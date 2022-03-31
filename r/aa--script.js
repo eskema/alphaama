@@ -108,6 +108,11 @@ function rap(video)
    over(video); over(controls);
 }
 
+function yt(url) {
+// fuck youtube but here it is anyway
+   return '<figure class="yt"><iframe src="https://www.youtube.com/embed/'+url.searchParams.get('v') +'" title="yt" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>'
+}
+
 function tag(spray,can) 
 {
    // spray is an event, can is an element
@@ -381,9 +386,20 @@ function replacer(url)
       rep += player(url, poster).outerHTML;
       
    } else { // regular links
-      rep += '<a href="' + url 
-      + '" class="content-link" target="_blank" rel="nofollow">' + url 
-      + '</a>';
+      
+      const ur = new URL(url);
+      let domain = ur.hostname.split('.').reverse().splice(0,2).reverse().join('.');
+      if (domain === 'youtube.com') {
+         //      console.log(ur, domain);
+         rep += yt(ur);
+         
+         
+         
+      } else {
+         rep += '<a href="' + url 
+         + '" class="content-link" target="_blank" rel="nofollow">' + url 
+         + '</a>';
+      }
 	}
    return rep
 }
