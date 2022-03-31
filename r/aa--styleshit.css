@@ -1,6 +1,3 @@
-/* @override 
-	https://alphaama.com/v1/r/aa--styleshit.css?* */
-
 @font-face { 
    font-family: fu; 
    src:  url('aa--fu.otf') format("opentype"),
@@ -313,6 +310,11 @@ article {
    overflow: hidden;
    max-height: var(--media-max-height);
    overflow-y: scroll;
+   box-sizing: border-box;
+}
+
+.interesting > article.has-media {
+   padding: 0!important;
 }
 
 .event.interesting > article {
@@ -1060,7 +1062,7 @@ article p {
    padding-top: 1.5rem;
 }
 
-article iframe,
+
 .content-video,
 .content-img {
    justify-self: start;
@@ -1101,6 +1103,26 @@ article iframe {
    border: 1px dotted rgb(var(--c-a-a));
    font-family: "fu", monospace;
 }
+
+.yt { 
+   margin: 0;
+   z-index: 24;
+}
+
+.yt iframe, .yt object, .yt embed { 
+   border: none;
+}
+
+.interesting .yt {
+   z-index: 24;
+}
+
+.interesting .yt iframe, .interesting .yt object, .interesting .yt embed {
+   height: calc(var(--media-max-height) - 9rem);
+   width: 100%;
+}
+
+
 /* @end */
 /* @group yo */
 
@@ -1308,7 +1330,6 @@ article iframe {
       overflow-y: scroll;
    }
    
-   article iframe,
    .content-video,
    .content-img {
       /*max-height: var(--max-media-height);*/
