@@ -41,7 +41,7 @@ function vip(e)
 }
 
 function rewind(e) 
-{ 
+{
    const container = e.target.parentElement,
    video = container.querySelector('video');
    video.currentTime = 0;
@@ -57,7 +57,7 @@ function player(src, poster)
 
    let postr = poster ? poster : '';
    if (postr) video.setAttribute('poster', postr);
-  
+   
    video.setAttribute('loop', '');
    video.setAttribute('playsinline', '');
    video.setAttribute('preload', 'metadata');  
@@ -99,7 +99,7 @@ function rap(video)
       progress.value = percentage;
       progress.style.width = percentage + '%';
       progress.innerHTML = percentage + '%';
-   
+      
    });
    video.addEventListener('loadedmetadata', function(event) {
       controls.dataset.duration = Math.ceil(video.duration);
@@ -112,8 +112,8 @@ function tag(spray,can)
 {
    // spray is an event, can is an element
    // on event add/remove classes to elements
-	spray.preventDefault();
-	
+   spray.preventDefault();
+   
    const 
    tag = can.getAttribute('data-tag'), 
    it = can.getAttribute('data-it'),
@@ -125,19 +125,19 @@ function tag(spray,can)
    
    if (it) {
            if (it === '_self') piece = can;
-		else if (it === '_parent') piece = can.parentNode;
-		else if (!piece) piece = page;
-		
-		if (piece.classList.contains(tag)) { 
+      else if (it === '_parent') piece = can.parentNode;
+      else if (!piece) piece = page;
+      
+      if (piece.classList.contains(tag)) { 
          
          piece.classList.remove(tag);
          if (wall) wall.setAttribute('aria-expanded','false');
-		
+         
       } else {
          
          if (can.classList.contains('tag1')) document.querySelector('.'+tag).classList.remove(tag);
          piece.classList.add(tag);
-
+         
       }
 	} else { 
       if (tag) {
@@ -151,24 +151,24 @@ function tag(spray,can)
 
 function orient(l) 
 { // element, elem, el, l
-	if (l) {
+   if (l) {
       const to = document.querySelector('.interesting');
       if (to) {
          const lrect = l.getBoundingClientRect(),
-   			lcenter = window.getComputedStyle(l).transformOrigin,
-   			lcenters = lcenter.split(" "),
-   			lx = lrect.left + parseInt(lcenters[0]) - window.pageXOffset,
+            lcenter = window.getComputedStyle(l).transformOrigin,
+            lcenters = lcenter.split(" "),
+            lx = lrect.left + parseInt(lcenters[0]) - window.pageXOffset,
             ly = lrect.top  + parseInt(lcenters[1]) - window.pageYOffset;
-   		const torect = to.getBoundingClientRect(),
-   			tox = torect.left - window.pageXOffset,
+         const torect = to.getBoundingClientRect(),
+            tox = torect.left - window.pageXOffset,
             toy = torect.top - window.pageYOffset;
-   		const radians = Math.atan2(tox - lx, toy - ly);
-   		const degree = (radians * (180 / Math.PI) * -1) + 180;
-   		l.style.transform = "rotate("+degree+"deg)";
+         const radians = Math.atan2(tox - lx, toy - ly);
+         const degree = (radians * (180 / Math.PI) * -1) + 180;
+         l.style.transform = "rotate("+degree+"deg)";
       } else {
          l.style.transform = "rotate(0)";
       }
-	}
+   }
 }
 
 function select(e,l) 
@@ -187,39 +187,39 @@ function select(e,l)
          if (page.classList.contains('scroll')) it = idea; // if scrolled, go to top
          else it = sec;	// go to bottom
       }
-   
+      
    } else {
       
-	   if (l.classList.contains('interesting')) {
+      if (l.classList.contains('interesting')) {
          
          l.classList.remove('interesting');
          page.classList.remove('k-is-s');
          it = l;
          
-   	} else {
+      } else {
          
          if (interesting) interesting.classList.remove('interesting');
          
          l.classList.add('interesting');
-   		page.classList.add('k-is-s');
+         page.classList.add('k-is-s');
          it = l.querySelector('.marker');
          
          const last = document.querySelector('.last');
          if (last) last.classList.remove('last');
-   	} l.classList.add('last');
-	
+      } l.classList.add('last');
+      
    } it.scrollIntoView(stuff);
 }
 
 function scrollin(scrollp, l) 
 {
    const h = l.scrollHeight - window.innerHeight;
-	
+   
    if (scrollp > 20) l.classList.add('scroll');
-	else if (scrollp < 20) l.classList.remove('scroll');
-	
-	if (scrollp > h - 100) l.classList.add('scrolled');
-	else if (scrollp < h - 150) l.classList.remove('scrolled');
+   else if (scrollp < 20) l.classList.remove('scroll');
+   
+   if (scrollp > h - 100) l.classList.add('scrolled');
+   else if (scrollp < h - 150) l.classList.remove('scrolled');
    
    orient(cleet);
 }
@@ -244,13 +244,13 @@ function is(e)
    let l;
    
    if (e.key === 'Enter') {
-		
+      
       // get the value of input and make it safer
-   	const 
+      const 
       n = document.createTextNode(e.target.value),
       v = n.wholeText,
       l = document.createElement('li'); // input history item
-   
+      
       l.append(n); // append input to history item
       let clear = false;
       
@@ -288,29 +288,29 @@ function is(e)
             if (!yours.getItem('--x')) yours.setItem('--x', 'clear input history');
             fool.innerHTML = '';
             put.placeholder = '_';
-				clear = true;
+            clear = true;
             break;
          default: console.log(v.substring(0,3));
             
             if (v.substring(0,3) === "--k") {
                start(v.substring(4));
                clear = true;
-            
+               
             // } else if (v.substring(0,3) === "--p") {
                // const p = v.substring(4);
                // l.dataset.tip = '"p, ' + p;
-         
+               
             } else l.dataset.tip = '" => nope(try: "--h")';
             
       }
          		
-		if (!clear) { // append input to history
-			fool.append(l);
+      if (!clear) { // append input to history
+      	fool.append(l);
          fool.scrollTop = fool.scrollHeight; 
-		}
-		
-		put.value = '';
-	}
+      }
+      
+      put.value = '';
+   }
    
 // to interpret what you want before enter return
 // i.e. handle mentions, etc..
@@ -345,7 +345,7 @@ put.addEventListener('keyup', is);
 put.addEventListener('focus', more);
 
 function arParams(str) 
-{
+{   
    const ar = str.split('?');
    if (ar[1]) {
       const params = new URLSearchParams(ar[1]);
@@ -353,24 +353,24 @@ function arParams(str)
          ar.push(params);
       }
    }
-	return ar;
+   return ar;
 }
 
 function replacer(url) 
 {
    let src = arParams(url);
    let match = src[0];
-	let rep = '';
+   let rep = '';
    //	const sw = match.startsWith('');
-
-	if ( match.endsWith('.jpg') 
-	  || match.endsWith('.jpeg') 
-	  || match.endsWith('.png')
-	  || match.endsWith('.gif')
-	  || match.endsWith('.svg')) { // images
-		
-		rep += '<img src="' + match + '" class="content-img">';
-	
+   
+   if ( match.endsWith('.jpg') 
+     || match.endsWith('.jpeg') 
+     || match.endsWith('.png')
+     || match.endsWith('.gif')
+     || match.endsWith('.svg')) { // images
+   	
+      rep += '<img src="' + url + '" class="content-img">';
+      
    } else if ( match.endsWith('.mp4')){ // videos
       
       let poster = false;
@@ -378,27 +378,26 @@ function replacer(url)
          poster = decodeURIComponent(src[2].get('poster'));
       }
       
-      rep += player(match, poster).outerHTML;
+      rep += player(url, poster).outerHTML;
       
-	} else { // regular links
-		rep += '<a href="' + match 
-      + '" class="content-link" target="_blank" rel="nofollow">' + match 
+   } else { // regular links
+      rep += '<a href="' + url 
+      + '" class="content-link" target="_blank" rel="nofollow">' + url 
       + '</a>';
 	}
-	return rep
+   return rep
 }
 
 function ai(content) 
 {
-	
    //URLs starting with http://, https://, or ftp://
    let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
-	let re = content.replace(patternA, replacer);
+   let re = content.replace(patternA, replacer);
    
    //URLs starting with www. (without // before it, or it'd re-link the ones done above)
    let patternB = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
-	re = re.replace(patternB, replacer);
-
+   re = re.replace(patternB, replacer);
+   
    // Change email addresses to mailto:: links
    // let patternC = /(([a-zA-Z0-9_\-\.]+)@[a-zA-Z_]+?(?:\.[a-zA-Z]{2,6}))+/gim;
    // re = re.replace(patternC, '<a class="content-mail" href="mailto:$1">$1</a>');
@@ -406,9 +405,8 @@ function ai(content)
    return re
 }
 
-
 function over(l) 
-{  
+{
    // replacement for default :hover, 
    // to "better" handle touch devices
    
@@ -473,43 +471,42 @@ function kind0(o)
    const bff = document.getElementById('p-'+o.pubkey),
    frend = JSON.parse(o.content),
    pubkey = document.createElement('p');
-	
+   
    if (bff) { 
-		fren = bff;
+      fren = bff;
       fren.innerHTML = '';
-	} else {
-		fren = document.createElement('li');
+   } else {
+      fren = document.createElement('li');
       fren.id = 'p-' + o.pubkey;
-		fren.classList.add('fren');    
+      fren.classList.add('fren');    
       over(fren);
       dlist.append(fren);    
-	}
+   }
    
-	pubkey.classList.add('pubkey');
-	pubkey.innerHTML = o.pubkey;
-	fren.append(pubkey);
+   pubkey.classList.add('pubkey');
+   pubkey.innerHTML = o.pubkey;
+   fren.append(pubkey);
 	
    if (frend.name) {
-		const name = document.createElement('h2');
-		name.classList.add('name');
-		name.innerHTML = frend.name;
-		fren.append(name);
+	   const name = document.createElement('h2');
+	   name.classList.add('name');
+	   name.innerHTML = frend.name;
+	   fren.append(name);
       
       if (frend.nip05) {
          name.setAttribute('data-nip05', frend.nip05)
-   		if (frend['nip05'].startsWith('_@')) {
-   			name.classList.add('root');
-   		}
-   	}
+         if (frend['nip05'].startsWith('_@')) {
+            name.classList.add('root');
+         }
+      }
 	}
    
-   
-	if (frend.picture) {
+   if (frend.picture) {
       let src = arParams(frend.picture);
       const picture = document.createElement('img');
-		picture.setAttribute('src', src[0]);
-		picture.classList.add('picture');
-		fren.append(picture);
+      picture.setAttribute('src', src[0]);
+      picture.classList.add('picture');
+      fren.append(picture);
       
       if (src.length > 2) { // there's parameters
          let srcl = src[2].get('logo'); // let c if it is a logo
@@ -517,22 +514,22 @@ function kind0(o)
             // let's build it
             const logo = document.createElement('img');
             logo.classList.add('logo');
-      		logo.setAttribute('src', decodeURIComponent(srcl));
-      		fren.append(logo);
+            logo.setAttribute('src', decodeURIComponent(srcl));
+            fren.append(logo);
          }
       }
-         
-		if (o.pubkey == yours.getItem('k')) { // gets main profile img
-			let u = document.getElementById('u');
+      
+      if (o.pubkey == yours.getItem('k')) { // gets main profile img
+         let u = document.getElementById('u');
          u.setAttribute('src', frend.picture.split('?')[0]);
-		}
-	}
+      }
+   }
    
 	if (frend.about) {
-		const about = document.createElement('p');
-		about.classList.add('about');
-		about.innerHTML = ai(frend.about);
-		fren.append(about);
+	   const about = document.createElement('p');
+	   about.classList.add('about');
+	   about.innerHTML = ai(frend.about);
+	   fren.append(about);
 	}
    
    // see if there are already posts from pubkey and updates figure
@@ -548,18 +545,17 @@ function kind0(o)
 
 function kind1(o) 
 { // NIP-01 text_note
-   
    const bff = document.getElementById('p-'+o.pubkey);
    
    if(bff) {
       bff.parentElement.prepend(bff);
       bff.setAttribute('aa-last', 'e-'+o.id);
       bff.addEventListener('click', function(e) {
-//         if (page.classList.contains('push')) {
-//            
-//         } else {
-            select(e, document.getElementById('e-'+o.id));
-//         }
+         if (page.classList.contains('push')) {
+            
+         } else {
+          select(e, document.getElementById('e-'+o.id));
+         }
       });
    }
    
@@ -606,7 +602,7 @@ function kind1(o)
          tags.dataset.raw = 'tags';
          
          let es = [];
-   		
+         
          o.tags.forEach(function(ot) {
             
             let t = document.createElement('a');
@@ -621,41 +617,39 @@ function kind1(o)
             if (ot[0] == 'e') {
                es.push(ot);
             }
-         
-   		});
+            
+         });
          
          if (es.length > 0) {
             l.classList.add('re');
             reply = es[es.length - 1][1];
          }
-   	
+         
       };
-
+      
       l.append(figure, marker, article, raw);
       
       if (reply) {
          l.setAttribute('data-re', reply)
          let rep = document.getElementById('e-'+reply);   		
          if (rep) {
-   			let lies = rep.querySelector('.replies');
+         	let lies = rep.querySelector('.replies');
             if (!lies) {
-   				lies = document.createElement('ul');
-   				lies.classList.add('replies');
-   				rep.append(lies);
-   			}  lies.append(l); 
-   
-   		} else feed.prepend(l);
-   	
+         	   lies = document.createElement('ul');
+         	   lies.classList.add('replies');
+         	   rep.append(lies);
+         	} lies.append(l); 
+         } else feed.prepend(l);
       } else feed.prepend(l);
    }
    
    const dat = JSON.parse(yours.getItem(o.pubkey));
    if (dat) { img.src = dat.picture ? dat.picture : 'r/aa--u.png';
-		caption.innerHTML = dat.name ? dat.name : o.pubkey;
-	} else { img.src = 'r/aa--u.png';
+      caption.innerHTML = dat.name ? dat.name : o.pubkey;
+   } else { img.src = 'r/aa--u.png';
       caption.innerHTML = o.pubkey;
-	   figure.classList.add('new');
-	}
+      figure.classList.add('new');
+   }
    
    const 
    oc = document.createTextNode(o.content),
@@ -666,35 +660,35 @@ function kind1(o)
    if (media) { article.classList.add('has-media');
       let videos = article.querySelectorAll('video');
       if (videos) {
-	      videos.forEach(rap);
-   	}
+         videos.forEach(rap);
+      }
    }
    
    let s = '';
-	s += '<li data-raw="id"><a href="?e=' + o.id + '">' + o.id + '</a></li> ';
-	s += '<li data-raw="pubkey"><a href="?p=' + o.pubkey + '">' + o.pubkey + '</a></li> ';
-	s += '<li data-raw="sig">' + o.sig + '</li> ';
-	s += '<li data-raw="kind">' + o.kind + '</li> ';
-	s += tags ? tags .outerHTML : '<li data-raw="tags">-</li>';
-	s += '<li data-raw="created_at"><time datetime="' + o.created_at + '">' + new Date(o.created_at*1000).toUTCString() + '</time></li> ';
+   s += '<li data-raw="id"><a href="?e=' + o.id + '">' + o.id + '</a></li> ';
+   s += '<li data-raw="pubkey"><a href="?p=' + o.pubkey + '">' + o.pubkey + '</a></li> ';
+   s += '<li data-raw="sig">' + o.sig + '</li> ';
+   s += '<li data-raw="kind">' + o.kind + '</li> ';
+   s += tags ? tags .outerHTML : '<li data-raw="tags">-</li>';
+   s += '<li data-raw="created_at"><time datetime="' + o.created_at + '">' + new Date(o.created_at*1000).toUTCString() + '</time></li> ';
    raw.innerHTML = s; 
    
 }
 
 function kind3(o) 
 { // NIP-02 Contact List and Petnames
-	
+   
    if (o.tags.length > 0) {
-		o.tags.forEach(function(ot) {
-			authors.push(ot[1]);
-		});
-	}
+      o.tags.forEach(function(ot) {
+         authors.push(ot[1]);
+      });
+   }
    // update profiles
-	we.send('["REQ", "aa-dis", {"kinds":[0], "authors":'+ JSON.stringify(authors) +'}]');
+   we.send('["REQ", "aa-dis", {"kinds":[0], "authors":'+ JSON.stringify(authors) +'}]');
    
    const lastweek = new Date();
-	lastweek.setDate(lastweek.getDate() - 9); // fetch feed from last x days
-	
+   lastweek.setDate(lastweek.getDate() - 9); // fetch feed from last x days
+   
    we.send('["REQ", "aa-feed", {"authors":'+ JSON.stringify(authors) +', "since":'+ Math.floor(lastweek.getTime()/1000) +'}]');
 }
 
@@ -797,24 +791,24 @@ async  window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertex
          
          const 
          dis = JSON.parse(e.data)[1], // the request id
-      	dat = JSON.parse(e.data)[2]; // the event data
-      	
-      	if (dis == "aa-you") {
+         dat = JSON.parse(e.data)[2]; // the event data
+         
+         if (dis == "aa-you") {
             
             switch (dat.kind) {  
                case 0: kind0(dat); break;
                case 3: kind3(dat); break;
                default: ; 
             }
-      	
+            
          } else if (dis == "aa-feed") {
-      		
+            
             switch (dat.kind) {
                case 0: kind0(dat); break;
                case 1: kind1(dat); break;
                default: ; 
             }
-      	
+            
          } else {
             // 
             switch (dat.kind) {
@@ -825,12 +819,9 @@ async  window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertex
       });
       
       we.addEventListener('close', function(e) { relaytion(we) }); 
-   
+      
    }
 }
-   
-
-
    
 function relaytion(ship) 
 {// updates id a with the connection status
@@ -849,12 +840,12 @@ window.addEventListener('load', function(event) {
    
    // get all the the elements for tag()
    tags = document.querySelectorAll('[data-tag]');
-	tags.forEach(function(l) { l.addEventListener('click', function(e) { tag(e,l); }); });	
-
+   tags.forEach(function(l) { l.addEventListener('click', function(e) { tag(e,l); }); });	
+   
    if (window.nostr) {
       
       window.nostr.getPublicKey().then( key => start(key) );
-   
+      
    } else {
       
       const pub = yours.getItem('k');
@@ -863,7 +854,6 @@ window.addEventListener('load', function(event) {
       else start('--k');
       
    }
-   
 //   window.addEventListener('hashchange', function() {
 //     console.log(location.hash)
 //   }, false);
