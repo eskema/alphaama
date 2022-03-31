@@ -1,0 +1,3 @@
+#remember to prepend a dot ( . ) to the filename just like this: .htaccess
+#research what you can do with it (a lot)
+ErrorDocument 404 /v1/420.html
