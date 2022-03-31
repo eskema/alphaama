@@ -782,7 +782,8 @@ article {
 
 .push .fren .logo {
    display: block;
-   transform: translateX(11.2rem) translateY(4rem);
+   transform: translateX(1.2rem) translateY(1.3rem);
+   align-self: end;
 }
 
 .name {
