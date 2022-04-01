@@ -8,7 +8,8 @@ put = document.getElementById('iot'),
 cleet = document.getElementById('e'),
 feed = document.getElementById('sea'),
 fool = document.getElementById('foo'),
-sec = document.getElementById('sec');
+sec = document.getElementById('sec'),
+u = document.getElementById('u');
 
 function orIs(it) 
 {// let's find out
@@ -276,14 +277,7 @@ function is(e)
          case '--bbbb': // boom biddy bye bye, 
             // destroys everything, 
             // or at least tries to..
-            authors = []; // list of pubkeys
-            yours.clear(); // localStorage
-            dlist.innerHTML = ''; // fren list
-            feed.innerHTML = ''; // timeline
-            fool.innerHTML = ''; // input history
-            put.placeholder = 'boom biddy bye bye'; // so you know what happened
-            let u = document.getElementById('u');
-            u.setAttribute('src', u.dataset.src);
+            bbbb();
             clear = true; // don't append this to history
             break;
          case '--d': // toggle frens
@@ -298,7 +292,9 @@ function is(e)
          default: console.log(v.substring(0,3));
             
             if (v.substring(0,3) === "--k") {
-               start(v.substring(4));
+               bbbb();
+               yours.setItem('k', v.substring(4));
+               start();
                clear = true;
                
             // } else if (v.substring(0,3) === "--p") {
@@ -536,7 +532,6 @@ function kind0(o)
       }
       
       if (o.pubkey == yours.getItem('k')) { // gets main profile img
-         let u = document.getElementById('u');
          u.setAttribute('src', frend.picture.split('?')[0]);
       }
    }
@@ -745,34 +740,53 @@ relays =
 relay = relays[0],
 authors = [];
 
-function start(k)
+function bbbb()
+{// clear stuff from previous key
+   authors = []; // list of pubkeys
+   yours.clear(); // localStorage
+   dlist.innerHTML = ''; // fren list
+   feed.innerHTML = ''; // timeline
+   fool.innerHTML = ''; // input history
+   put.placeholder = 'boom biddy bye bye'; // so you know what happened
+   u.setAttribute('src', u.dataset.src);
+   page.classList.remove('push');
+}
+
+function start()
 {  
    // connect to chosen relay
    we = new WebSocket(relay);
-   // clear stuff from previous key
-   yours.clear();
-   feed.innerHTML = '';
-   list.innerHTML = '';
    
-   // detect starting mode
-   if (k === '--k') { put.placeholder = '--k y0urpu6keyh3re'; // no key 
+   let k = yours.getItem('k');
+   
+   if (!k){
+      if (window.nostr) {
+         window.nostr.getPublicKey().then( key => {
+            yours.setItem('k', key);
+            k = key;
+         });
+      } else put.placeholder = '--k y0urpu6keyh3re'; // no key 
+   
    } else {
-      // check if already started by looking for a stored item 
+   
+      
       if (yours.getItem('--x')) {
          put.placeholder = '_'; // less is more
       } else put.placeholder = '--x : clear input history'; // tip
+         
       page.classList.add('has-k');
       authors = [];
       authors.push(k);
-      yours.setItem('k', k);
+//      yours.setItem('k', k);
+      
       // need to make some sessionStorage 
       // so we can have a base to come back to
       // after starting again with a new key,
       // and also a way to append keys instead of replacing
       // so we can have both and switch at will
-      const li = document.createElement('li');
-      li.append(k);
-      fool.append(li);
+//      const li = document.createElement('li');
+//      li.append(k);
+//      fool.append(li);
       
       if (window.nostr) { // nos2x
       /*
@@ -858,18 +872,8 @@ window.addEventListener('load', function(event) {
    tags = document.querySelectorAll('[data-tag]');
    tags.forEach(function(l) { l.addEventListener('click', function(e) { tag(e,l); }); });	
    
-   if (window.nostr) {
-      
-      window.nostr.getPublicKey().then( key => start(key) );
-      
-   } else {
-      
-      const pub = yours.getItem('k');
-      
-      if (pub) start(pub);
-      else start('--k');
-      
-   }
+   start();
+   
 //   window.addEventListener('hashchange', function() {
 //     console.log(location.hash)
 //   }, false);
