@@ -752,24 +752,15 @@ function bbbb()
    page.classList.remove('push');
 }
 
-function start()
-{  
-   // connect to chosen relay
-   we = new WebSocket(relay);
-   
+function start() {
+
    let k = yours.getItem('k');
    
-   if (!k){
-      if (window.nostr) {
-         window.nostr.getPublicKey().then( key => {
-            yours.setItem('k', key);
-            k = key;
-         });
-      } else put.placeholder = '--k y0urpu6keyh3re'; // no key 
-   
-   } else {
-   
+   if (k) {
       
+      // connect to chosen relay
+      we = new WebSocket(relay);
+
       if (yours.getItem('--x')) {
          put.placeholder = '_'; // less is more
       } else put.placeholder = '--x : clear input history'; // tip
@@ -777,28 +768,6 @@ function start()
       page.classList.add('has-k');
       authors = [];
       authors.push(k);
-//      yours.setItem('k', k);
-      
-      // need to make some sessionStorage 
-      // so we can have a base to come back to
-      // after starting again with a new key,
-      // and also a way to append keys instead of replacing
-      // so we can have both and switch at will
-//      const li = document.createElement('li');
-//      li.append(k);
-//      fool.append(li);
-      
-      if (window.nostr) { // nos2x
-      /*
-      
-async  window.nostr.getPublicKey(); //: string // returns your public key as hex
-async  window.nostr.signEvent(event): Event // returns the full event object signed
-async  window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
-async  window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
-async  window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
-      
-      */
-      }
       
       // updates idea with connection status
       idea.addEventListener('click', function(e) {
@@ -850,7 +819,18 @@ async  window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertex
       
       we.addEventListener('close', function(e) { relaytion(we) }); 
       
-   }
+      if (window.nostr) { // nos2x
+      /*
+      
+.getPublicKey(); //: string // returns your public key as hex
+.signEvent(event): Event // returns the full event object signed
+.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
+.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
+.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
+      
+      */
+      }
+   }   
 }
    
 function relaytion(ship) 
@@ -872,8 +852,15 @@ window.addEventListener('load', function(event) {
    tags = document.querySelectorAll('[data-tag]');
    tags.forEach(function(l) { l.addEventListener('click', function(e) { tag(e,l); }); });	
    
-   start();
+   let k = yours.getItem('k');
    
+   if (!k && window.nostr) {
+      window.nostr.getPublicKey().then( key => {
+         yours.setItem('k', key);
+         start();
+      });
+   } else start();
+
 //   window.addEventListener('hashchange', function() {
 //     console.log(location.hash)
 //   }, false);
