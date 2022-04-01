@@ -20,7 +20,7 @@
 
 --font-size: 16px;
 --media-height: 50vh; /* calc(1rem * 4); */
---media-max-height: calc(100vh - 9rem);            
+--media-max-height: calc(100vh );            
 }
 
 html,
@@ -143,7 +143,7 @@ button {
    grid-template-columns: 3.5rem 1fr;
    width: 100vw;
    bottom: 0;
-   z-index: 22;
+   z-index: 6;
 }
 
 #b::after {
@@ -608,7 +608,7 @@ article {
    right: 0;
    overflow: scroll;
    -webkit-overflow-scrolling: touch;
-   z-index: 23;
+   z-index: 4;
 }
 
 .has-k #d {
@@ -926,7 +926,7 @@ article {
    bottom: 0;
    width: 3.5rem;
    height: 3.5rem;
-   z-index: 23;
+   z-index: 7;
    font-size: 0;
    transition: var(--trans-quart);
    justify-items: center;   
@@ -973,7 +973,7 @@ body:not(.scroll) #e{
    width: 100%;
    bottom: 3.5rem;
    box-shadow: 0px -1rem 2rem rgb(var(--c-a-a));
-   z-index: 22;
+   z-index: 6;
 }
 
 #foo {
@@ -1072,7 +1072,8 @@ article p {
    object-fit: contain;
    box-sizing: border-box;
    position: relative;
-   margin: .5rem 0;
+   padding: .5rem 0;
+   margin: 0;
    display: block;
 }
 
@@ -1106,7 +1107,7 @@ article iframe {
 
 .yt { 
    margin: 0;
-   z-index: 24;
+   z-index: 6;
 }
 
 .yt iframe, .yt object, .yt embed { 
@@ -1114,11 +1115,11 @@ article iframe {
 }
 
 .interesting .yt {
-   z-index: 24;
+   z-index: 5;
 }
 
 .interesting .yt iframe, .interesting .yt object, .interesting .yt embed {
-   height: calc(var(--media-max-height) - 9rem);
+   height: calc(var(--media-max-height) - 7rem);
    width: 100%;
 }
 
