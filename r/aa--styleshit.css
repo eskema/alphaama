@@ -1,3 +1,6 @@
+/* @override 
+	https://alphaama.com/d-e-v/r/aa--styleshit.css?* */
+
 @font-face { 
    font-family: fu; 
    src:  url('aa--fu.otf') format("opentype"),
@@ -20,7 +23,7 @@
 
 --font-size: 16px;
 --media-height: 50vh; /* calc(1rem * 4); */
---media-max-height: calc(100vh );            
+--media-max-height: calc(100vh - 7rem);            
 }
 
 html,
@@ -308,7 +311,7 @@ article {
    border-bottom: 1px solid transparent;
    box-shadow: 1rem -1rem 2rem rgb(var(--c-a-a));
    overflow: hidden;
-   max-height: var(--media-max-height);
+   max-height: 100vh;
    overflow-y: scroll;
    box-sizing: border-box;
 }
@@ -510,6 +513,7 @@ article {
    color: rgb(var(--c-a-b));
    position: relative;
    text-align: right;
+   word-break: keep-all;
 }
 
 [data-raw="id"] {
@@ -1077,10 +1081,14 @@ article p {
    display: block;
 }
 
-.event.interesting > article .content-video,
+.event.interesting > article .content-video {
+   height: var(--media-max-height);
+}
+
+
 .event.interesting > article .content-img {
    height: auto;
-   max-height: var(--media-max-height);
+   
    max-height: unset;
    width: 100%;
 }
@@ -1119,7 +1127,7 @@ article iframe {
 }
 
 .interesting .yt iframe, .interesting .yt object, .interesting .yt embed {
-   height: calc(var(--media-max-height) - 7rem);
+   height: var(--media-max-height);
    width: 100%;
 }
 
@@ -1319,6 +1327,10 @@ article iframe {
       grid-template-columns: 1fr;
    }
    
+   [data-raw="tags"] .tag {
+      grid-column: 1;
+   }
+   
    [data-raw]::before {
       width: auto;
       right: auto;
@@ -1333,8 +1345,8 @@ article iframe {
    
    .content-video,
    .content-img {
-      /*max-height: var(--max-media-height);*/
-      height: auto;
+/*      max-height: var(--max-media-height);
+      height: auto;*/
    }
    
    #foo li {

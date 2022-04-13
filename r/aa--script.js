@@ -11,6 +11,8 @@ fool = document.getElementById('foo'),
 sec = document.getElementById('sec'),
 u = document.getElementById('u');
 
+session.removeItem('interesting');
+
 function orIs(it) 
 {// let's find out
    const interesting = document.querySelector('.interesting');
@@ -111,7 +113,7 @@ function rap(video)
 
 function yt(url) {
 // fuck youtube but here it is anyway
-   return '<figure class="yt"><iframe src="https://www.youtube.com/embed/'+url.searchParams.get('v') +'" title="yt" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>'
+   return '<figure class="yt"><iframe src="https://www.youtube.com/embed/'+url.searchParams.get('v') + '" title="yt" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>'
 }
 
 function tag(spray,can) 
@@ -181,9 +183,13 @@ function select(e,l)
 { // opens / close an article on event
    e.preventDefault();
    
+   if (typeof l === 'string') {
+      l = document.getElementById(l);
+   } 
+   
    let interesting = document.querySelector('.interesting'),
    stuff = { behavior:'smooth', block: 'start'};
-   
+      
    let it;
    
    if (e.target.id === "e") { 
@@ -195,26 +201,41 @@ function select(e,l)
       }
       
    } else {
+      if (l) {
+         if (l.classList.contains('interesting')) {
+            
+            l.classList.remove('interesting');
+            page.classList.remove('k-is-s');
+            it = l;
+            session.removeItem('interesting');
+            put.placeholder = 'new post';
+            
+         } else {
+            
+            if (interesting) interesting.classList.remove('interesting');
+            
+            l.classList.add('interesting');
+            page.classList.add('k-is-s');
+            it = l.querySelector('.marker');
+            session.interesting = l.id.substring(2);         
+            const last = document.querySelector('.last');
+            if (last) last.classList.remove('last');
+            put.placeholder = 'reply to ' + l.querySelector('figcaption').textContent;
+            
+         } l.classList.add('last');
+      }
       
-      if (l.classList.contains('interesting')) {
-         
-         l.classList.remove('interesting');
-         page.classList.remove('k-is-s');
-         it = l;
-         
-      } else {
-         
-         if (interesting) interesting.classList.remove('interesting');
-         
-         l.classList.add('interesting');
-         page.classList.add('k-is-s');
-         it = l.querySelector('.marker');
-         
-         const last = document.querySelector('.last');
-         if (last) last.classList.remove('last');
-      } l.classList.add('last');
-      
-   } it.scrollIntoView(stuff);
+   } 
+   
+   if (it) it.scrollIntoView(stuff);
+   else {
+      let notice = document.createElement('li');
+      notice.textContent = 'event not found'
+      fool.append(notice);
+   }
+   
+   
+   
 }
 
 function scrollin(scrollp, l) 
@@ -256,7 +277,7 @@ function is(e)
       n = document.createTextNode(e.target.value),
       v = n.wholeText,
       l = document.createElement('li'); // input history item
-      
+            
       l.append(n); // append input to history item
       let clear = false;
       
@@ -284,9 +305,9 @@ function is(e)
             page.classList.toggle('push'); 
             break;
          case '--x':
-            if (!yours.getItem('--x')) yours.setItem('--x', 'clear input history');
+            if (!yours.x) yours.setItem('x', 'clear input history');
             fool.innerHTML = '';
-            put.placeholder = '_';
+            put.placeholder = 'new post';
             clear = true;
             break;
          default: console.log(v.substring(0,3));
@@ -301,7 +322,11 @@ function is(e)
                // const p = v.substring(4);
                // l.dataset.tip = '"p, ' + p;
                
-            } else l.dataset.tip = '" => nope(try: "--h")';
+            } else {
+//               l.dataset.tip = '" => nope(try: "--h")';
+               
+               signnote(prepnote(v));
+            }
             
       }
          		
@@ -385,12 +410,8 @@ function replacer(url)
       
       const ur = new URL(url);
       let domain = ur.hostname.split('.').reverse().splice(0,2).reverse().join('.');
-      if (domain === 'youtube.com') {
-         //      console.log(ur, domain);
+      if (domain === 'youtube.com') { 
          rep += yt(ur);
-         
-         
-         
       } else {
          rep += '<a href="' + url 
          + '" class="content-link" target="_blank" rel="nofollow">' + url 
@@ -475,6 +496,12 @@ nostr event
 
 */
 
+function anykind(o) 
+{
+//   console.log(o);
+//   session.setItem(o.id, JSON.stringify(o));
+}
+
 function kind0(o) 
 { // NIP-01 set_metadata
    
@@ -556,6 +583,7 @@ function kind0(o)
 
 function kind1(o) 
 { // NIP-01 text_note
+
    const bff = document.getElementById('p-'+o.pubkey);
    
    if(bff) {
@@ -621,13 +649,9 @@ function kind1(o)
             t.href = '#' + ot[0] + '-' + ot[1];
             t.innerHTML = ot;
             tags.append(t);
-            t.addEventListener('click', function(e) {
-               select(e, document.getElementById(ot[0] + '-' + ot[1]))
-            });
             
-            if (ot[0] == 'e') {
-               es.push(ot);
-            }
+            if (ot[0] === 'e') es.push(ot);
+            if (ot[0] === 'nounce') caption.dataset.nounce = ot[1]
             
          });
          
@@ -684,6 +708,19 @@ function kind1(o)
    s += '<li data-raw="created_at"><time datetime="' + o.created_at + '">' + new Date(o.created_at*1000).toUTCString() + '</time></li> ';
    raw.innerHTML = s; 
    
+   const taglinks = raw.querySelectorAll('.tag');
+   taglinks.forEach(function(l) {
+      l.addEventListener('click', function(e) {
+         if (l.getAttribute('href')[1] === 'e') {
+            select(e, document.getElementById(l.getAttribute('href').substring(1)));
+         } else {
+            e.preventDefault();
+            let notice = document.createElement('li');
+            notice.textContent = 'not working yet'
+            fool.append(notice);
+         }
+      });
+   });
 }
 
 function kind3(o) 
@@ -722,12 +759,8 @@ wss://nostr-relay.wlvs.space
 
 */
 
-//if (window.nostr.getPublicKey()) {
-//   console.log(window.nostr.getPublicKey());
-//}
 
-let 
-we, 
+let we, 
 relays = 
 [  
    "wss://nostr-pub.wellorder.net",
@@ -741,9 +774,11 @@ relay = relays[0],
 authors = [];
 
 function bbbb()
-{// clear stuff from previous key
+{// boom biddy bye bye
+ // tries to forget everything
    authors = []; // list of pubkeys
    yours.clear(); // localStorage
+   session.clear(); // SessionStorage
    dlist.innerHTML = ''; // fren list
    feed.innerHTML = ''; // timeline
    fool.innerHTML = ''; // input history
@@ -753,16 +788,15 @@ function bbbb()
 }
 
 function start() {
-
-   let k = yours.getItem('k');
    
+   // connect to chosen relay
+   we = new WebSocket(relay);
+   
+   let k = yours.getItem('k');
    if (k) {
-      
-      // connect to chosen relay
-      we = new WebSocket(relay);
-
-      if (yours.getItem('--x')) {
-         put.placeholder = '_'; // less is more
+     
+     if (yours.getItem('x')) {
+         put.placeholder = 'new post'; // less is more
       } else put.placeholder = '--x : clear input history'; // tip
          
       page.classList.add('has-k');
@@ -792,6 +826,8 @@ function start() {
          dis = JSON.parse(e.data)[1], // the request id
          dat = JSON.parse(e.data)[2]; // the event data
          
+         session.setItem(dat.id, JSON.stringify(dat));
+         
          if (dis == "aa-you") {
             
             switch (dat.kind) {  
@@ -799,13 +835,13 @@ function start() {
                case 3: kind3(dat); break;
                default: ; 
             }
-            
+                        
          } else if (dis == "aa-feed") {
             
             switch (dat.kind) {
                case 0: kind0(dat); break;
                case 1: kind1(dat); break;
-               default: ; 
+               default: anykind(dat); 
             }
             
          } else {
@@ -818,7 +854,12 @@ function start() {
       });
       
       we.addEventListener('close', function(e) { relaytion(we) }); 
-      
+      if (!k && window.nostr) {
+      window.nostr.getPublicKey().then( key => {
+         yours.setItem('k', key);
+         start();
+      });
+   }
       if (window.nostr) { // nos2x
       /*
       
@@ -841,7 +882,80 @@ function relaytion(ship)
    2	CLOSING	The connection is in the process of closing.
    3	CLOSED	The connection is closed or couldn't be opened.*/
    
-   idea.dataset.status = '['+ ship.readyState +'] '+ relay + '/ ' + new Date().toUTCString()
+   idea.dataset.status = '['+ ship.readyState +'] '+ relay +'/ ' + new Date().toUTCString()
+}
+
+function prepnote(note)
+{
+   const now = Math.floor( ( new Date().getTime() ) / 1000 );
+   let tags = [];
+   
+   if (session.interesting) {
+      
+      const o = JSON.parse(session.getItem(session.interesting));
+      const es = [], ps = [];
+      
+      if (o.tags.length > 0) {
+         o.tags.forEach(function(ot) {
+            if (ot[0] == 'e') {
+               es.push(ot);
+            }
+            if (ot[0] == 'p') {
+               ps.push(ot);
+            }
+         });
+      }
+      
+      if (ps.length > 1) {
+         let lastpub = ps[ps.length - 1][1];
+         if ( lastpub !== o.pubkey && lastpub !== yours.k) {
+            tags.push(lastpub)
+         }
+      }  
+      
+      if (o.pubkey !== yours.k) tags.push(['p',o.pubkey]);
+      
+      if (es.length > 0) {
+         tags.push(es[0])
+      }
+      
+      tags.push(['e', o.id]);
+   }
+   
+   const ne = [ 
+      0,
+      yours.getItem('k'),
+      now,
+      1,
+      tags,
+      note
+   ];
+   
+   session.ne = JSON.stringify(ne);
+}
+
+function signnote() 
+{
+   const notehash = bitcoinjs.crypto.sha256( session.ne ).toString( 'hex' );
+   const notedat = JSON.parse(session.ne);
+   
+   const tosign = {
+      "id": notehash,
+      "pubkey": notedat[1],
+      "created_at": notedat[2],
+      "kind": notedat[3],
+      "tags": notedat[4],
+      "content": notedat[5]
+   }
+         
+   if (window.nostr) window.nostr.signEvent(tosign).then( e => postnote(e) );
+
+}
+
+function postnote(e) 
+{
+   session.post = JSON.stringify(e);
+   we.send( '["EVENT",' + session.post + ']' );
 }
 
 window.addEventListener('load', function(event) {
