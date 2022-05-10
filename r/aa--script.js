@@ -1,6 +1,5 @@
 const 
-yours = window.localStorage,
-page = document.body,
+your = window.localStorage,
 session = window.sessionStorage,
 idea = document.getElementById('a'), 
 dlist = document.getElementById('list'),
@@ -9,15 +8,25 @@ cleet = document.getElementById('e'),
 feed = document.getElementById('sea'),
 fool = document.getElementById('foo'),
 sec = document.getElementById('sec'),
-u = document.getElementById('u');
+u = document.getElementById('u'),
+stuff = { behavior:'smooth', block: 'start'};
 
 session.removeItem('interesting');
+
+let defaults = {
+   'media-autoload': true
+}
+
+if (!your.options) {
+   your.options = JSON.stringify(defaults);
+   console.log('options:', your.options);
+}
 
 function orIs(it) 
 {// let's find out
    const interesting = document.querySelector('.interesting');
    select(it, interesting ? interesting : idea);
-} cleet.addEventListener('click', orIs);
+} cleet.addEventListener('click', orIs, false);
 
 function pause(video) 
 { 
@@ -40,7 +49,9 @@ function vip(e)
 { // o cão do Marinho
    if (e.target.paused) {
       play(e.target);
-   } else pause(e.target);
+   } else {
+      pause(e.target);
+   }
 }
 
 function rewind(e) 
@@ -59,7 +70,9 @@ function player(src, poster)
    progress = document.createElement('progress');
 
    let postr = poster ? poster : '';
-   if (postr) video.setAttribute('poster', postr);
+   if (postr) {
+      video.setAttribute('poster', postr);
+   }
    
    video.setAttribute('loop', '');
    video.setAttribute('playsinline', '');
@@ -88,8 +101,8 @@ function rap(video)
    let controls = video.nextSibling;
    let progress = controls.querySelector('progress');
    
-   video.addEventListener('click', vip);
-   controls.addEventListener('click', rewind);
+   video.addEventListener('click', vip, false);
+   controls.addEventListener('click', rewind, false);
    
    video.addEventListener('timeupdate', function(e) {
       
@@ -106,7 +119,7 @@ function rap(video)
    });
    video.addEventListener('loadedmetadata', function(event) {
       controls.dataset.duration = Math.ceil(video.duration);
-   });
+   }, false);
    
    over(video); over(controls);
 }
@@ -116,66 +129,171 @@ function yt(url) {
    return '<figure class="yt"><iframe src="https://www.youtube.com/embed/'+url.searchParams.get('v') + '" title="yt" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>'
 }
 
-function tag(spray,can) 
+function tog(e,l) // toggle classes
 {
-   // spray is an event, can is an element
-   // on event add/remove classes to elements
-   spray.preventDefault();
+   e.preventDefault();
    
    const 
-   tag = can.getAttribute('data-tag'), 
-   it = can.getAttribute('data-it'),
-   ac = can.getAttribute('aria-controls');
+      tog = l.getAttribute('data-tog'), 
+      id = l.getAttribute('aria-controls');
    
-   let 
-   piece = document.querySelector(it),
-   wall = ac ? document.getElementById(ac) : false;
+   let wall = id ? document.getElementById(id) : false;
    
-   if (it) {
-           if (it === '_self') piece = can;
-      else if (it === '_parent') piece = can.parentNode;
-      else if (!piece) piece = page;
+   if (tog) {
       
-      if (piece.classList.contains(tag)) { 
+      document.body.classList.toggle(tog);
+      e.target.classList.toggle('active');
+      
+      if (wall && wall.getAttribute('aria-expanded') == 'false') {
+         wall.setAttribute('aria-expanded','true');
+      } else if (wall) { wall.setAttribute('aria-expanded','false'); }
+   } 			
+}
+
+function ash(tags, l) 
+{
+   const 
+      ul = document.createElement('ul'),
+      note = { 
+      'e': [], // list of event ids
+      'p': [], // list of pubkeys
+      'nonce': [], // pow
+      'custom': [], // else
+      'reply': false,
+      'replyto': false,
+      'oe': false,
+      'op': false,
+      'ul': ul
+   };
+   
+   ul.classList.add('tags');
+   
+   let nodes = ul.childNodes;
+   
+   
+   if (tags.length > 0) {
+      
+      tags.forEach(function(ot, i) {
          
-         piece.classList.remove(tag);
-         if (wall) wall.setAttribute('aria-expanded','false');
+         let g = note[ot[0]];
+         if (!g) {
+            g = note.custom;
+         } g.push(ot[1]);
          
-      } else {
+//         console.log(ot);
          
-         if (can.classList.contains('tag1')) document.querySelector('.'+tag).classList.remove(tag);
-         piece.classList.add(tag);
+         let tag = document.createElement('li');
+         tag.classList.add('tag', 'tag-'+ot[0]);
+         tag.dataset.tag = ot;
          
+         let a = document.createElement('a');
+         a.classList.add('tag-link');
+         
+                  
+         
+         if (ot.length > 1) {
+            let rel = '';
+            if (ot[2] && ot[2].substr(0, 6) === 'wss://') {
+               rel = '?wss=' + encodeURIComponent(ot[2].substr(6));
+            }
+            a.href = '#' + ot[0] + '-' + ot[1] + rel;
+            if (ot[0] === 'e' || ot[0] === 'p') {
+               a.innerHTML = pretty(ot[1]);
+               a.setAttribute('style', '--c:#' + hex(ot[1], false));
+            } else {
+               a.innerHTML = ot[1];
+            }
+            
+         } else {
+            a.innerHTML = ot;
+         }
+         
+         tag.append(a);
+
+         ul.append(tag);
+
+      });
+
+      if (note.e.length > 0) {
+         
+         note.oe = tags.findIndex(element => element[1] === note.e[0]);
+         note.reply = tags.findIndex(element => element[1] === note.e[note.e.length - 1]);
+         
+         l.setAttribute('data-reply', note.e[note.e.length - 1]);
+
       }
-	} else { 
-      if (tag) {
-         page.classList.toggle(tag);
-         if (wall && wall.getAttribute('aria-expanded') == 'false') {
-            wall.setAttribute('aria-expanded','true');
-         } else if (wall) wall.setAttribute('aria-expanded','false');
-      } 
-   }			
+            
+      if (note.p.length > 0) {
+         note.op = tags.findIndex(element => element[1] === note.p[0]);
+         note.replyto = tags.findIndex(element => element[1] === note.p[note.p.length - 1]);
+      }
+      
+      if (note.nonce.length > 0) {
+         let nonce = l.dataset.nonce;
+         l.setAttribute('data-nonce', note.nonce[0]);
+      }
+      
+      nodes.forEach(function(li, i) {
+         if (i === note.reply) {
+            li.classList.add('tag-e-parent');
+         }
+         
+         if (i === note.replyto) {
+            li.classList.add('tag-p-parent');
+         }
+         
+         if (i === note.oe) {
+            li.classList.add('tag-e-top');
+         }
+         
+         if (i === note.op) {
+            li.classList.add('tag-p-top');
+         }
+      });
+      
+//      note.ul = ul;
+   }
+   
+   return note
+}
+
+
+function mom(my) 
+{
+   const parents = [];
+   
+   for ( ; my && my !== document; my = my.parentNode ) {
+		if (my.classList.contains('event') && !my.classList.contains('interesting')) { parents.push(my); }
+	}
+   
+   parents.forEach(function(l) {
+      l.classList.add('mom');
+   });
+ 
 }
 
 function orient(l) 
-{ // element, elem, el, l
+{ // rotates an element towards another
    if (l) {
-      const to = document.querySelector('.interesting');
+      const to = document.querySelector('.was-interesting');
       if (to) {
-         const lrect = l.getBoundingClientRect(),
-            lcenter = window.getComputedStyle(l).transformOrigin,
-            lcenters = lcenter.split(" "),
-            lx = lrect.left + parseInt(lcenters[0]) - window.pageXOffset,
-            ly = lrect.top  + parseInt(lcenters[1]) - window.pageYOffset;
-         const torect = to.getBoundingClientRect(),
+         const 
+            rect = l.getBoundingClientRect(),
+            center = window.getComputedStyle(l).transformOrigin,
+            centers = center.split(" "),
+            lx = rect.left + parseInt(centers[0]) - window.pageXOffset,
+            ly = rect.top  + parseInt(centers[1]) - window.pageYOffset;
+         const 
+            torect = to.getBoundingClientRect(),
             tox = torect.left - window.pageXOffset,
             toy = torect.top - window.pageYOffset;
-         const radians = Math.atan2(tox - lx, toy - ly);
-         const degree = (radians * (180 / Math.PI) * -1) + 180;
+         const 
+            radians = Math.atan2(tox - lx, toy - ly),
+            degree = (radians * (180 / Math.PI) * -1) + 180;
+         
          l.style.transform = "rotate("+degree+"deg)";
-      } else {
-         l.style.transform = "rotate(0)";
-      }
+      
+      } else { l.style.transform = "rotate(0)"; }
    }
 }
 
@@ -186,40 +304,57 @@ function select(e,l)
    if (typeof l === 'string') {
       l = document.getElementById(l);
    } 
-   
-   let interesting = document.querySelector('.interesting'),
-   stuff = { behavior:'smooth', block: 'start'};
       
-   let it;
+   let 
+      interesting = document.querySelector('.interesting'),
+      it;
    
    if (e.target.id === "e") { 
       // cleet click
-      if (interesting) it = interesting.querySelector('.marker');
+      if (interesting) { it = interesting.querySelector('.marker'); }
       else {
-         if (page.classList.contains('scroll')) it = idea; // if scrolled, go to top
-         else it = sec;	// go to bottom
+         if (document.body.classList.contains('scroll')) { it = idea; }  // if scrolled, go to top
+         else { it = sec; } // go to bottom
       }
       
    } else {
       if (l) {
+         
+         let fren = l.closest('.fren');
+         
+         
+         
          if (l.classList.contains('interesting')) {
             
             l.classList.remove('interesting');
-            page.classList.remove('k-is-s');
+            fren.classList.remove('has-interesting');
+            
+            let moms = document.querySelectorAll('.mom');
+            moms.forEach(function(mom) {
+               mom.classList.remove('mom');
+            });
+            
+            document.body.classList.remove('k-is-s');
+            
             it = l;
             session.removeItem('interesting');
             put.placeholder = 'new post';
             
          } else {
             
-            if (interesting) interesting.classList.remove('interesting');
+            if (interesting) interesting.classList.remove('interesting'); 
             
             l.classList.add('interesting');
-            page.classList.add('k-is-s');
-            it = l.querySelector('.marker');
+            fren.classList.add('has-interesting');
+            
+            mom(l);
+            
+            document.body.classList.add('k-is-s');
+            
+            it = l;
             session.interesting = l.id.substring(2);         
             const last = document.querySelector('.last');
-            if (last) last.classList.remove('last');
+            if (last) { last.classList.remove('last'); }
             put.placeholder = 'reply to ' + l.querySelector('figcaption').textContent;
             
          } l.classList.add('last');
@@ -227,26 +362,40 @@ function select(e,l)
       
    } 
    
-   if (it) it.scrollIntoView(stuff);
-   else {
+   if (it) {
+      
+      if (it.classList.contains('interesting')) {
+         
+         it.scrollTo({
+           top: 0,
+           left: 0,
+           behavior: 'smooth'
+         });
+      
+      } else {
+         it.scrollIntoView(stuff);
+      }
+      
+      it.scrollIntoView(stuff);
+      
+   } else {
+//      foo('event not found');
       let notice = document.createElement('li');
       notice.textContent = 'event not found'
       fool.append(notice);
    }
-   
-   
-   
 }
 
 function scrollin(scrollp, l) 
 {
    const h = l.scrollHeight - window.innerHeight;
    
-   if (scrollp > 20) l.classList.add('scroll');
-   else if (scrollp < 20) l.classList.remove('scroll');
+   if (scrollp > 20) {
+      l.classList.add('scroll');
+      if (scrollp > h - 100) l.classList.add('scrolled');
+   } else if (scrollp < 20) { l.classList.remove('scroll'); }
    
-   if (scrollp > h - 100) l.classList.add('scrolled');
-   else if (scrollp < h - 150) l.classList.remove('scrolled');
+   if (scrollp < h - 150) { l.classList.remove('scrolled'); }
    
    orient(cleet);
 }
@@ -257,25 +406,26 @@ window.addEventListener('scroll', function(e) {
    lscroll = window.scrollY;
    if (!ticking) {
       window.requestAnimationFrame(function() {
-         scrollin(lscroll, page);
+         scrollin(lscroll, document.body);
          ticking = false;
       });
       ticking = true;
    }
-});
+}, false);
 
 //let kp = [], foolast = 0;
 
 function is(e)
 { // input handler event
-   let l;
+   const 
+   n = document.createTextNode(e.target.value),
+   v = n.wholeText;
+   let l,
+   c = v.substr(-1);
    
    if (e.key === 'Enter') {
       
       // get the value of input and make it safer
-      const 
-      n = document.createTextNode(e.target.value),
-      v = n.wholeText,
       l = document.createElement('li'); // input history item
             
       l.append(n); // append input to history item
@@ -302,19 +452,22 @@ function is(e)
             clear = true; // don't append this to history
             break;
          case '--d': // toggle frens
-            page.classList.toggle('push'); 
+            document.body.classList.toggle('ffs'); 
             break;
          case '--x':
-            if (!yours.x) yours.setItem('x', 'clear input history');
+            if (!your.x) { your.setItem('x', 'clear input history'); }
             fool.innerHTML = '';
             put.placeholder = 'new post';
             clear = true;
             break;
-         default: console.log(v.substring(0,3));
+         
+         default: 
+            
+            console.log(v.substring(0,3));
             
             if (v.substring(0,3) === "--k") {
                bbbb();
-               yours.setItem('k', v.substring(4));
+               your.setItem('k', v.substring(4));
                start();
                clear = true;
                
@@ -324,8 +477,8 @@ function is(e)
                
             } else {
 //               l.dataset.tip = '" => nope(try: "--h")';
+               prepnote(v)
                
-               signnote(prepnote(v));
             }
             
       }
@@ -338,10 +491,13 @@ function is(e)
       put.value = '';
    }
    
+//   console.log()
+    
 // to interpret what you want before enter return
 // i.e. handle mentions, etc..
 // if (v.length > 0) {
-// 	fool.dataset.log = v;
+ 	fool.dataset.log = c;
+   fool.dataset.content = v;
 // }
    
 // get value of history, key up/down
@@ -357,18 +513,18 @@ function more(e)
 {
    e.preventDefault();
    e.target.focus({ preventScroll: true });
-   page.classList.add('cow-mit');
+   document.body.classList.add('cow-mit');
 }
 
 function less(e) 
 {
-   page.classList.remove('cow-mit');
+   document.body.classList.remove('cow-mit');
    fool.scrollTop = fool.scrollHeight;
 }
 
-put.addEventListener('blur', less);
-put.addEventListener('keyup', is);
-put.addEventListener('focus', more);
+put.addEventListener('blur', less, false);
+put.addEventListener('keyup', is, false);
+put.addEventListener('focus', more, false);
 
 function arParams(str) 
 {   
@@ -388,16 +544,16 @@ function replacer(url)
    let match = src[0];
    let rep = '';
    //	const sw = match.startsWith('');
-   
-   if ( match.endsWith('.jpg') 
-     || match.endsWith('.jpeg') 
-     || match.endsWith('.png')
-     || match.endsWith('.gif')
-     || match.endsWith('.svg')) { // images
+   let matchlow = match.toLowerCase();
+   if ( matchlow.endsWith('.jpg') 
+     || matchlow.endsWith('.jpeg') 
+     || matchlow.endsWith('.png')
+     || matchlow.endsWith('.gif')
+     || matchlow.endsWith('.svg')) { // images
    	
       rep += '<img src="' + url + '" class="content-img">';
       
-   } else if ( match.endsWith('.mp4')){ // videos
+   } else if ( matchlow.endsWith('.mp4')){ // videos
       
       let poster = false;
       if (src.length > 2 && src[2].get('poster')) {
@@ -421,7 +577,56 @@ function replacer(url)
    return rep
 }
 
-function ai(content) 
+function hex(k, separator) {
+   // returns new 6 char hex from first 3 and last characters
+   // used for item classes, color, etc
+//   const str = 
+   let sep = '';
+   if (separator !== false) {
+      sep = separator;
+   }
+   return k.substr(0, 3) + sep + k.substr(-3)
+}
+
+function pretty(k) 
+{
+   let 
+      str,
+      bff = JSON.parse(your.getItem(k));
+   
+   if (bff && bff.name) {
+      str = bff.name
+   } else {
+      str = hex(k, '…')
+   }
+   
+   return str
+}
+
+function mentions(text, tags) 
+{
+   function nip8(_, index) 
+   {
+      let it = '<a href="#" class="mention>' + index + '</a>';
+      let ref = tags[index];
+      if (ref && ref[1]) {
+         
+         let ide = pretty(ref[1]);
+         it = '<a href="#' + ref[0] + '-' + ref[1] + '" class="mention mention-'+ref[0]+'" style="--c:#'+ hex(ref[1], false)+'">' + ide + '</a>';
+      }
+      
+      
+      
+      return it;
+   }
+   
+   return text.replace(/\B#\[(\d+)\]\B/g, nip8);
+   
+}
+
+
+
+function ai(content, tags) 
 {
    //URLs starting with http://, https://, or ftp://
    let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
@@ -435,7 +640,41 @@ function ai(content)
    // let patternC = /(([a-zA-Z0-9_\-\.]+)@[a-zA-Z_]+?(?:\.[a-zA-Z]{2,6}))+/gim;
    // re = re.replace(patternC, '<a class="content-mail" href="mailto:$1">$1</a>');
    
-   return re
+   // nip8 (mentions)
+//   let patternC = /\B#\[(\d+)\]\B/gim;
+      
+   re = mentions(re, tags);
+   return re;
+}
+
+// over functions
+
+function pointerenter(e) 
+{
+   if (e.pointerType !== 'touch') {
+      e.target.classList.add('over');
+      e.target.parentElement.classList.add('is-over');
+   } else e.target.removeEventListener('pointerenter', pointerenter);
+}
+
+function pointerleave(e) 
+{
+   if (e.pointerType !== 'touch') {
+      e.target.classList.remove('over');
+      e.target.parentElement.classList.remove('is-over');
+   } else e.target.removeEventListener('pointerleave', pointerleave);
+}
+
+function touchstart(e) 
+{
+   e.target.classList.add('over');
+   e.target.parentElement.classList.add('is-over');
+}
+
+function touchend(e) 
+{
+   e.target.classList.remove('over');
+   e.target.parentElement.classList.remove('is-over');
 }
 
 function over(l) 
@@ -445,40 +684,14 @@ function over(l)
    
    // e.pointerType === 'mouse, pen, touch'
    
-   function pointerenter(e) 
-   {
-      if (e.pointerType !== 'touch') {
-         l.classList.add('over');
-         l.parentElement.classList.add('is-over');
-      } else l.removeEventListener('pointerenter', pointerenter);
-   }
    
-   function pointerleave(e) 
-   {
-      if (e.pointerType !== 'touch') {
-         l.classList.remove('over');
-         l.parentElement.classList.remove('is-over');
-      } else l.removeEventListener('pointerleave', pointerleave);
-   }
-   
-   function touchstart(e) 
-   {
-      l.classList.add('over');
-      l.parentElement.classList.add('is-over');
-   }
-   
-   function touchend(e) 
-   {
-      l.classList.remove('over');
-      l.parentElement.classList.remove('is-over');
-   }
    
    // not a touch, kinda
-   l.addEventListener('pointerenter', pointerenter);
-   l.addEventListener('pointerleave', pointerleave);
+   l.addEventListener('pointerenter', pointerenter, false);
+   l.addEventListener('pointerleave', pointerleave, false);
    // touch
-   l.addEventListener('touchstart', touchstart);   
-   l.addEventListener('touchend', touchend);
+   l.addEventListener('touchstart', touchstart, false);   
+   l.addEventListener('touchend', touchend, false);
 }
 
 /* 
@@ -505,32 +718,48 @@ function anykind(o)
 function kind0(o) 
 { // NIP-01 set_metadata
    
-   yours.setItem(o.pubkey, o.content);
-   let fren;
+   your.setItem(o.pubkey, o.content);
+   
+   
    const bff = document.getElementById('p-'+o.pubkey),
-   frend = JSON.parse(o.content),
-   pubkey = document.createElement('p');
+   frend = JSON.parse(o.content);
+//   pub = document.createElement('p');
+   
+   let fren;
    
    if (bff) { 
       fren = bff;
-      fren.innerHTML = '';
+//      fren.innerHTML = '';
    } else {
-      fren = document.createElement('li');
-      fren.id = 'p-' + o.pubkey;
-      fren.classList.add('fren');    
-      over(fren);
-      dlist.append(fren);    
+      fren = newpub(o.pubkey);
+//      fren = document.createElement('li');
+//      fren.id = 'p-' + o.pubkey;
+//      fren.classList.add('fren');    
+//      over(fren);
+//      feed.append(fren);    
    }
    
-   pubkey.classList.add('pubkey');
-   pubkey.innerHTML = o.pubkey;
-   fren.append(pubkey);
+   fren.classList.add('bff');
+   
+   
+//   pub.classList.add('pubkey');
+//   pub.innerHTML = o.pubkey;
+//   fren.append(pub);
 	
    if (frend.name) {
-	   const name = document.createElement('h2');
-	   name.classList.add('name');
-	   name.innerHTML = frend.name;
-	   fren.append(name);
+      let name = fren.querySelector('.name');
+      let petname = fren.querySelector('.petname');
+      if (!name) {
+         name = document.createElement('h2');         
+         name.classList.add('name');
+         petname = document.createElement('span');
+         petname.classList.add('petname');
+         name.append(petname);
+         fren.append(name);
+      }
+	   
+      petname.innerHTML = frend.name;
+	   
       
       if (frend.nip05) {
          name.setAttribute('data-nip05', frend.nip05)
@@ -541,144 +770,257 @@ function kind0(o)
 	}
    
    if (frend.picture) {
+      
+      let picture = fren.querySelector('.picture');
+      
+      if (!picture) {
+         picture = document.createElement('img');
+         picture.classList.add('picture');
+         fren.append(picture);
+         fren.classList.add('has-picture');
+      }
+      
+      
+      
       let src = arParams(frend.picture);
-      const picture = document.createElement('img');
-      picture.setAttribute('src', src[0]);
-      picture.classList.add('picture');
-      fren.append(picture);
+      picture.setAttribute('src', src[0]);      
       
       if (src.length > 2) { // there's parameters
          let srcl = src[2].get('logo'); // let c if it is a logo
          if (srcl) { // it is
             // let's build it
-            const logo = document.createElement('img');
-            logo.classList.add('logo');
+            let logo = fren.querySelector('.logo');
+            if (!logo) {
+               logo = document.createElement('img');
+               logo.classList.add('logo');
+               fren.append(logo);
+            }
             logo.setAttribute('src', decodeURIComponent(srcl));
-            fren.append(logo);
          }
       }
       
-      if (o.pubkey == yours.getItem('k')) { // gets main profile img
+      if (o.pubkey == your.getItem('k')) { // gets main profile img
          u.setAttribute('src', frend.picture.split('?')[0]);
       }
+      
+      
    }
    
 	if (frend.about) {
-	   const about = document.createElement('p');
-	   about.classList.add('about');
+      let about = fren.querySelector('.about');
+      if (!about) {
+         about = document.createElement('p');
+         about.classList.add('about');
+         fren.append(about);
+      }
 	   about.innerHTML = ai(frend.about);
-	   fren.append(about);
 	}
    
    // see if there are already posts from pubkey and updates figure
    const upd = document.querySelectorAll('.p-'+o.pubkey+'');
    upd.forEach(function(l) {
+      
       if (frend.picture) {
          l.querySelector('.d-fig img').src = arParams(frend.picture)[0];
-      } if (frend.name) {
+      } 
+      
+      if (frend.name) {
          l.querySelector('.d-fig figcaption').innerHTML = frend.name;
       }
    });
 }
 
-function kind1(o) 
-{ // NIP-01 text_note
 
-   const bff = document.getElementById('p-'+o.pubkey);
-   
-   if(bff) {
-      bff.parentElement.prepend(bff);
-      bff.setAttribute('aa-last', 'e-'+o.id);
-      bff.addEventListener('click', function(e) {
-         if (page.classList.contains('push')) {
-            
-         } else {
-          select(e, document.getElementById('e-'+o.id));
-         }
-      });
-   }
-   
+//dlist.addEventListener('click', function(e) {
+//   
+//   if (e.target.classList.contains('name')) {
+//      select(e, document.getElementById(e.target.parentElement.getAttribute('aa-last')));
+//   }
+//   
+//   console.log(e.target);
+//});
+
+
+function stylek(k, l) 
+{
    let 
-   l = document.getElementById('e-'+o.id),
-   reply = false,
-   tags;
+      c = k.substr(0, 3) + '' + k.substr(-3),
+      cc = k.substr(0, 6), 
+      ccc = k.substr(-6),
+      styl = '--c:#' + c
+          +'; --cc:#' + cc
+          +'; --ccc:#' + ccc;
    
-   if (l) {
-      let 
+   
+   l.setAttribute('style', styl );
+   l.setAttribute('data-hex', hex(k, false));
+   
+//   return l
+}
+
+function newpub(k) 
+{
+   const 
+      l = document.createElement('li'),
+      p = document.createElement('p'),
+      c = document.createElement('ul');
+   
+   if (k) 
+   {
+      l.id = 'p-' + k;
+      l.classList.add('fren');    
+      p.classList.add('pubkey');
+      c.classList.add('events');
+      p.innerHTML = k;
+      l.append(p, c);
+      feed.append(l);      
+      
+      l.addEventListener('click', function(event) 
+      {
+         if (event.target.classList.contains('pubkey') 
+            || event.target.classList.contains('picture')
+            || event.target.classList.contains('name')
+            )
+         {
+            l.classList.toggle('smol');
+            l.scrollIntoView(stuff);
+         }
+      }, false);
+      
+      over(l);
+      return l;
+   }
+}
+
+function newid(o) 
+{
+   const 
+      l = document.createElement('li'),
+      figure = document.createElement('figure'),
+      img = document.createElement('img'),
+      caption = document.createElement('figcaption'),
+      marker = document.createElement('span'),
+      article = document.createElement('article'),
+      raw = document.createElement('ul'),
+      hex = o.pubkey.substr(0,3) + o.pubkey.substr(-3);
+
+   l.id = 'e-'+o.id;
+   l.classList.add('event');
+   l.setAttribute('data-kind', o.kind);
+   l.setAttribute('data-hex', hex);
+   l.setAttribute('style', '--c:#' + hex);
+   
+   figure.classList.add('d-fig');
+   raw.classList.add('e');
+   marker.classList.add('marker');
+   
+   figure.append(img, caption);
+   
+   figure.addEventListener('click', function(e) { select(e, l) }, false);
+   
+   over(figure);
+   over(marker);
+   over(article);
+   
+   l.append(figure, marker, article, raw);
+   
+   return l
+}
+
+function lies(rep, l) 
+{
+   let lies = rep.querySelector('.replies');
+   if (!lies) {
+      lies = document.createElement('ul');
+      lies.classList.add('replies');
+      rep.append(lies);
+   } 
+   lies.append(l); 
+//   let repar = rep.parentElement;
+//   if (repar) {
+//      repar.prepend(rep);  
+//      repar.parentElement.prepend(repar);
+//   }
+   
+}
+
+
+function kind1(o) 
+{ // NIP--1 text_note
+
+   let 
+      l = document.getElementById('e-'+o.id),
+      bff = document.getElementById('p-' + o.pubkey),
+      tags;
+   
+   if (!l) {
+      l = newid(o);
+   } 
+   
+   if (!bff) {
+      bff = newpub(o.pubkey);
+   } 
+   
+   const 
       figure = l.querySelector('.d-fig'),
          img = figure.querySelector('img'),
          caption = figure.querySelector('figcaption'),
       marker = l.querySelector('.marker'),
       article = l.querySelector('article'),
-      raw = l.querySelector('.e');
-   
-   } else {
-      l = document.createElement('li');
+      raw = l.querySelector('.e'),
+      food = bff.querySelector('.events');
+//      console.log(h);
+
+   tags = ash(o.tags, l);
+   l.append(tags.ul);
       
-      figure = document.createElement('figure'),
-         img = document.createElement('img'),
-         caption = document.createElement('figcaption'),
-      marker = document.createElement('span'),
-      article = document.createElement('article'),
-      raw = document.createElement('ul');
+   if (tags.reply !== false) {
+//         console.log(tags.reply, o.tags[tags.reply][1].substr(0, 4), tags.e[tags.e.length - 1].substr(0, 4), o.tags);
+      // if it's a reply, check if we already have it
       
-      figure.classList.add('d-fig');
-      raw.classList.add('e');
-      marker.classList.add('marker');
-      l.classList.add('event');
-      l.id = 'e-'+o.id;
-      l.setAttribute('data-kind', o.kind);
-      figure.classList.add('p-'+o.pubkey);
-      figure.append(img, caption);
-      
-      figure.addEventListener('click', function(e) { select(e, l) });
-      
-      over(figure);
-      
-      if (o.tags.length > 0) {
+      let rep = document.getElementById('e-'+tags.e[tags.e.length - 1]);
+      if (rep) { 
+         lies(rep, l); 
+      } else { 
          
-         tags = document.createElement('li');
-         tags.dataset.raw = 'tags';
+         l.classList.add('orphan');
          
-         let es = [];
-         
-         o.tags.forEach(function(ot) {
+         rep = document.getElementById('e-'+tags.e[0]);
+         if (rep) { 
+            lies(rep, l);
+         } else {
+                           
+            bff = document.getElementById('p-' + tags.p[0]);
             
-            let t = document.createElement('a');
-            t.classList.add('tag');
-            t.href = '#' + ot[0] + '-' + ot[1];
-            t.innerHTML = ot;
-            tags.append(t);
+            if (!bff) {
+               bff = newpub(tags.p[0]);
+            }
+                  
+            rep = document.createElement('li');
+            rep.classList.add('event');
+            rep.id = 'e-'+tags.e[0];
+            rep.classList.add('p-'+0);
+        
+            if (tags.replyto !== tags.op) {
+               
+               repto = document.createElement('li');
+               repto.classList.add('event');
+               repto.id = 'e-'+tags.e[tags.e.length - 1];
+               repto.classList.add('p-'+tags.p[tags.p.length - 1]);
+               
+               lies(repto, rep);
+               
+            } 
             
-            if (ot[0] === 'e') es.push(ot);
-            if (ot[0] === 'nounce') caption.dataset.nounce = ot[1]
-            
-         });
-         
-         if (es.length > 0) {
-            l.classList.add('re');
-            reply = es[es.length - 1][1];
+            lies(rep, l);
          }
-         
-      };
-      
-      l.append(figure, marker, article, raw);
-      
-      if (reply) {
-         l.setAttribute('data-re', reply)
-         let rep = document.getElementById('e-'+reply);   		
-         if (rep) {
-         	let lies = rep.querySelector('.replies');
-            if (!lies) {
-         	   lies = document.createElement('ul');
-         	   lies.classList.add('replies');
-         	   rep.append(lies);
-         	} lies.append(l); 
-         } else feed.prepend(l);
-      } else feed.prepend(l);
-   }
+      }
+   } else { 
+      food.prepend(l); 
+      bff.parentElement.prepend(bff);
+   }   
    
-   const dat = JSON.parse(yours.getItem(o.pubkey));
+   const dat = JSON.parse(your.getItem(o.pubkey));
    if (dat) { img.src = dat.picture ? dat.picture : 'r/aa--u.png';
       caption.innerHTML = dat.name ? dat.name : o.pubkey;
    } else { img.src = 'r/aa--u.png';
@@ -689,7 +1031,9 @@ function kind1(o)
    const 
    oc = document.createTextNode(o.content),
    ocd = oc.wholeText;
-   article.innerHTML = '<p>' + ai(ocd) + '</p>';
+   aiocd = ai(ocd, o.tags);
+
+   article.innerHTML = '<p>' + aiocd + '</p>';
    
    let media = article.querySelector('img, video, audio, iframe');
    if (media) { article.classList.add('has-media');
@@ -699,28 +1043,16 @@ function kind1(o)
       }
    }
    
+//   re = re.replace(/\B#\[(\d+)\]\B/g, nip8);
+   
    let s = '';
    s += '<li data-raw="id"><a href="?e=' + o.id + '">' + o.id + '</a></li> ';
    s += '<li data-raw="pubkey"><a href="?p=' + o.pubkey + '">' + o.pubkey + '</a></li> ';
    s += '<li data-raw="sig">' + o.sig + '</li> ';
    s += '<li data-raw="kind">' + o.kind + '</li> ';
-   s += tags ? tags .outerHTML : '<li data-raw="tags">-</li>';
+//   s += h.ul.outerHTML : '<li data-raw="tags">-</li>';
    s += '<li data-raw="created_at"><time datetime="' + o.created_at + '">' + new Date(o.created_at*1000).toUTCString() + '</time></li> ';
    raw.innerHTML = s; 
-   
-   const taglinks = raw.querySelectorAll('.tag');
-   taglinks.forEach(function(l) {
-      l.addEventListener('click', function(e) {
-         if (l.getAttribute('href')[1] === 'e') {
-            select(e, document.getElementById(l.getAttribute('href').substring(1)));
-         } else {
-            e.preventDefault();
-            let notice = document.createElement('li');
-            notice.textContent = 'not working yet'
-            fool.append(notice);
-         }
-      });
-   });
 }
 
 function kind3(o) 
@@ -761,30 +1093,34 @@ wss://nostr-relay.wlvs.space
 
 
 let we, 
-relays = 
-[  
-   "wss://nostr-pub.wellorder.net",
-   "wss://relayer.fiatjaf.com",
-   "wss://nostr.rocks",
-   "wss://nostr-relay.wlvs.space",
-   "wss://nostr-relay.untethr.me",
-   "wss://relay.bitid.nz"
-],
-relay = relays[0],
+relays = your.relays;
+
+if (!relays) {
+   relays = [  
+      "wss://nostr-pub.wellorder.net",
+      "wss://relayer.fiatjaf.com",
+      "wss://nostr.rocks",
+      "wss://nostr-relay.wlvs.space",
+      "wss://nostr-relay.untethr.me",
+      "wss://relay.bitid.nz",
+      "wss://nostr.bitcoiner.social",
+   ]
+}
+
+let relay = relays[0],
 authors = [];
 
 function bbbb()
 {// boom biddy bye bye
  // tries to forget everything
    authors = []; // list of pubkeys
-   yours.clear(); // localStorage
+   your.clear(); // localStorage
    session.clear(); // SessionStorage
-   dlist.innerHTML = ''; // fren list
    feed.innerHTML = ''; // timeline
    fool.innerHTML = ''; // input history
    put.placeholder = 'boom biddy bye bye'; // so you know what happened
    u.setAttribute('src', u.dataset.src);
-   page.classList.remove('push');
+   document.body.classList.remove('ffs');
 }
 
 function start() {
@@ -792,21 +1128,21 @@ function start() {
    // connect to chosen relay
    we = new WebSocket(relay);
    
-   let k = yours.getItem('k');
+   let k = your.getItem('k');
    if (k) {
-     
-     if (yours.getItem('x')) {
+      put.value = '';
+      if (your.getItem('x')) {
          put.placeholder = 'new post'; // less is more
-      } else put.placeholder = '--x : clear input history'; // tip
+      } else { put.placeholder = '--x : clear input history'; } // tip
          
-      page.classList.add('has-k');
+      document.body.classList.add('has-k');
       authors = [];
       authors.push(k);
       
       // updates idea with connection status
       idea.addEventListener('click', function(e) {
          relaytion(we) 
-      });
+      }, false);
       
       // send open request, gets all the events of k
       we.addEventListener('open', function(e) {
@@ -826,40 +1162,43 @@ function start() {
          dis = JSON.parse(e.data)[1], // the request id
          dat = JSON.parse(e.data)[2]; // the event data
          
-         session.setItem(dat.id, JSON.stringify(dat));
+         if (dis && dat) {
+            session.setItem(dat.id, JSON.stringify(dat));
          
-         if (dis == "aa-you") {
-            
-            switch (dat.kind) {  
-               case 0: kind0(dat); break;
-               case 3: kind3(dat); break;
-               default: ; 
-            }
-                        
-         } else if (dis == "aa-feed") {
-            
-            switch (dat.kind) {
-               case 0: kind0(dat); break;
-               case 1: kind1(dat); break;
-               default: anykind(dat); 
-            }
-            
-         } else {
-            // 
-            switch (dat.kind) {
-               case 0: kind0(dat); break;
-               default: ; 
-            }
-      	}
+            if (dis == "aa-you") {
+               
+               switch (dat.kind) {  
+                  case 0: kind0(dat); break;
+                  case 3: kind3(dat); break;
+                  default: ; 
+               }
+                           
+            } else if (dis == "aa-feed") {
+               
+               switch (dat.kind) {
+                  case 0: kind0(dat); break;
+                  case 1: kind1(dat); break;
+//                  case 7: kind1(dat); break;
+                  default: anykind(dat); 
+               }
+               
+            } else {
+               // 
+               switch (dat.kind) {
+                  case 0: kind0(dat); break;
+                  default: ; 
+               }
+         	}
+         }
       });
       
       we.addEventListener('close', function(e) { relaytion(we) }); 
       if (!k && window.nostr) {
-      window.nostr.getPublicKey().then( key => {
-         yours.setItem('k', key);
-         start();
-      });
-   }
+         window.nostr.getPublicKey().then( key => {
+            your.setItem('k', key);
+            start();
+         });
+      }
       if (window.nostr) { // nos2x
       /*
       
@@ -882,7 +1221,7 @@ function relaytion(ship)
    2	CLOSING	The connection is in the process of closing.
    3	CLOSED	The connection is closed or couldn't be opened.*/
    
-   idea.dataset.status = '['+ ship.readyState +'] '+ relay +'/ ' + new Date().toUTCString()
+   idea.dataset.status = '[' + ship.readyState + '] ' + relay.substr(6) + ' ' +  new Date().toUTCString()
 }
 
 function prepnote(note)
@@ -892,28 +1231,29 @@ function prepnote(note)
    
    if (session.interesting) {
       
-      const o = JSON.parse(session.getItem(session.interesting));
-      const es = [], ps = [];
+      const 
+      o = JSON.parse(session.getItem(session.interesting)), 
+      es = [], 
+      ps = [];
       
       if (o.tags.length > 0) {
          o.tags.forEach(function(ot) {
-            if (ot[0] == 'e') {
-               es.push(ot);
-            }
-            if (ot[0] == 'p') {
-               ps.push(ot);
+            switch (ot[0]) {
+               case 'e': es.push(ot); break;
+               case 'p': ps.push(ot); break;
+               default:
             }
          });
       }
       
       if (ps.length > 1) {
          let lastpub = ps[ps.length - 1][1];
-         if ( lastpub !== o.pubkey && lastpub !== yours.k) {
+         if ( lastpub !== o.pubkey && lastpub !== your.k) {
             tags.push(lastpub)
          }
       }  
       
-      if (o.pubkey !== yours.k) tags.push(['p',o.pubkey]);
+      if (o.pubkey !== your.k) { tags.push(['p',o.pubkey]); }
       
       if (es.length > 0) {
          tags.push(es[0])
@@ -924,7 +1264,7 @@ function prepnote(note)
    
    const ne = [ 
       0,
-      yours.getItem('k'),
+      your.getItem('k'),
       now,
       1,
       tags,
@@ -932,6 +1272,7 @@ function prepnote(note)
    ];
    
    session.ne = JSON.stringify(ne);
+   signnote();
 }
 
 function signnote() 
@@ -948,13 +1289,20 @@ function signnote()
       "content": notedat[5]
    }
          
-   if (window.nostr) window.nostr.signEvent(tosign).then( e => postnote(e) );
+   if (window.nostr) {
+      window.nostr.signEvent(tosign).then( (e) => {
+         session.post = JSON.stringify(e);
+         postnote();
+      });
+   
+   } else {
+      console.log('no nos2x')
+   }
 
 }
 
-function postnote(e) 
-{
-   session.post = JSON.stringify(e);
+function postnote() 
+{ 
    we.send( '["EVENT",' + session.post + ']' );
 }
 
@@ -962,23 +1310,23 @@ window.addEventListener('load', function(event) {
    
    over(fool);
    
-   // get all the the elements for tag()
-   tags = document.querySelectorAll('[data-tag]');
-   tags.forEach(function(l) { l.addEventListener('click', function(e) { tag(e,l); }); });	
+   // get all the the elements for tog()
+   tags = document.querySelectorAll('[data-tog]');
+   tags.forEach(function(l) { l.addEventListener('click', function(e) { tog(e,l); }, false); });	
    
-   let k = yours.getItem('k');
+   let k = your.getItem('k');
    
    if (!k && window.nostr) {
       window.nostr.getPublicKey().then( key => {
-         yours.setItem('k', key);
+         your.setItem('k', key);
          start();
       });
-   } else start();
+   } else { start(); }
 
 //   window.addEventListener('hashchange', function() {
 //     console.log(location.hash)
 //   }, false);
 
-});
+}, false);
 
 //window.addEventListener('resize', function(event) {  });
