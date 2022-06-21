@@ -1,32 +1,24 @@
 const 
-your = window.localStorage,
-session = window.sessionStorage,
-idea = document.getElementById('a'), 
-dlist = document.getElementById('list'),
-put = document.getElementById('iot'),
-cleet = document.getElementById('e'),
-feed = document.getElementById('sea'),
-fool = document.getElementById('foo'),
-sec = document.getElementById('sec'),
-u = document.getElementById('u'),
-stuff = { behavior:'smooth', block: 'start'};
+   your = window.localStorage,
+   session = window.sessionStorage,
+   idea = document.getElementById('a'), 
+   iot = document.getElementById('iot'),
+   knd1 = document.getElementById('kind-1'),
+   story = document.getElementById('story'),
+   aside = document.getElementById('as'),
+   u = document.getElementById('u'),
+   stuff = { behavior:'smooth', block: 'start'};
 
 session.removeItem('interesting');
 
-let defaults = {
-   'media-autoload': true
+let defaults = 
+{
+   'media': false
 }
 
-if (!your.options) {
-   your.options = JSON.stringify(defaults);
-   console.log('options:', your.options);
-}
-
-function orIs(it) 
-{// let's find out
-   const interesting = document.querySelector('.interesting');
-   select(it, interesting ? interesting : idea);
-} cleet.addEventListener('click', orIs, false);
+if (!your.options) your.options = JSON.stringify(defaults);
+let options = JSON.parse(your.options);
+console.log('options:', options);
 
 function pause(video) 
 { 
@@ -37,63 +29,63 @@ function pause(video)
 function play(video) 
 {
    let playin = document.querySelector('.playin');
-   if (playin) {
-      pause(video);
-   } else {
-      video.play();
-      video.classList.add('started','playin');
-   }
+   if (playin) 
+   {
+      pause(playin);
+      playin.classList.remove('playin');
+   } 
+   video.classList.add('started','playin');
+   video.play();
 }
 	        
 function vip(e) 
 { // o cão do Marinho
-   if (e.target.paused) {
-      play(e.target);
-   } else {
-      pause(e.target);
-   }
+   if (e.target.paused) { play(e.target) }
+   else { pause(e.target) }
 }
 
 function rewind(e) 
 {
-   const container = e.target.parentElement,
-   video = container.querySelector('video');
+   const 
+      container = e.target.parentElement,
+      video = container.querySelector('video');
    video.currentTime = 0;
 }
 
 function player(src, poster)
 {  
-   const rapper = document.createElement('figure'),
-   video = document.createElement('video'),
-   controls = document.createElement('figcaption'),
-   url = document.createElement('span'),
-   progress = document.createElement('progress');
+   const 
+      rapper = document.createElement('figure'),
+      video = document.createElement('video'),
+      controls = document.createElement('figcaption'),
+      url = document.createElement('span'),
+      progress = document.createElement('progress');
 
    let postr = poster ? poster : '';
-   if (postr) {
-      video.setAttribute('poster', postr);
-   }
+   if (postr) video.setAttribute('poster', postr);
    
+   video.classList.add('content-video');
    video.setAttribute('loop', '');
    video.setAttribute('playsinline', '');
    video.setAttribute('preload', 'metadata');  
-   video.classList.add('content-video');
    video.setAttribute('src', src); 
    
    rapper.classList.add('yo');
       
-   url.classList.add('vhs'); url.innerHTML = src;
+   url.classList.add('vhs'); 
+   url.innerHTML = src;
    
-   progress.innerHTML = '0% played',
-   progress.setAttribute('min', 0),
-   progress.setAttribute('max', 100),
-   progress.setAttribute('value', 0),
+   progress.innerHTML = '0% played';
+   progress.setAttribute('min', 0);
+   progress.setAttribute('max', 100);
+   progress.setAttribute('value', 0);
    
-   controls.append(url); controls.append(progress);      
+   controls.append(url, progress); 
 
-   rapper.prepend(video); rapper.append(controls);
+   rapper.prepend(video); 
+   rapper.append(controls);
    
-   return rapper;
+   return rapper
 }
 
 function rap(video)
@@ -104,8 +96,8 @@ function rap(video)
    video.addEventListener('click', vip, false);
    controls.addEventListener('click', rewind, false);
    
-   video.addEventListener('timeupdate', function(e) {
-      
+   video.addEventListener('timeupdate', function(e) 
+   {
       const percentage = Math.floor((100 / this.duration) * this.currentTime);
       
       controls.dataset.elapsed = Math.ceil(this.currentTime);
@@ -117,166 +109,153 @@ function rap(video)
       progress.innerHTML = percentage + '%';
       
    });
-   video.addEventListener('loadedmetadata', function(event) {
+   
+   video.addEventListener('loadedmetadata', function(e) 
+   {
       controls.dataset.duration = Math.ceil(video.duration);
+   
    }, false);
    
-   over(video); over(controls);
+   over(video); 
+   over(controls);
 }
 
-function yt(url) {
-// fuck youtube but here it is anyway
+function yt(url) 
+{ // fuck youtube but here it is anyway
    return '<figure class="yt"><iframe src="https://www.youtube.com/embed/'+url.searchParams.get('v') + '" title="yt" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>'
 }
 
-function tog(e,l) // toggle classes
-{
+function tog(e,l) 
+{ // toggle classes
    e.preventDefault();
-   
-   const 
-      tog = l.getAttribute('data-tog'), 
-      id = l.getAttribute('aria-controls');
-   
-   let wall = id ? document.getElementById(id) : false;
-   
-   if (tog) {
-      
+   const tog = l.getAttribute('data-tog');
+   if (tog) 
+   {
       document.body.classList.toggle(tog);
       e.target.classList.toggle('active');
-      
-      if (wall && wall.getAttribute('aria-expanded') == 'false') {
-         wall.setAttribute('aria-expanded','true');
-      } else if (wall) { wall.setAttribute('aria-expanded','false'); }
    } 			
+}
+
+function taglink(tag, clas) 
+{ // make tags clickable
+   const a = document.createElement('a');
+   
+   a.classList.add('tag');
+   
+   if (clas !== '') a.classList.add(clas);
+   
+   if (tag && tag[1]) 
+   {
+      a.classList.add('tag-'+tag[0]);
+      switch (tag[0]) 
+      {
+         case 'e':
+         case 'p':
+            a.title = tag[1];
+            a.textContent = pretty(tag[1]);
+            a.href = '#' + tag[0] + '-' + tag[1];
+            if (tag[2]) a.setAttribute('data-relay', tag[2]);
+            if (tag[3]) a.setAttribute('data-type', tag[0] +'-'+tag[3]);
+            stylek([tag[1]], a); 
+            break;
+            
+         case 'hashtag':
+//            a.href = '#' + tag[1];
+         default:
+            a.textContent = tag[1];
+      }
+   }
+   
+   return a
 }
 
 function ash(tags, l) 
 {
    const 
-      ul = document.createElement('ul'),
+      nav = document.createElement('nav'),
       note = { 
-      'e': [], // list of event ids
-      'p': [], // list of pubkeys
-      'nonce': [], // pow
-      'custom': [], // else
-      'reply': false,
-      'replyto': false,
-      'oe': false,
-      'op': false,
-      'ul': ul
-   };
+         'e': [], // list of event ids
+         'p': [], // list of pubkeys
+         'nonce': [], // pow
+         'hashtags': [], // #
+         'custom': [], // else
+         'ereply': false,
+         'preply': false,
+         'eroot': false,
+         'proot': false,
+         'nav': nav
+      };
    
-   ul.classList.add('tags');
+   nav.classList.add('tags');
    
-   let nodes = ul.childNodes;
+   let nodes = nav.childNodes;
    
-   
-   if (tags.length > 0) {
-      
-      tags.forEach(function(ot, i) {
-         
-         let g = note[ot[0]];
-         if (!g) {
-            g = note.custom;
-         } g.push(ot[1]);
-         
-//         console.log(ot);
-         
-         let tag = document.createElement('li');
-         tag.classList.add('tag', 'tag-'+ot[0]);
-         tag.dataset.tag = ot;
-         
-         let a = document.createElement('a');
-         a.classList.add('tag-link');
-         
-                  
-         
-         if (ot.length > 1) {
-            let rel = '';
-            if (ot[2] && ot[2].substr(0, 6) === 'wss://') {
-               rel = '?wss=' + encodeURIComponent(ot[2].substr(6));
-            }
-            a.href = '#' + ot[0] + '-' + ot[1] + rel;
-            if (ot[0] === 'e' || ot[0] === 'p') {
-               a.innerHTML = pretty(ot[1]);
-               a.setAttribute('style', '--c:#' + hex(ot[1], false));
-            } else {
-               a.innerHTML = ot[1];
-            }
-            
-         } else {
-            a.innerHTML = ot;
-         }
-         
-         tag.append(a);
-
-         ul.append(tag);
-
+   if (tags.length > 0) 
+   {
+      tags.forEach(function(ot, i) 
+      {
+         let notekey = note[ot[0]];
+         if (!notekey) notekey = note.custom;
+         notekey.push(ot[1]);
+         nav.append(taglink(ot, ''));
       });
-
-      if (note.e.length > 0) {
-         
-         note.oe = tags.findIndex(element => element[1] === note.e[0]);
-         note.reply = tags.findIndex(element => element[1] === note.e[note.e.length - 1]);
-         
-         l.setAttribute('data-reply', note.e[note.e.length - 1]);
-
+      
+      if (note.e.length > 0) 
+      {
+         note.ereply = tags.findIndex(el => el[1] === note.e[note.e.length - 1]);
+         note.eroot = tags.findIndex(el => el[1] === note.e[0]);
+         l.setAttribute('data-reply', 'e-' + note.e[note.e.length - 1]);
       }
             
-      if (note.p.length > 0) {
-         note.op = tags.findIndex(element => element[1] === note.p[0]);
-         note.replyto = tags.findIndex(element => element[1] === note.p[note.p.length - 1]);
+      if (note.p.length > 0) 
+      {
+         note.preply = tags.findIndex(el => el[1] === note.p[note.p.length - 1]);
+         note.proot = tags.findIndex(el => el[1] === note.p[0]);
       }
       
-      if (note.nonce.length > 0) {
+      if (note.nonce.length > 0) 
+      {
          let nonce = l.dataset.nonce;
          l.setAttribute('data-nonce', note.nonce[0]);
       }
       
-      nodes.forEach(function(li, i) {
-         if (i === note.reply) {
-            li.classList.add('tag-e-parent');
-         }
-         
-         if (i === note.replyto) {
-            li.classList.add('tag-p-parent');
-         }
-         
-         if (i === note.oe) {
-            li.classList.add('tag-e-top');
-         }
-         
-         if (i === note.op) {
-            li.classList.add('tag-p-top');
-         }
+      nodes.forEach(function(li, i) 
+      {
+         if (i === note.eroot) li.classList.add('tag-e-root');
+         if (i === note.proot) li.classList.add('tag-p-root');
+         if (i === note.ereply) li.classList.add('tag-e-reply');
+         if (i === note.preply) li.classList.add('tag-p-reply');
       });
-      
-//      note.ul = ul;
    }
    
    return note
 }
 
 
-function mom(my) 
-{
-   const parents = [];
-   
-   for ( ; my && my !== document; my = my.parentNode ) {
-		if (my.classList.contains('event') && !my.classList.contains('interesting')) { parents.push(my); }
+function mom(l) 
+{ // parent events from reply to root
+   for ( ; l && l !== document; l = l.parentNode ) 
+   {
+      if (l.classList.contains('event')) l.classList.add('mom')
 	}
-   
-   parents.forEach(function(l) {
-      l.classList.add('mom');
-   });
- 
+}
+
+function log(text) 
+{
+   console.log(text);
+//   const notice = document.createElement('li');
+//   notice.textContent = text;
+//   story.append(notice);
 }
 
 function orient(l) 
-{ // rotates an element towards another
-   if (l) {
+{ // rotates an element towards another, unused at the moment
+   if (l) 
+   {
       const to = document.querySelector('.was-interesting');
-      if (to) {
+      
+      if (to) 
+      {
          const 
             rect = l.getBoundingClientRect(),
             center = window.getComputedStyle(l).transformOrigin,
@@ -293,119 +272,68 @@ function orient(l)
          
          l.style.transform = "rotate("+degree+"deg)";
       
-      } else { l.style.transform = "rotate(0)"; }
+      } else { l.style.transform = "rotate(0)" }
    }
 }
 
-function select(e,l) 
-{ // opens / close an article on event
-   e.preventDefault();
+function not_interesting(l) 
+{
+   l.classList.remove('interesting');
+   history.pushState('', document.title, location.pathname + location.search);
+         
+   const moms = document.querySelectorAll('.mom');
+   moms.forEach(function(mom) { mom.classList.remove('mom') });
    
-   if (typeof l === 'string') {
-      l = document.getElementById(l);
-   } 
-      
-   let 
-      interesting = document.querySelector('.interesting'),
-      it;
+   document.body.classList.remove('k-e');
+   session.removeItem('interesting');
+   iot.placeholder = 'new post';
    
-   if (e.target.id === "e") { 
-      // cleet click
-      if (interesting) { it = interesting.querySelector('.marker'); }
-      else {
-         if (document.body.classList.contains('scroll')) { it = idea; }  // if scrolled, go to top
-         else { it = sec; } // go to bottom
-      }
-      
-   } else {
-      if (l) {
-         
-         let fren = l.closest('.fren');
-         
-         
-         
-         if (l.classList.contains('interesting')) {
-            
-            l.classList.remove('interesting');
-            fren.classList.remove('has-interesting');
-            
-            let moms = document.querySelectorAll('.mom');
-            moms.forEach(function(mom) {
-               mom.classList.remove('mom');
-            });
-            
-            document.body.classList.remove('k-is-s');
-            
-            it = l;
-            session.removeItem('interesting');
-            put.placeholder = 'new post';
-            
-         } else {
-            
-            if (interesting) interesting.classList.remove('interesting'); 
-            
-            l.classList.add('interesting');
-            fren.classList.add('has-interesting');
-            
-            mom(l);
-            
-            document.body.classList.add('k-is-s');
-            
-            it = l;
-            session.interesting = l.id.substring(2);         
-            const last = document.querySelector('.last');
-            if (last) { last.classList.remove('last'); }
-            put.placeholder = 'reply to ' + l.querySelector('figcaption').textContent;
-            
-         } l.classList.add('last');
-      }
-      
-   } 
-   
-   if (it) {
-      
-      if (it.classList.contains('interesting')) {
-         
-         it.scrollTo({
-           top: 0,
-           left: 0,
-           behavior: 'smooth'
-         });
-      
-      } else {
-         it.scrollIntoView(stuff);
-      }
-      
-      it.scrollIntoView(stuff);
-      
-   } else {
-//      foo('event not found');
-      let notice = document.createElement('li');
-      notice.textContent = 'event not found'
-      fool.append(notice);
-   }
+   return l
 }
+
+function is_interesting(l) 
+{ 
+   let interesting = document.getElementById('e-'+session.interesting);
+   if (interesting) not_interesting(interesting);
+   
+   l.classList.add('interesting');   
+   mom(l);
+   document.body.classList.add('k-e');
+   session.interesting = l.id.substring(2);   
+   location.hash = '#' + l.id;
+   iot.placeholder = 'reply to ' + l.querySelector('.author').textContent;
+   
+   return l
+}
+
+
+
 
 function scrollin(scrollp, l) 
 {
    const h = l.scrollHeight - window.innerHeight;
    
-   if (scrollp > 20) {
+   if (scrollp > 100) 
+   {
       l.classList.add('scroll');
       if (scrollp > h - 100) l.classList.add('scrolled');
-   } else if (scrollp < 20) { l.classList.remove('scroll'); }
    
-   if (scrollp < h - 150) { l.classList.remove('scrolled'); }
+   } else  {  l.classList.remove('scroll') }
    
-   orient(cleet);
+   if (scrollp < h - 150) l.classList.remove('scrolled');
+   
 }
 
 let lscroll = 0, ticking = false;
 
-window.addEventListener('scroll', function(e) {
+window.addEventListener('scroll', function(e) 
+{
    lscroll = window.scrollY;
-   if (!ticking) {
-      window.requestAnimationFrame(function() {
+   
+   if (!ticking) 
+   {
+      window.requestAnimationFrame(function() 
+      {
          scrollin(lscroll, document.body);
          ticking = false;
       });
@@ -413,26 +341,27 @@ window.addEventListener('scroll', function(e) {
    }
 }, false);
 
-//let kp = [], foolast = 0;
-
 function is(e)
-{ // input handler event
+{  // input handler event
    const 
-   n = document.createTextNode(e.target.value),
-   v = n.wholeText;
-   let l,
-   c = v.substr(-1);
+      n = document.createTextNode(e.target.value.trim()), // 
+      v = n.wholeText,
+      a = v.split(' ');
+   
+   let 
+      l,
+      c = v.substr(-1);
    
    if (e.key === 'Enter') {
-      
       // get the value of input and make it safer
       l = document.createElement('li'); // input history item
-            
       l.append(n); // append input to history item
-      let clear = false;
       
+      console.log(v);
+
       // commands switch
-      switch (v) {
+      switch (a[0]) 
+      {
          case '--h': // help
             l.dataset.tip = '" try dis tips fren:\n'
             +"{\n"
@@ -442,89 +371,50 @@ function is(e)
             // +" --e + space + event_id // load event \n"
             +" --k pubkey : u c that key \n"
             // +" --p + space + pubkey // check profile \n"
-            +" --x : clears input history \n"
             +"}";
             break;
          case '--bbbb': // boom biddy bye bye, 
             // destroys everything, 
             // or at least tries to..
             bbbb();
-            clear = true; // don't append this to history
             break;
          case '--d': // toggle frens
             document.body.classList.toggle('ffs'); 
             break;
-         case '--x':
-            if (!your.x) { your.setItem('x', 'clear input history'); }
-            fool.innerHTML = '';
-            put.placeholder = 'new post';
-            clear = true;
+         case '--media':
+            options.media = !options.media; 
+            your.options = JSON.stringify(options);
+            console.log('options:', options);
             break;
-         
-         default: 
-            
-            console.log(v.substring(0,3));
-            
-            if (v.substring(0,3) === "--k") {
+         case '--k':
+            if (a[1]) {
                bbbb();
-               your.setItem('k', v.substring(4));
+               your.k = a[1];
                start();
-               clear = true;
-               
-            // } else if (v.substring(0,3) === "--p") {
-               // const p = v.substring(4);
-               // l.dataset.tip = '"p, ' + p;
-               
-            } else {
-//               l.dataset.tip = '" => nope(try: "--h")';
-               prepnote(v)
-               
             }
-            
+         case '--read':
+            let unread = document.querySelectorAll('.unread');
+            if (unread.length > 0) unread.forEach(toggle_state);
+            break;
+         default: 
+            prep(v)
       }
-         		
-      if (!clear) { // append input to history
-      	fool.append(l);
-         fool.scrollTop = fool.scrollHeight; 
-      }
-      
-      put.value = '';
+      iot.value = '';
    }
-   
-//   console.log()
-    
-// to interpret what you want before enter return
-// i.e. handle mentions, etc..
-// if (v.length > 0) {
- 	fool.dataset.log = c;
-   fool.dataset.content = v;
-// }
-   
-// get value of history, key up/down
-//   if (e.key === 'ArrowUp') {
-//      if (fool.childNodes.length) { }
-//   }
-//   
-//   if (e.key === 'ArrowDown') { }
-   
 }
 
 function more(e) 
 {
    e.preventDefault();
    e.target.focus({ preventScroll: true });
-   document.body.classList.add('cow-mit');
+   document.body.classList.add('mode-input');
 }
 
 function less(e) 
 {
-   document.body.classList.remove('cow-mit');
-   fool.scrollTop = fool.scrollHeight;
+   document.body.classList.remove('mode-input');
+   story.scrollTop = story.scrollHeight;
 }
-
-put.addEventListener('blur', less, false);
-put.addEventListener('keyup', is, false);
-put.addEventListener('focus', more, false);
 
 function arParams(str) 
 {   
@@ -535,93 +425,98 @@ function arParams(str)
          ar.push(params);
       }
    }
-   return ar;
+   return ar
 }
 
 function replacer(url) 
 {
-   let src = arParams(url);
-   let match = src[0];
+   const 
+      src = arParams(url),
+      match = src[0],
+      matchlow = match.toLowerCase();
+   
    let rep = '';
-   //	const sw = match.startsWith('');
-   let matchlow = match.toLowerCase();
-   if ( matchlow.endsWith('.jpg') 
-     || matchlow.endsWith('.jpeg') 
-     || matchlow.endsWith('.png')
-     || matchlow.endsWith('.gif')
-     || matchlow.endsWith('.svg')) { // images
-   	
-      rep += '<img src="' + url + '" class="content-img">';
-      
-   } else if ( matchlow.endsWith('.mp4')){ // videos
-      
-      let poster = false;
-      if (src.length > 2 && src[2].get('poster')) {
-         poster = decodeURIComponent(src[2].get('poster'));
-      }
-      
-      rep += player(url, poster).outerHTML;
-      
-   } else { // regular links
-      
-      const ur = new URL(url);
-      let domain = ur.hostname.split('.').reverse().splice(0,2).reverse().join('.');
-      if (domain === 'youtube.com') { 
-         rep += yt(ur);
-      } else {
-         rep += '<a href="' + url 
-         + '" class="content-link" target="_blank" rel="nofollow">' + url 
-         + '</a>';
-      }
-	}
+   
+   if (options.media) 
+   {
+      if ( matchlow.endsWith('.jpg') 
+      || matchlow.endsWith('.jpeg') 
+      || matchlow.endsWith('.png')
+      || matchlow.endsWith('.gif')
+      || matchlow.endsWith('.svg')) 
+      { // images
+         rep += '<img src="' + url + '" class="content-img" loading="lazy">';
+         
+      } else if ( matchlow.endsWith('.mp4'))
+      { // videos
+         let poster = false;
+         if (src.length > 2 && src[2].get('poster')) poster = decodeURIComponent(src[2].get('poster'));
+         
+         rep += player(url, poster).outerHTML;
+         
+      } else { // regular links
+         
+         let ur = new URL(url);
+         let domain = ur.hostname.split('.').reverse().splice(0,2).reverse().join('.');
+         if (domain === 'youtube.com') { rep += yt(ur) } 
+         else 
+         {
+            rep += '<a href="' + url 
+            + '" class="content-link" target="_blank" rel="nofollow">' 
+            + url + '</a>';
+         }
+   	}
+   } else {
+      rep += '<a href="' + url 
+         + '" class="content-link" target="_blank" rel="nofollow">' 
+         + url + '</a>';
+   }
    return rep
+}
+
+function rgb(hex) 
+{
+   return parseInt(hex.substr(0, 2), 16)
+   + ',' +parseInt(hex.substr(2, 2), 16)
+   + ',' +parseInt(hex.substr(4, 2), 16)
 }
 
 function hex(k, separator) {
    // returns new 6 char hex from first 3 and last characters
    // used for item classes, color, etc
-//   const str = 
-   let sep = '';
-   if (separator !== false) {
-      sep = separator;
-   }
+   const sep = separator ? separator : '';
    return k.substr(0, 3) + sep + k.substr(-3)
 }
 
 function pretty(k) 
 {
-   let 
-      str,
-      bff = JSON.parse(your.getItem(k));
-   
-   if (bff && bff.name) {
-      str = bff.name
-   } else {
-      str = hex(k, '…')
-   }
-   
+   const bff = JSON.parse(your.getItem(k));
+   let str = bff && bff.name ? bff.name : hex(k, '…');
    return str
+}
+
+function checkmentions(text) 
+{
+   const mentions = [];
+   function mentionIndexes(l) 
+   {
+      const i = l.substr(2, l.length - 3)
+      mentions.push(parseInt(i))
+   }
+   const matches = text.match(/\B#\[(\d+)\]\B/g);
+   if (matches) matches.forEach(mentionIndexes);
+      
+   return mentions
 }
 
 function mentions(text, tags) 
 {
    function nip8(_, index) 
    {
-      let it = '<a href="#" class="mention>' + index + '</a>';
-      let ref = tags[index];
-      if (ref && ref[1]) {
-         
-         let ide = pretty(ref[1]);
-         it = '<a href="#' + ref[0] + '-' + ref[1] + '" class="mention mention-'+ref[0]+'" style="--c:#'+ hex(ref[1], false)+'">' + ide + '</a>';
-      }
-      
-      
-      
-      return it;
+      return taglink(tags[index], 'mention').outerHTML;
    }
    
-   return text.replace(/\B#\[(\d+)\]\B/g, nip8);
-   
+   return text.replace(/\B#\[(\d+)\]\B/g, nip8)
 }
 
 
@@ -636,46 +531,11 @@ function ai(content, tags)
    let patternB = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
    re = re.replace(patternB, replacer);
    
-   // Change email addresses to mailto:: links
-   // let patternC = /(([a-zA-Z0-9_\-\.]+)@[a-zA-Z_]+?(?:\.[a-zA-Z]{2,6}))+/gim;
-   // re = re.replace(patternC, '<a class="content-mail" href="mailto:$1">$1</a>');
-   
-   // nip8 (mentions)
-//   let patternC = /\B#\[(\d+)\]\B/gim;
-      
    re = mentions(re, tags);
-   return re;
+   return re
 }
 
-// over functions
 
-function pointerenter(e) 
-{
-   if (e.pointerType !== 'touch') {
-      e.target.classList.add('over');
-      e.target.parentElement.classList.add('is-over');
-   } else e.target.removeEventListener('pointerenter', pointerenter);
-}
-
-function pointerleave(e) 
-{
-   if (e.pointerType !== 'touch') {
-      e.target.classList.remove('over');
-      e.target.parentElement.classList.remove('is-over');
-   } else e.target.removeEventListener('pointerleave', pointerleave);
-}
-
-function touchstart(e) 
-{
-   e.target.classList.add('over');
-   e.target.parentElement.classList.add('is-over');
-}
-
-function touchend(e) 
-{
-   e.target.classList.remove('over');
-   e.target.parentElement.classList.remove('is-over');
-}
 
 function over(l) 
 {
@@ -684,413 +544,997 @@ function over(l)
    
    // e.pointerType === 'mouse, pen, touch'
    
+   // over functions
+
+   function pointerenter(e) 
+   {
+      if (e.pointerType !== 'touch') 
+      {
+         if (l.classList.contains('event')) 
+         {
+            let oldtarget = e.target.closest('.event.over');
+            if (oldtarget) oldtarget.classList.add('more-over');
+            
+            let newtarget = e.target.closest('.event');
+            newtarget.classList.add('over');
+            newtarget.classList.remove('more-over');
+         
+         } else 
+         {
+            e.target.classList.add('over');
+            e.target.parentElement.classList.add('is-over')
+         }
+      
+      } else { e.target.removeEventListener('pointerenter', pointerenter) }
+   }
    
+   function pointerleave(e) 
+   {
+      if (e.pointerType !== 'touch') 
+      {
+//         e.target.closest('.event').classList.add('over');
+         if (l.classList.contains('event')) 
+         {
+            let target = e.target.closest('.event');
+            if (target) 
+            {
+               target.classList.remove('over', 'more-over');
+               let targetP = target.parentElement.closest('.event')
+               if (targetP) 
+               {
+                  targetP.classList.remove('more-over');
+               }
+            }
+         } else 
+         {
+            e.target.classList.remove('over');
+            e.target.parentElement.classList.remove('is-over')
+         }
+      
+      } else { e.target.removeEventListener('pointerleave', pointerleave) }
+   }
    
+   function touchstart(e) 
+   {
+   //   console.log('touch', e.target);
+      e.target.classList.add('over');
+      e.target.parentElement.classList.add('is-over');
+   }
+   
+   function touchend(e) 
+   {
+      e.target.classList.remove('over');
+      e.target.parentElement.classList.remove('is-over');
+   }
+
    // not a touch, kinda
-   l.addEventListener('pointerenter', pointerenter, false);
-   l.addEventListener('pointerleave', pointerleave, false);
-   // touch
-   l.addEventListener('touchstart', touchstart, false);   
-   l.addEventListener('touchend', touchend, false);
+   if (l) {
+      l.addEventListener('pointerenter', pointerenter, false);
+      l.addEventListener('pointerleave', pointerleave, false);
+      // touch
+      l.addEventListener('touchstart', touchstart, false);   
+      l.addEventListener('touchend', touchend, false);
+   }
+   
 }
 
-/* 
+function verifyNIP05(fren, frend, pubkey)
+{ //https://<domain>/.well-known/nostr.json?name=<local-part>
+   const parts = frend.nip05.split('@');
+   
+   function checknip05(jsondata) 
+   {
+      if (pubkey === jsondata.names[parts[0]])
+      {
+         const name = fren.querySelector('.name');
+         if (name) 
+         {
+            name.setAttribute('data-nip05', frend.nip05)
+            fren.classList.add('nip05');
+            
+            if (frend.nip05.startsWith('_@')) name.classList.add('root');
+         }
+      }
+   }
+   
+   if (parts.length > 1) 
+   {
+      fetch('https://'+parts[1]+'/.well-known/nostr.json?name='+parts[0])
+      .then(response => { return response.json()})
+      .then(jsondata => checknip05(jsondata));
+   }
+}
 
-nostr event
+function timeSince(date) 
 {
-  "id": "80de8c99a4cf4453268e9f0d2beba95664658d8470957dee3a3f29d3b237e0ea",
-  "pubkey": "5c6c25b7ef18d8633e97512159954e1aa22809c6b763e94b9f91071836d00217",
-  "created_at": 1648529895,
-  "kind": 1,
-  "tags": [],
-  "content": "🪄🍽 Voilà. Your dishes are squeaky clean now.",
-  "sig": "3c26dbc1269b353e8e56bad9646ac6406d773c6f86d61a18472d94546d06769ff0b7e59da2edba7e3393fff7df6f4d6ebc21114480c971a3e35b2ee4c76896cd"
+   let 
+     seconds = Math.floor((new Date() - date) / 1000),
+     interval = seconds / 31536000;
+   
+   if (interval > 1) return Math.floor(interval) + "Y";
+   
+   interval = seconds / 2592000;
+   if (interval > 1) return Math.floor(interval) + "M";
+   
+   interval = seconds / 86400;
+   if (interval > 1) return Math.floor(interval) + "d";
+   
+   interval = seconds / 3600;
+   if (interval > 1) return Math.floor(interval) + "h";
+   
+   interval = seconds / 60;
+   if (interval > 1) return Math.floor(interval) + "m";
+   
+   return Math.floor(seconds) + "s";
 }
 
-*/
+
+function defolt(o) 
+{
+   let 
+      l = document.createElement('li'),
+      content = '';
+   
+   l.classList.add('anykind', 'kind-'+o.kind);
+   l.setAttribute('data-kind', o.kind);
+   
+   let l_id = document.createElement('h2');
+   l_id.classList.add('l-id');
+   l_id.textContent = o.id;
+   stylek([o.id], l);
+   
+   let now = new Date();
+   let eventDate = new Date(o.created_at*1000);
+      
+   let l_pubkey = document.createElement('p');
+   l_pubkey.classList.add('l-pubkey');
+   l_pubkey.textContent = pretty(o.pubkey) + ' / ~' + timeSince(eventDate);
+   
+   let l_content =  document.createElement('p');
+   l_content.classList.add('l-content');
+   l_content.textContent = o.content;
+   
+   let l_tags =  document.createElement('p');
+   l_tags.classList.add('l-tags');
+   l_tags.textContent = o.tags;
+   
+   l.append(l_id,l_pubkey,l_content,l_tags);
+   
+   return l
+}
+
+function stylek(keys, l) 
+{
+   let style = '';
+   keys.forEach(function(el, index) 
+   {
+      let c = '--';
+      for (var i = 0; i < index + 1; i++) {
+         c += 'c';
+      }
+      style += c + ':' + rgb(el.substr(0, 6)) + ';'
+   })
+   
+   l.setAttribute('style', style)
+}
+
+function hide(k) 
+{
+   const notk = document.querySelectorAll('.event:not(.p-'+k+')');
+   if (notk) { notk.forEach(function(l) { l.classList.add('hidden') })}
+   document.body.scrollIntoView(stuff);
+}
+
+function unhide() 
+{
+   const hidden = document.querySelectorAll('.hidden');
+   if (hidden) { hidden.forEach(function(l) { l.classList.remove('hidden') })}
+   document.body.scrollIntoView(stuff);
+}
+
+function select_e(l) 
+{ // opens / close an article on event
+  // l is an element, but if it's a string, we search for an element with that id
+   
+   let it, id = false;
+   if (typeof l === 'string') 
+   {
+      id = l;
+      l = document.getElementById('e-'+id);
+   }
+      
+   const interesting = document.querySelector('.interesting'); // selected element
+   
+   if (l) it = l.classList.contains('interesting') ? not_interesting(l) : is_interesting(l);
+   
+   if (it) { it.scrollIntoView(stuff) } 
+   else if (id) { get_event(id) }
+}
+
+function select_p(k) 
+{
+   let l = document.getElementById('p-' + k);
+   if (!l) 
+   {
+      get_pubkey(k);
+   
+   } else 
+   {
+      let solo = document.querySelector('.fren.solo');
+   
+      function pk() 
+      {
+         if (l) l.classList.add('solo');      
+         hide(k);
+         location.hash = '#p-' + k;
+         history.pushState('', '', location.origin + location.pathname + location.hash + location.search);
+         document.body.classList.add('p-k');
+         
+         let interesting = document.querySelector('.interesting');
+         if (interesting) interesting = not_interesting(interesting);
+      }
+      
+      if (solo) 
+      {
+         solo.classList.remove('solo');
+         let active = solo.querySelector('.active');
+         if (active) active.classList.remove('active');
+         unhide();
+         history.pushState('', '', location.pathname);
+         document.body.classList.remove('p-k');
+         if (solo !== l) pk();
+      
+      } else { pk() }
+   }
+   
+   update_k(k)
+   
+}
+
+function clickFren(e) 
+{
+   let fren = e.target.closest('.fren');
+   if (e.target.classList.contains('section')) {
+      if (e.target.classList.contains('active')) {
+         e.target.classList.remove('active');
+      } else {
+         let active = fren.querySelector('.active');
+         if (active) {
+            active.classList.remove('active');
+         }
+         e.target.classList.add('active');
+      }      
+   } else {
+   switch (e.target.tagName) {
+      case 'A':
+         if (e.target.classList.contains('interaction-link')) 
+         {
+            if (e.target.parentElement.classList.contains('unread')) {
+               toggle_state(e.target.parentElement);
+            }
+            
+            select_e(e.target.getAttribute('href').substr(3));
+            break;
+         }
+         if (e.target.classList.contains('follow-link'))
+         {
+            select_p(e.target.getAttribute('href').substr(3));
+         }
+      case 'P':
+      case 'HEADER':
+      case 'H2':
+      case 'UL':
+      case 'SPAN':
+         break;
+      case 'BUTTON':
+         if (e.target.parentElement.classList.contains('interaction')) 
+         {
+            toggle_state(e.target.parentElement);
+            break;
+         }
+      case 'LI':
+         if (e.target !== fren) {
+            break;
+         }
+      default:
+         select_p(fren.id.substr(2));            
+   }
+   }
+      
+}
+
+function clickEvent(e) 
+{
+   let event = e.target.closest('.event');
+   switch (e.target.tagName) 
+   {
+      case 'FIGCAPTION':
+      case 'VIDEO':
+      case 'DIV':
+      case 'UL':
+      case 'DL':
+      case 'DT':
+      case 'DD':
+         break;
+      case 'SPAN':
+         if (e.target.classList.contains('id')) {
+            view_source(e.target);
+         }
+         break;
+      case 'A':
+         let href = e.target.getAttribute('href');
+         switch (href.substr(1, 1)) 
+         {
+            case 'e':
+               e.preventDefault();
+               select_e(href.substr(3));
+               break;
+            case 'p':
+               e.preventDefault();
+               select_p(href.substr(3));
+               break;
+         }
+         break;
+      case 'BUTTON':
+         view_source(e.target);
+         break;
+      case 'P':
+         if (event.classList.contains('interesting')) {
+            break;
+         } 
+      case 'LI':
+         if (e.target.tagName === 'LI'
+         && event.classList.contains('interesting')
+         && !e.target.classList.contains('interesting')) 
+         {
+            break;
+         }
+      default:
+         e.preventDefault();
+         select_e(event);
+   }   
+}
+
+function newpub(k) 
+{   
+   const 
+      knd0 = document.getElementById('kind-0'),
+      l = document.createElement('li'),
+      pubkey = document.createElement('p'),
+      metadata = document.createElement('header'),
+      dms = document.createElement('ul'),
+      interactions = document.createElement('ul'),
+      follows = document.createElement('ul');
+   
+   l.id = 'p-' + k;
+   l.classList.add('fren');    
+   
+   pubkey.classList.add('pubkey');
+   pubkey.textContent = k;
+   
+   metadata.classList.add('metadata');
+   // I'm thinking maybe merge dms and interactions in a single list
+   dms.classList.add('dms', 'section');
+   dms.setAttribute('data-label', 'dms');
+   interactions.classList.add('interactions', 'section');
+   interactions.setAttribute('data-label', 'interactions');
+   follows.classList.add('follows', 'section');
+   follows.setAttribute('data-label', 'follows');
+   
+   stylek([k], l);
+   
+   l.append(pubkey, metadata, dms, interactions, follows);
+   
+   knd0.append(l);      
+   l.addEventListener('click', clickFren, false);
+   over(l);
+   
+   return l
+}
+
+function newid(o) 
+{
+   const l = document.createElement('li'),
+      p = document.createElement('p'),
+      content = document.createElement('article');
+      
+   
+   l.id = 'e-'+o.id;
+   l.classList.add('event');
+   l.classList.add('p-'+ o.pubkey);
+   l.setAttribute('data-kind', o.kind);
+   stylek([o.pubkey, o.id], l);
+   
+   p.classList.add('heading');
+   p.innerHTML = '<span class="id">' + pretty(o.id) + '</span>';
+   
+   
+   let created_at = make_time(o.created_at);
+   
+   content.classList.add('content');
+   const button = document.createElement('button');
+   button.classList.add('view-source');
+   button.textContent = '{:}';
+   l.append();
+   
+   over(l);
+
+   l.append(p, button, created_at, content);
+   
+   return l
+}
+
+function lies(reply, l) 
+{
+   let replies = reply.querySelector('.replies');
+   if (!replies) 
+   {
+      replies = document.createElement('ul');
+      replies.classList.add('replies');
+      reply.append(replies); 
+   } 
+   
+   replies.append(l); 
+
+   let eroot = l.querySelector('.tag-e-root');
+   let ereply = l.querySelector('.tag-e-reply');
+   if ( eroot !== ereply) 
+   {
+      eroot = document.getElementById(eroot.href.split('#')[1]);
+      if (eroot) eroot.parentElement.prepend(eroot);
+   }
+}
+
+function yourfollows() 
+{ 
+   let follows = your.getItem('follows');
+   let subs = '["' + your.k + '",' + your.follows.substr(1);
+   we.send('["REQ", "aa-dis", {"kinds":[0, 3], "authors":'+ your.follows + '}]');
+   
+   const lastweek = new Date();
+   lastweek.setDate(lastweek.getDate() - 3); // fetch kind1 from last x days
+   we.send('["REQ", "aa-feed", {"kinds":[1], "authors":'+ subs +', "since":'+ Math.floor(lastweek.getTime()/1000) +'}]');
+}
+
+function raw_event(o) 
+{
+   l = document.createElement('dl');
+   l.classList.add('raw');
+   let content = '';
+   Object.entries(o).forEach(([key, value]) =>
+   {
+      content += '<dt>' + key + '</dt>';
+      
+      let v = value;
+      if (key === 'tags') {
+         v = '<ul>';
+         value.forEach(function(val) 
+         {
+            v += '<li>' + val + '</li>';
+         });
+         v += '</ul>';
+      }
+      content += '<dd>' + v + '</dd>';
+   });
+   l.innerHTML = content;
+   
+   return l;
+}
+
+function view_source(l) 
+{
+   let event = l.closest('.event');
+   
+   event.classList.toggle('view-source');
+   
+   let source, 
+   childs = event.children;
+   
+   for (let i = 0; i < childs.length; i++) 
+   {
+     if (childs[i].classList.contains('source')) source = childs[i];
+   }
+   
+   if (!source) {
+      source = raw_event(JSON.parse(session[event.id.substr(2)]));
+      source.classList.add('source');
+      event.append(source);
+   }
+}
+
+function follows_you(k) 
+{
+   let fu = document.getElementById('fu');
+   if (!fu) {
+      fu = document.createElement('ul');
+      fu.id = 'fu';
+      fu.classList.add('follows-u', 'section');
+      fu.setAttribute('data-label', 'follows-u');
+      let you = document.getElementById('p-' + your.k);
+      if (!you) you = newpub(your.k);
+      you.append(fu);
+   }
+   let l = document.createElement('li');
+   l.classList.add('follow', 'section-item');
+   stylek([k], l);
+   
+   let a = document.createElement('a');
+   a.classList.add('follow-link');
+   a.href = '#p-' + k;
+   a.textContent = pretty(k);
+   
+   l.append(a);
+   fu.append(l);
+}
+
+function toggle_state(l) 
+{
+   let button_state = l.querySelector('button');
+   let id = button_state.dataset.id;
+   let inbox = JSON.parse(your.inbox);
+   let state = inbox[id];
+   let newstate = state === 'unread' ? 'read' : 'unread';
+
+   inbox[id] = newstate;
+   l.classList.remove(state);
+   l.classList.add(newstate);
+   your.inbox = JSON.stringify(inbox);
+}
+
+function make_time(timestamp) 
+{
+   let d = new Date(timestamp*1000);
+   let l = document.createElement('time');
+   
+   l.classList.add('created-at');
+   l.setAttribute('datetime', d.toISOString());
+   l.setAttribute('data-timestamp', timestamp);
+   l.title = d.toUTCString();
+   l.textContent = timeSince(d);
+   
+   return l
+}
+
+function notifica(o) {
+   
+   let inbox = your.inbox ? JSON.parse(your.inbox) : {};
+   if (!inbox[o.id]) inbox[o.id] = 'unread';
+   
+   let state = inbox[o.id];
+
+   your.inbox = JSON.stringify(inbox);
+      
+   switch (o.kind) 
+   {
+//      case 1:
+      case 4: kind4(o); break;
+      case 3: follows_you(o.pubkey); break;
+      default:
+         let 
+            l = document.createElement('li'),
+            text = ' replied in ';
+         
+         l.classList.add('interaction', 'section-item', state);
+         l.setAttribute('data-kind', o.kind);
+         stylek([o.pubkey,o.id], l);
+         
+         let id = document.createElement('a');
+         id.classList.add('interaction-link');
+         
+         let target = o.id;
+         id.textContent = pretty(o.id);
+
+         let mentions = checkmentions(o.content);
+         mentions.forEach(function(el) 
+         {
+            if (o.tags[el][1] === your.k) {
+               text = ' mentioned you in ';
+            }
+         });
+         
+         if (o.kind === 7) {
+            
+            let ind = o.tags.findIndex(inde);
+            
+            function inde(x) {
+              return x[0] === 'e';
+            }
+            
+            target = o.tags[ind][1];
+            text = " liked ";
+         }
+         
+         id.textContent = pretty(target);
+         id.href = '#e-' + target;
+         
+         let created_at = make_time(o.created_at);
+         
+         l.innerHTML = pretty(o.pubkey) 
+            + text 
+            + id.outerHTML 
+            + created_at.outerHTML;
+         
+         let button_state = document.createElement('button');
+         button_state.classList.add('inbox-state');
+         button_state.dataset.id = o.id;
+         button_state.textContent = '[x]';
+         
+         l.append(button_state);
+         
+         let selector = '#p-' + o.pubkey + ' .interactions';
+         let interactions = document.querySelector(selector);
+         if (!interactions) interactions = newpub(o.pubkey).querySelector(selector);
+         interactions.prepend(l);
+   }
+}
+
+function get_orphans(id, l)
+{
+   let replies = document.querySelectorAll('[data-reply="e-'+id+'"]');
+   if (replies && replies.length > 0) 
+   {
+      replies.forEach(function(reply) 
+      {
+         if (reply.classList.contains('orphan')) 
+         {
+            lies(l, reply);
+            reply.classList.remove('orphan');
+         }
+      });
+   }
+}
 
 function anykind(o) 
 {
-//   console.log(o);
-//   session.setItem(o.id, JSON.stringify(o));
+//   let 
+//      anyknd = document.getElementById('anykind'),
+//      l = defolt(o);
+//      
+//      anyknd.prepend(l);
+   console.log(defolt(o));
 }
 
 function kind0(o) 
 { // NIP-01 set_metadata
+   const dat = JSON.parse(o.content);
+   your[o.pubkey] = o.content;
    
-   your.setItem(o.pubkey, o.content);
-   
-   
-   const bff = document.getElementById('p-'+o.pubkey),
-   frend = JSON.parse(o.content);
-//   pub = document.createElement('p');
-   
-   let fren;
-   
-   if (bff) { 
-      fren = bff;
-//      fren.innerHTML = '';
-   } else {
-      fren = newpub(o.pubkey);
-//      fren = document.createElement('li');
-//      fren.id = 'p-' + o.pubkey;
-//      fren.classList.add('fren');    
-//      over(fren);
-//      feed.append(fren);    
-   }
-   
+   let fren = document.getElementById('p-'+o.pubkey);
+   if (!fren) fren = newpub(o.pubkey);  
    fren.classList.add('bff');
    
-   
-//   pub.classList.add('pubkey');
-//   pub.innerHTML = o.pubkey;
-//   fren.append(pub);
-	
-   if (frend.name) {
+   const metadata = fren.querySelector('.metadata');
+
+   if (dat.name) 
+   {
       let name = fren.querySelector('.name');
       let petname = fren.querySelector('.petname');
-      if (!name) {
+      if (!name) 
+      {
          name = document.createElement('h2');         
          name.classList.add('name');
          petname = document.createElement('span');
          petname.classList.add('petname');
          name.append(petname);
-         fren.append(name);
+         metadata.append(name);
       }
 	   
-      petname.innerHTML = frend.name;
+      petname.innerHTML = dat.name;
 	   
+      if (dat.nip05) verifyNIP05(fren, dat, o.pubkey);
       
-      if (frend.nip05) {
-         name.setAttribute('data-nip05', frend.nip05)
-         if (frend['nip05'].startsWith('_@')) {
-            name.classList.add('root');
-         }
-      }
 	}
    
-   if (frend.picture) {
-      
+   if (dat.picture) 
+   {
       let picture = fren.querySelector('.picture');
       
-      if (!picture) {
+      if (!picture) 
+      {
          picture = document.createElement('img');
          picture.classList.add('picture');
-         fren.append(picture);
+         metadata.append(picture);
          fren.classList.add('has-picture');
       }
-      
-      
-      
-      let src = arParams(frend.picture);
-      picture.setAttribute('src', src[0]);      
-      
-      if (src.length > 2) { // there's parameters
-         let srcl = src[2].get('logo'); // let c if it is a logo
-         if (srcl) { // it is
-            // let's build it
-            let logo = fren.querySelector('.logo');
-            if (!logo) {
-               logo = document.createElement('img');
-               logo.classList.add('logo');
-               fren.append(logo);
+
+      let src = arParams(dat.picture);
+      if (options.media) 
+      {
+         picture.setAttribute('src', src[0]);   
+         picture.setAttribute('loading', 'lazy');
+         
+         if (src.length > 2) 
+         { // there's parameters
+            let srcl = src[2].get('logo'); // let c if it is a logo
+            if (srcl) 
+            { // it is
+               // let's build it
+               let logo = fren.querySelector('.logo');
+               if (!logo) 
+               {
+                  logo = document.createElement('img');
+                  logo.classList.add('logo');
+                  logo.setAttribute('loading', 'lazy');
+                  metadata.append(logo);
+               }
+               logo.setAttribute('src', decodeURIComponent(srcl));
             }
-            logo.setAttribute('src', decodeURIComponent(srcl));
+         }
+         
+         if (o.pubkey === your.k) 
+         { // gets main profile img
+            u.setAttribute('style', 'background-image: url('+dat.picture.split('?')[0]+')');
          }
       }
-      
-      if (o.pubkey == your.getItem('k')) { // gets main profile img
-         u.setAttribute('src', frend.picture.split('?')[0]);
-      }
-      
-      
    }
    
-	if (frend.about) {
+	if (dat.about) 
+	{
       let about = fren.querySelector('.about');
-      if (!about) {
+      if (!about) 
+      {
          about = document.createElement('p');
          about.classList.add('about');
-         fren.append(about);
+         metadata.append(about);
       }
-	   about.innerHTML = ai(frend.about);
+	   about.innerHTML = ai(dat.about);
 	}
    
-   // see if there are already posts from pubkey and updates figure
-   const upd = document.querySelectorAll('.p-'+o.pubkey+'');
-   upd.forEach(function(l) {
-      
-      if (frend.picture) {
-         l.querySelector('.d-fig img').src = arParams(frend.picture)[0];
-      } 
-      
-      if (frend.name) {
-         l.querySelector('.d-fig figcaption').innerHTML = frend.name;
+   update_k(o.pubkey);
+}
+
+function update_k(k) 
+{
+   // see if there are already posts from pubkey and updates info
+   let dat = your[k] ? JSON.parse(your[k]) : false;
+   const existing = document.querySelectorAll('.p-' + k);
+   existing.forEach(function(l) 
+   {
+      const author = l.querySelector('.author');
+      if (dat && dat.picture && options.media) 
+      {
+         author.style = 'background-image: url('+arParams(dat.picture)[0]+')';
+         author.classList.add('has-picture');
       }
+      if (dat && dat.name) author.textContent = dat.name;
    });
 }
 
 
-//dlist.addEventListener('click', function(e) {
-//   
-//   if (e.target.classList.contains('name')) {
-//      select(e, document.getElementById(e.target.parentElement.getAttribute('aa-last')));
-//   }
-//   
-//   console.log(e.target);
-//});
-
-
-function stylek(k, l) 
-{
-   let 
-      c = k.substr(0, 3) + '' + k.substr(-3),
-      cc = k.substr(0, 6), 
-      ccc = k.substr(-6),
-      styl = '--c:#' + c
-          +'; --cc:#' + cc
-          +'; --ccc:#' + ccc;
-   
-   
-   l.setAttribute('style', styl );
-   l.setAttribute('data-hex', hex(k, false));
-   
-//   return l
-}
-
-function newpub(k) 
-{
-   const 
-      l = document.createElement('li'),
-      p = document.createElement('p'),
-      c = document.createElement('ul');
-   
-   if (k) 
-   {
-      l.id = 'p-' + k;
-      l.classList.add('fren');    
-      p.classList.add('pubkey');
-      c.classList.add('events');
-      p.innerHTML = k;
-      l.append(p, c);
-      feed.append(l);      
-      
-      l.addEventListener('click', function(event) 
-      {
-         if (event.target.classList.contains('pubkey') 
-            || event.target.classList.contains('picture')
-            || event.target.classList.contains('name')
-            )
-         {
-            l.classList.toggle('smol');
-            l.scrollIntoView(stuff);
-         }
-      }, false);
-      
-      over(l);
-      return l;
-   }
-}
-
-function newid(o) 
-{
-   const 
-      l = document.createElement('li'),
-      figure = document.createElement('figure'),
-      img = document.createElement('img'),
-      caption = document.createElement('figcaption'),
-      marker = document.createElement('span'),
-      article = document.createElement('article'),
-      raw = document.createElement('ul'),
-      hex = o.pubkey.substr(0,3) + o.pubkey.substr(-3);
-
-   l.id = 'e-'+o.id;
-   l.classList.add('event');
-   l.setAttribute('data-kind', o.kind);
-   l.setAttribute('data-hex', hex);
-   l.setAttribute('style', '--c:#' + hex);
-   
-   figure.classList.add('d-fig');
-   raw.classList.add('e');
-   marker.classList.add('marker');
-   
-   figure.append(img, caption);
-   
-   figure.addEventListener('click', function(e) { select(e, l) }, false);
-   
-   over(figure);
-   over(marker);
-   over(article);
-   
-   l.append(figure, marker, article, raw);
-   
-   return l
-}
-
-function lies(rep, l) 
-{
-   let lies = rep.querySelector('.replies');
-   if (!lies) {
-      lies = document.createElement('ul');
-      lies.classList.add('replies');
-      rep.append(lies);
-   } 
-   lies.append(l); 
-//   let repar = rep.parentElement;
-//   if (repar) {
-//      repar.prepend(rep);  
-//      repar.parentElement.prepend(repar);
-//   }
-   
-}
-
 
 function kind1(o) 
 { // NIP--1 text_note
-
    let 
       l = document.getElementById('e-'+o.id),
-      bff = document.getElementById('p-' + o.pubkey),
+      fren = document.getElementById('p-' + o.pubkey),
       tags;
    
-   if (!l) {
+   if (!l) 
+   { 
       l = newid(o);
-   } 
-   
-   if (!bff) {
-      bff = newpub(o.pubkey);
-   } 
-   
-   const 
-      figure = l.querySelector('.d-fig'),
-         img = figure.querySelector('img'),
-         caption = figure.querySelector('figcaption'),
-      marker = l.querySelector('.marker'),
-      article = l.querySelector('article'),
-      raw = l.querySelector('.e'),
-      food = bff.querySelector('.events');
-//      console.log(h);
-
-   tags = ash(o.tags, l);
-   l.append(tags.ul);
-      
-   if (tags.reply !== false) {
-//         console.log(tags.reply, o.tags[tags.reply][1].substr(0, 4), tags.e[tags.e.length - 1].substr(0, 4), o.tags);
-      // if it's a reply, check if we already have it
-      
-      let rep = document.getElementById('e-'+tags.e[tags.e.length - 1]);
-      if (rep) { 
-         lies(rep, l); 
-      } else { 
          
-         l.classList.add('orphan');
+      if (!fren) fren = newpub(o.pubkey);
+      
+      const 
+         heading = l.querySelector('.heading'),
+         content = l.querySelector('.content');
+   
+      tags = ash(o.tags, l);
+      
+      heading.append(tags.nav);
+      
+      let replyid = false, rootid = false;
+      if (tags.ereply !== false) 
+      {
+         // if it's a reply, check if we already have it
+         replyid = o.tags[tags.ereply][1];
+         let reply = document.getElementById('e-'+ replyid);
+   
+         if (reply) 
+         { // we have the reply event
+            lies(reply, l);
+            replyid = false;
          
-         rep = document.getElementById('e-'+tags.e[0]);
-         if (rep) { 
-            lies(rep, l);
-         } else {
-                           
-            bff = document.getElementById('p-' + tags.p[0]);
+         } else 
+         { // no reply, check for root event so at least it nests in the right thread
             
-            if (!bff) {
-               bff = newpub(tags.p[0]);
-            }
-                  
-            rep = document.createElement('li');
-            rep.classList.add('event');
-            rep.id = 'e-'+tags.e[0];
-            rep.classList.add('p-'+0);
-        
-            if (tags.replyto !== tags.op) {
-               
-               repto = document.createElement('li');
-               repto.classList.add('event');
-               repto.id = 'e-'+tags.e[tags.e.length - 1];
-               repto.classList.add('p-'+tags.p[tags.p.length - 1]);
-               
-               lies(repto, rep);
-               
-            } 
+            l.classList.add('orphan');
             
-            lies(rep, l);
+            rootid = o.tags[tags.eroot][1];
+            let root = document.getElementById('e-'+ rootid);
+            
+            if (root) { lies(root, l) } 
+            else { knd1.prepend(l) }
          }
+   
+      } else { knd1.prepend(l) }   
+      
+      get_orphans(o.id, l);
+      
+      
+      const dat = JSON.parse(your.getItem(o.pubkey));
+      
+      
+      
+      let author = document.createElement('a');
+      author.classList.add('author');
+      author.rel = 'author';
+      author.href = '#p-' + o.pubkey;
+      stylek([o.pubkey], author);
+      author.textContent = dat && dat.name ? dat.name : pretty(o.pubkey);
+      
+      if (options.media && dat && dat.picture) 
+      {          
+         author.style = 'background-image: url('+dat.picture+')';
+         author.classList.add('has-picture');
       }
-   } else { 
-      food.prepend(l); 
-      bff.parentElement.prepend(bff);
-   }   
+      
+      if (!dat) l.classList.add('new');
+      
+      heading.prepend(author);
+      
+      const 
+         oc = document.createTextNode(o.content),
+         ocd = oc.wholeText,
+         odc = document.createElement('p');
+      
+      odc.innerHTML = ai(ocd, o.tags);
    
-   const dat = JSON.parse(your.getItem(o.pubkey));
-   if (dat) { img.src = dat.picture ? dat.picture : 'r/aa--u.png';
-      caption.innerHTML = dat.name ? dat.name : o.pubkey;
-   } else { img.src = 'r/aa--u.png';
-      caption.innerHTML = o.pubkey;
-      figure.classList.add('new');
-   }
+      content.append(odc);
+      
+      let media = content.querySelector('img, video, audio, iframe');
+      if (media) 
+      { 
+         content.classList.add('has-media');
+         let videos = content.querySelectorAll('video');
+         if (videos) videos.forEach(rap);
+      }
+      const knd0 = document.getElementById('kind-0');
+      knd0.prepend(fren);
+      
+      if (replyid && session[replyid]) kind1(JSON.parse(session[replyid]));
    
-   const 
-   oc = document.createTextNode(o.content),
-   ocd = oc.wholeText;
-   aiocd = ai(ocd, o.tags);
+   } 
+}
 
-   article.innerHTML = '<p>' + aiocd + '</p>';
-   
-   let media = article.querySelector('img, video, audio, iframe');
-   if (media) { article.classList.add('has-media');
-      let videos = article.querySelectorAll('video');
-      if (videos) {
-         videos.forEach(rap);
+
+let pubcrawl = [], counts = {};
+function crawl()
+{ // make a list of all your follows and their follows and count them
+   pubcrawl.forEach(function(pub) 
+   {
+      if (counts[pub]) {
+         counts[pub] = counts[pub] + 1;
+      } else {
+         counts[pub] = 1;
       }
+   
+   });
+   
+   let sortable = [];
+   for (var pub in counts) {
+      sortable.push([pub, counts[pub]]);
    }
+
+   sortable.sort(function(a, b) {
+      return a[1] - b[1];
+   });
    
-//   re = re.replace(/\B#\[(\d+)\]\B/g, nip8);
-   
-   let s = '';
-   s += '<li data-raw="id"><a href="?e=' + o.id + '">' + o.id + '</a></li> ';
-   s += '<li data-raw="pubkey"><a href="?p=' + o.pubkey + '">' + o.pubkey + '</a></li> ';
-   s += '<li data-raw="sig">' + o.sig + '</li> ';
-   s += '<li data-raw="kind">' + o.kind + '</li> ';
-//   s += h.ul.outerHTML : '<li data-raw="tags">-</li>';
-   s += '<li data-raw="created_at"><time datetime="' + o.created_at + '">' + new Date(o.created_at*1000).toUTCString() + '</time></li> ';
-   raw.innerHTML = s; 
+   return sortable;
 }
 
 function kind3(o) 
-{ // NIP-02 Contact List and Petnames
+{ // NIP-02 Contact List and Petnames (& relays)
    
-   if (o.tags.length > 0) {
-      o.tags.forEach(function(ot) {
-         authors.push(ot[1]);
+   let fren = document.getElementById('p-' + o.pubkey);
+   if (!fren) fren = newpub(o.pubkey);   
+   
+   if (o.tags.length > 0) 
+   {
+      let follows = fren.querySelector('.follows');
+      follows.innerHTML = '';
+      let subscriptions = o.pubkey === your.k ? [] : false;
+      o.tags.forEach(function(ot) 
+      { 
+         if (subscriptions) subscriptions.push(ot[1]);
+         pubcrawl.push(ot[1]);
+         
+         const 
+            f = document.createElement('li'),
+            a = document.createElement('a');
+         
+         f.classList.add('follow', 'section-item');
+         
+         a.setAttribute('href', '#p-' + ot[1]);
+         a.classList.add('follow-link');
+         a.textContent = pretty(ot[1]);
+         
+         f.append(a);
+         stylek([ot[1]], f);
+         follows.append(f);
       });
+
+      let rels = JSON.parse(o.content);
+      let lays = fren.querySelector('.relays');
+      
+      if (!lays) 
+      {
+         lays = document.createElement('ul');
+         lays.classList.add('relays', 'section');
+         lays.setAttribute('data-label', 'relays');
+         fren.append(lays);
+      }
+      
+      lays.innerHTML = '';
+      
+      Object.entries(rels).forEach(([key, value]) => 
+      {
+         let li = document.createElement('li')
+         let re = document.createElement('a');
+         li.classList.add('section-item');
+         re.classList.add('relay');
+         re.textContent = key.substr(6);
+         re.dataset.read = value.read ? 'r' : '-';
+         re.dataset.write = value.write ? 'w' : '-';
+         li.append(re);
+         lays.append(li);
+      });
+      
+      if (subscriptions) 
+      {
+         your.follows = JSON.stringify(subscriptions);
+         yourfollows();
+      }                                    
    }
-   // update profiles
-   we.send('["REQ", "aa-dis", {"kinds":[0], "authors":'+ JSON.stringify(authors) +'}]');
-   
-   const lastweek = new Date();
-   lastweek.setDate(lastweek.getDate() - 9); // fetch feed from last x days
-   
-   we.send('["REQ", "aa-feed", {"authors":'+ JSON.stringify(authors) +', "since":'+ Math.floor(lastweek.getTime()/1000) +'}]');
 }
 
-/* Socket Stuff
 
-wss://nostr-pub.wellorder.net
-wss://relayer.fiatjaf.com
-wss://nostr.rocks
-wss://nostr-relay.wlvs.space
 
-{
-  "ids": <a list of event ids or prefixes>,
-  "kinds": <a list of a kind numbers>,
-  "#e": <a list of event ids that are referenced in an "e" tag>,
-  "#p": <a list of pubkeys that are referenced in a "p" tag>,
-  "since": <a timestamp, events must be newer than this to pass>,
-  "until": <a timestamp, events must be older than this to pass>,
-  "authors": <a list of pubkeys or prefixes, the pubkey of an event must be one of these>
+function kind4(o) 
+{ // NIP-04: Encrypted Direct Message
+   let own = o.tags[0][1] !== your.k;
+   let ek =  own ? o.tags[0][1] : o.pubkey;
+
+   let fren = document.getElementById('p-' + ek);
+   if (!fren) fren = newpub(ek);  
+  
+   let dms = fren.querySelector('.dms');
+   if (dms) 
+   {
+      let 
+         l = document.createElement('li'),
+         pubkey = document.createElement('p'),
+         content = document.createElement('p'),
+         eventDate = new Date(o.created_at*1000),
+         stored = your[o.id];
+         
+      l.classList.add('dm', 'section-item');
+      if (own) l.classList.add('own');
+            
+      pubkey.classList.add('l-pubkey');
+      pubkey.textContent = pretty(o.pubkey) + ' / ~' + timeSince(eventDate);
+      
+      content.classList.add('l-content');
+      content.textContent = '/* --encrypted-- */';
+
+      if (stored) {
+         content.textContent = stored;
+      } else {
+         // enabling this will open a dialog box for every message sent and received
+//         if (window.nostr) 
+//         {
+//            window.nostr.nip04.decrypt(ek, o.content)
+//            .then(decrypted => 
+//            {
+//               content.textContent = your[o.id] = decrypted;
+//            })
+//         }
+      }
+      
+      l.append(pubkey, content);
+      dms.append(l);
+   }
 }
-
-*/
-
 
 let we, 
 relays = your.relays;
@@ -1103,24 +1547,158 @@ if (!relays) {
       "wss://nostr-relay.wlvs.space",
       "wss://nostr-relay.untethr.me",
       "wss://relay.bitid.nz",
-      "wss://nostr.bitcoiner.social",
+      "wss://nostr.bitcoiner.social"
    ]
 }
 
-let relay = relays[0],
-authors = [];
+let relay = relays[3];
 
 function bbbb()
 {// boom biddy bye bye
  // tries to forget everything
-   authors = []; // list of pubkeys
    your.clear(); // localStorage
    session.clear(); // SessionStorage
-   feed.innerHTML = ''; // timeline
-   fool.innerHTML = ''; // input history
-   put.placeholder = 'boom biddy bye bye'; // so you know what happened
+   document.getElementById('kind-0').innerHTML = ''; // contacts
+   document.getElementById('kind-1').innerHTML = ''; // timeline
+   story.innerHTML = ''; // input history
+   iot.placeholder = 'boom biddy bye bye'; // so you know what happened
    u.setAttribute('src', u.dataset.src);
-   document.body.classList.remove('ffs');
+   document.body.classList.remove('ffs', 'has-k', 'k-e', 'k-p');
+}
+
+/* request
+
+{
+  "ids": <a list of event ids or prefixes>,
+  "authors": <a list of pubkeys or prefixes, the pubkey of an event must be one of these>,
+  "kinds": <a list of a kind numbers>,
+  "#e": <a list of event ids that are referenced in an "e" tag>,
+  "#p": <a list of pubkeys that are referenced in a "p" tag>,
+  "since": <a timestamp, events must be newer than this to pass>,
+  "until": <a timestamp, events must be older than this to pass>,
+  "limit": <maximum number of events to be returned in the initial query>
+}
+
+*/
+
+function open(e) 
+{
+   we.send('["REQ", "aa-you", {'
+      + '"authors":["'
+      + your.k.substring(0, 16)
+      + '"]'
+   //               + t ? ',"since":'+ t : ''
+   + '}]');
+   
+   we.send('["REQ", "aa-notifications", {"#p":["' 
+      + your.k + '"]'
+   //            + t ? ',"since":'+t : ''
+   + '}]');
+      
+   relaytion(we)
+}
+
+function reconnect() 
+{
+   // soon™
+}
+
+function message(e) 
+{
+   const 
+      type = JSON.parse(e.data)[0], // the request id
+      dis = JSON.parse(e.data)[1], // the request id
+      dat = JSON.parse(e.data)[2]; // the event data
+   
+   if (type !== 'EVENT') {
+      console.log(type, dis);
+   }
+   
+   if (dis && dat) 
+   {
+      session[dat.id] = JSON.stringify(dat);
+      
+      if ( !your.t || your.t < dat.created_at) your.t = dat.created_at;
+      
+      switch (dis) {
+         case 'aa-you':
+            switch (dat.kind) 
+            {
+               case 0: kind0(dat); break;
+               case 3: kind3(dat); break;
+               case 4: kind4(dat); break;
+               default: //anykind(dat); 
+            }
+            break;
+         case 'aa-notifications':
+            notifica(dat); 
+            break;
+         case 'aa-inspect':
+            switch (dat.kind) 
+            {
+               case 0: 
+                  kind0(dat); 
+                  select_p(dat.pubkey);
+                  break;
+               case 3: 
+                  kind3(dat); 
+                  break;
+               case 1: 
+                  kind1(dat);
+                  select_e(dat.id);
+                  break;
+               default: //anykind(dat); 
+            }
+            
+         default: // aa-feed
+            switch (dat.kind) 
+            {
+               case 0: 
+                  kind0(dat); 
+                  break;
+               case 1: kind1(dat); break;
+               case 3: kind3(dat); break;
+               default: anykind(dat); 
+            }
+      }
+   }
+}
+
+function close(e) 
+{ 
+   relaytion(we) 
+}
+
+function status(e) 
+{
+   relaytion(we) 
+}
+
+function get_event(id) 
+{
+   we.send('["REQ", "aa-inspect", {"ids":["'+id+'"]}]');
+   
+   setTimeout(function () {
+      
+      if (session[id]) select_e(id);
+      else log('event not found: ' + id);
+      
+   }, 100)
+}
+
+function get_pubkey(pubkey) 
+{
+   we.send('["REQ", "aa-inspect", {"authors":["'+pubkey+'"], "kinds":[0, 3]}]');
+   
+   setTimeout(function () {
+      if (your[pubkey]) select_e(pubkey);
+      else log('pubkey not found: ' + pubkey);
+   }, 100)
+}
+
+function print_event(o) 
+{
+   console.log(o);
 }
 
 function start() {
@@ -1130,85 +1708,38 @@ function start() {
    
    let k = your.getItem('k');
    if (k) {
-      put.value = '';
-      if (your.getItem('x')) {
-         put.placeholder = 'new post'; // less is more
-      } else { put.placeholder = '--x : clear input history'; } // tip
+      iot.value = '';
+      iot.placeholder = 'new post';
          
       document.body.classList.add('has-k');
-      authors = [];
-      authors.push(k);
+
+      we.addEventListener('open', open); 
+      we.addEventListener('message', message);
+      we.addEventListener('close', close); 
       
-      // updates idea with connection status
-      idea.addEventListener('click', function(e) {
-         relaytion(we) 
-      }, false);
+      idea.addEventListener('click', status, false);
       
-      // send open request, gets all the events of k
-      we.addEventListener('open', function(e) {
-         we.send(
-            '["REQ", "aa-you", {'
-            +'"authors":["'
-            + authors[0].substring(0, 16)
-            +'"]}]'
-         );
-         relaytion(we)
-      }); 
-      
-      // wen we get an event
-      we.addEventListener('message', function(e) {
+      if (window.nostr) 
+      { // nos2x
+         console.log('nos2x available');
+         /*
+         window.nostr.getPublicKey(); //: string // returns your public key as hex
+         window.nostr.signEvent(event): Event // returns the full event object signed
+         window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
+         window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
+         window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
+         */
          
-         const 
-         dis = JSON.parse(e.data)[1], // the request id
-         dat = JSON.parse(e.data)[2]; // the event data
-         
-         if (dis && dat) {
-            session.setItem(dat.id, JSON.stringify(dat));
-         
-            if (dis == "aa-you") {
-               
-               switch (dat.kind) {  
-                  case 0: kind0(dat); break;
-                  case 3: kind3(dat); break;
-                  default: ; 
-               }
-                           
-            } else if (dis == "aa-feed") {
-               
-               switch (dat.kind) {
-                  case 0: kind0(dat); break;
-                  case 1: kind1(dat); break;
-//                  case 7: kind1(dat); break;
-                  default: anykind(dat); 
-               }
-               
-            } else {
-               // 
-               switch (dat.kind) {
-                  case 0: kind0(dat); break;
-                  default: ; 
-               }
-         	}
-         }
-      });
-      
-      we.addEventListener('close', function(e) { relaytion(we) }); 
-      if (!k && window.nostr) {
-         window.nostr.getPublicKey().then( key => {
-            your.setItem('k', key);
+      }
+   } else 
+   {
+      if (window.nostr) 
+      {
+         window.nostr.getPublicKey().then( key => 
+         {
+            your.k = key;
             start();
          });
-      }
-      if (window.nostr) { // nos2x
-      /*
-      
-.getPublicKey(); //: string // returns your public key as hex
-.signEvent(event): Event // returns the full event object signed
-.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
-.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
-.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
-      
-      */
       }
    }   
 }
@@ -1221,48 +1752,129 @@ function relaytion(ship)
    2	CLOSING	The connection is in the process of closing.
    3	CLOSED	The connection is closed or couldn't be opened.*/
    
-   idea.dataset.status = '[' + ship.readyState + '] ' + relay.substr(6) + ' ' +  new Date().toUTCString()
+   idea.dataset.status = relay.substr(6);
+   idea.textContent = new Date().toUTCString() + ' [' + ship.readyState + ']';
 }
 
-function prepnote(note)
+function preptags(o) 
 {
-   const now = Math.floor( ( new Date().getTime() ) / 1000 );
    let tags = [];
-   
-   if (session.interesting) {
       
-      const 
-      o = JSON.parse(session.getItem(session.interesting)), 
+   const 
       es = [], 
-      ps = [];
+      ps = [],
+      mentions = [];
+   
+   let
+      ereply = false,
+      preply = false,
+      eroot = false,
+      proot = false;      
+   
+   if (o.tags.length > 0) {
       
-      if (o.tags.length > 0) {
-         o.tags.forEach(function(ot) {
+      let mentionsIndexes = checkmentions(o.content);
+   
+      o.tags.forEach(function(ot, index) {
+         
+         let i = mentionsIndexes.find(ind => ind === index);
+         if (i) {
+            mentions.push(ot);
+         } else 
+         {
             switch (ot[0]) {
-               case 'e': es.push(ot); break;
-               case 'p': ps.push(ot); break;
+               case 'e': 
+                  if (ot[3] && ot[3] === 'reply') 
+                  {
+                     ereply = ot[1];
+                  
+                  } else if (ot[3] && ot[3] === 'root') 
+                  {
+                     eroot = ot[1];
+                  
+                  } else 
+                  {
+                     es.push(ot);
+                  }
+                   
+                  break;
+               case 'p': 
+                  if (ot[3] && ot[3] === 'reply') 
+                  {
+                     preply = ot[1];
+                  
+                  } else if (ot[3] && ot[3] === 'root') 
+                  {
+                     proot = ot[1];
+                  
+                  } else 
+                  {
+                     ps.push(ot);
+                  } 
+                  break;
                default:
             }
-         });
-      }
-      
-      if (ps.length > 1) {
-         let lastpub = ps[ps.length - 1][1];
-         if ( lastpub !== o.pubkey && lastpub !== your.k) {
-            tags.push(lastpub)
          }
-      }  
-      
-      if (o.pubkey !== your.k) { tags.push(['p',o.pubkey]); }
-      
-      if (es.length > 0) {
-         tags.push(es[0])
-      }
-      
-      tags.push(['e', o.id]);
+
+      });
    }
    
-   const ne = [ 
+   if (!ereply) // old way, pre-nip10
+   {
+      if (es.length > 0) 
+      {
+         ereply = es[es.length - 1][1];
+         if (es.length > 1) eroot = es[0][1];
+      }
+      
+      if (ps.length > 0) 
+      {
+         preply = ps[ps.length - 1][1];
+         if (ps.length > 1) proot = ps[0][1];
+      }
+
+   }
+   
+   if (eroot) 
+   {
+      tags.push(['e', eroot,'','root']);
+   
+   } else if (ereply) 
+   {
+      tags.push(['e', ereply,'','root']);
+   }
+   
+   tags.push(['e', o.id,'','reply']);
+   
+   if (proot) 
+   {
+      tags.push(['p', proot,'','root']);
+   
+   } else 
+   {
+      if (preply) 
+      {
+         tags.push(['p', preply,'','root']);
+      
+      } else {
+         if (ps.length > 0) {
+            tags.push(['p', ps[0][1],'','root']);
+         }
+      }
+   }
+   
+   if (o.pubkey !== your.k) tags.push(['p',o.pubkey,'','reply']);
+
+   return tags
+}
+
+
+
+function prep(note)
+{
+   const now = Math.floor( ( new Date().getTime() ) / 1000 );
+   const tags = session.interesting ? preptags(JSON.parse(session[session.interesting])) : [];
+   const draft = [ 
       0,
       your.getItem('k'),
       now,
@@ -1271,62 +1883,84 @@ function prepnote(note)
       note
    ];
    
-   session.ne = JSON.stringify(ne);
-   signnote();
+   session.draft = JSON.stringify(draft);
+   sign(draft);
 }
 
-function signnote() 
+function sign(draft) 
 {
-   const notehash = bitcoinjs.crypto.sha256( session.ne ).toString( 'hex' );
-   const notedat = JSON.parse(session.ne);
-   
-   const tosign = {
-      "id": notehash,
-      "pubkey": notedat[1],
-      "created_at": notedat[2],
-      "kind": notedat[3],
-      "tags": notedat[4],
-      "content": notedat[5]
+   const hash = bitcoinjs.crypto.sha256( session.draft ).toString( 'hex' );
+   const note = JSON.parse(session.draft);
+   const unsigned = {
+      "id": hash,
+      "pubkey": draft[1],
+      "created_at": draft[2],
+      "kind": draft[3],
+      "tags": draft[4],
+      "content": draft[5]
    }
          
-   if (window.nostr) {
-      window.nostr.signEvent(tosign).then( (e) => {
-         session.post = JSON.stringify(e);
-         postnote();
+   if (window.nostr) 
+   {
+      window.nostr.signEvent(unsigned).then((signed) => 
+      {
+         session.post = JSON.stringify(signed);
+         post(session.post);
       });
    
-   } else {
-      console.log('no nos2x')
-   }
+   } else { console.log('you need nos2x to sign notes', unsigned) }
 
 }
 
-function postnote() 
+function post(note) 
 { 
-   we.send( '["EVENT",' + session.post + ']' );
+   we.send( '["EVENT",' + note + ']' );
+}
+
+function hashchange(e) 
+{  
+   let hash = location.hash;
+   let search = hash ? arParams(hash) : arParams(location.search);
+   
+   console.log(location);
+//   let params = search[1] ? new URLSearchParams(search[1]) : false;
+//   let entries = params.values();
+   
+//   if (entries.length > 0) {
+//      console.log(params);
+//   }
+   
+   if (search[0] !== '') {
+      console.log(search);
+      switch (search[0].substr(1, 1)) {
+         case 'e':
+            select_e(search[0].substr(3));
+            break;
+         case 'p':
+            select_p(search[0].substr(3))
+            break;
+         default:
+      }
+   }     
 }
 
 window.addEventListener('load', function(event) {
    
-   over(fool);
+   over(story);
+   if (location.hash) {
+      setTimeout(hashchange, 2000);
+   }
+   
+   knd1.addEventListener('click', clickEvent, false);
+   u.addEventListener('click', function(e) { select_p(your.k) }, false);
+   iot.addEventListener('blur', less, false);
+   iot.addEventListener('keyup', is, false);
+   iot.addEventListener('focus', more, false);
    
    // get all the the elements for tog()
-   tags = document.querySelectorAll('[data-tog]');
-   tags.forEach(function(l) { l.addEventListener('click', function(e) { tog(e,l); }, false); });	
+   const togs = document.querySelectorAll('[data-tog]');
+   togs.forEach(function(l) { l.addEventListener('click', function(e) { tog(e,l); }, false); });	
    
-   let k = your.getItem('k');
-   
-   if (!k && window.nostr) {
-      window.nostr.getPublicKey().then( key => {
-         your.setItem('k', key);
-         start();
-      });
-   } else { start(); }
-
-//   window.addEventListener('hashchange', function() {
-//     console.log(location.hash)
-//   }, false);
+   start();
 
 }, false);
-
-//window.addEventListener('resize', function(event) {  });
