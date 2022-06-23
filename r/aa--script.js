@@ -12,12 +12,11 @@ const
    ws_closed = {};
 
 
-let relays = your.r ? JSON.parse(your.r) : 
+//let relays = your.r ? JSON.parse(your.r) : 
+let relays = 
 {
    "wss://nostr-pub.wellorder.net":{"read":true,"write":true},
-   "wss://nostr.rocks":{"read":true,"write":true},
    "wss://nostr-relay.wlvs.space":{"read":true,"write":true},
-   "wss://relay.bitid.nz":{"read":true,"write":true},
    "wss://nostr-relay.untethr.me":{"read":true,"write":true},
    "wss://relay.damus.io":{"read":true,"write":true}
 };
