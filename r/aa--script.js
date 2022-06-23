@@ -1624,9 +1624,9 @@ function close(e)
    let wsc = ws_closed[e.target.url] ? ws_closed[e.target.url] : [];
    
    const index = ws.indexOf(e.target);
-   
+   let fails;
    if (index > -1) {
-     wsc.unshift(e.timeStamp);
+     fails = wsc.unshift(e.timeStamp);
      ws.splice(index, 1);
    }
    
@@ -1634,7 +1634,7 @@ function close(e)
    console.log(wsc);
    
    // reconnect if somewhat stable
-   if (wsc[1] && wsc[0] - wsc[1] > 99999) {
+   if (fails < 3 || wsc[1] && wsc[0] - wsc[1] > 99999) {
       connect(e.target.url);
    } else {
       // handle this later
