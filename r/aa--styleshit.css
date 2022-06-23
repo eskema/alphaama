@@ -669,7 +669,7 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions)
    border-bottom: 1px dotted rgba(var(--c), .6);
 }
 
-.heading .author.has-picture {
+.author.has-picture {
    background-size: var(--line);
    background-position: 0 center;
    background-repeat: no-repeat;

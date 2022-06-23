@@ -7,7 +7,20 @@ const
    story = document.getElementById('story'),
    aside = document.getElementById('as'),
    u = document.getElementById('u'),
-   stuff = { behavior:'smooth', block: 'start'};
+   stuff = { behavior:'smooth', block: 'start'},
+   ws = [],
+   ws_closed = {};
+
+
+let relays = your.r ? JSON.parse(your.r) : 
+{
+   "wss://nostr-pub.wellorder.net":{"read":true,"write":true},
+   "wss://nostr.rocks":{"read":true,"write":true},
+   "wss://nostr-relay.wlvs.space":{"read":true,"write":true},
+   "wss://relay.bitid.nz":{"read":true,"write":true},
+   "wss://nostr-relay.untethr.me":{"read":true,"write":true},
+   "wss://relay.damus.io":{"read":true,"write":true}
+};
 
 session.removeItem('interesting');
 
@@ -307,8 +320,6 @@ function is_interesting(l)
 }
 
 
-
-
 function scrollin(scrollp, l) 
 {
    const h = l.scrollHeight - window.innerHeight;
@@ -368,8 +379,10 @@ function is(e)
             +" --h : more halp soon™... \n"
             +" --bbbb : boom biddy bye bye \n"
             +" --d : toggle frens \n"
+            +" --media : toggle autoloading media files \n"
+            +" --read : make all interactions read again \n"
             // +" --e + space + event_id // load event \n"
-            +" --k pubkey : u c that key \n"
+            +" --k pubkey : login \n"
             // +" --p + space + pubkey // check profile \n"
             +"}";
             break;
@@ -518,8 +531,6 @@ function mentions(text, tags)
    
    return text.replace(/\B#\[(\d+)\]\B/g, nip8)
 }
-
-
 
 function ai(content, tags) 
 {
@@ -753,15 +764,22 @@ function select_e(l)
 
 function select_p(k) 
 {
-   let l = document.getElementById('p-' + k);
-   if (!l) 
+   let dat = your[k] ? JSON.parse(your[k]) : false;
+   
+   if (!dat) 
    {
       get_pubkey(k);
    
    } else 
    {
+      let l = document.getElementById('p-' + k);
+      if (!l.classList.contains('bff')) 
+      {
+         update_fren(dat, k)
+      } 
+      
       let solo = document.querySelector('.fren.solo');
-   
+      
       function pk() 
       {
          if (l) l.classList.add('solo');      
@@ -785,10 +803,9 @@ function select_p(k)
          if (solo !== l) pk();
       
       } else { pk() }
+      
    }
-   
-   update_k(k)
-   
+      
 }
 
 function clickFren(e) 
@@ -948,18 +965,18 @@ function newid(o)
    p.classList.add('heading');
    p.innerHTML = '<span class="id">' + pretty(o.id) + '</span>';
    
-   
+   l.dataset.stamp = o.created_at;
    let created_at = make_time(o.created_at);
    
    content.classList.add('content');
-   const button = document.createElement('button');
-   button.classList.add('view-source');
-   button.textContent = '{:}';
-   l.append();
+//   const button = document.createElement('button');
+//   button.classList.add('view-source');
+//   button.textContent = '{:}';
+//   l.append();
    
    over(l);
 
-   l.append(p, button, created_at, content);
+   l.append(p, created_at, content);
    
    return l
 }
@@ -975,26 +992,11 @@ function lies(reply, l)
    } 
    
    replies.append(l); 
+   ordered(replies);
 
-   let eroot = l.querySelector('.tag-e-root');
-   let ereply = l.querySelector('.tag-e-reply');
-   if ( eroot !== ereply) 
-   {
-      eroot = document.getElementById(eroot.href.split('#')[1]);
-      if (eroot) eroot.parentElement.prepend(eroot);
-   }
 }
 
-function yourfollows() 
-{ 
-   let follows = your.getItem('follows');
-   let subs = '["' + your.k + '",' + your.follows.substr(1);
-   we.send('["REQ", "aa-dis", {"kinds":[0, 3], "authors":'+ your.follows + '}]');
-   
-   const lastweek = new Date();
-   lastweek.setDate(lastweek.getDate() - 3); // fetch kind1 from last x days
-   we.send('["REQ", "aa-feed", {"kinds":[1], "authors":'+ subs +', "since":'+ Math.floor(lastweek.getTime()/1000) +'}]');
-}
+
 
 function raw_event(o) 
 {
@@ -1003,7 +1005,7 @@ function raw_event(o)
    let content = '';
    Object.entries(o).forEach(([key, value]) =>
    {
-      content += '<dt>' + key + '</dt>';
+      content += '<dt class="raw-' + key + '">' + key + '</dt>';
       
       let v = value;
       if (key === 'tags') {
@@ -1014,7 +1016,7 @@ function raw_event(o)
          });
          v += '</ul>';
       }
-      content += '<dd>' + v + '</dd>';
+      content += '<dd class="raw-' + key + '">' + v + '</dd>';
    });
    l.innerHTML = content;
    
@@ -1054,17 +1056,31 @@ function follows_you(k)
       if (!you) you = newpub(your.k);
       you.append(fu);
    }
-   let l = document.createElement('li');
-   l.classList.add('follow', 'section-item');
-   stylek([k], l);
    
-   let a = document.createElement('a');
-   a.classList.add('follow-link');
-   a.href = '#p-' + k;
-   a.textContent = pretty(k);
+   let followers = your.fu ? JSON.parse(your.fu) : [];
+   if (!followers.find[k]) { 
+      followers.push(k);
+   }
    
-   l.append(a);
-   fu.append(l);
+   your.fu = JSON.stringify(followers);
+   
+   let already = fu.querySelector('.p-'+k);
+   
+   if (!already) {
+      let l = document.createElement('li');
+      l.classList.add('follow', 'section-item', 'p-'+k);
+      stylek([k], l);
+      
+      let a = document.createElement('a');
+      a.classList.add('follow-link', 'author');
+      a.href = '#p-' + k;
+      a.textContent = pretty(k);
+      
+      l.append(a);
+      fu.append(l);
+   }
+   
+   
 }
 
 function toggle_state(l) 
@@ -1097,6 +1113,8 @@ function make_time(timestamp)
 
 function notifica(o) {
    
+   
+         
    let inbox = your.inbox ? JSON.parse(your.inbox) : {};
    if (!inbox[o.id]) inbox[o.id] = 'unread';
    
@@ -1110,61 +1128,77 @@ function notifica(o) {
       case 4: kind4(o); break;
       case 3: follows_you(o.pubkey); break;
       default:
-         let 
-            l = document.createElement('li'),
-            text = ' replied in ';
-         
-         l.classList.add('interaction', 'section-item', state);
-         l.setAttribute('data-kind', o.kind);
-         stylek([o.pubkey,o.id], l);
-         
-         let id = document.createElement('a');
-         id.classList.add('interaction-link');
-         
-         let target = o.id;
-         id.textContent = pretty(o.id);
-
-         let mentions = checkmentions(o.content);
-         mentions.forEach(function(el) 
-         {
-            if (o.tags[el][1] === your.k) {
-               text = ' mentioned you in ';
-            }
-         });
-         
-         if (o.kind === 7) {
-            
-            let ind = o.tags.findIndex(inde);
-            
-            function inde(x) {
-              return x[0] === 'e';
-            }
-            
-            target = o.tags[ind][1];
-            text = " liked ";
-         }
-         
-         id.textContent = pretty(target);
-         id.href = '#e-' + target;
-         
-         let created_at = make_time(o.created_at);
-         
-         l.innerHTML = pretty(o.pubkey) 
-            + text 
-            + id.outerHTML 
-            + created_at.outerHTML;
-         
-         let button_state = document.createElement('button');
-         button_state.classList.add('inbox-state');
-         button_state.dataset.id = o.id;
-         button_state.textContent = '[x]';
-         
-         l.append(button_state);
          
          let selector = '#p-' + o.pubkey + ' .interactions';
          let interactions = document.querySelector(selector);
          if (!interactions) interactions = newpub(o.pubkey).querySelector(selector);
-         interactions.prepend(l);
+         
+         let already = document.querySelector(selector + ' .e-'+o.id);
+         if (!already) {
+            if (o.kind === 1) 
+            {
+               let follows = your.follows ? JSON.parse(your.follows) : false;
+               if (follows && !follows.includes(o.pubkey))
+               {
+                  kind1(o)
+               }
+            }
+            
+            let 
+               l = document.createElement('li'),
+               text = ' replied in ';
+            
+            l.classList.add('interaction', 'section-item', state, 'e-'+o.id);
+            l.setAttribute('data-kind', o.kind);
+            stylek([o.pubkey,o.id], l);
+            
+            let id = document.createElement('a');
+            id.classList.add('interaction-link');
+            
+            let target = o.id;
+            id.textContent = pretty(o.id);
+   
+            let mentions = checkmentions(o.content);
+            mentions.forEach(function(el) 
+            {
+               if (o.tags[el][1] === your.k) {
+                  text = ' mentioned you in ';
+               }
+            });
+            
+            if (o.kind === 7) 
+            {
+               
+               let ind = o.tags.findIndex(inde);
+               
+               function inde(x) {
+                 return x[0] === 'e';
+               }
+               
+               target = o.tags[ind][1];
+               text = " liked ";
+            }
+            
+            id.textContent = pretty(target);
+            id.href = '#e-' + target;
+            
+            let created_at = make_time(o.created_at);
+            
+            l.innerHTML = pretty(o.pubkey) 
+               + text 
+               + id.outerHTML 
+               + created_at.outerHTML;
+            
+            let button_state = document.createElement('button');
+            button_state.classList.add('inbox-state');
+            button_state.dataset.id = o.id;
+            button_state.textContent = '[x]';
+            
+            l.append(button_state);
+            interactions.prepend(l);
+         }
+         
+         
    }
 }
 
@@ -1196,13 +1230,21 @@ function anykind(o)
 
 function kind0(o) 
 { // NIP-01 set_metadata
+   
    const dat = JSON.parse(o.content);
-   your[o.pubkey] = o.content;
+   dat.id = o.id;
+   your[o.pubkey] = JSON.stringify(dat);
+
+   update_fren(dat, o.pubkey);
+
+}
+
+function update_fren(dat, k)
+{
+   let fren = document.getElementById('p-'+k);
+   if (!fren) fren = newpub(k);
    
-   let fren = document.getElementById('p-'+o.pubkey);
-   if (!fren) fren = newpub(o.pubkey);  
    fren.classList.add('bff');
-   
    const metadata = fren.querySelector('.metadata');
 
    if (dat.name) 
@@ -1221,7 +1263,7 @@ function kind0(o)
 	   
       petname.innerHTML = dat.name;
 	   
-      if (dat.nip05) verifyNIP05(fren, dat, o.pubkey);
+      if (dat.nip05) verifyNIP05(fren, dat, k);
       
 	}
    
@@ -1261,7 +1303,7 @@ function kind0(o)
             }
          }
          
-         if (o.pubkey === your.k) 
+         if (k === your.k) 
          { // gets main profile img
             u.setAttribute('style', 'background-image: url('+dat.picture.split('?')[0]+')');
          }
@@ -1280,7 +1322,7 @@ function kind0(o)
 	   about.innerHTML = ai(dat.about);
 	}
    
-   update_k(o.pubkey);
+   update_k(k);
 }
 
 function update_k(k) 
@@ -1300,6 +1342,12 @@ function update_k(k)
    });
 }
 
+function ordered(room) 
+{
+   [...room.children]
+   .sort( (a,b) => a.dataset.stamp < b.dataset.stamp ? 1 : -1 )
+   .forEach(node => room.appendChild(node));
+}
 
 
 function kind1(o) 
@@ -1309,7 +1357,7 @@ function kind1(o)
       fren = document.getElementById('p-' + o.pubkey),
       tags;
    
-   if (!l) 
+   if (!l ) 
    { 
       l = newid(o);
          
@@ -1344,10 +1392,12 @@ function kind1(o)
             let root = document.getElementById('e-'+ rootid);
             
             if (root) { lies(root, l) } 
-            else { knd1.prepend(l) }
+            else { knd1.prepend(l), ordered(knd1) }
          }
    
-      } else { knd1.prepend(l) }   
+      } else { knd1.prepend(l), ordered(knd1) }   
+      
+      
       
       get_orphans(o.id, l);
       
@@ -1425,6 +1475,7 @@ function crawl()
 
 function kind3(o) 
 { // NIP-02 Contact List and Petnames (& relays)
+   if (o.pubkey === your.k) your.r = o.content;
    
    let fren = document.getElementById('p-' + o.pubkey);
    if (!fren) fren = newpub(o.pubkey);   
@@ -1454,36 +1505,18 @@ function kind3(o)
          follows.append(f);
       });
 
-      let rels = JSON.parse(o.content);
-      let lays = fren.querySelector('.relays');
-      
-      if (!lays) 
-      {
-         lays = document.createElement('ul');
-         lays.classList.add('relays', 'section');
-         lays.setAttribute('data-label', 'relays');
-         fren.append(lays);
-      }
-      
-      lays.innerHTML = '';
-      
-      Object.entries(rels).forEach(([key, value]) => 
-      {
-         let li = document.createElement('li')
-         let re = document.createElement('a');
-         li.classList.add('section-item');
-         re.classList.add('relay');
-         re.textContent = key.substr(6);
-         re.dataset.read = value.read ? 'r' : '-';
-         re.dataset.write = value.write ? 'w' : '-';
-         li.append(re);
-         lays.append(li);
-      });
+      build_relays(o.content, fren);
       
       if (subscriptions) 
       {
          your.follows = JSON.stringify(subscriptions);
-         yourfollows();
+         
+         ws.forEach(function(r) {
+            if (r.readyState === 1) {
+               yourfollows(r);
+            }
+         });
+         
       }                                    
    }
 }
@@ -1536,22 +1569,7 @@ function kind4(o)
    }
 }
 
-let we, 
-relays = your.relays;
 
-if (!relays) {
-   relays = [  
-      "wss://nostr-pub.wellorder.net",
-      "wss://relayer.fiatjaf.com",
-      "wss://nostr.rocks",
-      "wss://nostr-relay.wlvs.space",
-      "wss://nostr-relay.untethr.me",
-      "wss://relay.bitid.nz",
-      "wss://nostr.bitcoiner.social"
-   ]
-}
-
-let relay = relays[3];
 
 function bbbb()
 {// boom biddy bye bye
@@ -1583,34 +1601,66 @@ function bbbb()
 
 function open(e) 
 {
-   we.send('["REQ", "aa-you", {'
-      + '"authors":["'
-      + your.k.substring(0, 16)
-      + '"]'
+   console.log(e.target);
+
+   e.target.send('["REQ", "aa-you", {'
+   + '"authors":["'
+   + your.k.substring(0, 16)
+   + '"]'
    //               + t ? ',"since":'+ t : ''
    + '}]');
    
-   we.send('["REQ", "aa-notifications", {"#p":["' 
+   e.target.send('["REQ", "aa-notifications", {"#p":["' 
       + your.k + '"]'
    //            + t ? ',"since":'+t : ''
    + '}]');
       
-   relaytion(we)
+   relaytion(e.target)
 }
 
-function reconnect() 
+function close(e) 
+{ 
+   console.log('closed', e);
+   
+   let wsc = ws_closed[e.target.url] ? ws_closed[e.target.url] : [];
+   
+   const index = ws.indexOf(e.target);
+   
+   if (index > -1) {
+     wsc.unshift(e.timeStamp);
+     ws.splice(index, 1);
+   }
+   
+   ws_closed[e.target.url] = wsc;
+   console.log(wsc);
+   
+   // reconnect if somewhat stable
+   if (wsc[1] && wsc[0] - wsc[1] > 99999) {
+      connect(e.target.url);
+   } else {
+      // handle this later
+   }
+
+}
+
+function connect(url) 
 {
-   // soon™
+   r = new WebSocket(url);
+   r.addEventListener('open', open); 
+   r.addEventListener('message', message);
+   r.addEventListener('close', close);
+   ws.push(r);
 }
 
 function message(e) 
 {
    const 
-      type = JSON.parse(e.data)[0], // the request id
+      type = JSON.parse(e.data)[0], // the message type
       dis = JSON.parse(e.data)[1], // the request id
       dat = JSON.parse(e.data)[2]; // the event data
    
-   if (type !== 'EVENT') {
+   if (type !== 'EVENT') 
+   {
       console.log(type, dis);
    }
    
@@ -1638,14 +1688,12 @@ function message(e)
             {
                case 0: 
                   kind0(dat); 
-                  select_p(dat.pubkey);
-                  break;
-               case 3: 
-                  kind3(dat); 
                   break;
                case 1: 
                   kind1(dat);
-                  select_e(dat.id);
+                  break;
+               case 3: 
+                  kind3(dat); 
                   break;
                default: //anykind(dat); 
             }
@@ -1658,42 +1706,58 @@ function message(e)
                   break;
                case 1: kind1(dat); break;
                case 3: kind3(dat); break;
-               default: anykind(dat); 
+               default: //anykind(dat); 
             }
       }
    }
 }
 
-function close(e) 
-{ 
-   relaytion(we) 
-}
-
 function status(e) 
 {
-   relaytion(we) 
+   relaytion(ws[0]) 
 }
 
 function get_event(id) 
 {
-   we.send('["REQ", "aa-inspect", {"ids":["'+id+'"]}]');
+   ws.forEach(function(r) {
+      if (r.readyState === 1 && !session[id]) {
+         r.send('["REQ", "aa-inspect", {"ids":["'+id+'"]}]');
+      }
+   });
    
-   setTimeout(function () {
-      
+   setTimeout(function () 
+   {
       if (session[id]) select_e(id);
       else log('event not found: ' + id);
       
-   }, 100)
+   }, 1000)
 }
 
 function get_pubkey(pubkey) 
 {
-   we.send('["REQ", "aa-inspect", {"authors":["'+pubkey+'"], "kinds":[0, 3]}]');
+   ws.forEach(function(r) {
+      if (r.readyState === 1 && !your[pubkey]) {
+         r.send('["REQ", "aa-inspect", {"authors":["'+pubkey+'"], "kinds":[0, 3]}]');
+      }
+   });
    
-   setTimeout(function () {
-      if (your[pubkey]) select_e(pubkey);
+   setTimeout(function () 
+   {
+      if (your[pubkey]) select_p(pubkey);
       else log('pubkey not found: ' + pubkey);
-   }, 100)
+   
+   }, 1000)
+}
+
+function yourfollows(r) 
+{ 
+   let subs = '["' + your.k + '",' + your.follows.substr(1);
+   const lastweek = new Date();
+   lastweek.setDate(lastweek.getDate() - 3); // fetch kind1 from last x days
+   
+   r.send('["REQ", "aa-dis", {"kinds":[0, 3], "authors":'+ your.follows + '}]');
+   r.send('["REQ", "aa-feed", {"kinds":[1], "authors":'+ subs +', "since":'+ Math.floor(lastweek.getTime()/1000) +'}]');
+
 }
 
 function print_event(o) 
@@ -1702,21 +1766,19 @@ function print_event(o)
 }
 
 function start() {
-   
-   // connect to chosen relay
-   we = new WebSocket(relay);
-   
+         
    let k = your.getItem('k');
    if (k) {
       iot.value = '';
       iot.placeholder = 'new post';
          
-      document.body.classList.add('has-k');
-
-      we.addEventListener('open', open); 
-      we.addEventListener('message', message);
-      we.addEventListener('close', close); 
+      document.body.classList.add('has-k');         
       
+      Object.entries(relays).forEach(([url, can]) => 
+      {
+         if (can.read && can.write) connect(url);
+      });
+            
       idea.addEventListener('click', status, false);
       
       if (window.nostr) 
@@ -1752,8 +1814,39 @@ function relaytion(ship)
    2	CLOSING	The connection is in the process of closing.
    3	CLOSED	The connection is closed or couldn't be opened.*/
    
-   idea.dataset.status = relay.substr(6);
+   idea.dataset.status = ship.url.substr(6);
    idea.textContent = new Date().toUTCString() + ' [' + ship.readyState + ']';
+}
+
+function build_relays(relays, l) 
+{
+   let rr = JSON.parse(relays);
+   let r = l.querySelector('.relays');
+   
+   if (!r) 
+   {
+      r = document.createElement('ul');
+      r.classList.add('relays', 'section');
+      r.setAttribute('data-label', 'relays');
+      l.append(r);
+   }
+   
+   r.innerHTML = '';
+   
+   Object.entries(rr).forEach(([key, value]) => 
+   {
+      const 
+         li = document.createElement('li'),
+         a = document.createElement('a');
+         
+      li.classList.add('section-item');
+      a.classList.add('relay');
+      a.textContent = key.substr(6);
+      a.dataset.read = value.read ? 'r' : '-';
+      a.dataset.write = value.write ? 'w' : '-';
+      li.append(a);
+      r.append(li);
+   });
 }
 
 function preptags(o) 
@@ -1914,7 +2007,11 @@ function sign(draft)
 
 function post(note) 
 { 
-   we.send( '["EVENT",' + note + ']' );
+   ws.forEach(function(r) {
+      if (r.readyState === 1) {
+         r.send( '["EVENT",' + note + ']' );
+      }
+   });
 }
 
 function hashchange(e) 
@@ -1923,12 +2020,6 @@ function hashchange(e)
    let search = hash ? arParams(hash) : arParams(location.search);
    
    console.log(location);
-//   let params = search[1] ? new URLSearchParams(search[1]) : false;
-//   let entries = params.values();
-   
-//   if (entries.length > 0) {
-//      console.log(params);
-//   }
    
    if (search[0] !== '') {
       console.log(search);
