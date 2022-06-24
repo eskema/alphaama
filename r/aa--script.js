@@ -8,12 +8,12 @@ const
    aside = document.getElementById('as'),
    u = document.getElementById('u'),
    stuff = { behavior:'smooth', block: 'start'},
-   ws = [],
-   ws_closed = {};
+   readers = [],
+   writers = [],
+   cc = {};
 
-
-//let relays = your.r ? JSON.parse(your.r) : 
-let relays = 
+let relays = your.r ? JSON.parse(your.r) : 
+//let relays = 
 {
    "wss://nostr-pub.wellorder.net":{"read":true,"write":true},
    "wss://nostr-relay.wlvs.space":{"read":true,"write":true},
@@ -1127,77 +1127,73 @@ function notifica(o) {
       case 4: kind4(o); break;
       case 3: follows_you(o.pubkey); break;
       default:
-         
-         let selector = '#p-' + o.pubkey + ' .interactions';
-         let interactions = document.querySelector(selector);
-         if (!interactions) interactions = newpub(o.pubkey).querySelector(selector);
-         
-         let already = document.querySelector(selector + ' .e-'+o.id);
-         if (!already) {
-            if (o.kind === 1) 
-            {
-               let follows = your.follows ? JSON.parse(your.follows) : false;
-               if (follows && !follows.includes(o.pubkey))
+         if (o.pubkey !== your.k) {
+            let selector = '#p-' + o.pubkey + ' .interactions';
+            let interactions = document.querySelector(selector);
+            if (!interactions) interactions = newpub(o.pubkey).querySelector(selector);
+            
+            let already = document.querySelector(selector + ' .e-'+o.id);
+            if (!already) {
+               if (o.kind === 1) 
                {
-                  kind1(o)
+                  let follows = your.follows ? JSON.parse(your.follows) : false;
+                  if (follows && !follows.includes(o.pubkey)) kind1(o);
                }
+               
+               let 
+                  l = document.createElement('li'),
+                  text = ' replied in ';
+               
+               l.classList.add('interaction', 'section-item', state, 'e-'+o.id);
+               l.setAttribute('data-kind', o.kind);
+               stylek([o.pubkey,o.id], l);
+               
+               let id = document.createElement('a');
+               id.classList.add('interaction-link');
+               
+               let target = o.id;
+               id.textContent = pretty(o.id);
+      
+               let mentions = checkmentions(o.content);
+               mentions.forEach(function(el) 
+               {
+                  if (o.tags[el][1] === your.k) {
+                     text = ' mentioned you in ';
+                  }
+               });
+               
+               if (o.kind === 7) 
+               {
+                  
+                  let ind = o.tags.findIndex(inde);
+                  
+                  function inde(x) {
+                    return x[0] === 'e';
+                  }
+                  
+                  target = o.tags[ind][1];
+                  text = " liked ";
+               }
+               
+               id.textContent = pretty(target);
+               id.href = '#e-' + target;
+               
+               let created_at = make_time(o.created_at);
+               
+               l.innerHTML = pretty(o.pubkey) 
+                  + text 
+                  + id.outerHTML 
+                  + created_at.outerHTML;
+               
+               let button_state = document.createElement('button');
+               button_state.classList.add('inbox-state');
+               button_state.dataset.id = o.id;
+               button_state.textContent = '[x]';
+               
+               l.append(button_state);
+               interactions.prepend(l);
             }
-            
-            let 
-               l = document.createElement('li'),
-               text = ' replied in ';
-            
-            l.classList.add('interaction', 'section-item', state, 'e-'+o.id);
-            l.setAttribute('data-kind', o.kind);
-            stylek([o.pubkey,o.id], l);
-            
-            let id = document.createElement('a');
-            id.classList.add('interaction-link');
-            
-            let target = o.id;
-            id.textContent = pretty(o.id);
-   
-            let mentions = checkmentions(o.content);
-            mentions.forEach(function(el) 
-            {
-               if (o.tags[el][1] === your.k) {
-                  text = ' mentioned you in ';
-               }
-            });
-            
-            if (o.kind === 7) 
-            {
-               
-               let ind = o.tags.findIndex(inde);
-               
-               function inde(x) {
-                 return x[0] === 'e';
-               }
-               
-               target = o.tags[ind][1];
-               text = " liked ";
-            }
-            
-            id.textContent = pretty(target);
-            id.href = '#e-' + target;
-            
-            let created_at = make_time(o.created_at);
-            
-            l.innerHTML = pretty(o.pubkey) 
-               + text 
-               + id.outerHTML 
-               + created_at.outerHTML;
-            
-            let button_state = document.createElement('button');
-            button_state.classList.add('inbox-state');
-            button_state.dataset.id = o.id;
-            button_state.textContent = '[x]';
-            
-            l.append(button_state);
-            interactions.prepend(l);
          }
-         
-         
    }
 }
 
@@ -1506,17 +1502,7 @@ function kind3(o)
 
       build_relays(o.content, fren);
       
-      if (subscriptions) 
-      {
-         your.follows = JSON.stringify(subscriptions);
-         
-         ws.forEach(function(r) {
-            if (r.readyState === 1) {
-               yourfollows(r);
-            }
-         });
-         
-      }                                    
+      if (subscriptions) your.follows = JSON.stringify(subscriptions);
    }
 }
 
@@ -1598,57 +1584,76 @@ function bbbb()
 
 */
 
-function open(e) 
-{
-   console.log(e.target);
 
-   e.target.send('["REQ", "aa-you", {'
-   + '"authors":["'
-   + your.k.substring(0, 16)
-   + '"]'
-   //               + t ? ',"since":'+ t : ''
-   + '}]');
+
+function reopen(e) 
+{
+   console.log(e.target.url + ' reopen');
+   let since = your.t ? ',"since":'+ your.t : '';
+//   e.target.send('["REQ", "aa-you", {'
+//      + '"authors":["'
+//      + your.k.substring(0, 16)
+//      + '"]'
+//      + ', "limit": 100'
+//      + since
+//   + '}]');
    
    e.target.send('["REQ", "aa-notifications", {"#p":["' 
       + your.k + '"]'
-   //            + t ? ',"since":'+t : ''
+      + ', "limit": 23'
+      + since
    + '}]');
+   
+   feed(e.target, true);
       
    relaytion(e.target)
 }
 
 function close(e) 
-{ 
-   console.log('closed', e);
+{
+   console.log(e.target.url + ' closed ' + e.reason);
    
-   let wsc = ws_closed[e.target.url] ? ws_closed[e.target.url] : [];
-   
-   const index = ws.indexOf(e.target);
-   let fails;
-   if (index > -1) {
-     fails = wsc.unshift(e.timeStamp);
-     ws.splice(index, 1);
-   }
-   
-   ws_closed[e.target.url] = wsc;
-   console.log(wsc);
-   
-   // reconnect if somewhat stable
-   if (fails < 3 || wsc[1] && wsc[0] - wsc[1] > 99999) {
-      connect(e.target.url);
-   } else {
-      // handle this later
-   }
+   let close_history = cc[e.target.url] ? cc[e.target.url] : [];
 
+   const fails = close_history.unshift(e.timeStamp);
+
+   cc[e.target.url] = close_history;   
+   // reconnect if somewhat stable
+   if (fails < 4 || close_history[1] && close_history[0] - close_history[1] > 99999) 
+   {  
+      console.log('reconnecting...')
+      connect(e.target.url, true)
+   } else {
+      relaytion(e.target)
+   }
 }
 
-function connect(url) 
+function connect(url, reconnect) 
 {
-   r = new WebSocket(url);
-   r.addEventListener('open', open); 
+   const can = relays[url];
+   const r = can.ws = new WebSocket(url);
+   r.addEventListener('open', function(e) 
+   {
+      console.log(e.target.url + ' open');
+      
+      let since = reconnect && your.t ? ',"since":'+ your.t : '';
+      
+      if (can.read) 
+      {
+         e.target.send('["REQ", "aa-notifications", {'
+            + '"#p":["'+ your.k + '"]'
+            + ', "limit": 23'
+            + since
+         + '}]');
+         
+         feed(e.target, reconnect);
+      }
+
+      relaytion(e.target)
+   }); 
+   
    r.addEventListener('message', message);
    r.addEventListener('close', close);
-   ws.push(r);
 }
 
 function message(e) 
@@ -1679,6 +1684,10 @@ function message(e)
                default: //anykind(dat); 
             }
             break;
+         case 'aa-list':
+            kind3(dat); 
+            feed(e.target, false);
+            break;
          case 'aa-notifications':
             notifica(dat); 
             break;
@@ -1700,9 +1709,7 @@ function message(e)
          default: // aa-feed
             switch (dat.kind) 
             {
-               case 0: 
-                  kind0(dat); 
-                  break;
+               case 0: kind0(dat); break;
                case 1: kind1(dat); break;
                case 3: kind3(dat); break;
                default: //anykind(dat); 
@@ -1718,9 +1725,10 @@ function status(e)
 
 function get_event(id) 
 {
-   ws.forEach(function(r) {
-      if (r.readyState === 1 && !session[id]) {
-         r.send('["REQ", "aa-inspect", {"ids":["'+id+'"]}]');
+   Object.entries(relays).forEach(([url, can]) => 
+   {
+      if (can.read && can.ws && can.ws.readyState === 1) {
+         can.ws.send('["REQ", "aa-inspect", {"ids":["'+id+'"]}]');
       }
    });
    
@@ -1734,9 +1742,10 @@ function get_event(id)
 
 function get_pubkey(pubkey) 
 {
-   ws.forEach(function(r) {
-      if (r.readyState === 1 && !your[pubkey]) {
-         r.send('["REQ", "aa-inspect", {"authors":["'+pubkey+'"], "kinds":[0, 3]}]');
+   Object.entries(relays).forEach(([url, can]) => 
+   {
+      if (can.read && can.ws && can.ws.readyState === 1) {
+         can.ws.send('["REQ", "aa-inspect", {"authors":["'+pubkey+'"], "kinds":[0, 3]}]');
       }
    });
    
@@ -1748,15 +1757,21 @@ function get_pubkey(pubkey)
    }, 1000)
 }
 
-function yourfollows(r) 
+function feed(r, resume) 
 { 
-   let subs = '["' + your.k + '",' + your.follows.substr(1);
-   const lastweek = new Date();
-   lastweek.setDate(lastweek.getDate() - 3); // fetch kind1 from last x days
-   
-   r.send('["REQ", "aa-dis", {"kinds":[0, 3], "authors":'+ your.follows + '}]');
-   r.send('["REQ", "aa-feed", {"kinds":[1], "authors":'+ subs +', "since":'+ Math.floor(lastweek.getTime()/1000) +'}]');
+   if (your.follows) 
+   {
+      const lastweek = new Date();
+      lastweek.setDate(lastweek.getDate() - 3); // fetch kind1 from last x days
+      since = resume && your.t ? your.t : Math.floor(lastweek.getTime()/1000);
+      
+      let subs = '["' + your.k + '",' + your.follows.substr(1);
 
+      r.send('["REQ", "aa-feed", {"kinds":[0,1,3], "authors":'+ subs +', "since":'+ since +'}]');
+   } else {
+      r.send('["REQ", "aa-list", {"kinds":[3], "authors":['+ your.k +'], "limit":1}]');
+   }
+   
 }
 
 function print_event(o) 
@@ -1774,11 +1789,17 @@ function start() {
       document.body.classList.add('has-k');         
       
       Object.entries(relays).forEach(([url, can]) => 
-      {
-         if (can.read && can.write) connect(url);
+      { 
+         if (can.read || can.write) connect(url, false);
       });
             
       idea.addEventListener('click', status, false);
+      
+      if (options.media && your[k]) 
+      { // gets main profile img
+         let dat = JSON.parse(your[k]);
+         u.setAttribute('style', 'background-image: url('+dat.picture.split('?')[0]+')');
+      }
       
       if (window.nostr) 
       { // nos2x
@@ -2006,9 +2027,10 @@ function sign(draft)
 
 function post(note) 
 { 
-   ws.forEach(function(r) {
-      if (r.readyState === 1) {
-         r.send( '["EVENT",' + note + ']' );
+   Object.entries(relays).forEach(([url, can]) => 
+   {
+      if (can.write && can.ws && can.ws.readyState === 1) {
+         can.ws.send('["EVENT",' + note + ']');
       }
    });
 }
