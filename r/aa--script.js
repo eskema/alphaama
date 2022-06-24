@@ -8,8 +8,6 @@ const
    aside = document.getElementById('as'),
    u = document.getElementById('u'),
    stuff = { behavior:'smooth', block: 'start'},
-   readers = [],
-   writers = [],
    cc = {};
 
 let relays = your.r ? JSON.parse(your.r) : 
@@ -1630,15 +1628,19 @@ function close(e)
 
 function connect(url, reconnect) 
 {
-   const can = relays[url];
-   const r = can.ws = new WebSocket(url);
+   
+   let r = new WebSocket(url);
+      
    r.addEventListener('open', function(e) 
    {
       console.log(e.target.url + ' open');
       
+      let relay = relays[e.target.url.substr(0, e.target.url.length - 1)];
+      relay.ws = e.target;
+                  
       let since = reconnect && your.t ? ',"since":'+ your.t : '';
       
-      if (can.read) 
+      if (relay.read) 
       {
          e.target.send('["REQ", "aa-notifications", {'
             + '"#p":["'+ your.k + '"]'
