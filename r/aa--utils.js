@@ -274,7 +274,7 @@ function stylek(keys, l)
       for (var i = 0; i < index + 1; i++) {
          c += 'c';
       }
-      style += c + ':' + rgb(k.substr(0, 6)) + ';'
+      style += c + ':' + k.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/, (m, p1) => rgb(p1)) + ';'
    })
    
    l.style.cssText += style;
