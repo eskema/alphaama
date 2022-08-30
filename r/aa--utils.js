@@ -143,10 +143,9 @@ function arParams(str)
 
 function rgb(hex) 
 {
-   const c = hex.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/, (m, p1) => p1)
-   return parseInt(c.substr(0, 2), 16)
-   + ',' +parseInt(c.substr(2, 2), 16)
-   + ',' +parseInt(c.substr(4, 2), 16)
+   return parseInt(hex.substr(0, 2), 16)
+   + ',' +parseInt(hex.substr(2, 2), 16)
+   + ',' +parseInt(hex.substr(4, 2), 16)
 }
 
 function hex(k, separator) {
@@ -275,7 +274,7 @@ function stylek(keys, l)
       for (var i = 0; i < index + 1; i++) {
          c += 'c';
       }
-      style += c + ':' + rgb(k) + ';'
+      style += c + ':' + k.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/, (m, p1) => rgb(p1)) + ';'
    })
    
    l.style.cssText += style;
