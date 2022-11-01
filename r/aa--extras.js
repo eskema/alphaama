@@ -1,6 +1,25 @@
-function yt(id) 
+function yt(ur_l) 
 { // fuck youtube but here it is anyway
-   return '<figure class="yt"><iframe src="https://www.youtube.com/embed/'+ id + '" title="yt" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>'
+   
+   let id = ur_l.searchParams.get('v');
+   if (!id) 
+   {
+      let domain = ur_l.hostname.split('.').reverse().splice(0,2).reverse().join('.');
+      if (domain === 'youtu.be') id = ur_l.pathname.substring(1);
+   }
+   
+   if (!id) return false;
+   return '<figure class="yt"><iframe src="https://www.youtube.com/embed/'+ id + '" title="yt" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></figure>'   
+}
+
+function spotify(ur_l) 
+{ // fuck spofify but here it is anyway
+   const paths = ur_l.pathname.split('/');
+   if (paths[paths.length - 2] == 'track') 
+   {
+      return '<figure class="spotify"><iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/'+ paths[paths.length - 1] + '" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe></figure>'
+   }
+   return false
 }
 
 function orient(l) 

@@ -6,19 +6,54 @@ function x_days(number)
    return Math.floor(days.getTime()/1000)
 }
 
+function hfsp(uri) 
+{  
+   // h ash
+   // f ilter
+   // s earch
+   // p arams
+   const 
+      fun = uri.split('?'), 
+      poor = {h:fun[0]};
+   if (fun[1]) 
+   {
+      poor.s = fun[1];
+      poor.p = new URLSearchParams(fun[1]);
+   }
+   return poor
+}
+
+function embed(url) 
+{
+   const 
+      ur_l = new URL(url),
+      domain = ur_l.hostname.split('.').reverse().splice(0,2).reverse().join('.');
+   console.log(domain);
+   switch (domain) {
+      case 'youtu.be':
+      case 'youtube.com': return yt(ur_l)
+      case 'spotify.com': return spotify(ur_l)
+      default: return false
+   }
+}
+
 function replacer(url) 
 {
    const 
-      src = arParams(url),
-      match = src[0],
+      src = hfsp(url),
+      match = src.h,
       matchlow = match.toLowerCase();
+   
+   const base_link = url => 
+      '<a href="' + url 
+            + '" class="content-link" target="_blank" rel="nofollow">' 
+            + url + '</a>';
    
    let rep = '';
    
    if (options.media) 
    {
-
-      let format = src[2] ? src[2].get('format') : false;
+      let format = src.p ? src.p.get('format') : false;
       if ( matchlow.endsWith('.jpg') 
       || matchlow.endsWith('.jpeg') 
       || matchlow.endsWith('.png')
@@ -33,37 +68,16 @@ function replacer(url)
          
       } else if ( matchlow.endsWith('.mp4'))
       { // videos
-         let poster = src[2] && src[2].get('poster') ? decodeURIComponent(src[2].get('poster')) : false;
-         
+         let poster = src.p && src.p.get('poster') ? decodeURIComponent(src.p.get('poster')) : false;
          rep += player(url, poster).outerHTML;
-         
-      } else { // regular links
-         
-         let ur = new URL(url);
-         
-         let domain = ur.hostname.split('.').reverse().splice(0,2).reverse().join('.');
-         if (domain === 'youtube.com' || domain === 'youtu.be' ) 
-         { 
-            let id = ur.searchParams.get('v');
-            
-            if (!id) {
-                id = ur.pathname.substring(1);
-            }
-            
-            rep += yt(id)
-         } 
-         else 
-         {
-            rep += '<a href="' + url 
-            + '" class="content-link" target="_blank" rel="nofollow">' 
-            + url + '</a>';
-         }
+      } 
+      else 
+      { // regular links
+         rep += embed(url) ? embed(url) : base_link(url);
    	}
-   } else {
-      rep += '<a href="' + url 
-         + '" class="content-link" target="_blank" rel="nofollow">' 
-         + url + '</a>';
-   }
+   } 
+   else { rep += base_link(url) }
+   
    return rep
 }
 
@@ -94,7 +108,7 @@ function mentions(text, tags)
 function ai(content, tags) 
 {
    //URLs starting with http://, https://, or ftp://
-   let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
+   let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
    let re = content.replace(patternA, replacer);
    
    //URLs starting with www. (without // before it, or it'd re-link the ones done above)
@@ -115,7 +129,7 @@ function tog(e,l)
    } 			
 }
 
-function toggle_state(l) 
+function toggle_inbox_state(l) 
 {
    let button_state = l.querySelector('button');
    let id = button_state.dataset.id;
@@ -270,11 +284,14 @@ function stylek(keys, l)
    let style = '';
    keys.forEach(function(k, index) 
    {
-      let c = '--';
-      for (var i = 0; i < index + 1; i++) {
-         c += 'c';
+      try 
+      {
+         let c = '--';
+         for (var i = 0; i < index + 1; i++) { c += 'c'; }
+   //      style += c + ':' + rgb(k.substr(0, 6)) + ';'
+         style += c + ':' + k.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/, (m, p1) => rgb(p1)) + ';'
       }
-      style += c + ':' + k.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/, (m, p1) => rgb(p1)) + ';'
+      catch (error) { console.log(keys, error) }
    })
    
    l.style.cssText += style;
@@ -329,7 +346,7 @@ function a_k(a,dat)
    {
       let a_text = a.querySelector('.text');
       if (!a_text) a_text = document.createElement('span');
-      a_text.classList.add('text', 'test');
+      a_text.classList.add('text');
       a_text.textContent = dat.name;
       a.classList.add('has-text');
       a.append(a_text);
@@ -406,17 +423,21 @@ function ur(string)
    return string.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 }
 
+function hash(a) 
+{
+   return bitcoinjs.crypto.sha256(JSON.stringify(a)).toString('hex')
+}
+
 function ofa(a) 
 {//object from array
    const o = {};
    o.id         = a[0] ? a[0] : false;
    o.pubkey     = a[1] ? a[1] : false;
    o.created_at = a[2] ? a[2] : false;
-   o.kind       = a[3] ? a[3] : false;
+   o.kind       = a[3] === 0 ? 0 : a[3] ? a[3] : false;
    o.tags       = a[4] ? a[4] : false;
    o.content    = a[5] ? a[5] : false;
    o.sig        = a[6] ? a[6] : false;
-   
    return o
 }
 
@@ -431,7 +452,7 @@ function child_from_class(l, clas)
 
 function hide(k) 
 {
-   const notk = document.querySelectorAll('.event:not(.p-'+k+')');
+   const notk = document.querySelectorAll('.event:not([data-p="'+k+'"])');
    if (notk) { notk.forEach(function(l) { l.classList.add('hidden') })}
 }
 
@@ -473,11 +494,56 @@ String.prototype.hexEncode = function()
    return result
 }
 
-function isElement(element) {
-    return element instanceof Element || element instanceof HTMLDocument;  
+function isElement(l) {
+    return l instanceof Element || l instanceof HTMLDocument;  
 }
 
-function hash(a) 
+function make_section(clas)
 {
-   return bitcoinjs.crypto.sha256( JSON.stringify(a)).toString( 'hex' );   
+   let r = document.createElement('ul');
+   r.classList.add('section', clas);
+   r.setAttribute('data-label', clas);
+   return r
+}
+
+function react(e) 
+{
+   iot.focus();
+   iot.value = '+';
+   iot.parentElement.dataset.content = '+';
+   const l = e.target.closest('.event');
+   your.reaction = JSON.stringify(['+', l.id.substr(2), l.dataset.p]);
+   console.log(your.reaction);
+}
+
+function redact(e)
+{
+   
+}
+
+function hide_replies(e) 
+{
+   const l = e.target.closest('.event');
+   l.classList.toggle('replies-hidden');
+   l.scrollIntoView(stuff);
+}
+
+function make_actions(l) 
+{
+   const actions = document.createElement('p');
+   actions.classList.add('actions');
+   
+   const reactions = document.createElement('button');
+   reactions.textContent = '<3';
+   reactions.classList.add('reactions');
+
+   const hide = document.createElement('button');
+   hide.classList.add('hide-replies');
+//   hide.textContent = '//';
+   
+   actions.append(reactions, hide);
+   
+   l.append(actions);
+   reactions.addEventListener('click', react);
+   hide.addEventListener('click', hide_replies);
 }

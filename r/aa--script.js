@@ -205,13 +205,13 @@ function clickFren(e)
          if (e.target.classList.contains('interaction-link')) 
          {
             if (e.target.parentElement.classList.contains('unread')) {
-               toggle_state(e.target.parentElement);
+               toggle_inbox_state(e.target.parentElement);
             }
             
             select_e(e.target.getAttribute('href').substr(3));
             break;
          }
-         if (e.target.classList.contains('follow-link'))
+         if (e.target.classList.contains('author'))
          {
             select_p(e.target.getAttribute('href').substr(3));
          }
@@ -224,8 +224,11 @@ function clickFren(e)
       case 'BUTTON':
          if (e.target.parentElement.classList.contains('interaction')) 
          {
-            toggle_state(e.target.parentElement);
+            toggle_inbox_state(e.target.parentElement);
             break;
+         }
+         else if (e.target.classList.contains('close')) {
+            select_p(fren.id.substr(2)); 
          }
       case 'LI':
          if (e.target !== fren) {
@@ -261,7 +264,12 @@ function clickEvent(e)
                e.preventDefault();
                if (e.target.classList.contains('id')) 
                {
-                  view_source(e.target);
+                  if (e.target.classList.contains('mention')) {
+                     select_e(href.substr(3));
+                  }
+                  else {
+                     view_source(e.target);
+                  }                  
                } else {
                   select_e(href.substr(3));
                }
@@ -275,7 +283,7 @@ function clickEvent(e)
          break;
       case 'BUTTON':
          if (e.target.classList.contains('post')) {
-            let unsigned = JSON.parse(your[event.id.substr(2)]);
+            let unsigned = JSON.parse(your[event.dataset.o]);
             sign(unsigned);
          } 
          else if (e.target.classList.contains('cancel'))
@@ -284,7 +292,14 @@ function clickEvent(e)
          } 
          else if (e.target.classList.contains('edit'))
          {
-            let content = event.querySelector('.content').textContent;
+            let content;
+            switch (event.dataset.kind) {
+               case "0":
+                  content = '--smd ' + JSON.parse(your[event.dataset.o]).content;
+                  break;
+               default:
+                  content = event.querySelector('.content').textContent;
+            }
             iot.value = content;
             iot.parentElement.dataset.content = content;
             event.remove();
@@ -311,7 +326,10 @@ function clickEvent(e)
 
 function lies(reply, l) 
 {
-   let replies = reply.querySelector('.replies');
+   let 
+      replies = reply.querySelector('.replies'),
+      hide_btn = reply.querySelector('.actions .hide-replies');
+      
    if (!replies) 
    {
       replies = document.createElement('ul');
@@ -320,8 +338,11 @@ function lies(reply, l)
    } 
    
    replies.append(l); 
+//   console.log(replies.childNodes.length);
+   hide_btn.textContent = replies.childNodes.length;
    
    l.removeAttribute('data-reply');
+   reply.classList.add('has-replies');
    ordered(replies, true);
    
    let root = ancestor(reply, 'event');
@@ -414,29 +435,29 @@ function update_fren(dat, k)
    let fren = document.getElementById('p-'+k);
    if (!fren) fren = newpub(k);
    
-   fren.classList.add('bff');
+   fren.classList.add('bff'); // not sure if this is still used.. should be for your follows only
    const metadata = fren.querySelector('.metadata');
 
    if (dat.name) 
    {
-      let name = fren.querySelector('.name');
-      let petname;
-      if (!name) 
+      // iden.tit.y
+      let tit = fren.querySelector('.tit'); 
+      if (!tit) 
       {
-         name = document.createElement('h2');         
-         name.classList.add('name');
-         metadata.append(name);
+         tit = document.createElement('h2');         
+         tit.classList.add('tit');
+         metadata.append(tit);
       } 
       
-      petname = fren.querySelector('.petname');
-      if (!petname) 
+      let name = fren.querySelector('.name');
+      if (!name) 
       {
-         petname = document.createElement('span');
-         petname.classList.add('petname');
-         name.append(petname);
+         name = document.createElement('span');
+         name.classList.add('name');
+         tit.append(name);
       }
 
-      petname.innerHTML = dat.name;
+      name.innerHTML = dat.name;
 	   
       if (dat.nip05) verifyNIP05(fren, dat, k);
       
@@ -500,10 +521,3 @@ function update_fren(dat, k)
    update_k(k);
 }
 
-function make_section(clas)
-{
-   let r = document.createElement('ul');
-   r.classList.add('section', clas);
-   r.setAttribute('data-label', clas);
-   return r
-}

@@ -94,15 +94,15 @@ function connect(url, reconnect)
          if (options.k) 
          {
             interactions_filter['#p'] = [options.k];
-
-            if (options.t) 
-            {
-               interactions_filter.since = options.t
-            }
-            else
-            {
-               interactions_filter.limit = 100;
-            }
+            interactions_filter.since = reconnect ? options.t : x_days(options.days);
+//            if (options.t) 
+//            {
+//               interactions_filter.since = options.t
+//            }
+//            else
+//            {
+//               interactions_filter.limit = 100;
+//            }
 
             let subs = your.follows ? JSON.parse(your.follows) : [];
             if (options.k) subs.push(options.k);
@@ -188,8 +188,8 @@ function message(e)
          if (l.classList.contains('draft')) 
          {
             l.classList.remove('draft');
-            let actions = child_from_class(l, 'actions');
-            actions.innerHTML = '';
+            let actions_draft = child_from_class(l, 'actions-draft');
+            actions_draft.remove()
          }
       }
    }

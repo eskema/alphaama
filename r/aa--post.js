@@ -121,21 +121,49 @@ function prep(note)
          note//content
       ];
    
-   draft(a);
+   draft(a, 1);
 }
 
-function draft(a) 
+function reaction(note)
+{
+   let tags = [];
+   tags.push( [ 'e', note[1] ] );
+   tags.push( [ 'p', note[2] ] );
+   const a = [ 
+      0,//id
+      options.k,//pubkey
+      Math.floor( ( new Date().getTime() ) / 1000 ),//created_at
+      7,//kind
+      tags,//tags
+      note[0]//content
+   ];
+   
+   const unsigned = ofa(a);
+   unsigned.id = hash(a);
+   console.log(a, unsigned)
+   sign(unsigned);
+   your.removeItem('reaction')
+   
+}
+
+function draft(a, kind) 
 {
    const unsigned = ofa(a);
    unsigned.id = hash(a);
    your[unsigned.id] = JSON.stringify(unsigned);
    
-   let draft = kind1(unsigned)
+   let draft;
+   console.log(a[3]);
+   switch (kind) {
+      case 0: draft = kind0(unsigned); break;
+      default: draft = kind1(unsigned); break;
+   }
    
+   draft.dataset.o = unsigned.id;
    draft.classList.add('draft');
    
    let actions = document.createElement('div');
-   actions.classList.add('actions');
+   actions.classList.add('actions-draft');
    
    let post_btn = document.createElement('button');
    post_btn.classList.add('post');
@@ -157,6 +185,7 @@ function draft(a)
 
 function sign(unsigned) 
 {        
+   console.log(unsigned);
    if (window.nostr) 
    {
       window.nostr.signEvent(unsigned).then((signed) => 
@@ -201,6 +230,25 @@ function follow(k)
 function unfollow(k) 
 {
    // 
+}
+
+function set_metadata(o) 
+{
+   //make array to get hashed:
+   const a = [ 
+      0,//don't ask
+      options.k,//pubkey
+      Math.floor((new Date().getTime())/1000),//created_at
+      0,//kind
+      [],//tags
+      JSON.stringify(o)//content
+   ];
+   
+   draft(a, 0);
+//   const unsigned = ofa(a);
+//   unsigned.id = hash(a);
+//   console.log(unsigned);
+//   sign(unsigned);
 }
 
 function post(signed) 

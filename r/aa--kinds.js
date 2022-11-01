@@ -6,10 +6,7 @@ function newpub(k)
       knd0 = document.getElementById('kind-0'),
       l = document.createElement('li'),
       pubkey = document.createElement('p'),
-      metadata = document.createElement('header'),
-      dms = document.createElement('ul'),
-      interactions = document.createElement('ul'),
-      follows = document.createElement('ul');
+      metadata = document.createElement('header');
    
    l.id = 'p-' + k;
    l.classList.add('fren');    
@@ -18,21 +15,30 @@ function newpub(k)
    pubkey.textContent = k;
    
    metadata.classList.add('metadata');
+   
+   let close_btn = document.createElement('button');
+   close_btn.classList.add('close');
+   close_btn.textContent = 'x';
+   
+//   links.classList.add('sections-links');
+//   link_relays = document.createElement('a');
+//   link_relays.classList.add('link-relays');
+//   link_relays.textContent = 'relays'
    // I'm thinking maybe merge dms and interactions in a single list
-   dms.classList.add('dms', 'section');
-   dms.setAttribute('data-label', 'dms');
-   interactions.classList.add('interactions', 'section');
-   interactions.setAttribute('data-label', 'interactions');
-   follows.classList.add('follows', 'section');
-   follows.setAttribute('data-label', 'follows');
+//   dms.classList.add('dms', 'section');
+//   dms.setAttribute('data-label', 'dms');
+//   interactions.classList.add('interactions', 'section');
+//   interactions.setAttribute('data-label', 'interactions');
+//   const follows = make_section('follows');
+
    
    stylek([k], l);
    
-   l.append(pubkey, metadata, dms, interactions, follows);
+   l.append(pubkey, metadata, close_btn); // dms, interactions,
    
    knd0.append(l);      
    l.addEventListener('click', clickFren, false);
-   over(l);
+//   over(l);
    
    return l
 }
@@ -57,7 +63,7 @@ function newid(o)
    
    if (o.pubkey && o.pubkey !== false) 
    {
-      l.classList.add('p-'+ o.pubkey);
+      l.dataset.p = o.pubkey;
       h.prepend(taglink(['p', o.pubkey], ''));
    }
    
@@ -72,8 +78,7 @@ function newid(o)
       l.append(created_at);
       update_time(created_at);
    }
-   
-   if (o.kind && o.kind !== false) 
+   if (o.kind === 0 || o.kind && o.kind !== false) 
    {
       l.setAttribute('data-kind', o.kind);
    }
@@ -85,7 +90,7 @@ function newid(o)
    if (o.content && o.content !== false) {
       const content = document.createElement('article');
       content.classList.add('content');
-      content.textContent = o.content;
+      content.innerHTML = o.content;
       l.append(content);
    }
    
@@ -94,8 +99,10 @@ function newid(o)
       sig.classList.add('sig');
       l.append(sig);
    }
+   
+   make_actions(l);
 
-   over(l);
+//   over(l);
    return l
 }
 
@@ -169,9 +176,10 @@ function kind0(o)
    
 //   let fren = document.getElementById('p-' + o.pubkey);
 //   if (!fren) fren = newpub(o.pubkey);
+   let l;
    const 
       old_dat = your[o.pubkey] ? JSON.parse(your[o.pubkey]) : false,
-      dat = JSON.parse(o.content);
+      dat = typeof o.content === 'object' ? o.content : JSON.parse(o.content);
    
    if (old_dat && old_dat.id === o.id) { return dat } 
    else 
@@ -181,31 +189,32 @@ function kind0(o)
       update_k(o.pubkey);
    }
    
-   let new_content = dat.name + ' new metadata!';
-   if (old_dat.length > 0 !== dat) 
-   {
-      if (old_dat.name !== dat.name) 
-      {
-         new_content += '\n new name: ' + dat.name;
-      }
-      if (old_dat.picture !== dat.picture) 
-      {
-         new_content += '\n new picture: ' + dat.picture;
-      }
-      if (old_dat.about !== dat.about) 
-      {
-         new_content += '\n new about: ' + dat.about;
-      }
-      if (old_dat.nip05 !== dat.nip05)
-      {
-         new_content += '\n new nip05: ' + dat.nip05;
-      }
-   }
-   
-   o.content = new_content;
-   let l = newid(o);
-   knd1.append(l); 
-   ordered(knd1, false);
+//   let new_content = '<p>' + dat.name + ' new metadata!';
+//   if (old_dat.length > 0 !== dat) 
+//   {
+//      if (old_dat.name !== dat.name) 
+//      {
+//         new_content += '<br>name: ' + dat.name;
+//      }
+//      if (old_dat.picture !== dat.picture) 
+//      {
+//         new_content += '<br>picture: ' + dat.picture;
+//      }
+//      if (old_dat.about !== dat.about) 
+//      {
+//         new_content += '<br>about: ' + dat.about;
+//      }
+//      if (old_dat.nip05 !== dat.nip05)
+//      {
+//         new_content += '<br>nip05: ' + dat.nip05;
+//      }
+//   }
+//   new_content += '</p>';
+//   o.content = new_content;
+//   let l = newid(o);
+//   l.classList.add('root');
+//   knd1.append(l); 
+//   ordered(knd1, false);
    
    return l
 }
@@ -260,11 +269,14 @@ function kind1(o)
          l.classList.add('reply');
          // if it's a reply, check if we already have it
          replyid = o.tags[tags.ereply][1];
-//         rootid = o.tags[tags.eroot][1];
          let reply = document.getElementById('e-'+ replyid);
    
-         if (reply) lies(reply, l);
-         else childcare(tags);
+         if (reply) { lies(reply, l) }
+         else {
+            knd1.append(l);
+            ordered(knd1, false);
+            childcare(tags);
+         }
       } 
       else 
       {
@@ -304,7 +316,15 @@ function kind3(o)
    if (o.tags.length > 0) 
    {
       let follows = fren.querySelector('.follows');
-      follows.innerHTML = '';
+      if (!follows) 
+      { 
+         follows = make_section('follows');
+         fren.append(follows);
+      }
+      else {
+         follows.innerHTML = '';
+      }
+
       let subscriptions = o.pubkey === options.k ? [] : false;
       o.tags.forEach(function(ot) 
       { 
@@ -330,6 +350,7 @@ function kind3(o)
 
 function kind4(o) 
 { // Encrypted Direct Message (NIP4)
+   return false
    let m = false;
    let own = o.tags[0][1] !== options.k;
    let ek =  own ? o.tags[0][1] : o.pubkey;
