@@ -229,7 +229,30 @@ function follow(k)
 
 function unfollow(k) 
 {
-   // 
+   const 
+      now = Math.floor( ( new Date().getTime() ) / 1000 ), 
+      tags = [],
+      follows = JSON.parse(your.follows),
+      rels = JSON.parse(your.options).r;
+   
+   follows.filter(pubkey => pubkey !== k).forEach(function(pubkey) 
+   {
+      tags.push(['p',pubkey]);
+   });
+   
+   const a = [ 
+      0,//don't ask
+      options.k,//pubkey
+      now,//created_at
+      3,//kind
+      tags,//tags
+      JSON.stringify(rels)//content
+   ];
+   
+   const unsigned = ofa(a);
+   unsigned.id = hash(a);
+   console.log(unsigned);
+   sign(unsigned);
 }
 
 function set_metadata(o) 
