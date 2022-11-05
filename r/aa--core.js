@@ -122,6 +122,12 @@ function is(e)
                   follow(a[1]);
                }
                break;
+            case '--u':
+               if (a[1]) 
+               {
+                  unfollow(a[1]);
+               }
+               break;
             case '--md':
                let data = your[options.k] ? JSON.parse(your[options.k]) : false;
                if (data) 

@@ -938,6 +938,7 @@ button.view-source {
       -moz-user-select: none;
        -ms-user-select: none;
            user-select: none;
+   /*display: none;*/
 }
 
 .event.interesting .hidden {
@@ -951,7 +952,8 @@ button.view-source {
 
 .event.hidden > .content,
 .event.hidden > .heading,
-.event.hidden > .tags {
+.event.hidden > .tags,
+.event.hidden > .actions {
    display: none;
 }
 
@@ -1184,6 +1186,7 @@ button.view-source {
 
 
 .event.root:not(.mom):not(.interesting),
+.event[data-reply]:not(.mom):not(.interesting),
 .event.interesting > .replies > .reply {
    grid-template-columns: auto 1fr auto 2fr;
    grid-template-columns: minmax(33vw, auto) 1fr;
@@ -1199,6 +1202,7 @@ button.view-source {
 }
 
 .p-k .event.root:not(.mom):not(.interesting),
+.p-k .event[data-reply]:not(.mom):not(.interesting),
 .p-k .event.interesting .reply {
    grid-template-columns: auto 1fr;
    grid-template-rows: auto auto 1fr;
@@ -1209,7 +1213,8 @@ button.view-source {
       ". replies";
 }
 
-.event.root:not(.mom):not(.interesting) {
+.event.root:not(.mom):not(.interesting),
+.event[data-reply]:not(.mom):not(.interesting) {
    margin-bottom: var(--line);
 }
 
@@ -1235,6 +1240,7 @@ button.view-source {
    padding: 0!important;
 }
 
+.event[data-reply]:not(.mom):not(.interesting) > .heading,
 .event.root:not(.interesting):not(.mom) > .heading,
 .event.interesting .event .heading {
    position: sticky;
@@ -1245,6 +1251,7 @@ button.view-source {
 }
 
 .event.root:not(.interesting):not(.mom) > .content,
+.event[data-reply] > .content,
 .event.interesting .event.reply > .content {
    align-self: start;
    position: sticky;
@@ -1255,6 +1262,7 @@ button.view-source {
 
 .event.root:not(.interesting):not(.mom)[data-kind="0"] > .content,
 .p-k .event.root:not(.interesting):not(.mom) > .content,
+.p-k .event[data-reply] > .content,
 .p-k .event.interesting .event.reply > .content {
    max-width: unset;
 }

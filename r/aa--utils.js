@@ -73,7 +73,7 @@ function replacer(url)
       } 
       else 
       { // regular links
-         rep += embed(url) ? embed(url) : base_link(url);
+         rep += base_link(url); // embed(url) ? embed(url) : 
    	}
    } 
    else { rep += base_link(url) }
@@ -382,13 +382,19 @@ function taglink(tag, clas)
       
       function ep(tag) 
       {
-         a.href = '#' + tag[0] + '-' + tag[1];
-         a.classList.add(tag[0] + '-' + tag[1]);
-         a_text.textContent = pretty(tag[1]);
-         stylek([tag[1]], a);
          
-         if (tag[2]) a.setAttribute('data-relay', tag[2]);
-         if (tag[3]) a.setAttribute('data-type', tag[0] +'-'+tag[3]);
+         try 
+         {
+            a.href = '#' + tag[0] + '-' + tag[1];
+            a.classList.add(tag[0] + '-' + tag[1]);
+            a_text.textContent = pretty(tag[1]);
+            stylek([tag[1]], a);
+            if (tag[2]) a.setAttribute('data-relay', tag[2]);
+            if (tag[3]) a.setAttribute('data-type', tag[0] +'-'+tag[3]);
+         } 
+         catch (error) 
+         { console.log('malformed tag: ' + tag) }
+
       }
       
       switch (tag[0]) 

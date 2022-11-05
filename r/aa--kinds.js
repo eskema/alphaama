@@ -309,6 +309,7 @@ function kind3(o)
       options.r = JSON.parse(o.content);
       your.options = JSON.stringify(options);
       your.follows = JSON.stringify(o.tags);
+      your.k3 = JSON.stringify(o);
    }
    
    let fren = document.getElementById('p-' + o.pubkey);

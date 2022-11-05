@@ -192,6 +192,12 @@ function sign(unsigned)
       {
          post(signed);
          if (your[unsigned.id]) your.removeItem(your[unsigned.id]);
+         // broadcast interacted post
+         if (session.interesting) 
+         { 
+            let reply = JSON.parse(session[session.interesting]);
+            if (reply) post(reply);
+         }
       });
    
    } else { console.log('you need nos2x to sign notes', unsigned.content) }
@@ -201,35 +207,73 @@ function follow(k)
 {
    const 
       now = Math.floor( ( new Date().getTime() ) / 1000 ), 
-      tags = [],
-      follows = JSON.parse(your.follows),
-      rels = JSON.parse(your.options).r;
+      old = your.k3 ? JSON.parse(your.k3) : false,
+      tags = old ? old.tags : [],
+      content = old ? old.content : '',
+      parts = k.split(',');
    
-   follows.forEach(function(pubkey) 
+   if (tags.filter(p => p[1] === parts[0]).length) 
    {
-      tags.push(['p',pubkey]);
-   });
+      console.log('you already follow this one')
+   }
+   else 
+   {
+      const p = ['p'];
+      parts.forEach((part)=>{p.push(part)})
+   
+      tags.push(p);
       
-   tags.push(['p',k]);
+      const a = [ 
+         0,//don't ask
+         options.k,//pubkey
+         now,//created_at
+         3,//kind
+         tags,//tags
+         content//content
+      ];
+      
+//      console.log(old)
+      
+      const unsigned = ofa(a);
+      unsigned.id = hash(a);
+      console.log(unsigned);
+      sign(unsigned);
+   }
    
-   const a = [ 
-      0,//don't ask
-      options.k,//pubkey
-      now,//created_at
-      3,//kind
-      tags,//tags
-      JSON.stringify(rels)//content
-   ];
-   
-   const unsigned = ofa(a);
-   unsigned.id = hash(a);
-   console.log(unsigned);
-   sign(unsigned);
 }
 
 function unfollow(k) 
 {
-   // 
+   const 
+      now = Math.floor( ( new Date().getTime() ) / 1000 ), 
+      old = your.k3 ? JSON.parse(your.k3) : false;
+   
+   if (old) 
+   {
+      tags = old.tags.filter(p => p[1] !== k); //.forEach((p)=>{ tags.push(p) })
+         
+      const a = [ 
+         0,//don't ask
+         options.k,//pubkey
+         now,//created_at
+         3,//kind
+         tags,//tags
+         old.content//content
+      ];
+      
+//      console.log(old)
+      
+      const unsigned = ofa(a);
+      unsigned.id = hash(a);
+      console.log(unsigned);
+      sign(unsigned); 
+   }
+   else 
+   {
+      console.log("you don't follow anyone :(");
+   }
+   
+
 }
 
 function set_metadata(o) 
