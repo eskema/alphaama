@@ -98,6 +98,22 @@ function is_interesting(l)
    return l
 }
 
+function jk(e) {
+   if (!document.body.classList.contains('has-interesting') || e.target !== document.body) {
+      return
+   }
+   let i = document.getElementById('e-'+session.interesting);
+   
+   let next;
+   if (e.key === 'j') {
+      next = i.nextElementSibling || i.parentElement.firstElementChild
+   } else if (e.key === 'k') {
+      next = i.previousElementSibling || i.parentElement.lastElementChild
+   }
+
+   select_e(next)
+}
+
 function verifyNIP05(fren, frend, pubkey)
 { //https://<domain>/.well-known/nostr.json?name=<local-part>
    const parts = frend.nip05.split('@');
