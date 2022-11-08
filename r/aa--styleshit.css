@@ -847,6 +847,10 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    background-color: rgb(var(--c-a-a));
 }
 
+.event:not(.has-replies) > .replies {
+   display: none;
+}
+
 .event.root:not(.mom):not(.interesting) > .replies {
    position: sticky;
    top: 1.2rem;

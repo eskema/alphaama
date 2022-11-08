@@ -335,7 +335,9 @@ function clickEvent(e)
          } 
          else if (e.target.classList.contains('cancel'))
          {
+            let par = event.parentElement;
             event.remove();
+            if (!par.childNodes.length) par.closest('.event').classList.remove('has-replies');
          } 
          else if (e.target.classList.contains('edit'))
          {
@@ -349,7 +351,9 @@ function clickEvent(e)
             }
             iot.value = content;
             iot.parentElement.dataset.content = content;
+            let par = event.parentElement;
             event.remove();
+            if (!par.childNodes.length) par.closest('.event').classList.remove('has-replies');
             iot.focus();
             iot.setSelectionRange(iot.value.length,iot.value.length);
          }
