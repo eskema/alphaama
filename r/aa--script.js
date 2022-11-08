@@ -390,7 +390,9 @@ function lies(reply, l)
    
    replies.append(l); 
 //   console.log(replies.childNodes.length);
-   hide_btn.textContent = replies.childNodes.length;
+   let some = replies.childNodes.length;
+   let all = replies.querySelectorAll('.event').length;
+   hide_btn.textContent =  some + (all > some ? '.' + all : '');
    
    l.removeAttribute('data-reply');
    reply.classList.add('has-replies');

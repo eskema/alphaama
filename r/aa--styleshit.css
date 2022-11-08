@@ -397,7 +397,7 @@ button:hover {
 }
 
 .replies-hidden > .actions .hide-replies::after {
-   content: " event hidden */";
+   content: " hidden */";
    grid-area: after;
    white-space: pre;
 }
