@@ -98,20 +98,51 @@ function is_interesting(l)
    return l
 }
 
-function jk(e) {
-   if (!document.body.classList.contains('has-interesting') || e.target !== document.body) {
-      return
+function shortcuts(e) 
+{
+   if (session.interesting && e.target !== iot) 
+   {
+      const l = document.getElementById('e-'+session.interesting);
+      let c, next;
+      switch (e.key) 
+      {
+         case 'k':
+            // next
+            next = l.nextElementSibling;
+            break;
+         case 'i':
+            // previous
+            next = l.previousElementSibling;
+            break;
+         case 'j':
+            // parent
+            if (l.classList.contains('reply')) next = l.parentElement.closest('.event');
+            break;
+         case 'l':
+            // child
+            if (!l.classList.contains('replies-hidden')) next = l.querySelector('.event');
+            break;
+         case 'h':
+            // top
+            c = l.parentElement.firstElementChild;
+            if (c !== l) next = c;
+            break;
+         case 'b':
+            // bottom
+            c = l.parentElement.lastElementChild;
+            if (c !== l) next = c;
+            break;
+         case '\\':
+            // toggle replies
+            hide_replies(l);
+            break;
+         case 'Escape':
+            // out of selection
+            next = l;
+            break;
+      }
+      if (next) select_e(next)
    }
-   let i = document.getElementById('e-'+session.interesting);
-   
-   let next;
-   if (e.key === 'j') {
-      next = i.nextElementSibling || i.parentElement.firstElementChild
-   } else if (e.key === 'k') {
-      next = i.previousElementSibling || i.parentElement.lastElementChild
-   }
-
-   select_e(next)
 }
 
 function verifyNIP05(fren, frend, pubkey)

@@ -529,7 +529,7 @@ function redact(e)
 
 function hide_replies(e) 
 {
-   const l = e.target.closest('.event');
+   const l = e.target ? e.target.closest('.event') : e;
    l.classList.toggle('replies-hidden');
    l.scrollIntoView(stuff);
 }

@@ -334,7 +334,7 @@ window.addEventListener('load', function(event)
          e.preventDefault();
       }
    }, false);
-   document.addEventListener('keyup', jk)
+   document.addEventListener('keyup', shortcuts);
    
    // get all the the elements for tog()
    const togs = document.querySelectorAll('[data-tog]');
