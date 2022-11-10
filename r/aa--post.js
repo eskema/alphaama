@@ -140,7 +140,6 @@ function reaction(note)
    
    const unsigned = ofa(a);
    unsigned.id = hash(a);
-   console.log(a, unsigned)
    sign(unsigned);
    your.removeItem('reaction')
    
@@ -160,6 +159,7 @@ function draft(a, kind)
    }
    
    draft.dataset.o = unsigned.id;
+   draft.dataset.draft = unsigned.content;
    draft.classList.add('draft');
    
    let actions = document.createElement('div');

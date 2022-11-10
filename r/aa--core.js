@@ -83,7 +83,7 @@ function is(e)
       
       // commands switch
       
-      if (a.length === 1 && your.reaction) 
+      if (a.length === 1 && a[0].length === 1 && your.reaction) 
       {
          let note = JSON.parse(your.reaction);
          note[0] = v;
@@ -91,8 +91,14 @@ function is(e)
          reaction(note);
          iot.blur();
       }
+      else if (your.reaction)
+      {
+//         your.removeItem('reaction');
+         clear = false;
+      }
       else 
       {
+         your.removeItem('reaction');
          switch (a[0]) 
          {
             case '--bbbb': // boom biddy bye bye, 

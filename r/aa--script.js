@@ -79,6 +79,7 @@ function not_interesting(l)
    document.body.classList.remove('has-interesting');
    session.removeItem('interesting');
    iot.placeholder = 'new post';
+   session.removeItem('reaction');
    
    return l
 }
@@ -94,6 +95,7 @@ function is_interesting(l)
    session.interesting = l.id.substring(2);   
    location.hash = '#' + l.id;
    iot.placeholder = 'reply to ' + l.querySelector('.author').textContent;
+   session.removeItem('reaction');
    
    return l
 }
@@ -347,7 +349,7 @@ function clickEvent(e)
                   content = '--smd ' + JSON.parse(your[event.dataset.o]).content;
                   break;
                default:
-                  content = event.querySelector('.content').textContent;
+                  content = event.dataset.draft;
             }
             iot.value = content;
             iot.parentElement.dataset.content = content;
