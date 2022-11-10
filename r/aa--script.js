@@ -98,7 +98,7 @@ function is_interesting(l)
    return l
 }
 
-function shortcuts(e) 
+function hotkeys(e) 
 {
    if (session.interesting && e.target !== iot) 
    {
@@ -375,11 +375,27 @@ function clickEvent(e)
    }   
 }
 
+function count_replies(l) 
+{
+   for ( ; l && l !== document; l = l.parentNode ) 
+   {
+      if (l.classList.contains('event')) 
+      {
+         const replies = l.querySelector('.replies');
+         if (replies) 
+         {
+            const some = replies.childNodes.length;
+            const all = l.querySelectorAll('.event').length;
+            const hide_btn = l.querySelector('.actions .hide-replies');
+            hide_btn.textContent =  some + (all > some ? '.' + all : '');
+         }
+      }
+	}
+}
+
 function lies(reply, l) 
 {
-   let 
-      replies = reply.querySelector('.replies'),
-      hide_btn = reply.querySelector('.actions .hide-replies');
+   let replies = reply.querySelector('.replies');
       
    if (!replies) 
    {
@@ -390,15 +406,20 @@ function lies(reply, l)
    
    replies.append(l); 
 //   console.log(replies.childNodes.length);
-   let some = replies.childNodes.length;
-   let all = replies.querySelectorAll('.event').length;
-   hide_btn.textContent =  some + (all > some ? '.' + all : '');
+   count_replies(l);
    
    l.removeAttribute('data-reply');
    reply.classList.add('has-replies');
    ordered(replies, true);
    
    let root = ancestor(reply, 'event');
+//   if (root !== reply) 
+//   {
+//      some = root.querySelector('.replies').childNodes.length;
+//      all = root.querySelectorAll('.event').length;
+//      hide_btn = root.querySelector('.actions .hide-replies');
+//      hide_btn.textContent =  some + (all > some ? '.' + all : '');
+//   }
    if (parseInt(l.dataset.stamp) > parseInt(root.dataset.stamp)) 
    {
       root.dataset.stamp = l.dataset.stamp;
