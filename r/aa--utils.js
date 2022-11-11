@@ -514,12 +514,22 @@ function make_section(clas)
 
 function react(e) 
 {
-   iot.focus();
-   iot.value = '+';
-   iot.parentElement.dataset.content = '+';
-   const l = e.target.closest('.event');
-   your.reaction = JSON.stringify(['+', l.id.substr(2), l.dataset.p]);
-   console.log(your.reaction);
+   if (your.reaction) 
+   {
+      your.removeItem('reaction');
+      iot.blur();
+      iot.value = '';
+      iot.parentElement.dataset.content = '';
+   }
+   else 
+   {
+      iot.focus();
+      iot.value = '+';
+      iot.parentElement.dataset.content = '+';
+      const l = e.target.closest('.event');
+      your.reaction = JSON.stringify(['+', l.id.substr(2), l.dataset.p]);
+      console.log(your.reaction);
+   }
 }
 
 function redact(e)

@@ -79,21 +79,19 @@ function is(e)
  
    if (enter) {
       
-      console.log(v);
+      console.log(v);       
       
       // commands switch
       
-      if (a.length === 1 && a[0].length === 1 && your.reaction) 
+      if (a.length === 1 && [...new Intl.Segmenter().segment(a[0])].length === 1 && your.reaction) 
       {
          let note = JSON.parse(your.reaction);
          note[0] = v;
-//         console.log(note);
          reaction(note);
          iot.blur();
       }
       else if (your.reaction)
       {
-//         your.removeItem('reaction');
          clear = false;
       }
       else 
