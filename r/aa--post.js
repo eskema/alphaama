@@ -121,6 +121,9 @@ function prep(note)
          note//content
       ];
    
+   const hashtags = parse_hashtags(note);
+   console.log(hashtags);
+   if (hashtags.length) hashtags.forEach((t)=>{ a[4].push(t) });
    draft(a, 1);
 }
 

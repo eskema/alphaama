@@ -153,7 +153,7 @@ function message(e)
       }
    }
    
-   if (dis && dat) 
+   if (type === 'EVENT' && dis && dat) 
    {//console.log(dis, dat, e.origin)      
       if (session[dat.id])
       {

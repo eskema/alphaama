@@ -81,6 +81,14 @@ function replacer(url)
    return rep
 }
 
+function parse_hashtags(text) 
+{
+   const hashtags = [];
+   const matches = text.match(/(\B[#])\w+/g);
+   if (matches) matches.forEach((t)=>{hashtags.push(['t',t.substr(1).toLowerCase()])});
+   return hashtags
+}
+
 function checkmentions(text) 
 {
    const mentions = [];

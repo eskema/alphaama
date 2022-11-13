@@ -85,6 +85,7 @@ function is(e)
       
       if (a.length === 1 && [...new Intl.Segmenter().segment(a[0])].length === 1 && your.reaction) 
       {
+         console.log('reaction', a);
          let note = JSON.parse(your.reaction);
          note[0] = v;
          reaction(note);
@@ -92,10 +93,12 @@ function is(e)
       }
       else if (your.reaction)
       {
+         console.log('too many chars', a);
          clear = false;
       }
       else 
       {
+         console.log('command', a);
          your.removeItem('reaction');
          switch (a[0]) 
          {
