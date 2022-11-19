@@ -159,6 +159,7 @@ function raw_event(o)
          v = '<ul>';
          value.forEach(function(val) 
          {
+            if (typeof val === 'object') val = val.join(', ');
             v += '<li>' + val + '</li>';
          });
          v += '</ul>';

@@ -85,7 +85,7 @@ function is(e)
       
       if (a.length === 1 && [...new Intl.Segmenter().segment(a[0])].length === 1 && your.reaction) 
       {
-         console.log('reaction', a);
+//         console.log('reaction', a);
          let note = JSON.parse(your.reaction);
          note[0] = v;
          reaction(note);
@@ -98,7 +98,7 @@ function is(e)
       }
       else 
       {
-         console.log('command', a);
+//         console.log('command', a);
          your.removeItem('reaction');
          switch (a[0]) 
          {

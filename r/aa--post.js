@@ -1,108 +1,95 @@
-function preptags(o) 
+function get_seen(id)
 {
-   let tags = [];
-      
+   // gets the first relay that seen this id
+   const e = session[id] ? JSON.parse(session[id]) : false;
+   return e && e.seen ? e.seen[0] : ''
+}
+
+function filter_mentions(o) 
+{
+   // separate mentions from tags unless they're root or reply
    const 
-      es = [], 
-      ps = [],
+      tags = [], 
       mentions = [];
-   
-   let
-      ereply = false,
-      preply = false,
-      eroot = false,
-      proot = false;      
-   
-   if (o.tags.length > 0) {
       
-      let mentionsIndexes = checkmentions(o.content);
-   
-      o.tags.forEach(function(ot, index) {
-         
-         let i = mentionsIndexes.find(ind => ind === index);
-         if (i) {
-            mentions.push(ot);
-         } else 
+   let mentions_indexes = checkmentions(o.content);
+   for (let i = 0; i < o.tags.length; i++) 
+   {
+      if (mentions_indexes.find(mi => mi === i))
+      {
+         mentions.push(o.tags[i])
+         if(o.tags[i][0] === 'e' 
+         && o.tags[i][3] 
+         && o.tags[i][3] == ('root' || 'reply')) tags.push(o.tags[i]);
+      }
+      else tags.push(o.tags[i])
+   }
+   return [mentions, tags]
+}
+
+function get_root(tags) 
+{
+   // get the marked root event
+   const events = [];
+   for (let i = 0; i < tags.length; i++) 
+   {
+      if (tags[i][0] === 'e')
+      {
+         if (tags[i][3] && tags[i][3] === 'root')
          {
-            switch (ot[0]) {
-               case 'e': 
-                  if (ot[3] && ot[3] === 'reply') 
-                  {
-                     ereply = ot[1];
-                  } 
-                  else if (ot[3] && ot[3] === 'root') 
-                  {
-                     eroot = ot[1];
-                  } 
-                  else 
-                  {
-                     es.push(ot);
-                  }
-                  break;
-               case 'p': 
-                  if (ot[3] && ot[3] === 'reply') 
-                  {
-                     preply = ot[1];
-                  } 
-                  else if (ot[3] && ot[3] === 'root') 
-                  {
-                     proot = ot[1];
-                  } 
-                  else 
-                  {
-                     ps.push(ot);
-                  } 
-                  break;
-               default:
-            }
+            if (tags[i][2] === '') tags[i][2] = get_seen(tags[i][1]);
+            return tags[i];
          }
-      });
-   }
-   
-   if (!ereply) // old way, pre-nip10
-   {
-      if (es.length > 0) 
-      {
-         ereply = es[es.length - 1][1];
-         if (es.length > 1) eroot = es[0][1];
+         events.push(tags[i])
       }
+   }
+   // if there's no marked root, check if there's events and use the first
+   if (events.length) 
+   {
+      const 
+         e = events[0],
+         rel = e[2] && e[2] !== '' ? e[2] : get_seen(e[1]);
+      return ['e', e[1], rel, 'root'];
+   }
+   return false
+}
+
+function get_reply(tags) 
+{
+   const events = [];
+   for (let i = 0; i < tags.length; i++) 
+   {
+      if (tags[i][0] === 'e')
+      {
+         if (tags[i][3] && tags[i][3] === 'reply') return tags[i];
+         events.push(tags[i])
+      }
+   }
+   return events.length ? events[events.length-1] : false
+}
+
+function preptags(o) 
+{  
+   const 
+      [mentions, filt] = filter_mentions(o), 
+      tags = [];
       
-      if (ps.length > 0) 
-      {
-         preply = ps[ps.length - 1][1];
-         if (ps.length > 1) proot = ps[0][1];
-      }
+   let root = get_root(o.tags);
+   if (root) 
+   {
+      tags.push(root);
+      tags.push(['e', o.id,get_seen(o.id),'reply']);
    }
+   else tags.push(['e', o.id,get_seen(o.id),'root']);
    
-   if (eroot) 
+   const pubkeys = [];
+   o.tags.filter(t=>t[0]==='p').forEach((p)=>
    {
-      tags.push(['e', eroot,'','root']);
-   
-   } 
-   else if (ereply) 
-   {
-      tags.push(['e', ereply,'','root']);
-   }
-   
-   tags.push(['e', o.id,'','reply']);
-   
-   if (proot) 
-   {
-      tags.push(['p', proot,'','root']);
-   } 
-   else 
-   {
-      if (preply) 
-      {
-         tags.push(['p', preply,'','root']);
-      } 
-      else 
-      {
-         if (ps.length > 0) tags.push(['p', ps[0][1],'','root']);
-      }
-   }
-   
-   if (o.pubkey !== options.k) tags.push(['p',o.pubkey,'','reply']);
+      if (p[1] !== options.k) pubkeys.push(['p',p[1]])
+   });
+   let unique = [...new Set(pubkeys)];
+   if (o.pubkey !== options.k && !unique.includes(o.pubkey)) unique.push(['p',o.pubkey])
+   tags.push(...unique);
 
    return tags
 }
@@ -122,18 +109,21 @@ function prep(note)
       ];
    
    const hashtags = parse_hashtags(note);
-   console.log(hashtags);
    if (hashtags.length) hashtags.forEach((t)=>{ a[4].push(t) });
    draft(a, 1);
 }
 
 function reaction(note)
 {
+   let reply = JSON.parse(session[note[1]]);
+   if (reply) post(reply);
+   else reply = {seen:['']};
+   
    let tags = [];
-   tags.push( [ 'e', note[1] ] );
-   tags.push( [ 'p', note[2] ] );
+   tags.push( [ 'e', note[1],  reply.seen[0]] );
+   if (note[2] !== options.k) tags.push( [ 'p', note[2] ] );
    const a = [ 
-      0,//id
+      0,//magic
       options.k,//pubkey
       Math.floor( ( new Date().getTime() ) / 1000 ),//created_at
       7,//kind
@@ -188,22 +178,17 @@ function draft(a, kind)
 
 function sign(unsigned) 
 {        
-   console.log(unsigned);
+//   console.log(unsigned);
    if (window.nostr) 
    {
-      window.nostr.signEvent(unsigned).then((signed) => 
+      window.nostr.signEvent(unsigned).then((signed) =>
       {
          post(signed);
          if (your[unsigned.id]) your.removeItem(your[unsigned.id]);
-         // broadcast interacted post
-         if (session.interesting) 
-         { 
-            let reply = JSON.parse(session[session.interesting]);
-            if (reply) post(reply);
-         }
       });
-   
-   } else { console.log('you need nos2x to sign notes', unsigned.content) }
+      
+   } 
+   else console.log('you need nos2x to sign notes', unsigned.content)
 }
 
 function follow(k) 

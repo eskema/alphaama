@@ -549,6 +549,7 @@ button:hover {
    font-size: var(--font-size-s);
    background: rgb(var(--c-a-a));
    padding-right: var(--pad);
+   display: block;
 }
 
 .about {

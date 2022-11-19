@@ -96,7 +96,6 @@ function is_interesting(l)
    location.hash = '#' + l.id;
    iot.placeholder = 'reply to ' + l.querySelector('.author').textContent;
    session.removeItem('reaction');
-   
    return l
 }
 
@@ -158,7 +157,7 @@ function verifyNIP05(fren, frend, pubkey)
          const name = fren.querySelector('.name');
          if (name) 
          {
-            name.setAttribute('data-nip05', frend.nip05)
+            name.parentElement.setAttribute('data-nip05', frend.nip05)
             fren.classList.add('nip05');
             
             if (frend.nip05.startsWith('_@')) name.classList.add('root');
@@ -334,6 +333,13 @@ function clickEvent(e)
          if (e.target.classList.contains('post')) {
             let unsigned = JSON.parse(your[event.dataset.o]);
             sign(unsigned);
+            
+            // broadcast interacted post
+            if (session.interesting) 
+            { 
+               let reply = JSON.parse(session[session.interesting]);
+               if (reply) post(reply);
+            }
          } 
          else if (e.target.classList.contains('cancel'))
          {
