@@ -148,26 +148,35 @@ function hotkeys(e)
 
 function verifyNIP05(fren, frend, pubkey)
 { //https://<domain>/.well-known/nostr.json?name=<local-part>
-   const parts = frend.nip05.split('@');
+   let [username, domain] = frend.nip05.split('@');
+   domain = 'https://'+domain;
+   const same = new URL(domain);
+   if (domain !== same.origin)
+   {
+      console.log('invalid nip05: domain !== origin', domain);
+      domain = false;
+   }
    
    function checknip05(jsondata) 
    {
-      if (pubkey === jsondata.names[parts[0]])
+      console.log(jsondata);
+      
+      if (pubkey === jsondata.names[username])
       {
-         const name = fren.querySelector('.name');
-         if (name) 
+         const tit = fren.querySelector('.tit');
+         if (tit) 
          {
-            name.parentElement.setAttribute('data-nip05', frend.nip05)
+            tit.setAttribute('data-nip05', frend.nip05)
             fren.classList.add('nip05');
             
-            if (frend.nip05.startsWith('_@')) name.classList.add('root');
+            if (frend.nip05.startsWith('_@')) tit.classList.add('root');
          }
       }
    }
    
-   if (parts.length > 1) 
+   if (username && domain) 
    {
-      fetch('https://'+parts[1]+'/.well-known/nostr.json?name='+parts[0])
+      fetch(domain+'/.well-known/nostr.json?name='+username)
       .then(response => { return response.json()})
       .then(jsondata => checknip05(jsondata));
    }
