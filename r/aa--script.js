@@ -148,37 +148,50 @@ function hotkeys(e)
 
 function verifyNIP05(fren, frend, pubkey)
 { //https://<domain>/.well-known/nostr.json?name=<local-part>
-   let [username, domain] = frend.nip05.split('@');
-   domain = 'https://'+domain;
-   const same = new URL(domain);
-   if (domain !== same.origin)
+   let parts = frend.nip05.split('@');
+   if (parts.length === 2) 
    {
-      console.log('invalid nip05: domain !== origin', domain);
-      domain = false;
-   }
-   
-   function checknip05(jsondata) 
-   {
-      console.log(jsondata);
-      
-      if (pubkey === jsondata.names[username])
+      const 
+         username = parts[0],
+         domain = 'https://'+parts[1];
+         
+      const same = new URL(domain);
+      if (domain !== same.origin)
       {
-         const tit = fren.querySelector('.tit');
-         if (tit) 
+         console.log('invalid nip05: domain !== origin', domain);
+         domain = false;
+      }
+      
+      function checknip05(jsondata) 
+      {
+         console.log(jsondata);
+         
+         if (pubkey === jsondata.names[username])
          {
-            tit.setAttribute('data-nip05', frend.nip05)
-            fren.classList.add('nip05');
-            
-            if (frend.nip05.startsWith('_@')) tit.classList.add('root');
+            const tit = fren.querySelector('.tit');
+            if (tit) 
+            {
+               tit.setAttribute('data-nip05', frend.nip05)
+               fren.classList.add('nip05');
+               
+               if (frend.nip05.startsWith('_@')) tit.classList.add('root');
+            }
+            // relays
+            // jsondata.relays[pubkey]
          }
       }
-   }
-   
-   if (username && domain) 
-   {
-      fetch(domain+'/.well-known/nostr.json?name='+username)
-      .then(response => { return response.json()})
-      .then(jsondata => checknip05(jsondata));
+      
+      if (username && domain) 
+      {
+         fetch(domain+'/.well-known/nostr.json')
+         .then(response => 
+         {
+   //         const res = response.ok;
+            console.log('response',response.ok);
+            if (response.ok) return response.json()
+         })
+         .then(jsondata => checknip05(jsondata));
+      }
    }
 }
 
