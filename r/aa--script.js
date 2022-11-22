@@ -357,11 +357,21 @@ function clickEvent(e)
             sign(unsigned);
             
             // broadcast interacted post
-            if (session.interesting) 
-            { 
-               let reply = JSON.parse(session[session.interesting]);
-               if (reply) post(reply);
-            }
+//            if (session.interesting) 
+//            { 
+//               try 
+//               {
+//                  let reply = JSON.parse(session[session.interesting]);
+//                  seen = reply.seen[0];
+//                  delete reply.seen;
+//                  post(reply);
+//               }
+//               catch (error) {
+//                  console.log("broadcast wen't wrong")
+//               }
+//               
+//               if (reply) post(reply);
+//            }
          } 
          else if (e.target.classList.contains('cancel'))
          {

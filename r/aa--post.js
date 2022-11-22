@@ -115,12 +115,20 @@ function prep(note)
 
 function reaction(note)
 {
-   let reply = JSON.parse(session[note[1]]);
-   if (reply) post(reply);
-   else reply = {seen:['']};
+   let reply, seen = '';
+   try 
+   {
+      reply = JSON.parse(session[note[1]]);
+      seen = reply.seen[0];
+//      delete reply.seen;
+//      post(reply);
+   }
+   catch (error) {
+      console.log('somethin not seen')
+   }
    
    let tags = [];
-   tags.push( [ 'e', note[1],  reply.seen[0]] );
+   tags.push( [ 'e', note[1],  seen] );
    if (note[2] !== options.k) tags.push( [ 'p', note[2] ] );
    const a = [ 
       0,//magic
