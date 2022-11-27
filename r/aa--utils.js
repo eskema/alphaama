@@ -59,9 +59,11 @@ function replacer(url)
       || matchlow.endsWith('.png')
       || matchlow.endsWith('.gif')
       || matchlow.endsWith('.svg')
+      || matchlow.endsWith('.webp')
       || format && format === 'jpg'
       || format && format === 'jpeg'
       || format && format === 'svg'
+      || format && format === 'webp'
       || format && format === 'png') 
       { // images
          rep += '<img src="' + url + '" class="content-img" loading="lazy">';

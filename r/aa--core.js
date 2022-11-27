@@ -73,9 +73,9 @@ function is(e)
    
    e.target.parentElement.dataset.content = e.target.value;
    
-   if (a[a.length - 1].startsWith('@')) {
-      mention(a[a.length - 1].substr(1));
-   }
+//   if (a[a.length - 1].startsWith('@')) {
+//      mention(a[a.length - 1].substr(1));
+//   }
  
    if (enter) {
       
