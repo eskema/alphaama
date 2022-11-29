@@ -84,7 +84,7 @@ function newid(o)
    }
    
    if (o.tags && o.tags !== false) {
-      h.append(ash(o.tags, l).nav);
+      h.append(ash(o.tags));
    }
    
    if (o.content && o.content !== false) {
@@ -227,15 +227,14 @@ function kind1(o)
    
    if (!l) 
    { 
-      if (!l) l = newid(o);
-      else l.classList.remove('blank');
+      l = newid(o);
       
-      const tags = ash(o.tags, l);
+//      const tags = ash(o.tags, l);
 
-      let heading = child_from_class(l, 'heading');
-      let old_tags = heading.querySelector('.tags');
-      if (old_tags) old_tags.remove();
-      heading.append(tags.nav); 
+//      let heading = child_from_class(l, 'heading');
+//      let old_tags = heading.querySelector('.tags');
+//      if (old_tags) old_tags.remove();
+//      heading.append(tags.nav); 
       
       let created_at = child_from_class(l, 'created-at');
       update_time(created_at);
@@ -264,19 +263,22 @@ function kind1(o)
          if (videos) videos.forEach(rap);
       }
       
-      let replyid = false;
-      if (tags.ereply !== false) 
+      let 
+         reply_id,
+         reply_tag = get_reply(o.tags);
+         
+      if (reply_tag) reply_id = reply_tag[1];
+
+      if (reply_id) 
       {
          l.classList.add('reply');
-         // if it's a reply, check if we already have it
-         replyid = o.tags[tags.ereply][1];
-         let reply = document.getElementById('e-'+ replyid);
-   
-         if (reply) { lies(reply, l) }
+         l.setAttribute('data-reply', 'e-' + reply_id);
+         let reply = document.getElementById('e-'+ reply_id);
+         if (reply) lies(reply, l);
          else {
             knd1.append(l);
             ordered(knd1, false);
-            childcare(tags);
+            get_tags(o.tags);
          }
       } 
       else 
@@ -284,6 +286,7 @@ function kind1(o)
          l.classList.add('root');
          knd1.append(l); 
          ordered(knd1, false);
+         get_tags(o.tags);
       }   
 
       get_orphans(o.id, l);

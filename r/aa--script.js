@@ -9,63 +9,62 @@ const
 function ash(tags, l) 
 {
    const nav = document.createElement('nav');
-   let note = { 
-      'e': [], // list of event ids
-      'p': [], // list of pubkeys
-      'nonce': [], // pow
-      'hashtags': [], // #
-      'custom': [], // else
-      'ereply': false,
-      'preply': false,
-      'eroot': false,
-      'proot': false,
-      'tags': tags,
-      'nav': nav
-   };   
+//   let note = { 
+//      'e': [], // list of event ids
+//      'p': [], // list of pubkeys
+//      'nonce': [], // pow
+//      'hashtags': [], // #
+//      'custom': [], // else
+//      'ereply': false,
+//      'preply': false,
+//      'eroot': false,
+//      'proot': false,
+//      'tags': tags,
+//      'nav': nav
+//   };   
    
    nav.classList.add('tags');
    
-   let nodes = nav.childNodes;
-   
-   if (tags.length > 0) 
+   tags.forEach(function(ot, i) 
    {
-      tags.forEach(function(ot, i) 
-      {
-         let notekey = note[ot[0]];
-         if (!notekey) notekey = note.custom;
-         notekey.push(ot[1]);
-         nav.append(taglink(ot, ''));
-      });
-      
-      if (note.e.length > 0) 
-      {
-         note.ereply = tags.findIndex(el => el[1] === note.e[note.e.length - 1]);
-         note.eroot = tags.findIndex(el => el[1] === note.e[0]);
-         l.setAttribute('data-reply', 'e-' + note.e[note.e.length - 1]);
-      }
-            
-      if (note.p.length > 0) 
-      {
-         note.preply = tags.findIndex(el => el[1] === note.p[note.p.length - 1]);
-         note.proot = tags.findIndex(el => el[1] === note.p[0]);
-      }
-      
-      if (note.nonce.length > 0) 
-      {
-         let nonce = l.dataset.nonce;
-         l.setAttribute('data-nonce', note.nonce[0]);
-      }
-      
-      nodes.forEach(function(li, i) 
-      {
-         if (i === note.eroot) li.classList.add('tag-e-root');
-         if (i === note.proot) li.classList.add('tag-p-root');
-         if (i === note.ereply) li.classList.add('tag-e-reply');
-         if (i === note.preply) li.classList.add('tag-p-reply');
-      });
-   }
+      nav.append(taglink(ot, ''));
+   });
    
-   return note
+//   let nodes = nav.childNodes;
+//   
+//   if (tags.length > 0) 
+//   {
+//      
+//      
+//      if (note.e.length > 0) 
+//      {
+//         note.ereply = tags.findIndex(el => el[1] === note.e[note.e.length - 1]);
+//         note.eroot = tags.findIndex(el => el[1] === note.e[0]);
+//         l.setAttribute('data-reply', 'e-' + note.e[note.e.length - 1]);
+//      }
+            
+//      if (note.p.length > 0) 
+//      {
+//         note.preply = tags.findIndex(el => el[1] === note.p[note.p.length - 1]);
+//         note.proot = tags.findIndex(el => el[1] === note.p[0]);
+//      }
+//      
+//      if (note.nonce.length > 0) 
+//      {
+//         let nonce = l.dataset.nonce;
+//         l.setAttribute('data-nonce', note.nonce[0]);
+//      }
+      
+//      nodes.forEach(function(li, i) 
+//      {
+//         if (i === note.eroot) li.classList.add('tag-e-root');
+//         if (i === note.proot) li.classList.add('tag-p-root');
+//         if (i === note.ereply) li.classList.add('tag-e-reply');
+//         if (i === note.preply) li.classList.add('tag-p-reply');
+//      });
+//   }
+   
+   return nav
 }
 
 function not_interesting(l) 
@@ -211,7 +210,7 @@ function select_e(l)
    if (l) it = l.classList.contains('interesting') ? not_interesting(l) : is_interesting(l);
    
    if (it) { it.scrollIntoView(stuff) } 
-   else if (id) { to_get([id], []) }
+   else if (id) { to_get({e:[id]}) }
 }
 
 function select_p(k) 
@@ -220,7 +219,7 @@ function select_p(k)
    
    if (!dat) 
    {
-      to_get([],[k]);
+      to_get({p:[k]});
    
    } else 
    {

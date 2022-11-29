@@ -71,7 +71,7 @@ function get_reply(tags)
 function preptags(o) 
 {  
    const 
-      [mentions, filt] = filter_mentions(o), 
+      [mentions, filtered_tags] = filter_mentions(o), 
       tags = [];
       
    let root = get_root(o.tags);
