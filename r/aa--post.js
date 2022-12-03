@@ -65,7 +65,16 @@ function get_reply(tags)
          events.push(tags[i])
       }
    }
-   return events.length ? events[events.length-1] : false
+   
+   if (events.length)
+   {
+      if (events[events.length-1][3] 
+      && events[events.length-1][3] === 'mention') return false;
+      
+      return events[events.length-1]
+   }
+   else return false
+   
 }
 
 function preptags(o) 

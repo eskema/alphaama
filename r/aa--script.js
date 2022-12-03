@@ -572,7 +572,7 @@ function update_fren(dat, k)
 
       name.innerHTML = dat.name;
 	   
-      if (dat.nip05) verifyNIP05(fren, dat, k);
+      if (dat.nip05 && options.media) verifyNIP05(fren, dat, k);
       
 	}
    
