@@ -85,8 +85,9 @@ function connect(url, reconnect)
       {
          const 
             req = ['REQ', 'aa-open'],
-            feed_filter = {},
+            feed_filter = {kinds:[1,7]},
             profiles_filter = {},
+            dms_filter = {kinds:[4], limit:10},
             interactions_filter = {};
             
          feed_filter.since = reconnect ? options.t : x_days(options.days);
@@ -95,6 +96,8 @@ function connect(url, reconnect)
          {
             interactions_filter['#p'] = [options.k];
             interactions_filter.since = reconnect ? options.t : x_days(options.days);
+            
+            dms_filter['#p'] = [options.k];
 //            if (options.t) 
 //            {
 //               interactions_filter.since = options.t
@@ -117,6 +120,7 @@ function connect(url, reconnect)
             }
             req.push(profiles_filter);
             req.push(interactions_filter);
+            req.push(dms_filter);
          } 
          else 
          {

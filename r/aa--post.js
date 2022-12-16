@@ -293,11 +293,11 @@ function set_metadata(o)
       JSON.stringify(o)//content
    ];
    
-   draft(a, 0);
-//   const unsigned = ofa(a);
-//   unsigned.id = hash(a);
-//   console.log(unsigned);
-//   sign(unsigned);
+//   draft(a, 0);
+   const unsigned = ofa(a);
+   unsigned.id = hash(a);
+   console.log(unsigned);
+   sign(unsigned);
 }
 
 function post(signed) 

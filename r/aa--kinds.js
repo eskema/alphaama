@@ -356,52 +356,56 @@ function kind3(o)
 function kind4(o) 
 { // Encrypted Direct Message (NIP4)
    return false
+   console.log('k4');
    let m = false;
    let own = o.tags[0][1] !== options.k;
    let ek =  own ? o.tags[0][1] : o.pubkey;
+   let content;
 
-   let fren = document.getElementById('p-' + ek);
-   if (!fren) fren = newpub(ek);  
-  
-   let dms = fren.querySelector('.dms');
-   if (dms) 
-   {
-      let 
-         l = document.createElement('li'),
-         pubkey = document.createElement('p'),
-         content = document.createElement('p'),
-         eventDate = new Date(o.created_at*1000),
-         stored = your[o.id];
-         
-      l.classList.add('dm', 'section-item');
-      if (own) l.classList.add('own');
-            
-      pubkey.classList.add('l-pubkey');
-      pubkey.textContent = pretty(o.pubkey) + ' / ~' + timeSince(eventDate);
-      
-      content.classList.add('l-content');
-      content.textContent = '/* --encrypted-- */';
-
-      if (stored) {
-         content.textContent = stored;
-      } else {
+//   let fren = document.getElementById('p-' + ek);
+//   if (!fren) fren = newpub(ek);  
+//  
+//   let dms = fren.querySelector('.dms');
+//   if (dms) 
+//   {
+//      console.log('k4-dms');
+//      let 
+//         l = document.createElement('li'),
+//         pubkey = document.createElement('p'),
+//         content = document.createElement('p'),
+//         eventDate = new Date(o.created_at*1000),
+//         stored = your[o.id];
+//         
+//      l.classList.add('dm', 'section-item');
+//      if (own) l.classList.add('own');
+//            
+//      pubkey.classList.add('l-pubkey');
+//      pubkey.textContent = pretty(o.pubkey) + ' / ~' + timeSince(eventDate);
+//      
+//      content.classList.add('l-content');
+//      content.textContent = '/* --encrypted-- */';
+//
+//      if (stored) {
+//         content.textContent = stored;
+//      } else {
          // enabling this will open a dialog box for every message sent and received 
          // if nos2x permission is not set forever... 
          
-//         if (window.nostr) 
-//         {
-//            window.nostr.nip04.decrypt(ek, o.content)
-//            .then(decrypted => 
-//            {
-//               content.textContent = your[o.id] = decrypted;
-//            })
-//         }
-      }
-      
-      l.append(pubkey, content);
-      dms.append(l);
-      m = l;
-   }
+         if (window.nostr) 
+         {
+            window.nostr.nip04.decrypt(ek, o.content)
+            .then(decrypted => 
+            {
+               content = your[o.id] = decrypted;
+               console.log(decrypted)
+            })
+         }
+//      }
+//      
+//      l.append(pubkey, content);
+//      dms.append(l);
+//      m = l;
+//   }
    
    return m
 }
