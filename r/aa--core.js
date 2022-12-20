@@ -1,10 +1,11 @@
 const 
    your = window.localStorage,
-   session = window.sessionStorage;
+   session = window.sessionStorage,
+   hose = {};
    
 let get, options, relays, defaults = 
 {
-   'days': 3, // feed limit
+   'days': 1, // feed limit
    'media': false, //autoload media files
    'k': false, //account pubkey
    't': false, //timestamp for since,
@@ -36,10 +37,14 @@ function hashchange(e)
    if (search[0] !== '') 
    {
       console.log(search);
+      
       switch (search[0].substr(1, 1)) 
       {
          case 'e':
-            select_e(search[0].substr(3));
+//            your.
+            sub_root(search[0].substr(3));
+//            location
+//            select_e(search[0].substr(3));
             break;
          case 'p':
             select_p(search[0].substr(3))
@@ -120,6 +125,7 @@ function is(e)
                {
                   bbbb();
                   options.k = a[1];
+                  your.options = JSON.stringify(options);
                   start();
                }
                break;
@@ -160,6 +166,9 @@ function is(e)
                } else {
                   console.log(smd)
                }
+               break;
+            case '--some':
+               fetch_some(); 
                break;
             case '--read':
                let unread = document.querySelectorAll('.unread');
@@ -348,7 +357,7 @@ window.addEventListener('load', function(event)
    togs.forEach(function(l) { l.addEventListener('click', function(e) { tog(e,l); }, false); });	
    
    start();
-   setInterval(get_em, 2000);
+   setInterval(get_em, 1000);
    
    document.body.scrollIntoView(stuff);
    

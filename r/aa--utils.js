@@ -165,6 +165,11 @@ function arParams(str)
    return ar
 }
 
+function is_hex(str) 
+{
+  return /^[A-F0-9]+$/i.test(str)
+}
+
 function rgb(hex) 
 {
    return parseInt(hex.substr(0, 2), 16)

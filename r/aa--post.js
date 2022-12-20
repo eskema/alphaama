@@ -105,9 +105,14 @@ function preptags(o)
 
 function prep(note)
 {
-   const 
-      now = Math.floor( ( new Date().getTime() ) / 1000 ),
-      tags = session.interesting ? preptags(JSON.parse(session[session.interesting])) : [],
+   const now = Math.floor( ( new Date().getTime() ) / 1000 );
+   let tags = [];
+   if (session.interesting)
+   {
+      let reply = document.getElementById('e-'+session.interesting);
+      if (reply && reply.dataset.o) tags = preptags(JSON.parse(reply.dataset.o));
+   } 
+//   session.interesting ? preptags(JSON.parse(session[session.interesting])) : [],
       a = [ 
          0,//id
          options.k,//pubkey
@@ -127,8 +132,8 @@ function reaction(note)
    let reply, seen = '';
    try 
    {
-      reply = JSON.parse(session[note[1]]);
-      seen = reply.seen[0];
+      seen = JSON.parse(document.getElementById('e'+note[1]).dataset.seen)[0];
+
 //      delete reply.seen;
 //      post(reply);
    }
@@ -163,34 +168,42 @@ function draft(a, kind)
    
    let draft;
    console.log(a[3]);
-   switch (kind) {
-      case 0: draft = kind0(unsigned); break;
-      default: draft = kind1(unsigned); break;
-   }
+   process(unsigned).then(()=> 
+   {
+      draft = document.querySelector('#e-'+unsigned.id);
+      if (draft) {
+         draft.dataset.o = JSON.stringify(unsigned);
+         draft.dataset.draft = unsigned.content;
+         draft.classList.add('draft');
+         
+         let actions = document.createElement('div');
+         actions.classList.add('actions-draft');
+         
+         let post_btn = document.createElement('button');
+         post_btn.classList.add('post');
+         post_btn.textContent = 'post';
+         actions.append(post_btn);
+         
+         let edit_btn = document.createElement('button');
+         edit_btn.classList.add('edit');
+         edit_btn.textContent = 'edit';
+         actions.append(edit_btn);
+         
+         let cancel_btn = document.createElement('button');
+         cancel_btn.classList.add('cancel');
+         cancel_btn.textContent = 'cancel';
+         actions.append(cancel_btn);
+         
+         draft.append(actions);
+      }
+
+   });
+//   switch (kind) {
+//      case 0: kind0(unsigned); break;
+//      default: kind1(unsigned); break;
+//   }
    
-   draft.dataset.o = unsigned.id;
-   draft.dataset.draft = unsigned.content;
-   draft.classList.add('draft');
-   
-   let actions = document.createElement('div');
-   actions.classList.add('actions-draft');
-   
-   let post_btn = document.createElement('button');
-   post_btn.classList.add('post');
-   post_btn.textContent = 'post';
-   actions.append(post_btn);
-   
-   let edit_btn = document.createElement('button');
-   edit_btn.classList.add('edit');
-   edit_btn.textContent = 'edit';
-   actions.append(edit_btn);
-   
-   let cancel_btn = document.createElement('button');
-   cancel_btn.classList.add('cancel');
-   cancel_btn.textContent = 'cancel';
-   actions.append(cancel_btn);
-   
-   draft.append(actions);
+
 }
 
 function sign(unsigned) 
@@ -304,6 +317,7 @@ function post(signed)
 { 
    let post_it = ["EVENT"];
    post_it.push(signed);
+   console.log(signed);
    post_it = JSON.stringify(post_it);
    
    Object.entries(relays).forEach(([url, can]) => 

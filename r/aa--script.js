@@ -91,10 +91,24 @@ function is_interesting(l)
    l.classList.add('interesting');   
    mom(l);
    document.body.classList.add('has-interesting');
-   session.interesting = l.id.substring(2);   
+   
+   let l_id = l.id.substring(2);
+   session.interesting = l_id;   
    location.hash = '#' + l.id;
    iot.placeholder = 'reply to ' + l.querySelector('.author').textContent;
    session.removeItem('reaction');
+//   if (l.dataset.reply) get_tags(JSON.parse(l.dataset.o).tags);
+
+//   if (l.dataset.reply) 
+//   {
+//      sub_root(get_root(JSON.parse(l.dataset.o).tags)[1]);
+//   }
+//   else 
+//   {
+//      sub_root(l_id);
+//   }
+
+//   get_orphans(l);
    return l
 }
 
@@ -131,6 +145,11 @@ function hotkeys(e)
             // bottom
             c = l.parentElement.lastElementChild;
             if (c !== l) next = c;
+            break;
+         case 'f':
+            // fetch
+//            console.log(l.id.substr(2));
+            sub_root(l.id.substr(3));
             break;
          case '\\':
             // toggle replies
@@ -210,7 +229,10 @@ function select_e(l)
    if (l) it = l.classList.contains('interesting') ? not_interesting(l) : is_interesting(l);
    
    if (it) { it.scrollIntoView(stuff) } 
-   else if (id) { to_get({e:[id]}) }
+   else if (id) 
+   { 
+      //to_get({e:[id]}) 
+   }
 }
 
 function select_p(k) 
@@ -351,8 +373,10 @@ function clickEvent(e)
          }
          break;
       case 'BUTTON':
-         if (e.target.classList.contains('post')) {
-            let unsigned = JSON.parse(your[event.dataset.o]);
+         if (e.target.classList.contains('post')) 
+         {
+            let unsigned = JSON.parse(event.dataset.o);
+//            delete unsigned.seen;
             sign(unsigned);
             
             // broadcast interacted post
@@ -436,14 +460,20 @@ function lies(reply, l)
 {
    let replies = reply.querySelector('.replies');
       
-   if (!replies) 
+//   if (!replies) 
+//   {
+//      replies = document.createElement('ul');
+//      replies.classList.add('replies');
+//      reply.append(replies); 
+//   } 
+
+   if (l.classList.contains('interesting')) 
    {
-      replies = document.createElement('ul');
-      replies.classList.add('replies');
-      reply.append(replies); 
-   } 
-   
+      is_interesting(l);
+   }
+
    replies.append(l); 
+
 //   console.log(replies.childNodes.length);
    count_replies(l);
    
@@ -467,6 +497,7 @@ function lies(reply, l)
       l.classList.add('last');
    }
    ordered(knd1, false);
+
 }
 
 function view_source(l) 
@@ -477,7 +508,7 @@ function view_source(l)
    let source = child_from_class(event, 'source');
    if (!source) 
    {
-      source = raw_event(JSON.parse(session[event.id.substr(2)]));
+      source = raw_event(JSON.parse(event.dataset.o));
       source.classList.add('source');
       event.append(source);
    }
@@ -531,15 +562,22 @@ function inbox() {
    });
 }
 
-function get_orphans(id, l)
+function get_orphans(l)
 {
-   let replies = document.querySelectorAll('[data-reply="e-'+id+'"]');
-   if (replies && replies.length > 0) 
+   let orphans = document.querySelectorAll('[data-reply="'+l.id.substr(2)+'"]');
+   if (orphans.length) 
    {
-      replies.forEach(function(reply) 
+      orphans.forEach((orphan)=> 
       {
-         lies(l, reply);
-      });
+         try 
+         {
+            lies(l,orphan)
+         } 
+         catch (error) {
+            console.log(l,orphan)
+         }
+         
+      })
    }
 }
 
@@ -570,7 +608,7 @@ function update_fren(dat, k)
          tit.append(name);
       }
 
-      name.innerHTML = dat.name;
+      name.innerText = dat.name;
 	   
       if (dat.nip05 && options.media) verifyNIP05(fren, dat, k);
       
@@ -628,9 +666,11 @@ function update_fren(dat, k)
          about.classList.add('about');
          metadata.append(about);
       }
-	   about.innerHTML = ai(dat.about);
+	   about.innerText = dat.about;
 	}
    
    update_k(k);
 }
+
+
 

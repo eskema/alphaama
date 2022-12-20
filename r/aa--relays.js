@@ -20,7 +20,7 @@ function relaytion(ship) //ship is a websocket connection
       state//content
    ];
    
-   console.log(event)
+//   console.log(event)
    
 }
 
@@ -37,7 +37,7 @@ function close(e)
 
    relays[url].cc = cc;   
    // reconnect if somewhat stable
-   if (fails < 4 || cc[1] && cc[0] - cc[1] > 99999) 
+   if (fails < 8 || cc[1] && cc[0] - cc[1] > 99999) 
    {  
       const o = {};
       o.id         = 'r-' + e.timeStamp;
@@ -46,7 +46,7 @@ function close(e)
       o.kind       = "r";
       o.tags       = [['history', cc[0]],['fails', fails]];
       o.content    = 'reconnecting...';
-      connect(url, true)
+      setTimeout(()=>{connect(url, true)}, 200)
    } 
 }
 
@@ -72,70 +72,76 @@ function connect(url, reconnect)
      "limit": <maximum number of events to be returned in the initial query>
    }
    */
-
-   let r = new WebSocket(url);
- 
-   r.addEventListener('open', function(e) 
-   {      
-      let relay = relays[e.target.url.substr(0, e.target.url.length - 1)];
-      relay.ws = e.target; // for easy access later
-      relay.cc = []; // closed connection history
-            
-      if (relay.read) 
-      {
-         const 
-            req = ['REQ', 'aa-open'],
-            feed_filter = {kinds:[1,7]},
-            profiles_filter = {},
-            dms_filter = {kinds:[4], limit:10},
-            interactions_filter = {};
-            
-         feed_filter.since = reconnect ? options.t : x_days(options.days);
-         
-         if (options.k) 
+   
+   if (!url.endsWith('.onion')) 
+   {
+      
+   
+      let r = new WebSocket(url);
+    
+      r.addEventListener('open', function(e) 
+      {      
+         let relay = relays[e.target.url.substr(0, e.target.url.length - 1)];
+         relay.ws = e.target; // for easy access later
+         relay.cc = []; // closed connection history
+                  if (!options.t) options.t = x_days(options.days)
+         if (relay.read) 
          {
-            interactions_filter['#p'] = [options.k];
-            interactions_filter.since = reconnect ? options.t : x_days(options.days);
-            
-            dms_filter['#p'] = [options.k];
-//            if (options.t) 
-//            {
-//               interactions_filter.since = options.t
-//            }
-//            else
-//            {
-//               interactions_filter.limit = 100;
-//            }
-
-            let subs = your.follows ? JSON.parse(your.follows) : [];
-            if (options.k) subs.push(options.k);
-            
-            if (subs.length > 0) 
-            {
-               profiles_filter.kinds = [0,3];
-               profiles_filter.authors = subs;
+            const 
+               req = ['REQ', 'aa-open'],
+               feed_filter = {kinds:[1,7]},
+               profiles_filter = {},
+               dms_filter = {kinds:[4], limit:10},
+               interactions_filter = {};
                
-               feed_filter.authors = subs;
-               if (reconnect) profiles_filter.since = options.t;               
+            feed_filter.since = reconnect ? options.t : x_days(options.days);
+            
+            if (options.k) 
+            {
+               interactions_filter['#p'] = [options.k];
+               interactions_filter.since = reconnect ? options.t : x_days(options.days);
+               
+               dms_filter['#p'] = [options.k];
+   //            if (options.t) 
+   //            {
+   //               interactions_filter.since = options.t
+   //            }
+   //            else
+   //            {
+   //               interactions_filter.limit = 100;
+   //            }
+   
+               let subs = your.follows ? JSON.parse(your.follows) : [];
+               if (options.k) subs.push(options.k);
+               
+               if (subs.length > 0) 
+               {
+                  profiles_filter.kinds = [0,3];
+                  profiles_filter.authors = subs;
+                  
+                  feed_filter.authors = subs;
+                  if (reconnect) profiles_filter.since = options.t;               
+               }
+               req.push(profiles_filter);
+               req.push(interactions_filter);
+               req.push(dms_filter);
+            } 
+            else 
+            {
+               feed_filter.limit = 100;
             }
-            req.push(profiles_filter);
-            req.push(interactions_filter);
-            req.push(dms_filter);
-         } 
-         else 
-         {
-            feed_filter.limit = 100;
+            
+            req.push(feed_filter);
+            e.target.send(JSON.stringify(req));
          }
          
-         req.push(feed_filter);
-         e.target.send(JSON.stringify(req));
-      }
+         relaytion(e.target)
+      }); 
       
-      relaytion(e.target)
-   }); 
+      r.addEventListener('message', message);
+      r.addEventListener('close', close);
    
-   r.addEventListener('message', message);
-   r.addEventListener('close', close);
+   }
 }
 
 function message(e) 
@@ -159,42 +165,13 @@ function message(e)
    
    if (type === 'EVENT' && dis && dat) 
    {//console.log(dis, dat, e.origin)      
-      if (session[dat.id])
+//      
+      if (hose[dat.id]) 
       {
-         const current_dat = JSON.parse(session[dat.id]);
-         let seen = current_dat.seen ? current_dat.seen : [];
-         if (!seen.includes(e.origin)) seen.push(e.origin);
-         session[dat.id] = JSON.stringify(current_dat);          
-      } 
-      else 
-      {
-         seen = [];
-         seen.push(e.origin);
-         dat.seen = seen;
-         session[dat.id] = JSON.stringify(dat); 
-                  
-         if (!options.t 
-         || options.t < dat.created_at) 
-         {
-            options.t = dat.created_at;
-            your.options = JSON.stringify(options);
-         }
-      } 
-      
-      let l = document.getElementById('e-'+dat.id);
-      
-      if (!l) 
-      {
-         l = process(dat, dis);
-      } 
-      else 
-      {
-         if (l.classList.contains('draft')) 
-         {
-            l.classList.remove('draft');
-            let actions_draft = child_from_class(l, 'actions-draft');
-            actions_draft.remove()
-         }
-      }
+         hose[dat.id].seen.push(e.origin);
+      } else {
+         dat.seen = [e.origin];
+         hose[dat.id] = dat
+      }      
    }
 }

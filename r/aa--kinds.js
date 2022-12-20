@@ -1,4 +1,4 @@
-
+const missing = {}; //new DocumentFragment();
 
 function newpub(k) 
 {   
@@ -46,7 +46,7 @@ function newpub(k)
 function newid(o) 
 {
    const l = document.createElement('li');
-   l.classList.add('event');
+   l.classList.add('event', 'new');
    
    const h = document.createElement('p');
    h.classList.add('heading');
@@ -65,6 +65,19 @@ function newid(o)
    {
       l.dataset.p = o.pubkey;
       h.prepend(taglink(['p', o.pubkey], ''));
+      
+      if (o.pubkey === options.k) l.dataset.who = 'yo';
+      else if (your.follows && your.follows.search(o.pubkey) !== -1) l.dataset.who = 'bff';
+      else if (your.ff && your.ff.search(o.pubkey) !== -1) l.dataset.who = 'ff';
+      else l.dataset.who = 'mf';
+//      console.log(l.dataset.who);
+      switch (l.dataset.who) {
+         case 'yo':
+         case 'bff':
+         case 'ff':
+            l.classList.add('is-safe');
+            break;
+      }
    }
    
    if (o.id && o.id !== false && o.pubkey && o.pubkey !== false) {
@@ -100,8 +113,23 @@ function newid(o)
       l.append(sig);
    }
    
-   make_actions(l);
-
+   if (o.seen) 
+   {
+      l.dataset.seen = JSON.stringify(o.seen)
+      delete o.seen;
+   }
+   
+   if (o.mia) 
+   {
+      l.classList.add('mia');
+      delete o.mia;
+   }
+   
+   l.dataset.o = JSON.stringify(o);
+   
+   let replies = document.createElement('ul');
+   replies.classList.add('replies');
+   l.append(replies); 
 //   over(l);
    return l
 }
@@ -217,18 +245,50 @@ function kind0(o)
 //   knd1.append(l); 
 //   ordered(knd1, false);
    
-   return l
+//   return l
 }
 
 function kind1(o) 
 { // NIP1 text_note
    
    let l = document.getElementById('e-'+o.id);
+//   if (!l) l = missing.getElementById('e-'+o.id);
    
-   if (!l) 
+   if (l) 
+   {
+      if (l.classList.contains('draft')) 
+      {
+         l.classList.remove('draft');
+         let actions_draft = child_from_class(l, 'actions-draft');
+         actions_draft.remove()
+      }
+//      else if (l.classList.contains('mia'))
+//      {
+//         console.log('mia');
+//         mia = new DocumentFragment();
+//         mia.append(child_from_class(l, 'replies'));
+//         l.remove();
+//         l = false;
+//         console.log(mia);
+//      }
+      else 
+      {
+         if (l.dataset.seen) 
+         {
+            const seen = JSON.parse(l.dataset.seen);
+            l.dataset.seen = JSON.stringify([...new Set(seen.concat(o.seen))]);
+         }
+      }
+
+   }
+   else 
    { 
       l = newid(o);
       
+//      l.append(mia);
+      
+      const is_safe = l.classList.contains('is-safe');
+//      console.log(l);
 //      const tags = ash(o.tags, l);
 
 //      let heading = child_from_class(l, 'heading');
@@ -244,7 +304,9 @@ function kind1(o)
          ocd = oc.wholeText,
          odc = document.createElement('p');
       
-      odc.innerHTML = ai(ocd, o.tags);
+      if (is_safe) odc.innerHTML = ai(ocd, o.tags);
+      else odc.textContent = ocd;
+      
 
       let content = child_from_class(l, 'content');
       if (!content) {
@@ -256,29 +318,31 @@ function kind1(o)
       content.append(odc);
       
       let media = content.querySelector('img, video, audio, iframe');
-      if (media) 
+      if (media && is_safe) 
       { 
          content.classList.add('has-media');
          let videos = content.querySelectorAll('video');
          if (videos) videos.forEach(rap);
       }
       
+      make_actions(l);
+      get_orphans(l);
+            
       let 
          reply_id,
          reply_tag = get_reply(o.tags);
          
       if (reply_tag) reply_id = reply_tag[1];
-
       if (reply_id) 
       {
          l.classList.add('reply');
-         l.setAttribute('data-reply', 'e-' + reply_id);
+         l.setAttribute('data-reply', reply_id);
          let reply = document.getElementById('e-'+ reply_id);
          if (reply) lies(reply, l);
          else {
             knd1.append(l);
             ordered(knd1, false);
-            get_tags(o.tags);
+//            console.log(o.id, reply_id);
          }
       } 
       else 
@@ -286,19 +350,25 @@ function kind1(o)
          l.classList.add('root');
          knd1.append(l); 
          ordered(knd1, false);
-         get_tags(o.tags);
       }   
-
-      get_orphans(o.id, l);
-      
-      //Notifications (WIP)
-//      if (tags.p.length 
-//      && tags.p.includes(options.k)
-//      && o.pubkey !== options.k) notifica(o);
    
    } 
    
-   return l
+//   console.log(missing.querySelector('[data-reply="'+o.id+'"]').length);
+   
+//   if (missing) {
+//      
+//   }
+   
+//   if (o.id === session.sub_root) 
+//   {
+//      is_interesting(l);
+//      session.removeItem('sub_root');
+//   }
+   
+   
+   
+//   return l
 }
 
 function kind2(o) 
@@ -308,13 +378,14 @@ function kind2(o)
 
 function kind3(o) 
 { // Contacts (NIP2) (& relays until new dedicated relay NIP)
+   let your_follows = your.follows ? JSON.parse(your.follows) : [];
    if (o.pubkey === options.k) 
    {
       options.r = JSON.parse(o.content);
       your.options = JSON.stringify(options);
-      your.follows = JSON.stringify(o.tags);
+//      your.follows = JSON.stringify(o.tags);
       your.k3 = JSON.stringify(o);
-   }
+   } 
    
    let fren = document.getElementById('p-' + o.pubkey);
    if (!fren) fren = newpub(o.pubkey);   
@@ -329,28 +400,42 @@ function kind3(o)
       else {
          follows.innerHTML = '';
       }
-
+      
+      
+      const ff = your.ff ? JSON.parse(your.ff) : [];
       let subscriptions = o.pubkey === options.k ? [] : false;
       o.tags.forEach(function(ot) 
-      { 
-         if (subscriptions) subscriptions.push(ot[1]);
-//         pubcrawl.push(ot[1]);
-         const 
-            f = document.createElement('li'),
-            a = taglink(['p', ot[1]], '');
+      {
+         if (is_hex(ot[1])) 
+         {
+            if (subscriptions) subscriptions.push(ot[1]);
+            if (subscriptions 
+            || your_follows.includes(o.pubkey)) ff.push(ot[1]);
          
-         f.classList.add('follow', 'section-item', 'p-'+ot[1]);
-         f.append(a);
-         stylek([ot[1]], f);
-         follows.append(f);
+            const 
+               f = document.createElement('li'),
+               a = taglink(['p', ot[1]], '');
+            
+            f.classList.add('follow', 'section-item', 'p-'+ot[1]);
+            f.append(a);
+            stylek([ot[1]], f);
+            follows.append(f);
+         }
       });
 
       build_relays(o.content, fren);
       
       if (subscriptions) your.follows = JSON.stringify(subscriptions);
+      
+      if (subscriptions 
+         || your_follows.includes(o.pubkey)) 
+      {
+//         sanitized_pubs = [...new Set(ff.filter(pub => is_hex(pub)))];
+         your.ff = JSON.stringify([...new Set(ff.filter(pub => is_hex(pub)))]);
+      }
    }
    
-   return fren
+//   return fren
 }
 
 function kind4(o) 
@@ -407,7 +492,7 @@ function kind4(o)
 //      m = l;
 //   }
    
-   return m
+//   return m
 }
 
 function defolt(o) 
@@ -440,7 +525,7 @@ function defolt(o)
    
    l.append(l_id,l_pubkey,l_content,l_tags);
    
-   return l
+//   return l
 }
 
 function notifica(o) {
@@ -560,22 +645,24 @@ function notifica(o) {
    }   
 }
 
-function process(dat, dis) 
+async function process(dat, dis = false) 
 {
-   let l;
-   switch (dat.kind) 
-   {
-       case 0: l = kind0(dat); break;
-       case 1: l = kind1(dat); break;
-       case 2: l = kind2(dat); break;
-       case 3: l = kind3(dat); break;
-       case 4: l = kind4(dat); break;
-       case 6: l = kind1(dat); break;
-       case 7: l = kind1(dat); break;
-      default: l = defolt(dat)
-   }
    
-   if (isElement(l)) l.dataset.req = dis;
+//   {
+//      l = process(dat, dis);
+      switch (dat.kind) 
+      {
+          case 0: kind0(dat); break;
+          case 1: kind1(dat); break;
+          case 2: kind2(dat); break;
+          case 3: kind3(dat); break;
+   //       case 4: kind4(dat); break;
+   //       case 6: kind1(dat); break;
+          case 7: kind1(dat); break;
+   //      default: defolt(dat)
+      }
 
-   return l
+//   if (isElement(l)) l.dataset.req = dis;
+
+   
 }

@@ -133,6 +133,17 @@ button:hover {
    padding-right: var(--pad);
 }
 
+#a::after {
+   content: attr(data-status);
+   color: rgb(var(--c-a-c));
+}
+
+#a[data-status] {
+   position: sticky;
+   top: 0;
+   z-index: 9001;
+}
+
 /* @end */
 /* @group whatever the fuck you want */
 
@@ -739,6 +750,19 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    position: relative;
    box-sizing: border-box;
    border-top: 1px dotted rgba(var(--c-a-c),1);
+   --who: attr(data-who)
+}
+
+.event.new {
+   display: none;
+}
+
+.event.anon {
+   /*background: red;*/
+}
+
+.event[data-who="mf"] > .content {
+   /*display: none!important;*/
 }
 
 .event,
@@ -803,6 +827,30 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
 .heading > .author {   
    z-index: 10;
    grid-area: name;
+}
+
+.heading > .author:after {
+   /*color: rgb(var(--c-a-a));*/
+   /*content: "(" var(--who) ")";*/
+}
+
+[data-who="mf"] > .heading > .author:after {
+   content: "(mf)";
+   color: rgb(var(--c-b-a));
+}
+
+[data-who="ff"] > .heading > .author:after {
+   content: "(ff)";
+}
+
+[data-who="you"] > .heading > .author:after,
+[data-who="bff"] > .heading > .author:after {
+   content: "";
+}
+
+[data-who="you"] > .heading > .author {
+   content: "";
+   color: color: rgb(var(--c-a-e));
 }
 
 .heading > .author .text {
