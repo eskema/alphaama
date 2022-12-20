@@ -450,7 +450,7 @@ function count_replies(l)
             const some = replies.childNodes.length;
             const all = l.querySelectorAll('.event').length;
             const hide_btn = l.querySelector('.actions .hide-replies');
-            hide_btn.textContent =  some + (all > some ? '.' + all : '');
+            if (hide_btn) hide_btn.textContent =  some + (all > some ? '.' + all : '');
          }
       }
 	}
@@ -473,7 +473,6 @@ function lies(reply, l)
    }
 
    replies.append(l); 
-
 //   console.log(replies.childNodes.length);
    count_replies(l);
    

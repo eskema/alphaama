@@ -44,13 +44,13 @@ function replacer(url)
       match = src.h,
       matchlow = match.toLowerCase();
    
-   const base_link = url => 
-      '<a href="' + url 
-            + '" class="content-link" target="_blank" rel="nofollow">' 
-            + url + '</a>';
-   
-   let rep = '';
-   
+   let l = document.createElement('a');
+   l.href = url;
+   l.classList.add('content-link');
+   l.target = '_blank';
+   l.rel = 'nofollow';
+   l.textContent = url;
+      
    if (options.media) 
    {
       let format = src.p ? src.p.get('format') : false;
@@ -66,21 +66,20 @@ function replacer(url)
       || format && format === 'webp'
       || format && format === 'png') 
       { // images
-         rep += '<img src="' + url + '" class="content-img" loading="lazy">';
+         l = document.createElement('img');
+         l.src = url;
+         l.classList.add('content-img');
+         l.loading = 'lazy';
          
       } else if ( matchlow.endsWith('.mp4'))
       { // videos
          let poster = src.p && src.p.get('poster') ? decodeURIComponent(src.p.get('poster')) : false;
-         rep += player(url, poster).outerHTML;
+         l = player(url, poster);
       } 
-      else 
-      { // regular links
-         rep += base_link(url); // embed(url) ? embed(url) : 
-   	}
+      
    } 
-   else { rep += base_link(url) }
    
-   return rep
+   return l.outerHTML
 }
 
 function parse_hashtags(text) 
@@ -117,6 +116,7 @@ function mentions(text, tags)
 
 function ai(content, tags) 
 {
+   const p = document.createElement('p');
    //URLs starting with http://, https://, or ftp://
    let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
    let re = content.replace(patternA, replacer);
@@ -125,7 +125,8 @@ function ai(content, tags)
    let patternB = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
    re = re.replace(patternB, replacer);
    re = mentions(re, tags);
-   return re
+//   p.innerHTML = re;
+   return p
 }
 
 function tog(e,l) 
@@ -559,8 +560,9 @@ function hide_replies(e)
    l.scrollIntoView(stuff);
 }
 
-function make_actions(l) 
+function make_actions() 
 {
+   const actions_fragment = new DocumentFragment();
    const actions = document.createElement('p');
    actions.classList.add('actions');
    
@@ -574,7 +576,9 @@ function make_actions(l)
    
    actions.append(reactions, hide);
    
-   l.append(actions);
+   actions_fragment.append(actions);
    reactions.addEventListener('click', react);
    hide.addEventListener('click', hide_replies);
+   
+   return actions_fragment
 }

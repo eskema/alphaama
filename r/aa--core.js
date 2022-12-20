@@ -357,7 +357,7 @@ window.addEventListener('load', function(event)
    togs.forEach(function(l) { l.addEventListener('click', function(e) { tog(e,l); }, false); });	
    
    start();
-   setInterval(get_em, 1000);
+   setInterval(get_em, 2000);
    
    document.body.scrollIntoView(stuff);
    

@@ -894,6 +894,7 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    padding-left: var(--pad);
    padding-top: .7rem;
    background-color: rgb(var(--c-a-a));
+   /*max-height: 100vh;*/
 }
 
 .event:not(.has-replies) > .replies {

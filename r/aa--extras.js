@@ -103,9 +103,9 @@ function player(src, poster)
    rapper.classList.add('yo');
       
    url.classList.add('vhs'); 
-   url.innerHTML = src;
+   url.innerText = src;
    
-   progress.innerHTML = '0% played';
+   progress.innerText = '0% played';
    progress.setAttribute('min', 0);
    progress.setAttribute('max', 100);
    progress.setAttribute('value', 0);

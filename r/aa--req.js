@@ -139,7 +139,7 @@ function add_missing(k,at)
    missing[k].push(...pubkeys);
 }
 
-function get_em() 
+async function get_em() 
 {
    load_new();
 
@@ -148,7 +148,7 @@ function get_em()
       document.getElementById('a').dataset.status = 'fetching... ' + Object.keys(hose).length;
       
       //   const hoes = 
-      Object.values(hose).slice(0, 666).forEach((ho)=>
+      Object.values(hose).slice(0, 444).forEach((ho)=>
       {
          process(ho)
          .then(()=>{delete hose[ho.id];})
@@ -165,14 +165,14 @@ function get_em()
       
       if (pubkeys.length) 
       {
-         let pubs = chunkn(pubkeys, 444);
+         let pubs = chunkn(pubkeys, 222);
          pubs.forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
          your.get_pubkeys = '[]';
       }
    
       if (ids.length) 
       {
-         let idds = chunkn(ids, 444);
+         let idds = chunkn(ids, 222);
          idds.forEach((chunk)=>{req.push({'ids':chunk}) });
          your.get_ids = '[]';
       }
@@ -190,7 +190,7 @@ function get_em()
             }
          });
       }
-      else fetch_some();      
+//      else fetch_some();      
    }   
 }
 
