@@ -110,7 +110,7 @@ function process_message(e)
       switch (type) 
       {   
          case 'EOSE': // end of stored events
-            if (dis === 'aa-sub-root' || dis === 'aa-sub-p') relays[e.origin].ws.send(["CLOSE", dis]);
+            if (dis === 'aa-sub-root' || dis === 'aa-sub-p') relays[e.origin].ws.send(JSON.stringify['CLOSE', dis]);
          case 'NOTICE': // information from relays
          default: 
             console.log(type, dis, e.origin)         

@@ -162,7 +162,9 @@ function ai(l)
       //URLs starting with www. (without // before it, or it'd re-link the ones done above)
       let patternB = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
       re = ocd.replace(patternB, replacer);
-      requestAnimationFrame(()=> { content.append(p) });
+//      requestAnimationFrame(()=> { 
+         content.append(p) 
+//      });
    }
 }
 

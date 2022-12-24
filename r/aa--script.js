@@ -367,15 +367,15 @@ function lies(reply, l)
 {
    let replies = reply.querySelector('.replies');
 
-   requestAnimationFrame(()=> 
-   {
+//   requestAnimationFrame(()=> 
+//   {
 		replies.append(l);
       l.removeAttribute('data-reply');
       reply.classList.add('has-replies');
       ordered(replies, true);
       count_replies(l);
       if (l.classList.contains('interesting')) is_interesting(l);
-	});
+//	});
     
    
 
@@ -388,7 +388,9 @@ function lies(reply, l)
       l.classList.add('last');
    }
    
-   requestAnimationFrame(()=> { ordered(knd1, false); });
+//   requestAnimationFrame(()=> { 
+      ordered(knd1, false); 
+//   });
 
 }
 

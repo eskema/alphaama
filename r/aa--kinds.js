@@ -284,22 +284,20 @@ function kind1(o)
             }
             else 
             {
-               requestAnimationFrame(()=> 
-               {
+//               requestAnimationFrame(()=> {
                   knd1.append(l);
                   ordered(knd1, false);
-               });
+//               });
             }
          }
       } 
       else 
       {
          l.classList.add('root');
-         requestAnimationFrame(()=> 
-         {
+//         requestAnimationFrame(()=> {
             if (!document.getElementById('e-'+o.id)) knd1.append(l); 
             ordered(knd1, false);
-      	});
+//      	});
       }
       
       if (o.id === session.sub_root) 
