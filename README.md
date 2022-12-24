@@ -1,4 +1,4 @@
 # alphaama
 A&lt;3
 
-don't use this yet please, it may harm your computer.
+don't use this yet please.
