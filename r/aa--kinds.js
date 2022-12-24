@@ -297,7 +297,7 @@ function kind1(o)
          l.classList.add('root');
          requestAnimationFrame(()=> 
          {
-            knd1.append(l); 
+            if (!document.getElementById('e-'+o.id)) knd1.append(l); 
             ordered(knd1, false);
       	});
       }

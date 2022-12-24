@@ -139,9 +139,7 @@ async function verifyNIP05(fren, dat, pubkey)
             .then(jsondata => checknip05(jsondata));
          }
       }
-   }
-   else console.log(dat);
-   
+   }   
 }
 
 function select_e(l) 
@@ -452,7 +450,7 @@ function update_fren(dat, k)
    
    if (options.media) 
    {
-      verifyNIP05(fren, dat, k);
+      if (dat.nip05) verifyNIP05(fren, dat, k);
             
       if (dat.picture && fren.classList.contains('known')) 
       {
