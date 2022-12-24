@@ -6,82 +6,6 @@ function x_days(number)
    return Math.floor(days.getTime()/1000)
 }
 
-function hfsp(uri) 
-{  
-   // h ash
-   // f ilter
-   // s earch
-   // p arams
-   const 
-      fun = uri.split('?'), 
-      poor = {h:fun[0]};
-   if (fun[1]) 
-   {
-      poor.s = fun[1];
-      poor.p = new URLSearchParams(fun[1]);
-   }
-   return poor
-}
-
-function embed(url) 
-{
-   const 
-      ur_l = new URL(url),
-      domain = ur_l.hostname.split('.').reverse().splice(0,2).reverse().join('.');
-   console.log(domain);
-   switch (domain) {
-      case 'youtu.be':
-      case 'youtube.com': return yt(ur_l)
-      case 'spotify.com': return spotify(ur_l)
-      default: return false
-   }
-}
-
-function replacer(url) 
-{
-   const 
-      src = hfsp(url),
-      match = src.h,
-      matchlow = match.toLowerCase();
-   
-   let l = document.createElement('a');
-   l.href = url;
-   l.classList.add('content-link');
-   l.target = '_blank';
-   l.rel = 'nofollow';
-   l.textContent = url;
-      
-   if (options.media) 
-   {
-      let format = src.p ? src.p.get('format') : false;
-      if ( matchlow.endsWith('.jpg') 
-      || matchlow.endsWith('.jpeg') 
-      || matchlow.endsWith('.png')
-      || matchlow.endsWith('.gif')
-      || matchlow.endsWith('.svg')
-      || matchlow.endsWith('.webp')
-      || format && format === 'jpg'
-      || format && format === 'jpeg'
-      || format && format === 'svg'
-      || format && format === 'webp'
-      || format && format === 'png') 
-      { // images
-         l = document.createElement('img');
-         l.src = url;
-         l.classList.add('content-img');
-         l.loading = 'lazy';
-         
-      } else if ( matchlow.endsWith('.mp4'))
-      { // videos
-         let poster = src.p && src.p.get('poster') ? decodeURIComponent(src.p.get('poster')) : false;
-         l = player(url, poster);
-      } 
-      
-   } 
-   
-   return l.outerHTML
-}
-
 function parse_hashtags(text) 
 {
    const hashtags = [];
@@ -104,54 +28,142 @@ function checkmentions(text)
    return mentions
 }
 
-function mentions(text, tags) 
+function merely_mentions(text, tags) 
 {
-   function nip8(_, index) 
+   function nip8(m, index) 
    {
-      return taglink(tags[index], 'mention').outerHTML;
+      let mention = m, [tag, key] = tags[index];
+      
+      if (is_hex(key)) 
+      {
+         if (tag === 'p')
+         {
+            try { name = JSON.parse(localStorage[key]).name }
+            catch (error) { console.log('no name found') }
+            
+            if (name) mention = '@' + name;
+            else mention = '@' + hex_trun(key)
+         }
+         else if (tag === 'e')
+         {
+            mention = '/' + hex_trun(key)
+         }         
+      }
+      else mention = hex_trun(key)
+      
+      return mention;
    }
    
    return text.replace(/\B#\[(\d+)\]\B/g, nip8)
 }
 
-function ai(content, tags) 
+function try_url(url) 
 {
-   const p = document.createElement('p');
-   //URLs starting with http://, https://, or ftp://
-   let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
-   let re = content.replace(patternA, replacer);
+   let ur_l;
+   try { ur_l = new URL(url) } 
+   catch (error) { console.log('invalid url') };
+//   console.log(ur_l);
+   if (ur_l 
+   && (ur_l.protocol === 'http:' || ur_l.protocol === 'https:')
+   && !ur_l.href.includes('javascript:')
+   && !ur_l.href.includes('data:')) return ur_l;
+   else return false
+}
+
+function media_ext(string) 
+{
+   const 
+      lo = string.toLowerCase(),
+      image_ext = ['jpg','jpeg','gif','webp','png'],
+      video_ext = ['mp4'],
+      audio_ext = ['mp3'];
    
-   //URLs starting with www. (without // before it, or it'd re-link the ones done above)
-   let patternB = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
-   re = re.replace(patternB, replacer);
-   re = mentions(re, tags);
-//   p.innerHTML = re;
-   return p
-}
-
-function tog(e,l) 
-{ // toggle classes
-   e.preventDefault();
-   const tog = l.getAttribute('data-tog');
-   if (tog) 
+   function check_ext(extensions) 
    {
-      document.body.classList.toggle(tog);
-      e.target.classList.toggle('active');
-   } 			
+      let is = false;
+      extensions.forEach((ext)=> { if (lo.endsWith('.'+ext)) is = true });
+      return is
+   }
+   
+   let check = check_ext(image_ext) ? 'image'
+   : check_ext(video_ext) ? 'video'
+   : check_ext(audio_ext) ? 'audio'
+   : false;
+   
+   return check
 }
 
-function toggle_inbox_state(l) 
+function parse_link(url) 
 {
-   let button_state = l.querySelector('button');
-   let id = button_state.dataset.id;
-   let inbox = JSON.parse(your.inbox);
-   let state = inbox[id];
-   let newstate = state === 'unread' ? 'read' : 'unread';
+   
+   let ur_l = try_url(url); 
+//   console.log(ur_l)
+   if (ur_l) 
+   {
+      const 
+         src = ur_l.origin + ur_l.pathname,
+         ext = media_ext(src);
+   
+      let link;      
+      if (ext) 
+      {
+         switch (ext) 
+         {
+            case 'image':
+               link = document.createElement('img');
+               link.src = ur_l.href;
+               link.classList.add('content-img');
+               link.loading = 'lazy';
+               break;
+            case 'video':
+            case 'audio':
+               link = player(ur_l.href);
+               break;               
+         }      
+      }
+      else
+      {
+         link = document.createElement('a');
+         link.href = ur_l.href;
+         link.classList.add('content-link');
+         link.target = '_blank';
+         link.rel = 'nofollow';
+         link.textContent = ur_l.href;
+      }
+      return link
+   }
+}
 
-   inbox[id] = newstate;
-   l.classList.remove(state);
-   l.classList.add(newstate);
-   your.inbox = JSON.stringify(inbox);
+function ai(l) 
+{
+//   console.log('ai',l);
+   let o;
+   try { o = JSON.parse(l.dataset.o) }
+   catch (error) { console.log('no event data') }
+   
+   const p = document.createElement('p');
+   
+   function replacer(url) 
+   {
+      p.append(parse_link(url));
+      return url
+   }
+   
+   if (o) 
+   {
+      const 
+         oc = document.createTextNode(o.content),
+         content = l.querySelector('.content');
+      
+      let ocd = merely_mentions(oc.wholeText, o.tags);   
+      //URLs starting with http://, https://, or ftp://
+      let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
+      let re = ocd.replace(patternA, replacer);
+      //URLs starting with www. (without // before it, or it'd re-link the ones done above)
+      let patternB = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+      re = ocd.replace(patternB, replacer);
+      requestAnimationFrame(()=> { content.append(p) });
+   }
 }
 
 function arParams(str) 
@@ -159,7 +171,8 @@ function arParams(str)
    const ar = str.split('?');
    if (ar[1]) {
       const params = new URLSearchParams(ar[1]);
-      if (params) {
+      if (params) 
+      {
          ar.push(params);
       }
    }
@@ -171,105 +184,24 @@ function is_hex(str)
   return /^[A-F0-9]+$/i.test(str)
 }
 
-function rgb(hex) 
+function rgb(hex_string) 
 {
-   return parseInt(hex.substr(0, 2), 16)
-   + ',' +parseInt(hex.substr(2, 2), 16)
-   + ',' +parseInt(hex.substr(4, 2), 16)
+   return parseInt(hex_string.substr(0, 2), 16)
+   + ',' +parseInt(hex_string.substr(2, 2), 16)
+   + ',' +parseInt(hex_string.substr(4, 2), 16)
 }
 
-function hex(k, separator) {
+function hex_trun(k, separator = '…') {
    // returns new 6 char hex from first 3 and last characters
    // used for item classes, color, etc
-   const sep = separator ? separator : '';
-   return k.substr(0, 3) + sep + k.substr(-3)
+   return k.substr(0, 3) + separator + k.substr(-3)
 }
 
 function pretty(k) 
 {
    const bff = your[k] ? JSON.parse(your[k]) : false;
-   let str = bff && bff.name ? bff.name : hex(k, '…');
+   let str = bff && bff.name ? bff.name : hex_trun(k);
    return str
-}
-
-function over(l) 
-{
-   // replacement for default :hover, 
-   // to "better" handle touch devices
-   
-   // e.pointerType === 'mouse, pen, touch'
-   
-   // over functions
-
-   function pointerenter(e) 
-   {
-      if (e.pointerType !== 'touch') 
-      {
-         if (l.classList.contains('event')) 
-         {
-            let oldtarget = e.target.closest('.event.over');
-            if (oldtarget) oldtarget.classList.add('more-over');
-            
-            let newtarget = e.target.closest('.event');
-            newtarget.classList.add('over');
-            newtarget.classList.remove('more-over');
-         } 
-         else 
-         {
-            e.target.classList.add('over');
-            e.target.parentElement.classList.add('is-over')
-         }
-      
-      } else { e.target.removeEventListener('pointerenter', pointerenter) }
-   }
-   
-   function pointerleave(e) 
-   {
-      if (e.pointerType !== 'touch') 
-      {
-         //e.target.closest('.event').classList.add('over');
-         if (l.classList.contains('event')) 
-         {
-            let target = e.target.closest('.event');
-            if (target !== null) 
-            {
-               target.classList.remove('over', 'more-over');
-               if (target.parentElement !== null) 
-               {
-                  let targetP = target.parentElement.closest('.event')
-                  if (targetP) targetP.classList.remove('more-over');
-               }
-            }
-         } else 
-         {
-            e.target.classList.remove('over');
-            e.target.parentElement.classList.remove('is-over')
-         }
-      
-      } else { e.target.removeEventListener('pointerleave', pointerleave) }
-   }
-   
-   function touchstart(e) 
-   {
-      e.target.classList.add('over');
-      e.target.parentElement.classList.add('is-over');
-   }
-   
-   function touchend(e) 
-   {
-      e.target.classList.remove('over');
-      e.target.parentElement.classList.remove('is-over');
-   }
-
-   // not a touch, kinda
-   if (l) {
-      l.addEventListener('pointerenter', pointerenter, false);
-      l.addEventListener('pointerleave', pointerleave, false);
-      // touch
-      l.addEventListener('touchstart', touchstart, false);   
-      l.addEventListener('touchend', touchend, false);
-   }
-   
 }
 
 function timeSince(date) 
@@ -295,19 +227,28 @@ function timeSince(date)
    return Math.floor(seconds) + "s";
 }
 
+function x_0(x) 
+{
+   try { return x.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/, (thanks, cameri) => cameri)
+   } catch (error) { return x }  
+}
+
 function stylek(keys, l) 
 {
    let style = '';
-   keys.forEach(function(k, index) 
+   keys.forEach((k, index)=>
    {
-      try 
+      if (is_hex(k)) 
       {
-         let c = '--';
-         for (var i = 0; i < index + 1; i++) { c += 'c'; }
-   //      style += c + ':' + rgb(k.substr(0, 6)) + ';'
-         style += c + ':' + k.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/, (m, p1) => rgb(p1)) + ';'
+         try 
+         {
+            let c = '--';
+            for (var i = 0; i < index + 1; i++) { c += 'c'; }
+            style += c + ':' + rgb(x_0(k)) + ';'
+         }
+         catch (error) { console.log(keys, error) }
       }
-      catch (error) { console.log(keys, error) }
+
    })
    
    l.style.cssText += style;
@@ -353,19 +294,31 @@ function ordered(room, direction)
 
 function a_k(a,dat) 
 {
-   if (options.media && dat.picture) 
-   {
-      a.style.cssText += '--picture: url('+arParams(dat.picture)[0]+')';
-      a.classList.add('has-picture');
-   }
+//   a.textContent = '';
    if (dat.name) 
    {
       let a_text = a.querySelector('.text');
-      if (!a_text) a_text = document.createElement('span');
-      a_text.classList.add('text');
-      a_text.textContent = dat.name;
-      a.classList.add('has-text');
-      a.append(a_text);
+      if (a_text.innerText !== dat.name) a_text.textContent = dat.name;
+   }
+   
+   if (options.media && dat.picture) 
+   {
+      let a_image = a.querySelector('img');
+      if (!a_image)
+      {
+         a_image = document.createElement('img');
+         a.classList.add('has-picture');
+         a.append(a_image);
+      }
+      if (!a_image.src || a_image.src !== dat.picture.trim()) 
+      { 
+         a_image.src = dat.picture
+         if (a_image.src !== dat.picture.trim()) {
+            console.log(a_image.src === dat.picture)
+         }
+         
+      }
+//      if (a_image.src && a_image.src !== dat.picture.trim())
    }
 }
 
@@ -376,17 +329,14 @@ function update_k(k)
       dat = JSON.parse(your[k]),
       existing = document.querySelectorAll('[href="#p-'+k+'"]');
    
-   existing.forEach(function(a){a_k(a,dat)});
+   existing.forEach((a)=>{a_k(a,dat)});
 }
 
-function taglink(tag, clas) 
+function taglink(tag) 
 { // make tags clickable
    const a = document.createElement('a');
    
-   a.classList.add('a');
-   
-   if (clas && clas !== '') a.classList.add(clas);
-   
+   a.classList.add('a');   
    if (tag && tag[1]) 
    {
       a.classList.add('a-'+tag[0]);
@@ -398,11 +348,10 @@ function taglink(tag, clas)
       
       function ep(tag) 
       {
-         
          try 
          {
             a.href = '#' + tag[0] + '-' + tag[1];
-            a.classList.add(tag[0] + '-' + tag[1]);
+            a.classList.add(tag[0] + '-' + tag[1], tag[0] === 'e' ? 'id' : 'author' );
             a_text.textContent = pretty(tag[1]);
             stylek([tag[1]], a);
             if (tag[2]) a.setAttribute('data-relay', tag[2]);
@@ -417,16 +366,15 @@ function taglink(tag, clas)
       {
          case 'e':
             ep(tag);
-            a.classList.add('id');
-            a.dataset.before = '{';
-            a.dataset.after = '}';
             break;
          case 'p':
             ep(tag);
-            a.classList.add('author');
-            a.dataset.before = '@';
-            let dat = your[tag[1]] ? JSON.parse(your[tag[1]]) : false;
-            if (dat) a_k(a,dat);
+            let your_follows = your.follows ? JSON.parse(your.follows) : [];
+            if (your_follows.includes(tag[1])) 
+            {
+               let dat = your[tag[1]] ? JSON.parse(your[tag[1]]) : false;
+               if (dat) a_k(a,dat);
+            }
             break;
          case 't':
          case 'hashtag':
@@ -434,7 +382,6 @@ function taglink(tag, clas)
          default:
             a_text.textContent = tag[1];   
       }
-      
    }
    
    return a
@@ -475,13 +422,13 @@ function child_from_class(l, clas)
 function hide(k) 
 {
    const notk = document.querySelectorAll('.event:not([data-p="'+k+'"])');
-   if (notk) { notk.forEach(function(l) { l.classList.add('hidden') })}
+   if (notk.length) { notk.forEach((l)=> { l.classList.add('hidden') })}
 }
 
 function unhide() 
 {
    const hidden = document.querySelectorAll('.hidden');
-   if (hidden) { hidden.forEach(function(l) { l.classList.remove('hidden') })}
+   if (hidden.length) { hidden.forEach((l)=> { l.classList.remove('hidden') })}
 }
 
 function ancestor(l, clas) 
@@ -505,18 +452,17 @@ function mom(l)
 
 String.prototype.hexEncode = function()
 {
-   var hex, i;
-   var result = "";
+   let hex, i,result = '';
    for (i = 0; i < this.length; i++) 
    {
       hex = this.charCodeAt(i).toString(16);
-      result += ("000"+hex).slice(-4);
+      result += ('000'+hex).slice(-4);
    }
-   
    return result
 }
 
-function isElement(l) {
+function isElement(l) 
+{
     return l instanceof Element || l instanceof HTMLDocument;  
 }
 
@@ -548,16 +494,42 @@ function react(e)
    }
 }
 
-function redact(e)
-{
-   
-}
-
-function hide_replies(e) 
+function toggle_replies(e) 
 {
    const l = e.target ? e.target.closest('.event') : e;
    l.classList.toggle('replies-hidden');
-   l.scrollIntoView(stuff);
+}
+
+function parse_content(e) 
+{
+   const l = e.target ? e.target.closest('.event') : e;
+   
+   if (l && l.classList.contains('parsed')) 
+   {
+      const content = l.querySelector('.content');
+      let o;
+      try 
+      {
+         o = JSON.parse(l.dataset.o);
+      } 
+      catch (error) 
+      { 
+         console.log('no data found');
+      }    
+      if (o) 
+      {
+         l.classList.remove('parsed');
+         
+         const p = document.createElement('p');
+         p.textContent = merely_mentions(o.content, o.tags);
+         content.replaceChildren(p);
+      }  
+   }
+   else if (l)
+   {
+      l.classList.add('parsed');
+      ai(l)
+   }
 }
 
 function make_actions() 
@@ -566,19 +538,26 @@ function make_actions()
    const actions = document.createElement('p');
    actions.classList.add('actions');
    
+   const load_media = document.createElement('button');
+   load_media.title = 'will parse the content and load media';
+   load_media.textContent = ':';
+   load_media.classList.add('load-media');
+   
    const reactions = document.createElement('button');
+   reactions.title = 'react, 1 char limit';
    reactions.textContent = '<3';
    reactions.classList.add('reactions');
 
    const hide = document.createElement('button');
+   hide.title = 'toggle replies'
    hide.classList.add('hide-replies');
-//   hide.textContent = '//';
    
-   actions.append(reactions, hide);
+   actions.append(load_media, reactions, hide);
    
    actions_fragment.append(actions);
    reactions.addEventListener('click', react);
-   hide.addEventListener('click', hide_replies);
+   hide.addEventListener('click', toggle_replies);
+   load_media.addEventListener('click', parse_content);
    
    return actions_fragment
 }

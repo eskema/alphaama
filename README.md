@@ -1,4 +1,4 @@
 # alphaama
 A&lt;3
 
-alphaama.com
+don't use this yet please, it may harm your computer.

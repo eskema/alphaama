@@ -168,12 +168,16 @@ button:hover {
    display: grid;
    width: var(--size);
    height: var(--size);
-   background-size: cover;
-   background-position: 50% 50%;
    object-fit: cover;
    font-size: 0;
    text-align: center;
    background-color: rgb(var(--c));
+}
+
+#u img {
+   width: var(--size);
+   height: var(--size);
+   object-fit: cover;
 }
 
 #iot {
@@ -378,6 +382,8 @@ button:hover {
 
 .interesting > .actions {
    background: black;
+   grid-auto-flow: column;
+   grid-gap: 1rem;
 }
 
 .actions button {
@@ -754,7 +760,8 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
 }
 
 .event.new {
-   display: none;
+   opacity: 0!important;
+   position: absolute!important;
 }
 
 .event.anon {
@@ -878,7 +885,13 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    border: 1px solid transparent;
    border-left: none;
    box-sizing: border-box;
-   overflow: hidden;   
+   overflow: hidden;  
+   hyphens: auto; 
+   white-space: pre-wrap;
+}
+
+.content > a {
+   word-break: break-all;
 }
 
 .event.root:not(.mom):not(.interesting) > .replies .content,
@@ -1075,15 +1088,10 @@ button.view-source {
 
 
 
-.a.has-picture::before {
-   content: "";
+.a.has-picture img {
    width: calc(1rem ); /*calc(1rem + calc(1rem/3));*/
    height: calc(1rem ); /*calc(1rem + calc(1rem/3));*/
    padding: 0;
-   background-image: var(--picture);
-   background-size: cover;
-   background-position: center;
-   background-repeat: no-repeat;
 }
 
 .content .a.mention {
@@ -1414,7 +1422,7 @@ button.view-source {
    margin-bottom: 1.4rem;
    overflow: hidden;
    max-width: 100%;
-   white-space: pre-wrap;
+   
 }
 
 .content p:last-child {

@@ -20,8 +20,8 @@ function bbbb()
  // tries to forget everything
    your.clear(); // localStorage
    session.clear(); // SessionStorage
-   document.getElementById('kind-0').innerHTML = ''; // contacts
-   document.getElementById('kind-1').innerHTML = ''; // timeline
+   document.getElementById('kind-0').textContent = ''; // contacts
+   document.getElementById('kind-1').textContent = ''; // timeline
    iot.placeholder = 'boom biddy bye bye'; // so you know what happened
    u.removeAttribute('style');
    history.pushState('', '', location.pathname);
@@ -32,24 +32,18 @@ function bbbb()
 function hashchange(e) 
 {  
    let hash = location.hash;
-   let search = hash ? arParams(hash) : arParams(location.search);
-   
-   if (search[0] !== '') 
+   let hex_string = hash.split('?')[0].substr(3)
+   if (is_hex(hex_string)) 
    {
-      console.log(search);
-      
-      switch (search[0].substr(1, 1)) 
+      console.log(hex_string);
+      switch (hash.substr(1, 1)) 
       {
          case 'e':
-//            your.
-            sub_root(search[0].substr(3));
-//            location
-//            select_e(search[0].substr(3));
+            sub_root(hex_string);
             break;
          case 'p':
-            select_p(search[0].substr(3))
+            select_p(pubkey) 
             break;
-         default:
       }
    }     
 }
@@ -76,7 +70,7 @@ function is(e)
       v = n.wholeText,
       a = v.split(' ');
    
-   e.target.parentElement.dataset.content = e.target.value;
+   e.target.parentElement.dataset.content = v;
    
 //   if (a[a.length - 1].startsWith('@')) {
 //      mention(a[a.length - 1].substr(1));
@@ -111,9 +105,6 @@ function is(e)
                // destroys everything, 
                // or at least tries to..
                bbbb();
-               break;
-            case '--d': // toggle frens
-               document.body.classList.toggle('ffs'); 
                break;
             case '--media':
                options.media = !options.media; 
@@ -196,11 +187,10 @@ function more(e)
    document.body.classList.add('mode-input');
 }
 
-
-
 function clean_up() 
 {
-   session.removeItem('interesting');
+//   bbbb();
+   session.clear();
    
    if (!your.options) your.options = JSON.stringify(defaults);
    options = JSON.parse(your.options);
@@ -238,14 +228,10 @@ function clean_up()
 }
 
 function start() {
-
-     
-//   inbox();
-   
-//   interactions();
  
    if (options.k) 
    {
+      const u = document.getElementById('u');
       let dat = your[options.k] ? JSON.parse(your[options.k]) : false;
       
       iot.value = '';
@@ -254,26 +240,24 @@ function start() {
       document.body.classList.add('has-k');  
       
       
-
-      u.addEventListener('click', function(e) { select_p(options.k) }, false);
+      
+      u.addEventListener('click', (e) => { select_p(options.k) });
       
       stylek([options.k], u);
       if (options.media && dat) 
       { // gets main profile img
-         
-         u.setAttribute('style', 'background-image: url('+dat.picture.split('?')[0]+')');
+         if (dat.picture)
+         {
+            const img = document.createElement('img');
+            img.src = dat.picture;
+            u.replaceChildren(img);
+         }
       }
       
       Object.entries(relays).forEach(([url, can]) => 
       { 
          if (can.read || can.write) connect(url, false)
-      });
-      
-      if (location.hash) {
-         setTimeout(hashchange, 2000);
-      }
-      
-      
+      });      
       
       if (window.nostr) 
       { // nos2x
@@ -298,11 +282,7 @@ function start() {
             start();
          });
       }
-   }  
-   
-   
-   
-   
+   }     
 }
 
 function stored() 
@@ -343,7 +323,7 @@ window.addEventListener('load', function(event)
    iot.addEventListener('keyup', is, false);
    iot.addEventListener('focus', more, false);
    //prevent Enter key from adding line break
-   iot.addEventListener('keydown', function(e) 
+   iot.addEventListener('keydown', (e)=> 
    {
       if (e.key === 'Enter' && e.shiftKey === false) 
       {
@@ -352,13 +332,8 @@ window.addEventListener('load', function(event)
    }, false);
    document.addEventListener('keyup', hotkeys);
    
-   // get all the elements for tog()
-   const togs = document.querySelectorAll('[data-tog]');
-   togs.forEach(function(l) { l.addEventListener('click', function(e) { tog(e,l); }, false); });	
-   
    start();
-   setInterval(get_em, 2000);
-   
-   document.body.scrollIntoView(stuff);
+   setInterval(get_em, 1000);
+//   document.body.scrollIntoView(stuff);
    
 }, false);

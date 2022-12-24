@@ -1,69 +1,13 @@
 const 
-   idea = document.getElementById('a'), 
    iot = document.getElementById('iot'),
    knd1 = document.getElementById('kind-1'),
-   aside = document.getElementById('as'),
-   u = document.getElementById('u'),
    stuff = { behavior:'smooth', block: 'start'};
 
 function ash(tags, l) 
 {
-   const nav = document.createElement('nav');
-//   let note = { 
-//      'e': [], // list of event ids
-//      'p': [], // list of pubkeys
-//      'nonce': [], // pow
-//      'hashtags': [], // #
-//      'custom': [], // else
-//      'ereply': false,
-//      'preply': false,
-//      'eroot': false,
-//      'proot': false,
-//      'tags': tags,
-//      'nav': nav
-//   };   
-   
+   const nav = document.createElement('nav');  
    nav.classList.add('tags');
-   
-   tags.forEach(function(ot, i) 
-   {
-      nav.append(taglink(ot, ''));
-   });
-   
-//   let nodes = nav.childNodes;
-//   
-//   if (tags.length > 0) 
-//   {
-//      
-//      
-//      if (note.e.length > 0) 
-//      {
-//         note.ereply = tags.findIndex(el => el[1] === note.e[note.e.length - 1]);
-//         note.eroot = tags.findIndex(el => el[1] === note.e[0]);
-//         l.setAttribute('data-reply', 'e-' + note.e[note.e.length - 1]);
-//      }
-            
-//      if (note.p.length > 0) 
-//      {
-//         note.preply = tags.findIndex(el => el[1] === note.p[note.p.length - 1]);
-//         note.proot = tags.findIndex(el => el[1] === note.p[0]);
-//      }
-//      
-//      if (note.nonce.length > 0) 
-//      {
-//         let nonce = l.dataset.nonce;
-//         l.setAttribute('data-nonce', note.nonce[0]);
-//      }
-      
-//      nodes.forEach(function(li, i) 
-//      {
-//         if (i === note.eroot) li.classList.add('tag-e-root');
-//         if (i === note.proot) li.classList.add('tag-p-root');
-//         if (i === note.ereply) li.classList.add('tag-e-reply');
-//         if (i === note.preply) li.classList.add('tag-p-reply');
-//      });
-//   }
-   
+   tags.forEach((ot, i)=> { nav.append(taglink(ot, '')) });   
    return nav
 }
 
@@ -73,13 +17,12 @@ function not_interesting(l)
    history.pushState('', document.title, location.pathname + location.search);
          
    const moms = document.querySelectorAll('.mom');
-   moms.forEach(function(mom) { mom.classList.remove('mom') });
+   moms.forEach((mom)=> { mom.classList.remove('mom') });
    
    document.body.classList.remove('has-interesting');
    session.removeItem('interesting');
    iot.placeholder = 'new post';
    session.removeItem('reaction');
-   
    return l
 }
 
@@ -97,18 +40,6 @@ function is_interesting(l)
    location.hash = '#' + l.id;
    iot.placeholder = 'reply to ' + l.querySelector('.author').textContent;
    session.removeItem('reaction');
-//   if (l.dataset.reply) get_tags(JSON.parse(l.dataset.o).tags);
-
-//   if (l.dataset.reply) 
-//   {
-//      sub_root(get_root(JSON.parse(l.dataset.o).tags)[1]);
-//   }
-//   else 
-//   {
-//      sub_root(l_id);
-//   }
-
-//   get_orphans(l);
    return l
 }
 
@@ -164,53 +95,53 @@ function hotkeys(e)
    }
 }
 
-function verifyNIP05(fren, frend, pubkey)
+async function verifyNIP05(fren, dat, pubkey)
 { //https://<domain>/.well-known/nostr.json?name=<local-part>
-   let parts = frend.nip05.split('@');
-   if (parts.length === 2) 
+   if (dat && dat.nip05) 
    {
-      const 
-         username = parts[0],
-         domain = 'https://'+parts[1];
-         
-      const same = new URL(domain);
-      if (domain !== same.origin)
+      let parts = dat.nip05.trim().split('@');
+      if (parts.length === 2) 
       {
-         console.log('invalid nip05: domain !== origin', domain);
-         domain = false;
-      }
-      
-      function checknip05(jsondata) 
-      {
-         console.log(jsondata);
-         
-         if (pubkey === jsondata.names[username])
+         const 
+            username = parts[0],
+            domain = 'https://'+parts[1];
+            
+         const same = new URL(domain);
+         if (domain !== same.origin)
          {
-            const tit = fren.querySelector('.tit');
-            if (tit) 
+            console.log('invalid nip05: domain !== origin', domain);
+            domain = false;
+         }
+         
+         function checknip05(jsondata) 
+         {
+            if (pubkey === jsondata.names[username])
             {
-               tit.setAttribute('data-nip05', frend.nip05)
-               fren.classList.add('nip05');
-               
-               if (frend.nip05.startsWith('_@')) tit.classList.add('root');
+               const tit = fren.querySelector('.tit');
+               if (tit) 
+               {
+                  tit.setAttribute('data-nip05', dat.nip05)
+                  fren.classList.add('nip05');
+                  if (dat.nip05.startsWith('_@')) tit.classList.add('root');
+               }
             }
-            // relays
-            // jsondata.relays[pubkey]
+            else console.log('invalid nip05', jsondata.names[username])
+         }
+         
+         if (username && domain) 
+         {
+            fetch(domain+'/.well-known/nostr.json')
+            .then(response => 
+            {
+               console.log('response', response.ok);
+               if (response.ok) return response.json()
+            })
+            .then(jsondata => checknip05(jsondata));
          }
       }
-      
-      if (username && domain) 
-      {
-         fetch(domain+'/.well-known/nostr.json')
-         .then(response => 
-         {
-   //         const res = response.ok;
-            console.log('response',response.ok);
-            if (response.ok) return response.json()
-         })
-         .then(jsondata => checknip05(jsondata));
-      }
    }
+   else console.log(dat);
+   
 }
 
 function select_e(l) 
@@ -223,57 +154,56 @@ function select_e(l)
       id = l;
       l = document.getElementById('e-'+id);
    }
-      
-   const interesting = document.querySelector('.interesting'); // selected element
-   
+         
    if (l) it = l.classList.contains('interesting') ? not_interesting(l) : is_interesting(l);
    
    if (it) { it.scrollIntoView(stuff) } 
-   else if (id) 
-   { 
-      //to_get({e:[id]}) 
-   }
+   else if (id) to_get({e:[id]});
 }
 
 function select_p(k) 
 {
-   let dat = your[k] ? JSON.parse(your[k]) : false;
-   
-   if (!dat) 
+   if (is_hex(k)) 
    {
-      to_get({p:[k]});
-   
-   } else 
-   {
-      let l = document.getElementById('p-' + k);
-      if (!l) l = newpub(k);
-      update_fren(dat, k)
-      
-      let solo = document.querySelector('.fren.solo');
-      
-      function pk() 
-      {
-         if (l) l.classList.add('solo');      
-         hide(k);
-         location.hash = '#p-' + k;
-         history.pushState('', '', location.origin + location.pathname + location.hash + location.search);
-         document.body.classList.add('p-k');
-         
-         let interesting = document.querySelector('.interesting');
-         if (interesting) interesting = not_interesting(interesting);
+      let dat;
+      try {
+         dat = JSON.parse(your[k])
+      } catch (error) {
+         console.log('no saved data')
       }
       
-      if (solo) 
+      if (dat) 
       {
-         solo.classList.remove('solo');
-         let active = solo.querySelector('.active');
-         if (active) active.classList.remove('active');
-         unhide();
-         history.pushState('', '', location.pathname);
-         document.body.classList.remove('p-k');
-         if (solo !== l) pk();
-      
-      } else { pk() }
+         let l = document.getElementById('p-'+k);
+         if (!l) l = newpub(k);
+         update_fren(dat, k)
+         let solo = document.querySelector('.fren.solo');
+         function pk() 
+         {
+            l.classList.add('solo');      
+            hide(k);
+            location.hash = '#p-' + k;
+            history.pushState('', '', location.origin + location.pathname + '#p-' + k + location.search);
+            document.body.classList.add('p-k');
+            
+            let interesting = document.querySelector('.interesting');
+            if (interesting) interesting = not_interesting(interesting);
+         }
+         
+         if (solo) 
+         {
+            solo.classList.remove('solo');
+            let active = solo.querySelector('.active');
+            if (active) active.classList.remove('active');
+            unhide();
+            history.pushState('', '', location.pathname);
+            document.body.classList.remove('p-k');
+            if (solo !== l) pk();
+         
+         } else pk();
+      }
+      else to_get({p:[k]});
+      sub_p(k);
    }
 }
 
@@ -343,9 +273,7 @@ function clickEvent(e)
       case 'DL':
       case 'DT':
       case 'DD':
-         break;
       case 'SPAN':
-         
          break;
       case 'A':
          let href = e.target.getAttribute('href');
@@ -364,7 +292,6 @@ function clickEvent(e)
                } else {
                   select_e(href.substr(3));
                }
-               
                break;
             case 'p':
                e.preventDefault();
@@ -376,25 +303,7 @@ function clickEvent(e)
          if (e.target.classList.contains('post')) 
          {
             let unsigned = JSON.parse(event.dataset.o);
-//            delete unsigned.seen;
             sign(unsigned);
-            
-            // broadcast interacted post
-//            if (session.interesting) 
-//            { 
-//               try 
-//               {
-//                  let reply = JSON.parse(session[session.interesting]);
-//                  seen = reply.seen[0];
-//                  delete reply.seen;
-//                  post(reply);
-//               }
-//               catch (error) {
-//                  console.log("broadcast wen't wrong")
-//               }
-//               
-//               if (reply) post(reply);
-//            }
          } 
          else if (e.target.classList.contains('cancel'))
          {
@@ -404,13 +313,15 @@ function clickEvent(e)
          } 
          else if (e.target.classList.contains('edit'))
          {
-            let content;
+            let content = event.querySelector('.content').innerText;
             switch (event.dataset.kind) {
                case "0":
-                  content = '--smd ' + JSON.parse(your[event.dataset.o]).content;
+//                  let k0 = JSON.parse(your[option.k]);
+//                  delete k0.id
+                  content = '--smd ' + content;
                   break;
-               default:
-                  content = event.dataset.draft;
+//               default:
+//                  content = event.dataset.draft;
             }
             iot.value = content;
             iot.parentElement.dataset.content = content;
@@ -422,9 +333,7 @@ function clickEvent(e)
          }
          break;
       case 'P':
-         if (event.classList.contains('interesting')) {
-            break;
-         } 
+         if (event.classList.contains('interesting')) break;
       case 'LI':
          if (e.target.tagName === 'LI'
          && event.classList.contains('interesting')
@@ -459,35 +368,20 @@ function count_replies(l)
 function lies(reply, l) 
 {
    let replies = reply.querySelector('.replies');
-      
-//   if (!replies) 
-//   {
-//      replies = document.createElement('ul');
-//      replies.classList.add('replies');
-//      reply.append(replies); 
-//   } 
 
-   if (l.classList.contains('interesting')) 
+   requestAnimationFrame(()=> 
    {
-      is_interesting(l);
-   }
+		replies.append(l);
+      l.removeAttribute('data-reply');
+      reply.classList.add('has-replies');
+      ordered(replies, true);
+      count_replies(l);
+      if (l.classList.contains('interesting')) is_interesting(l);
+	});
+    
+   
 
-   replies.append(l); 
-//   console.log(replies.childNodes.length);
-   count_replies(l);
-   
-   l.removeAttribute('data-reply');
-   reply.classList.add('has-replies');
-   ordered(replies, true);
-   
    let root = ancestor(reply, 'event');
-//   if (root !== reply) 
-//   {
-//      some = root.querySelector('.replies').childNodes.length;
-//      all = root.querySelectorAll('.event').length;
-//      hide_btn = root.querySelector('.actions .hide-replies');
-//      hide_btn.textContent =  some + (all > some ? '.' + all : '');
-//   }
    if (parseInt(l.dataset.stamp) > parseInt(root.dataset.stamp)) 
    {
       root.dataset.stamp = l.dataset.stamp;
@@ -495,7 +389,8 @@ function lies(reply, l)
       if (last) last.classList.remove('last');
       l.classList.add('last');
    }
-   ordered(knd1, false);
+   
+   requestAnimationFrame(()=> { ordered(knd1, false); });
 
 }
 
@@ -503,62 +398,15 @@ function view_source(l)
 {
    const event = l.closest('.event');
    event.classList.toggle('view-source');
-   
    let source = child_from_class(event, 'source');
-   if (!source) 
+   if (!source)
    {
-      source = raw_event(JSON.parse(event.dataset.o));
+      const o = JSON.parse(event.dataset.o);
+      o.seen = JSON.parse(event.dataset.seen);
+      source = raw_event(o);
       source.classList.add('source');
       event.append(source);
    }
-}
-
-function follows_you(k) 
-{
-   let fu = document.getElementById('fu');
-   if (!fu) {
-      fu = make_section('follows-u');
-      fu.id = 'fu';
-
-      let you = document.getElementById('p-' + options.k);
-      if (!you) you = newpub(options.k);
-      you.append(fu);
-   }
-   
-   let followers = your.fu ? JSON.parse(your.fu) : [];
-   if (!followers.find[k]) { 
-      followers.push(k);
-   }
-   
-   your.fu = JSON.stringify(followers);
-   
-   let already = fu.querySelector('.p-'+k);
-   
-   if (!already) 
-   {
-      let 
-         l = document.createElement('li'),
-         a = taglink(['p', k], '');
-         
-      l.classList.add('follow', 'section-item', 'p-'+k);
-      stylek([k], l);
-      l.append(a);
-      fu.append(l);
-   }   
-}
-
-function inbox() {
-      
-   let inbox = your.inbox ? JSON.parse(your.inbox) : {};      
-      
-   Object.entries(inbox).forEach(([id, state]) => 
-   {       
-      if (state === 'unread') 
-      {
-         let unread = session[id] ? JSON.parse(session[id]) : false;
-         if (unread) notifica(unread);
-      } 
-   });
 }
 
 function get_orphans(l)
@@ -568,14 +416,8 @@ function get_orphans(l)
    {
       orphans.forEach((orphan)=> 
       {
-         try 
-         {
-            lies(l,orphan)
-         } 
-         catch (error) {
-            console.log(l,orphan)
-         }
-         
+         try { lies(l,orphan) } 
+         catch (error) { console.log(l,orphan) }
       })
    }
 }
@@ -584,8 +426,7 @@ function update_fren(dat, k)
 {
    let fren = document.getElementById('p-'+k);
    if (!fren) fren = newpub(k);
-   
-   fren.classList.add('bff'); // not sure if this is still used.. should be for your follows only
+
    const metadata = fren.querySelector('.metadata');
 
    if (dat.name) 
@@ -606,52 +447,33 @@ function update_fren(dat, k)
          name.classList.add('name');
          tit.append(name);
       }
-
-      name.innerText = dat.name;
-	   
-      if (dat.nip05 && options.media) verifyNIP05(fren, dat, k);
-      
+      name.textContent = dat.name;
 	}
    
-   if (dat.picture) 
+   if (options.media) 
    {
-      let picture = fren.querySelector('.picture');
-      
-      if (!picture) 
+      verifyNIP05(fren, dat, k);
+            
+      if (dat.picture && fren.classList.contains('known')) 
       {
-         picture = document.createElement('img');
-         picture.classList.add('picture');
-         metadata.append(picture);
-         fren.classList.add('has-picture');
-      }
-
-      let src = arParams(dat.picture);
-      if (options.media) 
-      {
-         picture.setAttribute('src', src[0]);   
-         picture.setAttribute('loading', 'lazy');
+         let picture = fren.querySelector('.picture');
          
-         if (src.length > 2) 
-         { // there's parameters
-            let srcl = src[2].get('logo'); // let c if it is a logo
-            if (srcl) 
-            { // it is
-               // let's build it
-               let logo = fren.querySelector('.logo');
-               if (!logo) 
-               {
-                  logo = document.createElement('img');
-                  logo.classList.add('logo');
-                  logo.setAttribute('loading', 'lazy');
-                  metadata.append(logo);
-               }
-               logo.setAttribute('src', decodeURIComponent(srcl));
-            }
+         if (!picture) 
+         {
+            picture = document.createElement('img');
+            picture.classList.add('picture');
+            metadata.append(picture);
+            fren.classList.add('has-picture');
          }
+         
+         picture.src = dat.picture;
+         picture.setAttribute('loading', 'lazy');
          
          if (k === options.k) 
          { // gets main profile img
-            u.style.backgroundImage = 'url('+dat.picture.split('?')[0]+')';
+            const img = document.createElement('img');
+            img.src = dat.picture;
+            u.replaceChildren(img);
          }
       }
    }
@@ -665,11 +487,8 @@ function update_fren(dat, k)
          about.classList.add('about');
          metadata.append(about);
       }
-	   about.innerText = dat.about;
+	   about.textContent = dat.about;
 	}
    
    update_k(k);
 }
-
-
-

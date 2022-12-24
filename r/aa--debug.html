@@ -221,7 +221,7 @@ function query()
       let rekt = JSON.stringify(req);
       const header = document.createElement('header');
       header.append(rekt);
-      res.innerHTML = '';
+      res.textContent = '';
       res.append(header);
       ws.send(rekt);
    }

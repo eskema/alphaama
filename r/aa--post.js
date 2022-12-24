@@ -1,31 +1,31 @@
 function get_seen(id)
 {
    // gets the first relay that seen this id
-   const e = session[id] ? JSON.parse(session[id]) : false;
-   return e && e.seen ? e.seen[0] : ''
+   const e = document.getElementById('e-'+id);
+   return e && e.dataset.seen ? JSON.parse(e.dataset.seen)[0] : ''
 }
 
-function filter_mentions(o) 
-{
-   // separate mentions from tags unless they're root or reply
-   const 
-      tags = [], 
-      mentions = [];
-      
-   let mentions_indexes = checkmentions(o.content);
-   for (let i = 0; i < o.tags.length; i++) 
-   {
-      if (mentions_indexes.find(mi => mi === i))
-      {
-         mentions.push(o.tags[i])
-         if(o.tags[i][0] === 'e' 
-         && o.tags[i][3] 
-         && o.tags[i][3] == ('root' || 'reply')) tags.push(o.tags[i]);
-      }
-      else tags.push(o.tags[i])
-   }
-   return [mentions, tags]
-}
+//function filter_mentions(o) 
+//{
+//   // separate mentions from tags unless they're root or reply
+//   const 
+//      tags = [], 
+//      mentions = [];
+//      
+//   let mentions_indexes = checkmentions(o.content);
+//   for (let i = 0; i < o.tags.length; i++) 
+//   {
+//      if (mentions_indexes.find(mi => mi === i))
+//      {
+//         mentions.push(o.tags[i])
+//         if(o.tags[i][0] === 'e' 
+//         && o.tags[i][3] 
+//         && o.tags[i][3] == ('root' || 'reply')) tags.push(o.tags[i]);
+//      }
+//      else tags.push(o.tags[i])
+//   }
+//   return [mentions, tags]
+//}
 
 function get_root(tags) 
 {
@@ -79,10 +79,7 @@ function get_reply(tags)
 
 function preptags(o) 
 {  
-   const 
-      [mentions, filtered_tags] = filter_mentions(o), 
-      tags = [];
-      
+   const tags = [];
    let root = get_root(o.tags);
    if (root) 
    {
@@ -94,7 +91,7 @@ function preptags(o)
    const pubkeys = [];
    o.tags.filter(t=>t[0]==='p').forEach((p)=>
    {
-      if (p[1] !== options.k) pubkeys.push(['p',p[1]])
+      if (p[1] !== options.k && is_hex(p[1])) pubkeys.push(['p',p[1]])
    });
    let unique = [...new Set(pubkeys)];
    if (o.pubkey !== options.k && !unique.includes(o.pubkey)) unique.push(['p',o.pubkey])
@@ -103,51 +100,45 @@ function preptags(o)
    return tags
 }
 
-function prep(note)
+function prep(content)
 {
-   const now = Math.floor( ( new Date().getTime() ) / 1000 );
+   const created_at = Math.floor( ( new Date().getTime() ) / 1000 );
    let tags = [];
    if (session.interesting)
    {
       let reply = document.getElementById('e-'+session.interesting);
       if (reply && reply.dataset.o) tags = preptags(JSON.parse(reply.dataset.o));
    } 
-//   session.interesting ? preptags(JSON.parse(session[session.interesting])) : [],
-      a = [ 
-         0,//id
-         options.k,//pubkey
-         now,//created_at
-         1,//kind
-         tags,//tags
-         note//content
-      ];
    
-   const hashtags = parse_hashtags(note);
-   if (hashtags.length) hashtags.forEach((t)=>{ a[4].push(t) });
+   const hashtags = parse_hashtags(content);
+   if (hashtags.length) hashtags.forEach((t)=>{ tags.push(t) });
+   
+   a = [ 
+      0,//magic
+      options.k,//pubkey
+      created_at,//created_at
+      1,//kind
+      tags,//tags
+      content//content
+   ];
+   
    draft(a, 1);
 }
 
 function reaction(note)
 {
-   let reply, seen = '';
-   try 
-   {
-      seen = JSON.parse(document.getElementById('e'+note[1]).dataset.seen)[0];
-
-//      delete reply.seen;
-//      post(reply);
-   }
-   catch (error) {
-      console.log('somethin not seen')
-   }
-   
-   let tags = [];
+   let 
+      created_at = Math.floor( ( new Date().getTime() ) / 1000 ),
+      reply, 
+      seen = get_seen(note[1]),
+      tags = [];
+      
    tags.push( [ 'e', note[1],  seen] );
    if (note[2] !== options.k) tags.push( [ 'p', note[2] ] );
    const a = [ 
       0,//magic
       options.k,//pubkey
-      Math.floor( ( new Date().getTime() ) / 1000 ),//created_at
+      created_at,//created_at
       7,//kind
       tags,//tags
       note[0]//content
@@ -165,45 +156,8 @@ function draft(a, kind)
    const unsigned = ofa(a);
    unsigned.id = hash(a);
    your[unsigned.id] = JSON.stringify(unsigned);
-   
-   let draft;
-   console.log(a[3]);
-   process(unsigned).then(()=> 
-   {
-      draft = document.querySelector('#e-'+unsigned.id);
-      if (draft) {
-         draft.dataset.o = JSON.stringify(unsigned);
-         draft.dataset.draft = unsigned.content;
-         draft.classList.add('draft');
-         
-         let actions = document.createElement('div');
-         actions.classList.add('actions-draft');
-         
-         let post_btn = document.createElement('button');
-         post_btn.classList.add('post');
-         post_btn.textContent = 'post';
-         actions.append(post_btn);
-         
-         let edit_btn = document.createElement('button');
-         edit_btn.classList.add('edit');
-         edit_btn.textContent = 'edit';
-         actions.append(edit_btn);
-         
-         let cancel_btn = document.createElement('button');
-         cancel_btn.classList.add('cancel');
-         cancel_btn.textContent = 'cancel';
-         actions.append(cancel_btn);
-         
-         draft.append(actions);
-      }
-
-   });
-//   switch (kind) {
-//      case 0: kind0(unsigned); break;
-//      default: kind1(unsigned); break;
-//   }
-   
-
+   unsigned.draft = true;
+   process(unsigned);
 }
 
 function sign(unsigned) 
@@ -223,41 +177,44 @@ function sign(unsigned)
 
 function follow(k) 
 {
-   const 
-      now = Math.floor( ( new Date().getTime() ) / 1000 ), 
-      old = your.k3 ? JSON.parse(your.k3) : false,
-      tags = old ? old.tags : [],
-      content = old ? old.content : '',
-      parts = k.split(',');
+   // pubkey,relay,petname;
+   const parts = k.split(',');
    
-   if (tags.filter(p => p[1] === parts[0]).length) 
+   
+   if (is_hex(parts[0])) 
    {
-      console.log('you already follow this one')
-   }
-   else 
-   {
-      const p = ['p'];
-      parts.forEach((part)=>{p.push(part)})
+      const 
+         now = Math.floor( ( new Date().getTime() ) / 1000 ), 
+         old = your.k3 ? JSON.parse(your.k3) : false,
+         tags = old ? old.tags : [],
+         content = old ? old.content : '';
    
-      tags.push(p);
+      if (tags.filter(p => p[1] === parts[0]).length) 
+      {
+         console.log('you already follow this one')
+      }
+      else 
+      {
+         const p = ['p'];
+         parts.forEach((part)=>{p.push(part)})
       
-      const a = [ 
-         0,//don't ask
-         options.k,//pubkey
-         now,//created_at
-         3,//kind
-         tags,//tags
-         content//content
-      ];
-      
-//      console.log(old)
-      
-      const unsigned = ofa(a);
-      unsigned.id = hash(a);
-      console.log(unsigned);
-      sign(unsigned);
+         tags.push(p);
+         
+         const a = [ 
+            0,//don't ask
+            options.k,//pubkey
+            now,//created_at
+            3,//kind
+            tags,//tags
+            content//content
+         ];
+               
+         const unsigned = ofa(a);
+         unsigned.id = hash(a);
+         sign(unsigned);
+      }
    }
-   
+   else console.log('bad key ' + parts[0]);
 }
 
 function unfollow(k) 
@@ -278,20 +235,12 @@ function unfollow(k)
          tags,//tags
          old.content//content
       ];
-      
-//      console.log(old)
-      
+            
       const unsigned = ofa(a);
       unsigned.id = hash(a);
-      console.log(unsigned);
       sign(unsigned); 
    }
-   else 
-   {
-      console.log("you don't follow anyone :(");
-   }
-   
-
+   else console.log("you don't follow anyone :(");
 }
 
 function set_metadata(o) 
@@ -309,21 +258,16 @@ function set_metadata(o)
 //   draft(a, 0);
    const unsigned = ofa(a);
    unsigned.id = hash(a);
-   console.log(unsigned);
    sign(unsigned);
 }
 
 function post(signed) 
 { 
-   let post_it = ["EVENT"];
-   post_it.push(signed);
-   console.log(signed);
-   post_it = JSON.stringify(post_it);
-   
+   console.log('post', signed);
    Object.entries(relays).forEach(([url, can]) => 
    {
       if (can.write && can.ws && can.ws.readyState === 1) {
-         can.ws.send(post_it);
+         can.ws.send(JSON.stringify(["EVENT", signed]));
       }
    });
 }

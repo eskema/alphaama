@@ -1,4 +1,4 @@
-const missing = {}; //new DocumentFragment();
+const missing = {}; 
 
 function newpub(k) 
 {   
@@ -19,28 +19,37 @@ function newpub(k)
    let close_btn = document.createElement('button');
    close_btn.classList.add('close');
    close_btn.textContent = 'x';
-   
-//   links.classList.add('sections-links');
-//   link_relays = document.createElement('a');
-//   link_relays.classList.add('link-relays');
-//   link_relays.textContent = 'relays'
-   // I'm thinking maybe merge dms and interactions in a single list
-//   dms.classList.add('dms', 'section');
-//   dms.setAttribute('data-label', 'dms');
-//   interactions.classList.add('interactions', 'section');
-//   interactions.setAttribute('data-label', 'interactions');
-//   const follows = make_section('follows');
-
-   
    stylek([k], l);
    
-   l.append(pubkey, metadata, close_btn); // dms, interactions,
+   l.append(pubkey, metadata, close_btn); 
    
    knd0.append(l);      
    l.addEventListener('click', clickFren, false);
-//   over(l);
    
    return l
+}
+
+function trust(pubkey) 
+{
+   const
+      bff = localStorage.follows,
+      ff = localStorage.ff;
+   
+   let trust = pubkey === options.k ? 'yo'
+   : bff && bff.search(pubkey) !== -1 ? 'bf'
+   : ff && ff.search(pubkey) !== -1 ? 'ff'
+   : 'mf';
+
+   let trusted;
+   switch (trust) {
+      case 'yo':
+      case 'bf':
+      case 'ff':
+         trusted = true;
+         break;
+   }
+   
+   return [trust,trusted]
 }
 
 function newid(o) 
@@ -61,23 +70,14 @@ function newid(o)
       h.append(h_id)
    }
    
+   
    if (o.pubkey && o.pubkey !== false) 
    {
       l.dataset.p = o.pubkey;
+      let trusts = trust(o.pubkey);
+      l.dataset.who = trusts[0];
+      if (trusts[1]) l.classList.add('trusted')
       h.prepend(taglink(['p', o.pubkey], ''));
-      
-      if (o.pubkey === options.k) l.dataset.who = 'yo';
-      else if (your.follows && your.follows.search(o.pubkey) !== -1) l.dataset.who = 'bff';
-      else if (your.ff && your.ff.search(o.pubkey) !== -1) l.dataset.who = 'ff';
-      else l.dataset.who = 'mf';
-//      console.log(l.dataset.who);
-      switch (l.dataset.who) {
-         case 'yo':
-         case 'bff':
-         case 'ff':
-            l.classList.add('is-safe');
-            break;
-      }
    }
    
    if (o.id && o.id !== false && o.pubkey && o.pubkey !== false) {
@@ -103,7 +103,11 @@ function newid(o)
    if (o.content && o.content !== false) {
       const content = document.createElement('article');
       content.classList.add('content');
-      content.textContent = o.content;
+      const p = document.createElement('p');
+      if (o.tags) p.textContent = merely_mentions(o.content, o.tags);
+      else p.textContent = o.content;
+      
+      content.append(p);
       l.append(content);
    }
    
@@ -129,16 +133,16 @@ function newid(o)
    
    let replies = document.createElement('ul');
    replies.classList.add('replies');
-   l.append(replies); 
-//   over(l);
+   l.append(replies);
+   
    return l
 }
 
 function build_relays(rels, l) 
 {
-   let rr = false;
-   
-   if (rels[0] === '{') 
+   let rr;
+   rels.trim();
+   if (rels.startsWith('{') && rels.endsWith('}')) 
    {
       try { rr = JSON.parse(rels) } 
       catch (error) { console.log('no relays found')}
@@ -153,7 +157,7 @@ function build_relays(rels, l)
             l.append(r);
          }
          
-         r.innerHTML = '';
+         r.textContent = '';
          
          Object.entries(rr).forEach(([key, value]) => 
          {
@@ -175,85 +179,57 @@ function build_relays(rels, l)
 
 function raw_event(o) 
 {
-   const l = document.createElement('dl');
-   l.classList.add('raw');
-   let content = '';
+   const dl = document.createElement('dl');
+   dl.classList.add('raw');
    Object.entries(o).forEach(([key, value]) =>
    {
-      content += '<dt class="raw-' + key + '">' + key + '</dt>';
+      const dt = document.createElement('dt');
+      dt.classList.add('raw-' + key);
+      dt.textContent = key;
       
       let v = value;
-      if (key === 'tags' || key === 'seen') {
-         v = '<ul>';
-         value.forEach(function(val) 
+      if (key === 'tags' || key === 'seen') 
+      {
+         v = document.createElement('ul');
+         value.forEach((val)=>
          {
+            const li = document.createElement('li');
             if (typeof val === 'object') val = val.join(', ');
-            v += '<li>' + val + '</li>';
-         });
-         v += '</ul>';
+            li.textContent = val;
+            v.append(li);
+         });         
       }
       
-      content += '<dd class="raw-' + key + '">' + v + '</dd>';
+      const dd = document.createElement('dd');
+      dd.classList.add('raw-' + key);
+      dd.append(v); 
+      dl.append(dt,dd);
+      
    });
-   l.innerText = content;
    
-   return l;
+   return dl;
 }
 
 function kind0(o) 
 { // NIP-01 set_metadata
-   
-//   let fren = document.getElementById('p-' + o.pubkey);
-//   if (!fren) fren = newpub(o.pubkey);
-   let l;
    const 
-      old_dat = your[o.pubkey] ? JSON.parse(your[o.pubkey]) : false,
+      old_dat = localStorage[o.pubkey] ? JSON.parse(localStorage[o.pubkey]) : false,
       dat = typeof o.content === 'object' ? o.content : JSON.parse(o.content);
-   
-   if (old_dat && old_dat.id === o.id) { return dat } 
-   else 
+//      if (old_dat && !old_dat.created_at) old_dat.created_at = 1;
+   if (!old_dat || (old_dat.created_at <  o.created_at))
    {
-      dat.id = o.id;
-      your[o.pubkey] = JSON.stringify(dat);
-      update_k(o.pubkey);
+      dat.id = o.id
+      dat.created_at = o.created_at;
+      dat.level = 
+      localStorage[o.pubkey] = JSON.stringify(dat);
+      update_fren(dat, o.pubkey);
    }
-   
-//   let new_content = '<p>' + dat.name + ' new metadata!';
-//   if (old_dat.length > 0 !== dat) 
-//   {
-//      if (old_dat.name !== dat.name) 
-//      {
-//         new_content += '<br>name: ' + dat.name;
-//      }
-//      if (old_dat.picture !== dat.picture) 
-//      {
-//         new_content += '<br>picture: ' + dat.picture;
-//      }
-//      if (old_dat.about !== dat.about) 
-//      {
-//         new_content += '<br>about: ' + dat.about;
-//      }
-//      if (old_dat.nip05 !== dat.nip05)
-//      {
-//         new_content += '<br>nip05: ' + dat.nip05;
-//      }
-//   }
-//   new_content += '</p>';
-//   o.content = new_content;
-//   let l = newid(o);
-//   l.classList.add('root');
-//   knd1.append(l); 
-//   ordered(knd1, false);
-   
-//   return l
 }
 
 function kind1(o) 
 { // NIP1 text_note
    
-   let l = document.getElementById('e-'+o.id);
-//   if (!l) l = missing.getElementById('e-'+o.id);
-   
+   let l = document.getElementById('e-'+o.id);   
    if (l) 
    {
       if (l.classList.contains('draft')) 
@@ -262,15 +238,6 @@ function kind1(o)
          let actions_draft = child_from_class(l, 'actions-draft');
          actions_draft.remove()
       }
-//      else if (l.classList.contains('mia'))
-//      {
-//         console.log('mia');
-//         mia = new DocumentFragment();
-//         mia.append(child_from_class(l, 'replies'));
-//         l.remove();
-//         l = false;
-//         console.log(mia);
-//      }
       else 
       {
          if (l.dataset.seen) 
@@ -279,68 +246,21 @@ function kind1(o)
             l.dataset.seen = JSON.stringify([...new Set(seen.concat(o.seen))]);
          }
       }
-
    }
    else 
    { 
-      l = newid(o);
-      
-//      l.append(mia);
-      
-      const is_safe = l.classList.contains('is-safe');
-//      console.log(l);
-//      const tags = ash(o.tags, l);
-
-//      let heading = child_from_class(l, 'heading');
-//      let old_tags = heading.querySelector('.tags');
-//      if (old_tags) old_tags.remove();
-//      heading.append(tags.nav); 
-      
+      l = newid(o);      
       let created_at = child_from_class(l, 'created-at');
       update_time(created_at);
-
-      const 
-         oc = document.createTextNode(o.content),
-         ocd = oc.wholeText,
-         odc = document.createElement('p');
-      
-//      if (is_safe) odc.innerHTML = ai(ocd, o.tags);
-//      else odc.textContent = ocd;
-//      odc.innerHTML = ai(ocd, o.tags);
-      odc.textContent = ocd;
-//      try {
-//         if (is_safe) odc.append(ai(ocd, o.tags));
-//         else odc.textContent = ocd;
-//      }
-//      catch (error) {
-//         console.log('ocd: ',ocd)
-//      }
-//      
-//      :
       
       
-
-      let content = child_from_class(l, 'content');
-      if (!content) {
-         content = document.createElement('article');
-         content.classList.add('content');
-         l.append(content);
+      
+      if (o.kind === 1) 
+      {
+         if (options.media && l.classList.contains('trusted')) parse_content(l);
+         l.insertBefore(make_actions(), l.querySelector('.replies'));
       }
-      content.innerHTML = ''; 
-      content.append(odc);
-      
-      let media = content.querySelector('img, video, audio, iframe');
-      if (media && is_safe) 
-      { 
-         content.classList.add('has-media');
-         let videos = content.querySelectorAll('video');
-         if (videos) videos.forEach(rap);
-      }
-      
-      l.insertBefore(make_actions(), l.querySelector('.replies'))
-      
-      get_orphans(l);
-            
+
       let 
          reply_id,
          reply_tag = get_reply(o.tags);
@@ -352,37 +272,72 @@ function kind1(o)
          l.setAttribute('data-reply', reply_id);
          let reply = document.getElementById('e-'+ reply_id);
          if (reply) lies(reply, l);
-         else {
-            knd1.append(l);
-            ordered(knd1, false);
-//            console.log(o.id, reply_id);
+         else 
+         {
+            let root_id, root_tag = get_root(o.tags);
+            if (root_tag) root_id = root_tag[1];
+            if (root_id !== reply_id) 
+            {
+               reply = document.getElementById('e-'+ reply_id);
+               if (reply) lies(reply, l);
+               l.setAttribute('data-reply', reply_id);
+            }
+            else 
+            {
+               requestAnimationFrame(()=> 
+               {
+                  knd1.append(l);
+                  ordered(knd1, false);
+               });
+            }
          }
       } 
       else 
       {
          l.classList.add('root');
-         knd1.append(l); 
-         ordered(knd1, false);
-      }   
+         requestAnimationFrame(()=> 
+         {
+            knd1.append(l); 
+            ordered(knd1, false);
+      	});
+      }
       
+      if (o.id === session.sub_root) 
+      {
+         is_interesting(l);
+         session.removeItem('sub_root');
+      }
       
-   
+      get_orphans(l);
+      
+      if (o.draft) 
+      {
+         delete o.draft;
+         l.dataset.o = JSON.stringify(o);
+         l.dataset.draft = o.content;
+         l.classList.add('draft');
+         
+         let actions = document.createElement('div');
+         actions.classList.add('actions-draft');
+         
+         let post_btn = document.createElement('button');
+         post_btn.classList.add('post');
+         post_btn.textContent = 'post';
+         actions.append(post_btn);
+         
+         let edit_btn = document.createElement('button');
+         edit_btn.classList.add('edit');
+         edit_btn.textContent = 'edit';
+         actions.append(edit_btn);
+         
+         let cancel_btn = document.createElement('button');
+         cancel_btn.classList.add('cancel');
+         cancel_btn.textContent = 'cancel';
+         actions.append(cancel_btn);
+         
+         l.append(actions);
+      }
    } 
-//   console.log(missing.querySelector('[data-reply="'+o.id+'"]').length);
-   
-//   if (missing) {
-//      
-//   }
-   
-//   if (o.id === session.sub_root) 
-//   {
-//      is_interesting(l);
-//      session.removeItem('sub_root');
-//   }
-   
-   
-   
-//   return l
 }
 
 function kind2(o) 
@@ -397,7 +352,6 @@ function kind3(o)
    {
       options.r = JSON.parse(o.content);
       your.options = JSON.stringify(options);
-//      your.follows = JSON.stringify(o.tags);
       your.k3 = JSON.stringify(o);
    } 
    
@@ -411,14 +365,11 @@ function kind3(o)
          follows = make_section('follows');
          fren.append(follows);
       }
-      else {
-         follows.innerHTML = '';
-      }
-      
+      else follows.textContent = '';
       
       const ff = your.ff ? JSON.parse(your.ff) : [];
       let subscriptions = o.pubkey === options.k ? [] : false;
-      o.tags.forEach(function(ot) 
+      o.tags.forEach((ot)=>
       {
          if (is_hex(ot[1])) 
          {
@@ -442,219 +393,9 @@ function kind3(o)
       if (subscriptions) your.follows = JSON.stringify(subscriptions);
       
       if (subscriptions 
-         || your_follows.includes(o.pubkey)) 
+      || your_follows.includes(o.pubkey)) 
       {
-//         sanitized_pubs = [...new Set(ff.filter(pub => is_hex(pub)))];
          your.ff = JSON.stringify([...new Set(ff.filter(pub => is_hex(pub)))]);
-      }
-   }
-   
-//   return fren
-}
-
-function kind4(o) 
-{ // Encrypted Direct Message (NIP4)
-   return false
-   console.log('k4');
-   let m = false;
-   let own = o.tags[0][1] !== options.k;
-   let ek =  own ? o.tags[0][1] : o.pubkey;
-   let content;
-
-//   let fren = document.getElementById('p-' + ek);
-//   if (!fren) fren = newpub(ek);  
-//  
-//   let dms = fren.querySelector('.dms');
-//   if (dms) 
-//   {
-//      console.log('k4-dms');
-//      let 
-//         l = document.createElement('li'),
-//         pubkey = document.createElement('p'),
-//         content = document.createElement('p'),
-//         eventDate = new Date(o.created_at*1000),
-//         stored = your[o.id];
-//         
-//      l.classList.add('dm', 'section-item');
-//      if (own) l.classList.add('own');
-//            
-//      pubkey.classList.add('l-pubkey');
-//      pubkey.textContent = pretty(o.pubkey) + ' / ~' + timeSince(eventDate);
-//      
-//      content.classList.add('l-content');
-//      content.textContent = '/* --encrypted-- */';
-//
-//      if (stored) {
-//         content.textContent = stored;
-//      } else {
-         // enabling this will open a dialog box for every message sent and received 
-         // if nos2x permission is not set forever... 
-         
-         if (window.nostr) 
-         {
-            window.nostr.nip04.decrypt(ek, o.content)
-            .then(decrypted => 
-            {
-               content = your[o.id] = decrypted;
-               console.log(decrypted)
-            })
-         }
-//      }
-//      
-//      l.append(pubkey, content);
-//      dms.append(l);
-//      m = l;
-//   }
-   
-//   return m
-}
-
-function defolt(o) 
-{
-   let 
-      l = document.createElement('li'),
-      content = '';
-   
-   l.classList.add('anykind', 'kind-'+o.kind);
-   l.setAttribute('data-kind', o.kind);
-   
-   let l_id = document.createElement('h2');
-   l_id.classList.add('l-id');
-   l_id.textContent = o.id;
-   stylek([o.id], l);
-   
-   let eventDate = new Date(o.created_at*1000);
-      
-   let l_pubkey = document.createElement('p');
-   l_pubkey.classList.add('l-pubkey');
-   l_pubkey.textContent = pretty(o.pubkey) + ' / ~' + timeSince(eventDate);
-   
-   let l_content =  document.createElement('p');
-   l_content.classList.add('l-content');
-   l_content.textContent = o.content;
-   
-   let l_tags =  document.createElement('p');
-   l_tags.classList.add('l-tags');
-   l_tags.textContent = o.tags;
-   
-   l.append(l_id,l_pubkey,l_content,l_tags);
-   
-//   return l
-}
-
-function notifica(o) {
-// old notifications, unused at the moment...
-//   let inbox = your.inbox ? JSON.parse(your.inbox) : {};
-//   if (!inbox[o.id]) inbox[o.id] = 'unread';
-//   
-//   let state = inbox[o.id], last;
-//
-//   your.inbox = JSON.stringify(inbox);
-//      
-//   switch (o.kind) 
-//   {
-//      case 4: last = kind4(o); break;
-//      case 3: follows_you(o.pubkey); break;
-//      default:
-//         if (o.pubkey !== options.k) {
-//            let selector = '#p-' + o.pubkey + ' .interactions';
-//            let interactions = document.querySelector(selector);
-//            if (!interactions) interactions = newpub(o.pubkey).querySelector(selector);
-//            
-//            let already = document.querySelector(selector + ' .e-'+o.id);
-//            if (!already) {
-//               if (o.kind === 1) 
-//               {
-//                  let follows = your.follows ? JSON.parse(your.follows) : false;
-//                  if (follows && !follows.includes(o.pubkey)) last = kind1(o);
-//               }
-//               
-//               let 
-//                  l = document.createElement('li'),
-//                  text = ' replied in ';
-//               
-//               l.classList.add('interaction', 'section-item', state, 'e-'+o.id);
-//               l.setAttribute('data-kind', o.kind);
-//               stylek([o.pubkey,o.id], l);
-//               
-//               let id = document.createElement('a');
-//               id.classList.add('interaction-link');
-//               
-//               let target = o.id;
-//               id.textContent = pretty(o.id);
-//      
-//               let mentions = checkmentions(o.content);
-//               mentions.forEach(function(el) 
-//               {
-//                  if (o.tags[el][1] === options.k) {
-//                     text = ' mentioned you in ';
-//                  }
-//               });
-//               
-//               if (o.kind === 7) 
-//               {
-//                  
-//                  let ind = o.tags.findIndex(inde);
-//                  
-//                  function inde(x) {
-//                    return x[0] === 'e';
-//                  }
-//                  
-//                  target = o.tags[ind][1];
-//                  text = " liked ";
-//               }
-//               
-//               id.textContent = pretty(target);
-//               id.href = '#e-' + target;
-//               
-//               let created_at = make_time(o.created_at);
-//               
-//               l.innerHTML = pretty(o.pubkey) 
-//                  + text 
-//                  + id.outerHTML 
-//                  + created_at.outerHTML;
-//               
-//               let button_state = document.createElement('button');
-//               button_state.classList.add('inbox-state');
-//               button_state.dataset.id = o.id;
-//               button_state.textContent = '[x]';
-//               
-//               l.append(button_state);
-//               interactions.prepend(l);
-//            }
-//         }
-//   }
-   
-   // using Web Notifications
-   if ("Notification" in window) 
-   {
-      if (Notification.permission === "granted") 
-      {
-         const data = your[o.pubkey] ? JSON.parse(your[o.pubkey]) : false;
-         let title = o.kind;
-         let options = {
-            'body': data.name ? data.name: o.pubkey,
-            'icon': data.picture ? data.picture: 'https://alphaama.com/r/apple-touch-icon.png',
-            'tag': o.id
-         }
-         
-         const notification = new Notification(title, options);
-         notification.onclick = function () 
-         {
-            window.parent.focus();
-            notification.close();
-            console.log(o.id);
-            select_e(o.id);
-         }
-      } 
-      else if (Notification.permission !== "denied") 
-      {
-         Notification.requestPermission().then((permission) => 
-         {
-            if (permission === "granted") {
-               const notification = new Notification("Hi there!");
-            }
-         });
       }
    }   
 }
@@ -663,21 +404,12 @@ async function process(dat)
 {
    let dis = dat.dis;
    delete dat.dis;
-//   {
-//      l = process(dat, dis);
-      switch (dat.kind) 
-      {
-          case 0: kind0(dat); break;
-          case 1: kind1(dat); break;
-          case 2: kind2(dat); break;
-          case 3: kind3(dat); break;
-   //       case 4: kind4(dat); break;
-   //       case 6: kind1(dat); break;
-          case 7: kind1(dat); break;
-   //      default: defolt(dat)
-      }
-
-//   if (isElement(l)) l.dataset.req = dis;
-
-   
+   switch (dat.kind) 
+   {
+       case 0: kind0(dat); break;
+       case 1: kind1(dat); break;
+       case 2: kind1(dat); break;
+       case 3: kind3(dat); break;
+       case 7: kind1(dat); break;
+   }
 }

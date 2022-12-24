@@ -39,54 +39,45 @@ function to_get(events)
    }
 }
 
-async function fetch_one(id)
-{
-//   missing.firstChild
-//   Object.entries(relays).forEach(([url, can]) => 
-//   {
-//      if (can.read && can.ws && can.ws.readyState === 1) 
-//      {
-//         can.ws.send(JSON.stringify(["REQ", "aa-fetch1", { ids:[id] } ]));
-//      }
-//   });
-} 
-
 async function fetch_some() 
 {
    const 
       events = { e: [], p: [] }, 
-      orphans = document.querySelectorAll('[data-reply]');
-      
-//   console.log(orphans); //.slice(0,23)
+      orphans = document.querySelectorAll('[data-reply]');      
    
    Array.from(orphans).forEach((l)=>
    {
-      let attempts = parseInt(l.dataset.fetched ? l.dataset.fetched : '0');
-      attempts++;
-      l.dataset.fetched = attempts;
-      if (attempts < 22) 
+      let reply = document.getElementById('e-'+l.dataset.reply);
+      if (reply)
       {
-         let root = get_root(JSON.parse(l.dataset.o).tags);
-         if (root) events.e.push(root[1]);
-         
-         let reply = get_reply(JSON.parse(l.dataset.o).tags);
-         if (reply) events.e.push(reply[1]);
-         
-   //      if (t.e) events.e.push(...t.e);
-         let t = get_tags(JSON.parse(l.dataset.o).tags);
-   //      if (t.e) events.e.push(...t.e);
-         if (t.p) 
+         lies(reply,l);
+      }
+      else {
+         let attempts = parseInt(l.dataset.fetched ? l.dataset.fetched : '0');
+         if (attempts < 22) 
          {
-//            console.log('pew pew', t.p.length);
-            t.p.forEach((p)=>{if (is_hex(p)) events.p.push(p)})
-//            events.p.push(...); 
+            attempts++;
+            l.dataset.fetched = attempts;
+            
+            let root = get_root(JSON.parse(l.dataset.o).tags);
+            if (root 
+            && !document.getElementById('e-'+root[1])
+            && !hose[root[1]]) events.e.push(root[1]);
+            
+            let reply = get_reply(JSON.parse(l.dataset.o).tags);
+            if (reply 
+            && !document.getElementById('e-'+reply[1])
+            && !hose[reply[1]]) events.e.push(reply[1]);
+            
+            let t = get_tags(JSON.parse(l.dataset.o).tags);
+            if (t.p) 
+            {
+               t.p.forEach((p)=>{if (is_hex(p) && !localStorage[p]) events.p.push(p)})
+            }
          }
       }
-
-      
-
-//      if (t.p) events.p.push(...t.p); 
    });
+   
    if (events.e) 
    {
       events.e = [...new Set(events.e)];
@@ -97,31 +88,17 @@ async function fetch_some()
       } 
    } 
   
-//   console.log(events);
    to_get(events);
-//   console.log(events)
-//   
-//   const trendy_e = Math.max.apply(null, events.e);
-//   const trendy_p = Math.max.apply(null, events.p);
-//   events.e = 
-//      console.log(events, trendy_e);
-}
-
-async function fetch_mias(id) 
-{
-   return new Promise(resolve=>
-   {
-      resolve()
-   });
-   const missing = mias.querySelectorAll('[data-reply="'+id+'"]');
-   if (all.length) {
-      
-   }
 }
 
 async function load_new() 
 {
-   document.querySelectorAll('.new.event').forEach((event)=>{event.classList.remove('new')});
+//   requestAnimationFrame(()=> 
+//   {
+//      
+//	});
+   document.querySelectorAll('.new.event').forEach((e)=>{e.classList.remove('new')});
+   
 }
 
 function chunkn(ar,is) 
@@ -134,21 +111,15 @@ function chunkn(ar,is)
     return res;
 }
 
-function add_missing(k,at) 
-{
-   missing[k].push(...pubkeys);
-}
-
 async function get_em() 
 {
    load_new();
-
-   if (Object.keys(hose).length) 
+   const hoe = Object.values(hose);
+   if (hoe.length) 
    {
-      document.getElementById('a').dataset.status = 'fetching... ' + Object.keys(hose).length;
+      document.getElementById('a').dataset.status = 'fetching... ' + hoe.length;
       
-      //   const hoes = 
-      Object.values(hose).slice(0, 444).forEach((ho)=>
+      hoe.forEach((ho)=>
       {
          process(ho)
          .then(()=>{delete hose[ho.id];})
@@ -165,74 +136,82 @@ async function get_em()
       
       if (pubkeys.length) 
       {
-         let pubs = chunkn(pubkeys, 222);
+         let pubs = chunkn(pubkeys, 444);
          pubs.forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
          your.get_pubkeys = '[]';
       }
    
       if (ids.length) 
       {
-         let idds = chunkn(ids, 222);
+         let idds = chunkn(ids, 444);
          idds.forEach((chunk)=>{req.push({'ids':chunk}) });
          your.get_ids = '[]';
       }
       
       if (ids.length || pubkeys.length) 
       {
-         
          req = JSON.stringify(req);
-         console.log('fetching ' + ids.length + ' ids & ' + pubkeys.length + ' authors');
-         Object.entries(relays).forEach(([url, can]) => 
+         let last_req = sessionStorage.req_get;
+         if (req !== last_req) 
          {
-            if (can.read && can.ws && can.ws.readyState === 1) 
+            sessionStorage.req_get = req;
+            console.log('fetching ' + ids.length + ' ids & ' + pubkeys.length + ' authors');
+            Object.entries(relays).forEach(([url, can]) => 
             {
-               can.ws.send(req);
-            }
-         });
+               if (can.read && can.ws && can.ws.readyState === 1) can.ws.send(req);
+            });
+         }
       }
-//      else fetch_some();      
+      else 
+      {
+         if (messages.length) 
+         {
+            messages.forEach(process_message)
+            messages.splice(0,messages.length)
+         } 
+         else fetch_some(); 
+      }
    }   
 }
 
 function sub_root(id)
 {
-   if (id) 
+   if (session.sub_root && session.sub_root === id) 
    {
-      if (session.sub_root && session.sub_root === id) 
+      let tried = session.tried ? JSON.parse(session.tried) : [];
+      tried.push(id);
+   }
+   else 
+   {  
+      console.log('sub-root ' + id);    
+      session.sub_root = id;
+      let req = ["REQ", "aa-sub-root", { ids:[id] } ];
+      req = JSON.stringify(req);
+      Object.entries(relays).forEach(([url, can]) => 
       {
-         let tried = session.tried ? JSON.parse(session.tried) : [];
-         tried.push(id);
-//         fetch_one();
-      }
-      else 
-      {      
-         console.log('sub-root ' + id);
-         session.sub_root = id;
-//         let chunks = chunkn(JSON.parse(your.ff), 444);
-         let req = ["REQ", "aa-sub-root", { ids:[id] } ];
-//         chunks.forEach((chunk)=>
-//         {
-//            
-//            req.push(
-//            {
-//               '#e':[id], 
-//               'kinds':[1], 
-//               'authors': chunk
-//            })
-//         });
-   
-   //      console.log(req);
-         req = JSON.stringify(req);
-   //      console.log(req)
-         Object.entries(relays).forEach(([url, can]) => 
-         {
-            if (can.read && can.ws && can.ws.readyState === 1) 
-            {
-               can.ws.send(req);
-            }
-         });
-      }
-   }   
+         if (can.read && can.ws && can.ws.readyState === 1) can.ws.send(req);
+      });
+   }  
+}
+
+function sub_p(pubkey)
+{
+   if (session.sub_p && session.sub_p === pubkey) 
+   {
+      let tried = session.tried ? JSON.parse(session.tried) : [];
+      tried.push(id);
+   }
+   else 
+   {  
+      console.log('sub-p ' + pubkey);    
+      session.sub_p = pubkey;
+      let req = ["REQ", "aa-sub-p", { authors:[pubkey], kinds:[1], limit: 10 } ];
+      req = JSON.stringify(req);
+      Object.entries(relays).forEach(([url, can]) => 
+      {
+         if (can.read && can.ws && can.ws.readyState === 1) can.ws.send(req);
+      });
+   }  
 }
 
 function get_tags(tags) 
@@ -241,7 +220,7 @@ function get_tags(tags)
    
    tags.forEach((tag)=> 
    { 
-      if (tag[0] === 'e' || tag[0] === 'p') events[tag[0]].push(tag[1]) 
+      if ((tag[0] === 'e' || tag[0] === 'p') && is_hex(tag[1])) events[tag[0]].push(tag[1]) 
    });
    
    if (!events.e.length) delete events.e;
@@ -249,57 +228,3 @@ function get_tags(tags)
    
    return events
 }
-
-//function childcare(tags) 
-//{
-//   const ereply = Number.isInteger(tags.ereply) ? tags.tags[tags.ereply][1] : false;
-//   const eroot = Number.isInteger(tags.eroot) ? tags.tags[tags.eroot][1] : false;
-//   const preply = Number.isInteger(tags.preply) ? tags.tags[tags.preply][1] : false;
-//   const proot = Number.isInteger(tags.proot) ? tags.tags[tags.proot][1] : false;
-//   
-//   const l = tags.nav.closest('.event');
-//   
-//   let 
-//      root = get_root(tags), 
-//      reply = get_reply(tags),
-//      root_id, reply_id;
-//   
-//   if (root) root_id = root[1];
-//   if (reply) reply_id = reply[1];
-//   
-//   
-//   
-//   const ids = [], pubkeys = [];
-//   
-//   if (eroot && tags.eroot !== tags.ereply)
-//   Number.isInteger(tags.eroot)
-//   {
-//      root = document.getElementById(eroot);
-//      if (!root && session[eroot]) 
-//      {
-//         root = kind1(JSON.parse(session[eroot]))
-//      } else 
-//      {
-//         ids.push(eroot);
-//         if (proot 
-//         && preply 
-//         && proot !== preply 
-//         && !your[proot]) 
-//         {
-//            pubkeys.push(proot);
-//         }
-//      }      
-//   }
-//
-//   if (session[ereply]) 
-//   {
-//      reply = process(JSON.parse(session[ereply]), 'childcare');
-//   } 
-//   else 
-//   {
-//      ids.push(ereply);
-//      if (preply && !your[preply]) pubkeys.push(preply);
-//   }
-//   
-//   if (ids.length > 0 || pubkeys.length > 0) to_get(ids, pubkeys);
-//}
