@@ -19,24 +19,11 @@ let options, relays, defaults =
 {
    'days': 1, // feed limit
    'media': false, //autoload media files
-   't': false, //timestamp for since,
    'r': { // bootstrap relays if no others found
           "wss://nostr-pub.wellorder.net":{"read":true,"write":true},
           "wss://nostr-relay.wlvs.space":{"read":true,"write":true},
           "wss://relay.damus.io":{"read":true,"write":true} }
 };
-
-if (window.nostr) 
-{  // nos2x
-   console.log('signer extension available');
-   /*
-   window.nostr.getPublicKey(); //: string // returns your public key as hex
-   window.nostr.signEvent(event): Event // returns the full event object signed
-   window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
-   window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
-   window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
-   */         
-} 
 
 const re = new Worker('r/aa_relays_ww.js');
 re.onmessage=e=>{ pre_process(e.data) };
@@ -46,10 +33,7 @@ async function fetch_relays()
    {
       if (window.nostr) 
       { 
-         resolve(window.nostr.getRelays())
-//         let rels = window.nostr.getRelays().then((rr) => 
-//         { console.lof(rr); resolve( rr ? rr : options.r) });
-         
+         resolve(window.nostr.getRelays()) 
       } 
       else resolve(options.r)
    });
@@ -59,7 +43,8 @@ function aa_open(dis, reconnect = false)
 {
    const req = ['REQ', 'aa-open'];
    const subs = [aa.k, ...aa.bff];
-   const wen = reconnect ? options.t : x_days(options.days);
+   const day_since = x_days(options.days);
+   const wen = reconnect && aa.t ? aa.t > day_since ? aa.t : day_since : day_since;
    // profiles and contacts from your you and your follows
    let filter = {authors: subs, kinds:[0,3]};
 //   if (aa.k3.length) filter.since = wen;
@@ -298,10 +283,21 @@ function clean_up()
 {
 //   bbbb();
 //   sessionStorage.clear();
+   if (window.nostr) 
+   {  // nos2x
+      console.log('signer extension available');
+/*
+window.nostr.getPublicKey(); //: string // returns your public key as hex
+window.nostr.signEvent(event): Event // returns the full event object signed
+window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
+window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
+window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
+*/         
+   } 
    aa.rekt = {};
    if (!localStorage.options) localStorage.options = JSON.stringify(defaults);
    options = JSON.parse(localStorage.options);
-   console.log(options);
+   console.log('options', options);
    
    if (window.nostr && !aa.k) 
    {  
@@ -340,7 +336,7 @@ function start(k) {
       
       fetch_relays().then((rels)=> 
       {
-         console.log(rels)
+//         console.log('relays from ' + rels)
          if (!Object.keys(rels).length) rels = options.r;
 //         relays = [...Object.entries(rels).filter(([url, can])=>can.read || can.write).map(([url,can])=>url)];
          re.postMessage(['rel', rels]);      
@@ -361,7 +357,7 @@ window.addEventListener('load', (event)=>
    document.addEventListener('keyup', hotkeys);
    
    let a = document.getElementById('a');
-   a.addEventListener('click', ()=>{ if (a.dataset.mess) { hoes() } });
+//   a.addEventListener('click', ()=>{ if (a.dataset.mess) { hoes() } });
    
 //   start();
 //   setInterval(get_em, 1000);

@@ -464,12 +464,16 @@ function parse_content(e)
          const p = document.createElement('p');
          p.textContent = merely_mentions(o.content, o.tags);
          
-         content.replaceChildren(p);
+         if (content) content.replaceChildren(p);
       }
       else
       {
          l.classList.add('parsed');
-         content.replaceChildren(ai(o));
+         if (content) {
+            
+         }
+         try { content.replaceChildren(ai(o)) } catch (error) { console.log('could not parse', o) }
+         
          let media = content.querySelector('img, video, audio, iframe');
          if (media) 
          { 

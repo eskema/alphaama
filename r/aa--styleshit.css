@@ -1116,8 +1116,6 @@ button.view-source {
    padding-top: 0;
 }
 
-
-
 .a.has-picture img {
    width: calc(1rem ); /*calc(1rem + calc(1rem/3));*/
    height: calc(1rem ); /*calc(1rem + calc(1rem/3));*/
@@ -1135,19 +1133,13 @@ button.view-source {
    border-bottom: none;
 }
 
-.a.has-picture.mention::before {
-   background-image: none!important;
-   height: unset;
-   width: unset;
-}
-
-.content .a.mention:not(.a-p):not(.a-e)::before {
-   content: "";
+.content .a.has-picture img {
+   display: none;
 }
 
 .content a.a-p::before {
    content: "@";
-   width: auto;
+   /*width: auto;*/
 }
 
 .content a.a-e::before {

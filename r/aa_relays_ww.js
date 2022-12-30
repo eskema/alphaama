@@ -68,7 +68,7 @@ function retry(e)
       let cc = relays[e.target.url].cc;
       const fails = cc.unshift(e.timeStamp);
       // reconnect if somewhat stable
-      if (fails < 69 || cc[1] && cc[0] - cc[1] > 99999) 
+      if (fails < 10 || cc[1] && cc[0] - cc[1] > 99999) 
       {  
          setTimeout(()=>{ connect(e.target.url) }, 420 * fails)
       } 

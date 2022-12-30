@@ -411,6 +411,7 @@ function kind3(o)
 function process(o) 
 {
    if (!seen[o.id]) seen[o.id] = o;
+   else if (seen[o.id].seen && !seen[o.id].seen.includes[o.seen[0]]) seen[o.id].seen.push(o.seen[0])
    
    switch (o.kind) 
    {
