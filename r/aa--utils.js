@@ -6,168 +6,6 @@ function x_days(number)
    return Math.floor(days.getTime()/1000)
 }
 
-function parse_hashtags(text) 
-{
-   const hashtags = [];
-   const matches = text.match(/(\B[#])\w+/g);
-   if (matches) matches.forEach((t)=>{hashtags.push(['t',t.substr(1).toLowerCase()])});
-   return hashtags
-}
-
-function checkmentions(text) 
-{
-   const mentions = [];
-   function mentionIndexes(l) 
-   {
-      const i = l.substr(2, l.length - 3)
-      mentions.push(parseInt(i))
-   }
-   const matches = text.match(/\B#\[(\d+)\]\B/g);
-   if (matches) matches.forEach(mentionIndexes);
-   
-   return mentions
-}
-
-function merely_mentions(text, tags) 
-{
-   function nip8(m, index) 
-   {
-      let mention = m, [tag, key] = tags[index];
-      
-      if (is_hex(key)) 
-      {
-         if (tag === 'p')
-         {
-            try { name = JSON.parse(localStorage[key]).name }
-            catch (error) { console.log('no name found') }
-            
-            if (name) mention = '@' + name;
-            else mention = '@' + hex_trun(key)
-         }
-         else if (tag === 'e')
-         {
-            mention = '/' + hex_trun(key)
-         }         
-      }
-      else mention = hex_trun(key)
-      
-      return mention;
-   }
-   
-   return text.replace(/\B#\[(\d+)\]\B/g, nip8)
-}
-
-function try_url(url) 
-{
-   let ur_l;
-   try { ur_l = new URL(url) } 
-   catch (error) { console.log('invalid url') };
-//   console.log(ur_l);
-   if (ur_l 
-   && (ur_l.protocol === 'http:' || ur_l.protocol === 'https:')
-   && !ur_l.href.includes('javascript:')
-   && !ur_l.href.includes('data:')) return ur_l;
-   else return false
-}
-
-function media_ext(string) 
-{
-   const 
-      lo = string.toLowerCase(),
-      image_ext = ['jpg','jpeg','gif','webp','png'],
-      video_ext = ['mp4'],
-      audio_ext = ['mp3'];
-   
-   function check_ext(extensions) 
-   {
-      let is = false;
-      extensions.forEach((ext)=> { if (lo.endsWith('.'+ext)) is = true });
-      return is
-   }
-   
-   let check = check_ext(image_ext) ? 'image'
-   : check_ext(video_ext) ? 'video'
-   : check_ext(audio_ext) ? 'audio'
-   : false;
-   
-   return check
-}
-
-function parse_link(url) 
-{
-   
-   let ur_l = try_url(url); 
-//   console.log(ur_l)
-   if (ur_l) 
-   {
-      const 
-         src = ur_l.origin + ur_l.pathname,
-         ext = media_ext(src);
-   
-      let link;      
-      if (ext) 
-      {
-         switch (ext) 
-         {
-            case 'image':
-               link = document.createElement('img');
-               link.src = ur_l.href;
-               link.classList.add('content-img');
-               link.loading = 'lazy';
-               break;
-            case 'video':
-            case 'audio':
-               link = player(ur_l.href);
-               break;               
-         }      
-      }
-      else
-      {
-         link = document.createElement('a');
-         link.href = ur_l.href;
-         link.classList.add('content-link');
-         link.target = '_blank';
-         link.rel = 'nofollow';
-         link.textContent = ur_l.href;
-      }
-      return link
-   }
-}
-
-function ai(l) 
-{
-//   console.log('ai',l);
-   let o;
-   try { o = JSON.parse(l.dataset.o) }
-   catch (error) { console.log('no event data') }
-   
-   const p = document.createElement('p');
-   
-   function replacer(url) 
-   {
-      p.append(parse_link(url));
-      return url
-   }
-   
-   if (o) 
-   {
-      const 
-         oc = document.createTextNode(o.content),
-         content = l.querySelector('.content');
-      
-      let ocd = merely_mentions(oc.wholeText, o.tags);   
-      //URLs starting with http://, https://, or ftp://
-      let patternA = /(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim;
-      let re = ocd.replace(patternA, replacer);
-      //URLs starting with www. (without // before it, or it'd re-link the ones done above)
-      let patternB = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
-      re = ocd.replace(patternB, replacer);
-//      requestAnimationFrame(()=> { 
-         content.append(p) 
-//      });
-   }
-}
-
 function arParams(str) 
 {   
    const ar = str.split('?');
@@ -201,9 +39,8 @@ function hex_trun(k, separator = '…') {
 
 function pretty(k) 
 {
-   const bff = your[k] ? JSON.parse(your[k]) : false;
-   let str = bff && bff.name ? bff.name : hex_trun(k);
-   return str
+   const bff = aa.p[k];
+   return bff && bff.name ? bff.name : hex_trun(k)
 }
 
 function timeSince(date) 
@@ -235,25 +72,9 @@ function x_0(x)
    } catch (error) { return x }  
 }
 
-function stylek(keys, l) 
+function stylek(k, l) 
 {
-   let style = '';
-   keys.forEach((k, index)=>
-   {
-      if (is_hex(k)) 
-      {
-         try 
-         {
-            let c = '--';
-            for (var i = 0; i < index + 1; i++) { c += 'c'; }
-            style += c + ':' + rgb(x_0(k)) + ';'
-         }
-         catch (error) { console.log(keys, error) }
-      }
-
-   })
-   
-   l.style.cssText += style;
+   if (is_hex(k)) l.style.cssText = '--c:' + rgb(x_0(k)) + ';';
 }
 
 function make_time(timestamp) 
@@ -296,11 +117,10 @@ function ordered(room, direction)
 
 function a_k(a,dat) 
 {
-//   a.textContent = '';
    if (dat.name) 
    {
       let a_text = a.querySelector('.text');
-      if (a_text.innerText !== dat.name) a_text.textContent = dat.name;
+      if (a_text.textContent !== dat.name) a_text.textContent = dat.name;
    }
    
    if (options.media && dat.picture) 
@@ -312,81 +132,8 @@ function a_k(a,dat)
          a.classList.add('has-picture');
          a.append(a_image);
       }
-      if (!a_image.src || a_image.src !== dat.picture.trim()) 
-      { 
-         a_image.src = dat.picture
-         if (a_image.src !== dat.picture.trim()) {
-            console.log(a_image.src === dat.picture)
-         }
-         
-      }
-//      if (a_image.src && a_image.src !== dat.picture.trim())
+      if (!a_image.src || a_image.src !== dat.picture.trim()) a_image.src = dat.picture
    }
-}
-
-function update_k(k) 
-{
-   // see if there are already posts from pubkey and updates info
-   const 
-      dat = JSON.parse(your[k]),
-      existing = document.querySelectorAll('[href="#p-'+k+'"]');
-   
-   existing.forEach((a)=>{a_k(a,dat)});
-}
-
-function taglink(tag) 
-{ // make tags clickable
-   const a = document.createElement('a');
-   
-   a.classList.add('a');   
-   if (tag && tag[1]) 
-   {
-      a.classList.add('a-'+tag[0]);
-      a.title = tag[1];
-
-      let a_text = document.createElement('span');
-      a_text.classList.add('text');
-      a.append(a_text);
-      
-      function ep(tag) 
-      {
-         try 
-         {
-            a.href = '#' + tag[0] + '-' + tag[1];
-            a.classList.add(tag[0] + '-' + tag[1], tag[0] === 'e' ? 'id' : 'author' );
-            a_text.textContent = pretty(tag[1]);
-            stylek([tag[1]], a);
-            if (tag[2]) a.setAttribute('data-relay', tag[2]);
-            if (tag[3]) a.setAttribute('data-type', tag[0] +'-'+tag[3]);
-         } 
-         catch (error) 
-         { console.log('malformed tag: ' + tag) }
-
-      }
-      
-      switch (tag[0]) 
-      {
-         case 'e':
-            ep(tag);
-            break;
-         case 'p':
-            ep(tag);
-            let your_follows = your.follows ? JSON.parse(your.follows) : [];
-            if (your_follows.includes(tag[1])) 
-            {
-               let dat = your[tag[1]] ? JSON.parse(your[tag[1]]) : false;
-               if (dat) a_k(a,dat);
-            }
-            break;
-         case 't':
-         case 'hashtag':
-            a.dataset.before = '#';
-         default:
-            a_text.textContent = tag[1];   
-      }
-   }
-   
-   return a
 }
 
 function ur(string) 
@@ -478,9 +225,9 @@ function make_section(clas)
 
 function react(e) 
 {
-   if (your.reaction) 
+   if (aa.reaction) 
    {
-      your.removeItem('reaction');
+      delete aa.reaction;
       iot.blur();
       iot.value = '';
       iot.parentElement.dataset.content = '';
@@ -491,8 +238,8 @@ function react(e)
       iot.value = '+';
       iot.parentElement.dataset.content = '+';
       const l = e.target.closest('.event');
-      your.reaction = JSON.stringify(['+', l.id.substr(2), l.dataset.p]);
-      console.log(your.reaction);
+      aa.reaction = ['+', l.id.substr(2), l.dataset.p];
+//      console.log(aa.reaction);
    }
 }
 
@@ -502,35 +249,235 @@ function toggle_replies(e)
    l.classList.toggle('replies-hidden');
 }
 
+function parse_hashtags(text) 
+{
+   const hashtags = [];
+   const matches = text.match(/(\B[#])\w+/g);
+   if (matches) matches.forEach((t)=>{hashtags.push(['t',t.substr(1).toLowerCase()])});
+   return hashtags
+}
+
+function checkmentions(text) 
+{
+   const mentions = [];
+   function mentionIndexes(l) 
+   {
+      const i = l.substr(2, l.length - 3)
+      mentions.push(parseInt(i))
+   }
+   const matches = text.match(/\B#\[(\d+)\]\B/g);
+   if (matches) matches.forEach(mentionIndexes);
+   
+   return mentions
+}
+
+function merely_mentions(text, tags) 
+{
+   function nip8(mention, index) 
+   {
+      let [tag, kid] = tags[index];
+      
+      if (is_hex(kid)) 
+      {
+         if (tag === 'p')
+         {
+            try { name = aa.p[kid].name }
+            catch (error) { console.log('no name found') }
+            
+            if (name) mention = '@' + name;
+            else mention = '@' + hex_trun(kid)
+         }
+         else if (tag === 'e')
+         {
+            mention = '/' + hex_trun(kid)
+         }         
+      }
+      else mention = hex_trun(kid)
+      
+      return mention;
+   }
+   
+   return text.replace(/\B#\[(\d+)\]\B/g, nip8)
+}
+
+function try_url(url) 
+{
+   let ur_l;
+   try { ur_l = new URL(url) } 
+   catch (error) { console.log('invalid url') };
+//   console.log(ur_l);
+   if (ur_l 
+   && (ur_l.protocol === 'http:' || ur_l.protocol === 'https:')) return ur_l;
+   else return false
+}
+
+function media_type(href) 
+{
+   const 
+      lo = href.toLowerCase(),
+      image_ext = ['jpg','jpeg','gif','webp','png'],
+      video_ext = ['mp4'],
+      audio_ext = ['mp3'],
+      format = new URLSearchParams(href);
+   
+   function check_ext(extensions) 
+   {
+      let is = false;
+      extensions.forEach((ext)=> 
+      {  if (lo.endsWith('.'+ext)
+         || (format.has('format') && format.get('format') === ext) ) is = true });
+      return is
+   }
+   
+   let check = check_ext(image_ext) ? 'image'
+   : check_ext(video_ext) ? 'video'
+   : check_ext(audio_ext) ? 'audio'
+   : false;
+   
+   return check
+}
+
+function tag_link(tag)
+{
+   if (tag 
+   && (tag[0] === 'e'
+      || tag[0] === 'p'
+      || tag[0] === 't'
+      )
+   && tag[1]
+   ) 
+   {
+      const a = document.createElement('a');
+      a.classList.add('a','a-'+tag[0]);
+      a.title = tag[1];
+      
+      const a_text = document.createElement('span');
+      a_text.classList.add('text');
+      
+      a.append(a_text);
+      a.href = '#' + tag[0] + '-' + ur(tag[1]);
+      a_text.textContent = pretty(tag[1]);
+      if (tag[0] === 'e' || tag[0] === 'p') stylek(tag[1], a);      
+      if (tag[0] === 'p' && is_hex(tag[1]) && aa.p[tag[1]]) a_k(a,aa.p[tag[1]]);
+      return a
+   }
+         
+   return false
+}
+
+function parse_link(url) 
+{
+   let ur_l = try_url(url); 
+   if (ur_l) 
+   {
+      const 
+         src = ur_l.origin + ur_l.pathname,
+         type = options.media ? media_type(src) : false;
+
+      let link;      
+      switch (type) 
+      {
+         case 'image':
+            link = document.createElement('img');
+            link.src = ur_l.href;
+            link.classList.add('content-img');
+            link.loading = 'lazy';
+            break;
+         case 'video':
+         case 'audio':
+            link = player(ur_l.href);
+            break;    
+         default:
+            link = document.createElement('a');
+            link.href = ur_l.href;
+            link.classList.add('content-link');
+            link.target = '_blank';
+            link.rel = 'nofollow';
+            link.textContent = ur_l.href;
+      } 
+      return link
+   }
+   return false
+}
+
+function ai(o) 
+{
+   const 
+      p = document.createElement('p'),
+      oc = document.createTextNode(o.content),
+      ocd = oc.wholeText,
+      matches = {},
+      matchy_mentions = [...ocd.matchAll(/\B#\[(\d+)\]\B/g)],
+      matchy_links = [...ocd.matchAll(/\b(https?:\/\/\S*\b)/g)];
+
+   matchy_mentions.forEach((match)=> { matches[match.index] = match[0] });
+   matchy_links.forEach((match)=> { matches[match.index] = match[0] });
+   
+   if (Object.keys(matches).length) 
+   {
+      let curser = 0;
+      let sorted = Object.entries(matches).sort((a,b)=> a - b); 
+      sorted.forEach(([i,m], index)=>
+      {
+         let i_nt = parseInt(i)
+         
+         p.append(document.createTextNode(ocd.substring(curser,i_nt)));
+            
+         if (m.startsWith('#[')) 
+         {
+            let mi = parseInt(m.replace(/\D/g,''));
+            if (o.tags[mi] && is_hex(o.tags[mi][1]))
+            {
+               let mention = tag_link(o.tags[mi]);
+               if (mention) p.append(mention);
+               else p.append(document.createTextNode(m));
+            }                              
+         }
+         else 
+         {
+            let link = parse_link(m);
+            if (link) p.append(link);
+         }
+         curser = i_nt + m.length;
+         if (index === sorted.length - 1) p.append(document.createTextNode(ocd.substring(curser)));
+      });
+   }
+   else p.append(oc);
+   
+   return p
+}
+
 function parse_content(e) 
 {
    const l = e.target ? e.target.closest('.event') : e;
+   let o; 
+   try { o = JSON.parse(l.dataset.o) } 
+   catch (error) { console.log('no data found') } 
    
-   if (l && l.classList.contains('parsed')) 
+   if (o && l) 
    {
       const content = l.querySelector('.content');
-      let o;
-      try 
-      {
-         o = JSON.parse(l.dataset.o);
-      } 
-      catch (error) 
-      { 
-         console.log('no data found');
-      }    
-      if (o) 
+      
+      if (l.classList.contains('parsed')) 
       {
          l.classList.remove('parsed');
-         
          const p = document.createElement('p');
          p.textContent = merely_mentions(o.content, o.tags);
+         
          content.replaceChildren(p);
-      }  
-   }
-   else if (l)
-   {
-      l.classList.add('parsed');
-      ai(l)
+      }
+      else
+      {
+         l.classList.add('parsed');
+         content.replaceChildren(ai(o));
+         let media = content.querySelector('img, video, audio, iframe');
+         if (media) 
+         { 
+            content.classList.add('has-media');
+            let videos = content.querySelectorAll('video');
+            if (videos) videos.forEach(rap);
+         }
+      }
    }
 }
 

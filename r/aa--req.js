@@ -1,45 +1,110 @@
 function to_get(events) 
-{
-   let get_pubkeys;
-   try { get_pubkeys = JSON.parse(your.get_pubkeys) }
-   catch (error) { get_pubkeys = []; console.log(your.get_pubkeys) }
-   let get_ids;
-   try { get_ids = JSON.parse(your.get_ids) }
-   catch (error) { get_ids = []; console.log(your.get_ids) }
-      
-   if (events.p)
+{     
+//   if (events.p)
+//   {
+//      pubkeys.push(...events.p);
+//      pubkeys = [...new Set(pubkeys.filter(k=>is_hex(k)))];
+//      let p_to_get = [];
+//      pubkeys.forEach((p)=> 
+//      {
+//         if (!attempts[p]) attempts[p] = 0;
+//         attempts[p]++;
+//         
+//         if (attempts[p] < 22 && !aa.p[p]) p_to_get.push(p)
+//      });
+//      pubkeys = JSON.stringify(p_to_get);
+//   } 
+//   
+//   if (events.e) {
+//      let ids = get_ids.concat(events.e);
+//      let unique_ids = [...new Set(ids.filter(k=>is_hex(k)))];
+//      let e_to_get = [];
+//      unique_ids.forEach((id)=> 
+//      {
+//         let attempts = parseInt(sessionStorage[id] ? sessionStorage[id] : '0');
+//         attempts++;
+//         sessionStorage[id] = attempts;
+//         
+//         if (attempts < 22 && !document.getElementById('e-'+id)) e_to_get.push(id)
+//      });
+//      localStorage.get_ids = JSON.stringify(e_to_get);
+//   }
+}
+
+function fetch_missing(relay_url) 
+{  
+   const events = { e: [], p: [] }     
+   document.querySelectorAll('[data-reply]').forEach((l)=>
    {
-      let pubkeys = get_pubkeys.concat(events.p);
-      let unique_pubkeys = [...new Set(pubkeys.filter(k=>is_hex(k)))];
-      let p_to_get = [];
-      unique_pubkeys.forEach((p)=> 
+      let reply = document.getElementById('e-'+l.dataset.reply);
+      if (reply) lies(reply,l);
+      else 
       {
-         let attempts = parseInt(sessionStorage[p] ? sessionStorage[p] : '0');
-         attempts++;
-         sessionStorage[p] = attempts;
-         
-         if (attempts < 22 && !localStorage[p]) p_to_get.push(p)
-      });
-      your.get_pubkeys = JSON.stringify(p_to_get);
-   } 
+         let attempts = parseInt(l.dataset.fetched ? l.dataset.fetched : '0');
+         if (attempts < 22) 
+         {
+            attempts++;
+            l.dataset.fetched = attempts;
+            const o = JSON.parse(l.dataset.o);
+//            let root = get_root(o.tags);
+            
+//            if (root 
+//            && !document.getElementById('e-'+root[1])
+//            && !hose[root[1]]) events.e.push(root[1]);
+            
+            let reply = get_reply(o.tags);
+            if (reply 
+            && !document.getElementById('e-'+reply[1])
+            ) events.e.push(reply[1]);
+            
+            let t = get_tags(o.tags);
+            if (t.p) 
+            {
+               t.p.forEach((p)=>{if (is_hex(p) && !aa.p[p]) events.p.push(p)})
+            }
+         }
+      }
+   });
    
-   if (events.e) {
-      let ids = get_ids.concat(events.e);
-      let unique_ids = [...new Set(ids.filter(k=>is_hex(k)))];
-      let e_to_get = [];
-      unique_ids.forEach((id)=> 
+   if (events.e) 
+   {
+      events.e = [...new Set(events.e)];
+      if (events.p) events.p = [...new Set(events.p)];
+      
+      
+//      document.getElementById('a').dataset.status = '... ' + events.e.length + 'e & ' + events.p.length + ' p';
+//      delete document.getElementById('a').dataset.status;
+      
+      let req = ["REQ", "aa-get"];
+               
+      if (events.p) 
       {
-         let attempts = parseInt(sessionStorage[id] ? sessionStorage[id] : '0');
-         attempts++;
-         sessionStorage[id] = attempts;
-         
-         if (attempts < 22 && !document.getElementById('e-'+id)) e_to_get.push(id)
-      });
-      your.get_ids = JSON.stringify(e_to_get);
+         let pubs = chunkn(events.p, 444);
+         pubs.forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
+      }
+      
+      let ids = chunkn(events.e, 444);
+      ids.forEach((chunk)=>{req.push({'ids':chunk}) });
+
+      let 
+         rekt,
+         rekt_url = aa.rekt[relay_url];
+      if (rekt_url) rekt = aa.rekt[relay_url][req[1]];
+      else aa.rekt[relay_url] = {};
+
+      if (req.length > 2 && JSON.stringify(req) !== JSON.stringify(rekt)) 
+      {
+         console.log(rekt, req)
+         console.log('fetching ' + events.e.length + ' e & ' + events.p.length + ' p from ' + relay_url);
+         aa.rekt[relay_url][req[1]] = req;
+//         console.log(aa.rekt);
+//            console.log(req)
+         re.postMessage(['req', [req, relay_url]]);
+      }
    }
 }
 
-async function fetch_some() 
+function fetch_some() 
 {
    const 
       events = { e: [], p: [] }, 
@@ -91,14 +156,9 @@ async function fetch_some()
    to_get(events);
 }
 
-async function load_new() 
+function load_new() 
 {
-//   requestAnimationFrame(()=> 
-//   {
-//      
-//	});
-   document.querySelectorAll('.new.event').forEach((e)=>{e.classList.remove('new')});
-   
+   document.querySelectorAll('.new.event').forEach((e)=>{e.classList.remove('new')});  
 }
 
 function chunkn(ar,is) 
@@ -109,11 +169,19 @@ function chunkn(ar,is)
         res.push(chunk);
     }
     return res;
+} 
+
+function hoes(e) 
+{
+   const oes = Object.values(hose);
+   oes.forEach((ho)=> { process(ho) });
+   if (oes.length) document.getElementById('a').dataset.mess = oes.length;
+   else delete document.getElementById('a').dataset.mess
 }
 
-async function get_em() 
+function get_em() 
 {
-   load_new();
+//   load_new();
    const hoe = Object.values(hose);
    if (hoe.length) 
    {
@@ -128,24 +196,20 @@ async function get_em()
    else 
    {
       delete document.getElementById('a').dataset.status;
-            
-      let pubkeys = your.get_pubkeys ? JSON.parse(your.get_pubkeys) : [];
-      let ids = your.get_ids ? JSON.parse(your.get_ids) : [];
-      
       let req = ["REQ", "aa-get"];
       
       if (pubkeys.length) 
       {
          let pubs = chunkn(pubkeys, 444);
          pubs.forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
-         your.get_pubkeys = '[]';
+         localStorage.get_pubkeys = '[]';
       }
    
       if (ids.length) 
       {
          let idds = chunkn(ids, 444);
          idds.forEach((chunk)=>{req.push({'ids':chunk}) });
-         your.get_ids = '[]';
+         localStorage.get_ids = '[]';
       }
       
       if (ids.length || pubkeys.length) 
@@ -169,22 +233,22 @@ async function get_em()
             messages.forEach(process_message)
             messages.splice(0,messages.length)
          } 
-         else fetch_some(); 
+//         else fetch_some(); 
       }
    }   
 }
 
 function sub_root(id)
 {
-   if (session.sub_root && session.sub_root === id) 
+   if (sessionStorage.sub_root && sessionStorage.sub_root === id) 
    {
-      let tried = session.tried ? JSON.parse(session.tried) : [];
+      let tried = sessionStorage.tried ? JSON.parse(sessionStorage.tried) : [];
       tried.push(id);
    }
    else 
    {  
       console.log('sub-root ' + id);    
-      session.sub_root = id;
+      sessionStorage.sub_root = id;
       let req = ["REQ", "aa-sub-root", { ids:[id] } ];
       req = JSON.stringify(req);
       Object.entries(relays).forEach(([url, can]) => 
@@ -196,15 +260,15 @@ function sub_root(id)
 
 function sub_p(pubkey)
 {
-   if (session.sub_p && session.sub_p === pubkey) 
+   if (sessionStorage.sub_p && sessionStorage.sub_p === pubkey) 
    {
-      let tried = session.tried ? JSON.parse(session.tried) : [];
+      let tried = sessionStorage.tried ? JSON.parse(sessionStorage.tried) : [];
       tried.push(id);
    }
    else 
    {  
       console.log('sub-p ' + pubkey);    
-      session.sub_p = pubkey;
+      sessionStorage.sub_p = pubkey;
       let req = ["REQ", "aa-sub-p", { authors:[pubkey], kinds:[1], limit: 10 } ];
       req = JSON.stringify(req);
       Object.entries(relays).forEach(([url, can]) => 

@@ -1,7 +1,7 @@
+// deprecated in favor of the new /r/aa_relays_ww.js
 function close(e) 
-{   
+{      
    let url = e.target.url.substr(0, e.target.url.length - 1);
-   
    let relay = relays[url];
    let cc = relay.cc ? relay.cc : [];
 
@@ -60,13 +60,12 @@ function connect(url, reconnect)
                
             feed_filter.since = reconnect ? options.t : x_days(options.days);
             
-            if (options.k) 
+            if (aa.k) 
             {
-               interactions_filter['#p'] = [options.k];
+               interactions_filter['#p'] = [aa.k];
                interactions_filter.since = reconnect ? options.t : x_days(options.days);
    
-               let subs = your.follows ? JSON.parse(your.follows) : [];
-               if (options.k) subs.push(options.k);
+               let subs = [aa.k, ...aa.bff];
                if (subs.length > 0) 
                {
                   profiles_filter.kinds = [0,3];
@@ -84,7 +83,7 @@ function connect(url, reconnect)
          }
       }); 
       
-      r.addEventListener('message', message);
+      r.addEventListener('message', process_message);
       r.addEventListener('close', close);
    
    }
@@ -94,36 +93,33 @@ const messages = [];
 
 function message(e) 
 {
-   messages.push({data: e.data, origin:e.origin});
+   messages.push(e);
+   
 }
 
-function process_message(e) 
+function process_message(e)       
 {
-      const 
-      parsed = JSON.parse(e.data),
-      type = parsed[0], // the message type
-      dis = parsed[1], // the request id
-      dat = parsed[2]; // the event data
-   
-   if (type !== 'EVENT') 
-   {
-      switch (type) 
-      {   
-         case 'EOSE': // end of stored events
-            if (dis === 'aa-sub-root' || dis === 'aa-sub-p') relays[e.origin].ws.send(JSON.stringify['CLOSE', dis]);
-         case 'NOTICE': // information from relays
-         default: 
-            console.log(type, dis, e.origin)         
-      }
-   }
-   
-   if (type === 'EVENT' && dis && dat) 
-   {      
-      if (hose[dat.id]) hose[dat.id].seen.push(e.origin);
-      else 
-      {
-         dat.seen = [e.origin];
-         hose[dat.id] = dat
-      }      
+   const [type, dis, dat] = JSON.parse(e.data);
+
+   switch (type) 
+   {  
+      case 'EVENT':
+         if (hose[dat.id] && !hose[dat.id].seen.includes(e.origin)) hose[dat.id].seen.push(e.origin);
+         else 
+         {
+            dat.dis = dis
+            dat.seen = [e.origin];
+            hose[dat.id] = dat
+            document.getElementById('a').dataset.mess = Object.keys(hose).length
+         } 
+         break;
+      case 'EOSE': // end of stored events
+         hoes('');
+//         get_em();
+         if (dis === 'aa-sub-root' || dis === 'aa-sub-p') relays[e.origin].ws.send(JSON.stringify['CLOSE', dis]);
+      case 'NOTICE': // information from relays
+      case 'OK': // post consfirmation
+      default: 
+         console.log(type, dis, e.origin)         
    }
 }

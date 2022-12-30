@@ -138,7 +138,13 @@ button:hover {
    color: rgb(var(--c-a-c));
 }
 
-#a[data-status] {
+#a[data-mess]::after {
+   content: attr(data-mess);
+   color: rgb(var(--c-a-c));
+}
+
+#a[data-status],
+#a[data-mess] {
    position: sticky;
    top: 0;
    z-index: 9001;
@@ -341,6 +347,10 @@ button:hover {
    border-bottom: 1px solid transparent;
 }
 
+.event.draft > .actions {
+   display: none;
+}
+
 .actions-draft {
    grid-area: actions;
    display: grid;
@@ -350,6 +360,7 @@ button:hover {
    padding: var(--pad);
    justify-items: start;
    justify-self: start;
+   background: rgb(var(--c-a-a));
 }
 
 .cancel {
@@ -371,13 +382,16 @@ button:hover {
 .actions {
    grid-area: actions;
    padding: 0 var(--pad);
-   justify-self: end;
+   /*justify-self: end;*/
    position: sticky;
    position: -webkit-sticky;
    bottom: 4rem;
    display: grid;
-   justify-items: end;
-   background: rgb(var(--c-a-a));
+   /*justify-items: end;*/
+   grid-auto-flow: column;
+   grid-template-columns: auto 1fr auto;
+   /*grid-gap: var(--pad);*/
+   
 }
 
 .interesting > .actions {
@@ -388,19 +402,31 @@ button:hover {
 
 .actions button {
    color: rgb(var(--c-a-b));
+   background: rgb(var(--c-a-a));
+   /*line-height: var(--line);*/
+   /*padding-top: 1rem;*/
 }
 
 .actions button:hover {
    color: rgb(var(--c-a-f));
 }
 
+.actions .reactions {
+   justify-self: end
+}
+
 .actions .hide-replies {
    display: none;
 }
 
+.actions .load-media {
+   justify-self: start;
+}
+
 .has-replies > .actions > .hide-replies {
    display: grid;
-   grid-template-areas: "before count after"
+   grid-template-areas: "before count after";
+   padding-left: var(--pad);
 }
 
 .actions .hide-replies::before {
@@ -759,10 +785,10 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    --who: attr(data-who)
 }
 
-.event.new {
+/*.event.new {
    opacity: 0!important;
    position: absolute!important;
-}
+}*/
 
 .event.anon {
    /*background: red;*/
@@ -912,6 +938,10 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
 
 .event:not(.has-replies) > .replies {
    display: none;
+}
+
+.event.root > .replies {
+   padding-bottom: 0;
 }
 
 .event.root:not(.mom):not(.interesting) > .replies {
@@ -1092,15 +1122,16 @@ button.view-source {
    width: calc(1rem ); /*calc(1rem + calc(1rem/3));*/
    height: calc(1rem ); /*calc(1rem + calc(1rem/3));*/
    padding: 0;
+   object-fit: cover;
 }
 
-.content .a.mention {
+.content a {
    align-items: center!important;
    font-size: var(--font-size);
    padding: 0;
 }
 
-.content .a.mention .text {
+.content .a .text {
    border-bottom: none;
 }
 
@@ -1114,12 +1145,12 @@ button.view-source {
    content: "";
 }
 
-.a-p.mention::before {
+.content a.a-p::before {
    content: "@";
    width: auto;
 }
 
-.a-e.mention::before {
+.content a.a-e::before {
    content: "/";
 }
 
@@ -1282,6 +1313,7 @@ button.view-source {
 
 .event[data-reply] {
    margin-bottom: var(--line);
+   /*position: absolute;*/
 }
 .event[data-reply]::before {
    content: "*";

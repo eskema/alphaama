@@ -3,13 +3,13 @@ const
    knd1 = document.getElementById('kind-1'),
    stuff = { behavior:'smooth', block: 'start'};
 
-function ash(tags, l) 
-{
-   const nav = document.createElement('nav');  
-   nav.classList.add('tags');
-   tags.forEach((ot, i)=> { nav.append(taglink(ot, '')) });   
-   return nav
-}
+//function ash(tags, l) 
+//{
+//   const nav = document.createElement('nav');  
+//   nav.classList.add('tags');
+//   tags.forEach((ot, i)=> { nav.append(tag_link(ot)) });   
+//   return nav
+//}
 
 function not_interesting(l) 
 {
@@ -20,34 +20,34 @@ function not_interesting(l)
    moms.forEach((mom)=> { mom.classList.remove('mom') });
    
    document.body.classList.remove('has-interesting');
-   session.removeItem('interesting');
+   sessionStorage.removeItem('interesting');
    iot.placeholder = 'new post';
-   session.removeItem('reaction');
+   delete aa.reaction;
+
    return l
 }
 
 function is_interesting(l) 
 { 
-   let interesting = document.getElementById('e-'+session.interesting);
+   let interesting = document.getElementById('e-'+sessionStorage.interesting);
    if (interesting) not_interesting(interesting);
    update_time(l.querySelector('.created-at'));
    l.classList.add('interesting');   
    mom(l);
    document.body.classList.add('has-interesting');
-   
    let l_id = l.id.substring(2);
-   session.interesting = l_id;   
+   sessionStorage.interesting = l_id;   
    location.hash = '#' + l.id;
    iot.placeholder = 'reply to ' + l.querySelector('.author').textContent;
-   session.removeItem('reaction');
+   delete aa.reaction;
    return l
 }
 
 function hotkeys(e) 
 {
-   if (session.interesting && e.target !== iot) 
+   if (sessionStorage.interesting && e.target !== iot) 
    {
-      const l = document.getElementById('e-'+session.interesting);
+      const l = document.getElementById('e-'+sessionStorage.interesting);
       let c, next;
       switch (e.key) 
       {
@@ -95,52 +95,62 @@ function hotkeys(e)
    }
 }
 
+function checknip05(jsondata) 
+{
+   if (jsondata && jsondata.names) 
+   {
+      if (pubkey === jsondata.names[username])
+      {
+         const tit = fren.querySelector('.tit');
+         if (tit) 
+         {
+            tit.dataset.nip05 = dat.nip05;
+            fren.classList.add('nip05');
+            if (dat.nip05.startsWith('_@')) tit.classList.add('root');
+            document.querySelectorAll('a[href="#p-'+pubkey+'"]')
+            .forEach((a)=>{a.dataset.nip05 = dat.nip05});
+         }
+      }
+      else console.log('invalid nip05', jsondata.names[username])
+   }
+}
+
 async function verifyNIP05(fren, dat, pubkey)
 { //https://<domain>/.well-known/nostr.json?name=<local-part>
-   if (dat && dat.nip05) 
+   return new Promise(resolve =>
    {
-      let parts = dat.nip05.trim().split('@');
-      if (parts.length === 2) 
+      let [username, domain] = dat.nip05.trim().split('@');
+      if (username && domain) 
       {
-         const 
-            username = parts[0],
-            domain = 'https://'+parts[1];
-            
+         domain = 'https://'+domain;
          const same = new URL(domain);
          if (domain !== same.origin)
          {
             console.log('invalid nip05: domain !== origin', domain);
-            domain = false;
+            resolve(false);
          }
-         
-         function checknip05(jsondata) 
+         else 
          {
-            if (pubkey === jsondata.names[username])
+            fetch(domain+'/.well-known/nostr.json', {headers:{'Content-Type':'application/json'}})
+            .then(async response => 
             {
-               const tit = fren.querySelector('.tit');
-               if (tit) 
+               if (!response.ok) 
                {
-                  tit.setAttribute('data-nip05', dat.nip05)
-                  fren.classList.add('nip05');
-                  if (dat.nip05.startsWith('_@')) tit.classList.add('root');
+                  const error = (data && data.message) || response.status;
+                  return Promise.reject(error)
                }
-            }
-            else console.log('invalid nip05', jsondata.names[username])
-         }
-         
-         if (username && domain) 
-         {
-            fetch(domain+'/.well-known/nostr.json')
-            .then(response => 
-            {
-               console.log('response', response.ok);
-               if (response.ok) return response.json()
+               
+               return await response.json()
+               // check for error response
             })
-            .then(jsondata => checknip05(jsondata));
+            .then((jsondata) => checknip05(jsondata)); 
          }
       }
-   }   
+      else resolve(false);
+   });
 }
+
+
 
 function select_e(l) 
 { // opens / close an article on event
@@ -162,19 +172,12 @@ function select_e(l)
 function select_p(k) 
 {
    if (is_hex(k)) 
-   {
-      let dat;
-      try {
-         dat = JSON.parse(your[k])
-      } catch (error) {
-         console.log('no saved data')
-      }
-      
-      if (dat) 
+   {  
+      if (aa.p[k]) 
       {
          let l = document.getElementById('p-'+k);
          if (!l) l = newpub(k);
-         update_fren(dat, k)
+         update_fren(aa.p[k], k)
          let solo = document.querySelector('.fren.solo');
          function pk() 
          {
@@ -201,7 +204,7 @@ function select_p(k)
          } else pk();
       }
       else to_get({p:[k]});
-      sub_p(k);
+//      sub_p(k);
    }
 }
 
@@ -279,17 +282,8 @@ function clickEvent(e)
          {
             case 'e':
                e.preventDefault();
-               if (e.target.classList.contains('id')) 
-               {
-                  if (e.target.classList.contains('mention')) {
-                     select_e(href.substr(3));
-                  }
-                  else {
-                     view_source(e.target);
-                  }                  
-               } else {
-                  select_e(href.substr(3));
-               }
+               if (e.target.classList.contains('id')) view_source(e.target);
+               else select_e(href.substr(3));
                break;
             case 'p':
                e.preventDefault();
@@ -314,12 +308,8 @@ function clickEvent(e)
             let content = event.querySelector('.content').innerText;
             switch (event.dataset.kind) {
                case "0":
-//                  let k0 = JSON.parse(your[option.k]);
-//                  delete k0.id
                   content = '--smd ' + content;
                   break;
-//               default:
-//                  content = event.dataset.draft;
             }
             iot.value = content;
             iot.parentElement.dataset.content = content;
@@ -452,7 +442,7 @@ function update_fren(dat, k)
    
    if (options.media) 
    {
-      if (dat.nip05) verifyNIP05(fren, dat, k);
+      if (dat.nip05 && location.protocol === 'https:') verifyNIP05(fren, dat, k);
             
       if (dat.picture && fren.classList.contains('known')) 
       {
@@ -469,7 +459,7 @@ function update_fren(dat, k)
          picture.src = dat.picture;
          picture.setAttribute('loading', 'lazy');
          
-         if (k === options.k) 
+         if (k === aa.k) 
          { // gets main profile img
             const img = document.createElement('img');
             img.src = dat.picture;
@@ -488,7 +478,7 @@ function update_fren(dat, k)
          metadata.append(about);
       }
 	   about.textContent = dat.about;
-	}
-   
-   update_k(k);
+	}   
+   document.querySelectorAll('a[href="#p-'+k+'"]').forEach((a)=>{a_k(a,dat)})
+//   if (hrefs.length) hrefs
 }

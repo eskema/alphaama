@@ -1,29 +1,130 @@
-const 
-   your = window.localStorage,
-   session = window.sessionStorage,
-   hose = {};
-   
-let get, options, relays, defaults = 
+let aa;
+try { aa = JSON.parse(localStorage.aa) } 
+catch (error) 
+{ 
+   console.log('fresh start');
+   aa = 
+   {
+      p:{},
+      bff:[],
+      ff:[],
+      k0:[],
+      k3:[],
+      rekt:{}
+   };
+};
+
+const hose = {}, reqs = {}, seen = {};
+let options, relays, defaults = 
 {
    'days': 1, // feed limit
    'media': false, //autoload media files
-   'k': false, //account pubkey
    't': false, //timestamp for since,
    'r': { // bootstrap relays if no others found
           "wss://nostr-pub.wellorder.net":{"read":true,"write":true},
           "wss://nostr-relay.wlvs.space":{"read":true,"write":true},
           "wss://relay.damus.io":{"read":true,"write":true} }
+};
+
+if (window.nostr) 
+{  // nos2x
+   console.log('signer extension available');
+   /*
+   window.nostr.getPublicKey(); //: string // returns your public key as hex
+   window.nostr.signEvent(event): Event // returns the full event object signed
+   window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
+   window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
+   window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
+   */         
+} 
+
+const re = new Worker('r/aa_relays_ww.js');
+re.onmessage=e=>{ pre_process(e.data) };
+async function fetch_relays() 
+{
+   return new Promise(resolve=>
+   {
+      if (window.nostr) 
+      { 
+         resolve(window.nostr.getRelays())
+//         let rels = window.nostr.getRelays().then((rr) => 
+//         { console.lof(rr); resolve( rr ? rr : options.r) });
+         
+      } 
+      else resolve(options.r)
+   });
 }
+
+function aa_open(dis, reconnect = false) 
+{
+   const req = ['REQ', 'aa-open'];
+   const subs = [aa.k, ...aa.bff];
+   const wen = reconnect ? options.t : x_days(options.days);
+   // profiles and contacts from your you and your follows
+   let filter = {authors: subs, kinds:[0,3]};
+//   if (aa.k3.length) filter.since = wen;
+   req.push(filter);
+   // notes and reactions from your you and your follows
+   filter = {authors: subs, kinds:[1,7], since: wen};
+   req.push(filter);
+   // replies to your posts
+   filter = {'#p': [aa.k], kinds:[1,7], since: wen};
+   req.push(filter);
+   re.postMessage(['req', [req, dis]]);
+   console.log(dis, req);
+}
+
+function pre_process([type, dis, dat]) 
+{
+//   console.log(type, dis, dat);
+   
+   switch (type) 
+   {
+      case 'OPEN':
+//         console.log(type, dis, dat);
+         if (dat === 1) 
+         {
+            if (!reqs[dis]) reqs[dis] = {};
+            if (!reqs[dis]['aa-open']) 
+            {
+               reqs[dis]['aa-open'] = 1;
+               aa_open(dis) 
+            }
+            else aa_open(dis, true)
+         }
+         break
+      case 'STATE':
+      case 'NOTICE':
+         console.log(type, dis, dat);
+//         let relay = document.querySelector('[data-label="'+new URL(dis).hostname+'"]');
+//         if (relay) relay.dataset.state = dat;
+         break;
+      case 'EOSE': 
+         console.log(type, dis, dat[1].length);
+         dat[1].map((o)=>{ process(o) }); 
+         setTimeout(()=>{fetch_missing(dis+"/")}, 500);
+         break;
+      case 'EVENT': 
+         process(dat[1]); 
+         setTimeout(()=>{fetch_missing(dis+"/")}, 1000);
+//         fetch_missing(dis+"/");
+//         fetch_some();
+         break;      
+   }
+}
+
+//else if (!relays) relays = options.r;
 
 function bbbb()
 {// boom biddy bye bye
  // tries to forget everything
-   your.clear(); // localStorage
-   session.clear(); // SessionStorage
+   localStorage.clear(); 
+   sessionStorage.clear(); 
    document.getElementById('kind-0').textContent = ''; // contacts
    document.getElementById('kind-1').textContent = ''; // timeline
    iot.placeholder = 'boom biddy bye bye'; // so you know what happened
    u.removeAttribute('style');
+   u.textContent = '';
    history.pushState('', '', location.pathname);
    document.body.setAttribute('class', '');
    options = defaults;
@@ -70,6 +171,10 @@ function is(e)
       v = n.wholeText,
       a = v.split(' ');
    
+   let seg = a[0];
+   try { seg = [...new Intl.Segmenter().segment(a[0])] } 
+   catch (error) { console.log('no Intl.Segmenter()','use a better browser')};
+   
    e.target.parentElement.dataset.content = v;
    
 //   if (a[a.length - 1].startsWith('@')) {
@@ -82,15 +187,17 @@ function is(e)
       
       // commands switch
       
-      if (a.length === 1 && [...new Intl.Segmenter().segment(a[0])].length === 1 && your.reaction) 
+      if (a.length === 1 && seg.length === 1 && aa.reaction) 
       {
-//         console.log('reaction', a);
-         let note = JSON.parse(your.reaction);
-         note[0] = v;
-         reaction(note);
-         iot.blur();
+         let note = aa.reaction;
+         if (note) {
+            note[0] = v;
+            reaction(note);
+            iot.blur();
+         }
+         
       }
-      else if (your.reaction)
+      else if (aa.reaction)
       {
          console.log('too many chars', a);
          clear = false;
@@ -98,7 +205,7 @@ function is(e)
       else 
       {
 //         console.log('command', a);
-         your.removeItem('reaction');
+         delete aa.reaction;
          switch (a[0]) 
          {
             case '--bbbb': // boom biddy bye bye, 
@@ -108,16 +215,16 @@ function is(e)
                break;
             case '--media':
                options.media = !options.media; 
-               your.options = JSON.stringify(options);
-               window.location.reload();
+               localStorage.options = JSON.stringify(options);
+               location.reload();
                break;
             case '--k':
                if (a[1]) 
                {
                   bbbb();
-                  options.k = a[1];
-                  your.options = JSON.stringify(options);
-                  start();
+                  aa.k = a[1];
+                  localStorage.aa = JSON.stringify(aa);
+                  location.reload();
                }
                break;
             case '--f':
@@ -133,10 +240,10 @@ function is(e)
                }
                break;
             case '--md':
-               let data = your[options.k] ? JSON.parse(your[options.k]) : false;
+               let data = aa.p[aa.k];
                if (data) 
                {
-                  if (data.id) delete data.id;
+                  delete data.created_at;
                   data = JSON.stringify(data);
                }
                else 
@@ -158,8 +265,8 @@ function is(e)
                   console.log(smd)
                }
                break;
-            case '--some':
-               fetch_some(); 
+            case '--miss':
+               fetch_missing(false); 
                break;
             case '--read':
                let unread = document.querySelectorAll('.unread');
@@ -190,63 +297,40 @@ function more(e)
 function clean_up() 
 {
 //   bbbb();
-   session.clear();
-   
-   if (!your.options) your.options = JSON.stringify(defaults);
-   options = JSON.parse(your.options);
-   
-   relays = options.r 
-            && typeof options.r === 'object' ? 
-               options.r 
-            : options.r ? 
-                  JSON.parse(options.r) 
-               : defaults.r;
-   
-   // update options from previous versions
-   if (!options.k && your.k) {
-      options.k = your.k;
-      your.removeItem('k');
-   }
-   
-   if (!options.t && your.t) {
-      options.t = your.t;
-      your.removeItem('t');
-   }
-   
-   if (!options.r && your.r) {
-      options.r = your.r;
-      your.removeItem('r');
-   }
-   
-   if (!options.days) {
-      options.days = defaults.days;
-   }
-   
-   your.options = JSON.stringify(options);
-   
+//   sessionStorage.clear();
+   aa.rekt = {};
+   if (!localStorage.options) localStorage.options = JSON.stringify(defaults);
+   options = JSON.parse(localStorage.options);
    console.log(options);
+   
+   if (window.nostr && !aa.k) 
+   {  
+      window.nostr.getPublicKey().then((k) => 
+      {
+         aa.k = k;
+         localStorage.aa = JSON.stringify(aa);
+         start(k);
+      });         
+   } else if (aa.k) start(aa.k);
 }
 
-function start() {
+function start(k) {
  
-   if (options.k) 
+   if (is_hex(k)) 
    {
-      const u = document.getElementById('u');
-      let dat = your[options.k] ? JSON.parse(your[options.k]) : false;
-      
       iot.value = '';
       iot.placeholder = 'new post';
          
       document.body.classList.add('has-k');  
       
+      const u = document.getElementById('u');
+      u.addEventListener('click', (e) => { select_p(k) });
       
-      
-      u.addEventListener('click', (e) => { select_p(options.k) });
-      
-      stylek([options.k], u);
-      if (options.media && dat) 
-      { // gets main profile img
-         if (dat.picture)
+      stylek(k, u);
+      if (options.media) 
+      {
+         let dat = aa.p[k];
+         if (dat && dat.picture)
          {
             const img = document.createElement('img');
             img.src = dat.picture;
@@ -254,86 +338,33 @@ function start() {
          }
       }
       
-      Object.entries(relays).forEach(([url, can]) => 
-      { 
-         if (can.read || can.write) connect(url, false)
-      });      
-      
-      if (window.nostr) 
-      { // nos2x
-         console.log('nos2x available');
-         /*
-         window.nostr.getPublicKey(); //: string // returns your public key as hex
-         window.nostr.signEvent(event): Event // returns the full event object signed
-         window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of relays
-         window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
-         window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
-         */
-         
-      }
-   } else 
-   {
-      if (window.nostr) 
+      fetch_relays().then((rels)=> 
       {
-         window.nostr.getPublicKey().then((k) => 
-         {
-            options.k = k;
-            your.options = JSON.stringify(options);
-            start();
-         });
-      }
+         console.log(rels)
+         if (!Object.keys(rels).length) rels = options.r;
+//         relays = [...Object.entries(rels).filter(([url, can])=>can.read || can.write).map(([url,can])=>url)];
+         re.postMessage(['rel', rels]);      
+      });
    }     
 }
 
-function stored() 
-{
-   let count = 0;
-   let recent = 0;
-   let tt = x_days(JSON.parse(your.options).days);
-//   console.log(tt,JSON.parse(your.options).t );
-   
-   Object.keys(sessionStorage).forEach(function(key){
-      count++;
-//      if (sessionStorage[key].startsWith('{')) {
-         const v = sessionStorage[key];
-         if (v.startsWith('{')) {
-            const o = JSON.parse(v);
-            
-            if (o.created_at < tt) {
-               recent++;
-               let l = process(o, 'cached');
-//               console.log(o.created_at);
-            }
-         }
-   });
-   
-   console.log(count, recent);
-}
-
-
-window.addEventListener('load', function(event) 
-{
-   
+window.addEventListener('load', (event)=> 
+{  
    clean_up(); 
-//   stored();
+   knd1.addEventListener('click', clickEvent);
    
-   knd1.addEventListener('click', clickEvent, false);
-   
-   iot.addEventListener('blur', less, false);
-   iot.addEventListener('keyup', is, false);
-   iot.addEventListener('focus', more, false);
-   //prevent Enter key from adding line break
+   iot.addEventListener('blur', less);
+   iot.addEventListener('keyup', is);
+   iot.addEventListener('focus', more);
    iot.addEventListener('keydown', (e)=> 
-   {
-      if (e.key === 'Enter' && e.shiftKey === false) 
-      {
-         e.preventDefault();
-      }
-   }, false);
+   { if (e.key === 'Enter' && e.shiftKey === false) { e.preventDefault() } });
    document.addEventListener('keyup', hotkeys);
    
-   start();
-   setInterval(get_em, 1000);
+   let a = document.getElementById('a');
+   a.addEventListener('click', ()=>{ if (a.dataset.mess) { hoes() } });
+   
+//   start();
+//   setInterval(get_em, 1000);
 //   document.body.scrollIntoView(stuff);
    
 }, false);

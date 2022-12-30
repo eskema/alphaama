@@ -33,7 +33,7 @@ function get_root(tags)
    const events = [];
    for (let i = 0; i < tags.length; i++) 
    {
-      if (tags[i][0] === 'e')
+      if (tags[i][0] === 'e' && is_hex(tags[i][1]))
       {
          if (tags[i][3] && tags[i][3] === 'root')
          {
@@ -59,7 +59,7 @@ function get_reply(tags)
    const events = [];
    for (let i = 0; i < tags.length; i++) 
    {
-      if (tags[i][0] === 'e')
+      if (tags[i][0] === 'e' && is_hex(tags[i][1]))
       {
          if (tags[i][3] && tags[i][3] === 'reply') return tags[i];
          events.push(tags[i])
@@ -91,10 +91,10 @@ function preptags(o)
    const pubkeys = [];
    o.tags.filter(t=>t[0]==='p').forEach((p)=>
    {
-      if (p[1] !== options.k && is_hex(p[1])) pubkeys.push(['p',p[1]])
+      if (p[1] !== aa.k && is_hex(p[1])) pubkeys.push(['p',p[1]])
    });
    let unique = [...new Set(pubkeys)];
-   if (o.pubkey !== options.k && !unique.includes(o.pubkey)) unique.push(['p',o.pubkey])
+   if (o.pubkey !== aa.k && !unique.includes(o.pubkey)) unique.push(['p',o.pubkey])
    tags.push(...unique);
 
    return tags
@@ -104,9 +104,9 @@ function prep(content)
 {
    const created_at = Math.floor( ( new Date().getTime() ) / 1000 );
    let tags = [];
-   if (session.interesting)
+   if (sessionStorage.interesting)
    {
-      let reply = document.getElementById('e-'+session.interesting);
+      let reply = document.getElementById('e-'+sessionStorage.interesting);
       if (reply && reply.dataset.o) tags = preptags(JSON.parse(reply.dataset.o));
    } 
    
@@ -115,7 +115,7 @@ function prep(content)
    
    a = [ 
       0,//magic
-      options.k,//pubkey
+      aa.k,//pubkey
       created_at,//created_at
       1,//kind
       tags,//tags
@@ -127,6 +127,7 @@ function prep(content)
 
 function reaction(note)
 {
+//   console.log(note[0], note[1], note[2])
    let 
       created_at = Math.floor( ( new Date().getTime() ) / 1000 ),
       reply, 
@@ -134,10 +135,10 @@ function reaction(note)
       tags = [];
       
    tags.push( [ 'e', note[1],  seen] );
-   if (note[2] !== options.k) tags.push( [ 'p', note[2] ] );
+   if (note[2] !== aa.k) tags.push( [ 'p', note[2] ] );
    const a = [ 
       0,//magic
-      options.k,//pubkey
+      aa.k,//pubkey
       created_at,//created_at
       7,//kind
       tags,//tags
@@ -146,16 +147,16 @@ function reaction(note)
    
    const unsigned = ofa(a);
    unsigned.id = hash(a);
+//   console.log(unsigned)
    sign(unsigned);
-   your.removeItem('reaction')
-   
+   delete aa.reaction
 }
 
 function draft(a, kind) 
 {
    const unsigned = ofa(a);
    unsigned.id = hash(a);
-   your[unsigned.id] = JSON.stringify(unsigned);
+   localStorage[unsigned.id] = JSON.stringify(unsigned);
    unsigned.draft = true;
    process(unsigned);
 }
@@ -168,7 +169,7 @@ function sign(unsigned)
       window.nostr.signEvent(unsigned).then((signed) =>
       {
          post(signed);
-         if (your[unsigned.id]) your.removeItem(your[unsigned.id]);
+         if (localStorage[unsigned.id]) localStorage.removeItem(localStorage[unsigned.id]);
       });
       
    } 
@@ -185,7 +186,7 @@ function follow(k)
    {
       const 
          now = Math.floor( ( new Date().getTime() ) / 1000 ), 
-         old = your.k3 ? JSON.parse(your.k3) : false,
+         old = aa.k3[0],
          tags = old ? old.tags : [],
          content = old ? old.content : '';
    
@@ -202,7 +203,7 @@ function follow(k)
          
          const a = [ 
             0,//don't ask
-            options.k,//pubkey
+            aa.k,//pubkey
             now,//created_at
             3,//kind
             tags,//tags
@@ -221,7 +222,7 @@ function unfollow(k)
 {
    const 
       now = Math.floor( ( new Date().getTime() ) / 1000 ), 
-      old = your.k3 ? JSON.parse(your.k3) : false;
+      old = aa.k3[0];
    
    if (old) 
    {
@@ -229,7 +230,7 @@ function unfollow(k)
          
       const a = [ 
          0,//don't ask
-         options.k,//pubkey
+         aa.k,//pubkey
          now,//created_at
          3,//kind
          tags,//tags
@@ -248,7 +249,7 @@ function set_metadata(o)
    //make array to get hashed:
    const a = [ 
       0,//don't ask
-      options.k,//pubkey
+      aa.k,//pubkey
       Math.floor((new Date().getTime())/1000),//created_at
       0,//kind
       [],//tags
@@ -262,12 +263,14 @@ function set_metadata(o)
 }
 
 function post(signed) 
-{ 
+{
+   
    console.log('post', signed);
-   Object.entries(relays).forEach(([url, can]) => 
-   {
-      if (can.write && can.ws && can.ws.readyState === 1) {
-         can.ws.send(JSON.stringify(["EVENT", signed]));
-      }
-   });
+   re.postMessage(['bro', ['EVENT', signed]]);
+//   Object.entries(relays).forEach(([url, can]) => 
+//   {
+//      if (can.write && can.ws && can.ws.readyState === 1) {
+//         can.ws.send(JSON.stringify(["EVENT", signed]));
+//      }
+//   });
 }
