@@ -98,8 +98,9 @@ function pre_process(dis,dat,origin)
       dat.seen = [origin];
       seen[dis][dat.id] = dat;
    }
-   if (eose[origin] && eose[origin].includes(dis)) postMessage(['EVENT',origin,[dis,dat]]);
-   else if (!seen[dis][dat.id].seen.includes(origin)) seen[dis][dat.id].seen.push(origin);
+   else if(!seen[dis][dat.id].seen.includes(origin)) seen[dis][dat.id].seen.push(origin);
+   
+   if (eose[origin] && eose[origin].includes(dis)) postMessage(['EVENT',origin,[dis,seen[dis][dat.id]]]);
 
 }
 

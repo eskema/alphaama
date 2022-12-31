@@ -45,7 +45,7 @@ function fetch_missing(relay_url)
          {
             attempts++;
             l.dataset.fetched = attempts;
-            const o = JSON.parse(l.dataset.o);
+            const o = seen[l.id.substr(2)];
 //            let root = get_root(o.tags);
             
 //            if (root 

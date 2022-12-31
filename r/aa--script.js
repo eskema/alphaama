@@ -294,7 +294,7 @@ function clickEvent(e)
       case 'BUTTON':
          if (e.target.classList.contains('post')) 
          {
-            let unsigned = JSON.parse(event.dataset.o);
+            let unsigned = JSON.parse(localStorage[event.id.substr(2)]);
             sign(unsigned);
          } 
          else if (e.target.classList.contains('cancel'))
@@ -391,8 +391,8 @@ function view_source(l)
    let source = child_from_class(event, 'source');
    if (!source)
    {
-      const o = JSON.parse(event.dataset.o);
-      o.seen = JSON.parse(event.dataset.seen);
+      const o = seen[l.id.substr(2)];
+//      o.seen = JSON.parse(event.dataset.seen);
       source = raw_event(o);
       source.classList.add('source');
       event.append(source);

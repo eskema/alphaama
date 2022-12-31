@@ -451,7 +451,7 @@ function parse_content(e)
 {
    const l = e.target ? e.target.closest('.event') : e;
    let o; 
-   try { o = JSON.parse(l.dataset.o) } 
+   try { o = seen[l.id.substr(2)] } 
    catch (error) { console.log('no data found') } 
    
    if (o && l) 

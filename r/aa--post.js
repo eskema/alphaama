@@ -104,10 +104,11 @@ function prep(content)
 {
    const created_at = Math.floor( ( new Date().getTime() ) / 1000 );
    let tags = [];
-   if (sessionStorage.interesting)
+   let reply_id = sessionStorage.interesting;
+   if (reply_id)
    {
-      let reply = document.getElementById('e-'+sessionStorage.interesting);
-      if (reply && reply.dataset.o) tags = preptags(JSON.parse(reply.dataset.o));
+      let reply = document.getElementById('e-'+reply_id);
+      if (reply && seen[reply_id]) tags = preptags(seen[reply_id]);
    } 
    
    const hashtags = parse_hashtags(content);

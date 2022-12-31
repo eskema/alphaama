@@ -103,7 +103,7 @@ function newid(o)
       const content = document.createElement('article');
       content.classList.add('content');
       const p = document.createElement('p');
-      p.textContent = o.content;
+      p.textContent = merely_mentions(o.content,o.tags);
       content.append(p);
       l.append(content);
    }
@@ -125,9 +125,7 @@ function newid(o)
       l.classList.add('mia');
       delete o.mia;
    }
-   
-   l.dataset.o = JSON.stringify(o);
-   
+      
    let replies = document.createElement('ul');
    replies.classList.add('replies');
    l.append(replies);
@@ -230,24 +228,14 @@ function kind1(o)
 { // NIP1 text_note
    
    let l = document.getElementById('e-'+o.id);   
-   if (l) 
+   if (l 
+   && l.classList.contains('draft')) 
    {
-      if (l.classList.contains('draft')) 
-      {
-         l.classList.remove('draft');
-         let actions_draft = child_from_class(l, 'actions-draft');
-         actions_draft.remove()
-      }
-      else 
-      {
-         if (l.dataset.seen) 
-         {
-            const seen = JSON.parse(l.dataset.seen);
-            l.dataset.seen = JSON.stringify([...new Set(seen.concat(o.seen))]);
-         }
-      }
+      l.classList.remove('draft');
+      let actions_draft = child_from_class(l, 'actions-draft');
+      actions_draft.remove()
    }
-   else 
+   else if (!l)
    { 
       l = newid(o);      
       let created_at = child_from_class(l, 'created-at');
@@ -311,7 +299,7 @@ function kind1(o)
       if (o.draft) 
       {
          delete o.draft;
-         l.dataset.o = JSON.stringify(o);
+//         l.dataset.o = JSON.stringify(o);
          l.dataset.draft = o.content;
          l.classList.add('draft');
          
@@ -410,17 +398,22 @@ function kind3(o)
 
 function process(o) 
 {
-   if (!seen[o.id]) seen[o.id] = o;
-   else if (seen[o.id].seen && !seen[o.id].seen.includes[o.seen[0]]) seen[o.id].seen.push(o.seen[0])
+   if (!seen[o.id])
+   {
+      seen[o.id] = o;
+   }
+   else if (seen[o.id] && o.seen && o.seen.length)
+   {
+      if (!seen[o.id].seen) seen[o.id].seen = [];
+      if (!seen[o.id].seen.includes(o.seen[0])) seen[o.id].seen.push(o.seen[0])
+   }
    
    switch (o.kind) 
    {
-       case 0: kind0(o); break;
-       case 1: kind1(o); break;
-       case 2: kind1(o); break;
-       case 3: kind3(o); break;
-       case 7: kind1(o); break;
+      case 0: kind0(o); break;
+      case 3: kind3(o); break;
+      case 2: 
+      case 7: 
+      case 1: kind1(o); break;
    }
-
-   delete hose[o.id];
 }
