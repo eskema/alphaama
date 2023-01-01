@@ -67,7 +67,6 @@ function newid(o)
       h.append(h_id)
    }
    
-   
    if (o.pubkey && o.pubkey !== false) 
    {
       l.dataset.p = o.pubkey;
@@ -95,10 +94,6 @@ function newid(o)
       l.setAttribute('data-kind', o.kind);
    }
    
-//   if (o.tags && o.tags !== false) {
-//      h.append(ash(o.tags));
-//   }
-   
    if (o.content && o.content !== false) {
       const content = document.createElement('article');
       content.classList.add('content');
@@ -106,24 +101,6 @@ function newid(o)
       p.textContent = merely_mentions(o.content,o.tags);
       content.append(p);
       l.append(content);
-   }
-   
-   if (o.sig && o.sig !== false) {
-      const sig = document.createElement('p');
-      sig.classList.add('sig');
-      l.append(sig);
-   }
-   
-   if (o.seen) 
-   {
-      l.dataset.seen = JSON.stringify(o.seen)
-      delete o.seen;
-   }
-   
-   if (o.mia) 
-   {
-      l.classList.add('mia');
-      delete o.mia;
    }
       
    let replies = document.createElement('ul');
@@ -260,21 +237,21 @@ function kind1(o)
          if (reply) lies(reply, l);
          else 
          {
-            let root_id, root_tag = get_root(o.tags);
-            if (root_tag) root_id = root_tag[1];
-            if (root_id !== reply_id) 
-            {
-               reply = document.getElementById('e-'+ reply_id);
-               if (reply) lies(reply, l);
-               l.setAttribute('data-reply', reply_id);
-            }
-            else 
-            {
+//            let root_id, root_tag = get_root(o.tags);
+//            if (root_tag) root_id = root_tag[1];
+//            if (root_id !== reply_id) 
+//            {
+//               root = document.getElementById('e-'+ root_id);
+//               if (root) lies(root, l);
+//               l.setAttribute('data-reply', reply_id);
+//            }
+//            else 
+//            {
 //               requestAnimationFrame(()=> {
                   knd1.append(l);
                   ordered(knd1, false);
 //               });
-            }
+//            }
          }
       } 
       else 
@@ -402,18 +379,20 @@ function process(o)
    {
       seen[o.id] = o;
    }
-   else if (seen[o.id] && o.seen && o.seen.length)
+   else // if (seen[o.id] && o.seen && o.seen.length)
    {
-      if (!seen[o.id].seen) seen[o.id].seen = [];
-      if (!seen[o.id].seen.includes(o.seen[0])) seen[o.id].seen.push(o.seen[0])
+//      if (!seen[o.id].seen) seen[o.id].seen = [];
+//      if (!seen[o.id].seen.includes(o.seen[0])) seen[o.id].seen.push(o.seen[0])
+//      seen[o.id].seen = 
+      seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))]
    }
    
    switch (o.kind) 
    {
-      case 0: kind0(o); break;
-      case 3: kind3(o); break;
+      case 0: kind0(seen[o.id]); break;
+      case 3: kind3(seen[o.id]); break;
       case 2: 
       case 7: 
-      case 1: kind1(o); break;
+      case 1: kind1(seen[o.id]); break;
    }
 }

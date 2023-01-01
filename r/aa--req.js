@@ -62,6 +62,7 @@ function fetch_missing(relay_url)
             {
                t.p.forEach((p)=>{if (is_hex(p) && !aa.p[p]) events.p.push(p)})
             }
+            if (!aa.p[o.pubkey]) events.p.push(o.pubkey)
          }
       }
    });

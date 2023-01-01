@@ -116,6 +116,7 @@ function eose_handler(dis, origin)
    
    if (dis === 'aa-sub-root' 
    || dis === 'aa-sub-p') relays[origin].ws.send(JSON.stringify['CLOSE', dis]);
+   
 }
 
 function message(e)

@@ -391,7 +391,7 @@ function view_source(l)
    let source = child_from_class(event, 'source');
    if (!source)
    {
-      const o = seen[l.id.substr(2)];
+      const o = seen[event.id.substr(2)];
 //      o.seen = JSON.parse(event.dataset.seen);
       source = raw_event(o);
       source.classList.add('source');

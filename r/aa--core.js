@@ -78,6 +78,7 @@ function pre_process([type, dis, dat])
             else aa_open(dis, true)
          }
          break
+      case 'OK':
       case 'STATE':
       case 'NOTICE':
          console.log(type, dis, dat);
@@ -87,7 +88,7 @@ function pre_process([type, dis, dat])
       case 'EOSE': 
          console.log(type, dis, dat[1].length);
          dat[1].map((o)=>{ process(o) }); 
-         setTimeout(()=>{fetch_missing(dis+"/")}, 500);
+         setTimeout(()=>{fetch_missing(dis+"/")}, 1000);
          break;
       case 'EVENT': 
          process(dat[1]); 
