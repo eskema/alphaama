@@ -36,7 +36,7 @@ function trust(pubkey)
    : aa.ff && aa.ff.includes(pubkey) ? 'ff'
    : 'mf';
 
-   let trusted;
+   let trusted = false;
    switch (trust) {
       case 'yo':
       case 'bf':
@@ -52,56 +52,49 @@ function newid(o)
 {
    const l = document.createElement('li');
    l.classList.add('event', 'new');
+   l.id = 'e-'+o.id;
    
    const h = document.createElement('p');
    h.classList.add('heading');
+   const h_id = tag_link(['e',o.id], '');
+   h_id.classList.add('id');
+   h.append(h_id)
    
    l.append(h);
       
-   if (o.id && o.id !== false) 
-   {
-      l.id = 'e-'+o.id;
-      
-      const h_id = tag_link(['e',o.id], '');
-      h_id.classList.add('id');
-      h.append(h_id)
-   }
-   
-   if (o.pubkey && o.pubkey !== false) 
-   {
       l.dataset.p = o.pubkey;
+      
       let trusts = trust(o.pubkey);
       l.dataset.who = trusts[0];
       if (trusts[1]) l.classList.add('trusted')
       const h_author = tag_link(['p', o.pubkey]);
       h_author.classList.add('author');
       h.prepend(h_author);
-   }
    
-   if (o.id && o.id !== false && o.pubkey && o.pubkey !== false) {
+//   if (o.id && o.id !== false && o.pubkey && o.pubkey !== false) {
       stylek(o.pubkey, l);
-   }
+//   }
    
-   if (o.created_at && o.created_at !== false) 
-   {
+//   if (o.created_at && o.created_at !== false) 
+//   {
       l.dataset.stamp = o.created_at;
       let created_at = make_time(o.created_at);
       l.append(created_at);
       update_time(created_at);
-   }
-   if (o.kind === 0 || o.kind && o.kind !== false) 
-   {
+//   }
+//   if (o.kind === 0 || o.kind && o.kind !== false) 
+//   {
       l.setAttribute('data-kind', o.kind);
-   }
+//   }
    
-   if (o.content && o.content !== false) {
+//   if (o.content && o.content !== false) {
       const content = document.createElement('article');
       content.classList.add('content');
       const p = document.createElement('p');
       p.textContent = merely_mentions(o.content,o.tags);
       content.append(p);
       l.append(content);
-   }
+//   }
       
    let replies = document.createElement('ul');
    replies.classList.add('replies');
@@ -371,28 +364,4 @@ function kind3(o)
       }
    }   
    
-}
-
-function process(o) 
-{
-   if (!seen[o.id])
-   {
-      seen[o.id] = o;
-   }
-   else // if (seen[o.id] && o.seen && o.seen.length)
-   {
-//      if (!seen[o.id].seen) seen[o.id].seen = [];
-//      if (!seen[o.id].seen.includes(o.seen[0])) seen[o.id].seen.push(o.seen[0])
-//      seen[o.id].seen = 
-      seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))]
-   }
-   
-   switch (o.kind) 
-   {
-      case 0: kind0(seen[o.id]); break;
-      case 3: kind3(seen[o.id]); break;
-      case 2: 
-      case 7: 
-      case 1: kind1(seen[o.id]); break;
-   }
 }

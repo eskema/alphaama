@@ -247,6 +247,7 @@ function toggle_replies(e)
 {
    const l = e.target ? e.target.closest('.event') : e;
    l.classList.toggle('replies-hidden');
+   l.scrollIntoView(stuff);
 }
 
 function parse_hashtags(text) 
@@ -275,7 +276,9 @@ function merely_mentions(text, tags)
 {
    function nip8(mention, index) 
    {
-      let [tag, kid] = tags[index];
+      const tag = tags[parseInt(index)];
+      let kid;
+      if (tag && tag.length >= 2) kid = tag[1];
       
       if (is_hex(kid)) 
       {
@@ -292,12 +295,12 @@ function merely_mentions(text, tags)
             mention = '/' + hex_trun(kid)
          }         
       }
-      else mention = hex_trun(kid)
       
       return mention;
    }
    
-   return text.replace(/\B#\[(\d+)\]\B/g, nip8)
+   return text.replace(/\B#\[(\d+)\]\B/g, nip8);
+   
 }
 
 function try_url(url) 

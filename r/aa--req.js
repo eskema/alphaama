@@ -40,22 +40,17 @@ function fetch_missing(relay_url)
       if (reply) lies(reply,l);
       else 
       {
-         let attempts = parseInt(l.dataset.fetched ? l.dataset.fetched : '0');
-         if (attempts < 22) 
+         let not_seen = l.dataset.not_seen ? JSON.parse(l.dataset.not_seen) : [];
+         if (!not_seen.includes(relay_url)) 
          {
-            attempts++;
-            l.dataset.fetched = attempts;
+            not_seen.push(relay_url);
+            l.dataset.not_seen = JSON.stringify(not_seen);
             const o = seen[l.id.substr(2)];
-//            let root = get_root(o.tags);
-            
-//            if (root 
-//            && !document.getElementById('e-'+root[1])
-//            && !hose[root[1]]) events.e.push(root[1]);
-            
-            let reply = get_reply(o.tags);
-            if (reply 
-            && !seen[reply[1]]
-            ) events.e.push(reply[1]);
+//
+//            let reply = get_reply(o.tags);
+//            if (reply 
+//            && !seen[reply[1]]
+//            ) events.e.push(reply[1]);
             
             let t = get_tags(o.tags);
             if (t.p) 
@@ -63,46 +58,49 @@ function fetch_missing(relay_url)
                t.p.forEach((p)=>{if (is_hex(p) && !aa.p[p]) events.p.push(p)})
             }
             if (!aa.p[o.pubkey]) events.p.push(o.pubkey)
+            
+            if (t.e) 
+            {
+               t.e.forEach((e)=>{if (is_hex(e) && !seen[e]) events.e.push(e)})
+            }
          }
       }
    });
    
+   let req = ["REQ", "aa-get"];
+   
    if (events.e) 
    {
       events.e = [...new Set(events.e)];
-      if (events.p) events.p = [...new Set(events.p)];
-      
-      
-//      document.getElementById('a').dataset.status = '... ' + events.e.length + 'e & ' + events.p.length + ' p';
-//      delete document.getElementById('a').dataset.status;
-      
-      let req = ["REQ", "aa-get"];
-               
-      if (events.p) 
-      {
-         let pubs = chunkn(events.p, 444);
-         pubs.forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
-      }
-      
-      let ids = chunkn(events.e, 444);
-      ids.forEach((chunk)=>{req.push({'ids':chunk}) });
+      chunkn(events.e, 444).forEach((chunk)=>{req.push({'ids':chunk}) });
+   }
+   
+   if (events.p) 
+   {
+      events.p = [...new Set(events.p)];
+      chunkn(events.p, 444).forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
+   }
+   
+   
+         
 
-      let 
-         rekt,
-         rekt_url = aa.rekt[relay_url];
-      if (rekt_url) rekt = aa.rekt[relay_url][req[1]];
-      else aa.rekt[relay_url] = {};
-
-      if (req.length > 2 && JSON.stringify(req) !== JSON.stringify(rekt)) 
+   if (req.length > 2)
+   {
+      const 
+         last_req = reqs[relay_url][req[1]], 
+         s_req = JSON.stringify(req);
+      
+      if (!last_req
+      || (last_req[1] && last_req[0] !== s_req)
+      ) 
       {
-//         console.log(rekt, req)
          console.log('fetching ' + events.e.length + 'e & ' + events.p.length + 'p from ' + relay_url);
-         aa.rekt[relay_url][req[1]] = req;
-//         console.log(aa.rekt);
-//            console.log(req)
+         reqs[relay_url][req[1]] = [s_req];
          re.postMessage(['req', [req, relay_url]]);
       }
    }
+   
+   
 }
 
 //function fetch_some() 

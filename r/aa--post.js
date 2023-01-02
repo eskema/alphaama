@@ -159,6 +159,7 @@ function draft(a, kind)
    unsigned.id = hash(a);
    localStorage[unsigned.id] = JSON.stringify(unsigned);
    unsigned.draft = true;
+   unsigned.seen = [];
    process(unsigned);
 }
 

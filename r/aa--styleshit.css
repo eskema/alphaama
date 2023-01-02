@@ -119,7 +119,7 @@ button:hover {
 /* @end */
 /* @group a */
 
-#a {
+/*#a {
    color: rgb(var(--c-a-d));
    background: rgb(var(--c-a-a));
    grid-area: h1;
@@ -149,6 +149,56 @@ button:hover {
    top: 0;
    z-index: 9001;
 }
+*/
+
+#a {
+   color: rgb(var(--c-a-c));
+   background: rgb(var(--c-a-a));
+   grid-area: h1;
+   display: grid;
+   grid-template-areas: "before after title";
+   grid-template-columns: auto auto 1fr;
+   grid-gap: var(--pad);
+   margin: 0;
+   padding: var(--pad);
+   /*white-space: pre;*/
+   line-height: 1;
+   cursor: pointer;
+}
+
+#a::before {
+   content: attr(data-id-a);
+   grid-area: before;
+   color: rgb(var(--c-a-f));
+}
+
+#a::after{
+   content: "//";
+   grid-area: after;
+   /*color: rgb(var(--c-a-c));*/
+}
+
+#a:hover {
+   color: color: rgb(var(--c-a-f));;
+}
+
+#a:hover::before {
+   content: "-<-";
+}
+
+.has-interesting #a:hover::before {
+   content: "<--";
+}
+
+
+
+.has-interesting #a {
+   position: sticky;
+   position: -webkit-sticky;
+   top: 0;
+   z-index: 999;
+}
+
 
 /* @end */
 /* @group whatever the fuck you want */

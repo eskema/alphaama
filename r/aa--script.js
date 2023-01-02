@@ -442,7 +442,7 @@ function update_fren(dat, k)
    
    if (options.media) 
    {
-      if (dat.nip05 && location.protocol === 'https:') verifyNIP05(fren, dat, k);
+//      if (dat.nip05 && location.protocol === 'https:') verifyNIP05(fren, dat, k);
             
       if (dat.picture && fren.classList.contains('known')) 
       {

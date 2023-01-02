@@ -55,7 +55,9 @@ function aa_open(dis, reconnect = false)
    // replies to your posts
    filter = {'#p': [aa.k], kinds:[1,7], since: wen};
    req.push(filter);
+   reqs[dis]['aa-open'] = [JSON.stringify(req)];
    re.postMessage(['req', [req, dis]]);
+   
    console.log(dis, req);
 }
 
@@ -66,16 +68,13 @@ function pre_process([type, dis, dat])
    switch (type) 
    {
       case 'OPEN':
-//         console.log(type, dis, dat);
+//         ['OPEN',e.target.url,e.target.readyState]
          if (dat === 1) 
          {
             if (!reqs[dis]) reqs[dis] = {};
-            if (!reqs[dis]['aa-open']) 
-            {
-               reqs[dis]['aa-open'] = 1;
-               aa_open(dis) 
-            }
-            else aa_open(dis, true)
+            if (reqs[dis]['aa-open']) aa_open(dis, true)
+            else aa_open(dis);
+            
          }
          break
       case 'OK':
@@ -86,16 +85,45 @@ function pre_process([type, dis, dat])
 //         if (relay) relay.dataset.state = dat;
          break;
       case 'EOSE': 
+         // ['EOSE', origin, [dis,sorted]]
          console.log(type, dis, dat[1].length);
+         reqs[dis + '/'][dat[0]].push(dat[1].length);
          dat[1].map((o)=>{ process(o) }); 
-         setTimeout(()=>{fetch_missing(dis+"/")}, 1000);
+//         setTimeout(()=>{console.log('eose')}, 1000);
+         setTimeout(()=>{fetch_missing(dis+"/")}, 100);
          break;
       case 'EVENT': 
          process(dat[1]); 
-         setTimeout(()=>{fetch_missing(dis+"/")}, 1000);
+//         setTimeout(()=>{console.log('event')}, 1000);
+         setTimeout(()=>{fetch_missing(dis+"/")}, 100);
 //         fetch_missing(dis+"/");
 //         fetch_some();
          break;      
+   }
+}
+
+function process(o) 
+{
+   if (!seen[o.id])
+   {
+      seen[o.id] = o;
+      if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
+   }
+   else // if (seen[o.id] && o.seen && o.seen.length)
+   {
+//      if (!seen[o.id].seen) seen[o.id].seen = [];
+//      if (!seen[o.id].seen.includes(o.seen[0])) seen[o.id].seen.push(o.seen[0])
+//      seen[o.id].seen = 
+      seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))]
+   }
+   
+   switch (o.kind) 
+   {
+      case 0: kind0(seen[o.id]); break;
+      case 3: kind3(seen[o.id]); break;
+      case 2: 
+      case 7: 
+      case 1: kind1(seen[o.id]); break;
    }
 }
 
@@ -345,9 +373,17 @@ function start(k) {
    }     
 }
 
+function funk(e) 
+{
+   console.log(e.target);
+}
+
 window.addEventListener('load', (event)=> 
 {  
    clean_up(); 
+   
+   document.getElementById('a').addEventListener('click', funk);
+   
    knd1.addEventListener('click', clickEvent);
    
    iot.addEventListener('blur', less);

@@ -22,16 +22,22 @@ function add_relaytion(ship)
    });
 }
 
-function demand(stuff) // [stringified req, origin = false]
+function demand(stuff) // [req, origin = false]
 {
    if (stuff[1] && relays[stuff[1]]) rr = [relays[stuff[1]]];
    else rr = relays ? Object.values(relays) : [];
    
    rr.filter((can)=> can.read && can.ws && can.ws.readyState === 1)
-   .map((can)=> { can.ws.send(JSON.stringify(stuff[0])) })
+   .map((can)=> 
+   { 
+      if (!can.reqs) can.reqs = {};
+      
+      can.reqs[stuff[0][1]] = [];
+      can.ws.send(JSON.stringify(stuff[0])) 
+   })
 }
 
-function broadcast(shit) // stringified
+function broadcast(shit)
 {
    Object.values(relays).filter((can)=> can.write && can.ws && can.ws.readyState === 1)
    .map((can)=> { can.ws.send(JSON.stringify(shit))})
@@ -78,6 +84,7 @@ function retry(e)
 function connect(url) 
 {  
    if (relays[url].fc) delete relay[url].fc;
+//   if (relays[url].reqs) delete relay[url].reqs;
    if (!relays[url].cc) relays[url].cc = [];
    relays[url].ws = new WebSocket(url);   
    relays[url].ws.addEventListener('open', open); 
@@ -92,30 +99,41 @@ function anal_z(o)
 
 function pre_process(dis,dat,origin) 
 {
-   if (!seen[dis]) seen[dis] = {};
-   if (!seen[dis][dat.id])
-   { 
-      dat.seen = [origin];
-      seen[dis][dat.id] = dat;
-   }
-   else if(!seen[dis][dat.id].seen.includes(origin)) seen[dis][dat.id].seen.push(origin);
-   
-   if (eose[origin] && eose[origin].includes(dis)) postMessage(['EVENT',origin,[dis,seen[dis][dat.id]]]);
+   dat.seen = [origin];
+   let r = origin + '/';
+   if (relays[r].reqs[dis]) relays[r].reqs[dis].push(dat);
+   else postMessage(['EVENT',origin,[dis,dat]]);
+//   
+//   if(!seen[origin][dis][dat.id].seen.includes(origin)) seen[dis][dat.id].seen.push(origin);
+//   
+//   if (eose[origin] 
+//   && eose[origin].includes(dis)
+//   ) 
 
 }
 
 function eose_handler(dis, origin) 
 {
-   if (!eose[origin]) eose[origin] = [];
-   eose[origin].push(dis);
-   
-   const sorted = Object.values(seen[dis])
+   const sorted = relays[origin + '/'].reqs[dis]
    .sort((a,b)=>{a.created_at - b.created_at});
    
    postMessage(['EOSE', origin, [dis,sorted]])
-   
-   if (dis === 'aa-sub-root' 
-   || dis === 'aa-sub-p') relays[origin].ws.send(JSON.stringify['CLOSE', dis]);
+   delete relays[origin + '/'].reqs[dis];
+//   if (!eose[origin]) eose[origin] = [];
+//   else
+//   {
+//      
+//   }
+//   if (!eose[origin]) eose[origin] = [];
+//   eose[origin].push(dis);
+//   
+//   const sorted = Object.values(seen[dis])
+//   .sort((a,b)=>{a.created_at - b.created_at});
+//   
+//   postMessage(['EOSE', origin, [dis,sorted]])
+//   
+//   if (dis === 'aa-sub-root' 
+//   || dis === 'aa-sub-p') relays[origin].ws.send(JSON.stringify['CLOSE', dis]);
    
 }
 
