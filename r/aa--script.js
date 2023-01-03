@@ -359,27 +359,42 @@ function lies(reply, l)
 
 //   requestAnimationFrame(()=> 
 //   {
-		replies.append(l);
+   let insert_b =  null, stamp = parseInt(l.dataset.stamp);
+   [...replies.children].forEach((rep)=>
+   {
+      if (!insert_b && stamp < parseInt(rep.dataset.stamp) ) insert_b = rep;
+   });
+//   console.log('lies', insert_b);
+   replies.insertBefore(l, insert_b);
+   
+//		replies.append(l);
       l.removeAttribute('data-reply');
       reply.classList.add('has-replies');
-      ordered(replies, true);
+//      ordered(replies, true);
       count_replies(l);
-      if (l.classList.contains('interesting')) is_interesting(l);
+//      if (l.classList.contains('interesting')) is_interesting(l);
 //	});
     
    
 
    let root = ancestor(reply, 'event');
-   if (parseInt(l.dataset.stamp) > parseInt(root.dataset.stamp)) 
+   if (stamp > parseInt(root.dataset.stamp)) 
    {
       root.dataset.stamp = l.dataset.stamp;
-      let last = replies.querySelector('.last');
-      if (last) last.classList.remove('last');
-      l.classList.add('last');
+//      let last = replies.querySelector('.last');
+//      if (last) last.classList.remove('last');
+//      l.classList.add('last');
+      insert_b = null;
+      [...knd1.children].forEach((rep)=>
+      {
+         if (!insert_b && stamp > parseInt(rep.dataset.stamp)) insert_b = rep;
+      });
+//      console.log('lies', insert_b);
+      knd1.insertBefore(root, insert_b);
    }
    
 //   requestAnimationFrame(()=> { 
-      ordered(knd1, false); 
+//      ordered(knd1, false); 
 //   });
 
 }

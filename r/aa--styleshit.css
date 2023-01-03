@@ -1000,6 +1000,10 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    align-self: start;
 }
 
+.replies {
+   /*display: none;*/
+}
+
 .replies-hidden .replies {
    display: none;
 }

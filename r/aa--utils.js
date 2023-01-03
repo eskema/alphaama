@@ -282,7 +282,7 @@ function merely_mentions(text, tags)
       
       if (is_hex(kid)) 
       {
-         if (tag === 'p')
+         if (tag[0] === 'p')
          {
             try { name = aa.p[kid].name }
             catch (error) { console.log('no name found') }
@@ -290,7 +290,7 @@ function merely_mentions(text, tags)
             if (name) mention = '@' + name;
             else mention = '@' + hex_trun(kid)
          }
-         else if (tag === 'e')
+         else if (tag[0] === 'e')
          {
             mention = '/' + hex_trun(kid)
          }         
@@ -411,7 +411,10 @@ function ai(o)
       ocd = oc.wholeText,
       matches = {},
       matchy_mentions = [...ocd.matchAll(/\B#\[(\d+)\]\B/g)],
-      matchy_links = [...ocd.matchAll(/\b(https?:\/\/\S*\b)/g)];
+//      matchy_links = [...ocd.matchAll(/\b(https?:\/\/\S*\b)/g)];
+      matchy_links = [...ocd.matchAll(/(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim)];
+
+      
 
    matchy_mentions.forEach((match)=> { matches[match.index] = match[0] });
    matchy_links.forEach((match)=> { matches[match.index] = match[0] });

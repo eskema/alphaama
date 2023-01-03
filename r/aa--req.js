@@ -33,7 +33,7 @@
 
 function fetch_missing(relay_url) 
 {  
-   const events = { e: [], p: [] }     
+   let events = { e: [], p: [] }     
    document.querySelectorAll('[data-reply]').forEach((l)=>
    {
       let reply = document.getElementById('e-'+l.dataset.reply);
@@ -46,23 +46,11 @@ function fetch_missing(relay_url)
             not_seen.push(relay_url);
             l.dataset.not_seen = JSON.stringify(not_seen);
             const o = seen[l.id.substr(2)];
-//
-//            let reply = get_reply(o.tags);
-//            if (reply 
-//            && !seen[reply[1]]
-//            ) events.e.push(reply[1]);
-            
+
             let t = get_tags(o.tags);
-            if (t.p) 
-            {
-               t.p.forEach((p)=>{if (is_hex(p) && !aa.p[p]) events.p.push(p)})
-            }
-            if (!aa.p[o.pubkey]) events.p.push(o.pubkey)
-            
-            if (t.e) 
-            {
-               t.e.forEach((e)=>{if (is_hex(e) && !seen[e]) events.e.push(e)})
-            }
+            if (t.p) t.p.forEach((p)=>{if (!aa.p[p]) events.p.push(p)});
+            if (!aa.p[o.pubkey]) events.p.push(o.pubkey);
+            if (t.e) t.e.forEach((e)=>{if (!seen[e]) events.e.push(e)});
          }
       }
    });
@@ -80,9 +68,6 @@ function fetch_missing(relay_url)
       events.p = [...new Set(events.p)];
       chunkn(events.p, 444).forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
    }
-   
-   
-         
 
    if (req.length > 2)
    {
@@ -94,13 +79,15 @@ function fetch_missing(relay_url)
       || (last_req[1] && last_req[0] !== s_req)
       ) 
       {
+         document.getElementById('a').textContent = 'REQ aa-get ' + events.e.length + 'e & ' + events.p.length + 'p from ' + relay_url;
          console.log('fetching ' + events.e.length + 'e & ' + events.p.length + 'p from ' + relay_url);
          reqs[relay_url][req[1]] = [s_req];
          re.postMessage(['req', [req, relay_url]]);
       }
    }
-   
-   
+   else {
+      document.getElementById('a').textContent = 'All done';
+   }
 }
 
 //function fetch_some() 
@@ -283,7 +270,10 @@ function get_tags(tags)
    
    tags.forEach((tag)=> 
    { 
-      if ((tag[0] === 'e' || tag[0] === 'p') && is_hex(tag[1])) events[tag[0]].push(tag[1]) 
+      if ((tag[0] === 'e' || tag[0] === 'p') && is_hex(tag[1])) 
+      {
+         events[tag[0]].push(tag[1]);
+      }
    });
    
    if (!events.e.length) delete events.e;

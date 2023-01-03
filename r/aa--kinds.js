@@ -219,7 +219,8 @@ function kind1(o)
 
       let 
          reply_id,
-         reply_tag = get_reply(o.tags);
+         reply_tag = get_reply(o.tags),
+         append_as_root = false;
          
       if (reply_tag) reply_id = reply_tag[1];
       if (reply_id) 
@@ -228,32 +229,22 @@ function kind1(o)
          l.setAttribute('data-reply', reply_id);
          let reply = document.getElementById('e-'+ reply_id);
          if (reply) lies(reply, l);
-         else 
-         {
-//            let root_id, root_tag = get_root(o.tags);
-//            if (root_tag) root_id = root_tag[1];
-//            if (root_id !== reply_id) 
-//            {
-//               root = document.getElementById('e-'+ root_id);
-//               if (root) lies(root, l);
-//               l.setAttribute('data-reply', reply_id);
-//            }
-//            else 
-//            {
-//               requestAnimationFrame(()=> {
-                  knd1.append(l);
-                  ordered(knd1, false);
-//               });
-//            }
-         }
+         else append_as_root = true;
       } 
       else 
       {
          l.classList.add('root');
-//         requestAnimationFrame(()=> {
-            if (!document.getElementById('e-'+o.id)) knd1.append(l); 
-            ordered(knd1, false);
-//      	});
+         append_as_root = true
+      }
+      
+      if (append_as_root) 
+      {
+         let insert_b =  null, stamp = parseInt(l.dataset.stamp);
+         [...knd1.children].forEach((rep)=>
+         {
+            if (!insert_b && stamp > parseInt(rep.dataset.stamp)) insert_b = rep;
+         });
+         knd1.insertBefore(l, insert_b);
       }
       
       if (o.id === sessionStorage.sub_root 

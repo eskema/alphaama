@@ -59,12 +59,11 @@ function aa_open(dis, reconnect = false)
    re.postMessage(['req', [req, dis]]);
    
    console.log(dis, req);
+   document.getElementById('a').textContent = 'REQ aa-open ' + dis;
 }
 
-function pre_process([type, dis, dat]) 
-{
-//   console.log(type, dis, dat);
-   
+async function pre_process([type, dis, dat]) 
+{   
    switch (type) 
    {
       case 'OPEN':
@@ -74,31 +73,33 @@ function pre_process([type, dis, dat])
             if (!reqs[dis]) reqs[dis] = {};
             if (reqs[dis]['aa-open']) aa_open(dis, true)
             else aa_open(dis);
-            
          }
          break
+      case 'EOSE': 
+         // ['EOSE', origin, [dis,sorted]]
+         console.log(type, dis, dat[1].length);
+         document.getElementById('a').textContent = type + ' ' + dat[0] + ' ' + dis + ' ' + dat[1].length;
+         reqs[dis + '/'][dat[0]].push('eose ' + dat[1].length);
+         dat[1].map((o)=>{ process(o) }); 
+//         setTimeout(()=>{
+         if (dat[0] === 'aa-open') fetch_missing(dis+"/");
+         else {
+            document.getElementById('a').textContent = '';
+         }
+//         }, 1000);
+         break;
+      case 'EVENT': 
+         process(dat[1]); 
+//         setTimeout(()=>{
+         fetch_missing(dis+"/")
+//         }, 1000);
+         break;
       case 'OK':
       case 'STATE':
       case 'NOTICE':
          console.log(type, dis, dat);
-//         let relay = document.querySelector('[data-label="'+new URL(dis).hostname+'"]');
-//         if (relay) relay.dataset.state = dat;
-         break;
-      case 'EOSE': 
-         // ['EOSE', origin, [dis,sorted]]
-         console.log(type, dis, dat[1].length);
-         reqs[dis + '/'][dat[0]].push(dat[1].length);
-         dat[1].map((o)=>{ process(o) }); 
-//         setTimeout(()=>{console.log('eose')}, 1000);
-         setTimeout(()=>{fetch_missing(dis+"/")}, 100);
-         break;
-      case 'EVENT': 
-         process(dat[1]); 
-//         setTimeout(()=>{console.log('event')}, 1000);
-         setTimeout(()=>{fetch_missing(dis+"/")}, 100);
-//         fetch_missing(dis+"/");
-//         fetch_some();
-         break;      
+         document.getElementById('a').textContent = type + ' ' + dis + ' ' + dat;
+         break;  
    }
 }
 
