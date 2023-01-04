@@ -1046,10 +1046,14 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
 .replies-hidden .event.has-new > .heading {
    display: grid;
 }
-.replies-hidden .event.has-new > .content {
+.replies-hidden .event.has-new:not(.new) > .content {
    display: grid;
+   padding-bottom: 1em;
+   /*color: rgb(var(--c-a-b));*/
+}
+.replies-hidden .event.has-new:not(.new) > .content * {
    font-size: var(--font-size-s);
-   
+   line-height: 1.2;
 }
 
 .replies-hidden .event:not(.has-new) > .replies {
@@ -1443,7 +1447,8 @@ button.view-source {
    position: sticky;
    position: -webkit-sticky;
    top: 1rem;
-   max-width: 40vw;
+   padding-bottom: 1rem;
+   /*max-width: 40vw;*/
 }
 
 .event.root:not(.interesting):not(.mom)[data-kind="0"] > .content,
