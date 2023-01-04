@@ -105,7 +105,7 @@ async function pre_process([type, dis, dat])
 
 function process(o) 
 {
-   let draft, l = document.getElementById('#e-'+o.id);
+   let draft, l = document.getElementById('e-'+o.id);
    if (l && l.classList.contains('draft')) draft = true;
    
    if (!seen[o.id] || draft)
