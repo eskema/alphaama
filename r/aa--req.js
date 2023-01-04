@@ -85,9 +85,7 @@ function fetch_missing(relay_url)
          re.postMessage(['req', [req, relay_url]]);
       }
    }
-   else {
-      document.getElementById('a').textContent = 'All done';
-   }
+   else document.getElementById('a').textContent = 'whatever the fuck you want';
 }
 
 //function fetch_some() 

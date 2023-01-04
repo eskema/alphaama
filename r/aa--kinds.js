@@ -1,5 +1,24 @@
 const missing = {}; 
 
+//const in_view = new window.IntersectionObserver(([entry]) => 
+//{
+//   if (entry.isIntersecting) 
+//   {
+//      let l = entry.target;
+//      
+//      if (l.classList.contains('trusted')) parse_content(l);
+//      l.classList.add('loaded');
+//      console.log('in_view', entry)
+//      in_view.unobserve(l);
+//      return
+//   }
+//  console.log('!in_view', entry.id)
+//}, 
+//{
+//   root: null,
+//   threshold: 0.1, // set offset 0.1 means trigger if atleast 10% of element in viewport
+//});
+
 function newpub(k) 
 {   
    const 
@@ -9,7 +28,9 @@ function newpub(k)
       metadata = document.createElement('header');
    
    l.id = 'p-' + k;
-   l.classList.add('fren');    
+   l.classList.add('fren');
+   let trusts = trust(k);
+   if (trusts[1]) l.classList.add('trusted');
    
    pubkey.classList.add('pubkey');
    pubkey.textContent = k;
@@ -66,7 +87,7 @@ function newid(o)
       
       let trusts = trust(o.pubkey);
       l.dataset.who = trusts[0];
-      if (trusts[1]) l.classList.add('trusted')
+      if (trusts[1]) l.classList.add('trusted');
       const h_author = tag_link(['p', o.pubkey]);
       h_author.classList.add('author');
       h.prepend(h_author);
@@ -191,7 +212,11 @@ function kind0(o)
    if (o.pubkey === aa.k && !aa.k0.find((e)=> e.id === o.id)) aa.k0.unshift(o);
    
    if (location.hash.length 
-   && location.hash.startsWith('#p-'+o.pubkey)) select_p(o.pubkey)
+   && location.hash.startsWith('#p-'+o.pubkey)
+   ) 
+   { 
+      select_p(o.pubkey); console.log(o.pubkey)
+   }
 }
 
 function kind1(o) 
@@ -284,6 +309,11 @@ function kind1(o)
          
          l.append(actions);
       }
+//      if (o.kind === 1) 
+//      {
+//         in_view.observe(l);
+//         l.insertBefore(make_actions(), l.querySelector('.replies'));
+//      }
    } 
 }
 

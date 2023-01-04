@@ -199,6 +199,14 @@ function mom(l)
 	}
 }
 
+function dad(l, class_name) 
+{ // parent events from reply to root
+   for ( ; l && l !== document; l = l.parentNode ) 
+   {
+      if (l.classList.contains('event')) l.classList.add(class_name)
+	}
+}
+
 String.prototype.hexEncode = function()
 {
    let hex, i,result = '';
@@ -246,7 +254,26 @@ function react(e)
 function toggle_replies(e) 
 {
    const l = e.target ? e.target.closest('.event') : e;
-   l.classList.toggle('replies-hidden');
+   if (!l.classList.contains('replies-hidden')) 
+   {
+      l.classList.add('replies-hidden');
+      l.querySelectorAll('.event.new').forEach((ne)=>{ne.classList.remove('new', 'has-new')});
+   }
+   else 
+   {
+      let new_events = l.querySelectorAll('.event.new');
+      if (new_events.length)
+      {
+         new_events.forEach((ne)=>{ne.classList.remove('new')});
+         l.querySelectorAll('.has-new').forEach((ne)=>{ne.classList.remove('has-new')});
+      }
+      else {
+         l.classList.remove('replies-hidden');
+      }
+      
+      
+   }
+   
    l.scrollIntoView(stuff);
 }
 
@@ -453,7 +480,7 @@ function ai(o)
    return p
 }
 
-function parse_content(e) 
+async function parse_content(e) 
 {
    const l = e.target ? e.target.closest('.event') : e;
    let o; 

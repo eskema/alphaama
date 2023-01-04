@@ -171,6 +171,7 @@ function select_e(l)
 
 function select_p(k) 
 {
+   console.log('select', k);
    if (is_hex(k)) 
    {  
       if (aa.p[k]) 
@@ -305,7 +306,7 @@ function clickEvent(e)
          } 
          else if (e.target.classList.contains('edit'))
          {
-            let content = event.querySelector('.content').innerText;
+            let content = event.querySelector('.content').textContent;
             switch (event.dataset.kind) {
                case "0":
                   content = '--smd ' + content;
@@ -335,8 +336,9 @@ function clickEvent(e)
    }   
 }
 
-function count_replies(l) 
+function count_replies(o_l) 
 {
+   let l = o_l;
    for ( ; l && l !== document; l = l.parentNode ) 
    {
       if (l.classList.contains('event')) 
@@ -348,6 +350,7 @@ function count_replies(l)
             const all = l.querySelectorAll('.event').length;
             const hide_btn = l.querySelector('.actions .hide-replies');
             if (hide_btn) hide_btn.textContent =  some + (all > some ? '.' + all : '');
+            if (l !== o_l) l.classList.add('has-new');
          }
       }
 	}
@@ -459,7 +462,7 @@ function update_fren(dat, k)
    {
 //      if (dat.nip05 && location.protocol === 'https:') verifyNIP05(fren, dat, k);
             
-      if (dat.picture && fren.classList.contains('known')) 
+      if (dat.picture && fren.classList.contains('trusted')) 
       {
          let picture = fren.querySelector('.picture');
          

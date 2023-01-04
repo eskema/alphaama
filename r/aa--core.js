@@ -109,6 +109,15 @@ function process(o)
    {
       seen[o.id] = o;
       if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
+      
+      switch (o.kind) 
+      {
+         case 0: kind0(seen[o.id]); break;
+         case 3: kind3(seen[o.id]); break;
+         case 2: 
+         case 7: 
+         case 1: kind1(seen[o.id]); break;
+      }
    }
    else // if (seen[o.id] && o.seen && o.seen.length)
    {
@@ -116,15 +125,7 @@ function process(o)
 //      if (!seen[o.id].seen.includes(o.seen[0])) seen[o.id].seen.push(o.seen[0])
 //      seen[o.id].seen = 
       seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))]
-   }
-   
-   switch (o.kind) 
-   {
-      case 0: kind0(seen[o.id]); break;
-      case 3: kind3(seen[o.id]); break;
-      case 2: 
-      case 7: 
-      case 1: kind1(seen[o.id]); break;
+
    }
 }
 
@@ -379,13 +380,36 @@ function funk(e)
    console.log(e.target);
 }
 
+
+
+//let last_known_scroll_position = 0;
+//let ticking = false;
+//
+//function aa_scroll(e) 
+//{
+//   last_known_scroll_position = window.scrollY;
+//   
+//   if (!ticking) 
+//   {
+//      window.requestAnimationFrame(()=> 
+//      {
+//         handle_scroll(last_known_scroll_position, page);
+//         ticking = false;
+//      });
+//   
+//      ticking = true;
+//   }
+//}
+//
+//window.addEventListener('scroll', scroll);
+
 window.addEventListener('load', (event)=> 
 {  
    clean_up(); 
    
    document.getElementById('a').addEventListener('click', funk);
    
-   knd1.addEventListener('click', clickEvent);
+   knd1.addEventListener('click', clickEvent, false);
    
    iot.addEventListener('blur', less);
    iot.addEventListener('keyup', is);

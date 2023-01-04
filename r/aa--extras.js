@@ -50,9 +50,9 @@ function player(src)
    rapper.classList.add('yo');
       
    url.classList.add('vhs'); 
-   url.innerText = src;
+   url.textContent = src;
    
-   progress.innerText = '0% played';
+   progress.textContent = '0% played';
    progress.setAttribute('min', 0);
    progress.setAttribute('max', 100);
    progress.setAttribute('value', 0);
@@ -83,7 +83,7 @@ function rap(video)
       
       progress.value = percentage;
       progress.style.width = percentage + '%';
-      progress.innerText = percentage + '%';
+      progress.textContent = percentage + '%';
       
    });
    
