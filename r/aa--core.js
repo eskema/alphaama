@@ -105,10 +105,16 @@ async function pre_process([type, dis, dat])
 
 function process(o) 
 {
-   if (!seen[o.id])
+   let draft, l = document.getElementById('#e-'+o.id);
+   if (l && l.classList.contains('draft')) draft = true;
+   
+   if (!seen[o.id] || draft)
    {
-      seen[o.id] = o;
-      if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
+      if (!seen[o.id])
+      {
+         seen[o.id] = o;
+         if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
+      } 
       
       switch (o.kind) 
       {
@@ -119,14 +125,9 @@ function process(o)
          case 1: kind1(seen[o.id]); break;
       }
    }
-   else // if (seen[o.id] && o.seen && o.seen.length)
-   {
-//      if (!seen[o.id].seen) seen[o.id].seen = [];
-//      if (!seen[o.id].seen.includes(o.seen[0])) seen[o.id].seen.push(o.seen[0])
-//      seen[o.id].seen = 
-      seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))]
-
-   }
+   else if (!seen[o.id]) seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))];
+   
+   
 }
 
 //else if (!relays) relays = options.r;
