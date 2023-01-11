@@ -1,4 +1,3 @@
-const missing = {}; 
 
 //const in_view = new window.IntersectionObserver(([entry]) => 
 //{
@@ -80,42 +79,35 @@ function newid(o)
    const h_id = tag_link(['e',o.id], '');
    h_id.classList.add('id');
    h.append(h_id)
-   
    l.append(h);
-      
+   
+   if (o.pubkey) 
+   {
       l.dataset.p = o.pubkey;
-      
       let trusts = trust(o.pubkey);
       l.dataset.who = trusts[0];
       if (trusts[1]) l.classList.add('trusted');
       const h_author = tag_link(['p', o.pubkey]);
       h_author.classList.add('author');
       h.prepend(h_author);
-   
-//   if (o.id && o.id !== false && o.pubkey && o.pubkey !== false) {
       stylek(o.pubkey, l);
-//   }
+   }
    
-//   if (o.created_at && o.created_at !== false) 
-//   {
+   if (o.created_at) 
+   {
       l.dataset.stamp = o.created_at;
       let created_at = make_time(o.created_at);
       l.append(created_at);
-      update_time(created_at);
-//   }
-//   if (o.kind === 0 || o.kind && o.kind !== false) 
-//   {
-      l.setAttribute('data-kind', o.kind);
-//   }
-   
-//   if (o.content && o.content !== false) {
-      const content = document.createElement('article');
-      content.classList.add('content');
-      const p = document.createElement('p');
-      p.textContent = merely_mentions(o.content,o.tags);
-      content.append(p);
-      l.append(content);
-//   }
+   }
+
+   l.setAttribute('data-kind', o.kind);
+
+   const content = document.createElement('article');
+   content.classList.add('content');
+   const p = document.createElement('p');
+   p.textContent = merely_mentions(o.content,o.tags);
+   content.append(p);
+   l.append(content);
       
    let replies = document.createElement('ul');
    replies.classList.add('replies');
@@ -163,37 +155,151 @@ function build_relays(rels, l)
    }
 }
 
-function raw_event(o) 
+function raw_event(event_data) 
 {
-   const dl = document.createElement('dl');
-   dl.classList.add('raw');
-   Object.entries(o).forEach(([key, value]) =>
+   const o = event_data.o;
+   if (o) 
    {
-      const dt = document.createElement('dt');
-      dt.classList.add('raw-' + key);
-      dt.textContent = key;
+      o.seen = event_data.seen;
       
-      let v = value;
-      if (key === 'tags' || key === 'seen') 
+      const dl = document.createElement('dl');
+      dl.classList.add('raw');
+      Object.entries(o).forEach(([key, value]) =>
       {
-         v = document.createElement('ul');
-         value.forEach((val)=>
+         const dt = document.createElement('dt');
+         dt.classList.add('raw-' + key);
+         dt.textContent = key;
+         
+         let v = value;
+         if (key === 'tags' || key === 'seen') 
          {
-            const li = document.createElement('li');
-            if (typeof val === 'object' && val.length) val = val.join(', ');
-            li.textContent = val;
-            v.append(li);
-         });         
-      }
+            v = document.createElement('ul');
+            value.forEach((val)=>
+            {
+               const li = document.createElement('li');
+               if (typeof val === 'object' && val.length) val = val.join(', ');
+               li.textContent = val;
+               v.append(li);
+            });         
+         }
+         
+         const dd = document.createElement('dd');
+         dd.classList.add('raw-' + key);
+         dd.append(v); 
+         dl.append(dt,dd);
+         
+      });
       
-      const dd = document.createElement('dd');
-      dd.classList.add('raw-' + key);
-      dd.append(v); 
-      dl.append(dt,dd);
-      
-   });
+      return dl;
+   }
+}
+
+function m_l(tagName, o = false)
+{
+   const l = document.createElement(tagName);
+   if (o) 
+   {
+      if (o.id)  l.id = o.id;
+      if (o.cla) l.classList.add(o.cla);
+      if (o.lab) l.dataset.label = o.lab;
+      if (o.ref) l.href = o.ref;
+      if (o.src) l.src = o.src;
+      if (o.tit) l.title = o.tit;
+      if (o.con) l.textContent = o.con;  
+   }
+   return l
+}
+
+
+
+
+//function defolt(o) 
+//{   
+//   const l = make_l('article', {id: o.id, cl:'e'});
+//   l.setAttribute('data-kind', o.kind);
+//   l.dataset.stamp = o.created_at;
+//   stylek([o.pubkey, o.id], l);
+//   
+//   const id = document.createElement('h1');
+//   id.append(taglink(['e',o.id], ''));
+//   
+//   const by = make_l('p', {cl:'by'});
+//   const created_at = make_time(o.created_at);
+//   by.append(taglink(['p', o.pubkey], ''), created_at);
+//   
+//   l.append(id, by, make_l('a', {cl:'s', href: '#s-'+o.id , title:'view-source',content: ''+o.kind}), make_l('section', {cl:'content', content: o.content}));
+//   
+//   if (o.tags) 
+//   {
+//      const tags = make_l('ol', {cl:'tags'});
+//      tags.start = 0;
+//      o.tags.forEach((tag)=>{ tags.append(make_l('li', {cl:'tag', content:taglink(tag,'')})) });
+//      l.append(tags);
+//   }
+//   
+//   l.append(make_actions(), make_l('section', {cl:'replies'}));
+//   
+//   update_time(created_at);
+//   created_at.addEventListener('click', function(event) {update_time(created_at)}, false);
+//   return l
+//}
+
+function inb4(container, timestamp)
+{
+   let b = [...container.children].filter((rep)=> timestamp > parseInt(rep.dataset.stamp))[0];
+   return b ? b : null
+}
+
+
+
+function e_e(o) 
+{
+   const opt = 
+   {
+      id: o.id,
+      cla: o.pubkey
+   }
+   const event = m_l('article', opt);
+   event.classList.add('e_e');
+   event.dataset.kind = o.kind;
+   event.dataset.stamp = o.created_at;
+//   event.dataset.sig = o.sig;
    
-   return dl;
+   const by = m_l('p', {cla: 'by'})
+   const created_at = make_time(o.created_at);
+   by.append(tag_link(['p', o.pubkey], ''), created_at);
+   
+   
+//   event.append(by, m_l('section', {con: o.content }));
+   event.append(by);
+   
+//   if (o.tags.length)
+//   {
+//      const tags = m_l('ol', {})
+//      tags.start = 0;
+//      o.tags.map((tag)=>
+//      { tags.append(m_l('li', {con: tag.join(', ')})) });
+//      event.append(tags)
+//   }
+   
+   return event
+}
+
+function anal_z(o) 
+{
+   
+}
+
+function defolt(o) 
+{
+   let l = document.getElementById(o.id);
+   if (!l) 
+   {
+      l = e_e(o);
+      const container = document.getElementById('e');
+      container.insertBefore(l, inb4(container, o.created_at))  
+   }
+   
 }
 
 function kind0(o) 
@@ -385,4 +491,47 @@ function kind3(o)
       }
    }   
    
+}
+
+function db_new_id(id, e = false) 
+{
+   db[id] = 
+   {
+      seen: [],
+      reply_ids: [],
+      react_ids: [],
+      reactions: {}
+   };
+   if (e) 
+   {
+      if (e.data) db[id].o = e.data[2];
+      if (e.origin && !db[id].seen.includes(e.origin)) db[id].seen.push(e.origin);
+   }
+}
+
+function kind7(o) 
+{
+   const reply_tag = get_reply(o.tags);
+   if (reply_tag) 
+   {
+      let reply_id = reply_tag[1];
+      
+      if (!db[reply_id])
+      {
+         db_new_id(reply_id);
+      } 
+      
+      if (!db[reply_id].react_ids.includes(reply_id))
+      {
+        db[reply_id].react_ids.push(o.id);
+        
+        if (db[reply_id].reactions[o.content]) db[reply_id].reactions[o.content].push(o.pubkey)
+        else db[reply_id].reactions[o.content] = [o.pubkey]
+      } 
+      
+      if (!document.getElementById(o.id)) 
+      {
+         document.getElementById('e').insertBefore(e_e(o), inb4(document.getElementById('e'), o.created_at)) 
+      }
+   }
 }

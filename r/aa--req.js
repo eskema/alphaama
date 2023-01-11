@@ -1,36 +1,3 @@
-//function to_get(events) 
-//{     
-//   if (events.p)
-//   {
-//      pubkeys.push(...events.p);
-//      pubkeys = [...new Set(pubkeys.filter(k=>is_hex(k)))];
-//      let p_to_get = [];
-//      pubkeys.forEach((p)=> 
-//      {
-//         if (!attempts[p]) attempts[p] = 0;
-//         attempts[p]++;
-//         
-//         if (attempts[p] < 22 && !aa.p[p]) p_to_get.push(p)
-//      });
-//      pubkeys = JSON.stringify(p_to_get);
-//   } 
-//   
-//   if (events.e) {
-//      let ids = get_ids.concat(events.e);
-//      let unique_ids = [...new Set(ids.filter(k=>is_hex(k)))];
-//      let e_to_get = [];
-//      unique_ids.forEach((id)=> 
-//      {
-//         let attempts = parseInt(sessionStorage[id] ? sessionStorage[id] : '0');
-//         attempts++;
-//         sessionStorage[id] = attempts;
-//         
-//         if (attempts < 22 && !document.getElementById('e-'+id)) e_to_get.push(id)
-//      });
-//      localStorage.get_ids = JSON.stringify(e_to_get);
-//   }
-//}
-
 function fetch_missing(relay_url) 
 {  
    let events = { e: [], p: [] }     
@@ -45,12 +12,12 @@ function fetch_missing(relay_url)
          {
             not_seen.push(relay_url);
             l.dataset.not_seen = JSON.stringify(not_seen);
-            const o = seen[l.id.substr(2)];
+            const o = db[l.id.substr(2)].o;
 
             let t = get_tags(o.tags);
             if (t.p) t.p.forEach((p)=>{if (!aa.p[p]) events.p.push(p)});
             if (!aa.p[o.pubkey]) events.p.push(o.pubkey);
-            if (t.e) t.e.forEach((e)=>{if (!seen[e]) events.e.push(e)});
+            if (t.e) t.e.forEach((e)=>{if (!db[e] || !db[e].o) events.e.push(e)});
          }
       }
    });
@@ -72,73 +39,18 @@ function fetch_missing(relay_url)
    if (req.length > 2)
    {
       const 
-         last_req = reqs[relay_url][req[1]], 
+         last_req = relays[relay_url].get, 
          s_req = JSON.stringify(req);
       
-      if (!last_req
-      || (last_req[1] && last_req[0] !== s_req)
-      ) 
+      if (!last_req || last_req !== s_req)
       {
-         document.getElementById('a').textContent = 'REQ aa-get ' + events.e.length + 'e & ' + events.p.length + 'p from ' + relay_url;
-         console.log('fetching ' + events.e.length + 'e & ' + events.p.length + 'p from ' + relay_url);
-         reqs[relay_url][req[1]] = [s_req];
-         re.postMessage(['req', [req, relay_url]]);
+         relays[relay_url].get = s_req;
+//         r_mess(['req', [req, relay_url]]);
+         demand([req, relay_url]);
       }
    }
    else document.getElementById('a').textContent = 'whatever the fuck you want';
 }
-
-//function fetch_some() 
-//{
-//   const 
-//      events = { e: [], p: [] }, 
-//      orphans = document.querySelectorAll('[data-reply]');      
-//   
-//   Array.from(orphans).forEach((l)=>
-//   {
-//      let reply = document.getElementById('e-'+l.dataset.reply);
-//      if (reply)
-//      {
-//         lies(reply,l);
-//      }
-//      else {
-//         let attempts = parseInt(l.dataset.fetched ? l.dataset.fetched : '0');
-//         if (attempts < 22) 
-//         {
-//            attempts++;
-//            l.dataset.fetched = attempts;
-//            
-//            let root = get_root(JSON.parse(l.dataset.o).tags);
-//            if (root 
-//            && !document.getElementById('e-'+root[1])
-//            && !hose[root[1]]) events.e.push(root[1]);
-//            
-//            let reply = get_reply(JSON.parse(l.dataset.o).tags);
-//            if (reply 
-//            && !document.getElementById('e-'+reply[1])
-//            && !hose[reply[1]]) events.e.push(reply[1]);
-//            
-//            let t = get_tags(JSON.parse(l.dataset.o).tags);
-//            if (t.p) 
-//            {
-//               t.p.forEach((p)=>{if (is_hex(p) && !localStorage[p]) events.p.push(p)})
-//            }
-//         }
-//      }
-//   });
-//   
-//   if (events.e) 
-//   {
-//      events.e = [...new Set(events.e)];
-//      
-//      if (events.p) 
-//      {
-//         events.p = [...new Set(events.p)];
-//      } 
-//   } 
-//  
-//   to_get(events);
-//}
 
 function load_new() 
 {
@@ -154,73 +66,6 @@ function chunkn(ar,is)
     }
     return res;
 } 
-
-//function hoes(e) 
-//{
-//   const oes = Object.values(hose);
-//   oes.forEach((ho)=> { process(ho) });
-//   if (oes.length) document.getElementById('a').dataset.mess = oes.length;
-//   else delete document.getElementById('a').dataset.mess
-//}
-
-//function get_em() 
-//{
-//   load_new();
-//   const hoe = Object.values(hose);
-//   if (hoe.length) 
-//   {
-//      document.getElementById('a').dataset.status = 'fetching... ' + hoe.length;
-//      
-//      hoe.forEach((ho)=>
-//      {
-//         process(ho)
-//         .then(()=>{delete hose[ho.id];})
-//      });   
-//   } 
-//   else 
-//   {
-//      delete document.getElementById('a').dataset.status;
-//      let req = ["REQ", "aa-get"];
-//      
-//      if (pubkeys.length) 
-//      {
-//         let pubs = chunkn(pubkeys, 444);
-//         pubs.forEach((chunk)=>{req.push({'kinds': [0], 'authors':chunk}) });
-//         localStorage.get_pubkeys = '[]';
-//      }
-//   
-//      if (ids.length) 
-//      {
-//         let idds = chunkn(ids, 444);
-//         idds.forEach((chunk)=>{req.push({'ids':chunk}) });
-//         localStorage.get_ids = '[]';
-//      }
-//      
-//      if (ids.length || pubkeys.length) 
-//      {
-//         req = JSON.stringify(req);
-//         let last_req = sessionStorage.req_get;
-//         if (req !== last_req) 
-//         {
-//            sessionStorage.req_get = req;
-//            console.log('fetching ' + ids.length + ' ids & ' + pubkeys.length + ' authors');
-//            Object.entries(relays).forEach(([url, can]) => 
-//            {
-//               if (can.read && can.ws && can.ws.readyState === 1) can.ws.send(req);
-//            });
-//         }
-//      }
-//      else 
-//      {
-//         if (messages.length) 
-//         {
-//            messages.forEach(process_message)
-//            messages.splice(0,messages.length)
-//         } 
-//         else fetch_some(); 
-//      }
-//   }   
-//}
 
 function sub_root(id)
 {

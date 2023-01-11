@@ -43,28 +43,7 @@ function pretty(k)
    return bff && bff.name ? bff.name : hex_trun(k)
 }
 
-function timeSince(date) 
-{
-   let 
-     seconds = Math.floor((new Date() - date) / 1000),
-     interval = seconds / 31536000;
-   
-   if (interval > 1) return Math.floor(interval) + "Y";
-   
-   interval = seconds / 2592000;
-   if (interval > 1) return Math.floor(interval) + "M";
-   
-   interval = seconds / 86400;
-   if (interval > 1) return Math.floor(interval) + "d";
-   
-   interval = seconds / 3600;
-   if (interval > 1) return Math.floor(interval) + "h";
-   
-   interval = seconds / 60;
-   if (interval > 1) return Math.floor(interval) + "m";
-   
-   return Math.floor(seconds) + "s";
-}
+
 
 function x_0(x) 
 {
@@ -77,13 +56,41 @@ function stylek(k, l)
    if (is_hex(k)) l.style.cssText = '--c:' + rgb(x_0(k)) + ';';
 }
 
+function time_since(date) 
+{
+   const seconds = Math.floor((new Date() - date) / 1000);
+   let interval = seconds / 31536000;
+   if (interval > 1) return Math.floor(interval) + "Y";
+   interval = seconds / 2592000;
+   if (interval > 1) return Math.floor(interval) + "M";   
+   interval = seconds / 86400;
+   if (interval > 1) return Math.floor(interval) + "d";
+   interval = seconds / 3600;
+   if (interval > 1) return Math.floor(interval) + "h";
+   interval = seconds / 60;
+   if (interval > 1) return Math.floor(interval) + "m";
+   return Math.floor(seconds) + "s";
+}
+
 function make_time(timestamp) 
 {
    const l = document.createElement('time');   
    l.classList.add('created-at');
    l.dataset.timestamp = timestamp;
    
+   l.addEventListener('click', (e)=> {update_time(l)});
+   update_time(l);
    return l
+}
+
+function format_date(d)
+{
+   return (d.getHours()+'').padStart(2,'0') 
+   +':'+ (d.getMinutes()+'').padStart(2,'0') 
+   +':'+ (d.getSeconds()+'').padStart(2,'0')
+   +' '+ (d.getDay()+'').padStart(2,'0') 
+   +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
+   +'/'+ d.getFullYear()
 }
 
 function update_time(l)
@@ -91,9 +98,9 @@ function update_time(l)
    const ts = l.dataset.timestamp;
    const d = new Date(ts*1000);
    l.setAttribute('datetime', d.toISOString());
-   l.title = d.toUTCString();
-   l.textContent = timeSince(d);
-   l.parentElement.dataset.stamp = ts;
+   l.title = format_date(d); //d.toUTCString()
+   l.textContent = time_since(d);
+//   l.closest('.e_e').dataset.stamp = ts;
 }
 
 function ordered(room, direction) 
@@ -141,10 +148,10 @@ function ur(string)
    return string.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 }
 
-function hash(a) 
-{
-   return bitcoinjs.crypto.sha256(JSON.stringify(a)).toString('hex')
-}
+//function hash(a) 
+//{
+//   return bitcoinjs.crypto.sha256(JSON.stringify(a)).toString('hex')
+//}
 
 function ofa(a) 
 {//object from array
@@ -334,7 +341,7 @@ function try_url(url)
 {
    let ur_l;
    try { ur_l = new URL(url) } 
-   catch (error) { console.log('invalid url') };
+   catch (error) { console.log('invalid url', url) };
 //   console.log(ur_l);
    if (ur_l 
    && (ur_l.protocol === 'http:' || ur_l.protocol === 'https:')) return ur_l;
@@ -439,7 +446,7 @@ function ai(o)
       matches = {},
       matchy_mentions = [...ocd.matchAll(/\B#\[(\d+)\]\B/g)],
 //      matchy_links = [...ocd.matchAll(/\b(https?:\/\/\S*\b)/g)];
-      matchy_links = [...ocd.matchAll(/(\b(https?|ftp):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim)];
+      matchy_links = [...ocd.matchAll(/(\b(https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@$#\/%=~_|]*)/gim)];
 
       
 
@@ -484,7 +491,7 @@ async function parse_content(e)
 {
    const l = e.target ? e.target.closest('.event') : e;
    let o; 
-   try { o = seen[l.id.substr(2)] } 
+   try { o = db[l.id.substr(2)].o } 
    catch (error) { console.log('no data found') } 
    
    if (o && l) 
@@ -546,4 +553,20 @@ function make_actions()
    load_media.addEventListener('click', parse_content);
    
    return actions_fragment
+}
+
+function m_l(tag_name, o = false)
+{
+   const l = document.createElement(tag_name);
+   if (o) 
+   {
+      if (o.id)  l.id = o.id;
+      if (o.cla) l.classList.add(o.cla);
+      if (o.lab) l.dataset.label = o.lab;
+      if (o.ref) l.href = o.ref;
+      if (o.src) l.src = o.src;
+      if (o.tit) l.title = o.tit;
+      if (o.con) l.textContent = o.con;  
+   }
+   return l
 }

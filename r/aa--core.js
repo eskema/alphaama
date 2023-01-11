@@ -1,4 +1,4 @@
-let aa;
+let aa, db = {};
 try { aa = JSON.parse(localStorage.aa) } 
 catch (error) 
 { 
@@ -9,128 +9,136 @@ catch (error)
       bff:[],
       ff:[],
       k0:[],
-      k3:[],
-      rekt:{}
-   };
-};
+      k3:[]
+   }
+}
 
-const hose = {}, reqs = {}, seen = {};
-let options, relays, defaults = 
+//const hose = {}, reqs = {}, seen = {};
+let options, defaults = 
 {
    'days': 1, // feed limit
    'media': false, //autoload media files
-   'r': { // bootstrap relays if no others found
-          "wss://nostr-pub.wellorder.net":{"read":true,"write":true},
-          "wss://nostr-relay.wlvs.space":{"read":true,"write":true},
-          "wss://relay.damus.io":{"read":true,"write":true} }
+   'r':  {  // bootstrap relays if no others found
+            // the relays listed here are public instances 
+            // maintained by the creators of the respective implementations
+            
+            // https://sr.ht/~gheartsfield/nostr-rs-relay/
+            "wss://nostr-pub.wellorder.net":{"read":true,"write":true},
+            // https://github.com/Cameri/nostream
+            "wss://nostr-relay.wlvs.space":{"read":true,"write":true},
+            // https://github.com/atdixon/me.untethr.nostr-relay
+            "wss://nostr-relay.untethr.me":{"read":true,"write":true}
+         }
 };
 
-const re = new Worker('r/aa_relays_ww.js');
-re.onmessage=e=>{ pre_process(e.data) };
+//const re = new Worker('r/aa_relays_ww.js');
+//re.onmessage=e=>{ pre_process(e.data) };
+//
+//r_mess();
+
 async function fetch_relays() 
 {
    return new Promise(resolve=>
    {
       if (window.nostr) 
       { 
-         resolve(window.nostr.getRelays()) 
+         window.nostr.getRelays().then((r)=>
+         {
+            if (!Object.keys(r).length) r = options.r;
+            resolve(r)
+         });
       } 
       else resolve(options.r)
    });
 }
 
-function aa_open(dis, reconnect = false) 
-{
-   const req = ['REQ', 'aa-open'];
-   const subs = [aa.k, ...aa.bff];
-   const day_since = x_days(options.days);
-   const wen = reconnect && aa.t ? aa.t > day_since ? aa.t : day_since : day_since;
-   // profiles and contacts from your you and your follows
-   let filter = {authors: subs, kinds:[0,3]};
+//function aa_open(dis, reconnect = false) 
+//{
+//   const req = ['REQ', 'aa-open'];
+//   const subs = [aa.k, ...aa.bff];
+//   const day_since = x_days(options.days);
+//   const wen = reconnect && aa.t ? aa.t > day_since ? aa.t : day_since : day_since;
+//   // profiles and contacts from your you and your follows
+//   let filter = {authors: subs, kinds:[0,3]};
 //   if (aa.k3.length) filter.since = wen;
-   req.push(filter);
-   // notes and reactions from your you and your follows
-   filter = {authors: subs, kinds:[1,7], since: wen};
-   req.push(filter);
-   // replies to your posts
-   filter = {'#p': [aa.k], kinds:[1,7], since: wen};
-   req.push(filter);
-   reqs[dis]['aa-open'] = [JSON.stringify(req)];
-   re.postMessage(['req', [req, dis]]);
-   
-   console.log(dis, req);
-   document.getElementById('a').textContent = 'REQ aa-open ' + dis;
-}
-
-async function pre_process([type, dis, dat]) 
-{   
-   switch (type) 
-   {
-      case 'OPEN':
+//   req.push(filter);
+//   // notes and reactions from your you and your follows
+//   filter = {authors: subs, kinds:[1,7], since: wen};
+//   req.push(filter);
+//   // replies to your posts
+//   filter = {'#p': [aa.k], kinds:[1,7], since: wen};
+//   req.push(filter);
+//   reqs[dis]['aa-open'] = [JSON.stringify(req)];
+//   r_mess(['req', [req, dis]]);
+//   
+//   console.log(dis, req);
+//   document.getElementById('a').textContent = 'REQ aa-open ' + dis;
+//}
+//
+//async function pre_process([type, dis, dat]) 
+//{   
+//   switch (type) 
+//   {
+//      case 'OPEN':
 //         ['OPEN',e.target.url,e.target.readyState]
-         if (dat === 1) 
-         {
-            if (!reqs[dis]) reqs[dis] = {};
-            if (reqs[dis]['aa-open']) aa_open(dis, true)
-            else aa_open(dis);
-         }
-         break
-      case 'EOSE': 
-         // ['EOSE', origin, [dis,sorted]]
-         console.log(type, dis, dat[1].length);
-         document.getElementById('a').textContent = type + ' ' + dat[0] + ' ' + dis + ' ' + dat[1].length;
-         reqs[dis + '/'][dat[0]].push('eose ' + dat[1].length);
-         dat[1].map((o)=>{ process(o) }); 
+//         if (dat === 1) 
+//         {
+//            if (!reqs[dis]) reqs[dis] = {};
+//            if (reqs[dis]['aa-open']) aa_open(dis, true)
+//            else aa_open(dis);
+//         }
+//         break
+//      case 'EOSE': 
+//         // ['EOSE', origin, [dis,sorted]]
+//         console.log(type, dat[0] +' '+ dis, dat[1].length);
+//         document.getElementById('a').textContent = type + ' ' + dat[0] + ' ' + dis + ' ' + dat[1].length;
+//         reqs[dis + '/'][dat[0]].push('eose ' + dat[1].length);
+//         dat[1].map((o)=>{ process(o) }); 
+//         if (dat[0] === 'aa-open') fetch_missing(dis+"/");
+//         else {
+//            document.getElementById('a').textContent = '';
+//         }
+//         break;
+//      case 'EVENT': 
+//         process(dat[1]); 
 //         setTimeout(()=>{
-         if (dat[0] === 'aa-open') fetch_missing(dis+"/");
-         else {
-            document.getElementById('a').textContent = '';
-         }
+//         fetch_missing(dis+"/")
 //         }, 1000);
-         break;
-      case 'EVENT': 
-         process(dat[1]); 
-//         setTimeout(()=>{
-         fetch_missing(dis+"/")
-//         }, 1000);
-         break;
-      case 'OK':
-      case 'STATE':
-      case 'NOTICE':
-         console.log(type, dis, dat);
-         document.getElementById('a').textContent = type + ' ' + dis + ' ' + dat;
-         break;  
-   }
-}
-
-function process(o) 
-{
-   let draft, l = document.getElementById('e-'+o.id);
-   if (l && l.classList.contains('draft')) draft = true;
-   
-   if (!seen[o.id] || draft)
-   {
-      if (!seen[o.id])
-      {
-         seen[o.id] = o;
-         if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
-      } 
-      
-      switch (o.kind) 
-      {
-         case 0: kind0(seen[o.id]); break;
-         case 3: kind3(seen[o.id]); break;
-         case 2: 
-         case 7: 
-         case 1: kind1(seen[o.id]); break;
-      }
-   }
-   else if (!seen[o.id]) seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))];
-   
-   
-}
-
-//else if (!relays) relays = options.r;
+//         break;
+//      case 'OK':
+//      case 'STATE':
+//      case 'NOTICE':
+//         console.log(type, dis, dat);
+//         document.getElementById('a').textContent = type + ' ' + dis + ' ' + dat;
+//         break;  
+//   }
+//}
+//
+//function process(o) 
+//{
+//   if (!seen[o.id])
+//   {
+//      let e_o;
+//      if (!o.draft)
+//      {
+//         e_o = seen[o.id] = o;
+//         if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
+//      }
+//      else e_o = o;
+//      
+//      switch (o.kind) 
+//      {
+//         case 0: kind0(e_o); break;
+//         case 3: kind3(e_o); break;
+//         case 2: 
+//         case 7: 
+//         case 1: 
+//            defolt(e_o); break; 
+//             kind1(e_o); break; 
+//      }
+//   }
+//   else seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))];
+//}
 
 function bbbb()
 {// boom biddy bye bye
@@ -166,6 +174,32 @@ function hashchange(e)
    }     
 }
 
+function new_mention(dis) 
+{
+   // wip, right now it just autocompletes when you click it
+   document.getElementById('helper').textContent = '';
+   let maybe = Object.entries(aa.p)
+   .filter(([k,dat])=> dat.name && dat.name.startsWith(dis)
+   || k.startsWith(dis));
+   if (maybe.length) 
+   {
+      maybe.map(([k,dat])=>
+      {
+         let content = dat.name + ' ' + dat.nip05 + ' ' + hex_trun(k);
+         l = m_l('p',{cla:'helper',con:content})
+         document.getElementById('helper').append(l);
+         l.addEventListener('click', ()=> 
+         {
+            document.getElementById('helper').textContent = '';
+            iot.value = iot.value.substr(0,iot.value.length - dis.length);
+            iot.value += dat.name + ' ';
+            iot.setSelectionRange(iot.value.length,iot.value.length);
+            iot.focus();
+         })
+      });
+   }
+}
+
 function less(e) 
 {
    document.body.classList.remove('mode-input');
@@ -184,7 +218,7 @@ function is(e)
    }
    
    const 
-      n = document.createTextNode(e.target.value.trim()),
+      n = document.createTextNode(e.target.value.trimStart()),
       v = n.wholeText,
       a = v.split(' ');
    
@@ -194,9 +228,13 @@ function is(e)
    
    e.target.parentElement.dataset.content = v;
    
-//   if (a[a.length - 1].startsWith('@')) {
-//      mention(a[a.length - 1].substr(1));
-//   }
+   // wip mentions
+   let l_word = a[a.length - 1].toLowerCase();
+   if (l_word.startsWith('@') && l_word.length > 1 && !l_word.endsWith(' ')) 
+   {
+      new_mention(l_word.substr(1));
+   }
+   else document.getElementById('helper').textContent = '';   
  
    if (enter) {
       
@@ -276,8 +314,6 @@ function is(e)
                if (smd.startsWith('{') && smd.endsWith('}')) 
                {
                   set_metadata(JSON.parse(smd))
-   //               smd = JSON.parse(smd);
-   //               console.log(smd);
                } else {
                   console.log(smd)
                }
@@ -289,7 +325,6 @@ function is(e)
                let unread = document.querySelectorAll('.unread');
                if (unread.length > 0) unread.forEach(toggle_state);
                break;
-            
             default: 
                prep(v)
          }
@@ -366,12 +401,10 @@ function start(k) {
          }
       }
       
-      fetch_relays().then((rels)=> 
+      fetch_relays().then((ships)=> // ahoy pirates unite
       {
-//         console.log('relays from ' + rels)
-         if (!Object.keys(rels).length) rels = options.r;
-//         relays = [...Object.entries(rels).filter(([url, can])=>can.read || can.write).map(([url,can])=>url)];
-         re.postMessage(['rel', rels]);      
+         if (!Object.keys(ships).length) ships = options.r;
+         add_relaytion(ships) 
       });
    }     
 }
@@ -420,10 +453,5 @@ window.addEventListener('load', (event)=>
    document.addEventListener('keyup', hotkeys);
    
    let a = document.getElementById('a');
-//   a.addEventListener('click', ()=>{ if (a.dataset.mess) { hoes() } });
-   
-//   start();
-//   setInterval(get_em, 1000);
-//   document.body.scrollIntoView(stuff);
    
 }, false);

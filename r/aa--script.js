@@ -301,6 +301,7 @@ function clickEvent(e)
          else if (e.target.classList.contains('cancel'))
          {
             let par = event.parentElement;
+            if (event.classList.contains('interesting')) not_interesting(event);
             event.remove();
             if (!par.childNodes.length) par.closest('.event').classList.remove('has-replies');
          } 
@@ -409,9 +410,9 @@ function view_source(l)
    let source = child_from_class(event, 'source');
    if (!source)
    {
-      const o = seen[event.id.substr(2)];
+//      const o = db[event.id.substr(2)].o;
 //      o.seen = JSON.parse(event.dataset.seen);
-      source = raw_event(o);
+      source = raw_event(db[event.id.substr(2)]);
       source.classList.add('source');
       event.append(source);
    }

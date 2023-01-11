@@ -4,7 +4,7 @@
    <meta charset="UTF-8"><title>alphaama</title>
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <meta name="theme-color" content="#171717">
-   <link rel="stylesheet" href="r/aa--styleshit.css?v=28" />
+   <link rel="stylesheet" href="r/aa--styleshit.css?v=29" />
    <link rel="apple-touch-icon" sizes="180x180" href="r/apple-touch-icon.png">
    <link rel="icon" type="image/png" sizes="32x32" href="r/favicon-32x32.png">
    <link rel="icon" type="image/png" sizes="16x16" href="r/favicon-16x16.png">
@@ -37,6 +37,8 @@
    
    <ul id="kind-0"></ul>
    <ul id="kind-1"></ul>
+   <ul id="p"></ul>
+   <ul id="e"></ul>
    
 </main>
 
@@ -69,29 +71,40 @@
       <li><em>--u pubkey</em> : unfollow pubkey</li>
       <li><em>--media</em> : toggle autoloading media files</li>
       <li><em>--bbbb</em> : boom biddy bye bye</li>
-      <li><em>--hotkeys</em> : wen event selected, press:
-      <br/>`k` next
-      <br/>`i` previous
-      <br/>`j` parent
-      <br/>`l` child
-      <br/>`h` top
-      <br/>`b` bottom
-      <br/>`f` fetch
-      <br/>`\` toggle replies
-      <br/>`esc`: ape</li>
+   </ul>
+   <p>hotkeys, wen event selected, press:</p>
+   <ul>
+      <li><em>`k`</em> next </li>
+      <li><em>`i`</em> previous </li>
+      <li><em>`j`</em> parent </li>
+      <li><em>`l`</em> child </li>
+      <li><em>`h`</em> top </li>
+      <li><em>`b`</em> bottom </li>
+      <li><em>`f`</em> fetch </li>
+      <li><em>`\`</em> toggle replies </li>
+      <li><em>`esc`</em> ape</li>
    </ul>
    
 </footer>
 
 </div>
 <!-- https://bitcoincore.tech/apps/bitcoinjs-ui/lib/bitcoinjs-lib.js -->
-<script src="r/bitcoinjs-lib.js"></script>
- <script src="r/aa--utils.js?v=125"></script>
- <script src="r/aa--kinds.js?v=125"></script>
-  <script src="r/aa--post.js?v=125"></script>
-   <script src="r/aa--req.js?v=125"></script>
-<script src="r/aa--script.js?v=125"></script>
-<script src="r/aa--extras.js?v=125"></script>
-  <script src="r/aa--core.js?v=125"></script>
+<!--<script src="r/bitcoinjs-lib.js"></script>-->
+<!--https://bundle.run/noble-secp256k1@1.2.14-->
+<script src="d/bundle_noble-secp256k1_1.2.14.js"></script>
+<!--https://bundle.run/browserify-cipher@1.0.1-->
+<script src="d/bundle_browserify-cipher_1.0.1.js"></script>
+<!--https://bundle.run/bech32@2.0.0-->
+<script src="d/bundle_bech32_2.0.0.js"></script>
+<script src="d/bundle_buffer_6.0.3.js"></script>
+ <script src="r/aa_crypto.js?v=127"></script>
+ <script src="r/aa--utils.js?v=127"></script>
+ <script src="r/aa--kinds.js?v=127"></script>
+  <script src="r/aa--post.js?v=127"></script>
+   <script src="r/aa--req.js?v=127"></script>
+<script src="r/aa--script.js?v=127"></script>
+<script src="r/aa--extras.js?v=127"></script>
+ <script src="r/aa_relays.js?v=127"></script>
+  <script src="r/aa--core.js?v=127"></script>
 
 </body></html>

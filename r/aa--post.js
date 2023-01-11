@@ -1,8 +1,9 @@
 function get_seen(id)
 {
    // gets the first relay that seen this id
-   const e = document.getElementById('e-'+id);
-   return e && e.dataset.seen ? JSON.parse(e.dataset.seen)[0] : ''
+//   const e = db[id];
+   return db[id] && db[id].seen ? db[id].seen[0] : ''
+//   return seen[id] && seen[id].seen ? seen[id].seen[0] : ''
 }
 
 //function filter_mentions(o) 
@@ -108,11 +109,13 @@ function prep(content)
    if (reply_id)
    {
       let reply = document.getElementById('e-'+reply_id);
-      if (reply && seen[reply_id]) tags = preptags(seen[reply_id]);
+      if (reply && db[reply_id] && db[reply_id].o) tags = preptags(db[reply_id].o);
    } 
    
    const hashtags = parse_hashtags(content);
    if (hashtags.length) hashtags.forEach((t)=>{ tags.push(t) });
+   
+//   if (draft.tags){}
    
    a = [ 
       0,//magic
@@ -126,7 +129,7 @@ function prep(content)
    draft(a, 1);
 }
 
-function reaction(note)
+async function reaction(note)
 {
 //   console.log(note[0], note[1], note[2])
    let 
@@ -147,20 +150,20 @@ function reaction(note)
    ];
    
    const unsigned = ofa(a);
-   unsigned.id = hash(a);
+   unsigned.id = await hash(JSON.stringify(a));
 //   console.log(unsigned)
    sign(unsigned);
    delete aa.reaction
 }
 
-function draft(a, kind) 
+async function draft(a, kind) 
 {
    const unsigned = ofa(a);
-   unsigned.id = hash(a);
+   unsigned.id = await hash(JSON.stringify(a));
    localStorage[unsigned.id] = JSON.stringify(unsigned);
    unsigned.draft = true;
    unsigned.seen = [];
-   process(unsigned);
+   kind1(unsigned);
 }
 
 function sign(unsigned) 
@@ -170,7 +173,7 @@ function sign(unsigned)
    {
       window.nostr.signEvent(unsigned).then((signed) =>
       {
-         post(signed);
+         broadcast(['EVENT', signed]); //post(signed);
          if (localStorage[unsigned.id]) localStorage.removeItem(localStorage[unsigned.id]);
       });
       
@@ -178,7 +181,7 @@ function sign(unsigned)
    else console.log('you need nos2x to sign notes', unsigned.content)
 }
 
-function follow(k) 
+async function follow(k) 
 {
    // pubkey,relay,petname;
    const parts = k.split(',');
@@ -213,14 +216,14 @@ function follow(k)
          ];
                
          const unsigned = ofa(a);
-         unsigned.id = hash(a);
+         unsigned.id = await hash(JSON.stringify(a));
          sign(unsigned);
       }
    }
    else console.log('bad key ' + parts[0]);
 }
 
-function unfollow(k) 
+async function unfollow(k) 
 {
    const 
       now = Math.floor( ( new Date().getTime() ) / 1000 ), 
@@ -240,13 +243,13 @@ function unfollow(k)
       ];
             
       const unsigned = ofa(a);
-      unsigned.id = hash(a);
+      unsigned.id = await hash(JSON.stringify(a));
       sign(unsigned); 
    }
    else console.log("you don't follow anyone :(");
 }
 
-function set_metadata(o) 
+async function set_metadata(o) 
 {
    //make array to get hashed:
    const a = [ 
@@ -260,19 +263,12 @@ function set_metadata(o)
    
 //   draft(a, 0);
    const unsigned = ofa(a);
-   unsigned.id = hash(a);
+   unsigned.id = await hash(JSON.stringify(a));
    sign(unsigned);
 }
 
 function post(signed) 
 {
-   
-   console.log('post', signed);
-   re.postMessage(['bro', ['EVENT', signed]]);
-//   Object.entries(relays).forEach(([url, can]) => 
-//   {
-//      if (can.write && can.ws && can.ws.readyState === 1) {
-//         can.ws.send(JSON.stringify(["EVENT", signed]));
-//      }
-//   });
+   broadcast(['EVENT', signed])
+//   r_mess(['bro', ['EVENT', signed]]);
 }
