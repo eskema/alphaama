@@ -7,18 +7,26 @@ function fetch_missing(relay_url)
       if (reply) lies(reply,l);
       else 
       {
-         let not_seen = l.dataset.not_seen ? JSON.parse(l.dataset.not_seen) : [];
-         if (!not_seen.includes(relay_url)) 
+         if (!relay_url) 
          {
-            not_seen.push(relay_url);
-            l.dataset.not_seen = JSON.stringify(not_seen);
-            const o = db[l.id.substr(2)].o;
-
-            let t = get_tags(o.tags);
-            if (t.p) t.p.forEach((p)=>{if (!aa.p[p]) events.p.push(p)});
-            if (!aa.p[o.pubkey]) events.p.push(o.pubkey);
-            if (t.e) t.e.forEach((e)=>{if (!db[e] || !db[e].o) events.e.push(e)});
+            delete l.dataset.not_seen
          }
+         else 
+         {
+            let not_seen = l.dataset.not_seen ? JSON.parse(l.dataset.not_seen) : [];
+            if (!not_seen.includes(relay_url)) 
+            {
+               not_seen.push(relay_url);
+               l.dataset.not_seen = JSON.stringify(not_seen);
+               const o = db[l.id.substr(2)].o;
+   
+               let t = get_tags(o.tags);
+               if (t.p) t.p.forEach((p)=>{if (!aa.p[p]) events.p.push(p)});
+               if (!aa.p[o.pubkey]) events.p.push(o.pubkey);
+               if (t.e) t.e.forEach((e)=>{if (!db[e] || !db[e].o) events.e.push(e)});
+            }
+         }
+
       }
    });
    

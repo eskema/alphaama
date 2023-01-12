@@ -147,7 +147,7 @@ function bbbb()
    sessionStorage.clear(); 
    document.getElementById('kind-0').textContent = ''; // contacts
    document.getElementById('kind-1').textContent = ''; // timeline
-   iot.placeholder = 'boom biddy bye bye'; // so you know what happened
+   io('','boom biddy bye bye'); // so you know what happened
    u.removeAttribute('style');
    u.textContent = '';
    history.pushState('', '', location.pathname);
@@ -177,27 +177,39 @@ function hashchange(e)
 function new_mention(dis) 
 {
    // wip, right now it just autocompletes when you click it
-   document.getElementById('helper').textContent = '';
-   let maybe = Object.entries(aa.p)
-   .filter(([k,dat])=> dat.name && dat.name.startsWith(dis)
-   || k.startsWith(dis));
-   if (maybe.length) 
+   const 
+      iot = document.getElementById('iot'),
+      helper = document.getElementById('helper');
+   helper.textContent = '';
+   
+   Object.entries(aa.p)
+   .filter(([k,dat])=> dat.name && dat.name.startsWith(dis) || k.startsWith(dis))
+   .map(([k,dat])=>
    {
-      maybe.map(([k,dat])=>
+      let content = dat.name + ' ' + dat.nip05 + ' ' + hex_trun(k);
+      l = m_l('p',{cla:'helper',con:content})
+      helper.append(l);
+      l.addEventListener('click', ()=> 
       {
-         let content = dat.name + ' ' + dat.nip05 + ' ' + hex_trun(k);
-         l = m_l('p',{cla:'helper',con:content})
-         document.getElementById('helper').append(l);
-         l.addEventListener('click', ()=> 
-         {
-            document.getElementById('helper').textContent = '';
-            iot.value = iot.value.substr(0,iot.value.length - dis.length);
-            iot.value += dat.name + ' ';
-            iot.setSelectionRange(iot.value.length,iot.value.length);
-            iot.focus();
-         })
-      });
-   }
+         helper.textContent = '';
+         
+         io(iot.value.substr(0,iot.value.length - dis.length) + dat.name + ' ');
+//         iot.value += dat.name + ' ';
+         iot.setSelectionRange(iot.value.length,iot.value.length);
+         iot.focus();
+         let mentions = helper.dataset.mentions;
+         mentions = mentions ? JSON.parse(mentions) : [];
+         mentions.push([iot.value.substr(0,iot.value.length - dis.length), dat.name, ])
+      })
+   });
+}
+
+function io(text, placeholder = false) 
+{
+   const iot = document.getElementById('iot');
+   iot.value = text;
+   iot.parentElement.dataset.content = text;
+   if (placeholder) iot.placeholder = placeholder;
 }
 
 function less(e) 
@@ -207,6 +219,7 @@ function less(e)
 
 function is(e)
 {  // input handler event
+   const iot = document.getElementById('iot');
    let 
       enter = false,
       clear = true;
@@ -381,9 +394,7 @@ function start(k) {
  
    if (is_hex(k)) 
    {
-      iot.value = '';
-      iot.placeholder = 'new post';
-         
+      io('','new post');
       document.body.classList.add('has-k');  
       
       const u = document.getElementById('u');
@@ -443,8 +454,8 @@ window.addEventListener('load', (event)=>
    
    document.getElementById('a').addEventListener('click', funk);
    
-   knd1.addEventListener('click', clickEvent, false);
-   
+   document.getElementById('kind-1').addEventListener('click', clickEvent, false);
+   const iot = document.getElementById('iot');
    iot.addEventListener('blur', less);
    iot.addEventListener('keyup', is);
    iot.addEventListener('focus', more);

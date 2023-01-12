@@ -1,7 +1,4 @@
-const 
-   iot = document.getElementById('iot'),
-   knd1 = document.getElementById('kind-1'),
-   stuff = { behavior:'smooth', block: 'start'};
+const stuff = { behavior:'smooth', block: 'start'};
 
 //function ash(tags, l) 
 //{
@@ -21,7 +18,7 @@ function not_interesting(l)
    
    document.body.classList.remove('has-interesting');
    sessionStorage.removeItem('interesting');
-   iot.placeholder = 'new post';
+   document.getElementById('iot').placeholder = 'new post';
    delete aa.reaction;
 
    return l
@@ -38,7 +35,7 @@ function is_interesting(l)
    let l_id = l.id.substring(2);
    sessionStorage.interesting = l_id;   
    location.hash = '#' + l.id;
-   iot.placeholder = 'reply to ' + l.querySelector('.author').textContent;
+   document.getElementById('iot').placeholder = 'reply to ' + l.querySelector('.author').textContent;
    delete aa.reaction;
    return l
 }
@@ -313,11 +310,11 @@ function clickEvent(e)
                   content = '--smd ' + content;
                   break;
             }
-            iot.value = content;
-            iot.parentElement.dataset.content = content;
+            io(content);
             let par = event.parentElement;
             event.remove();
             if (!par.childNodes.length) par.closest('.event').classList.remove('has-replies');
+            const iot = document.getElementById('iot');
             iot.focus();
             iot.setSelectionRange(iot.value.length,iot.value.length);
          }
@@ -357,19 +354,42 @@ function count_replies(o_l)
 	}
 }
 
+function last_first(container, timestamp)
+{
+   let b = [...container.children].filter((c)=> timestamp > parseInt(c.dataset.stamp))[0];
+   return b ? b : null
+}
+
+function insert_before(container, timestamp)
+{
+   let b = [...container.children].filter((c)=> timestamp < parseInt(c.dataset.stamp))[0];
+   return b ? b : null
+}
+
 function lies(reply, l) 
 {
    let replies = reply.querySelector('.replies');
 
 //   requestAnimationFrame(()=> 
 //   {
-   let insert_b =  null, stamp = parseInt(l.dataset.stamp);
-   [...replies.children].forEach((rep)=>
-   {
-      if (!insert_b && stamp < parseInt(rep.dataset.stamp) ) insert_b = rep;
-   });
+   let 
+      l_stamp = parseInt(l.dataset.stamp);
+//      last = [...replies.children].filter((rep)=> parseInt(rep.dataset.stamp) > l_stamp ).reverse()[0],
+//      insert_b = last ? last : null;
+//      last = 1;
+//   .forEach((rep)=>
+//   {
+//      let rep_stamp = parseInt(rep.dataset.stamp);
+//      if (l_stamp < rep_stamp) 
+//      {
+//         if (!last) last = rep_stamp;
+//         if (l_stamp <= last) last = 
+//         insert_b = rep.nextSibling;
+//      }
+//   });
 //   console.log('lies', insert_b);
-   replies.insertBefore(l, insert_b);
+   replies.insertBefore(l, insert_before(replies, l_stamp));
+//   replies.insertBefore(l, last ? last : null);
    
 //		replies.append(l);
       l.removeAttribute('data-reply');
@@ -380,27 +400,19 @@ function lies(reply, l)
 //	});
     
    
-
-   let root = ancestor(reply, 'event');
-   if (stamp > parseInt(root.dataset.stamp)) 
+   if (l.dataset.p !== aa.k) 
    {
-      root.dataset.stamp = l.dataset.stamp;
-//      let last = replies.querySelector('.last');
-//      if (last) last.classList.remove('last');
-//      l.classList.add('last');
-      insert_b = null;
-      [...knd1.children].forEach((rep)=>
+      let root = (reply.closest('.event.root') || ancestor(reply, 'event') );   
+      if (root) 
       {
-         if (!insert_b && stamp > parseInt(rep.dataset.stamp)) insert_b = rep;
-      });
-//      console.log('lies', insert_b);
-      knd1.insertBefore(root, insert_b);
+         if (l_stamp > parseInt(root.dataset.stamp)) 
+         {
+            root.dataset.stamp = l.dataset.stamp;
+            let knd1 = document.getElementById('kind-1');
+            knd1.insertBefore(root, last_first(knd1, l_stamp));
+         }
+      }  
    }
-   
-//   requestAnimationFrame(()=> { 
-//      ordered(knd1, false); 
-//   });
-
 }
 
 function view_source(l) 
@@ -410,8 +422,6 @@ function view_source(l)
    let source = child_from_class(event, 'source');
    if (!source)
    {
-//      const o = db[event.id.substr(2)].o;
-//      o.seen = JSON.parse(event.dataset.seen);
       source = raw_event(db[event.id.substr(2)]);
       source.classList.add('source');
       event.append(source);
@@ -499,5 +509,4 @@ function update_fren(dat, k)
 	   about.textContent = dat.about;
 	}   
    document.querySelectorAll('a[href="#p-'+k+'"]').forEach((a)=>{a_k(a,dat)})
-//   if (hrefs.length) hrefs
 }

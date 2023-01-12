@@ -244,14 +244,6 @@ function m_l(tagName, o = false)
 //   return l
 //}
 
-function inb4(container, timestamp)
-{
-   let b = [...container.children].filter((rep)=> timestamp > parseInt(rep.dataset.stamp))[0];
-   return b ? b : null
-}
-
-
-
 function e_e(o) 
 {
    const opt = 
@@ -297,7 +289,7 @@ function defolt(o)
    {
       l = e_e(o);
       const container = document.getElementById('e');
-      container.insertBefore(l, inb4(container, o.created_at))  
+      container.insertBefore(l, last_first(container, o.created_at))  
    }
    
 }
@@ -337,8 +329,8 @@ function kind1(o)
       actions_draft.remove()
    }
    else if (!l)
-   { 
-      l = newid(o);      
+   {
+      l = newid(o);
       let created_at = child_from_class(l, 'created-at');
       update_time(created_at);
 
@@ -370,12 +362,15 @@ function kind1(o)
       
       if (append_as_root) 
       {
-         let insert_b =  null, stamp = parseInt(l.dataset.stamp);
-         [...knd1.children].forEach((rep)=>
-         {
-            if (!insert_b && stamp > parseInt(rep.dataset.stamp)) insert_b = rep;
-         });
-         knd1.insertBefore(l, insert_b);
+         let knd1 = document.getElementById('kind-1'), l_stamp = parseInt(l.dataset.stamp);
+         let last = [...knd1.children].filter((r)=> l_stamp > parseInt(r.dataset.stamp))[0];
+         knd1.insertBefore(l, last ? last : null);
+//         let insert_b =  null, stamp = parseInt(l.dataset.stamp);
+//         [...document.getElementById('kind-1').children].forEach((rep)=>
+//         {
+//            if (!insert_b && stamp > parseInt(rep.dataset.stamp)) insert_b = rep;
+//         });
+//         document.getElementById('kind-1').insertBefore(l, insert_b);
       }
       
       if (o.id === sessionStorage.sub_root 

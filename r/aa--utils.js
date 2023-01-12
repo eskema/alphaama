@@ -1,3 +1,45 @@
+function bytes_to_hex(bytes) 
+{
+   return bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+}
+
+function hex_to_bytes(hex) 
+{
+   return Uint8Array.from(hex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
+}
+
+function zero_bits(b)
+{
+   let n = 0;
+   if (b == 0) return 8;
+   while (b >>= 1) n++;
+   return 7-n;
+}
+
+function count_leading_zero_bits(bytes)
+{
+   let bits, total, i;
+   for (i = 0, total = 0; i < 32; i++) 
+   {
+      bits = zero_bits(bytes[i]);
+      total += bits;
+      if (bits !== 8) break;
+   }
+   return total
+}
+
+function base64_to_hex(str) 
+{
+   const raw = atob(str);
+   let i, result = ''; 
+   for (i = 0; i < raw.length; i++) 
+   {
+      const hex = raw.charCodeAt(i).toString(16);
+      result += (hex.length === 2 ? hex : '0' + hex);
+   }
+   return result
+}
+
 function x_days(number) 
 {
    const days = new Date();
@@ -103,6 +145,23 @@ function update_time(l)
 //   l.closest('.e_e').dataset.stamp = ts;
 }
 
+function sotr(l, asc) 
+{
+   function sort_d(a,b,asc) 
+   {
+      if (asc) 
+      { 
+         return a.dataset.stamp > b.dataset.stamp
+      }
+      else 
+      { // desc
+         return a.dataset.stamp < b.dataset.stamp
+      }
+      
+   }
+   return [...l.children].sort( (a,b) => sort_d(a,b,asc) ? 1 : -1 )
+}
+
 function ordered(room, direction) 
 {
    function sort_d(a,b,bool) 
@@ -147,11 +206,6 @@ function ur(string)
 {
    return string.replace(/[^a-z0-9]/gi, '-').toLowerCase()
 }
-
-//function hash(a) 
-//{
-//   return bitcoinjs.crypto.sha256(JSON.stringify(a)).toString('hex')
-//}
 
 function ofa(a) 
 {//object from array
@@ -243,15 +297,13 @@ function react(e)
    if (aa.reaction) 
    {
       delete aa.reaction;
-      iot.blur();
-      iot.value = '';
-      iot.parentElement.dataset.content = '';
+      io('');
+      document.getElementById('iot').blur();
    }
    else 
    {
-      iot.focus();
-      iot.value = '+';
-      iot.parentElement.dataset.content = '+';
+      io('+');
+      document.getElementById('iot').focus();
       const l = e.target.closest('.event');
       aa.reaction = ['+', l.id.substr(2), l.dataset.p];
 //      console.log(aa.reaction);
