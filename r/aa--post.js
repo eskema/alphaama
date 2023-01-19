@@ -1,32 +1,8 @@
 function get_seen(id)
 {
    // gets the first relay that seen this id
-//   const e = db[id];
    return db[id] && db[id].seen ? db[id].seen[0] : ''
-//   return seen[id] && seen[id].seen ? seen[id].seen[0] : ''
 }
-
-//function filter_mentions(o) 
-//{
-//   // separate mentions from tags unless they're root or reply
-//   const 
-//      tags = [], 
-//      mentions = [];
-//      
-//   let mentions_indexes = checkmentions(o.content);
-//   for (let i = 0; i < o.tags.length; i++) 
-//   {
-//      if (mentions_indexes.find(mi => mi === i))
-//      {
-//         mentions.push(o.tags[i])
-//         if(o.tags[i][0] === 'e' 
-//         && o.tags[i][3] 
-//         && o.tags[i][3] == ('root' || 'reply')) tags.push(o.tags[i]);
-//      }
-//      else tags.push(o.tags[i])
-//   }
-//   return [mentions, tags]
-//}
 
 function get_root(tags) 
 {
@@ -44,9 +20,11 @@ function get_root(tags)
          events.push(tags[i])
       }
    }
-   // if there's no marked root, check if there's events and use the first
+   // if there's no marked root, check if there's events and use the first if not marked mention
    if (events.length) 
    {
+      if (events[0][3] && events[0][3] === 'mention') return false;
+      
       const 
          e = events[0],
          rel = e[2] && e[2] !== '' ? e[2] : get_seen(e[1]);
@@ -57,6 +35,7 @@ function get_root(tags)
 
 function get_reply(tags) 
 {
+   // get the marked reply event
    const events = [];
    for (let i = 0; i < tags.length; i++) 
    {
@@ -66,7 +45,7 @@ function get_reply(tags)
          events.push(tags[i])
       }
    }
-   
+   // if there's no marked reply, check if there's events and use the last if not marked mention
    if (events.length)
    {
       if (events[events.length-1][3] 
@@ -75,7 +54,6 @@ function get_reply(tags)
       return events[events.length-1]
    }
    else return false
-   
 }
 
 function preptags(o) 
@@ -101,85 +79,67 @@ function preptags(o)
    return tags
 }
 
-function prep(content, mentions = false)
+function prep(event)
 {
-   let event = 
-   {
-      kind: 1,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [],
-      content: content,
-      pubkey: aa.k
-   };
+   event.created_at = Math.floor(Date.now() / 1000);
 
    let reply_id = sessionStorage.interesting;
    if (reply_id)
    {
       let reply = document.getElementById('e-'+reply_id);
-      if (reply && db[reply_id] && db[reply_id].o) event.tags = preptags(db[reply_id].o);
+      if (reply && db[reply_id] && db[reply_id].o) event.tags = [...event.tags, ...preptags(db[reply_id].o)];
    } 
-   const hashtags = parse_hashtags(content);
+   const hashtags = parse_hashtags(event.content);
    if (hashtags.length) hashtags.forEach((t)=>{ event.tags.push(t) });
    
-   if (mentions) 
-   {
+//   if (mentions) 
+//   {
       // mentions.forEach(build_mention(mention))
-   }
-
+//   }
    
-//   const unsigned = ofa(a);
    event.id = NostrTools.getEventHash(event); // await hash(JSON.stringify(a));
    localStorage[event.id] = JSON.stringify(event);
    event.draft = true;
    event.seen = [];
    kind1(event);
-   
-//   a = [ 
-//      0,//magic
-//      aa.k,//pubkey
-//      created_at,//created_at
-//      1,//kind
-//      tags,//tags
-//      content//content
-//   ];
-//   
-//   draft(a, 1);
 }
 
-async function reaction(note)
+async function reaction(event)
 {
 //   console.log(note[0], note[1], note[2])
-   let event = 
-   {
-      kind: 7,
-      created_at: Math.floor(Date.now() / 1000),
-      tags: [],
-      content: note[0],
-      pubkey: aa.k
-   };
-      
-   event.tags.push([ 'e', note[1], get_seen(note[1]) ]);
-   event.tags.push([ 'p', note[2] ]);
+//   let event = 
+//   {
+//      kind: 7,
+//      created_at: Math.floor(Date.now() / 1000),
+//      tags: [],
+//      content: note[0],
+//      pubkey: aa.k
+//   };
+//      
+//   event.tags.push([ 'e', note[1], get_seen(note[1]) ]);
+//   event.tags.push([ 'p', note[2] ]);
    event.id = NostrTools.getEventHash(event);
    sign(event);
-   delete aa.reaction
+   delete temp.reaction
+}
+
+function finish_hi(m)
+{
+   m.id = NostrTools.getEventHash(m);
+   sign(m);
 }
 
 
 
-async function follow(k) 
+function follow(parts) 
 {
-   // pubkey,relay,petname;
-   const parts = k.split(',');
+   // pubkey,relay,petname
+//   const parts = k.split(',');
    
-   if (is_hex(parts[0])) 
+   if (aa.k3[0] && is_hex(parts[0])) 
    {   
-      const 
-         old = aa.k3[0],
-         tags = old ? old.tags : [],
-         content = old ? old.content : '';
-   
-      if (tags.filter(p => p[1] === parts[0]).length) 
+      let old = aa.k3[0];
+      if (old.tags.filter(p => p[1] === parts[0]).length) 
       {
          console.log('you already follow this one')
       }
@@ -189,40 +149,24 @@ async function follow(k)
          {
             kind: 3,
             created_at: Math.floor(Date.now() / 1000),
-            tags: tags,
-            content: content,
+            tags: [...old.tags, ['p', ...parts]],
+            content: old.content,
             pubkey: aa.k
          };
-      
-//         const p = ['p', ...parts];
-//         parts.forEach((part)=>{p.push(part)})
-      
-         event.tags.push(['p', ...parts]);
-         
-//         const a = [ 
-//            0,//don't ask
-//            aa.k,//pubkey
-//            now,//created_at
-//            3,//kind
-//            tags,//tags
-//            content//content
-//         ];
-               
-//         const unsigned = ofa(a);
+
          event.id = NostrTools.getEventHash(event);
+//         console.log(event);
          sign(event);
       }
    }
    else console.log('bad key ' + parts[0]);
 }
 
-async function unfollow(k) 
+function unfollow(k) 
 {
    const old = aa.k3[0];
    if (old) 
-   {
-//      tags = old.tags.filter(p => p[1] !== k); //.forEach((p)=>{ tags.push(p) })
-      
+   {      
       let event = 
       {
          kind: 3,
@@ -231,15 +175,6 @@ async function unfollow(k)
          content: old.content,
          pubkey: aa.k
       };
-//      
-//      const a = [ 
-//         0,//don't ask
-//         aa.k,//pubkey
-//         now,//created_at
-//         3,//kind
-//         tags,//tags
-//         old.content//content
-//      ];
             
       event.id = NostrTools.getEventHash(event);
       sign(event);
@@ -257,37 +192,71 @@ function set_metadata(o)
       content: JSON.stringify(o),
       pubkey: aa.k
    };
-//      
-//   event.tags.push([ 'e', note[1], get_seen(note[1]) ]);
-//   event.tags.push([ 'p', note[2] ]);
-//   const a = [ 
-//      0,//magic
-//      aa.k,//pubkey
-//      created_at,//created_at
-//      7,//kind
-//      tags,//tags
-//      note[0]//content
-//   ];
-   
-//   const unsigned = ofa(a);
    event.id = NostrTools.getEventHash(event);
-//   console.log(unsigned)
    sign(event);
+}
+
+function add_new_relay(tag) 
+{
+
+}
+
+function verify_relay_list(relay_list) 
+{
+//   relay_list.map((item)=>
+//   {
+//      let url = new URL(item[0]);
+//      if (!url && (url.protocol === 'wss:' || url.protocol === 'ws:')
+//      && item.length === 2
+//      ) 
+//      {
+//         
+//      }
+//      if (item.length === 2
+//      && item) {
+//         
+//      }
+//   });
+//   return true
+}
+
+function set_relays(relays_list) 
+{ 
    
-//   //make array to get hashed:
-//   const a = [ 
-//      0,//don't ask
-//      aa.k,//pubkey
-//      Math.floor((new Date().getTime())/1000),//created_at
-//      0,//kind
-//      [],//tags
-//      JSON.stringify(o)//content
-//   ];
-//   
-//   draft(a, 0);
-//   const unsigned = ofa(a);
-//   unsigned.id = await hash(JSON.stringify(a));
-//   sign(unsigned);
+   console.log(relay_list)
+//   let old = aa.k3[0];
+//   if (old) 
+//   {
+//      console.log('you already follow this one')
+//   }
+//   else 
+//   {
+//      let event = 
+//      {
+//         kind: 3,
+//         created_at: Math.floor(Date.now() / 1000),
+//         tags: [...old.tags, ['p', ...parts]],
+//         content: old.content,
+//         pubkey: aa.k
+//      };
+//
+//      event.id = NostrTools.getEventHash(event);
+//      sign(event);
+//   }
+
+
+//   let event = 
+//   {
+//      kind: 10001,
+//      created_at: Math.floor(Date.now() / 1000),
+//      tags: relays_list,
+//      content: '',
+//      pubkey: aa.k
+//   };  
+//
+//   event.id = NostrTools.getEventHash(event);
+//   console.log(event)
+//   sign(event);
 }
 
 function sign(unsigned) 
@@ -304,9 +273,3 @@ function sign(unsigned)
    } 
    else console.log('you need nos2x to sign notes', unsigned.content)
 }
-//
-//function post(signed) 
-//{
-//   broadcast(['EVENT', signed])
-//   r_mess(['bro', ['EVENT', signed]]);
-//}

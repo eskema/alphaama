@@ -1,3 +1,4 @@
+
 function bytes_to_hex(bytes) 
 {
    return bytes.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
@@ -125,6 +126,11 @@ function make_time(timestamp)
    return l
 }
 
+function dt(timestamp_in_seconds) 
+{
+   return new Date(timestamp_in_seconds*1000)
+}
+
 function format_date(d)
 {
    return (d.getHours()+'').padStart(2,'0') 
@@ -138,11 +144,23 @@ function format_date(d)
 function update_time(l)
 {
    const ts = l.dataset.timestamp;
-   const d = new Date(ts*1000);
+   const d = dt(ts);
    l.setAttribute('datetime', d.toISOString());
    l.title = format_date(d); //d.toUTCString()
    l.textContent = time_since(d);
 //   l.closest('.e_e').dataset.stamp = ts;
+}
+
+function sort_ca(a,b,asc) 
+{
+   if (asc) 
+   { 
+      return a.created_at > b.created_at
+   }
+   else 
+   { // desc
+      return a.created_at < b.created_at
+   }
 }
 
 function sotr(l, asc) 
@@ -157,8 +175,8 @@ function sotr(l, asc)
       { // desc
          return a.dataset.stamp < b.dataset.stamp
       }
-      
    }
+
    return [...l.children].sort( (a,b) => sort_d(a,b,asc) ? 1 : -1 )
 }
 
@@ -181,25 +199,29 @@ function ordered(room, direction)
    .forEach(node => room.appendChild(node));
 }
 
-function a_k(a,dat) 
+function a_k(a,contact) 
 {
-   if (dat.name) 
+   if (contact.data) 
    {
-      let a_text = a.querySelector('.text');
-      if (a_text.textContent !== dat.name) a_text.textContent = dat.name;
+      if (contact.data.name) 
+      {
+         let name = contact.data.name.substr(0, 100);
+         let a_text = a.querySelector('.text');
+         if (a_text.textContent !== name) a_text.textContent = name;
+      }
+      
+      if (contact.trusted && options.media && contact.data.picture) 
+      {
+         let a_image = a.querySelector('img');
+         if (!a_image)
+         {
+            a_image = m_l('img',{cla:'has-picture'});
+            a.append(a_image);
+         }
+         if (!a_image.src || a_image.src !== contact.data.picture.trim()) a_image.src = contact.data.picture
+      }   
    }
    
-   if (options.media && dat.picture) 
-   {
-      let a_image = a.querySelector('img');
-      if (!a_image)
-      {
-         a_image = document.createElement('img');
-         a.classList.add('has-picture');
-         a.append(a_image);
-      }
-      if (!a_image.src || a_image.src !== dat.picture.trim()) a_image.src = dat.picture
-   }
 }
 
 function ur(string) 
@@ -294,9 +316,12 @@ function make_section(clas)
 
 function react(e) 
 {
-   if (aa.reaction) 
+   const l = e.target.closest('.event');
+   if (temp.reaction) 
    {
-      delete aa.reaction;
+      l.classList.remove('reacting');
+      compose = false;
+      delete temp.reaction;
       io('');
       document.getElementById('iot').blur();
    }
@@ -304,9 +329,20 @@ function react(e)
    {
       io('+');
       document.getElementById('iot').focus();
-      const l = e.target.closest('.event');
-      aa.reaction = ['+', l.id.substr(2), l.dataset.p];
-//      console.log(aa.reaction);
+      
+      l.classList.add('reacting');
+      temp.reaction = ['+', l.id.substr(2), l.dataset.p];
+
+      compose = 
+      {
+         kind:7,
+         pubkey:aa.k,
+         created_at: Math.floor(Date.now() / 1000),
+         content:'+',
+         tags:[['e',l.id.substr(2),get_seen(l.id.substr(2))],['p',l.dataset.p]]
+      }
+      
+//      console.log(temp.reaction);
    }
 }
 
@@ -426,32 +462,58 @@ function media_type(href)
    return check
 }
 
-function tag_link(tag)
+function tag_link(tag, content = false)
 {
-   if (tag 
-   && (tag[0] === 'e'
-      || tag[0] === 'p'
-      || tag[0] === 't'
-      )
-   && tag[1]
-   ) 
+   const a = document.createElement('a');
+   a.classList.add('a','a-'+tag[0]);
+   a.title = tag[1];
+   
+   const a_text = document.createElement('span');
+   a_text.classList.add('text');
+   
+   a.append(a_text);
+   a.href = '#' + tag[0] + '-' + ur(tag[1]);
+   if (tag[0] === 'e' || tag[0] === 'p') 
    {
-      const a = document.createElement('a');
-      a.classList.add('a','a-'+tag[0]);
-      a.title = tag[1];
-      
-      const a_text = document.createElement('span');
-      a_text.classList.add('text');
-      
-      a.append(a_text);
-      a.href = '#' + tag[0] + '-' + ur(tag[1]);
       a_text.textContent = pretty(tag[1]);
-      if (tag[0] === 'e' || tag[0] === 'p') stylek(tag[1], a);      
+      stylek(tag[1], a);      
       if (tag[0] === 'p' && is_hex(tag[1]) && aa.p[tag[1]]) a_k(a,aa.p[tag[1]]);
-      return a
    }
+   else a_text.textContent = content ? content : tag[1];
+   
+   return a
+}
+
+function parse_magnet(magnet)
+{
+   let ur = new URL(m);
+   if (ur.protocol === 'magnet:' && ur.searchParams.has('xt')) 
+   {
+      let xt = ur.searchParams.get('xt');
+      
+      if (xt.startsWith('urn:btih:')) 
+      {
+         xt = xt.substr(9);
+         console.log(xt);
+         let dn = ur.searchParams.has('dn') ? ur.searchParams.get('dn') : 'no name';
+         let maglink = m_l('a',{cla:'magnet', con:'magnet link: '+dn, ref:magnet});
+         maglink.target = '_blank';
          
-   return false
+         p.append(maglink);
+         maglink.addEventListener('click', (e)=> 
+         {
+            wt.add(m,(torrent)=> 
+            {
+              const ul = m_l('ul',{cla:'torrents'})
+              torrent.files.forEach((file)=>
+              {
+                  ul.append(m_l('li',{con:file.name}))
+              });
+              p.append(ul)
+            });
+         });
+      }
+   }
 }
 
 function parse_link(url) 
@@ -498,12 +560,16 @@ function ai(o)
       matches = {},
       matchy_mentions = [...ocd.matchAll(/\B#\[(\d+)\]\B/g)],
 //      matchy_links = [...ocd.matchAll(/\b(https?:\/\/\S*\b)/g)];
-      matchy_links = [...ocd.matchAll(/(\b(https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@$#\/%=~_|]*)/gim)];
+      matchy_links = [...ocd.matchAll(/(\b(https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@$#\/%=~_|]*)/gim)],
+      matchy_magnet = [...ocd.matchAll(/(magnet:\?xt=urn:btih:.*)/gi)],
+      matchy_lnbc = [...ocd.matchAll(/(lnbc)[-A-Z0-9].*/gi)];
 
       
 
    matchy_mentions.forEach((match)=> { matches[match.index] = match[0] });
    matchy_links.forEach((match)=> { matches[match.index] = match[0] });
+   matchy_magnet.forEach((match)=> { matches[match.index] = match[0] });
+   matchy_lnbc.forEach((match)=> { matches[match.index] = match[0] });
    
    if (Object.keys(matches).length) 
    {
@@ -518,12 +584,26 @@ function ai(o)
          if (m.startsWith('#[')) 
          {
             let mi = parseInt(m.replace(/\D/g,''));
-            if (o.tags[mi] && is_hex(o.tags[mi][1]))
+            if (o.tags[mi] 
+            && is_hex(o.tags[mi][1])
+            && (o.tags[mi][0] === 'e' || o.tags[mi][0] === 'p')
+            )
             {
                let mention = tag_link(o.tags[mi]);
                if (mention) p.append(mention);
                else p.append(document.createTextNode(m));
             }                              
+         }
+         else if (m.startsWith('magnet'))
+         {  
+//            let magnet = parse_magnet(m);
+            p.append(document.createTextNode(m))
+         }
+         else if (m.startsWith('lnbc'))
+         {  
+            console.log(m);
+//            let magnet = parse_magnet(m);
+//            p.append(document.createTextNode(m))
          }
          else 
          {

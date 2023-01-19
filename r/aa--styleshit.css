@@ -513,8 +513,6 @@ button:hover {
    grid-template-columns: 1fr;
    align-items: start;
    align-self: start;
-   /*max-height: 50vh;*/
-   /*overflow-y: scroll;*/
 }
 
 .fren {
@@ -533,63 +531,15 @@ button:hover {
    align-items: end;
 }
 
-.ffs .fren{
-   margin-bottom: var(--line);
-   border: 1px solid rgb(var(--c));
-   border-bottom: 0;
-}
-
-.fren button.close {
-   grid-area: header;
-   align-self: start;
-   justify-self: end;
-   background: rgb(var(--c-a-a));
-   color: rgb(var(--c-b-a));
-   color: rgb(var(--c-a-f));
-   top: calc(var(--line) + var(--pad));
-   right: 0;
-   padding: calc(var(--pad)*2);
-   font-size: var(--font-size-l);
-   line-height: 1;
-}
-
-.fren .metadata {
-   grid-area: header;
-   display: grid;
-   grid-template-columns: auto 1fr;
-   grid-template-rows: auto 1fr;
-   grid-template-areas:
-      "picture picture"
-      "name logo"
-      "about about";
-   align-self: start;
-   align-items: start;
-}
-
-.fren .picture {
-   grid-area: picture;
-   align-self: start;
-   max-height: var(--media-height);
-   height: unset;
-   transition: var(--trans-quart);
-   object-fit: contain;
-   object-position: 0% 0%;
-   cursor: pointer;
-}
-
-.fren .id {
-   color: rgb(var(--c-b-a));
-}
-
 .fren .pubkey {
    grid-area: pubkey;
-   margin: 0;
-   align-self: start;
+   /*margin: 0;*/
+   /*align-self: start;*/
    padding: var(--pad);
-   max-width: 100%;
+   max-width: 100vw;
    word-break: break-all;
-   box-sizing: border-box;
-   z-index: 4;
+   /*box-sizing: border-box;*/
+   /*z-index: 4;*/
    background: rgb(var(--c-a-a));
    color: rgb(var(--c));
 }
@@ -603,12 +553,184 @@ button:hover {
    transform: translateX(-100%) translateY(.6rem);
 }
 
-.fren .logo {
+/*.ffs .fren{
+   margin-bottom: var(--line);
+   border: 1px solid rgb(var(--c));
+   border-bottom: 0;
+}*/
+
+
+
+.fren .metadata {
+   grid-area: header;
+   display: grid;
+   grid-template-areas:
+      "picture"
+      "name"
+      "about"
+      "luds"
+      ;
+/*   grid-template-columns: auto 1fr;
+   grid-template-rows: auto 1fr;
+   grid-template-areas:
+      "picture picture"
+      "name nip05"
+      "about about";*/
+   align-self: start;
+   align-items: start;
+}
+
+.metadata > * {
+   font-size: var(--font-size-s);
+   color: rgb(var(--c-a-f));
+   background: rgb(var(--c-a-a));
+   padding: 0 var(--pad);
+   word-break: break-all;
+   justify-self: start;
+}
+
+.metadata p.empty {
+   color: rgb(var(--c-a-b));
+   grid-row: 99;
+   grid-area: unset;
+}
+
+.metadata p::before,
+.metadata p.empty::before {
+   content: attr(class) ": ";
+}
+
+.metadata .picture,
+.metadata .banner {
+   grid-area: picture;
+   background: none;
+   line-height: 1;
+   padding: var(--pad);
+}
+
+.metadata .banner {
+   
+   /*justify-self: end;*/
+   
+   margin-bottom: 2rem;
+   /*margin-right: 3rem;*/
+}
+
+.metadata .picture {
+   align-self: end;
+   max-height: var(--media-height);
+   height: unset;
+   transition: var(--trans-quart);
+   /*max-width: 50vw;*/
+   object-fit: contain;
+   object-position: 0% 0%;
+   cursor: pointer;
+   /*justify-self: start;*/
+   /*line-height: 1;*/
+}
+
+.metadata .name::before,
+.metadata .nip05::before,
+/*.metadata .lud06::before,*/
+/*.metadata .lud16::before,*/
+.metadata .about::before {
+   content: none;
+}
+
+.metadata .name {
+   font-size: var(--font-size);
+/*   color: rgb(var(--c-a-f));
+   background: rgb(var(--c-a-a));*/
+   /*position: relative;*/
+   grid-area: name;
+   z-index: 1;
+   justify-self: start;
+   margin-bottom: 1.6rem;
+   /*padding-top: 0;*/
+   /*background: none;*/
+}
+
+.metadata .nip05 {
+   grid-area: name;
+   margin-top: 2rem;
+   padding-bottom: var(--pad);
+   /*align-self: start;*/
+   line-height: 1.6;
+   
+   justify-self: start;
+   /*content: attr(data-nip05);*/
+   font-size: var(--font-size-s);
+   /*background: rgb(var(--c-a-a));*/
+   /*padding-right: var(--pad);*/
+   /*display: block;*/
+}
+
+.metadata .nip05::after {
+   content: " " attr(data-verified);
+   color: rgb(var(--c-b-c));
+}
+
+.metadata .display_name {
+   grid-area: name;
+   justify-self: end;
+   background: none;
+}
+
+.metadata .display_name::before {
+   content: "(";
+}
+.metadata .display_name::after {
+   content: ")";
+}
+
+.metadata .about {
+   color: rgb(var(--c-a-d));
+   line-height: 1.4;
+   hyphens: auto;
+   -webkit-hyphens: auto;
+   white-space: pre-wrap;  
+   padding: var(--pad);
+   padding-top: 0;
+   word-break: break-word;
+   hyphens: auto;
+   font-size: var(--font-size);
+   grid-area: about;
+}
+
+.metadata .about::before {
+   content: "\\";
+   display: block;
+}
+
+.metadata .lud06,
+.metadata .lud16 {
+   grid-area: luds;
+}
+
+
+.fren button.close {
+   grid-area: pubkey;
+   /*align-self: start;*/
+   justify-self: end;
+   background: rgb(var(--c-a-a));
+   color: rgb(var(--c-b-a));
+   color: rgb(var(--c-a-f));
+   top: calc(var(--line) + var(--pad));
+   /*right: 0;*/
+   padding: calc(var(--pad)*2);
+   font-size: var(--font-size-l);
+   line-height: 1;
+   z-index: 34;
+   /*transform: translateY(-100%);*/
+}
+
+
+/*.fren .logo {
    grid-area: logo;
    width: var(--line);
    height: var(--line);
    /*make your own filter: 
-   https://codepen.io/sosuke/pen/Pjoqqp */
+   https://codepen.io/sosuke/pen/Pjoqqp *!/
    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(0%) contrast(100%);
    padding: var(--pad);
    z-index: 23;
@@ -616,9 +738,9 @@ button:hover {
    align-self: end;
    border-top: 0;
    align-self: start;
-}
+}*/
 
-.metadata .tit {
+/*.metadata .tit {
    padding-top: 0;
    padding-bottom: 0;
    grid-area: name;
@@ -626,52 +748,10 @@ button:hover {
    align-self: start;
    justify-self: start;
    grid-template-areas: "petname nip05";
-   /*line-height: 1.4;*/
-}
+   /*line-height: 1.4;*!/
+}*/
 
-.name {
-   color: rgb(var(--c-a-f));
-   background: rgb(var(--c-a-a));
-   position: relative;
-   grid-area: petname;
-   z-index: 1;
-   justify-self: start;
-   padding: 0 var(--pad);
-   padding-top: 0;
-}
 
-.text[data-nip05] .name {
-   /*color: rgb(var(--c));*/
-}
-
-.tit::after {
-   grid-area: nip05;
-   content: attr(data-nip05);
-   font-size: var(--font-size-s);
-   background: rgb(var(--c-a-a));
-   padding-right: var(--pad);
-   display: block;
-}
-
-.about {
-   color: rgb(var(--c-a-d));
-   background-color: rgb(var(--c-a-a));
-   margin: 0;
-   transform-origin: bottom left;
-   line-height: 1.4;
-   /*word-break: break-all;*/
-   hyphens: auto;
-   -webkit-hyphens: auto;
-   white-space: pre-wrap;  
-   padding: var(--pad);
-   padding-top: 0;
-   grid-area: about;
-}
-
-.about::before {
-   content: "\\";
-   display: block;
-}
 
 .solo .section {
    padding: 0 var(--pad);
@@ -995,6 +1075,11 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    overflow: hidden;  
    hyphens: auto; 
    white-space: pre-wrap;
+   max-height: calc(100vh - 4rem);
+}
+
+.content {
+   
 }
 
 .content > a {
@@ -1042,7 +1127,7 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
 }
 
 .replies-hidden .event:not(.new),
-.replies-hidden .event:not(.new) > .replies{
+.replies-hidden .event:not(.has-new) > .replies{
    padding: 0;
 }
 
@@ -1066,7 +1151,7 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
 }
 
 .replies-hidden .event:not(.has-new) > .replies {
-   display: none;
+   /*display: none;*/
 }
 
 .created-at {
@@ -1560,6 +1645,7 @@ button.view-source {
    margin-bottom: 1.4rem;
    overflow: hidden;
    max-width: 100%;
+   /*padding-bottom: 2rem;*/
    
 }
 
@@ -1573,6 +1659,7 @@ button.view-source {
    hyphens: auto;
    overflow: hidden;
    margin: 0;
+   max-height: unset;
 }
 
 .content-video,

@@ -1,4 +1,4 @@
-let aa, db = {};
+let aa, compose, temp = {}, db = {};
 try { aa = JSON.parse(localStorage.aa) } 
 catch (error) 
 { 
@@ -9,16 +9,19 @@ catch (error)
       bff:[],
       ff:[],
       k0:[],
-      k3:[]
+      k3:[],
+      k10001: []
    }
 }
+if (!aa.k10001) aa.k10001 = [];
 
 //const hose = {}, reqs = {}, seen = {};
 let options, defaults = 
 {
-   'days': 1, // feed limit
-   'media': false, //autoload media files
-   'r':  {  // bootstrap relays if no others found
+   days: 1, // feed limit
+   media: false, //autoload media files
+   log:{ demand:false, broadcast:true},
+   r:  {  // bootstrap relays if no others found
             // the relays listed here are public instances 
             // maintained by the creators of the respective implementations
             
@@ -31,10 +34,57 @@ let options, defaults =
          }
 };
 
-//const re = new Worker('r/aa_relays_ww.js');
-//re.onmessage=e=>{ pre_process(e.data) };
-//
-//r_mess();
+// NIP:5 verification
+const aa_nip5 = new Worker('r/aa_nip5.js');
+
+function nip5_check(nip5,k)
+{
+   let [username, domain] = nip5.trim().split('@');
+   if (username && domain) 
+   {
+      let
+         nip5 = localStorage.nip5 ? JSON.parse(localStorage.nip5) : {},
+         internal_check;
+         
+      if (nip5[domain] && nip5[domain].json.names[username]) internal_check = nip5[domain].names[username];
+      if (internal_check === k) postMessage([nip5,k,true]);
+      else aa_nip5.postMessage([username,domain,k]);
+   }
+}
+
+function nip5_result(result) 
+{
+   // result = [nip5,k,bool,json]
+   console.log(result);
+   const wen = Date.now()/1000;
+   if (result.length > 3) 
+   {
+      let nip5 = localStorage.nip5 ? JSON.parse(localStorage.nip5) : {};
+      nip5[domain].json = json;
+      nip5[domain].wen = wen;
+      localStorage.nip5 = JSON.stringify(nip5);
+   }
+
+   if (result[2] === true) 
+   {
+      aa.p[result[1]].verified = true;
+      aa.p[result[1]].verified_on = wen;
+   }
+//   const tit = fren.querySelector('.tit');
+//   if (tit) 
+//   {
+//      tit.dataset.nip05 = dat.nip05;
+//      fren.classList.add('nip05');
+//      if (dat.nip05.startsWith('_@')) tit.classList.add('root');
+//      document.querySelectorAll('a[href="#p-'+pubkey+'"]')
+//      .forEach((a)=>{a.dataset.nip05 = dat.nip05});
+//   }  
+}
+
+aa_nip5.onmessage=e=>{nip5_result(e.data)};
+
+// wip adding webtorrent support
+//const wt = new WebTorrent();
 
 async function fetch_relays() 
 {
@@ -52,93 +102,11 @@ async function fetch_relays()
    });
 }
 
-//function aa_open(dis, reconnect = false) 
-//{
-//   const req = ['REQ', 'aa-open'];
-//   const subs = [aa.k, ...aa.bff];
-//   const day_since = x_days(options.days);
-//   const wen = reconnect && aa.t ? aa.t > day_since ? aa.t : day_since : day_since;
-//   // profiles and contacts from your you and your follows
-//   let filter = {authors: subs, kinds:[0,3]};
-//   if (aa.k3.length) filter.since = wen;
-//   req.push(filter);
-//   // notes and reactions from your you and your follows
-//   filter = {authors: subs, kinds:[1,7], since: wen};
-//   req.push(filter);
-//   // replies to your posts
-//   filter = {'#p': [aa.k], kinds:[1,7], since: wen};
-//   req.push(filter);
-//   reqs[dis]['aa-open'] = [JSON.stringify(req)];
-//   r_mess(['req', [req, dis]]);
-//   
-//   console.log(dis, req);
-//   document.getElementById('a').textContent = 'REQ aa-open ' + dis;
-//}
-//
-//async function pre_process([type, dis, dat]) 
-//{   
-//   switch (type) 
-//   {
-//      case 'OPEN':
-//         ['OPEN',e.target.url,e.target.readyState]
-//         if (dat === 1) 
-//         {
-//            if (!reqs[dis]) reqs[dis] = {};
-//            if (reqs[dis]['aa-open']) aa_open(dis, true)
-//            else aa_open(dis);
-//         }
-//         break
-//      case 'EOSE': 
-//         // ['EOSE', origin, [dis,sorted]]
-//         console.log(type, dat[0] +' '+ dis, dat[1].length);
-//         document.getElementById('a').textContent = type + ' ' + dat[0] + ' ' + dis + ' ' + dat[1].length;
-//         reqs[dis + '/'][dat[0]].push('eose ' + dat[1].length);
-//         dat[1].map((o)=>{ process(o) }); 
-//         if (dat[0] === 'aa-open') fetch_missing(dis+"/");
-//         else {
-//            document.getElementById('a').textContent = '';
-//         }
-//         break;
-//      case 'EVENT': 
-//         process(dat[1]); 
-//         setTimeout(()=>{
-//         fetch_missing(dis+"/")
-//         }, 1000);
-//         break;
-//      case 'OK':
-//      case 'STATE':
-//      case 'NOTICE':
-//         console.log(type, dis, dat);
-//         document.getElementById('a').textContent = type + ' ' + dis + ' ' + dat;
-//         break;  
-//   }
-//}
-//
-//function process(o) 
-//{
-//   if (!seen[o.id])
-//   {
-//      let e_o;
-//      if (!o.draft)
-//      {
-//         e_o = seen[o.id] = o;
-//         if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
-//      }
-//      else e_o = o;
-//      
-//      switch (o.kind) 
-//      {
-//         case 0: kind0(e_o); break;
-//         case 3: kind3(e_o); break;
-//         case 2: 
-//         case 7: 
-//         case 1: 
-//            defolt(e_o); break; 
-//             kind1(e_o); break; 
-//      }
-//   }
-//   else seen[o.id].seen = [...new Set(seen[o.id].seen.concat(o.seen))];
-//}
+const resolve_relays = (list) =>
+{
+   if (!Object.keys(list).length) list = options.r;
+   add_relaytion(list) 
+}
 
 function bbbb()
 {// boom biddy bye bye
@@ -183,10 +151,12 @@ function new_mention(dis)
    helper.textContent = '';
    
    Object.entries(aa.p)
-   .filter(([k,dat])=> dat.name && dat.name.startsWith(dis) || k.startsWith(dis))
+   .filter(([k,dat])=> dat.name && dat.name.startsWith(dis) 
+   || dat.nip05 && dat.nip05.startsWith(dis)
+   || k.startsWith(dis))
    .map(([k,dat])=>
    {
-      let content = dat.name + ' ' + dat.nip05 + ' ' + hex_trun(k);
+      let content = '(' + hex_trun(k) + ') ' + dat.name + (dat.nip05 ? ' / ' + dat.nip05 : '');
       l = m_l('p',{cla:'helper',con:content})
       helper.append(l);
       l.addEventListener('click', ()=> 
@@ -197,9 +167,9 @@ function new_mention(dis)
 //         iot.value += dat.name + ' ';
          iot.setSelectionRange(iot.value.length,iot.value.length);
          iot.focus();
-         let mentions = helper.dataset.mentions;
-         mentions = mentions ? JSON.parse(mentions) : [];
-         mentions.push([iot.value.substr(0,iot.value.length - dis.length), dat.name, ])
+//         let mentions = helper.dataset.mentions;
+//         mentions = mentions ? JSON.parse(mentions) : [];
+//         mentions.push([iot.value.substr(0,iot.value.length - dis.length), dat.name, k])
       })
    });
 }
@@ -215,11 +185,15 @@ function io(text, placeholder = false)
 function less(e) 
 {
    document.body.classList.remove('mode-input');
+   if (!e.target.value.length && compose) compose = false;
 }
 
 function is(e)
 {  // input handler event
-   const iot = document.getElementById('iot');
+   const 
+      iot = document.getElementById('iot'),
+      helper = document.getElementById('helper');
+      
    let 
       enter = false,
       clear = true;
@@ -235,9 +209,21 @@ function is(e)
       v = n.wholeText,
       a = v.split(' ');
    
+   if (!compose) compose = 
+   {
+      kind:1,
+      pubkey:aa.k,
+      created_at: Math.floor(Date.now() / 1000),
+      content:v,
+      tags:[]
+   };
+   else {
+      compose.content = v;
+   }
+
    let seg = a[0];
    try { seg = [...new Intl.Segmenter().segment(a[0])] } 
-   catch (error) { console.log('no Intl.Segmenter()','use a better browser')};
+   catch (error) { console.log('no Intl.Segmenter(), use a better browser')};
    
    e.target.parentElement.dataset.content = v;
    
@@ -247,44 +233,54 @@ function is(e)
    {
       new_mention(l_word.substr(1));
    }
-   else document.getElementById('helper').textContent = '';   
- 
-   if (enter) {
-      
-      console.log(v);       
-      
-      // commands switch
-      
-      if (a.length === 1 && seg.length === 1 && aa.reaction) 
+   else helper.textContent = '';   
+
+   // 
+   if (enter) 
+   {      
+      if (compose.kind === 7) 
       {
-         let note = aa.reaction;
-         if (note) {
-            note[0] = v;
-            reaction(note);
+         console.log('new reaction')
+      }
+      
+      if (a.length === 1 && seg.length === 1 && temp.reaction) 
+      {
+//         let note = temp.reaction;
+//         if (note) {
+//            note[0] = v;
+//            reaction(note);
             iot.blur();
-         }
+            reaction(compose);
+            compose = false;
+            
+//         }
          
       }
-      else if (aa.reaction)
+      else if (temp.reaction)
       {
-         console.log('too many chars', a);
+         console.log('too many chars', v.length);
          clear = false;
       }
       else 
       {
-//         console.log('command', a);
-         delete aa.reaction;
+//       // commands switch
+         delete temp.reaction;
          switch (a[0]) 
          {
-            case '--bbbb': // boom biddy bye bye, 
-               // destroys everything, 
-               // or at least tries to..
-               bbbb();
-               break;
+            case '--bbbb': bbbb(); break;
             case '--media':
                options.media = !options.media; 
                localStorage.options = JSON.stringify(options);
                location.reload();
+               break;
+            case '--f':
+               let fo = v.substr(3).trim().split(',');
+               fo.forEach((f)=> { f = f.trim() });
+               if (fo.length) follow(fo);
+               break;
+            case '--u':
+               let un = v.substr(3).trim();
+               if (un.length) unfollow(un);
                break;
             case '--k':
                if (a[1]) 
@@ -295,32 +291,20 @@ function is(e)
                   location.reload();
                }
                break;
-            case '--f':
-               if (a[1]) 
-               {
-                  follow(a[1]);
-               }
-               break;
-            case '--u':
-               if (a[1]) 
-               {
-                  unfollow(a[1]);
-               }
-               break;
             case '--md':
-               let data = aa.p[aa.k];
-               if (data) 
+               let contact = aa.p[aa.k], data;
+               if (contact) 
                {
-                  delete data.created_at;
-                  data = JSON.stringify(data);
+//                  data = contact.data;
+//                  delete data.created_at;
+                  data = JSON.stringify(contact.data);
                }
                else 
                {
                   data = 'no metadata found.'
                }
                clear = false;
-               iot.value = '--smd ' + data;
-               iot.parentElement.dataset.content = '--smd ' + data;
+               io('--smd ' + data);
                break;
             case '--smd':
                let smd = v.substr(5).trim();
@@ -331,24 +315,31 @@ function is(e)
                   console.log(smd)
                }
                break;
+            case '--srl':
+               let srl;
+               try { srl = JSON.parse(v.substr(5).trim()) }
+               catch (err) { console.log(v) }
+               if (srl) set_relays(srl)
+               break;
             case '--miss':
                fetch_missing(false); 
                break;
-            case '--read':
-               let unread = document.querySelectorAll('.unread');
-               if (unread.length > 0) unread.forEach(toggle_state);
-               break;
+//            case '--read':
+//               let unread = document.querySelectorAll('.unread');
+//               if (unread.length > 0) unread.forEach(toggle_state);
+//               break;
             default: 
-               prep(v)
+//               compose.content = v;
+//               if (helper.dataset.mentions) 
+//               {
+//                  console.log(helper.dataset.mentions)
+//               }
+               prep(compose)
          }
          
       }
       
-      if (clear) {
-         iot.value = '';
-         iot.parentElement.dataset.content = '';
-      }
-      
+      if (clear) io('');
    }
 }
 
@@ -373,10 +364,10 @@ window.nostr.getRelays(): { [url: string]: RelayPolicy } // returns a map of rel
 window.nostr.nip04.encrypt(pubkey, plaintext): string // returns ciphertext+iv as specified in nip04
 window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as specified in nip04
 */         
-   } 
-   aa.rekt = {};
+   }    
    if (!localStorage.options) localStorage.options = JSON.stringify(defaults);
    options = JSON.parse(localStorage.options);
+   if (!options.log) options.log = { demand:false, broadcast:true, eose: false};
    console.log('options', options);
    
    if (window.nostr && !aa.k) 
@@ -390,33 +381,37 @@ window.nostr.nip04.decrypt(pubkey, ciphertext): string // takes ciphertext+iv as
    } else if (aa.k) start(aa.k);
 }
 
+function update_u(k) 
+{
+   const u = document.getElementById('u');
+   stylek(k, u);
+      
+   if (options.media) 
+   {
+      let contact = aa.p[k];
+      if (contact && contact.data && contact.data.picture)
+      {
+         let img = u.querySelector('img');
+         if (!img) 
+         {
+            img = document.createElement('img');
+            u.replaceChildren(img)
+         }
+         img.src = contact.data.picture
+      }
+   }
+}
+
 function start(k) {
  
    if (is_hex(k)) 
    {
       io('','new post');
-      document.body.classList.add('has-k');  
+      document.body.classList.add('has-k');   
+      update_u(k);
+      document.getElementById('u').addEventListener('click', (e) => { select_p(k) });
       
-      const u = document.getElementById('u');
-      u.addEventListener('click', (e) => { select_p(k) });
-      
-      stylek(k, u);
-      if (options.media) 
-      {
-         let dat = aa.p[k];
-         if (dat && dat.picture)
-         {
-            const img = document.createElement('img');
-            img.src = dat.picture;
-            u.replaceChildren(img);
-         }
-      }
-      
-      fetch_relays().then((ships)=> // ahoy pirates unite
-      {
-         if (!Object.keys(ships).length) ships = options.r;
-         add_relaytion(ships) 
-      });
+      fetch_relays().then(resolve_relays);
    }     
 }
 

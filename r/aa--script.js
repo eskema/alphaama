@@ -1,13 +1,5 @@
 const stuff = { behavior:'smooth', block: 'start'};
 
-//function ash(tags, l) 
-//{
-//   const nav = document.createElement('nav');  
-//   nav.classList.add('tags');
-//   tags.forEach((ot, i)=> { nav.append(tag_link(ot)) });   
-//   return nav
-//}
-
 function not_interesting(l) 
 {
    l.classList.remove('interesting');
@@ -19,7 +11,6 @@ function not_interesting(l)
    document.body.classList.remove('has-interesting');
    sessionStorage.removeItem('interesting');
    document.getElementById('iot').placeholder = 'new post';
-   delete aa.reaction;
 
    return l
 }
@@ -36,7 +27,6 @@ function is_interesting(l)
    sessionStorage.interesting = l_id;   
    location.hash = '#' + l.id;
    document.getElementById('iot').placeholder = 'reply to ' + l.querySelector('.author').textContent;
-   delete aa.reaction;
    return l
 }
 
@@ -92,60 +82,7 @@ function hotkeys(e)
    }
 }
 
-function checknip05(jsondata) 
-{
-   if (jsondata && jsondata.names) 
-   {
-      if (pubkey === jsondata.names[username])
-      {
-         const tit = fren.querySelector('.tit');
-         if (tit) 
-         {
-            tit.dataset.nip05 = dat.nip05;
-            fren.classList.add('nip05');
-            if (dat.nip05.startsWith('_@')) tit.classList.add('root');
-            document.querySelectorAll('a[href="#p-'+pubkey+'"]')
-            .forEach((a)=>{a.dataset.nip05 = dat.nip05});
-         }
-      }
-      else console.log('invalid nip05', jsondata.names[username])
-   }
-}
 
-async function verifyNIP05(fren, dat, pubkey)
-{ //https://<domain>/.well-known/nostr.json?name=<local-part>
-   return new Promise(resolve =>
-   {
-      let [username, domain] = dat.nip05.trim().split('@');
-      if (username && domain) 
-      {
-         domain = 'https://'+domain;
-         const same = new URL(domain);
-         if (domain !== same.origin)
-         {
-            console.log('invalid nip05: domain !== origin', domain);
-            resolve(false);
-         }
-         else 
-         {
-            fetch(domain+'/.well-known/nostr.json', {headers:{'Content-Type':'application/json'}})
-            .then(async response => 
-            {
-               if (!response.ok) 
-               {
-                  const error = (data && data.message) || response.status;
-                  return Promise.reject(error)
-               }
-               
-               return await response.json()
-               // check for error response
-            })
-            .then((jsondata) => checknip05(jsondata)); 
-         }
-      }
-      else resolve(false);
-   });
-}
 
 
 
@@ -169,41 +106,42 @@ function select_e(l)
 function select_p(k) 
 {
    console.log('select', k);
-   if (is_hex(k)) 
-   {  
-      if (aa.p[k]) 
+   
+   let l = document.getElementById('p-'+k);
+   if (!l) l = newpub(k);
+   
+   if (aa.p[k] && aa.p[k].data)
+   {
+      
+      update_fren(k)
+      let solo = document.querySelector('.fren.solo');
+      
+      function pk() 
       {
-         let l = document.getElementById('p-'+k);
-         if (!l) l = newpub(k);
-         update_fren(aa.p[k], k)
-         let solo = document.querySelector('.fren.solo');
-         function pk() 
-         {
-            l.classList.add('solo');      
-            hide(k);
-            location.hash = '#p-' + k;
-            history.pushState('', '', location.origin + location.pathname + '#p-' + k + location.search);
-            document.body.classList.add('p-k');
-            
-            let interesting = document.querySelector('.interesting');
-            if (interesting) interesting = not_interesting(interesting);
-         }
+         l.classList.add('solo');      
+         hide(k);
+         location.hash = '#p-' + k;
+         history.pushState('', '', location.origin + location.pathname + '#p-' + k + location.search);
+         document.body.classList.add('p-k');
          
-         if (solo) 
-         {
-            solo.classList.remove('solo');
-            let active = solo.querySelector('.active');
-            if (active) active.classList.remove('active');
-            unhide();
-            history.pushState('', '', location.pathname);
-            document.body.classList.remove('p-k');
-            if (solo !== l) pk();
-         
-         } else pk();
+         let interesting = document.querySelector('.interesting');
+         if (interesting) interesting = not_interesting(interesting);
       }
-      else to_get({p:[k]});
-//      sub_p(k);
+      
+      if (solo) 
+      {
+         solo.classList.remove('solo');
+         let active = solo.querySelector('.active');
+         if (active) active.classList.remove('active');
+         unhide();
+         history.pushState('', '', location.pathname);
+         document.body.classList.remove('p-k');
+         if (solo !== l) pk();
+      
+      } else pk();
    }
+//      else to_get({p:[k]});
+//      sub_p(k);
 }
 
 function clickFren(e) 
@@ -334,9 +272,8 @@ function clickEvent(e)
    }   
 }
 
-function count_replies(o_l) 
+function count_replies(l) 
 {
-   let l = o_l;
    for ( ; l && l !== document; l = l.parentNode ) 
    {
       if (l.classList.contains('event')) 
@@ -348,7 +285,6 @@ function count_replies(o_l)
             const all = l.querySelectorAll('.event').length;
             const hide_btn = l.querySelector('.actions .hide-replies');
             if (hide_btn) hide_btn.textContent =  some + (all > some ? '.' + all : '');
-            if (l !== o_l) l.classList.add('has-new');
          }
       }
 	}
@@ -370,34 +306,13 @@ function lies(reply, l)
 {
    let replies = reply.querySelector('.replies');
 
-//   requestAnimationFrame(()=> 
-//   {
-   let 
-      l_stamp = parseInt(l.dataset.stamp);
-//      last = [...replies.children].filter((rep)=> parseInt(rep.dataset.stamp) > l_stamp ).reverse()[0],
-//      insert_b = last ? last : null;
-//      last = 1;
-//   .forEach((rep)=>
-//   {
-//      let rep_stamp = parseInt(rep.dataset.stamp);
-//      if (l_stamp < rep_stamp) 
-//      {
-//         if (!last) last = rep_stamp;
-//         if (l_stamp <= last) last = 
-//         insert_b = rep.nextSibling;
-//      }
-//   });
-//   console.log('lies', insert_b);
+   let l_stamp = parseInt(l.dataset.stamp);
+
    replies.insertBefore(l, insert_before(replies, l_stamp));
-//   replies.insertBefore(l, last ? last : null);
-   
-//		replies.append(l);
-      l.removeAttribute('data-reply');
-      reply.classList.add('has-replies');
-//      ordered(replies, true);
-      count_replies(l);
-//      if (l.classList.contains('interesting')) is_interesting(l);
-//	});
+
+   l.removeAttribute('data-reply');
+   reply.classList.add('has-replies', 'has-new');
+   count_replies(l);
     
    
    if (l.dataset.p !== aa.k) 
@@ -441,72 +356,51 @@ function get_orphans(l)
    }
 }
 
-function update_fren(dat, k)
+function show_fren() 
 {
-   let fren = document.getElementById('p-'+k);
-   if (!fren) fren = newpub(k);
+   
+}
 
-   const metadata = fren.querySelector('.metadata');
-
-   if (dat.name) 
+function update_metadata(contact) 
+{
+   const metadata = new DocumentFragment();
+   Object.entries(contact.data).map(([key,value])=>
    {
-      // iden.tit.y
-      let tit = fren.querySelector('.tit'); 
-      if (!tit) 
+      switch (key) 
       {
-         tit = document.createElement('h2');         
-         tit.classList.add('tit');
-         metadata.append(tit);
-      } 
+         case 'picture':
+            if (contact.trusted && options.media) metadata.append(m_l('img',{cla:key,src:value}));
+            else metadata.append(m_l('p',{cla:key,con:value}));
+            break;
+         default: 
+            metadata.append(m_l('p',{cla:key,con:value}));
+      }
+      if (!value || value === '') metadata.lastChild.classList.add('empty');
+      if (key === 'nip05') metadata.lastChild.dataset.verified = '?';
+   });
+   return metadata
+}
+
+function update_fren(k)
+{
+   let contact = aa.p[k];
+   let l = document.getElementById('p-'+k);
+//   if (!l) l = newpub(k);
+   if (contact && contact.data) 
+   {
+//      cd = contact.data;
+      const metadata = l.querySelector('.metadata');
+      metadata.dataset.date = format_date(dt(contact.wen));
+      metadata.textContent = '';
+      metadata.append(update_metadata(contact));
+
       
-      let name = fren.querySelector('.name');
-      if (!name) 
-      {
-         name = document.createElement('span');
-         name.classList.add('name');
-         tit.append(name);
-      }
-      name.textContent = dat.name;
-	}
-   
-   if (options.media) 
-   {
-//      if (dat.nip05 && location.protocol === 'https:') verifyNIP05(fren, dat, k);
-            
-      if (dat.picture && fren.classList.contains('trusted')) 
-      {
-         let picture = fren.querySelector('.picture');
-         
-         if (!picture) 
-         {
-            picture = document.createElement('img');
-            picture.classList.add('picture');
-            metadata.append(picture);
-            fren.classList.add('has-picture');
-         }
-         
-         picture.src = dat.picture;
-         picture.setAttribute('loading', 'lazy');
-         
-         if (k === aa.k) 
-         { // gets main profile img
-            const img = document.createElement('img');
-            img.src = dat.picture;
-            u.replaceChildren(img);
-         }
-      }
+      //      let follows = fren.querySelector('.follows');
+   //      if (!follows) 
+   //      { 
+   //         follows = make_section('follows');
+   //         fren.append(follows);
+   //      }
+      document.querySelectorAll('a[href="#p-'+k+'"]').forEach((a)=>{a_k(a,contact)})
    }
-   
-	if (dat.about) 
-	{
-      let about = fren.querySelector('.about');
-      if (!about) 
-      {
-         about = document.createElement('p');
-         about.classList.add('about');
-         metadata.append(about);
-      }
-	   about.textContent = dat.about;
-	}   
-   document.querySelectorAll('a[href="#p-'+k+'"]').forEach((a)=>{a_k(a,dat)})
 }

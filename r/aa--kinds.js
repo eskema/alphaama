@@ -1,4 +1,3 @@
-
 //const in_view = new window.IntersectionObserver(([entry]) => 
 //{
 //   if (entry.isIntersecting) 
@@ -18,33 +17,49 @@
 //   threshold: 0.1, // set offset 0.1 means trigger if atleast 10% of element in viewport
 //});
 
+function db_new_id(id, e = false) 
+{
+   db[id] = 
+   {
+      seen: [],
+      reply_ids: [],
+      react_ids: [],
+      reactions: {}
+   };
+   if (e) 
+   {
+      if (e.data) db[id].o = e.data[2];
+      if (e.origin && !db[id].seen.includes(e.origin)) db[id].seen.push(e.origin);
+   }
+}
+
 function newpub(k) 
 {   
    const 
-      knd0 = document.getElementById('kind-0'),
-      l = document.createElement('li'),
-      pubkey = document.createElement('p'),
-      metadata = document.createElement('header');
+      l = m_l('li', {id:'p-'+k,cla:'fren'}),
+      pubkey = m_l('p', {cla:'pubkey', con:k}),
+      metadata = m_l('header', {cla:'metadata'});
    
-   l.id = 'p-' + k;
-   l.classList.add('fren');
-   let trusts = trust(k);
-   if (trusts[1]) l.classList.add('trusted');
+//   let trusts = trust(k);
+//   if (trusts[1]) l.classList.add('trusted');
    
-   pubkey.classList.add('pubkey');
-   pubkey.textContent = k;
-   
-   metadata.classList.add('metadata');
-   
-   let close_btn = document.createElement('button');
-   close_btn.classList.add('close');
-   close_btn.textContent = 'x';
    stylek(k, l);
+//   pubkey = document.createElement('p'),
+//      metadata = document.createElement('header')
+//   pubkey.classList.add('pubkey');
+//   pubkey.textContent = k;
+   
+//   metadata.classList.add('metadata');
+   
+   let close_btn = m_l('button',{cla:'close',con:'x'});
+   
+   // fetch data
+   // follow
    
    l.append(pubkey, metadata, close_btn); 
    
-   knd0.append(l);      
-   l.addEventListener('click', clickFren, false);
+   document.getElementById('kind-0').append(l);      
+   l.addEventListener('click', clickFren);
    
    return l
 }
@@ -295,25 +310,74 @@ function defolt(o)
 }
 
 function kind0(o) 
-{ // NIP-01 set_metadata
-   const 
-      old_dat = aa.p[o.pubkey],
-      dat = typeof o.content === 'object' ? o.content : JSON.parse(o.content);
-//      if (old_dat && !old_dat.created_at) old_dat.created_at = 1;
-   if (!old_dat || (old_dat.created_at < o.created_at))
-   {
-      dat.created_at = o.created_at;
-      aa.p[o.pubkey] = dat;
-      localStorage.aa = JSON.stringify(aa);
-      update_fren(dat, o.pubkey);
-   }
-   if (o.pubkey === aa.k && !aa.k0.find((e)=> e.id === o.id)) aa.k0.unshift(o);
+{ 
+   // NIP-01 set_metadata
+   let new_data;
+   try { new_data = typeof o.content === 'object' ? o.content : JSON.parse(o.content) } 
+   catch (err) { console.log('invalid kind:0 content') }
    
-   if (location.hash.length 
-   && location.hash.startsWith('#p-'+o.pubkey)
-   ) 
-   { 
-      select_p(o.pubkey); console.log(o.pubkey)
+   if (new_data) 
+   {  
+      let contact = aa.p[o.pubkey];
+      if (contact) 
+      {
+         let old_data = contact.data;
+         if (!old_data || !contact.wen || contact.wen < o.created_at)
+         {
+            aa.p[o.pubkey].data = new_data;
+            aa.p[o.pubkey].wen = o.created_at;
+            localStorage.aa = JSON.stringify(aa);
+      //      update_fren(o.pubkey);
+         }
+      }
+      else aa.p[o.pubkey] = {data:new_data, wen:o.created_at}
+      
+      if (o.pubkey === aa.k && !aa.k0.find((e)=> e.id === o.id)) 
+      {
+         aa.k0.unshift(o);
+         aa.k0.sort((a,b) => b.created_at - a.created_at);
+         localStorage.aa = JSON.stringify(aa);
+         update_u(aa.k);
+      }
+      
+//      if (location.hash.length 
+//      && location.hash.startsWith('#p-'+o.pubkey)
+//      ) 
+//      { 
+//         select_p(o.pubkey); console.log(o.pubkey)
+//      }
+   }
+}
+
+function appende(l,o) 
+{
+   let 
+      reply_id,
+      reply_tag = get_reply(o.tags),
+      append_as_root = false;
+      
+   if (reply_tag) reply_id = reply_tag[1];
+   if (reply_id) 
+   {
+      l.classList.add('reply');
+      l.setAttribute('data-reply', reply_id);
+      let reply = document.getElementById('e-'+ reply_id);
+      if (reply) lies(reply, l);
+      else append_as_root = true;
+   } 
+   else 
+   {
+      l.classList.add('root');
+      append_as_root = true
+   }
+   
+   if (append_as_root) 
+   {
+      const 
+         knd1 = document.getElementById('kind-1'), 
+         l_stamp = parseInt(l.dataset.stamp),
+         last = [...knd1.children].filter((r)=> l_stamp > parseInt(r.dataset.stamp))[0];
+      knd1.insertBefore(l, last ? last : null);
    }
 }
 
@@ -340,38 +404,7 @@ function kind1(o)
          l.insertBefore(make_actions(), l.querySelector('.replies'));
       }
 
-      let 
-         reply_id,
-         reply_tag = get_reply(o.tags),
-         append_as_root = false;
-         
-      if (reply_tag) reply_id = reply_tag[1];
-      if (reply_id) 
-      {
-         l.classList.add('reply');
-         l.setAttribute('data-reply', reply_id);
-         let reply = document.getElementById('e-'+ reply_id);
-         if (reply) lies(reply, l);
-         else append_as_root = true;
-      } 
-      else 
-      {
-         l.classList.add('root');
-         append_as_root = true
-      }
-      
-      if (append_as_root) 
-      {
-         let knd1 = document.getElementById('kind-1'), l_stamp = parseInt(l.dataset.stamp);
-         let last = [...knd1.children].filter((r)=> l_stamp > parseInt(r.dataset.stamp))[0];
-         knd1.insertBefore(l, last ? last : null);
-//         let insert_b =  null, stamp = parseInt(l.dataset.stamp);
-//         [...document.getElementById('kind-1').children].forEach((rep)=>
-//         {
-//            if (!insert_b && stamp > parseInt(rep.dataset.stamp)) insert_b = rep;
-//         });
-//         document.getElementById('kind-1').insertBefore(l, insert_b);
-      }
+      appende(l,o);
       
       if (o.id === sessionStorage.sub_root 
       || (location.hash.length && location.hash.startsWith('#e-'+o.id))
@@ -419,16 +452,47 @@ function kind1(o)
 }
 
 function kind2(o) 
-{// Recommend Relay (NIP1)
+{
+   // Recommend Relay (NIP1)
    kind1(o);
 }
 
 function kind3(o) 
-{ // Contacts (NIP2) (& relays until new dedicated relay NIP)
-   const you = o.pubkey === aa.k;
-   if (you) 
+{ 
+   // Contacts (NIP2) (& relays until new dedicated relay NIP)
+   const dis_you = o.pubkey === aa.k;
+
+   if (o.tags.length) 
    {
-      if (!aa.k3.find((e)=> e.id === o.id)) aa.k3.unshift(o);
+      let subs = [];
+      o.tags.forEach((ot)=>
+      {
+         if (is_hex(ot[1])) 
+         {
+            if (dis_you) subs.push(ot[1]);
+            if (aa.bff.includes(o.pubkey) 
+            && !aa.ff.includes(ot[1])
+            ) aa.ff.push(ot[1]);
+         }
+      });
+
+      if (dis_you || aa.bff.includes(o.pubkey))
+      {
+         if (dis_you) aa.bff = subs;
+         if (aa.bff.includes(o.pubkey)) aa.ff = [...new Set(aa.ff)];
+         localStorage.aa = JSON.stringify(aa);     
+      } 
+   }
+   
+   // relays part
+   if (dis_you) 
+   {
+      if (!aa.k3.find((e)=> e.id === o.id))
+      {
+         aa.k3.unshift(o);
+         aa.k3.sort((a,b) => b.created_at - a.created_at);
+         localStorage.aa = JSON.stringify(aa);
+      }
       let rels;
       try { rels = JSON.parse(o.content) } 
       catch (error) { console.log('no relays found in your kind-3') }
@@ -437,70 +501,6 @@ function kind3(o)
          options.r = rels
          localStorage.options = JSON.stringify(options);
       }      
-      
-   } 
-   
-//   let fren = document.getElementById('p-' + o.pubkey);
-//   if (!fren) fren = newpub(o.pubkey);   
-   if (o.tags.length > 0) 
-   {
-//      let follows = fren.querySelector('.follows');
-//      if (!follows) 
-//      { 
-//         follows = make_section('follows');
-//         fren.append(follows);
-//      }
-      let pubs = [];
-      o.tags.forEach((ot)=>
-      {
-         if (is_hex(ot[1])) 
-         {
-            if (you) pubs.push(ot[1]);
-            if (aa.bff.includes(o.pubkey) 
-            && !aa.ff.includes(ot[1])
-            ) aa.ff.push(ot[1]);
-         
-//            const 
-//               f = document.createElement('li'),
-//               a = tag_link(ot);
-//            
-//            f.classList.add('follow', 'section-item', 'p-'+ot[1]);
-//            f.append(a);
-//            stylek(ot[1], f);
-//            follows.append(f);
-         }
-      });
-
-//      build_relays(o.content, fren);
-      
-      if (you)
-      { 
-         aa.bff = pubs;
-      }
-      
-      if (you || aa.bff.includes(o.pubkey)) localStorage.aa = JSON.stringify(aa);      
-      
-      if (aa.bff.includes(o.pubkey)) 
-      {
-         aa.ff = [...new Set(aa.ff)];
-      }
-   }   
-   
-}
-
-function db_new_id(id, e = false) 
-{
-   db[id] = 
-   {
-      seen: [],
-      reply_ids: [],
-      react_ids: [],
-      reactions: {}
-   };
-   if (e) 
-   {
-      if (e.data) db[id].o = e.data[2];
-      if (e.origin && !db[id].seen.includes(e.origin)) db[id].seen.push(e.origin);
    }
 }
 
@@ -528,5 +528,18 @@ function kind7(o)
       {
          document.getElementById('e').insertBefore(e_e(o), inb4(document.getElementById('e'), o.created_at)) 
       }
+   }
+}
+
+function kind10001(o) 
+{
+   if (o.pubkey === aa.k) 
+   {
+      if (!aa.k10001.find((e)=> e.id === o.id))
+      {
+         aa.k10001.unshift(o);
+         aa.k10001.sort((a,b) => b.created_at - a.created_at);
+      }
+      console.log(o)
    }
 }

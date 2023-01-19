@@ -21,8 +21,8 @@ function fetch_missing(relay_url)
                const o = db[l.id.substr(2)].o;
    
                let t = get_tags(o.tags);
-               if (t.p) t.p.forEach((p)=>{if (!aa.p[p]) events.p.push(p)});
-               if (!aa.p[o.pubkey]) events.p.push(o.pubkey);
+               if (t.p) t.p.forEach((p)=>{if (!aa.p[p] || !aa.p[p].data) events.p.push(p)});
+               if (!aa.p[o.pubkey] || !aa.p[o.pubkey].data) events.p.push(o.pubkey);
                if (t.e) t.e.forEach((e)=>{if (!db[e] || !db[e].o) events.e.push(e)});
             }
          }
