@@ -589,44 +589,58 @@ button:hover {
    justify-self: start;
 }
 
-.metadata p.empty {
-   color: rgb(var(--c-a-b));
-   grid-row: 99;
-   grid-area: unset;
-}
-
-.metadata p::before,
-.metadata p.empty::before {
-   content: attr(class) ": ";
-}
-
 .metadata .picture,
 .metadata .banner {
    grid-area: picture;
    background: none;
    line-height: 1;
+   
+}
+
+p.metadata .banner,
+.metadata .picture {
    padding: var(--pad);
 }
 
-.metadata .banner {
+.metadata .banner,
+.metadata .picture {
    
+
+   transition: var(--trans-quart);
+   /*max-width: 50vw;*/
+   
+   
+   cursor: pointer;
+   /*max-width: 100%;*/
+   /*justify-self: start;*/
+   /*line-height: 1;*/
+}
+
+.metadata img.banner {
+   /*max-width: calc(70vw - calc(var(--pad) * 1.5));*/
    /*justify-self: end;*/
+   /*align-self: start;*/
+   object-fit: cover;
+   object-position: 50% 50%;
+   width: 100%;
+   /*max-height: calc(var(--media-height) - 2.4rem);*/
+   max-height: var(--media-height);
+   /*height: u;*/
    
-   margin-bottom: 2rem;
+   padding: 0;
+   margin: 0;
+   /*margin-bottom: 2rem;*/
    /*margin-right: 3rem;*/
 }
 
 .metadata .picture {
-   align-self: end;
+   /*opacity: .5;*/
    max-height: var(--media-height);
    height: unset;
-   transition: var(--trans-quart);
-   /*max-width: 50vw;*/
    object-fit: contain;
+   align-self: end;
    object-position: 0% 0%;
-   cursor: pointer;
-   /*justify-self: start;*/
-   /*line-height: 1;*/
+   max-width: calc(30vw - calc(var(--pad) * 1.5));
 }
 
 .metadata .name::before,
@@ -687,7 +701,6 @@ button:hover {
    color: rgb(var(--c-a-d));
    line-height: 1.4;
    hyphens: auto;
-   -webkit-hyphens: auto;
    white-space: pre-wrap;  
    padding: var(--pad);
    padding-top: 0;
@@ -707,6 +720,16 @@ button:hover {
    grid-area: luds;
 }
 
+.metadata p.empty {
+   color: rgb(var(--c-a-b));
+   grid-row: 99;
+   grid-area: unset;
+}
+
+.metadata p::before,
+.metadata p.empty::before {
+   content: attr(class) ": ";
+}
 
 .fren button.close {
    grid-area: pubkey;
@@ -1028,24 +1051,24 @@ body:not(.ffs) .fren:not(.solo) > *:not(.interactions) {
    /*content: "(" var(--who) ")";*/
 }
 
-[data-who="mf"] > .heading > .author:after {
+[data-trust="false"] > .heading > .author:after {
    content: "(mf)";
    color: rgb(var(--c-b-a));
 }
 
-[data-who="ff"] > .heading > .author:after {
+[data-trust="3"] > .heading > .author:after {
    content: "(ff)";
 }
 
-[data-who="you"] > .heading > .author:after,
-[data-who="bff"] > .heading > .author:after {
+/*[data-trust="1"] > .heading > .author:after,
+[data-trust="2"] > .heading > .author:after {
    content: "";
-}
+}*/
 
-[data-who="you"] > .heading > .author {
+/*[data-who="you"] > .heading > .author {
    content: "";
    color: color: rgb(var(--c-a-e));
-}
+}*/
 
 .heading > .author .text {
    border-bottom: 1px dotted rgba(var(--c), 0);

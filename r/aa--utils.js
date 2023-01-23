@@ -209,19 +209,19 @@ function a_k(a,contact)
          let a_text = a.querySelector('.text');
          if (a_text.textContent !== name) a_text.textContent = name;
       }
-      
-      if (contact.trusted && options.media && contact.data.picture) 
+      let a_image = a.querySelector('img');
+      if (options.media && contact.trust && contact.trust !== 'false' &&  contact.data.picture) 
       {
-         let a_image = a.querySelector('img');
          if (!a_image)
          {
-            a_image = m_l('img',{cla:'has-picture'});
+            a_image = m_l('img',{cla:'picture'});
             a.append(a_image);
          }
-         if (!a_image.src || a_image.src !== contact.data.picture.trim()) a_image.src = contact.data.picture
-      }   
+         if (!a_image.src || a_image.src !== contact.data.picture.trim()) a_image.src = contact.data.picture;
+         a.classList.add('has-picture')
+      }
+      else if (a_image) a.removeChild(a_image)
    }
-   
 }
 
 function ur(string) 
@@ -406,7 +406,8 @@ function merely_mentions(text, tags)
       {
          if (tag[0] === 'p')
          {
-            try { name = aa.p[kid].name }
+            let name;
+            try { name = aa.p[kid].data.name }
             catch (error) { console.log('no name found') }
             
             if (name) mention = '@' + name;

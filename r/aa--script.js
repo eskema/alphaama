@@ -100,7 +100,7 @@ function select_e(l)
    if (l) it = l.classList.contains('interesting') ? not_interesting(l) : is_interesting(l);
    
    if (it) { it.scrollIntoView(stuff) } 
-   else if (id) to_get({e:[id]});
+//   else if (id) to_get({e:[id]});
 }
 
 function select_p(k) 
@@ -369,7 +369,8 @@ function update_metadata(contact)
       switch (key) 
       {
          case 'picture':
-            if (contact.trusted && options.media) metadata.append(m_l('img',{cla:key,src:value}));
+         case 'banner':
+            if (options.media && contact.trust && contact.trust !== 'false') metadata.append(m_l('img',{cla:key,src:value}));
             else metadata.append(m_l('p',{cla:key,con:value}));
             break;
          default: 
@@ -390,7 +391,7 @@ function update_fren(k)
    {
 //      cd = contact.data;
       const metadata = l.querySelector('.metadata');
-      metadata.dataset.date = format_date(dt(contact.wen));
+      metadata.dataset.date = format_date(dt(contact.last_k0));
       metadata.textContent = '';
       metadata.append(update_metadata(contact));
 

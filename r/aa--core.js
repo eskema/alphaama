@@ -151,19 +151,19 @@ function new_mention(dis)
    helper.textContent = '';
    
    Object.entries(aa.p)
-   .filter(([k,dat])=> dat.name && dat.name.startsWith(dis) 
-   || dat.nip05 && dat.nip05.startsWith(dis)
+   .filter(([k,dat])=> dat.data.name && dat.data.name.startsWith(dis) 
+   || dat.data.nip05 && dat.data.nip05.startsWith(dis)
    || k.startsWith(dis))
    .map(([k,dat])=>
    {
-      let content = '(' + hex_trun(k) + ') ' + dat.name + (dat.nip05 ? ' / ' + dat.nip05 : '');
+      let content = '(' + hex_trun(k) + ') ' + dat.data.name + (dat.data.nip05 ? ' / ' + dat.data.nip05 : '');
       l = m_l('p',{cla:'helper',con:content})
       helper.append(l);
       l.addEventListener('click', ()=> 
       {
          helper.textContent = '';
          
-         io(iot.value.substr(0,iot.value.length - dis.length) + dat.name + ' ');
+         io(iot.value.substr(0,iot.value.length - dis.length) + dat.data.name + ' ');
 //         iot.value += dat.name + ' ';
          iot.setSelectionRange(iot.value.length,iot.value.length);
          iot.focus();
@@ -323,6 +323,31 @@ function is(e)
                break;
             case '--miss':
                fetch_missing(false); 
+               break;
+            case '--ops':
+//               let contact = aa.p[aa.k], data;
+//               if (contact) 
+//               {
+//                  data = contact.data;
+//                  delete data.created_at;
+//                  data = JSON.stringify(options);
+//               }
+//               else 
+//               {
+//                  data = 'no metadata found.'
+//               }
+               clear = false;
+               io('--sop ' + JSON.stringify(options));
+               break;
+            case '--sop':
+               let sop = v.substr(5).trim();
+               if (sop.startsWith('{') && sop.endsWith('}')) 
+               {
+                  options = JSON.parse(sop);
+                  localStorage.options = sop;
+               } else {
+                  console.log(sop)
+               }
                break;
 //            case '--read':
 //               let unread = document.querySelectorAll('.unread');

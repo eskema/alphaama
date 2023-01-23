@@ -3,8 +3,6 @@
 //   if (entry.isIntersecting) 
 //   {
 //      let l = entry.target;
-//      
-//      if (l.classList.contains('trusted')) parse_content(l);
 //      l.classList.add('loaded');
 //      console.log('in_view', entry)
 //      in_view.unobserve(l);
@@ -40,21 +38,11 @@ function newpub(k)
       pubkey = m_l('p', {cla:'pubkey', con:k}),
       metadata = m_l('header', {cla:'metadata'});
    
-//   let trusts = trust(k);
-//   if (trusts[1]) l.classList.add('trusted');
-   
    stylek(k, l);
-//   pubkey = document.createElement('p'),
-//      metadata = document.createElement('header')
-//   pubkey.classList.add('pubkey');
-//   pubkey.textContent = k;
-   
-//   metadata.classList.add('metadata');
    
    let close_btn = m_l('button',{cla:'close',con:'x'});
    
-   // fetch data
-   // follow
+   // todo: follows
    
    l.append(pubkey, metadata, close_btn); 
    
@@ -64,23 +52,47 @@ function newpub(k)
    return l
 }
 
-function trust(pubkey) 
+function trust_calc(pubkey) 
 {  
-   let trust = pubkey === aa.k ? 'yo'
-   : aa.bff && aa.bff.includes(pubkey) ? 'bf'
-   : aa.ff && aa.ff.includes(pubkey) ? 'ff'
-   : 'mf';
-
-   let trusted = false;
-   switch (trust) {
-      case 'yo':
-      case 'bf':
-      case 'ff':
-         trusted = true;
-         break;
+   let trust = pubkey === aa.k ? 1 : 'false';
+   // 0 no trust
+   // 1 you   
+   
+   // 2 pubkeys you follow by including them in your kind-3
+   // 3 pubkeys that are followed by #2 that are not in the previous sets
+   // 4 pubkeys that are followed by #3 that are not in the previous sets
+   // ...
+   if (trust === 'false') 
+   {
+      
+      let bffs = aa.p[aa.k].bff;
+      if (bffs && bffs.includes(pubkey)) trust = 2;
+      else if (bffs && bffs.some((id)=> aa.p[id].bff && aa.p[id].bff.includes(pubkey) )) trust = 3;
    }
    
-   return [trust,trusted]
+   return trust
+}
+
+function trust_get(pubkey) 
+{  
+   let trust, contact = aa.p[pubkey];
+   return contact && contact.trust ? contact.trust : trust_calc(pubkey)
+}
+
+function trust_reset() 
+{  
+   Object.keys(aa.p).map(trust_set);
+}
+
+const trust_set = (pubkey) =>
+{  
+   aa.p[pubkey].trust = trust_calc(pubkey);
+};
+
+function is_trusty(pubkey) 
+{  
+   let trust = trust_get(pubkey);
+   return (Number.isInteger(trust) && trust > 0) ? true : false;
 }
 
 function newid(o) 
@@ -99,9 +111,7 @@ function newid(o)
    if (o.pubkey) 
    {
       l.dataset.p = o.pubkey;
-      let trusts = trust(o.pubkey);
-      l.dataset.who = trusts[0];
-      if (trusts[1]) l.classList.add('trusted');
+      l.dataset.trust = trust_get(o.pubkey);
       const h_author = tag_link(['p', o.pubkey]);
       h_author.classList.add('author');
       h.prepend(h_author);
@@ -322,23 +332,28 @@ function kind0(o)
       if (contact) 
       {
          let old_data = contact.data;
-         if (!old_data || !contact.wen || contact.wen < o.created_at)
+         if (!old_data || !contact.last_k0 || contact.last_k0 < o.created_at)
          {
             aa.p[o.pubkey].data = new_data;
-            aa.p[o.pubkey].wen = o.created_at;
-            localStorage.aa = JSON.stringify(aa);
+            aa.p[o.pubkey].last_k0 = o.created_at;
+            
+//            localStorage.aa = JSON.stringify(aa);
       //      update_fren(o.pubkey);
          }
+         
       }
-      else aa.p[o.pubkey] = {data:new_data, wen:o.created_at}
-      
+      else aa.p[o.pubkey] = {data:new_data, last_k0:o.created_at};
+      if (!aa.p[o.pubkey].trust) aa.p[o.pubkey].trust = trust_calc(o.pubkey);
       if (o.pubkey === aa.k && !aa.k0.find((e)=> e.id === o.id)) 
       {
          aa.k0.unshift(o);
          aa.k0.sort((a,b) => b.created_at - a.created_at);
-         localStorage.aa = JSON.stringify(aa);
+         
          update_u(aa.k);
       }
+      localStorage.aa = JSON.stringify(aa);
+      
+      
       
 //      if (location.hash.length 
 //      && location.hash.startsWith('#p-'+o.pubkey)
@@ -400,7 +415,7 @@ function kind1(o)
 
       if (o.kind === 1) 
       {
-         if (l.classList.contains('trusted')) parse_content(l);
+         if (is_trusty(o.pubkey) || o.draft) parse_content(l);
          l.insertBefore(make_actions(), l.querySelector('.replies'));
       }
 
@@ -457,51 +472,111 @@ function kind2(o)
    kind1(o);
 }
 
+function update_follows() 
+{
+   let aap = Object.entries(aa.p);
+   let unfollowed = [];
+   // remove prior follows
+   // for each contact that is followed
+   aap.filter(([k,v])=>v.followed_by)
+   .map(([dis_k,contact])=> 
+   {
+      // for each of the ids that follow this k
+      contact.followed_by.map((id)=>
+      {
+         // check that they still follow k
+         if (aa.p[id].bff && !aa.p[id].bff.includes(dis_k)) 
+         {
+//            console.log(dis_k,contact);
+//            console.log(id,aa.p[id].bff);
+//            console.log('not found in ' + id + ' bffs', aa.p[id].bff);
+            contact.followed_by = contact.followed_by.filter((i)=> i !== id );
+            unfollowed.push(dis_k);
+         }
+      });      
+   });
+   return unfollowed;
+}
+
 function kind3(o) 
 { 
    // Contacts (NIP2) (& relays until new dedicated relay NIP)
-   const dis_you = o.pubkey === aa.k;
-
-   if (o.tags.length) 
+   if (!aa.p[o.pubkey] || !aa.p[o.pubkey].last_k3 || aa.p[o.pubkey].last_k3 < o.created_at)
    {
-      let subs = [];
-      o.tags.forEach((ot)=>
-      {
-         if (is_hex(ot[1])) 
-         {
-            if (dis_you) subs.push(ot[1]);
-            if (aa.bff.includes(o.pubkey) 
-            && !aa.ff.includes(ot[1])
-            ) aa.ff.push(ot[1]);
-         }
-      });
-
-      if (dis_you || aa.bff.includes(o.pubkey))
-      {
-         if (dis_you) aa.bff = subs;
-         if (aa.bff.includes(o.pubkey)) aa.ff = [...new Set(aa.ff)];
-         localStorage.aa = JSON.stringify(aa);     
-      } 
-   }
+      aa.p[o.pubkey].last_k3 = o.created_at;
+      const dis_you = o.pubkey === aa.k;
    
-   // relays part
-   if (dis_you) 
-   {
-      if (!aa.k3.find((e)=> e.id === o.id))
+      if (o.tags.length) 
       {
-         aa.k3.unshift(o);
-         aa.k3.sort((a,b) => b.created_at - a.created_at);
-         localStorage.aa = JSON.stringify(aa);
+         // iterate over each contact on the list
+         let pubs = [];
+         o.tags.forEach((tag)=>
+         {
+            // tag = ['p','id','relay_url','petname']
+            if (tag.length > 1 && tag[0] === 'p') 
+            {
+               let pub = tag[1].trim();
+               if (is_hex(pub)) 
+               {
+      //            console.log(ot[1].length);
+                  pubs.push(pub);
+                  
+                  if (!aa.p[pub]) aa.p[pub] = { followed_by:[o.pubkey], relays:[], petnames:[] };
+                  
+                  if (!aa.p[pub].followed_by) aa.p[pub].followed_by = [o.pubkey];
+                  if (!aa.p[pub].followed_by.includes(o.pubkey)) aa.p[pub].followed_by.push(o.pubkey);
+                  
+                  // relay hints
+                  if (tag[2] && tag[2] !== '') 
+                  {
+                     let relay = tag[2].trim();
+                     if (dis_you) aa.p[pub].relay = relay;
+                     if (!aa.p[pub].relays) aa.p[pub].relays = [relay];
+                     if (!aa.p[pub].relays.includes(relay)) aa.p[pub].relays.push(relay); 
+                  }
+      
+                  // petnames
+                  if (tag[3] && tag[3] !== '') 
+                  {
+                     let petname = tag[3].trim();
+                     if (dis_you) aa.p[pub].petname = petname;
+                     if (!aa.p[pub].petnames) aa.p[pub].petnames = [petname];
+                     if (!aa.p[pub].petnames.includes(petname)) aa.p[pub].petnames.push(petname);
+                  }
+                  
+                  if (!aa.p[pub].trust) aa.p[pub].trust = trust_calc(pub)
+                  
+               } // else console.log('invalid pubkey in kind:3')
+            } // else console.log('not p tag in kind:3')
+         });
+         pubs = [...new Set(pubs)];         
+         aa.p[o.pubkey].bff = pubs;
       }
-      let rels;
-      try { rels = JSON.parse(o.content) } 
-      catch (error) { console.log('no relays found in your kind-3') }
-      if (rels) 
+      
+      let unfollowed = update_follows();
+      if (unfollowed.length) unfollowed.map(trust_set)
+      
+      // relays part
+      if (dis_you) 
       {
-         options.r = rels
-         localStorage.options = JSON.stringify(options);
-      }      
-   }
+         if (!aa.k3.find((e)=> e.id === o.id))
+         {
+            aa.k3.unshift(o);
+            aa.k3.sort((a,b) => b.created_at - a.created_at);
+   //         localStorage.aa = JSON.stringify(aa);
+         }
+         let rels;
+         try { rels = JSON.parse(o.content) } 
+         catch (error) { console.log('no relays found in your kind-3') }
+         if (rels) 
+         {
+            options.r = rels
+            localStorage.options = JSON.stringify(options);
+         }      
+      }
+      
+      localStorage.aa = JSON.stringify(aa);
+   } 
 }
 
 function kind7(o) 

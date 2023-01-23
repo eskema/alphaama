@@ -59,7 +59,8 @@ function force_close()
 function f_open(resume) 
 {
    const request_filters = [];
-   const subs = [aa.k, ...aa.bff];
+   let bff = aa.p[aa.k].bff ? aa.p[aa.k].bff : [];
+   const subs = [aa.k, ...bff];
    const since = x_days(options.days);
    const wen = resume && aa.t ? aa.t > since ? aa.t : since : since;
    // profiles and contacts from your you and your follows
