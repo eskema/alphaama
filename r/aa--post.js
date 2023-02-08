@@ -7,7 +7,7 @@ function get_seen(id)
 function get_root(tags) 
 {
    // get the marked root event
-   const events = [];
+   const e_tags = [];
    for (let i = 0; i < tags.length; i++) 
    {
       if (tags[i][0] === 'e' && is_hex(tags[i][1]))
@@ -17,16 +17,17 @@ function get_root(tags)
             if (tags[i][2] === '') tags[i][2] = get_seen(tags[i][1]);
             return tags[i];
          }
-         events.push(tags[i])
+         e_tags.push(tags[i])
       }
    }
-   // if there's no marked root, check if there's events and use the first if not marked mention
-   if (events.length) 
+   // if there's no marked root, 
+   // check if there's events and use the first if not marked mention
+   if (e_tags.length) 
    {
-      if (events[0][3] && events[0][3] === 'mention') return false;
+      if (e_tags[0][3] && e_tags[0][3] === 'mention') return false;
       
       const 
-         e = events[0],
+         e = e_tags[0],
          rel = e[2] && e[2] !== '' ? e[2] : get_seen(e[1]);
       return ['e', e[1], rel, 'root'];
    }
@@ -36,24 +37,25 @@ function get_root(tags)
 function get_reply(tags) 
 {
    // get the marked reply event
-   const events = [];
+   const e_tags = [];
    for (let i = 0; i < tags.length; i++) 
    {
       if (tags[i][0] === 'e' && is_hex(tags[i][1]))
       {
          if (tags[i][3] && tags[i][3] === 'reply') return tags[i];
-         events.push(tags[i])
+         e_tags.push(tags[i])
       }
    }
-   // if there's no marked reply, check if there's events and use the last if not marked mention
-   if (events.length)
+   // if there's no marked reply, 
+   // check if there's events and use the last if not a mention
+   if (e_tags.length)
    {
-      if (events[events.length-1][3] 
-      && events[events.length-1][3] === 'mention') return false;
+      if (e_tags[e_tags.length-1][3] 
+      && e_tags[e_tags.length-1][3] === 'mention') return false;
       
-      return events[events.length-1]
+      return e_tags[e_tags.length-1]
    }
-   else return false
+   return false
 }
 
 function preptags(o) 
@@ -73,60 +75,62 @@ function preptags(o)
       if (p[1] !== aa.k && is_hex(p[1])) pubkeys.push(['p',p[1]])
    });
    let unique = [...new Set(pubkeys)];
-   if (o.pubkey !== aa.k && !unique.includes(o.pubkey)) unique.push(['p',o.pubkey])
+   if (o.pubkey !== aa.k && !unique.some((t)=>t[1] === o.pubkey)) unique.push(['p',o.pubkey])
    tags.push(...unique);
 
    return tags
 }
 
-function prep(event)
+function prep()
 {
-   event.created_at = Math.floor(Date.now() / 1000);
+   compose.o.created_at = now();
 
    let reply_id = sessionStorage.interesting;
    if (reply_id)
    {
       let reply = document.getElementById('e-'+reply_id);
       if (reply && db[reply_id] && db[reply_id].o) event.tags = [...event.tags, ...preptags(db[reply_id].o)];
-   } 
-   const hashtags = parse_hashtags(event.content);
-   if (hashtags.length) hashtags.forEach((t)=>{ event.tags.push(t) });
+   }
+   const hashtags = parse_hashtags(compose.o.content);
+   if (hashtags.length) hashtags.forEach((t)=>{ compose.o.tags.push(t) });
    
 //   if (mentions) 
 //   {
       // mentions.forEach(build_mention(mention))
 //   }
    
-   event.id = NostrTools.getEventHash(event); // await hash(JSON.stringify(a));
-   localStorage[event.id] = JSON.stringify(event);
-   event.draft = true;
-   event.seen = [];
-   kind1(event);
+   compose.o.id = NostrTools.getEventHash(compose.o); // await hash(JSON.stringify(a));
+   draft();
 }
 
-async function reaction(event)
+function draft() 
 {
-//   console.log(note[0], note[1], note[2])
-//   let event = 
-//   {
-//      kind: 7,
-//      created_at: Math.floor(Date.now() / 1000),
-//      tags: [],
-//      content: note[0],
-//      pubkey: aa.k
-//   };
-//      
-//   event.tags.push([ 'e', note[1], get_seen(note[1]) ]);
-//   event.tags.push([ 'p', note[2] ]);
+
+   if (compose) 
+   {
+      compose.o.created_at = now();
+      compose.o.id = NostrTools.getEventHash(compose.o);
+      compose.n = x_note(compose.o.id);
+      drafts[compose.o.id] = compose;
+      pr(compose);
+      compose_clear();
+   }
+}
+
+function reaction(event)
+{  
    event.id = NostrTools.getEventHash(event);
    sign(event);
-   delete temp.reaction
+   
+//   delete temp.reaction
+//   document.getElementById('iot').blur();      
 }
 
-function finish_hi(m)
+function finish_hi()
 {
-   m.id = NostrTools.getEventHash(m);
-   sign(m);
+   compose.o.id = NostrTools.getEventHash(compose.o);
+   sign(compose.o);
+   compose_clear();
 }
 
 
@@ -148,7 +152,7 @@ function follow(parts)
          let event = 
          {
             kind: 3,
-            created_at: Math.floor(Date.now() / 1000),
+            created_at: now(),
             tags: [...old.tags, ['p', ...parts]],
             content: old.content,
             pubkey: aa.k
@@ -170,7 +174,7 @@ function unfollow(k)
       let event = 
       {
          kind: 3,
-         created_at: Math.floor(Date.now() / 1000),
+         created_at: now(),
          tags: old.tags.filter(p => p[1] !== k),
          content: old.content,
          pubkey: aa.k
@@ -187,7 +191,7 @@ function set_metadata(o)
    let event = 
    {
       kind: 0,
-      created_at: Math.floor(Date.now() / 1000),
+      created_at: now(),
       tags: [],
       content: JSON.stringify(o),
       pubkey: aa.k
@@ -266,8 +270,10 @@ function sign(unsigned)
    {
       window.nostr.signEvent(unsigned).then((signed) =>
       {
+         console.log(signed);
          broadcast(['EVENT', signed]); //post(signed);
          if (localStorage[unsigned.id]) localStorage.removeItem(localStorage[unsigned.id]);
+//         compose = false;
       });
       
    } 

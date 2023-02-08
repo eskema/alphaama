@@ -64,11 +64,11 @@ function f_open(resume)
    const since = x_days(options.days);
    const wen = resume && aa.t ? aa.t > since ? aa.t : since : since;
    // profiles and contacts from your you and your follows
-   let profiles_filter = {authors: subs, kinds:[0,3,10001]};
+   let profiles_filter = {authors: subs, kinds:[0,3,10002]};
    if (resume) profiles_filter.since = wen;
    request_filters.push(profiles_filter);
    // notes and reactions from your you and your follows
-   request_filters.push({authors: subs, kinds:[1,7], since: wen});
+   request_filters.push({authors: subs, kinds:[1,2,7,40,42,30023], since: wen});
    // replies to your posts
    request_filters.push({'#p': [aa.k], kinds:[1,7], since: wen});
    
@@ -122,18 +122,24 @@ async function connect(url)
 function pr(event_data) 
 {
    const o = event_data.o;
+   if (event_data.draft) console.log(event_data);
    if (o) 
    {
       if (!aa.t || aa.t < o.created_at) aa.t = o.created_at;
+      let contact = p_get(o.pubkey);
       
       switch (o.kind) 
       {
-         case 0: kind0(o); break;
-         case 1: kind1(o); break;
-         case 2: kind1(o); break;
-         case 3: kind3(o); break;
-         case 7: kind1(o);break;
-         case 10001: kind10001(10001);break;
+         case 0: kind0(event_data); break;
+         case 1: kind1(event_data); break;
+         case 2: kind1(event_data); break;
+         case 3: kind3(event_data); break;
+         case 7: kind1(event_data); break;
+         case 40: kind1(event_data); break;
+         case 42: kind1(event_data); break;
+         case 10002: kind1(event_data); break;
+         case 30023: kind1(event_data); break;
+//         case 10001: kind10001(10001);break;
                // defolt(o); break; 
       }
    }
@@ -144,7 +150,8 @@ function event_messag(e)
 {
    if (!db[e.data[2].id]) 
    {
-      db_new_id(e.data[2].id, e) 
+      if (NostrTools.validateEvent(e.data[2]) && NostrTools.verifySignature(e.data[2])) db_new_id(e.data[2].id, e);
+      else console.log('invalid event:', e);
    }
    else if (!db[e.data[2].id].seen.includes(e.origin)) 
    {
@@ -153,8 +160,11 @@ function event_messag(e)
    const incoming = relays[e.origin].reqs[e.data[1]];
    if (!incoming) 
    {
-      pr(db[e.data[2].id]);
-      fetch_missing(e.origin);
+      if (db[e.data[2].id])
+      {
+         pr(db[e.data[2].id]);
+         fetch_missing(e.origin);      
+      }
    }
    else relays[e.origin].reqs[e.data[1]].push(e.data[2].id);
 }

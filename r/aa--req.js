@@ -1,5 +1,6 @@
 function fetch_missing(relay_url) 
 {  
+   console.log('fetch missing', relay_url);
    let events = { e: [], p: [] }     
    document.querySelectorAll('[data-reply]').forEach((l)=>
    {
@@ -18,9 +19,9 @@ function fetch_missing(relay_url)
             {
                not_seen.push(relay_url);
                l.dataset.not_seen = JSON.stringify(not_seen);
-               const o = db[l.id.substr(2)].o;
+               const o = db[l.dataset.x].o;
    
-               let t = get_tags(o.tags);
+               let t = get_ep_tags(o.tags);
                if (t.p) t.p.forEach((p)=>{if (!aa.p[p] || !aa.p[p].data) events.p.push(p)});
                if (!aa.p[o.pubkey] || !aa.p[o.pubkey].data) events.p.push(o.pubkey);
                if (t.e) t.e.forEach((e)=>{if (!db[e] || !db[e].o) events.e.push(e)});
@@ -57,7 +58,7 @@ function fetch_missing(relay_url)
          demand([req, relay_url]);
       }
    }
-   else document.getElementById('a').textContent = 'whatever the fuck you want';
+//   else document.getElementById('a').textContent = 'whatever the fuck you want';
 }
 
 function load_new() 
@@ -115,7 +116,7 @@ function sub_p(pubkey)
    }  
 }
 
-function get_tags(tags) 
+function get_ep_tags(tags) 
 {
    const events = { e: [], p: [] };
    

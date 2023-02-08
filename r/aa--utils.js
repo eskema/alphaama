@@ -82,8 +82,8 @@ function hex_trun(k, separator = '…') {
 
 function pretty(k) 
 {
-   const bff = aa.p[k];
-   return bff && bff.name ? bff.name : hex_trun(k)
+   const contact = aa.p[k];
+   return contact && contact.data && contact.data.name ? contact.data.name : hex_trun(k)
 }
 
 
@@ -99,21 +99,36 @@ function stylek(k, l)
    if (is_hex(k)) l.style.cssText = '--c:' + rgb(x_0(k)) + ';';
 }
 
+function now() 
+{
+   return Math.floor(Date.now() / 1000)
+}
+
 function time_since(date) 
 {
+   const dis = (interval) => { return (Math.floor(interval) + '').padStart(2,'0') };
+   
    const seconds = Math.floor((new Date() - date) / 1000);
+   
    let interval = seconds / 31536000;
-   if (interval > 1) return Math.floor(interval) + "Y";
+   if (interval > 1) return  dis(interval) + "Y";
+   
    interval = seconds / 2592000;
-   if (interval > 1) return Math.floor(interval) + "M";   
+   if (interval > 1) return  dis(interval) + "M";   
+   
    interval = seconds / 86400;
-   if (interval > 1) return Math.floor(interval) + "d";
+   if (interval > 1) return  dis(interval) + "d";
+   
    interval = seconds / 3600;
-   if (interval > 1) return Math.floor(interval) + "h";
+   if (interval > 1) return  dis(interval) + "h";
+   
    interval = seconds / 60;
-   if (interval > 1) return Math.floor(interval) + "m";
-   return Math.floor(seconds) + "s";
+   if (interval > 1) return  dis(interval) + "m";
+   
+   return dis(seconds) + "s";
 }
+
+const update_time = (e)=> {e.target.title = time_since(dt(e.target.dataset.timestamp))}
 
 function make_time(timestamp) 
 {
@@ -121,8 +136,14 @@ function make_time(timestamp)
    l.classList.add('created-at');
    l.dataset.timestamp = timestamp;
    
-   l.addEventListener('click', (e)=> {update_time(l)});
-   update_time(l);
+//   l.addEventListener('click', (e)=> {update_time(l)});
+//   update_time(l);
+   const d = dt(timestamp);
+   l.setAttribute('datetime', d.toISOString());
+   l.title =  time_since(d);
+   l.textContent = format_date(d);
+   
+   l.addEventListener('click', update_time);
    return l
 }
 
@@ -132,24 +153,23 @@ function dt(timestamp_in_seconds)
 }
 
 function format_date(d)
-{
-   return (d.getHours()+'').padStart(2,'0') 
+{  
+   return d.getFullYear()
+   +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
+   +'/'+ (d.getDate()+'').padStart(2,'0') 
+   +' '+ (d.getHours()+'').padStart(2,'0') 
    +':'+ (d.getMinutes()+'').padStart(2,'0') 
    +':'+ (d.getSeconds()+'').padStart(2,'0')
-   +' '+ (d.getDay()+'').padStart(2,'0') 
-   +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
-   +'/'+ d.getFullYear()
 }
 
-function update_time(l)
-{
-   const ts = l.dataset.timestamp;
-   const d = dt(ts);
-   l.setAttribute('datetime', d.toISOString());
-   l.title = format_date(d); //d.toUTCString()
-   l.textContent = time_since(d);
-//   l.closest('.e_e').dataset.stamp = ts;
-}
+//function update_time(l)
+//{
+//   const ts = l.dataset.timestamp;
+//   const d = dt(ts);
+//   l.setAttribute('datetime', d.toISOString());
+//   l.title =  time_since(d);
+//   l.textContent = format_date(d);
+//}
 
 function sort_ca(a,b,asc) 
 {
@@ -210,14 +230,14 @@ function a_k(a,contact)
          if (a_text.textContent !== name) a_text.textContent = name;
       }
       let a_image = a.querySelector('img');
-      if (options.media && contact.trust && contact.trust !== 'false' &&  contact.data.picture) 
+      if (options.media && contact.trust && contact.trust !== 'false' && contact.data.picture) 
       {
          if (!a_image)
          {
             a_image = m_l('img',{cla:'picture'});
             a.append(a_image);
          }
-         if (!a_image.src || a_image.src !== contact.data.picture.trim()) a_image.src = contact.data.picture;
+         if (!a_image.src || a_image.src !== contact.data.picture.trim()) a_image.src = try_url(contact.data.picture);
          a.classList.add('has-picture')
       }
       else if (a_image) a.removeChild(a_image)
@@ -317,30 +337,33 @@ function make_section(clas)
 function react(e) 
 {
    const l = e.target.closest('.event');
-   if (temp.reaction) 
+   if (compose && compose.o && compose.o.kind && compose.o.kind === 7 ) 
    {
       l.classList.remove('reacting');
-      compose = false;
-      delete temp.reaction;
-      io('');
-      document.getElementById('iot').blur();
+      compose_clear();
+//      delete temp.reaction;
+//      io({t:''});
+//      document.getElementById('iot').blur();
    }
    else 
    {
-      io('+');
-      document.getElementById('iot').focus();
-      
-      l.classList.add('reacting');
-      temp.reaction = ['+', l.id.substr(2), l.dataset.p];
 
-      compose = 
+      l.classList.add('reacting');
+//      temp.reaction = ['+', l.id, l.dataset.p];
+
+      compose = {o:
       {
          kind:7,
          pubkey:aa.k,
-         created_at: Math.floor(Date.now() / 1000),
-         content:'+',
-         tags:[['e',l.id.substr(2),get_seen(l.id.substr(2))],['p',l.dataset.p]]
-      }
+         created_at: now(),
+         content:options.reaction,
+         tags:[['e',l.dataset.x,get_seen(l.dataset.x)],['p',l.dataset.p]]
+      }, reply: db[l.dataset.x], draft:1,seen:[]};
+      draft();
+      
+      
+//      io({t:compose.o.content});
+//      document.getElementById('iot').focus();
       
 //      console.log(temp.reaction);
    }
@@ -370,6 +393,12 @@ function toggle_replies(e)
    }
    
    l.scrollIntoView(stuff);
+}
+
+function togl(e) 
+{
+//   console.log('togl', e.target)
+   e.target.classList.toggle('active')
 }
 
 function parse_hashtags(text) 
@@ -473,15 +502,19 @@ function tag_link(tag, content = false)
    a_text.classList.add('text');
    
    a.append(a_text);
-   a.href = '#' + tag[0] + '-' + ur(tag[1]);
+   
    if (tag[0] === 'e' || tag[0] === 'p') 
    {
+//      a.href = '#' + tag[0] + '-' + ur(tag[1]);
+      let encoded = tag[0] === 'e' ? x_note(tag[1]) : x_npub(tag[1]);
+      a.dataset.nostr = encoded;
+      a.href = '#' + encoded;
       a_text.textContent = pretty(tag[1]);
       stylek(tag[1], a);      
       if (tag[0] === 'p' && is_hex(tag[1]) && aa.p[tag[1]]) a_k(a,aa.p[tag[1]]);
+      a.addEventListener('click', nostr_link);
    }
    else a_text.textContent = content ? content : tag[1];
-   
    return a
 }
 
@@ -517,6 +550,32 @@ function parse_magnet(magnet)
    }
 }
 
+function parse_lnbc(lnbc)
+{
+   let bolt_11, lnbc_link;
+            
+   try { bolt_11 = BOLT11.decode(lnbc) } 
+   catch (error) { 
+//      console.log(m,ocd,error) 
+   }
+   
+   if (bolt_11) 
+   {
+      lnbc_link = m_l('a',
+      {
+         cla:'content-lnbc',
+         ref:'lightning:' + bolt_11.paymentRequest, 
+         con:'⚡️ ' + (bolt_11.sections[2].value / 1000) + ' sats',
+         tit:bolt_11.sections[6].value
+      });
+      lnbc_link.rel = 'noopener noreferrer';
+      lnbc_link.target = '_blank';
+   }
+   else lnbc_link = document.createTextNode(lnbc);
+   
+   return lnbc_link
+}
+
 function parse_link(url) 
 {
    let ur_l = try_url(url); 
@@ -534,6 +593,7 @@ function parse_link(url)
             link.src = ur_l.href;
             link.classList.add('content-img');
             link.loading = 'lazy';
+            link.addEventListener('click', togl);
             break;
          case 'video':
          case 'audio':
@@ -544,7 +604,7 @@ function parse_link(url)
             link.href = ur_l.href;
             link.classList.add('content-link');
             link.target = '_blank';
-            link.rel = 'nofollow';
+            link.rel = 'noopener noreferrer';
             link.textContent = ur_l.href;
       } 
       return link
@@ -559,11 +619,14 @@ function ai(o)
       oc = document.createTextNode(o.content),
       ocd = oc.wholeText,
       matches = {},
-      matchy_mentions = [...ocd.matchAll(/\B#\[(\d+)\]\B/g)],
+      matchy_mentions = [...ocd.matchAll(/#\[(\d+)\]/g)],
 //      matchy_links = [...ocd.matchAll(/\b(https?:\/\/\S*\b)/g)];
-      matchy_links = [...ocd.matchAll(/(\b(https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@$#\/%=~_|]*)/gim)],
+
+//      matchy_links = [...ocd.matchAll(/(\b(https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:,.;]*[-A-Z0-9+&@$#\/%=~_|]*)/gim)],
+      matchy_links = [...ocd.matchAll(/((https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:.,;]*[-A-Z0-9+&@$#\/%=~_|]*)\b/gim)],
+
       matchy_magnet = [...ocd.matchAll(/(magnet:\?xt=urn:btih:.*)/gi)],
-      matchy_lnbc = [...ocd.matchAll(/(lnbc)[-A-Z0-9].*/gi)];
+      matchy_lnbc = [...ocd.matchAll(/((lnbc)[-A-Z0-9]*)\b/gi)];
 
       
 
@@ -600,11 +663,10 @@ function ai(o)
 //            let magnet = parse_magnet(m);
             p.append(document.createTextNode(m))
          }
-         else if (m.startsWith('lnbc'))
-         {  
-            console.log(m);
-//            let magnet = parse_magnet(m);
-//            p.append(document.createTextNode(m))
+         else if (m.toLowerCase().startsWith('lnbc'))
+         {
+            p.append(parse_lnbc(m));
+//            console.log(bolt_11);
          }
          else 
          {
@@ -624,7 +686,7 @@ async function parse_content(e)
 {
    const l = e.target ? e.target.closest('.event') : e;
    let o; 
-   try { o = db[l.id.substr(2)].o } 
+   try { o = db[l.dataset.x].o } 
    catch (error) { console.log('no data found') } 
    
    if (o && l) 
@@ -642,10 +704,11 @@ async function parse_content(e)
       else
       {
          l.classList.add('parsed');
-         if (content) {
-            
-         }
-         try { content.replaceChildren(ai(o)) } catch (error) { console.log('could not parse', o) }
+//         if (content) {
+//            
+//         }
+         try { content.replaceChildren(ai(o)) } 
+         catch (error) { console.log('could not parse', o) }
          
          let media = content.querySelector('img, video, audio, iframe');
          if (media) 
@@ -660,32 +723,100 @@ async function parse_content(e)
 
 function make_actions() 
 {
-   const actions_fragment = new DocumentFragment();
-   const actions = document.createElement('p');
-   actions.classList.add('actions');
+//   const actions_fragment = new DocumentFragment();
+   const actions = m_l('p',{cla:'actions'});
+//   const actions = document.createElement('p');
+//   actions.classList.add('actions');
    
-   const load_media = document.createElement('button');
-   load_media.title = 'will parse the content and load media';
-   load_media.textContent = ':';
-   load_media.classList.add('load-media');
+   const load_media = m_l('button',{cla:'load-media',con:':',tit:'will parse the content and load media'});
+   load_media.addEventListener('click', parse_content);
    
-   const reactions = document.createElement('button');
-   reactions.title = 'react, 1 char limit';
-   reactions.textContent = '<3';
-   reactions.classList.add('reactions');
+   const reactions = m_l('button',{cla:'reactions',con:'<3',tit:'react, 1 char limit'});
+//   reactions.title = 'react, 1 char limit';
+//   reactions.textContent = '<3';
+//   reactions.classList.add('reactions');
+   reactions.addEventListener('click', react);
 
-   const hide = document.createElement('button');
-   hide.title = 'toggle replies'
-   hide.classList.add('hide-replies');
+   const hide = m_l('button',{cla:'hide-replies',tit:'toggle replies'});
+//   hide.title = 'toggle replies'
+//   hide.classList.add('hide-replies');
+   hide.addEventListener('click', toggle_replies);
    
    actions.append(load_media, reactions, hide);
    
-   actions_fragment.append(actions);
-   reactions.addEventListener('click', react);
-   hide.addEventListener('click', toggle_replies);
-   load_media.addEventListener('click', parse_content);
+   return actions
+}
+
+function view_source(e) 
+{
+   e.preventDefault();
+   let event = e.target.closest('.event');
+   event.classList.toggle('view-source');
+   let source = child_from_class(event, 'source');
+   if (!source)
+   {
+      source = raw_event(event.classList.contains('draft') ? drafts[event.dataset.x] : db[event.dataset.x]);
+      source.classList.add('source');
+      event.append(source);
+   }
+}
+
+function draft_post(e) 
+{
+   let event = e.target.closest('.event');
+//   let unsigned = JSON.parse(localStorage[event.id.substr(2)]);
+//   console.log(drafts[event.dataset.x]);
    
-   return actions_fragment
+   sign(drafts[event.dataset.x].o);
+}
+
+function draft_edit(e) 
+{
+   let event = e.target.closest('.event');
+   compose = drafts[event.dataset.x];
+   compose_edit_tags();
+   io({t:compose.o.content,f:1});
+//   let content = event.querySelector('.content').textContent;
+//   switch (event.dataset.kind) {
+//      case "0":
+//         content = '--smd ' + content;
+//         break;
+//   }
+   draft_cancel(e);
+//   let par = event.parentElement;
+//   event.remove();
+//   if (par.classList.contains('replies') && !par.childNodes.length) par.closest('.event').classList.remove('has-replies');
+   
+   
+//   io(compose.o.content);
+   
+}
+
+function draft_cancel(e)
+{
+   let event = e.target.closest('.event');
+   let par = event.parentElement;
+   if (event.classList.contains('interesting')) not_interesting(event);
+   event.remove();
+   if (par.classList.contains('replies') && !par.childNodes.length) par.closest('.event').classList.remove('has-replies');
+}
+
+function make_draft_actions() 
+{
+   const actions = m_l('p',{cla:'actions-draft'});
+   
+   const post_btn = m_l('button',{cla:'post',con:'post'});
+   post_btn.addEventListener('click', draft_post);
+   
+   const edit_btn = m_l('button',{cla:'edit',con:'edit'});
+   edit_btn.addEventListener('click', draft_edit);
+   
+   const cancel_btn = m_l('button',{cla:'cancel',con:'cancel'});
+   cancel_btn.addEventListener('click', draft_cancel);
+   
+   actions.append(post_btn, edit_btn, cancel_btn);
+   
+   return actions
 }
 
 function m_l(tag_name, o = false)

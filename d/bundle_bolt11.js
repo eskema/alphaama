@@ -1,46 +1,123 @@
-(() => {
+var BOLT11 = (() => {
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __commonJS = (cb, mod) => function __require() {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   };
 
-  // node_modules/bech32/dist/index.js
-  var require_dist = __commonJS({
-    "node_modules/bech32/dist/index.js"(exports) {
+  // node_modules/bech32/index.js
+  var require_bech32 = __commonJS({
+    "node_modules/bech32/index.js"(exports, module) {
       "use strict";
-      Object.defineProperty(exports, "__esModule", { value: true });
-      exports.bech32m = exports.bech32 = void 0;
       var ALPHABET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
       var ALPHABET_MAP = {};
-      for (let z = 0; z < ALPHABET.length; z++) {
-        const x = ALPHABET.charAt(z);
+      for (z = 0; z < ALPHABET.length; z++) {
+        x = ALPHABET.charAt(z);
+        if (ALPHABET_MAP[x] !== void 0)
+          throw new TypeError(x + " is ambiguous");
         ALPHABET_MAP[x] = z;
       }
+      var x;
+      var z;
       function polymodStep(pre) {
-        const b = pre >> 25;
+        var b = pre >> 25;
         return (pre & 33554431) << 5 ^ -(b >> 0 & 1) & 996825010 ^ -(b >> 1 & 1) & 642813549 ^ -(b >> 2 & 1) & 513874426 ^ -(b >> 3 & 1) & 1027748829 ^ -(b >> 4 & 1) & 705979059;
       }
       function prefixChk(prefix) {
-        let chk = 1;
-        for (let i = 0; i < prefix.length; ++i) {
-          const c = prefix.charCodeAt(i);
+        var chk = 1;
+        for (var i = 0; i < prefix.length; ++i) {
+          var c = prefix.charCodeAt(i);
           if (c < 33 || c > 126)
             return "Invalid prefix (" + prefix + ")";
           chk = polymodStep(chk) ^ c >> 5;
         }
         chk = polymodStep(chk);
-        for (let i = 0; i < prefix.length; ++i) {
-          const v = prefix.charCodeAt(i);
+        for (i = 0; i < prefix.length; ++i) {
+          var v = prefix.charCodeAt(i);
           chk = polymodStep(chk) ^ v & 31;
         }
         return chk;
       }
+      function encode(prefix, words, LIMIT) {
+        LIMIT = LIMIT || 90;
+        if (prefix.length + 7 + words.length > LIMIT)
+          throw new TypeError("Exceeds length limit");
+        prefix = prefix.toLowerCase();
+        var chk = prefixChk(prefix);
+        if (typeof chk === "string")
+          throw new Error(chk);
+        var result = prefix + "1";
+        for (var i = 0; i < words.length; ++i) {
+          var x2 = words[i];
+          if (x2 >> 5 !== 0)
+            throw new Error("Non 5-bit word");
+          chk = polymodStep(chk) ^ x2;
+          result += ALPHABET.charAt(x2);
+        }
+        for (i = 0; i < 6; ++i) {
+          chk = polymodStep(chk);
+        }
+        chk ^= 1;
+        for (i = 0; i < 6; ++i) {
+          var v = chk >> (5 - i) * 5 & 31;
+          result += ALPHABET.charAt(v);
+        }
+        return result;
+      }
+      function __decode(str, LIMIT) {
+        LIMIT = LIMIT || 90;
+        if (str.length < 8)
+          return str + " too short";
+        if (str.length > LIMIT)
+          return "Exceeds length limit";
+        var lowered = str.toLowerCase();
+        var uppered = str.toUpperCase();
+        if (str !== lowered && str !== uppered)
+          return "Mixed-case string " + str;
+        str = lowered;
+        var split = str.lastIndexOf("1");
+        if (split === -1)
+          return "No separator character for " + str;
+        if (split === 0)
+          return "Missing prefix for " + str;
+        var prefix = str.slice(0, split);
+        var wordChars = str.slice(split + 1);
+        if (wordChars.length < 6)
+          return "Data too short";
+        var chk = prefixChk(prefix);
+        if (typeof chk === "string")
+          return chk;
+        var words = [];
+        for (var i = 0; i < wordChars.length; ++i) {
+          var c = wordChars.charAt(i);
+          var v = ALPHABET_MAP[c];
+          if (v === void 0)
+            return "Unknown character " + c;
+          chk = polymodStep(chk) ^ v;
+          if (i + 6 >= wordChars.length)
+            continue;
+          words.push(v);
+        }
+        if (chk !== 1)
+          return "Invalid checksum for " + str;
+        return { prefix, words };
+      }
+      function decodeUnsafe() {
+        var res = __decode.apply(null, arguments);
+        if (typeof res === "object")
+          return res;
+      }
+      function decode(str) {
+        var res = __decode.apply(null, arguments);
+        if (typeof res === "object")
+          return res;
+        throw new Error(res);
+      }
       function convert(data, inBits, outBits, pad) {
-        let value = 0;
-        let bits = 0;
-        const maxV = (1 << outBits) - 1;
-        const result = [];
-        for (let i = 0; i < data.length; ++i) {
+        var value = 0;
+        var bits = 0;
+        var maxV = (1 << outBits) - 1;
+        var result = [];
+        for (var i = 0; i < data.length; ++i) {
           value = value << inBits | data[i];
           bits += inBits;
           while (bits >= outBits) {
@@ -60,113 +137,37 @@
         }
         return result;
       }
-      function toWords(bytes) {
-        return convert(bytes, 8, 5, true);
-      }
-      function fromWordsUnsafe(words) {
-        const res = convert(words, 5, 8, false);
+      function toWordsUnsafe(bytes) {
+        var res = convert(bytes, 8, 5, true);
         if (Array.isArray(res))
           return res;
       }
-      function fromWords(words) {
-        const res = convert(words, 5, 8, false);
+      function toWords(bytes) {
+        var res = convert(bytes, 8, 5, true);
         if (Array.isArray(res))
           return res;
         throw new Error(res);
       }
-      function getLibraryFromEncoding(encoding) {
-        let ENCODING_CONST;
-        if (encoding === "bech32") {
-          ENCODING_CONST = 1;
-        } else {
-          ENCODING_CONST = 734539939;
-        }
-        function encode(prefix, words, LIMIT) {
-          LIMIT = LIMIT || 90;
-          if (prefix.length + 7 + words.length > LIMIT)
-            throw new TypeError("Exceeds length limit");
-          prefix = prefix.toLowerCase();
-          let chk = prefixChk(prefix);
-          if (typeof chk === "string")
-            throw new Error(chk);
-          let result = prefix + "1";
-          for (let i = 0; i < words.length; ++i) {
-            const x = words[i];
-            if (x >> 5 !== 0)
-              throw new Error("Non 5-bit word");
-            chk = polymodStep(chk) ^ x;
-            result += ALPHABET.charAt(x);
-          }
-          for (let i = 0; i < 6; ++i) {
-            chk = polymodStep(chk);
-          }
-          chk ^= ENCODING_CONST;
-          for (let i = 0; i < 6; ++i) {
-            const v = chk >> (5 - i) * 5 & 31;
-            result += ALPHABET.charAt(v);
-          }
-          return result;
-        }
-        function __decode(str, LIMIT) {
-          LIMIT = LIMIT || 90;
-          if (str.length < 8)
-            return str + " too short";
-          if (str.length > LIMIT)
-            return "Exceeds length limit";
-          const lowered = str.toLowerCase();
-          const uppered = str.toUpperCase();
-          if (str !== lowered && str !== uppered)
-            return "Mixed-case string " + str;
-          str = lowered;
-          const split = str.lastIndexOf("1");
-          if (split === -1)
-            return "No separator character for " + str;
-          if (split === 0)
-            return "Missing prefix for " + str;
-          const prefix = str.slice(0, split);
-          const wordChars = str.slice(split + 1);
-          if (wordChars.length < 6)
-            return "Data too short";
-          let chk = prefixChk(prefix);
-          if (typeof chk === "string")
-            return chk;
-          const words = [];
-          for (let i = 0; i < wordChars.length; ++i) {
-            const c = wordChars.charAt(i);
-            const v = ALPHABET_MAP[c];
-            if (v === void 0)
-              return "Unknown character " + c;
-            chk = polymodStep(chk) ^ v;
-            if (i + 6 >= wordChars.length)
-              continue;
-            words.push(v);
-          }
-          if (chk !== ENCODING_CONST)
-            return "Invalid checksum for " + str;
-          return { prefix, words };
-        }
-        function decodeUnsafe(str, LIMIT) {
-          const res = __decode(str, LIMIT);
-          if (typeof res === "object")
-            return res;
-        }
-        function decode(str, LIMIT) {
-          const res = __decode(str, LIMIT);
-          if (typeof res === "object")
-            return res;
-          throw new Error(res);
-        }
-        return {
-          decodeUnsafe,
-          decode,
-          encode,
-          toWords,
-          fromWordsUnsafe,
-          fromWords
-        };
+      function fromWordsUnsafe(words) {
+        var res = convert(words, 5, 8, false);
+        if (Array.isArray(res))
+          return res;
       }
-      exports.bech32 = getLibraryFromEncoding("bech32");
-      exports.bech32m = getLibraryFromEncoding("bech32m");
+      function fromWords(words) {
+        var res = convert(words, 5, 8, false);
+        if (Array.isArray(res))
+          return res;
+        throw new Error(res);
+      }
+      module.exports = {
+        decodeUnsafe,
+        decode,
+        encode,
+        toWordsUnsafe,
+        toWords,
+        fromWordsUnsafe,
+        fromWords
+      };
     }
   });
 
@@ -2213,18 +2214,16 @@
               }
             }
           }
-          return this._strip();
+          return this.strip();
         };
         function parseHex4Bits(string, index) {
           var c = string.charCodeAt(index);
-          if (c >= 48 && c <= 57) {
-            return c - 48;
-          } else if (c >= 65 && c <= 70) {
+          if (c >= 65 && c <= 70) {
             return c - 55;
           } else if (c >= 97 && c <= 102) {
             return c - 87;
           } else {
-            assert(false, "Invalid character in " + string);
+            return c - 48 & 15;
           }
         }
         function parseHexByte(string, lowerBound, index) {
@@ -2269,24 +2268,21 @@
               }
             }
           }
-          this._strip();
+          this.strip();
         };
         function parseBase(str, start, end, mul) {
           var r = 0;
-          var b = 0;
           var len = Math.min(str.length, end);
           for (var i = start; i < len; i++) {
             var c = str.charCodeAt(i) - 48;
             r *= mul;
             if (c >= 49) {
-              b = c - 49 + 10;
+              r += c - 49 + 10;
             } else if (c >= 17) {
-              b = c - 17 + 10;
+              r += c - 17 + 10;
             } else {
-              b = c;
+              r += c;
             }
-            assert(c >= 0 && b < mul, "Invalid character");
-            r += b;
           }
           return r;
         }
@@ -2324,7 +2320,7 @@
               this._iaddn(word);
             }
           }
-          this._strip();
+          this.strip();
         };
         BN.prototype.copy = function copy(dest) {
           dest.words = new Array(this.length);
@@ -2334,15 +2330,6 @@
           dest.length = this.length;
           dest.negative = this.negative;
           dest.red = this.red;
-        };
-        function move(dest, src) {
-          dest.words = src.words;
-          dest.length = src.length;
-          dest.negative = src.negative;
-          dest.red = src.red;
-        }
-        BN.prototype._move = function _move(dest) {
-          move(dest, this);
         };
         BN.prototype.clone = function clone() {
           var r = new BN(null);
@@ -2355,7 +2342,7 @@
           }
           return this;
         };
-        BN.prototype._strip = function strip() {
+        BN.prototype.strip = function strip() {
           while (this.length > 1 && this.words[this.length - 1] === 0) {
             this.length--;
           }
@@ -2367,18 +2354,9 @@
           }
           return this;
         };
-        if (typeof Symbol !== "undefined" && typeof Symbol.for === "function") {
-          try {
-            BN.prototype[Symbol.for("nodejs.util.inspect.custom")] = inspect;
-          } catch (e) {
-            BN.prototype.inspect = inspect;
-          }
-        } else {
-          BN.prototype.inspect = inspect;
-        }
-        function inspect() {
+        BN.prototype.inspect = function inspect() {
           return (this.red ? "<BN-R: " : "<BN: ") + this.toString(16) + ">";
-        }
+        };
         var zeros = [
           "",
           "0",
@@ -2497,15 +2475,15 @@
               var w = this.words[i];
               var word = ((w << off | carry) & 16777215).toString(16);
               carry = w >>> 24 - off & 16777215;
-              off += 2;
-              if (off >= 26) {
-                off -= 26;
-                i--;
-              }
               if (carry !== 0 || i !== this.length - 1) {
                 out = zeros[6 - word.length] + word + out;
               } else {
                 out = word + out;
+              }
+              off += 2;
+              if (off >= 26) {
+                off -= 26;
+                i--;
               }
             }
             if (carry !== 0) {
@@ -2526,7 +2504,7 @@
             var c = this.clone();
             c.negative = 0;
             while (!c.isZero()) {
-              var r = c.modrn(groupBase).toString(base);
+              var r = c.modn(groupBase).toString(base);
               c = c.idivn(groupBase);
               if (!c.isZero()) {
                 out = zeros[groupSize - r.length] + r + out;
@@ -2559,92 +2537,45 @@
           return this.negative !== 0 ? -ret : ret;
         };
         BN.prototype.toJSON = function toJSON() {
-          return this.toString(16, 2);
+          return this.toString(16);
         };
-        if (Buffer2) {
-          BN.prototype.toBuffer = function toBuffer(endian, length) {
-            return this.toArrayLike(Buffer2, endian, length);
-          };
-        }
+        BN.prototype.toBuffer = function toBuffer(endian, length) {
+          assert(typeof Buffer2 !== "undefined");
+          return this.toArrayLike(Buffer2, endian, length);
+        };
         BN.prototype.toArray = function toArray(endian, length) {
           return this.toArrayLike(Array, endian, length);
         };
-        var allocate = function allocate2(ArrayType, size) {
-          if (ArrayType.allocUnsafe) {
-            return ArrayType.allocUnsafe(size);
-          }
-          return new ArrayType(size);
-        };
         BN.prototype.toArrayLike = function toArrayLike(ArrayType, endian, length) {
-          this._strip();
           var byteLength = this.byteLength();
           var reqLength = length || Math.max(1, byteLength);
           assert(byteLength <= reqLength, "byte array longer than desired length");
           assert(reqLength > 0, "Requested array length <= 0");
-          var res = allocate(ArrayType, reqLength);
-          var postfix = endian === "le" ? "LE" : "BE";
-          this["_toArrayLike" + postfix](res, byteLength);
+          this.strip();
+          var littleEndian = endian === "le";
+          var res = new ArrayType(reqLength);
+          var b, i;
+          var q = this.clone();
+          if (!littleEndian) {
+            for (i = 0; i < reqLength - byteLength; i++) {
+              res[i] = 0;
+            }
+            for (i = 0; !q.isZero(); i++) {
+              b = q.andln(255);
+              q.iushrn(8);
+              res[reqLength - i - 1] = b;
+            }
+          } else {
+            for (i = 0; !q.isZero(); i++) {
+              b = q.andln(255);
+              q.iushrn(8);
+              res[i] = b;
+            }
+            for (; i < reqLength; i++) {
+              res[i] = 0;
+            }
+          }
           return res;
-        };
-        BN.prototype._toArrayLikeLE = function _toArrayLikeLE(res, byteLength) {
-          var position = 0;
-          var carry = 0;
-          for (var i = 0, shift = 0; i < this.length; i++) {
-            var word = this.words[i] << shift | carry;
-            res[position++] = word & 255;
-            if (position < res.length) {
-              res[position++] = word >> 8 & 255;
-            }
-            if (position < res.length) {
-              res[position++] = word >> 16 & 255;
-            }
-            if (shift === 6) {
-              if (position < res.length) {
-                res[position++] = word >> 24 & 255;
-              }
-              carry = 0;
-              shift = 0;
-            } else {
-              carry = word >>> 24;
-              shift += 2;
-            }
-          }
-          if (position < res.length) {
-            res[position++] = carry;
-            while (position < res.length) {
-              res[position++] = 0;
-            }
-          }
-        };
-        BN.prototype._toArrayLikeBE = function _toArrayLikeBE(res, byteLength) {
-          var position = res.length - 1;
-          var carry = 0;
-          for (var i = 0, shift = 0; i < this.length; i++) {
-            var word = this.words[i] << shift | carry;
-            res[position--] = word & 255;
-            if (position >= 0) {
-              res[position--] = word >> 8 & 255;
-            }
-            if (position >= 0) {
-              res[position--] = word >> 16 & 255;
-            }
-            if (shift === 6) {
-              if (position >= 0) {
-                res[position--] = word >> 24 & 255;
-              }
-              carry = 0;
-              shift = 0;
-            } else {
-              carry = word >>> 24;
-              shift += 2;
-            }
-          }
-          if (position >= 0) {
-            res[position--] = carry;
-            while (position >= 0) {
-              res[position--] = 0;
-            }
-          }
         };
         if (Math.clz32) {
           BN.prototype._countBits = function _countBits(w) {
@@ -2709,7 +2640,7 @@
           for (var bit = 0; bit < w.length; bit++) {
             var off = bit / 26 | 0;
             var wbit = bit % 26;
-            w[bit] = num.words[off] >>> wbit & 1;
+            w[bit] = (num.words[off] & 1 << wbit) >>> wbit;
           }
           return w;
         }
@@ -2759,7 +2690,7 @@
           for (var i = 0; i < num.length; i++) {
             this.words[i] = this.words[i] | num.words[i];
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.ior = function ior(num) {
           assert((this.negative | num.negative) === 0);
@@ -2786,7 +2717,7 @@
             this.words[i] = this.words[i] & num.words[i];
           }
           this.length = b.length;
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.iand = function iand(num) {
           assert((this.negative | num.negative) === 0);
@@ -2821,7 +2752,7 @@
             }
           }
           this.length = a.length;
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.ixor = function ixor(num) {
           assert((this.negative | num.negative) === 0);
@@ -2851,7 +2782,7 @@
           if (bitsLeft > 0) {
             this.words[i] = ~this.words[i] & 67108863 >> 26 - bitsLeft;
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.notn = function notn(width) {
           return this.clone().inotn(width);
@@ -2866,7 +2797,7 @@
           } else {
             this.words[off] = this.words[off] & ~(1 << wbit);
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.iadd = function iadd(num) {
           var r;
@@ -2975,7 +2906,7 @@
           if (a !== this) {
             this.negative = 1;
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.sub = function sub(num) {
           return this.clone().isub(num);
@@ -3011,7 +2942,7 @@
           } else {
             out.length--;
           }
-          return out._strip();
+          return out.strip();
         }
         var comb10MulTo = function comb10MulTo2(self, num, out) {
           var a = self.words;
@@ -3600,10 +3531,11 @@
           } else {
             out.length--;
           }
-          return out._strip();
+          return out.strip();
         }
         function jumboMulTo(self, num, out) {
-          return bigMulTo(self, num, out);
+          var fftm = new FFTM();
+          return fftm.mulp(self, num, out);
         }
         BN.prototype.mulTo = function mulTo(num, out) {
           var res;
@@ -3760,7 +3692,7 @@
           this.normalize13b(rmws, N);
           out.negative = x.negative ^ y.negative;
           out.length = x.length + y.length;
-          return out._strip();
+          return out.strip();
         };
         BN.prototype.mul = function mul(num) {
           var out = new BN(null);
@@ -3776,9 +3708,6 @@
           return this.clone().mulTo(num, this);
         };
         BN.prototype.imuln = function imuln(num) {
-          var isNegNum = num < 0;
-          if (isNegNum)
-            num = -num;
           assert(typeof num === "number");
           assert(num < 67108864);
           var carry = 0;
@@ -3794,7 +3723,7 @@
             this.words[i] = carry;
             this.length++;
           }
-          return isNegNum ? this.ineg() : this;
+          return this;
         };
         BN.prototype.muln = function muln(num) {
           return this.clone().imuln(num);
@@ -3851,7 +3780,7 @@
             }
             this.length += s;
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.ishln = function ishln(bits) {
           assert(this.negative === 0);
@@ -3900,7 +3829,7 @@
             this.words[0] = 0;
             this.length = 1;
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.ishrn = function ishrn(bits, hint, extended) {
           assert(this.negative === 0);
@@ -3944,7 +3873,7 @@
             var mask = 67108863 ^ 67108863 >>> r << r;
             this.words[this.length - 1] &= mask;
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.maskn = function maskn(bits) {
           return this.clone().imaskn(bits);
@@ -3955,7 +3884,7 @@
           if (num < 0)
             return this.isubn(-num);
           if (this.negative !== 0) {
-            if (this.length === 1 && (this.words[0] | 0) <= num) {
+            if (this.length === 1 && (this.words[0] | 0) < num) {
               this.words[0] = num - (this.words[0] | 0);
               this.negative = 0;
               return this;
@@ -4001,7 +3930,7 @@
               this.words[i + 1] -= 1;
             }
           }
-          return this._strip();
+          return this.strip();
         };
         BN.prototype.addn = function addn(num) {
           return this.clone().iaddn(num);
@@ -4035,7 +3964,7 @@
             this.words[i + shift] = w & 67108863;
           }
           if (carry === 0)
-            return this._strip();
+            return this.strip();
           assert(carry === -1);
           carry = 0;
           for (i = 0; i < this.length; i++) {
@@ -4044,7 +3973,7 @@
             this.words[i] = w & 67108863;
           }
           this.negative = 1;
-          return this._strip();
+          return this.strip();
         };
         BN.prototype._wordDiv = function _wordDiv(num, mode) {
           var shift = this.length - num.length;
@@ -4092,9 +4021,9 @@
             }
           }
           if (q) {
-            q._strip();
+            q.strip();
           }
-          a._strip();
+          a.strip();
           if (mode !== "div" && shift !== 0) {
             a.iushrn(shift);
           }
@@ -4167,12 +4096,12 @@
             if (mode === "mod") {
               return {
                 div: null,
-                mod: new BN(this.modrn(num.words[0]))
+                mod: new BN(this.modn(num.words[0]))
               };
             }
             return {
               div: this.divn(num.words[0]),
-              mod: new BN(this.modrn(num.words[0]))
+              mod: new BN(this.modn(num.words[0]))
             };
           }
           return this._wordDiv(num, mode);
@@ -4198,25 +4127,16 @@
             return dm.div;
           return dm.div.negative !== 0 ? dm.div.isubn(1) : dm.div.iaddn(1);
         };
-        BN.prototype.modrn = function modrn(num) {
-          var isNegNum = num < 0;
-          if (isNegNum)
-            num = -num;
+        BN.prototype.modn = function modn(num) {
           assert(num <= 67108863);
           var p = (1 << 26) % num;
           var acc = 0;
           for (var i = this.length - 1; i >= 0; i--) {
             acc = (p * acc + (this.words[i] | 0)) % num;
           }
-          return isNegNum ? -acc : acc;
-        };
-        BN.prototype.modn = function modn(num) {
-          return this.modrn(num);
+          return acc;
         };
         BN.prototype.idivn = function idivn(num) {
-          var isNegNum = num < 0;
-          if (isNegNum)
-            num = -num;
           assert(num <= 67108863);
           var carry = 0;
           for (var i = this.length - 1; i >= 0; i--) {
@@ -4224,8 +4144,7 @@
             this.words[i] = w / num | 0;
             carry = w % num;
           }
-          this._strip();
-          return isNegNum ? this.ineg() : this;
+          return this.strip();
         };
         BN.prototype.divn = function divn(num) {
           return this.clone().idivn(num);
@@ -4427,7 +4346,7 @@
             return -1;
           if (this.negative === 0 && negative)
             return 1;
-          this._strip();
+          this.strip();
           var res;
           if (this.length > 1) {
             res = 1;
@@ -4766,8 +4685,7 @@
         Red.prototype.imod = function imod(a) {
           if (this.prime)
             return this.prime.ireduce(a)._forceRed(this);
-          move(a, a.umod(this.m)._forceRed(this));
-          return a;
+          return a.umod(this.m)._forceRed(this);
         };
         Red.prototype.neg = function neg(a) {
           if (a.isZero()) {
@@ -4992,10 +4910,10 @@
     }
   });
 
-  // web/alphaama/cli/bolt11.js
+  // node_modules/light-bolt11-decoder/bolt11.js
   var require_bolt11 = __commonJS({
-    "web/alphaama/cli/bolt11.js"(exports, module) {
-      var bech32 = require_dist();
+    "node_modules/light-bolt11-decoder/bolt11.js"(exports, module) {
+      var bech32 = require_bech32();
       var Buffer2 = require_buffer().Buffer;
       var BN = require_bn();
       var DEFAULTNETWORK = {
@@ -5342,7 +5260,7 @@
       };
     }
   });
-  require_bolt11();
+  return require_bolt11();
 })();
 /*! Bundled license information:
 

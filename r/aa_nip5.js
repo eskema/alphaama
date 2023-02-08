@@ -15,6 +15,7 @@ function fetch_nip5(username,domain,k)
             const error = (data && data.message) || response.status;
             return Promise.reject(error)
          }
+//         else if (response.origin === url.origin)
          return await response.json()
       })
       .then((json)=> 
@@ -25,6 +26,13 @@ function fetch_nip5(username,domain,k)
             else postMessage([nip5,k,false,json])
          }
       });
+      
+//      const json = reponse.json();
+//      if (json) 
+//      {
+//         if (k === json.names[username]) postMessage([nip5,k,true,json]);
+//         else postMessage([nip5,k,false,json])
+//      }
    }
    else postMessage([nip5,k,false])
 }
