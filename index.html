@@ -1,96 +1,27 @@
 <!DOCTYPE html>
-<html lang="en-US"> <head> <meta charset="UTF-8">
-<title>alphaama</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#171717">
-<link rel="stylesheet" href="r/aa--styleshit.css?v=136" />
-<link rel="apple-touch-icon" sizes="180x180" href="r/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="r/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="r/favicon-16x16.png">
-<link rel="manifest" href="r/site.webmanifest?v=1">
-<link rel="mask-icon" href="r/safari-pinned-tab.svg" color="#171717">
-</head> <body> <div id="aa">
-<h1 id="a" data-id-a="A&lt;3">whatever the fuck you want</h1>
-<header id="wtfyw">
-   <textarea id="iot" 
-             name="idiot" 
-             placeholder="--k pubkey" 
-             autocomplete="off" 
-             autocorrect="off" 
-             tabindex="1" 
-             contenteditable
-             ></textarea>   
-   <div id="composer"><ol id="compose-tags" class="list"></ol><div id="helper"></div></div>
-   <button id="less" type="text">-</button>
-   <button id="u" type="text">u</button>
-</header>
-<main id="messages">
-   <ul id="kind-0"></ul>
-   <ul id="kind-1"></ul>
-   <ul id="p"></ul>
-   <ul id="e"></ul>
-</main>
-<footer id="alphaama">
-   
-   <p>alphaama (A&lt;3) is a nostr playground, this is v2.9.4
-   <br/>meaning you're a <em>beta</em> tester, just before v3. congrats on the promotion.</p>
-   
-   <p>you need a <em>nostr</em> public key, 
-   <br/>they're free and require no permission or identity. 
-   <br/>learn about nostr:
-      <a href="https://github.com/nostr-protocol/nips" target="_blank" rel="noreferrer noopener" class="content-link">nostr - Notes and Other Stuff Transmitted by Relays</a></p> 
-      
-   
-   <!--<p><em>9ec7a778167afb1d30c4833de9322da0c08ba71a69e1911d5578d3144bb56437</em></p>-->
-   <p>please use the browser extension <a href="https://github.com/fiatjaf/nos2x" target="_blank" rel="noreferrer noopener" class="content-link">nos2x</a>, you need it to sign notes and secure your keys from potential attacks</p>
-   
-   <p>for more nostr resources, check out <a href="https://github.com/aljazceru/awesome-nostr" target="_blank" rel="noreferrer noopener" class="content-link">https://github.com/aljazceru/awesome-nostr</a></p>
-   
-   <p>alphaama is open source without any license, fuck that shit, therefore, do whatever the fuck you want with it.</p>
-   
-   <p>the code is sure to have bugs, bad decisions and lots of ways to be improved, but it works and is simple enough to understand and modify with little knowledge. that's the fun part.</p>
-   
-   <p>get the files: --><a href="https://github.com/eskema/alphaama" target="_blank" rel="noreferrer noopener" class="content-link"> https://github.com/eskema/alphaama</a> make it yours.</p>
-   
-   <p>available commands:</p>
-   <ul>
-      <li><em>--k pubkey</em> : login as pubkey</li>
-      <li><em>--f pubkey</em> : follow pubkey (pubkey,relay,petname) </li>
-      <li><em>--u pubkey</em> : unfollow pubkey</li>
-      <li><em>--media</em> : toggle autoloading media files</li>
-      <li><em>--bbbb</em> : boom biddy bye bye</li>
-   </ul>
-   <p>hotkeys, wen event selected, press:</p>
-   <ul>
-      <li><em>`k`</em> next </li>
-      <li><em>`i`</em> previous </li>
-      <li><em>`j`</em> parent </li>
-      <li><em>`l`</em> child </li>
-      <li><em>`h`</em> top </li>
-      <li><em>`b`</em> bottom </li>
-      <li><em>`f`</em> fetch </li>
-      <li><em>`\`</em> toggle replies </li>
-      <li><em>`esc`</em> ape</li>
-   </ul>
-   
-</footer>
-
-</div>
-<!--https://github.com/davidshimjs/qrcodejs/blob/master/qrcode.min.js-->
-<script src="d/qrcode.js"></script>
-<!--https://github.com/nbd-wtf/nostr-tools-->
-<script src="d/nostr-tools_1.2.3.js"></script>
-<script src="d/bundle_bolt11.js"></script>
-
-<!--https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js-->
-<!--<script src="d/webtorrent.min.js"></script>-->
- <script src="r/aa--utils.js?v=136"></script>
- <script src="r/aa--kinds.js?v=136"></script>
-  <script src="r/aa--post.js?v=136"></script>
-   <script src="r/aa--req.js?v=136"></script>
-<script src="r/aa--script.js?v=136"></script>
-<script src="r/aa--extras.js?v=136"></script>
- <script src="r/aa_relays.js?v=136"></script>
-  <script src="r/aa--core.js?v=136"></script>
-
-</body></html>
+<html lang="en-US" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <title>alphaama</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#171717">
+  <link rel="icon" type="image/png" sizes="32x32" href="/stuff/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/stuff/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/stuff/apple-touch-icon.png">
+  <link rel="mask-icon" href="/stuff/safari-pinned-tab.svg" color="#171717">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/alphaama.css" />
+  <script src="/dep/nostr_tools_2.js?v=20000"></script>
+  <script src="/dep/it.js"></script>
+  <script src="/aa.js"></script>
+  <script src="/o_p.js"></script>
+  <script src="/d_b.js"></script>
+  <script src="/v_u.js"></script>
+  <script src="/cli.js"></script>
+  <script src="/kin.js"></script>
+  <script src="/dex.js"></script>
+  <script src="/aka.js"></script>
+  <script src="/rel.js"></script>
+  <script src="/q_e.js"></script>
+  <script src="/index.js"></script>
+</head><body><!-- alphaama --></body></html>
