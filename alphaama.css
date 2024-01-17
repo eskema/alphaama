@@ -655,6 +655,11 @@ button.butt
   mix-blend-mode: luminosity;
 }
 
+#butt_u img:not([src])
+{
+  opacity: 0;
+}
+
 #u > details
 {
   background-color: rgb(var(--color-b));
@@ -1604,7 +1609,7 @@ a.author
   color: rgb(var(--color-f));
 }
 
-.tag.tag_p
+.tag_p
 {
   color: rgb(var(--c));
 }
@@ -2141,11 +2146,6 @@ a.author
   display: none;
 }
 
-.profile .pubkey .butt.follow.is_bff::before
-{
-  content: 'un';
-}
-
 .profile .metadata
 {
   align-items: start;
@@ -2400,7 +2400,8 @@ p[data-meta="about"]::before
 }
 
 .extradata .bffs,
-.extradata .followers
+.extradata .followers,
+.extradata .relays
 {
   color: rgb(var(--color-f));
   font-size: var(--font-size-s);
@@ -2688,15 +2689,15 @@ p[data-meta="about"]::before
 
 /* @group relays */
 
-.relay,
-.filter
+#u .relay,
+#u .filter
 {
   grid-template-areas: "rm k v sets";
   grid-template-columns: auto auto 1fr auto;
 }
 
-.filter::after,
-.relay::after 
+#u .filter::after,
+#u .relay::after 
 {
   content: attr(data-sets);
   grid-area: sets;
@@ -2738,7 +2739,7 @@ p[data-meta="about"]::before
   opacity: .6;
 }
 
-.relay::before
+#u .relay::before
 {
   content: "(" attr(data-state) ") " attr(data-q);
   margin-right: var(--pad);

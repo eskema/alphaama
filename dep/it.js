@@ -365,6 +365,9 @@ it.fx.vars =(s)=>
   let o;
   try { o = JSON.parse(s) } catch (er) { console.log(er,s) }
   
+  const aka_p = aa.p[aka.o.ls.xpub];
+  if (!aka_p) return false;
+
   if (o) for (const k in o) 
   {
     const v = o[k];
@@ -384,14 +387,12 @@ it.fx.vars =(s)=>
             switch (val) 
             {
               case 'aka': 
-                if (!aka?.o.ls?.xpub) return false;
-                o[k][i] = aka.o.ls.xpub; 
+                o[k][i] = aka_p.xpub; 
                 break;
 
               case 'bff': 
-                if (!aka.o.ls.bff?.length) return false;
                 o[k] = o[k].filter((dis)=>dis!==val);
-                o[k].push(...aka.o.ls.bff);                    
+                o[k].push(...aka_p.extradata.bff);                    
                 break;
             }
           }

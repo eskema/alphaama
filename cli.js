@@ -70,6 +70,7 @@ cli.v =s=>
 {
   cli.t.value = s;
   cli.expand();
+  cli.foc();
 };
 
 cli.grow_hack =()=>

@@ -116,9 +116,8 @@ v_u.e =async nid=>
     let dat = await aa.db.get_e(x);
     if (dat) aa.print(dat);
     else v_u.req_e(x);
-    // l = document.getElementById(nid);
   }
-  // if (l) kin.view(l)
+  else kin.view(l)
 };
 
 v_u.req_e =x=>

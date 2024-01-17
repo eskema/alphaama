@@ -199,9 +199,9 @@ q_e.add_filter =s=>
     try { o = JSON.parse(a[0]) } catch (er) { console.log(er,s) }
     if (o)
     {
-      let log = localStorage.ns+' qe add'+fid+' ';
+      let log = localStorage.ns+' qe add '+fid+' ';
       let filter = q_e.o.ls[fid];
-      if (filter && window.prompt('update filter?'))
+      if (filter && window.confirm('update filter?'))
       {
         log += filter.v + ' > ';
         filter.v = a[0]

@@ -283,12 +283,12 @@ author.profile_butt_relays =e=>
 author.profile_butt_bff =e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
-  const request = ['REQ','relays',{authors:[xpub],kinds:[3],limit:1}];
+  const request = ['REQ','bff',{authors:[xpub],kinds:[3],limit:1}];
   q_e.demand(request,rel.in_set(rel.o.r),{eose:'close'});
   // console.log(request);
 };
 
-author.profile_butt_follow =e=>
+author.profile_butt_follow =async e=>
 {
   const x = e.target.closest('.profile').dataset.xpub;
   const is_bff = e.target.classList.contains('is_bff');
@@ -302,8 +302,31 @@ author.profile_butt_follow =e=>
   else
   {
     //follow
-    console.log('follow')
-    author.prep.follow(x)
+    console.log('follow');
+    if (!aka.o.ls.xpub) return false;
+    
+    let a = [x];
+
+    let dat_k3 = await author.get_k3();
+    if (dat_k3)
+    {
+      const p = await aa.db.get_p(x);
+      console.log(p)
+      if (p?.extradata.relays.length) 
+      {
+        url = it.s.url(p.extradata.relays[0]);
+        if (url) a.push(url.href);
+      }
+      else a.push('');
+
+      if (p?.metadata?.name)
+      {
+        a.push(it.fx.an(p.metadata.name));
+      } 
+    }
+    else console.log('no k3')
+
+    cli.v('.aa aka follow '+a.join(', '));
   }
 };
 
@@ -548,18 +571,13 @@ author.get_k3 =async()=>
   return false;
 };
 
-author.prep = {};
-
-author.prep.follow =(x)=>
-{
-  cli.v('.aa aka follow '+x+',,');
-}
-
 author.follow =async(s)=>
 {
+  console.log(s)
+  
   if (!aka.o.ls.xpub) return false;
   const a = s.trim().split(',');
-  let k,relay,petname,p_tag = ['p'];
+  let p_tag = ['p'],k,relay,petname;
   if (a.length) 
   {
     k = a.shift().trim();
@@ -608,20 +626,26 @@ author.follow =async(s)=>
           if (it.s.an(petname)) p_tag.push(petname);
           else if (p?.metadata?.name) p_tag.push(p.metadata.name);
         }
-        tags.push(p_tag);
 
-        if (dat_k3.event.content.length) console.log('has content',dat_k3.event.content.length)
-        const draft = 
+        console.log(p_tag);
+        const c_len = tags.length +1;
+        if (window.confirm('new contacts length = '+c_len+'. you sure?'))
         {
-          pubkey:aka.o.ls.xpub,
-          kind:3,
-          created_at:it.tim.now(),
-          content:dat_k3.event.content,
-          tags:tags
-        };
-        aa.draft(draft)
-        // console.log(draft)
-        // console.log('not following',p_tag)
+          tags.push(p_tag);
+          
+          console.log(tags)
+        }
+
+        // if (dat_k3.event.content.length) console.log('has content',dat_k3.event.content.length)
+        // const draft = 
+        // {
+        //   pubkey:aka.o.ls.xpub,
+        //   kind:3,
+        //   created_at:it.tim.now(),
+        //   content:dat_k3.event.content,
+        //   tags:tags
+        // };
+        // aa.draft(draft)
       }
     }
     else 
@@ -630,7 +654,9 @@ author.follow =async(s)=>
     }
   }
   
+  
 };
+
 
 author.unfollow =()=>
 {};
