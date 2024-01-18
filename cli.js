@@ -274,6 +274,13 @@ cli.otocomp =()=>
 
 it.act =s=>
 {
+  // pipe commands
+  // let acts = s.split('||');
+  // for (const ac of acts)
+  // {
+  //   soon™
+  // }
+
   let a = s.split(' ');
   let err = 'invalid action';
   if (a.length > 1) 

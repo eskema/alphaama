@@ -390,7 +390,8 @@ it.fx.vars =(s)=>
                 o[k][i] = aka_p.xpub; 
                 break;
 
-              case 'bff': 
+              case 'bff':
+              case 'k3': 
                 o[k] = o[k].filter((dis)=>dis!==val);
                 o[k].push(...aka_p.extradata.bff);                    
                 break;
@@ -461,7 +462,8 @@ it.mk.link =(url,text=false,title=false)=>
 
 it.mk.author =async(xpub,p)=>
 {
-  if (!p) p = await aa.db.get_p(xpub);
+  if (!p) p = aa.p[xpub];
+  if (!p) p = author.p(xpub); //await aa.db.get_p(xpub);
   const pubkey = it.mk.l('a',
   {
     cla:'a author',

@@ -265,33 +265,33 @@ kin.d1 =dat=>
 kin.d3 =dat=>
 {
   const tags = dat.event.tags;
-  if (tags.length && !dat.clas?.includes('draft'))
+  if (tags.length) //  && !dat.clas?.includes('draft')
   {
     const xpub = dat.event.pubkey;
-    const cat = dat.event.created_at;
+    const c_at = dat.event.created_at;
     aa.db.get_p(xpub).then(p=>
     {      
+      let updated;
       let k3 = p.pastdata.k3;
-      if (!k3.length || k3[0][1] < cat) 
+      if (!k3.length || k3[0][1] < c_at) 
       {
-        p.pastdata.k3.unshift([dat.event.id,cat]);
+        p.pastdata.k3.unshift([dat.event.id,c_at]);
         console.log('old bff from '+xpub,p.extradata.bff);
 
-        p.extradata.bff = author.bff(tags,xpub);
+        p.extradata.bff = author.k3(tags,xpub);
 
-        if (cat > p.updated) p.updated = cat;
-        author.save(p);
-      }
-      if (!p.extradata.bff.length)
-      {
-        p.extradata.bff = author.bff(tags,xpub);
+        if (c_at > p.updated) p.updated = c_at;
         author.save(p);
       }
 
       let profile = document.getElementById(p.npub);
       if (!profile) profile = author.profile(p);
       author.update(profile,p,true);
+
+      if (p.sets.includes('aka')) aka.load_bff(p)
+      
     });
+
   }
   const note = kin.def(dat);
   note.classList.add('root');

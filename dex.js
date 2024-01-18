@@ -6,7 +6,7 @@ const dex =
 dex.load =()=>
 {
   const index = it.mk.l('nav',{id:'index',cla:'empty',clk:it.clk.expanded});
-  document.getElementById('u').append(it.mk.butt(u),index);
+  document.getElementById('u').append(index);
 };
 
 aa.dex =()=>

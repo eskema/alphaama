@@ -11,16 +11,51 @@ const aa =
   mk:{},
 };
 
+aa.ct.setup = 
+{
+  'login': 
+  {
+    description:'load aka and relays from ext',
+    exe:aa.login
+  },
+  'reset':
+  {
+    description:'resets everything',
+    exe:aa.bbbb
+  }
+};
+
+aa.login =()=>  
+{
+  if (window.nostr && aka)
+  {
+    window.nostr.getPublicKey().then(x=>
+    {
+      aka.set(x);
+      if (rel) rel.ext();
+    });
+  }
+};
+
+aa.reset =()=>
+{
+  aa.db.clear(['stuff','authors','events']).then(()=>
+  {
+    localStorage.clear();
+    sessionStorage.clear();
+    setTimeout(()=>{location.reload()},500)
+  });
+};
+
+
+
 aa.load_mod =async mod=>
 {
-  if (mod && mod.o && mod.o.id)
-  {
-    const saved_mod = await aa.db.get({get:{store:'stuff',key:mod.o.id}});
-    if (saved_mod) mod.o = saved_mod;
-    else if (mod.def) mod.o = mod.def;
-    if (!mod.o.ls) mod.o.ls = {};
-    it.mk.mod(mod);
-  }
+  const saved_mod = await aa.db.get({get:{store:'stuff',key:mod.def.id}});
+  if (saved_mod) mod.o = saved_mod;
+  else if (mod.def) mod.o = mod.def;
+  if (!mod.o.ls) mod.o.ls = {};
+  it.mk.mod(mod);
   return mod
 };
 
@@ -40,6 +75,13 @@ aa.save =mod=>
     mod.l = it.mk.ls(o);
   }
 };
+
+aa.mk.u =()=>
+{
+  const u = it.mk.l('aside',{id:'u'});
+  document.body.insertBefore(u,document.body.lastChild);
+  u.append(it.mk.butt(u))
+}
 
 aa.mk.header =()=>
 {

@@ -1,8 +1,7 @@
 const rel = 
 {
-  active:{},
-  o:{id:'rel'},
   def:{id:'rel',ls:{},sets:['read','write'],r:'read',w:'write'}, 
+  active:{},
 };
 
 rel.load =(e)=>
@@ -116,7 +115,7 @@ rel.mk =(u,o) =>
     if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
     l.append(
       url_l,
-      it.mk.l('button',{cla:'rm',con:'rm',clk:(e)=>
+      it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
       {
         const url = e.target.parentNode.querySelector('.url').innerText;
         cli.t.value = localStorage.ns + ' rel rm ' + url;
@@ -248,20 +247,22 @@ rel.ext =()=>
 {
   if (window.nostr) 
   {
-    window.nostr.getRelays().then(r=>
-    {
-      let a = [];
-      for (const rl in r)
-      {
-        let s = rl+' ext';
-        if (r[rl].read) s += ' read';
-        if (r[rl].write) s += ' write';
-        a.push(s);
-      }
-      rel.add(a.join(','));
-      v_u.log(localStorage.ns+' rel ext: '+a.length+' added');
-    });
+    window.nostr.getRelays().then(rel.from_ext);
   } else v_u.log('no extension found, make sure it is enabled.')
+};
+
+rel.from_ext =(relays)=>
+{
+  let a = [];
+  for (const rl in relays)
+  {
+    let s = rl+' ext';
+    if (relays[rl].read) s += ' read';
+    if (relays[rl].write) s += ' write';
+    a.push(s);
+  }
+  if (a.length) rel.add(a.join(','));
+  v_u.log(localStorage.ns+' rel ext: '+a.length+' added');
 };
 
 rel.on_open =async e=>

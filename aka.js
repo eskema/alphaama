@@ -1,6 +1,6 @@
 const aka = 
 {
-  o:{id:'aka',ls:{}}
+  def:{id:'aka',ls:{}}
 };
 
 aka.mk =(k,v)=>
@@ -45,7 +45,20 @@ aka.load =()=>
       description:'follow account (can be hex or npub)',
       exe:author.follow
     },
-  }
+    'unfollow': 
+    {
+      required:['id'], 
+      description:'unfollow account (can be hex or npub)',
+      exe:author.unfollow
+    },
+    'score': 
+    {
+      required:['id','number'], 
+      description:'set user score',
+      exe:author.score
+    },
+  };
+  
   aa.load_mod(aka).then(aka.start);
 };
 
@@ -64,39 +77,32 @@ aka.start =async mod=>
       butt_u.textContent = ls.xpub.substr(0,3);
     }
     let p = await aa.db.get_p(ls.xpub);
-    if (p)
+    let updd;
+    if (p.trust < 9) 
     {
-      if (p.trust < 9) 
-      {
-        p.trust = 9;
-        author.save(p);
-      }
-      if (butt_u) author.pic(butt_u,p);
-      if (!p.pastdata.k0.length) v_u.log('aka !metadata');
-      if (!p.pastdata.k3.length) v_u.log('aka !bffs');
-      else 
-      {
-        aka.set_bffs(p)
-      }
-      author.profile(p);  
+      p.trust = 9;
+      updd = true;
     }
+    if (it.a_set(p.sets,['aka'])) updd = true;
+    if (butt_u) author.pic(butt_u,p);
+    if (!p.pastdata.k0.length) v_u.log('aka !metadata');
+    if (!p.pastdata.k3.length) v_u.log('aka !bffs');
+    else 
+    {
+      aka.load_bff(p)
+    }
+    author.profile(p);
+    if (updd) author.save(p);
   }
   else v_u.log('no aka')
 };
 
-aka.set_bffs =async p=>
+aka.load_bff =async p=>
 {
-  let bff_keys = p.extradata.bff;
-  if (bff_keys.length)
+  if (p.extradata.bff.length)
   {
-    if (!aka.o.ls.bff) 
-    {
-      aka.o.ls.bff = bff_keys;
-      aa.save(aka);
-    }
-    let bffs = await aa.db.get({get_a:{store:'authors',a:bff_keys}});
+    let bffs = await aa.db.get({get_a:{store:'authors',a:p.extradata.bff}});
     for (const bff of bffs) aa.p[bff.xpub] = bff;
-    author.aka_bff(bffs,p);
     for (const bff of bffs) author.profile(bff);
   }
 };
@@ -116,20 +122,14 @@ aka.set =s=>
   else console.log('aka mk requires', aa.ct.aka.add.required)
 };
 
-aka.ext =s=>
+aka.ext =async()=>
 {
   if (window.nostr) 
   {
-    window.nostr.getPublicKey().then(x=>
-    { 
-      if (x) 
-      {
-        cli.fuck_off();
-        aka.set(x);
-      }
-    });
+    cli.fuck_off();
+    window.nostr.getPublicKey().then(aka.set);
   } 
-  else v_u.log("no extension found, make sure it's enabled")
+  else v_u.log("no extension found, make sure it's enabled");
 };
 
 aka.rm =s=>
@@ -148,27 +148,28 @@ author.p =xpub=>
 {
   return {
     xpub:xpub,
-    petname:'',
     relay:'',
+    petname:'',
     npub:it.fx.npub(xpub),
     trust:0,
     updated:0,
-    verified:[],
+    verified:[], // [result,date]
     sets:[],
     extradata:
     {
       bff:[],
       relays:[],
+      relay_hints:[],
       followers:[],
       petnames:[],
       lists:[],
     },
-    pastdata:
-    {
-      k0:[],//[[id,created_at],...]
+    pastdata: //[[id,created_at],...]
+    { 
+      k0:[],
       k3:[],
       k10002:[],
-    }
+    },
   }
 };
 
@@ -178,8 +179,24 @@ author.save =p=>
   aa.db.put({put:{store:'authors',a:[p]}});
 };
 
-author.bff =(tags,x)=>
+author.get_k3 =async()=>
 {
+  let k3_id;
+  const aka_pub = aa.p[aka.o.ls.xpub];
+  if (aka_pub && aka_pub.pastdata.k3) k3_id = aka_pub.pastdata.k3[0][0];
+  if (k3_id) 
+  {
+    const k3 = await aa.db.get_e(k3_id);
+    return k3;
+  }
+  else v_u.log('no k3 found');
+  return false;
+};
+
+author.k3 =(tags,x)=>
+{
+  let is_bff, is_aka = aka?.o.ls.xpub === x;
+  if (!is_aka && aa.p[aka?.o.ls.xpub].extradata.bff.includes(x)) is_bff = true; 
   const bff = [];
   for (const tag of tags)
   {
@@ -189,36 +206,57 @@ author.bff =(tags,x)=>
       bff.push(xpub);
       aa.db.get_p(xpub).then(p=>
       {
-        if ((relay && it.a_set(p.extradata.relays,[relay]))
-        || (petname && it.a_set(p.extradata.petnames,[petname]))
-        || it.a_set(p.extradata.followers,[x])
-        ) author.save(p)
+        let updd;
+
+        if (!p.extradata.relay_hints) 
+        {
+          p.extradata.relay_hints = [];
+          updd = true
+        }
+
+        if (relay)
+        {
+          if (it.a_set(p.extradata.relay_hints,[relay])) updd = true;
+          if (is_aka && p.relay !== relay) 
+          {
+            p.relay = relay;
+            updd = true;
+          }
+        }
+
+        if (petname)
+        {
+          if (it.a_set(p.extradata.petnames,[petname])) updd = true;
+          if (is_aka && p.petname !== petname) 
+          {
+            p.petname = petname;
+            updd = true;
+          }
+        } 
+        if (it.a_set(p.extradata.followers,[x])) updd = true;
+        if (is_aka)
+        {
+          if (p.trust === 0)
+          {
+            p.trust = 5;
+            updd = true;
+          }
+          if (it.a_set(p.sets,['bff'])) updd = true;
+        }
+        else if (is_bff && it.a_set(p.sets,['ff'])) updd = true;
+        
+        if (updd) author.save(p);
       });
     }
   }
   return bff
-};
-author.aka_bff =(bffs,p)=>
-{
-  const a = [];
-  for (const bff of bffs)
-  {
-    if (bff.trust === 0) 
-    {
-      bff.trust = 5;
-      aa.p[bff.xpub] = bff;
-      a.push(bff);
-    }
-  }
-  if (a.length) aa.db.put({put:{store:'authors',a:a}});
 };
 
 author.get =async xpub=>
 {
   return new Promise(resolve=>
   {
-    if (!it.s.x(xpub) 
-    && xpub.startsWith('npub')) xpub = it.fx.decode(xpub);
+    if (!it.s.x(xpub) && xpub.startsWith('npub')) xpub = it.fx.decode(xpub);
     let dis = aa.p[xpub];
     if (!dis)
     {
@@ -244,17 +282,33 @@ author.profile =p=>
     it.fx.color(p.xpub,profile);
     const pubkey = it.mk.l('p',{cla:'pubkey'});
     profile.append(pubkey);
-    const butt_follow = it.mk.l('button',{cla:'butt follow',con:'follow',clk:author.profile_butt_follow});
-    if (aka.o.ls.bff?.includes(p.xpub)) 
+    
+    const butt_score = it.mk.l('button',
     {
-      butt_follow.classList.add('is_bff');
-      butt_follow.textContent = 'unfollow';
-    }
-    pubkey.append(butt_follow);
-    it.mk.author(p.xpub,p).then(dis=>
-    {
-      pubkey.append(dis,it.mk.l('span',{cla:'xpub',con:p.xpub}))
+      cla:'butt score',
+      con:p.trust,
+      clk:author.profile_butt_score
     });
+    pubkey.append(butt_score);
+    if (aka.o.ls.xpub)
+    {
+      const butt_follow = it.mk.l('button',
+      {
+        cla:'butt follow',
+        con:'follow',
+        clk:author.profile_butt_follow
+      });
+      if (aka.o.ls.bff?.includes(p.xpub)) 
+      {
+        butt_follow.classList.add('is_bff');
+        butt_follow.textContent = 'unfollow';
+      }
+      pubkey.append(butt_follow);
+    }
+    
+    it.mk.author(p.xpub,p)
+    .then(dis=>{pubkey.append(dis,it.mk.l('span',{cla:'xpub',con:p.xpub}))});
+
     profile.append(it.mk.l('section',{cla:'metadata'}));
     profile.append(it.mk.l('section',{cla:'extradata'}));
     profile.dataset.updated = p.updated ?? 0;
@@ -286,6 +340,13 @@ author.profile_butt_bff =e=>
   const request = ['REQ','bff',{authors:[xpub],kinds:[3],limit:1}];
   q_e.demand(request,rel.in_set(rel.o.r),{eose:'close'});
   // console.log(request);
+};
+
+author.profile_butt_score =async e=>
+{
+  const xpub = e.target.closest('.profile').dataset.xpub;
+  const p = await aa.db.get_p(xpub);
+  cli.v('.aa aka score '+xpub+' '+p.trust);
 };
 
 author.profile_butt_follow =async e=>
@@ -418,9 +479,9 @@ author.list =(a,l)=>
   {    
     const bff_li = x=>
     {
-      it.mk.author(x).then(pubkey=>
+      it.mk.author(x).then(dis=>
       {
-        l.append(it.mk.l('li',{cla:'bff',app:pubkey}));
+        l.append(it.mk.l('li',{cla:'bff',app:dis}));
       });
     };
     
@@ -500,6 +561,21 @@ author.mk.extra.relays =(extr,a,p)=>
   relays_details.append(butt_relays);
 };
 
+author.mk.extra.relay_hints =(extr,a,p)=>
+{
+  let ul = it.mk.l('ul',{cla:'relay_hints'});
+  let relay_hints_details = it.mk.details('relay_hints ('+a.length+')',ul);
+  extr.append(relay_hints_details);
+
+  if (a.length)
+  {
+    for (const item of a) 
+    {
+      ul.append(it.mk.l('li',{cla:'item relay',con:item}))
+    }
+  }
+};
+
 author.mk.extradata =p=>
 {
   const extradata = it.mk.l('section',{cla:'extradata'});
@@ -557,25 +633,17 @@ author.pic =(l,p)=>
   else if (pic) l.removeChild(pic);
 };
 
-author.get_k3 =async()=>
-{
-  let k3_id;
-  const aka_pub = aa.p[aka.o.ls.xpub];
-  if (aka_pub && aka_pub.pastdata.k3) k3_id = aka_pub.pastdata.k3[0][0];
-  if (k3_id) 
-  {
-    const k3 = await aa.db.get_e(k3_id);
-    return k3;
-  }
-  else v_u.log('no k3 found');
-  return false;
-};
 
-author.follow =async(s)=>
+
+author.follow =async s=>
 {
   console.log(s)
   
-  if (!aka.o.ls.xpub) return false;
+  if (!aka.o.ls.xpub) 
+  {
+    v_u.log('no aka found, setup one first')
+    return false;
+  }
   const a = s.trim().split(',');
   let p_tag = ['p'],k,relay,petname;
   if (a.length) 
@@ -632,11 +700,11 @@ author.follow =async(s)=>
         if (window.confirm('new contacts length = '+c_len+'. you sure?'))
         {
           tags.push(p_tag);
-          
           console.log(tags)
         }
 
-        // if (dat_k3.event.content.length) console.log('has content',dat_k3.event.content.length)
+        // if (dat_k3.event.content.length) 
+        // console.log('has content',dat_k3.event.content.length)
         // const draft = 
         // {
         //   pubkey:aka.o.ls.xpub,
@@ -652,11 +720,42 @@ author.follow =async(s)=>
     {
       v_u.log('no k3 found, create one first')
     }
-  }
-  
-  
+  } 
 };
 
+author.unfollow =async s=>
+{
+  console.log(s)
+};
 
-author.unfollow =()=>
-{};
+author.score =s=>
+{
+  const [xpub,score] = s.trim().split(' ');
+  console.log(xpub,score);
+};
+
+author.process =async xpub=>
+{
+  let p = await aa.db.get_p(xpub);
+  if (p.pastdata.k3.length)
+  {
+    const k3_id = p.pastdata.k3[0][0];
+    const k3 = await aa.db.get_e(k3_id);
+    const k3_tags = k3.event.tags;
+    author.k3(k3_tags,xpub);
+  }
+  if (p.pastdata.k10002.length)
+  {
+    const k10002_id = p.pastdata.k10002[0][0];
+    const k10002 = await aa.db.get_e(k10002_id);
+    const k10002_tags = k10002.event.tags;
+    console.log(k10002_tags);
+  }
+};
+
+author.process_bff =(xpub=false)=>
+{
+  if (!xpub) xpub = aka.o.ls.xpub;
+  const bff = aa.p[xpub]?.extradata.bff;
+  for (const x of bff) author.process(x);
+};

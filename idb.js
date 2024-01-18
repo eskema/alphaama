@@ -1,5 +1,16 @@
 const indexed_db = {ops:{}};
 
+indexed_db.ops.clear =async(db,o)=>
+{
+  for (const store of o.stores)
+  {
+    console.log(store);
+    const odb = db.transaction(store,'readwrite').objectStore(store);
+    const store_clear = odb.clear();
+    store_clear.onsuccess =e=> postMessage('db '+o.store+' cleared');
+  }
+};
+
 indexed_db.ops.put =async(db,o)=>
 { // o = {store:'',a:[]}
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
@@ -214,7 +225,7 @@ indexed_db.ok =(db,o)=>
 }
 onmessage =m=> 
 { 
-  // console.log('db onmessage',m);
+  // console.log('db onmessage',m.data);
   const db = indexedDB.open("alphaama", 13);
   db.onerror = indexed_db.err;
   db.onupgradeneeded = indexed_db.upg;

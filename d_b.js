@@ -18,8 +18,25 @@ aa.idb.onmessage=e=>
   if (exes.length) exes.map(k=>delete aa.db.exe[k]);
 };
 
+aa.db.clear = async a=>
+{
+  return new Promise(resolve=>
+  {
+    const db = new Worker('idb.js');
+    db.onmessage=e=>
+    {
+      // console.log('aa.db.get',o,e.data);
+      setTimeout(()=>{db.terminate()},200);
+      resolve(e.data);
+    }
+    const o = {clear:{stores:a}};
+    db.postMessage(o);
+  });
+};
+
 aa.db.get =async o=>
 {
+  console.log('aa.db.get',o);
   return new Promise(resolve=>
   {
     const db = new Worker('idb.js');
@@ -38,6 +55,7 @@ aa.db.get_p =async xpub=>
   if (aa.p[xpub]) return aa.p[xpub];  
   return new Promise(resolve=>
   {
+    console.log('aa.db.get_p',xpub);
     const o = {get:{store:'authors',key:xpub}};
     const db = new Worker('idb.js');
     db.onmessage=e=>

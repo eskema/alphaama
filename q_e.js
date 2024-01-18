@@ -1,6 +1,6 @@
 const q_e =
 { 
-  o:{id:'q_e',ls:{}},
+  def:{id:'q_e',ls:{}},
   clk:{},
 };
 
@@ -14,7 +14,7 @@ q_e.load =()=>
     {
       required:['id','filter'],
       description:'add new filter',
-      exe:q_e.add_filter
+      exe:q_e.add
     },
     'rm':
     {
@@ -50,6 +50,12 @@ q_e.load =()=>
       description:'stop all running filters or just one',
       exe:q_e.close
     },
+    'stuff':
+    {
+      description:'sets a bunch of queries to get you started',
+      exe:q_e.stuff
+    },
+    
     // 'raw':
     // {
     //   required:['relset','raw_filter'],
@@ -61,6 +67,15 @@ q_e.load =()=>
   aa.load_mod(q_e);
 };
 
+q_e.stuff =()=>
+{
+  q_e.add('a {"authors":["aka"],"kinds":[0,3,10002]}');
+  q_e.add('b {"authors":["bff"],"kinds":[0,3,10002]}');
+  q_e.add('d {"#p":["aka"],"kinds":[4]}');
+  q_e.add('f {"authors":["aka","bff"],"kinds":[0,3,10002],"since":"n_1"}');
+  q_e.add('n {"#p":["aka"],"kinds":[1,7],"since":"n_2"}');
+};
+
 q_e.mk =(f_id,o) =>
 {
   f_id = it.fx.an(f_id);
@@ -69,16 +84,14 @@ q_e.mk =(f_id,o) =>
   l.append(
     it.mk.l('span',{cla:'key',con:f_id}),
     it.mk.l('span',{cla:'val',con:o.v}),
-    it.mk.l('button',{cla:'rm',con:'rm',clk:q_e.clk.rm})
+    it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
+    {
+      const filter = e.target.parentNode.querySelector('.key').innerText;
+      cli.t.value = localStorage.ns + ' qe rm ' + filter;
+      cli.foc();
+    }})
   );
   return l
-};
-
-q_e.clk.rm =e=>
-{
-  const filter = e.target.parentNode.querySelector('.key').innerText;
-  cli.t.value = localStorage.ns + ' qe rm ' + filter;
-  cli.expand();
 };
 
 q_e.demand =(request,relays,options)=> // [req, origin = false]
@@ -188,7 +201,7 @@ q_e.sub =s=>
 
 };
 
-q_e.add_filter =s=>
+q_e.add =s=>
 {
   let a = s.trim().split(' ');
   let fid = a.shift();

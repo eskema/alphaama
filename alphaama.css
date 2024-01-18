@@ -732,7 +732,7 @@ button.butt
   top: 0; 
 }
 
-.viewing #l,
+.viewing:not(.cli_expanded) #l,
 #l:not(.expanded) .l
 {
   display: none;
@@ -1419,10 +1419,12 @@ a.author
 .replies::after
 {
   align-self: end;
-  background-color: rgba(var(--color-e),1);
+  background-color: rgba(var(--color-b),1);
   bottom: 5rem;
   display: grid;
   font-size: var(--font-size-s);
+  justify-self: start;
+  left: -6px;
   line-height: 1.5rem;
   padding: 0;
   padding-left: var(--padm);
@@ -1441,6 +1443,7 @@ a.author
 .replies[data-count]:hover
 {
   z-index: 6;
+  /*background: red;*/
 }
 
 .replies.expanded
@@ -1989,7 +1992,7 @@ a.author
   border-bottom: var(--pad) solid rgb(var(--color-b));
   display: grid;
   grid-template-areas: 
-  "trust pub";
+  "pub pub";
   padding-bottom: 1px;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
@@ -2000,45 +2003,52 @@ a.author
 .profile.in_view 
 {
   grid-template-areas: 
-  "trust pub"
+  "pub pub"
   "metadata metadata"
   "actions actions"
   "extradata extradata";
   margin-bottom: calc(var(--line) + calc(var(--pad)*2));
 }
 
-.profile::before
+.profile .score
 {
-  align-items: center;
+  /*align-items: center;*/
   align-self: center;
   box-sizing: border-box;
   color: rgb(var(--color-b));
-  content: attr(data-trust);
-  display: grid;
+  /*content: attr(data-trust);*/
+  /*display: grid;*/
+  grid-area: trust;
   font-size: var(--font-size-s);
   height: var(--size-s);
   justify-items: center;
-  pointer-events: none;
   position: absolute;
-  width: var(--size-s);
+  width: var(--pad);
 }
 
-.profile::before[data-luma="dark"]
+.profile[data-luma="dark"] .butt
 {
   color: rgb(var(--color-e));
 }
 
-.profile.in_view::before
+.profile.in_view .score
 {
   border: 1px dashed rgb(var(--color-b));
   margin-left: var(--padm);
   position: relative;
+  width: var(--line);
 }
 
-.profile:not(.in_view)::before
+.profile:not(.in_view) .score
 {
   color: rgb(var(--color-c));
   transform: translateX(-100%);
+}
+
+.profile .follow 
+{
+  grid-area: follow;
+  padding: 0 var(--pad);
 }
 
 .profile .pubkey
@@ -2048,9 +2058,9 @@ a.author
   display: grid;
   font-size: var(--font-size-s);
   grid-area: pub;
-  grid-gap: var(--pad);
-  grid-template-areas: "author follow_butt xpub";
-  grid-template-columns: 1fr auto;
+  /*grid-gap: var(--pad);*/
+  grid-template-areas: "trust author follow xpub";
+  grid-template-columns: auto 1fr auto;
   justify-items: end;
   justify-self: stretch;
   line-height: 1;
