@@ -11,19 +11,7 @@ const aa =
   mk:{},
 };
 
-aa.ct.setup = 
-{
-  'login': 
-  {
-    description:'load aka and relays from ext',
-    exe:aa.login
-  },
-  'reset':
-  {
-    description:'resets everything',
-    exe:aa.bbbb
-  }
-};
+
 
 aa.login =()=>  
 {
@@ -34,7 +22,9 @@ aa.login =()=>
       aka.set(x);
       if (rel) rel.ext();
     });
+    cli.fuck_off()
   }
+  else v_u.log('enable extension first and try again')
 };
 
 aa.reset =()=>
@@ -47,7 +37,19 @@ aa.reset =()=>
   });
 };
 
-
+aa.ct.u = 
+{
+  'login': 
+  {
+    description:'load aka and relays from ext',
+    exe:aa.login
+  },
+  'reset':
+  {
+    description:'resets everything',
+    exe:aa.reset
+  }
+};
 
 aa.load_mod =async mod=>
 {
@@ -199,14 +201,14 @@ aa.replace_note =(l,dat)=>
 aa.to_print =dat=>
 {
   const q_id = 'print';
-  if (!aa.q.hasOwnProperty('print')) aa.q.print = [];
-  aa.q.print.push(dat);
+  if (!aa.q.hasOwnProperty(q_id)) aa.q[q_id] = [];
+  aa.q[q_id].push(dat);
   
   it.to(()=>
   {
     // console.log('it.to print',aa.q.print);
-    for (const dat of aa.q.print) aa.print(d);
-    aa.q.print = [];
+    for (const dis of aa.q[q_id]) aa.print(dis);
+    aa.q[q_id] = [];
   },50,'print');
 };
 

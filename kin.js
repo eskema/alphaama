@@ -267,18 +267,19 @@ kin.d3 =dat=>
   const tags = dat.event.tags;
   if (tags.length) //  && !dat.clas?.includes('draft')
   {
-    const xpub = dat.event.pubkey;
+    const x = dat.event.pubkey;
     const c_at = dat.event.created_at;
-    aa.db.get_p(xpub).then(p=>
+    aa.db.get_p(x).then(p=>
     {      
       let updated;
       let k3 = p.pastdata.k3;
       if (!k3.length || k3[0][1] < c_at) 
       {
         p.pastdata.k3.unshift([dat.event.id,c_at]);
-        console.log('old bff from '+xpub,p.extradata.bff);
+        console.log('old bff from '+x,p.extradata.bff);
 
-        p.extradata.bff = author.k3(tags,xpub);
+        p.extradata.bff = author.bff_from_tags(tags);
+        author.process_k3_tags(tags,x);
 
         if (c_at > p.updated) p.updated = c_at;
         author.save(p);

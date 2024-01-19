@@ -52,7 +52,7 @@ aa.db.get =async o=>
 
 aa.db.get_p =async xpub=>
 {
-  if (aa.p[xpub]) return aa.p[xpub];  
+  if (aa.p[xpub]) return aa.p[xpub];
   return new Promise(resolve=>
   {
     console.log('aa.db.get_p',xpub);

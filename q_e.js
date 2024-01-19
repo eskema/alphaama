@@ -71,8 +71,8 @@ q_e.stuff =()=>
 {
   q_e.add('a {"authors":["aka"],"kinds":[0,3,10002]}');
   q_e.add('b {"authors":["bff"],"kinds":[0,3,10002]}');
-  q_e.add('d {"#p":["aka"],"kinds":[4]}');
-  q_e.add('f {"authors":["aka","bff"],"kinds":[0,3,10002],"since":"n_1"}');
+  q_e.add('d {"#p":["aka"],"kinds":[4],"since":"n_7"}');
+  q_e.add('f {"authors":["aka","bff"],"kinds":[1,7,30023],"since":"n_2"}');
   q_e.add('n {"#p":["aka"],"kinds":[1,7],"since":"n_2"}');
 };
 
