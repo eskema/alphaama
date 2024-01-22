@@ -368,7 +368,7 @@ button.butt
 
 .item 
 {
-  /*color: rgb(var(--color-c));*/
+  color: rgb(var(--color-d));
   display: grid;
   grid-template-areas: "key value";
   grid-template-columns: auto 1fr;
@@ -378,19 +378,7 @@ button.butt
 
 .item:hover
 {
-  color: rgb(var(--color-d));
-}
-
-.item:hover > .val
-{
   color: rgb(var(--color-f));
-}
-
-.item.active::before 
-{
-  content: "*";
-  color:rgb(var(--color-main));
-  margin-right: var(--pad);
 }
 
 .item[data-before]::before 
@@ -2716,15 +2704,15 @@ p[data-meta="about"]::before
 
 /* @group relays */
 
-#u .relay,
-#u .filter
+.relay,
+.filter
 {
   grid-template-areas: "rm k v sets";
   grid-template-columns: auto auto 1fr auto;
 }
 
-#u .filter::after,
-#u .relay::after 
+.filter::after,
+.relay::after 
 {
   content: attr(data-sets);
   grid-area: sets;
@@ -2772,13 +2760,13 @@ p[data-meta="about"]::before
   margin-right: var(--pad);
 }
 
-.relay[data-state="1"]::before
+#u .relay[data-state="1"]::before
 {
   color: rgb(var(--color-yes));
   opacity: .7;
 }
 
-.relay[data-state="3"]::before
+#u .relay[data-state="3"]::before
 {
   color: rgb(var(--color-no));
   opacity: .7;

@@ -12,41 +12,46 @@ q_e.load =()=>
   {
     'add':
     {
-      required:['id','filter'],
+      required:['fid','filter'],
       description:'add new filter',
       exe:q_e.add
     },
     'rm':
     {
-      required:['id'],
-      optional:['ids'],
-      description:'remove filter',
+      required:['fid'],
+      description:'remove one or more filters',
       exe:q_e.rm_filter
     },
     'sets':
     {
-      required:['set','id'],
+      required:['set','sid'],
       optional:['ids'],
       description:'create sets of filters',
       exe:q_e.sets
     },
     'setrm':
     {
-      required:['set'],
-      optional:['id'],
+      required:['relset'],
+      optional:['fid'],
       description:'remove set from filter',
       exe:q_e.set_rm
     },
     'run':
     {
-      required:['filter'],
+      required:['fid'],
       optional:['relset','options'],
       description:'run filter on relay set',
       exe:q_e.run
     },
+    'raw':
+    {
+      required:['relset','raw_filter'],
+      description:'run raw filter on relay set',
+      exe:q_e.raw
+    },
     'close':
     {
-      optional:['filter'],
+      optional:['fid'],
       description:'stop all running filters or just one',
       exe:q_e.close
     },
@@ -55,12 +60,7 @@ q_e.load =()=>
       description:'sets a bunch of queries to get you started',
       exe:q_e.stuff
     },
-    'raw':
-    {
-      required:['relset','raw_filter'],
-      description:'run raw filter on relay set',
-      exe:q_e.raw
-    },
+    
   };
 
   aa.load_mod(q_e);

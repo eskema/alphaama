@@ -99,6 +99,27 @@ rel.c_on =async(url,o=false)=>
 
 rel.mk =(u,o) =>
 {
+  const l = rel.mk_item(u,o);
+  if (l)
+  {
+    l.append(it.mk.l('button',
+    {
+      cla:'rm',
+      con:'rm',
+      clk:e=>
+      {
+        const url = e.target.parentNode.querySelector('.url').innerText;
+        cli.t.value = localStorage.ns + ' rel rm ' + url;
+        cli.foc();
+      }
+    }));
+    return l
+  }
+  else return false
+};
+
+rel.mk_item =(u,o)=>
+{
   u = it.s.url(u);
   if (u) 
   {
@@ -113,15 +134,7 @@ rel.mk =(u,o) =>
     );
     
     if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
-    l.append(
-      url_l,
-      it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
-      {
-        const url = e.target.parentNode.querySelector('.url').innerText;
-        cli.t.value = localStorage.ns + ' rel rm ' + url;
-        cli.foc();
-      }})
-    );
+    l.append(url_l);
     return l
   }
   return false
@@ -263,6 +276,57 @@ rel.from_ext =(relays)=>
   }
   if (a.length) rel.add(a.join(','));
   v_u.log(localStorage.ns+' rel ext: '+a.length+' added');
+};
+
+rel.from_k3 =(content)=>
+{
+  let relays;
+  if (content.length > 3)
+  {
+    try { relays = JSON.parse(content)}
+    catch (er) { console.log(er)}
+  }
+  console.log(relays)
+  return relays
+};
+
+rel.add_from_k3 =(relays,p)=>
+{
+  if (relays)
+  {
+    if (!p.rels) p.rels = {};
+    for (let url in relays)
+    {
+      const dis = it.s.url(url);
+      if (dis)
+      {
+        let relay = p.rels[dis.href];
+        if (!relay) relay = p.rels[dis.href] = {sets:[]};
+        if (relays[url].read === true) it.a_set(relay.sets,['read']);
+        if (relays[url].write === true) it.a_set(relay.sets,['write']);
+        it.a_set(relay.sets,['k3']);
+      }
+    }
+  }
+};
+
+rel.add_from_k10002 =(tags,p)=>
+{
+  if (!p.rels) p.rels = {};
+  for (const tag of tags)
+  {
+    const [type,url,permission] = tag;
+    const dis = it.s.url(url);
+    if (dis)
+    {
+      let relay = p.rels[dis.href];
+      if (!relay) relay = p.rels[dis.href] = {sets:[]};
+      if (permission === 'read') it.a_set(relay.sets,['read']);
+      else if (permission === 'write') it.a_set(relay.sets,['write']);
+      else it.a_set(relay.sets,['read','write']);
+      it.a_set(relay.sets,['k10002']);
+    }
+  }
 };
 
 rel.on_open =async e=>

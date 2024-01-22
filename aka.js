@@ -161,11 +161,11 @@ author.p =xpub=>
     updated:0,
     verified:[], // [result,date]
     sets:[],
+    rels:{},
     extradata:
     {
       bff:[],
       relays:[],
-      relay_hints:[],
       followers:[],
       petnames:[],
       lists:[],
@@ -214,11 +214,11 @@ author.load =async xpub=>
   },500,q_id);
 };
 
-author.get_k3 =async()=>
+author.get_k3 =async(xpub)=>
 {
   let k3_id;
-  const aka_p = aa.p[aka.o.ls.xpub];
-  if (aka_p && aka_p.pastdata.k3) k3_id = aka_p.pastdata.k3[0][0];
+  const p = xpub ? aa.p[xpub] : aa.p[aka.o.ls.xpub];
+  if (p && p.pastdata.k3) k3_id = p.pastdata.k3[0][0];
   if (k3_id) 
   {
     return await aa.db.get_e(k3_id);
@@ -244,15 +244,15 @@ author.process_k3_tags =(tags,x)=>
         updd = true;
       }
 
-      if (!p.extradata.relay_hints) 
-      {
-        p.extradata.relay_hints = [];
-        updd = true
-      }
-
       if (relay)
       {
-        if (it.a_set(p.extradata.relay_hints,[relay])) updd = true;
+        let url = it.s.url(relay);
+        if (url)
+        {
+          if (!p.rels) p.rels = {};
+          if (!p.rels[url.href]) p.rels[url.href] = {sets:[]};
+          if (it.a_set(p.rels[url.href].sets,['hint'])) updd = true;
+        }
         if (is_aka && p.relay !== relay) 
         {
           p.relay = relay;
@@ -563,29 +563,29 @@ author.mk.extra.bff =(extr,a,p)=>
   if (p.pastdata?.k3.length) butt_bff.dataset.last = it.tim.e(p.pastdata.k3[0][1]);
   bff_details.append(butt_bff);
 
-  const butt_taglist = it.mk.l('button',
-  {
-    cla:'butt taglist',
-    con:'view tag list',
-    clk:it.mk.taglist
-  });
-  bff_details.append(butt_taglist);
+  // const butt_taglist = it.mk.l('button',
+  // {
+  //   cla:'butt taglist',
+  //   con:'view tag list',
+  //   clk:it.mk.taglist
+  // });
+  // bff_details.append(butt_taglist);
 
 };
 
-it.mk.taglist =async e=>
-{
-  const xpub = e.target.closest('.profile').dataset.xpub;
-  const ul = e.target.parentElement.querySelector('ul');
-  ul.remove();
-  let k3 = await author.get_k3(xpub);
-  if (k3)
-  {
-    let tags = kin.tags(k3.event.tags);
-    e.target.parentElement.append(tags);
-  }
+// it.mk.taglist =async e=>
+// {
+//   const xpub = e.target.closest('.profile').dataset.xpub;
+//   const ul = e.target.parentElement.querySelector('ul');
+//   ul.remove();
+//   let k3 = await author.get_k3(xpub);
+//   if (k3)
+//   {
+//     let tags = kin.tags(k3.event.tags);
+//     e.target.parentElement.append(tags);
+//   }
   
-};
+// };
 
 
 author.mk.extra.followers =(extr,a)=>
@@ -601,15 +601,15 @@ author.mk.extra.followers =(extr,a)=>
 author.mk.extra.relays =(extr,a,p)=>
 {
   let ul = it.mk.l('ul',{cla:'relays'});
-  let relays_details = it.mk.details('relays ('+a.length+')',ul);
-  extr.append(relays_details);
-
+  
   if (a.length)
   {
-    for (const item of a) 
-    {
-      ul.append(it.mk.l('li',{cla:'item relay',con:item}))
-    }
+    for (const item of a) ul.append(it.mk.l('li',{cla:'item relay',con:item}))
+  }
+
+  if (p.rels)
+  {
+    for (const relay in p.rels) ul.append(rel.mk_item(relay,p.rels[relay]))
   }
 
   const butt_relays = it.mk.l('button',
@@ -620,7 +620,9 @@ author.mk.extra.relays =(extr,a,p)=>
   });
   if (p.pastdata.k10002.length) butt_relays.dataset.last = it.tim.e(p.pastdata.k10002[0][1]);
 
+  let relays_details = it.mk.details('relays ('+ul.childNodes.length+')',ul);
   relays_details.append(butt_relays);
+  extr.append(relays_details);
 };
 
 author.mk.extra.relay_hints =(extr,a,p)=>

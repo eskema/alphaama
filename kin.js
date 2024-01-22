@@ -273,17 +273,18 @@ kin.d3 =dat=>
     const c_at = dat.event.created_at;
     aa.db.get_p(x).then(p=>
     {      
-      let updated;
-      let k3 = p.pastdata.k3;
-      if (!k3.length || k3[0][1] < c_at) 
+      let last = p.pastdata.k3;
+      if (!last.length || last[0][1] < c_at) 
       {
-        p.pastdata.k3.unshift([dat.event.id,c_at]);
-        console.log('old bff from '+x,p.extradata.bff);
+        last.unshift([dat.event.id,c_at]);
 
         p.extradata.bff = author.bff_from_tags(tags);
         author.process_k3_tags(tags,x);
 
         if (c_at > p.updated) p.updated = c_at;
+
+        rel.add_from_k3(rel.from_k3(dat.event.content),p);
+
         author.save(p);
       }
 
@@ -293,14 +294,7 @@ kin.d3 =dat=>
 
       if (p.sets.includes('aka')) aka.load_bff(p);
 
-      const relays = kin.extract_relays_from_content(dat.event.content);
-      if (relays)
-      {
-        for (const relay in relays)
-        {
-          console.log(relay)
-        }
-      }
+      
     });
   }
   const note = kin.def(dat);
@@ -308,16 +302,58 @@ kin.d3 =dat=>
   return note
 };
 
-kin.extract_relays_from_content =(content)=>
+kin.d10002 =dat=>
 {
-  let relays;
-  if (content.length > 3)
+  const tags = dat.event.tags;
+  if (tags.length) 
   {
-    try { relays = JSON.parse(content)}
-    catch (er) { console.log(er)}
+    const x = dat.event.pubkey;
+    const c_at = dat.event.created_at;
+    aa.db.get_p(x).then(p=>
+    {
+      let last = p.pastdata.k10002;
+      if (!last.length || last[0][1] < c_at) 
+      {
+        last.unshift([dat.event.id,c_at]);
+
+        // p.extradata.bff = author.bff_from_tags(tags);
+        // author.process_k3_tags(tags,x);
+
+        if (c_at > p.updated) p.updated = c_at;
+        rel.add_from_k10002(tags,p);
+        // const relays = kin.extract_relays_from_content(dat.event.content);
+        // if (relays)
+        // {
+        //   console.log(relays);
+        //   if (!p.rels) p.rels = {};
+        //   for (const url in relays)
+        //   {
+        //     const dis = it.s.url(url);
+        //     if (dis)
+        //     {
+        //       const relay = p.rels[dis.href] = {sets:[]};
+        //       if (relays[url].read === true) it.a_set(relay.sets,['read']);
+        //       if (relays[url].write === true) it.a_set(relay.sets,['write']);
+        //       it.a_set(relay.sets,['k3']);
+        //     }
+        //   }
+        // }
+
+        author.save(p);
+      }
+
+      let profile = document.getElementById(p.npub);
+      if (!profile) profile = author.profile(p);
+      author.update(profile,p,true);
+
+      // if (p.sets.includes('aka')) aka.load_bff(p);
+
+      
+    });
   }
-  console.log(relays)
-  return relays
+  const note = kin.def(dat);
+  note.classList.add('root');
+  return note
 };
 
 kin.d7 =dat=>

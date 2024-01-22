@@ -23,7 +23,7 @@ v_u.pop =()=>
     }
     else document.title = 'alphaama';
   }
-  console.log(history.state)
+  // console.log(history.state)
 };
 window.addEventListener('popstate',v_u.pop);
 
