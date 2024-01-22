@@ -55,13 +55,12 @@ q_e.load =()=>
       description:'sets a bunch of queries to get you started',
       exe:q_e.stuff
     },
-    
-    // 'raw':
-    // {
-    //   required:['relset','raw_filter'],
-    //   description:'run raw filter on relay set',
-    //   exe:q_e.raw
-    // },
+    'raw':
+    {
+      required:['relset','raw_filter'],
+      description:'run raw filter on relay set',
+      exe:q_e.raw
+    },
   };
 
   aa.load_mod(q_e);
@@ -242,21 +241,23 @@ q_e.rm_filter =s=>
   else v_u.log('.aa qe '+fid+' not found')
 };
 
-// q_e.raw =s=>
-// {
-//   let [relset,filter] = s.trim().split(' ');
-//   if (relset && filter) 
-//   { 
-//     let filtered = it.fx.vars(filter);
-//     if (filtered)
-//     {
-//       let request = ['REQ','raw',filtered];
-//       v_u.log('.aa qe raw '+filter);
-//       q_e.demand(request,rel.in_set(relset));
-//     }
-//     else v_u.log('invalid filter')
-//   }
-// };
+q_e.raw =s=>
+{
+  let [relset,filter] = s.trim().split(' ');
+  if (relset && filter) 
+  { 
+    let filtered = it.fx.vars(filter);
+    if (filtered)
+    {
+      let request = ['REQ','raw',filtered];
+      let relays = rel.in_set(relset);
+      if (!relays) relays = rel.in_set(rel.o.r);
+      v_u.log('.aa qe raw '+filter);
+      q_e.demand(request,relays,{eose:'close'});
+    }
+    else v_u.log('invalid filter')
+  }
+};
 
 q_e.run =s=>
 {

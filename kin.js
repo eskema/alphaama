@@ -104,12 +104,14 @@ kin.ok =message=>
 kin.eose =message=>
 {
   // message.data ["EOSE", <sub_id>]
-  let sub = rel.active[message.origin].q[message.data[1]];
+  const sub_id = message.data[1];
+  let sub = rel.active[message.origin].q[sub_id];
   if (sub.eose === 'close')
   {
+    rel.close(message.origin,sub_id)
     // console.log(sub.eose,message.data[1],rel.active[message.origin].q[message.data[1]]);
-    rel.active[message.origin].ws.send(JSON.stringify(['CLOSE',message.data[1]]));
-    delete rel.active[message.origin].q[message.data[1]];
+    // rel.active[message.origin].ws.send(JSON.stringify(['CLOSE',message.data[1]]));
+    // delete rel.active[message.origin].q[message.data[1]];
   }
 };
 
@@ -128,7 +130,7 @@ kin.event =message=>
   const event = message.data[2];
   const o = {event:event,seen:[message.origin],subs:[sub_id]};
   
-  if (NostrTools.verifyEvent(event)) kin.o(o); 
+  if (it.fx.verify(event)) kin.o(o); 
   else console.log('invalid event',message);
 };
 
@@ -289,14 +291,33 @@ kin.d3 =dat=>
       if (!profile) profile = author.profile(p);
       author.update(profile,p,true);
 
-      if (p.sets.includes('aka')) aka.load_bff(p)
-      
-    });
+      if (p.sets.includes('aka')) aka.load_bff(p);
 
+      const relays = kin.extract_relays_from_content(dat.event.content);
+      if (relays)
+      {
+        for (const relay in relays)
+        {
+          console.log(relay)
+        }
+      }
+    });
   }
   const note = kin.def(dat);
   note.classList.add('root');
   return note
+};
+
+kin.extract_relays_from_content =(content)=>
+{
+  let relays;
+  if (content.length > 3)
+  {
+    try { relays = JSON.parse(content)}
+    catch (er) { console.log(er)}
+  }
+  console.log(relays)
+  return relays
 };
 
 kin.d7 =dat=>
@@ -413,7 +434,7 @@ kin.view =l=>
   l.classList.add('in_view');   
   it.fx.in_path(l);
   aa.l.classList.add('viewing','view_e');
-  v_u.scroll(l)
+  v_u.scroll(l);
 };
 
 aa.print =dat=>

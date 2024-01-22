@@ -177,7 +177,7 @@ rel.close =(k,id)=>
   setTimeout(()=>{rel.upd_state(k)},100);
 };
 
-rel.resume =sub_id=>
+rel.resume =()=>
 {
   for (const url in rel.active) { rel.c_on(url) }
 };

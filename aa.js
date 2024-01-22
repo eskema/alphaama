@@ -9,6 +9,7 @@ const aa =
   state:{},
   ct:{},
   mk:{},
+  clk:{},
 };
 
 
@@ -108,7 +109,7 @@ aa.mk.view =()=>
   const main = it.mk.l('main',{id:'view'});
   
   const l = it.mk.section('l',1);
-  l.append(it.mk.l('ul',{id:'logs'}));
+  l.append(it.mk.l('ul',{id:'logs',cla:'list'}));
   
   const p = it.mk.section('p');
   p.append(it.mk.l('div',{id:'authors'}))
@@ -123,12 +124,12 @@ aa.mk.view =()=>
 // if (localStorage.cash === 'yes' && 'serviceWorker' in navigator)
 // { aa.cash = navigator.serviceWorker.register('/cash.js') }
 
-aa.yolo =e=>
+aa.clk.yolo =e=>
 {
   console.log(e.target)
 };
 
-aa.post =e=>
+aa.clk.post =e=>
 {
   let dat = aa.e[e.target.closest('.note').dataset.id];
   if (dat)
@@ -138,31 +139,62 @@ aa.post =e=>
   }
 };
 
-aa.sign =e=>
+aa.post =dat=>
 {
-  let dat = aa.e[e.target.closest('.note').dataset.id];
   if (dat)
   {
-    if (window.nostr) 
-    {
-      window.nostr.signEvent(dat.event)
-      .then(signed=> 
-      {
-        dat = {event:signed,clas:['not_sent']};
-        aa.e[signed.id] = dat;
-        aa.db.upd(dat);
-        aa.print(dat);
-        // console.log(signed);
-      })
-    } else v_u.log('you need a signer')
+    console.log(e.target);
+    if (dat.clas?.includes('not_sent')) it.a_rm(dat.clas,['not_sent']);
+
+  }
+};
+
+aa.clk.sign =e=>
+{
+  let dat = aa.e[e.target.closest('.note').dataset.id];
+  
+  if (dat)
+  {
+    aa.sign(dat)
+    
   }
   else v_u.log('nothing to sign')
 };
 
-aa.edit =e=>
+aa.sign =async event=>
+{
+  return new Promise(resolve=>
+  {
+    if (event)
+    {
+      if (window.nostr) 
+      {
+        window.nostr.signEvent(event).then(signed=> 
+        {
+          aa.e[signed.id] = {event:signed,clas:['not_sent']};
+          resolve(aa.e[signed.id])
+          // aa.db.upd(dat);
+          // aa.print(dat);
+        });
+      } 
+      else 
+      {
+        v_u.log('you need a signer');
+        resolve(false)
+      }
+    }
+    else 
+    {
+      v_u.log('nothing to sign');
+      resolve(false)
+    }
+  });
+};
+
+aa.clk.edit =e=>
 {console.log(e.target)};
 
-aa.cancel =e=>
+aa.clk.cancel =e=>
 {console.log(e.target)};
 
 aa.draft =draft=>
@@ -209,7 +241,7 @@ aa.to_print =dat=>
     // console.log('it.to print',aa.q.print);
     for (const dis of aa.q[q_id]) aa.print(dis);
     aa.q[q_id] = [];
-  },50,'print');
+  },50,q_id);
 };
 
 aa.mia_relays =a=>

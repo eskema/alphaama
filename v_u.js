@@ -23,6 +23,7 @@ v_u.pop =()=>
     }
     else document.title = 'alphaama';
   }
+  console.log(history.state)
 };
 window.addEventListener('popstate',v_u.pop);
 
@@ -80,7 +81,7 @@ v_u.scroll =(l,options={})=>
 
 v_u.log =s=>
 {
-  const log = it.mk.l('li',{cla:'l'});
+  const log = it.mk.l('li',{cla:'l item'});
   if (typeof s === 'string') s = it.mk.l('p',{con:s});
   log.append(s);
   
@@ -140,15 +141,13 @@ v_u.nprofile =async nprofile=>
 v_u.nevent =async nevent=>
 {
   let data = it.fx.decode(nevent);
-  if (data)
+  if (data && data.id)
   {
     let nid = it.fx.nid(data.id);
-    // v_u.replace(nid);
     let l = document.getElementById(nid);
     if (!l)
     {
-      let x = it.fx.decode(nid);
-      let dat = await aa.db.get_e(x);
+      let dat = await aa.db.get_e(data.id);
       if (dat) 
       {
         aa.print(dat);
@@ -160,7 +159,7 @@ v_u.nevent =async nevent=>
         dat = 
         {
           event:{id:data.id,created_at:it.tim.now() - 10},
-          seen:[],subs:[]
+          seen:[],subs:[],clas:[]
         };
         if (data.author) dat.event.pubkey = data.author;
         if (data.kind) dat.event.kind = data.kind;
@@ -175,12 +174,18 @@ v_u.nevent =async nevent=>
         console.log(dat);
         let blank = kin.note(dat);
         blank.classList.add('blank','root');
-        document.getElementById('notes').append(blank);
-        kin.view(blank);
-        // console.log({ids:[dat.event.id]},dat.seen);
-        // q_e.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
+        v_u.append(blank,document.getElementById('notes'));
+        // v_u.state(nid);
+        // kin.view(blank);
+        q_e.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
+        // v_u.pop();
       }
     }
+    else 
+    {
+      v_u.replace(nid);
+    }
+    
   }
 };
 
@@ -305,9 +310,3 @@ v_u.trusted_src =(l)=>
   }
 };
 
-aa.ct.db.view =
-{
-  required:['id'],
-  description:'load event',
-  exe: v_u.view
-};

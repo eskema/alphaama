@@ -33,9 +33,7 @@ window.addEventListener('load',()=>
   if (cli) cli.load();
   if (dex) dex.load();
 
-  const dialog = it.mk.l('dialog',{id:'dialog'});
-  dialog.append(it.mk.l('p',{con:'yo'}))
-  document.body.append(dialog);
+  document.body.append(it.mk.l('dialog',{id:'dialog'}));
 
   setTimeout(v_u.pop,100);
 });

@@ -152,6 +152,14 @@ aa.db.some =async s=>
   db.postMessage(o);
 };
 
+aa.db.view =s=>
+{
+  console.log(s);
+  cli.fuck_off();
+  v_u.state(s.trim());
+
+};
+
 aa.ct.db =
 {
   'some':
@@ -161,6 +169,12 @@ aa.ct.db =
     description:'request n events from db',
     exe: aa.db.some
   },
+  'view':
+  {
+    required:['id'],
+    description:'load event',
+    exe: aa.db.view
+  }
   // 'req':
   // {
   //   required:['filter'],

@@ -175,6 +175,7 @@ it.fx.nid =x=> NostrTools.nip19.noteEncode(x);
 it.fx.npub =x=> NostrTools.nip19.npubEncode(x);
 it.fx.decode =x=> NostrTools.nip19.decode(x).data;
 it.fx.hash =o=> NostrTools.getEventHash(o);
+it.fx.verify =o=> NostrTools.verifyEvent(o);
 
 it.fx.in_path =(l,k=false)=>
 {
@@ -463,7 +464,11 @@ it.mk.link =(url,text=false,title=false)=>
 it.mk.author =async(xpub,p)=>
 {
   if (!p) p = aa.p[xpub];
-  if (!p) p = author.p(xpub); //await aa.db.get_p(xpub);
+  if (!p) 
+  {
+    p = author.p(xpub); //await aa.db.get_p(xpub);
+    author.load(xpub);
+  }
   const pubkey = it.mk.l('a',
   {
     cla:'a author',

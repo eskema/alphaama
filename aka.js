@@ -90,7 +90,7 @@ aka.start =async mod=>
     if (!p.pastdata.k3.length) v_u.log('aka !bffs');
     else 
     {
-      aka.load_bff(p)
+      aka.load_bff(p);
     }
     author.profile(p);
     if (updd) author.save(p);
@@ -192,18 +192,39 @@ author.save =p=>
   },1000,q_id);
 };
 
+author.load =async xpub=>
+{
+  const q_id = 'author_load';
+  if (!aa.q.hasOwnProperty(q_id)) aa.q[q_id] = [];
+  aa.q[q_id].push(xpub);
+  
+  it.to(()=>
+  {
+    const authors = [...aa.q[q_id]];
+    aa.q[q_id] = [];
+    aa.db.get({get_a:{store:'authors',a:authors}}).then(a=>
+    {
+      for (p of a) 
+      {
+        let profile = document.getElementById(p.npub);
+        if (!profile) profile = author.profile(p);
+        author.update(profile,p,true);
+      }
+    });
+  },500,q_id);
+};
+
 author.get_k3 =async()=>
 {
   let k3_id;
-  const aka_pub = aa.p[aka.o.ls.xpub];
-  if (aka_pub && aka_pub.pastdata.k3) k3_id = aka_pub.pastdata.k3[0][0];
+  const aka_p = aa.p[aka.o.ls.xpub];
+  if (aka_p && aka_p.pastdata.k3) k3_id = aka_p.pastdata.k3[0][0];
   if (k3_id) 
   {
-    const k3 = await aa.db.get_e(k3_id);
-    return k3;
+    return await aa.db.get_e(k3_id);
   }
   else v_u.log('no k3 found');
-  return false;
+  return false
 };
 
 author.process_k3_tags =(tags,x)=>
@@ -264,7 +285,7 @@ author.process_k3_tags =(tags,x)=>
   if (to_upd.length) aa.db.put({put:{store:'authors',a:to_upd}});
 };
 
-author.bff_from_tags =(tags)=>
+author.bff_from_tags =tags=>
 {
   const bff = [];
   const p_to_get = [];
@@ -300,11 +321,10 @@ author.profile =p=>
     it.fx.color(p.xpub,profile);
     const pubkey = it.mk.l('p',{cla:'pubkey'});
     profile.append(pubkey);
-    
     const butt_score = it.mk.l('button',
     {
       cla:'butt score',
-      con:p.trust,
+      con:profile.dataset.trust,
       clk:author.profile_butt_score
     });
     pubkey.append(butt_score);
@@ -316,7 +336,7 @@ author.profile =p=>
         con:'follow',
         clk:author.profile_butt_follow
       });
-      if (aka.o.ls.bff?.includes(p.xpub)) 
+      if (author.follows(p.xpub)) 
       {
         butt_follow.classList.add('is_bff');
         butt_follow.textContent = 'unfollow';
@@ -553,12 +573,18 @@ author.mk.extra.bff =(extr,a,p)=>
 
 };
 
-it.mk.taglist =e=>
+it.mk.taglist =async e=>
 {
-  let tags = kin.tags(o.tags);
-  let tags_details = it.mk.details('#['+o.tags.length+']',tags);
-  tags_details.classList.add('details');
-  note.append(tags_details);
+  const xpub = e.target.closest('.profile').dataset.xpub;
+  const ul = e.target.parentElement.querySelector('ul');
+  ul.remove();
+  let k3 = await author.get_k3(xpub);
+  if (k3)
+  {
+    let tags = kin.tags(k3.event.tags);
+    e.target.parentElement.append(tags);
+  }
+  
 };
 
 
@@ -669,94 +695,121 @@ author.pic =(l,p)=>
   else if (pic) l.removeChild(pic);
 };
 
-
+author.follows =(xpub)=>
+{
+  let ak = aa.p[aka.o.ls.xpub];
+  if (ak && ak.extradata.bff.length)
+  {
+    if (ak.extradata.bff.includes(xpub)) return true;
+    else return false;
+  }
+  else v_u.log('no bff found to check');
+};
 
 author.follow =async s=>
 {
-  console.log(s)
-  
+  console.log(s);
+  let no_content;
   if (!aka.o.ls.xpub) 
   {
-    v_u.log('no aka found, setup one first')
+    v_u.log('no aka found, set one first')
     return false;
   }
+
   const a = s.trim().split(',');
   let p_tag = ['p'],k,relay,petname;
+  
+  if (a.length) k = a.shift().trim();
+  if (!k) return false;
+  if (k.startsWith('npub')) k = it.fx.decode(k);
+  if (!it.s.key(k)) {console.log('invalid key to follow',k);return false}
+  if (author.follows(k)) {console.log('already following',k);return false}
+  p_tag.push(k);
+
   if (a.length) 
   {
-    k = a.shift().trim();
-    if (k.startsWith('npub')) k = it.fx.decode(k);
-    if (!it.s.key(k)) {console.log('invalid key');return false}
-    p_tag.push(k);
+    relay = a.shift().trim();
+    let url = it.s.url(relay);
+    if (url) p_tag.push(url.href);
+    else p_tag.push('')
+  }
+
+  if (a.length) 
+  {
+    petname = a.shift().trim();
+    if (it.s.an(petname)) p_tag.push(petname);
+  }
     
-    let dat_k3 = await author.get_k3();
-    if (dat_k3)
+  let dat_k3 = await author.get_k3();
+  if (dat_k3)
+  {
+    const dialog = document.getElementById('dialog');
+    const dialog_butts = it.mk.l('p',{cla:'dialog_butts'});
+    const confirm_dialog = it.mk.l('button',
     {
-      console.log(dat_k3);
-      const tags = dat_k3.event.tags;
-      let is_following, len = tags.length;
-      for (let i=0;i<len;i++)
+      con:'confirm',
+      cla:'butt',
+      clk:()=>
       {
-        if (tags[i][1] === k) is_following = [i,tags[i]];
-      }
-      if (is_following)
-      {
-        v_u.log('you already follow this');
-        console.log('already following',is_following);
-        return false;
-      }
-      else
-      {
-        const p = await aa.db.get_p(k);
-        if (p) console.log(p);
-        if (a.length) 
+        const event = 
         {
-          relay = a.shift().trim();
-          let url = it.s.url(relay);
-          if (url) p_tag.push(url.href);
-          else 
-          {
-            if (p?.extradata.relays.length) 
-            {
-              url = it.s.url(p.extradata.relays[0]);
-              if (url) p_tag.push(url.href);
-            }
-            else p_tag.push('')
-          }
-        }
-        if (a.length) 
+          pubkey:aka.o.ls.xpub,
+          kind:3,
+          created_at:it.tim.now(),
+          content:dat_k3.event.content,
+          tags:aka.k3_tags
+        };
+        event.id = it.fx.hash(event);
+        
+        console.log(event);
+        aa.sign(event).then((signed)=>
         {
-          petname = a[0].trim();
-          if (it.s.an(petname)) p_tag.push(petname);
-          else if (p?.metadata?.name) p_tag.push(p.metadata.name);
-        }
+          aa.e[event.id] = {event:signed,seen:[],subs:[],clas:['draft']};
+          console.log('signed',signed)
+        });
+        
 
-        console.log(p_tag);
-        const c_len = tags.length +1;
-        if (window.confirm('new contacts length = '+c_len+'. you sure?'))
-        {
-          tags.push(p_tag);
-          console.log(tags)
-        }
 
-        // if (dat_k3.event.content.length) 
-        // console.log('has content',dat_k3.event.content.length)
-        // const draft = 
-        // {
-        //   pubkey:aka.o.ls.xpub,
-        //   kind:3,
-        //   created_at:it.tim.now(),
-        //   content:dat_k3.event.content,
-        //   tags:tags
-        // };
-        // aa.draft(draft)
+        dialog.close();
+        dialog.textContent = '';
       }
-    }
-    else 
+    });
+    const close_dialog = it.mk.l('button',
     {
-      v_u.log('no k3 found, create one first')
-    }
-  } 
+      con:'cancel',
+      cla:'butt',
+      clk:()=>
+      {
+        dialog.close();
+        dialog.textContent = '';
+      }
+    });
+    dialog_butts.append(close_dialog,confirm_dialog);
+    const tags = [...dat_k3.event.tags,p_tag];
+    aka.k3_tags = tags;
+    dialog.append(dialog_butts,kin.tags(tags));
+    dialog.showModal();
+    dialog.scrollTop = dialog.scrollHeight;
+    // if (window.confirm('new contacts length = '+len+'. you sure?'))
+    // {
+    //   tags.push(p_tag);
+
+    //   console.log(tags)
+    // }
+
+    // if (dat_k3.event.content.length) 
+    // console.log('has content',dat_k3.event.content.length)
+    // const draft = 
+    // {
+    //   pubkey:aka.o.ls.xpub,
+    //   kind:3,
+    //   created_at:it.tim.now(),
+    //   content:dat_k3.event.content,
+    //   tags:tags
+    // };
+    // aa.draft(draft)
+  }
+  else v_u.log('no k3 found, create one first')
 };
 
 author.unfollow =async s=>
