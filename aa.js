@@ -135,7 +135,8 @@ aa.clk.post =e=>
   if (dat)
   {
     console.log(e.target);
-    if (dat.clas?.includes('not_sent')) it.a_rm(dat.clas,['not_sent']);
+    if (dat.clas?.includes('not_sent')) dat.clas = it.a_rm(dat.clas,['not_sent']);
+    q_e.broadcast(dat.event);
   }
 };
 
@@ -143,20 +144,24 @@ aa.post =dat=>
 {
   if (dat)
   {
-    console.log(e.target);
-    if (dat.clas?.includes('not_sent')) it.a_rm(dat.clas,['not_sent']);
-
+    // if (dat.clas?.includes('not_sent')) it.a_rm(dat.clas,['not_sent']);
   }
 };
 
 aa.clk.sign =e=>
 {
   let dat = aa.e[e.target.closest('.note').dataset.id];
-  
+  console.log(dat);
   if (dat)
   {
-    aa.sign(dat)
-    
+    aa.sign(dat.event).then(signed=>
+    {
+      dat.event = signed;
+      dat.clas = it.a_rm(dat.clas,['draft']);
+      it.a_set(dat.clas,['not_sent']);
+      aa.db.upd(dat);
+      aa.print(dat);
+    })
   }
   else v_u.log('nothing to sign')
 };
@@ -165,27 +170,14 @@ aa.sign =async event=>
 {
   return new Promise(resolve=>
   {
-    if (event)
+    if (window.nostr) 
     {
-      if (window.nostr) 
-      {
-        window.nostr.signEvent(event).then(signed=> 
-        {
-          aa.e[signed.id] = {event:signed,clas:['not_sent']};
-          resolve(aa.e[signed.id])
-          // aa.db.upd(dat);
-          // aa.print(dat);
-        });
-      } 
-      else 
-      {
-        v_u.log('you need a signer');
-        resolve(false)
-      }
-    }
+      window.nostr.signEvent(event)
+      .then(signed=> resolve(signed));
+    } 
     else 
     {
-      v_u.log('nothing to sign');
+      v_u.log('you need a signer');
       resolve(false)
     }
   });
@@ -203,7 +195,7 @@ aa.draft =draft=>
   delete cli.prep;
 
   draft.id = it.fx.hash(draft);
-  aa.e[draft.id] = {event:draft,clas:['draft']};
+  aa.e[draft.id] = {event:draft,clas:['draft'],seen:[],subs:[]};
   aa.print(aa.e[draft.id]);
 };
 
@@ -222,7 +214,7 @@ aa.replace_note =(l,dat)=>
   let is_reply = b.classList.contains('reply');
   b.className = l.className;
   l.remove();
-  b.classList.remove('blank','draft');
+  b.classList.remove('blank','draft','not_sent');
   if (dat.clas) b.classList.add(...dat.clas);
   if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root');
   else if (is_root) b.classList.add('root');
@@ -297,7 +289,7 @@ aa.moar =()=>
       ids.map((id)=>
       {
         let l = document.getElementById(it.fx.nid(id));
-        it.a_dataset('nope',l,[url]);
+        it.a_dataset(l,'nope',[url]);
       });
       q_e.demand(['REQ','ids',{ids:ids}],[url],{eose:'done'});
     }

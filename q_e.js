@@ -93,7 +93,7 @@ q_e.mk =(f_id,o) =>
   return l
 };
 
-q_e.demand =(request,relays,options)=> // [req, origin = false]
+q_e.demand =(request,relays,options)=>
 {
   if (request && relays && relays.length)
   {
@@ -107,7 +107,7 @@ q_e.demand =(request,relays,options)=> // [req, origin = false]
     {
       const relay = rel.active[k];
 
-      if (!relay || !relay.ws)
+      if (!relay || !relay.ws || relay.ws.readyState === 3)
       {
         if (!rel.o.ls[k])
         {
@@ -118,15 +118,14 @@ q_e.demand =(request,relays,options)=> // [req, origin = false]
           }
           else rel.add(k+' off');
         }
-        else 
+        else
         {
           if (!rel.o.ls[k].sets.includes('off')) rel.c_on(k,opts);
         }
       }
-      else 
+      else if (relay.ws.readyState === 1)
       {
         relay.q[request[1]] = opts;
-        // console.log(request);
         relay.ws.send(JSON.stringify(request));  
         rel.upd_state(k);      
       }
@@ -140,11 +139,28 @@ q_e.demand =(request,relays,options)=> // [req, origin = false]
   }
 };
 
-q_e.broadcast =shit=>
+q_e.broadcast =(event,relays=false)=>
 {
   // ['EVENT', signed]
-  Object.values(rel.o.ls).filter((can)=> can.write && can.ws && can.ws.readyState === 1)
-  .map((can)=> { can.ws.send(JSON.stringify(shit)) })
+  if (!relays) relays = rel.in_set(rel.o.w);
+  if (relays)
+  {
+    let dis = JSON.stringify(['EVENT',event]);
+    for (const k of relays)
+    {
+      const relay = rel.active[k];
+      if (relay?.ws?.readyState === 1)
+      {
+        console.log('yo',dis)
+        relay.ws.send(dis);
+      }
+      else
+      {
+        if (!rel.o.ls[k]) rel.add(k+' post');
+        rel.c_on(k,{send:[dis]});
+      } 
+    }
+  }
 };
 
 q_e.sets =s=>

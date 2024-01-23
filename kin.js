@@ -98,7 +98,26 @@ kin.auth =message=>
 kin.ok =message=>
 {
   // message.data ["OK", <event_id>, <true|false>, <message>]
-  console.log(message)
+  const [type,id,is_ok,reason] = message.data;
+  if (is_ok) 
+  {
+    console.log('ok',id,message.origin);
+    let dat = aa.e[id];
+    dat.clas = it.a_rm(dat.clas,['not_sent']);
+    it.a_set(dat.seen,[message.origin]);
+    aa.db.upd(dat);
+
+    const l = document.getElementById(it.fx.nid(id));
+    if (l) 
+    {
+      l.classList.remove('not_sent');
+      it.a_dataset(l,'seen',[message.origin]);
+      let actions = l.querySelector('.actions');
+      actions.replaceWith(kin.note_actions(dat.clas))
+    }
+    
+  }
+  else console.log('not ok',id,reason)
 };
 
 kin.eose =message=>
@@ -115,22 +134,20 @@ kin.eose =message=>
   }
 };
 
-kin.o =dat=>
-{
-  let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
-  if (!sub.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
-  aa.print(dat);
-  aa.db.upd(dat);
-};
-
 kin.event =message=>
 { // message = {data,origin}
   // console.log(message);
   const sub_id = message.data[1];
   const event = message.data[2];
-  const o = {event:event,seen:[message.origin],subs:[sub_id]};
-  
-  if (it.fx.verify(event)) kin.o(o); 
+
+  if (it.fx.verify(event)) 
+  {
+    const dat = {event:event,seen:[message.origin],subs:[sub_id]};
+    let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
+    if (!sub.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
+    aa.print(dat);
+    aa.db.upd(dat);
+  }
   else console.log('invalid event',message);
 };
 
@@ -221,20 +238,16 @@ kin.d0 =dat=>
   {
     aa.db.get_p(dat.event.pubkey).then(p=>
     {
-      const cat = dat.event.created_at;
-      let k0 = p.pastdata.k0;
-      if (!k0.length || (k0.length && k0[0][1] < cat)) 
+      const c_at = dat.event.created_at;
+      if (!p.pastdata.k0.length || p.pastdata.k0[0][1] < c_at) 
       {
-        p.pastdata.k0.unshift([dat.event.id,cat]);
-        
+        p.pastdata.k0.unshift([dat.event.id,c_at]);
+        if (c_at > p.updated) p.updated = c_at;
         p.metadata = metadata;
-        
-        if (cat > p.updated) p.updated = cat;
         author.save(p);
       }
       let profile = document.getElementById(p.npub);
       if (!profile) profile = author.profile(p);
-
       author.update(profile,p,true);
     });
   }
@@ -273,21 +286,31 @@ kin.d3 =dat=>
     const c_at = dat.event.created_at;
     aa.db.get_p(x).then(p=>
     {      
-      let last = p.pastdata.k3;
-      if (!last.length || last[0][1] < c_at) 
+      if (!p.pastdata.k3.length || p.pastdata.k3[0][1] < c_at) 
       {
-        last.unshift([dat.event.id,c_at]);
-
-        p.extradata.bff = author.bff_from_tags(tags);
+        p.pastdata.k3.unshift([dat.event.id,c_at]);
+        if (c_at > p.updated) p.updated = c_at;
+        const old_bff = [...p.extradata.bff];
+        p.extradata.bff = author.bff_from_tags(tags);        
         author.process_k3_tags(tags,x);
 
-        if (c_at > p.updated) p.updated = c_at;
+        for (const k of old_bff)
+        {
+          if (!p.extradata.bff.includes(k))
+          {
+
+            // handle unfollowed k
+
+          }
+        }
+
+        
 
         rel.add_from_k3(rel.from_k3(dat.event.content),p);
 
         author.save(p);
       }
-
+      
       let profile = document.getElementById(p.npub);
       if (!profile) profile = author.profile(p);
       author.update(profile,p,true);
@@ -311,15 +334,14 @@ kin.d10002 =dat=>
     const c_at = dat.event.created_at;
     aa.db.get_p(x).then(p=>
     {
-      let last = p.pastdata.k10002;
-      if (!last.length || last[0][1] < c_at) 
+      if (!p.pastdata.k10002.length || p.pastdata.k10002[0][1] < c_at) 
       {
-        last.unshift([dat.event.id,c_at]);
-
+        p.pastdata.k10002.unshift([dat.event.id,c_at]);
+        if (c_at > p.updated) p.updated = c_at;
         // p.extradata.bff = author.bff_from_tags(tags);
         // author.process_k3_tags(tags,x);
 
-        if (c_at > p.updated) p.updated = c_at;
+        
         rel.add_from_k10002(tags,p);
         // const relays = kin.extract_relays_from_content(dat.event.content);
         // if (relays)
@@ -399,28 +421,33 @@ kin.note_actions =clas=>
   if (clas.includes('draft'))
   {
     l.append(
-      it.mk.l('button',{con:'yolo',cla:'butt yolo',clk:aa.yolo}),
+      it.mk.l('button',{con:'yolo',cla:'butt yolo',clk:aa.clk.yolo}),
       ' ',
-      it.mk.l('button',{con:'sign',cla:'butt sign',clk:aa.sign}),      
+      it.mk.l('button',{con:'sign',cla:'butt sign',clk:aa.clk.sign}),      
       ' ',
-      it.mk.l('button',{con:'edit',cla:'butt edit',clk:aa.edit}),
+      it.mk.l('button',{con:'edit',cla:'butt edit',clk:aa.clk.edit}),
       ' ',
-      it.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.cancel}));
+      it.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel})
+    );
   }
   else
   {
     if (clas.includes('not_sent'))
     {
-      l.append( it.mk.l('button',{con:'post',cla:'butt post',clk:aa.post}));
+      l.append( 
+        it.mk.l('button',{con:'post',cla:'butt post',clk:aa.clk.post}),
+        ' ',
+        it.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel})  
+      );
     }
     else
     {
       l.append(
-        it.mk.l('button',{con:'<3',tit:'react',cla:'butt react',ckl:aa.react}),
+        it.mk.l('button',{con:'<3',tit:'react',cla:'butt react',ckl:aa.clk.react}),
         ' ',
-        it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',ckl:aa.parse}),
+        it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',ckl:aa.clk.parse}),
         ' ',
-        it.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',ckl:aa.hide}),
+        it.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',ckl:aa.clk.hide}),
       );
     }
   }
@@ -478,9 +505,6 @@ aa.print =dat=>
   const xid = dat.event.id;
   if (aa.miss.e[xid]) delete aa.miss.e[xid];
   if (!aa.e[xid]) aa.e[xid] = dat;
-  
-  // if (dat.cla?.includes('not_sent') 
-  // && !aa.e[dat.event.id]) aa.e[dat.event.id] = dat;
 
   let nid = it.fx.nid(xid);
   let l = document.getElementById(nid);

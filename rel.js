@@ -90,7 +90,12 @@ rel.c_on =async(url,o=false)=>
 {
   let relay = rel.active[url] ? rel.active[url] : rel.active[url] = {q:{},cc:[]};
   if (relay.fc) delete relay.fc;
-  if (o && o.req?.length) relay.q[o.req[1]] = o;
+  if (o)
+  {
+    if (o.req?.length) relay.q[o.req[1]] = o;
+    if (o.send?.length) relay.send = o.send;
+  }
+  
   relay.ws = new WebSocket(url);
   relay.ws.onopen = rel.on_open;
   relay.ws.onclose = rel.on_close;
@@ -350,6 +355,14 @@ rel.on_open =async e=>
       relay.ws.send(JSON.stringify(sub.req));
     }
   }
+  if (relay.send?.length) 
+  {
+    for (const ev of relay.send) 
+    {
+      console.log(ev)
+      relay.ws.send(ev)
+    }
+  }
   rel.upd_state(e.target.url);
 };
 
@@ -364,10 +377,10 @@ rel.on_close =async e=>
     let cc = relay.cc;
     const fails = cc.unshift(Math.floor(e.timeStamp));
     // reconnect if somewhat stable
-    if (fails < 10 || cc[1] && cc[0] - cc[1] > 99999) 
+    if (cc[1] && cc[0] - cc[1] > 99999 || fails < 21) 
     {  
       setTimeout(()=>{ rel.c_on(rl) }, 420 * fails)
-    } 
+    }
   } else v_u.log(rl+' closed');
 };
 

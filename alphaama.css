@@ -406,7 +406,7 @@ button.butt
 
 .item > .val
 {
-  color: rgb(var(--color-d));
+  /*color: rgb(var(--color-d));*/
 }
 
 /* @end */
@@ -979,7 +979,7 @@ button.butt
 
 .note
 {
-  background: rgba(var(--color-b));
+  background: rgba(var(--c),.1);
   box-sizing: border-box;
   border-left: 1px dotted rgba(var(--color-c),.5);
   border-top: 1px dotted rgba(var(--color-c),.5);
@@ -1132,7 +1132,7 @@ button.butt
   display: grid;
   font-size: var(--font-size-s);
   grid-area: by;
-  grid-template-areas: "author id created_at draft";
+  grid-template-areas: "author id created_at clas";
   grid-template-columns: auto 1fr auto;
   line-height: 1rem;
 }
@@ -1141,7 +1141,7 @@ button.butt
 {
   grid-template-areas: 
   "id id id"
-  "author created_at draft";
+  "author created_at clas";
 }
 
 .note.root:not(.in_view):not(.in_path) > .by,
@@ -1152,12 +1152,22 @@ button.butt
   z-index: 10;
 }
 
-.note.draft .by::after
+.note.draft .by::after,
+.note.not_sent .by::after
 {
   color: rgb(var(--color-main));
-  content: 'draft';
-  grid-area: draft;
+  grid-area: clas;
   padding: 0 var(--padm);
+}
+
+.note.draft .by::after
+{
+  content: 'draft';
+}
+
+.note.not_sent .by::after
+{
+  content: 'not_sent';
 }
 
 .by .id 
@@ -1335,6 +1345,7 @@ a.author
 
 .content 
 {
+  background: rgb(var(--color-b));
   border: 1px solid transparent;
   border-left: none;
   box-sizing: border-box;
@@ -1388,6 +1399,14 @@ a.author
   color: rgb(var(--color-e)); 
 }
 
+.note:not(.in_view) > .content .paragraph:last-child::after
+{
+  color: rgb(var(--color-c));
+  content: ".";
+  display: block;
+  font-size: var(--font-size-xs);
+}
+
 /* @end */
 
 /* @group replies */
@@ -1414,16 +1433,18 @@ a.author
 .replies::after
 {
   align-self: end;
-  background-color: rgba(var(--color-b),1);
+  background-color: rgb(var(--color-b));
+  border-top: 1px dashed  rgba(var(--c),.2);
   bottom: 5rem;
   display: grid;
   font-size: var(--font-size-s);
   justify-self: start;
-  left: -6px;
+  /*left: -6px;*/
   line-height: 1.5rem;
   padding: 0;
   padding-left: var(--padm);
   position: sticky;
+  transform: translateX(calc(var(--padm)*-.5));
   z-index: 5; 
 }
 
@@ -2450,12 +2471,12 @@ p[data-meta="about"]::before
 
 .note[data-kind="1"]
 {
-  background: rgba(var(--c),.1);
+  
 }
 
 .note[data-kind="1"] > .content
 {
-  background: rgba(var(--color-b),1);
+  
 }
 
 .note[data-kind="1"].root:not(.in_view):not(.in_path) > .content::after
@@ -2463,17 +2484,16 @@ p[data-meta="about"]::before
   padding-bottom: var(--line);
 }
 
-.note[data-kind="1"]:not(.in_view) > .content .paragraph:last-child::after
-{
-  color: rgb(var(--color-c));
-  content: ".";
-  display: block;
-  font-size: var(--font-size-xs);
-}
+
 
 /* @end */
 
 /* @group kind-7 */
+
+.note[data-kind="7"]
+{
+  background: rgba(var(--color-b));
+}
 
 .note.in_view > .replies > .note[data-kind="7"],
 .note[data-kind="7"]:not(.in_view)
@@ -2516,11 +2536,14 @@ p[data-meta="about"]::before
 .note[data-kind="7"]:not(.in_view) > .by .author .picture,
 .note[data-kind="7"]:not(.in_view) > .by .author::before,
 .note[data-kind="7"]:not(.in_view) > .by .author::after,
-.note[data-kind="7"]:not(.in_view) > .by .author:not(.has-picture)::before
+.note[data-kind="7"]:not(.in_view) > .by .author:not(.has-picture)::before,
+.note[data-kind="7"] > .content .paragraph:last-child::after
 {
   content: "";
   display: none;
 }
+
+
 
 /* @end */
 

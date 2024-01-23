@@ -187,8 +187,8 @@ author.save =p=>
   aa.q[q_id].push(p);
   it.to(()=>
   {
-    aa.db.put({put:{store:'authors',a:aa.q[q_id]}});
-    aa.q[q_id] = [];
+    aa.db.put({put:{store:'authors',a:aa.q[q_id]}}).then(()=>
+    {aa.q[q_id] = [];});
   },1000,q_id);
 };
 
@@ -202,8 +202,10 @@ author.load =async xpub=>
   {
     const authors = [...aa.q[q_id]];
     aa.q[q_id] = [];
+    console.log(q_id);
     aa.db.get({get_a:{store:'authors',a:authors}}).then(a=>
     {
+      
       for (p of a) 
       {
         let profile = document.getElementById(p.npub);
@@ -211,7 +213,7 @@ author.load =async xpub=>
         author.update(profile,p,true);
       }
     });
-  },500,q_id);
+  },1000,q_id);
 };
 
 author.get_k3 =async(xpub)=>
@@ -282,7 +284,15 @@ author.process_k3_tags =(tags,x)=>
     else console.log('invalid hex key in k3 of '+x,xpub)
   }
 
-  if (to_upd.length) aa.db.put({put:{store:'authors',a:to_upd}});
+  if (to_upd.length) 
+  {
+    aa.db.put({put:{store:'authors',a:to_upd}});
+    for (const p of to_upd)
+    {
+      const profile = document.getElementById(p.npub);
+      if (profile) author.update(profile,p,true)
+    }
+  }
 };
 
 author.bff_from_tags =tags=>
@@ -302,6 +312,7 @@ author.bff_from_tags =tags=>
 
   if (p_to_get.length)
   {
+    console.log('author.bff_from_tags');
     aa.db.get({get_a:{store:'authors',a:p_to_get}}).then(a=>
     {
       for (p of a) aa.p[p.xpub] = p;
@@ -319,34 +330,7 @@ author.profile =p=>
     profile.dataset.trust = p.trust;
     profile.dataset.xpub = p.xpub;
     it.fx.color(p.xpub,profile);
-    const pubkey = it.mk.l('p',{cla:'pubkey'});
-    profile.append(pubkey);
-    const butt_score = it.mk.l('button',
-    {
-      cla:'butt score',
-      con:profile.dataset.trust,
-      clk:author.profile_butt_score
-    });
-    pubkey.append(butt_score);
-    if (aka.o.ls.xpub)
-    {
-      const butt_follow = it.mk.l('button',
-      {
-        cla:'butt follow',
-        con:'follow',
-        clk:author.profile_butt_follow
-      });
-      if (author.follows(p.xpub)) 
-      {
-        butt_follow.classList.add('is_bff');
-        butt_follow.textContent = 'unfollow';
-      }
-      pubkey.append(butt_follow);
-    }
-    
-    it.mk.author(p.xpub,p)
-    .then(dis=>{pubkey.append(dis,it.mk.l('span',{cla:'xpub',con:p.xpub}))});
-
+    profile.append(author.mk.pubkey(p));
     profile.append(it.mk.l('section',{cla:'metadata'}));
     profile.append(it.mk.l('section',{cla:'extradata'}));
     profile.dataset.updated = p.updated ?? 0;
@@ -410,18 +394,34 @@ author.profile_butt_follow =async e=>
     if (dat_k3)
     {
       const p = await aa.db.get_p(x);
-      console.log(p)
-      if (p?.extradata.relays.length) 
+      console.log(p);
+      const rels = Object.entries(p.rels);
+      if (rels.length)
       {
-        url = it.s.url(p.extradata.relays[0]);
-        if (url) a.push(url.href);
+        let relays = rels.filter(r=>r[1].sets.includes('write'))
+        .sort(it.fx.sort_relays_by_sets_len);
+        if (!relays.length)
+        {
+          const yours = Object.keys(rel.o.ls);
+          relays = rels.filter(r=>yours.includes(r[0]));
+        }
+        if (!relays.length)
+        {
+          relays = [rels[0]]
+        }
+        if (relays.length)
+        {
+          const url = it.s.url(relays[0][0]);
+          if (url) a.push(url.href);
+        }
       }
       else a.push('');
 
-      if (p?.metadata?.name)
+      if (p.metadata?.name)
       {
         a.push(it.fx.an(p.metadata.name));
-      } 
+      }
+      else if (p.extradata.petnames.length) a.push(it.fx.an(p.extradata.petnames[0]));
     }
     else console.log('no k3')
 
@@ -435,6 +435,10 @@ author.update =async(profile,p,b=false)=>
   if (profile.classList.contains('simp') || b)
   {
     profile.classList.remove('simp');
+
+    const pubkey = profile.querySelector('.pubkey');
+    pubkey.replaceWith(author.mk.pubkey(p));
+
     const metadata = profile.querySelector('.metadata');
     metadata.replaceWith(author.mk.metadata(p));
     
@@ -443,6 +447,7 @@ author.update =async(profile,p,b=false)=>
     
     profile.dataset.trust = p.trust;
     profile.dataset.updated = p.updated ?? 0;
+
     author.links(p)
   }
 };
@@ -530,6 +535,7 @@ author.list =(a,l)=>
     }
     if (keys_to_get.length)
     {
+      console.log('author.list');
       aa.db.get({get_a:{store:'authors',a:keys_to_get}})
       .then(all=>
       {
@@ -640,6 +646,43 @@ author.mk.extra.relay_hints =(extr,a,p)=>
   }
 };
 
+author.mk.pubkey =p=>
+{
+  const pubkey = it.mk.l('p',{cla:'pubkey'});
+    // profile.append(pubkey);
+  const butt_score = it.mk.l('button',
+  {
+    cla:'butt score',
+    con:p.trust+'',
+    clk:author.profile_butt_score
+  });
+  
+  pubkey.append(butt_score);
+
+  if (aka.o.ls.xpub)
+  {
+    const butt_follow = it.mk.l('button',
+    {
+      cla:'butt follow',
+      con:'follow',
+      clk:author.profile_butt_follow
+    });
+    if (author.follows(p.xpub)) 
+    {
+      butt_follow.classList.add('is_bff');
+      butt_follow.textContent = 'unfollow';
+    }
+    pubkey.append(butt_follow);
+  }
+    
+  it.mk.author(p.xpub,p).then(dis=>
+  {
+    pubkey.append(dis,it.mk.l('span',{cla:'xpub',con:p.xpub}))
+  });
+
+  return pubkey
+};
+
 author.mk.extradata =p=>
 {
   const extradata = it.mk.l('section',{cla:'extradata'});
@@ -676,7 +719,11 @@ author.link =(l,p=false)=>
     }
     author.pic(l,p);
     if (p.metadata.nip05) l.dataset.nip05 = p.metadata.nip05;
+    
+    if (author.follows(p.xpub)) l.classList.add('is_bff');
+    else l.classList.remove('is_bff');
   }
+  
 };
 
 author.pic =(l,p)=>
@@ -711,12 +758,13 @@ author.follows =(xpub)=>
 author.follow =async s=>
 {
   console.log(s);
-  let no_content;
   if (!aka.o.ls.xpub) 
   {
     v_u.log('no aka found, set one first')
     return false;
   }
+
+  cli.fuck_off();
 
   const a = s.trim().split(',');
   let p_tag = ['p'],k,relay,petname;
@@ -762,15 +810,14 @@ author.follow =async s=>
           tags:aka.k3_tags
         };
         event.id = it.fx.hash(event);
-        
-        console.log(event);
         aa.sign(event).then((signed)=>
         {
-          aa.e[event.id] = {event:signed,seen:[],subs:[],clas:['draft']};
-          console.log('signed',signed)
+          console.log('signed',signed);
+          aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+          aa.print(dat);
+          aa.db.upd(dat);
+          q_e.broadcast(signed);
         });
-        
-
 
         dialog.close();
         dialog.textContent = '';

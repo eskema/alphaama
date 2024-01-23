@@ -274,7 +274,7 @@ it.a_set =(a,dis)=>
   return b
 };
 
-it.a_dataset =(set,l,dis)=>
+it.a_dataset =(l,set,dis)=>
 {
   let a = l.dataset[set] ? l.dataset[set].trim().split(' ') : [];
   it.a_set(a,dis);
@@ -416,6 +416,12 @@ it.fx.sorts =(a,s)=>
   return ab
 };
 
+it.fx.sort_relays_by_sets_len =(a,b)=>
+{
+  if (a[1].sets.length > b[1].sets.length) return -1;
+  else return 1
+};
+
 it.tog =(s,l=false)=>
 {
   let le = l ? l : aa.l;
@@ -472,6 +478,7 @@ it.mk.author =async(xpub,p)=>
   const pubkey = it.mk.l('a',
   {
     cla:'a author',
+    tit:p.npub+' \n '+xpub,
     ref:'#'+p.npub,
     clk:it.clk.a,
   });
