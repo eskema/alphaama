@@ -126,26 +126,39 @@ aa.mk.view =()=>
 
 aa.clk.yolo =e=>
 {
-  console.log(e.target)
-};
-
-aa.clk.post =e=>
-{
   let dat = aa.e[e.target.closest('.note').dataset.id];
   if (dat)
   {
-    console.log(e.target);
-    if (dat.clas?.includes('not_sent')) dat.clas = it.a_rm(dat.clas,['not_sent']);
-    q_e.broadcast(dat.event);
+    aa.sign(dat.event).then(signed=>
+    {
+      if (signed)
+      {
+        dat.event = signed;
+        dat.clas = it.a_rm(dat.clas,['draft']);
+        it.a_set(dat.clas,['not_sent']);
+        aa.post(dat);
+        // aa.db.upd(dat);
+        // aa.print(dat);
+      }      
+    })
   }
-};
+  else v_u.log('nothing to sign')
 
-aa.post =dat=>
-{
-  if (dat)
-  {
-    // if (dat.clas?.includes('not_sent')) it.a_rm(dat.clas,['not_sent']);
-  }
+  // const note = e.target.closest('.note');
+  // const xid = note.dataset.id;
+  // const dat = aa.e[xid];
+  // aa.sign(dat.event).then(signed=>
+  // {
+  //   dat.event = signed;
+  //   dat.clas = it.a_rm(dat.clas,['draft']);
+  //   it.a_set(dat.clas,['not_sent']);
+  //   aa.db.upd(dat);
+  //   aa.print(dat);
+  // })
+  // cli.v(aa.e[xid].event.content);
+  // delete aa.e[xid];
+  // note.remove(); 
+  // console.log(e.target)
 };
 
 aa.clk.sign =e=>
@@ -156,11 +169,14 @@ aa.clk.sign =e=>
   {
     aa.sign(dat.event).then(signed=>
     {
-      dat.event = signed;
-      dat.clas = it.a_rm(dat.clas,['draft']);
-      it.a_set(dat.clas,['not_sent']);
-      aa.db.upd(dat);
-      aa.print(dat);
+      if (signed)
+      {
+        dat.event = signed;
+        dat.clas = it.a_rm(dat.clas,['draft']);
+        it.a_set(dat.clas,['not_sent']);
+        aa.db.upd(dat);
+        aa.print(dat);
+      }
     })
   }
   else v_u.log('nothing to sign')
@@ -183,25 +199,45 @@ aa.sign =async event=>
   });
 };
 
+aa.clk.post =e=>
+{
+  let dat = aa.e[e.target.closest('.note').dataset.id];
+  if (dat) aa.post(dat);
+};
+
+aa.post =dat=>
+{
+  // if (dat.clas?.includes('not_sent')) dat.clas = it.a_rm(dat.clas,['not_sent']);
+  q_e.broadcast(dat.event);
+};
+
 aa.clk.edit =e=>
-{console.log(e.target)};
+{
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  cli.v(aa.e[xid].event.content);
+  delete aa.e[xid];
+  note.remove();
+};
 
 aa.clk.cancel =e=>
-{console.log(e.target)};
-
-aa.draft =draft=>
 {
-  if (!aa.drafts) aa.drafts = [];
-  delete cli.prep;
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  delete aa.e[xid];
+  note.remove();
+};
 
-  draft.id = it.fx.hash(draft);
-  aa.e[draft.id] = {event:draft,clas:['draft'],seen:[],subs:[]};
-  aa.print(aa.e[draft.id]);
+aa.draft =event=>
+{
+  event.id = it.fx.hash(event);
+  aa.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
+  console.log(event);
+  aa.print(aa.e[event.id]);
 };
 
 aa.replace_note =(l,dat)=>
 {
-  if (aa.miss.e[dat.event.id]) delete aa.miss.e[dat.event.id];
   l.id = 'temp-'+dat.event.id;
   let b = kin.da(dat);
   let childs = l.querySelector('.replies').childNodes;

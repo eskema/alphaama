@@ -1,6 +1,7 @@
 const v_u =
 {
   upd:{},
+  viewing:false
 };
 
 v_u.pop =()=>
@@ -48,6 +49,7 @@ v_u.clear =()=>
   }
   aa.state.l.textContent = '';
   aa.l.classList.remove('viewing','view_e','view_p');
+  v_u.viewing = false;
 };
 
 v_u.state =s=>
@@ -106,6 +108,7 @@ v_u.p =async npub=>
   l.classList.add('in_view');
   aa.l.classList.add('viewing','view_p');
   v_u.scroll(l);
+  v_u.viewing = npub;
 };
 
 v_u.e =async nid=>
@@ -118,7 +121,8 @@ v_u.e =async nid=>
     if (dat) aa.print(dat);
     else v_u.req_e(x);
   }
-  else kin.view(l)
+  else kin.view(l);
+  v_u.viewing = nid;
 };
 
 v_u.req_e =x=>
@@ -214,7 +218,7 @@ v_u.append_as_reply =(dat,note,reply_tag)=>
     reply = kin.blank(reply_tag,dat,1);
     v_u.append(note,reply.querySelector('.replies'));
 
-    let root_tag = rep.root(dat.event.tags);
+    let root_tag = it.get_root_tag(dat.event.tags);
     if (root_tag && root_tag[1] !== reply_id)
     {
       reply.classList.add('reply');

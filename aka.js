@@ -205,12 +205,12 @@ author.load =async xpub=>
     console.log(q_id);
     aa.db.get({get_a:{store:'authors',a:authors}}).then(a=>
     {
-      
       for (p of a) 
       {
+        aa.p[p.xpub] = p;
         let profile = document.getElementById(p.npub);
         if (!profile) profile = author.profile(p);
-        author.update(profile,p,true);
+        // author.update(profile,p,true);
       }
     });
   },1000,q_id);

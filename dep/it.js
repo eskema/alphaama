@@ -76,7 +76,7 @@ it.s.one =s=>
   let a = s.split(' ');
   let seg = a[0];
   try { seg = [...new Intl.Segmenter().segment(a[0])] } 
-  catch (error) { v_u.log('no Intl.Segmenter(), use a better browser')};
+  catch (error) { console.log('no Intl.Segmenter(), use a better browser')};
   if (a.length === 1 && seg.length === 1) return true;
   else return false
 };
@@ -85,7 +85,7 @@ it.s.url =s=>
 {
   let url;
   try{ url = new URL(s) } 
-  catch(er){ v_u.log('not url '+s) };
+  catch(er){ console.log('not url '+s) };
   return url
 };
 
@@ -205,6 +205,86 @@ it.fx.rm_path =k=>
   }
 };
 
+it.get_tags =(event)=>
+{  
+   const tags = [];
+   let root_tag = it.get_root_tag(event.tags);
+   if (root_tag.length)
+   {
+    let dat = aa.e[root_tag[1]];
+    console.log(dat);
+    const is_really_root = it.get_root_tag(dat.event.tags);
+    if (is_really_root.length) console.log(is_really_root);
+    // let l = document.getElementById(root_tag[1]);
+    // if (l)
+    // {
+
+    // }
+   }
+   if (root_tag.length) 
+   {
+      console.log(root_tag);
+      if (root_tag.length > 2 && root_tag[2] === '') 
+      {
+        root_tag[2] = it.get_seen(event.id);
+      }
+      tags.push(root_tag);
+      tags.push(['e',event.id,it.get_seen(event.id),'reply']);
+   }
+   else tags.push(['e',event.id,it.get_seen(event.id),'root']);
+   const pubkeys_to_add = [];
+   const pubkeys = event.tags
+   .filter(t=>it.tag.p(t) && t[1] !== aka.o.ls.xpub);
+   
+   for (const pub of pubkeys)
+   {
+      pubkeys_to_add.push(pub)
+   }
+
+   let unique = [...new Set(pubkeys)];
+   if (event.pubkey !== aka.o.ls.xpub && !unique.some(t=>t[1] === event.pubkey)) unique.push(['p',event.pubkey])
+   tags.push(...unique);
+
+   return tags
+};
+
+it.get_reply_tag =tags=>
+{
+  const a = it.loopita(tags, it.tag.e, it.tag.reply);
+  
+  let is_array = Array.isArray(a[0]);
+  if (a && !is_array) return a;
+  if (is_array)
+  {
+    let l = a[a.length-1];
+    if (it.tag.marked('mention',l)) return false;
+    return l
+  }
+  return false
+};
+
+it.get_root_tag =tags=>
+{
+  const a = it.loopita(tags, it.tag.e, it.tag.root);
+  
+  let is_array = Array.isArray(a[0]);
+  if (a && !is_array) return a;
+  if (is_array)
+  {
+    let l = a[0];
+    if (it.tag.marked('mention',l)) return false;
+    return l
+  }
+  return false
+};
+
+it.get_seen =(x)=>
+{
+  const dat = aa.e[x];
+  if (dat) return dat.seen[0];
+  else ''
+};
+
 it.tim ={};
 it.tim.std =st=> new Date(st*1000);
 
@@ -292,14 +372,14 @@ it.a_rm =(a,dis)=>
 
 it.fx.merge =(dis,dat)=>
 {
-  let merged,sets = ['seen','subs','clas'];
+  let merged,sets = ['seen','subs','clas','refs'];
   for (const set of sets)
   { 
     if (!dis.hasOwnProperty(set)) { dis[set] = [];merged=true; } 
     if (!dat.hasOwnProperty(set)) dat[set] = [];
     if (it.a_set(dis[set],dat[set])) merged=true;
   }
-  return merged
+  return merged ? dis : false
 };
 
 it.fx.merge_sets =(a,og,oh)=>

@@ -103,14 +103,14 @@ kin.ok =message=>
   {
     console.log('ok',id,message.origin);
     let dat = aa.e[id];
-    dat.clas = it.a_rm(dat.clas,['not_sent']);
+    dat.clas = it.a_rm(dat.clas,['not_sent','draft']);
     it.a_set(dat.seen,[message.origin]);
     aa.db.upd(dat);
 
     const l = document.getElementById(it.fx.nid(id));
     if (l) 
     {
-      l.classList.remove('not_sent');
+      l.classList.remove('not_sent','draft');
       it.a_dataset(l,'seen',[message.origin]);
       let actions = l.querySelector('.actions');
       actions.replaceWith(kin.note_actions(dat.clas))
@@ -142,11 +142,24 @@ kin.event =message=>
 
   if (it.fx.verify(event)) 
   {
-    const dat = {event:event,seen:[message.origin],subs:[sub_id]};
+    const dat = 
+    {
+      event:event,
+      seen:[message.origin],
+      subs:[sub_id],
+      clas:[],
+      refs:[]
+    };
+    if (aa.miss.e[event.id]) delete aa.miss.e[event.id];
+    if (!aa.e[event.id]) aa.e[event.id] = dat;
+    else 
+    {
+      const dis = it.fx.merge(aa.e[event.id],dat);
+      if (dis) aa.e[event.id] = dis;
+    }
     let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
     if (!sub.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
     aa.print(dat);
-    aa.db.upd(dat);
   }
   else console.log('invalid event',message);
 };
@@ -156,7 +169,7 @@ kin.da =dat=>
   let note;
   if (kin.hasOwnProperty('d'+dat.event.kind)) note = kin['d'+dat.event.kind](dat);
   else note = kin.def(dat);
-  kin.dex(dat);
+  // kin.dex(dat);
   return note
 };
 
@@ -264,7 +277,7 @@ kin.d1 =dat=>
 {
   let note = kin.note(dat);
   note.classList.add('is_new');
-  let reply_tag = rep.ly(dat.event.tags);
+  let reply_tag = it.get_reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length)
   {
     v_u.append_as_reply(dat,note,reply_tag);
@@ -380,39 +393,11 @@ kin.d10002 =dat=>
 
 kin.d7 =dat=>
 {
-  kin.d1(dat)
+  const note = kin.d1(dat);
+  return note
 };
 
-const rep = {};
-rep.ly =tags=>
-{
-  const a = it.loopita(tags, it.tag.e, it.tag.reply);
-  
-  let is_array = Array.isArray(a[0]);
-  if (a && !is_array) return a;
-  if (is_array)
-  {
-    let l = a[a.length-1];
-    if (it.tag.marked('mention',l)) return false;
-    return l
-  }
-  return false
-};
 
-rep.root =tags=>
-{
-  const a = it.loopita(tags, it.tag.e, it.tag.root);
-  
-  let is_array = Array.isArray(a[0]);
-  if (a && !is_array) return a;
-  if (is_array)
-  {
-    let l = a[0];
-    if (it.tag.marked('mention',l)) return false;
-    return l
-  }
-  return false
-};
 
 kin.note_actions =clas=>
 {
@@ -495,7 +480,8 @@ kin.tags =tags=>
 kin.view =l=>
 {
   l.classList.add('in_view');   
-  it.fx.in_path(l);
+  it.to(()=>{it.fx.in_path(l)},100,'in_path');
+  // it.fx.in_path(l)
   aa.l.classList.add('viewing','view_e');
   v_u.scroll(l);
 };
@@ -503,8 +489,8 @@ kin.view =l=>
 aa.print =dat=>
 {
   const xid = dat.event.id;
-  if (aa.miss.e[xid]) delete aa.miss.e[xid];
-  if (!aa.e[xid]) aa.e[xid] = dat;
+  aa.db.upd(dat);
+  
 
   let nid = it.fx.nid(xid);
   let l = document.getElementById(nid);
@@ -513,6 +499,8 @@ aa.print =dat=>
     l = kin.da(dat);
     let butt = document.getElementById('butt_e');
     butt.dataset.count = document.querySelectorAll('.note').length;
+    if (!l) console.log(dat);
+    if (l?.classList.contains('draft')) v_u.scroll(l,{behavior:'smooth',block:'center'});
   }
   else
   {
@@ -521,6 +509,7 @@ aa.print =dat=>
   } 
 
   if (l && history.state.view === nid) kin.view(l);
+  
 
   aa.moar();
   // aa.dex();

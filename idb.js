@@ -145,14 +145,10 @@ const a_set =(a,dis)=>
 
 const merge =(dis,dat)=>
 {
-  let merged,sets = ['seen','subs','clas'];
+  let merged,sets = ['seen','subs','clas','refs'];
   for (const set of sets)
   { 
-    if (!dis.hasOwnProperty(set)) 
-    { 
-      dis[set] = [];
-      merged=true; 
-    } 
+    if (!dis.hasOwnProperty(set)) {dis[set]=[]; merged=true} 
     if (!dat.hasOwnProperty(set)) dat[set] = [];
     if (a_set(dis[set],dat[set])) merged=true;
   }
@@ -170,8 +166,7 @@ indexed_db.ops.upd =async(db,o)=>
       if (cursor) 
       { 
         // console.log('db cursor');
-        const og = cursor.value;
-        if (merge(og,item)) cursor.update(item);
+        if (merge(cursor.value,item)) cursor.update(item);
       }
       else odb.put(item)
     }
@@ -194,22 +189,41 @@ indexed_db.upg =(e) =>
     db.createObjectStore('events',{keyPath:'event.id'});
   }
   st = tx.objectStore('events');
-  if (!st.indexNames.contains('pubkey')) st.createIndex('pubkey','event.pubkey');
-  if (!st.indexNames.contains('kind')) st.createIndex('kind','event.kind');
+
+  // if (st.indexNames.contains('pubkey')) st.deleteIndex('pubkey');
+  if (!st.indexNames.contains('pubkey')) st.createIndex('pubkey','event.pubkey',{unique:false});
+  // if (st.indexNames.contains('kind')) st.deleteIndex('kind');
+  if (!st.indexNames.contains('kind')) st.createIndex('kind','event.kind',{unique:false});
+  // if (!st.indexNames.contains('p_tags')) st.createIndex('p_tags','event.kind');
   // st.deleteIndex('created_at');
-  if (!st.indexNames.contains('created_at')) st.createIndex('created_at','event.created_at');
+  if (st.indexNames.contains('created_at')) st.deleteIndex('created_at');
+  if (!st.indexNames.contains('created_at')) st.createIndex('created_at','event.created_at',{unique:false});
   
+  if (!st.indexNames.contains('refs')) st.createIndex('refs','refs',{unique:false,multiEntry:true});
+
+
+
   if (!db.objectStoreNames.contains('authors'))
   {
     db.createObjectStore('authors',{keyPath:'xpub'});
   }
   st = tx.objectStore('authors');
   if (!st.indexNames.contains('npub')) st.createIndex('npub','npub');
-  if (!st.indexNames.contains('updated')) st.createIndex('updated','updated');
-  if (!st.indexNames.contains('sets')) st.createIndex('sets','sets');
-  if (!st.indexNames.contains('name')) st.createIndex('name','metadata.name');
-  if (!st.indexNames.contains('nip05')) st.createIndex('nip05','metadata.nip05');
-  if (!st.indexNames.contains('bff')) st.createIndex('bff','extradata.bff');
+  // if (!st.indexNames.contains('updated')) st.createIndex('updated','updated',{unique:false});
+  if (st.indexNames.contains('updated')) st.deleteIndex('updated');
+  
+  // if (st.indexNames.contains('sets')) st.deleteIndex('sets');
+  // if (st.indexNames.contains('sets')) st.deleteIndex('sets');
+  // if (!st.indexNames.contains('sets')) st.createIndex('sets','sets',{unique:false,multiEntry:true});
+  
+  // if (st.indexNames.contains('name')) st.deleteIndex('name');
+  if (!st.indexNames.contains('name')) st.createIndex('name','metadata.name',{unique:false});
+  // if (st.indexNames.contains('nip05')) st.deleteIndex('nip05');
+  if (!st.indexNames.contains('nip05')) st.createIndex('nip05','metadata.nip05',{unique:false});
+  
+  if (st.indexNames.contains('bff')) st.deleteIndex('bff');
+  // if (!st.indexNames.contains('bff')) st.createIndex('bff','extradata.bff');
+  // xpub,
 };
 indexed_db.err =e=>{ console.log('db error',e) };
 indexed_db.ok =(db,o)=> 
@@ -226,7 +240,7 @@ indexed_db.ok =(db,o)=>
 onmessage =m=> 
 { 
   // console.log('db onmessage',m.data);
-  const db = indexedDB.open("alphaama", 13);
+  const db = indexedDB.open("alphaama", 15);
   db.onerror = indexed_db.err;
   db.onupgradeneeded = indexed_db.upg;
   db.onsuccess =e=> indexed_db.ok(e.target.result,m.data);  

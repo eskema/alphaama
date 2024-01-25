@@ -136,15 +136,12 @@ cli.compost =s=>
   {
     if (cli.prep) 
     {
-      cli.prep.content = cli.t.value;
       cli.prep.created_at = it.tim.now();
       aa.draft(cli.prep);
       delete cli.prep;
-      cli.clear();
     }
     else 
     {
-      cli.fuck_off();
       v_u.log('unable to create note:');
       v_u.log(s);
       if (!aka.o.ls.xpub)
@@ -153,6 +150,7 @@ cli.compost =s=>
         v_u.log('type: ".aa aka" for options');
       } 
     }
+    cli.fuck_off();
   }
 };
 
@@ -192,83 +190,95 @@ cli.act_item =(main_act,sub_act)=>
   return l
 };
 
-
-cli.otocomp =()=>
+cli.action =(s,a)=>
 {
-  const ns = localStorage.ns;
-  cli.oto.textContent = ''; 
-  cli.oto.dataset.s = '';
-  
-  const s = cli.t.value;
-  const a = s.split(' ');
-  const w = a[a.length - 1].toLowerCase();
-  
-  const comp_cat =()=>
+  for (const act of Object.keys(aa.ct))
   {
-    const acts = Object.keys(aa.ct);
-    for (const act of acts)
+    let act_item;
+    if (a.length === 2 && a[1] === '') 
     {
-      let act_item;
-      if (a.length === 2 && a[1] === '') 
+      act_item = cli.act_item(act,'');
+      cli.oto.append(act_item);
+    }
+    else if (act.startsWith(a[1]))
+    {
+      const acts_a = Object.keys(aa.ct[act]);
+      for (const act_a of acts_a)
       {
-        act_item = cli.act_item(act,'');
-        cli.oto.append(act_item);
-      }
-      else if (act.startsWith(a[1]))
-      {
-        const acts_a = Object.keys(aa.ct[act]);
-        for (const act_a of acts_a)
+        let action = localStorage.ns+' '+act+' '+act_a;
+        if (action.startsWith(s)) 
         {
-          let action = ns+' '+act+' '+act_a;
-          if (action.startsWith(s)) 
-          {
-            act_item = cli.act_item(act,act_a);
-            cli.oto.append(act_item);
-          }
-          else if (s.startsWith(action)) 
-          {
-            act_item = cli.act_item(act,act_a);
-            act_item.classList.add('pinned');
-            cli.oto.append(act_item);
-          }
+          act_item = cli.act_item(act,act_a);
+          cli.oto.append(act_item);
+        }
+        else if (s.startsWith(action)) 
+        {
+          act_item = cli.act_item(act,act_a);
+          act_item.classList.add('pinned');
+          cli.oto.append(act_item);
         }
       }
     }
   }
+};
 
+
+cli.otocomp =()=>
+{
+  const s = cli.t.value;
+  const a = s.split(' ');
+  
+  cli.oto.textContent = ''; 
+  cli.oto.dataset.s = '';
   cli.oto.dataset.s = s;
   
-  // if empty or typing ns: show the ns
-  if (!s.length || ns.startsWith(s)) 
+  if (!s.length || localStorage.ns.startsWith(s)) 
   {
     let act_item = cli.act_item('','');
     cli.oto.append(act_item);
   }
-  else if (a[0] === ns) comp_cat(); // else if it's an action
+  else if (a[0] === localStorage.ns) cli.action(s,a); // else if it's an action
   else 
-  { // it's not an action
-    if (w.startsWith('#[') && w.length > 2) 
+  { 
+    // it's not an action
+    const w = a[a.length - 1].toLowerCase();
+    if (w.startsWith('@') && w.length > 1) 
     {
       console.log('mention')
       // new_mention(l_word.substring(2));
     }
-    else if (s.length) cli.oto.textContent = '';
+    // else if (s.length) cli.oto.textContent = '';
   }
 
-  if (aka.o.ls.xpub)
+  if (aka.o.ls.xpub) cli.pre_compost(s)
+};
+
+cli.pre_compost =s=>
+{
+  if (!cli.hasOwnProperty('prep')) 
   {
-    if (!cli.hasOwnProperty('prep')) 
+    cli.prep = 
     {
-      cli.prep = 
-      {
-        pubkey:aka.o.ls.xpub,
-        kind:1,
-        created_at:it.tim.now(),
-        content:s,
-        tags:[]
-      };
+      pubkey:aka.o.ls.xpub,
+      kind:1,
+      created_at:it.tim.now(),
+      content:s,
+      tags:[]
+    };
+  }
+  else cli.prep.content = s;
+
+  const dis = v_u.viewing;
+  if (dis)
+  {
+    let x = it.fx.decode(dis);
+    if (dis.startsWith('note'))
+    {
+      const reply_e = aa.e[x].event;
+      const tags = [...cli.prep.tags,...it.get_tags(reply_e)];
+      cli.prep.tags = [...new Set(tags)];
+      console.log(cli.prep.tags);
     }
-    else cli.prep.content = s;
   }
 };
 

@@ -98,20 +98,21 @@ aa.db.put =async o=>
 aa.db.upd =async dat=>
 {
   const xid = dat.event.id;
+
   if (!aa.q.upd) aa.q.upd = {};
   if (!aa.q.upd[xid]) aa.q.upd[xid] = [];
   aa.q.upd[xid].push(dat);
 
   it.to(()=>
   {
-    let q = Object.entries(aa.q.upd);
-    aa.q.upd = {};
-    let keys = [];
+    // let q = Object.entries(aa.q.upd);
+    // aa.q.upd = {};
+    // let keys = [];
     let values = [];
     
-    q.forEach(([k,v])=>
+    for (const k in aa.q.upd)
     {
-      keys.push(k);
+      const v = aa.q.upd[k];
       if (v.length > 1)
       {
         let og = v.shift();
@@ -119,14 +120,12 @@ aa.db.upd =async dat=>
         values.push(og);
       }
       else values.push(v[0]);
-    });
+    }
 
-    const dis = {upd:{store:'events',a:values}};
-    aa.idb.postMessage(dis);
-    // aa.db.put();
-    // console.log(values);
-  },500,'db_upd');
-}
+    aa.idb.postMessage({upd:{store:'events',a:values}});
+
+  },1000,'db_upd');
+};
 
 // aa.db.req =s=>
 // {
