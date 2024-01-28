@@ -229,6 +229,14 @@ aa.clk.cancel =e=>
   it.butt_count('e','.note');
 };
 
+aa.clk.react =e=>
+{
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  console.log('react',xid);
+  cli.v(localStorage.ns+' e react '+xid+' '+localStorage.reaction);
+};
+
 aa.clk.parse =e=>
 {
   const note = e.target.closest('.note');

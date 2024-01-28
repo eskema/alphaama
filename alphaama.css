@@ -1044,8 +1044,22 @@ button.butt:focus
 #e > .note:not(.root),
 .note.draft
 {
-  border-left: 2px dashed rgba(var(--color-f),.5);
-  border-top: 2px dashed rgba(var(--color-f),.5);
+  /*border-left: 2px dashed rgba(var(--color-f),.5);*/
+  /*border-top: 2px dashed rgba(var(--color-f),.5);*/
+}
+
+.note.draft
+{
+  grid-template-columns: 38.2vw 1fr;
+  grid-template-areas: 
+  "by      by"
+  "content content"
+  "tags    tags"
+  "actions actions"
+  "replies replies"
+  "sig     sig"
+  "after   after"
+  !important;
 }
 
 .note.in_path.in_view,
@@ -2525,10 +2539,10 @@ p[data-meta="about"]::before
   grid-template-columns: auto 1fr;
 }
 
-.note[data-kind="7"]:not(.in_view) > .by
+/*.note[data-kind="7"]:not(.in_view) > .by
 {
-  grid-template-areas: "author id";
-}
+  grid-template-areas: "author id created_at";
+}*/
 
 .note[data-kind="7"]:not(.in_view) > .by .author span
 {
@@ -2554,7 +2568,7 @@ p[data-meta="about"]::before
 
 .note[data-kind="7"]:not(.in_view) > .actions,
 .note[data-kind="7"]:not(.in_view) > .replies,
-.note[data-kind="7"]:not(.in_view) > .by .created_at,
+/*.note[data-kind="7"]:not(.in_view) > .by .created_at,*/
 .note[data-kind="7"]:not(.in_view) > .by .author .picture,
 .note[data-kind="7"]:not(.in_view) > .by .author::before,
 .note[data-kind="7"]:not(.in_view) > .by .author::after,
@@ -2673,18 +2687,18 @@ p[data-meta="about"]::before
 .note .actions .butt 
 {
   background: rgb(var(--color-b));
+  color: rgb(var(--color-c));
   cursor: pointer;
-  font-size: var(--font-size-s);
 }
 
-.root > .actions .butt 
+.root > .actions
 {
-  font-size: var(--font-size);
+  padding-bottom: var(--pad);
 }
 
 .actions .butt:hover 
 {
-  cursor: pointer;
+  /*cursor: pointer;*/
   color: rgb(var(--color-f));
 }
 
@@ -2703,13 +2717,13 @@ p[data-meta="about"]::before
   color: rgb(var(--color-yes));
 }
 
-.note:not(.draft) > .actions > .butt.yolo,
+/*.note:not(.draft) > .actions > .butt.yolo,
 .note:not(.draft) > .actions > .butt.sign,
 .draft > .actions > .butt.post
 {
   display: none;
   pointer-events: none;
-}
+}*/
 
 .butt.edit 
 {

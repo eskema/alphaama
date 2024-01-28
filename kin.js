@@ -57,27 +57,7 @@ kin.note =dat=>
   }
   if (o.sig) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
 
-  let replies = it.mk.l('ul',{cla:'replies expanded',clk:e=>
-  {
-    e.stopPropagation();
-    const dis = e.target;  
-    if (dis.classList.contains('replies'))
-    { 
-      e.preventDefault();
-      dis.classList.toggle('expanded');
-      if (dis.classList.contains('expanded')
-      || dis.parentNode.classList.contains('haz_new'))
-      {
-        dis.parentNode.classList.remove('haz_new','is_new');
-        replies = dis.querySelectorAll('.note');
-        if (replies)
-        {
-          for (const l of replies) l.classList.remove('haz_new_reply','haz_new','is_new');
-        }
-        v_u.scroll(dis,{behavior:'smooth',block:'center'});
-      }
-    } 
-  }});
+  let replies = it.mk.l('ul',{cla:'replies expanded',clk:v_u.mark_read});
   
   note.append(replies,kin.note_actions(dat.clas));  
   return note
@@ -231,7 +211,7 @@ kin.blank =(tag,dat,seconds)=>
     else v_u.log(tag);
   }
   const note = kin.note({event:blank_event,seen:seen,subs:dat.subs});
-  note.classList.add('blank');
+  note.classList.add('blank','is_new');
   return note
 };
 
@@ -431,11 +411,11 @@ kin.note_actions =clas=>
     else
     {
       l.append(
-        it.mk.l('button',{con:'<3',tit:'react',cla:'butt react',ckl:aa.clk.react}),
+        it.mk.l('button',{con:'<3',tit:'react',cla:'butt react',clk:aa.clk.react}),
         ' ',
-        it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',ckl:aa.clk.parse}),
+        it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
         ' ',
-        it.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',ckl:aa.clk.hide}),
+        it.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',clk:aa.clk.hide}),
       );
     }
   }

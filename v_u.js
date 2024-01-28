@@ -310,6 +310,29 @@ v_u.upd.path =(l,stamp)=>
   if (root && updated) v_u.append(root,document.getElementById('notes'),1)
 }
 
+v_u.mark_read =e=>
+{
+  e.stopPropagation();
+  const dis = e.target;  
+  if (dis.classList.contains('replies'))
+  { 
+    e.preventDefault();
+    
+    dis.parentNode.classList.remove('haz_new','haz_new_reply','is_new');
+    
+    const new_stuff = dis.querySelectorAll('.haz_new,.haz_new_reply,.is_new');        
+    if (new_stuff.length)
+    {
+      for (const l of new_stuff) l.classList.remove('haz_new_reply','haz_new','is_new');
+      if (dis.classList.contains('expanded')) dis.classList.remove('expanded')
+    }
+    else dis.classList.toggle('expanded');
+    
+    v_u.scroll(dis,{behavior:'smooth',block:'center'});
+    
+  } 
+};
+
 // v_u.upd.butt_count =(id,cla)=>
 // {
 //   it.to(()=>
