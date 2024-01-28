@@ -95,6 +95,15 @@ q_e.mk =(f_id,o) =>
 
 q_e.demand =(request,relays,options)=>
 {
+  let filters = request.slice(2);
+  for (const f of filters)
+  {
+    if (!it.fx.verify_filter(f)) 
+    {
+      console.log('demand failed: invalid filter',f);
+      return false;
+    }
+  }
   if (request && relays && relays.length)
   {
     let opts = {req:request};
@@ -111,6 +120,8 @@ q_e.demand =(request,relays,options)=>
       {
         if (!rel.o.ls[k])
         {
+          // const dialog = document.getElementById('dialog');
+
           if (window.confirm('fetch missing from relay '+k+'?'))
           {
             rel.add(k+' moar');

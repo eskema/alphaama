@@ -28,7 +28,6 @@ cli.load =e=>
   cli.t.oninput = cli.update;
   cli.t.onfocus = cli.expand;
   cli.t.onkeydown = cli.keydown;
-  
   cli.oto = it.mk.l('ul',{id:'oto',cla:'list'});
 
   l.append(butt,cli.t,cli.oto);
@@ -87,6 +86,12 @@ cli.grow_hack =()=>
 
 cli.update =e=>
 {
+  // console.log(e);
+  if (e?.inputType === "insertFromPaste")
+  {
+    const pasted = cli.t.value;
+    cli.t.value = pasted.trim();
+  }
   cli.grow_hack();
   cli.otocomp();
 };
@@ -125,6 +130,17 @@ cli.keydown =e=>
   }
   else if (e.key === 'Escape') cli.collapse();
 };
+it.parse = {};
+it.parse.hashtags =(s)=>
+{
+  const hashtags = [];
+  const ma = s.match(/(\B[#])\w+/g);
+  if (ma) 
+  {
+    for (const m of ma) hashtags.push(['t',m.substr(1).toLowerCase()])
+  }
+  return hashtags
+};
 
 cli.compost =s=>
 {
@@ -134,11 +150,12 @@ cli.compost =s=>
   if (it.s.act(s)) it.act(s);
   else 
   {
-    if (cli.prep) 
+    if (cli.dat) 
     {
-      cli.prep.created_at = it.tim.now();
-      aa.draft(cli.prep);
-      delete cli.prep;
+      cli.dat.event.created_at = it.tim.now();
+      cli.dat.event.tags.push(...it.parse.hashtags(s));
+      aa.draft(cli.dat.event);
+      delete cli.dat;
     }
     else 
     {
@@ -253,33 +270,51 @@ cli.otocomp =()=>
   if (aka.o.ls.xpub) cli.pre_compost(s)
 };
 
-cli.pre_compost =s=>
+cli.mk_dat =(s,dis)=>
 {
-  if (!cli.hasOwnProperty('prep')) 
+  cli.dat = 
   {
-    cli.prep = 
+    event:
     {
       pubkey:aka.o.ls.xpub,
       kind:1,
       created_at:it.tim.now(),
       content:s,
       tags:[]
-    };
-  }
-  else cli.prep.content = s;
+    },
+    replying:dis
+  };
 
-  const dis = v_u.viewing;
   if (dis)
   {
     let x = it.fx.decode(dis);
     if (dis.startsWith('note'))
     {
       const reply_e = aa.e[x].event;
-      const tags = [...cli.prep.tags,...it.get_tags(reply_e)];
-      cli.prep.tags = [...new Set(tags)];
-      console.log(cli.prep.tags);
+      cli.dat.event.tags.push(...it.get_tags(reply_e));
     }
   }
+};
+
+cli.pre_compost =s=>
+{
+  if (s.length)
+  {
+    const dis = v_u.viewing;
+    
+    if (dis && cli.dat?.to !== dis) 
+    {
+      delete cli.dat;
+    }
+
+    if (!cli.hasOwnProperty('dat')) 
+    {
+      cli.mk_dat(s,dis)
+    }
+    else cli.dat.event.content = s;
+    // console.log(dis,cli.dat);
+  }
+  else if (cli.hasOwnProperty('dat')) delete cli.dat;
 };
 
 it.act =s=>

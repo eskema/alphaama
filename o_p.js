@@ -44,6 +44,7 @@ o_p.set =s=>
     localStorage[k] = v;
     o_p.load();
     v_u.log(localStorage.ns+' op set '+k+' to '+v);
+    cli.fuck_off();
   }
 };
 

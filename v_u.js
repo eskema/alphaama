@@ -94,17 +94,21 @@ v_u.log =s=>
   
 v_u.p =async npub=>
 {
-  let p,xpub;
+  let xpub = it.fx.decode(npub);
+  let p = await aa.db.get_p(xpub);
+  if (!p) 
+  {
+    p = author.p(xpub);
+    // v_u.req_p([xpub]);
+  }
+  
   let l = document.getElementById(npub);  
   if (!l)
   {
-    xpub = it.fx.decode(npub);
-    p = await aa.db.get_p(xpub);
     l = author.profile(p);
   }
-  if (!p) p = await aa.db.get_p(xpub ?? it.fx.decode(npub));
 
-  if (p && l.classList.contains('simp')) author.update(l,p);
+  if (l.classList.contains('simp')) author.update(l,p);
   l.classList.add('in_view');
   aa.l.classList.add('viewing','view_p');
   v_u.scroll(l);
@@ -114,27 +118,49 @@ v_u.p =async npub=>
 v_u.e =async nid=>
 {
   let l = document.getElementById(nid);
-  if (!l)
+  if (l) v_u.dis(l);
+  else
   {
     let x = it.fx.decode(nid);
     let dat = await aa.db.get_e(x);
-    if (dat) aa.print(dat);
-    else v_u.req_e(x);
+    if (dat) 
+    {
+      aa.print(dat);
+      if (!aa.p[dat.event.pubkey])
+      {
+        
+      }
+    }
+    // else v_u.req_e([x]);
   }
-  else kin.view(l);
   v_u.viewing = nid;
 };
 
-v_u.req_e =x=>
+v_u.dis =l=>
 {
-  if (window.confirm('fetch dis note?'))
-  {
-    const request = ['REQ','ids',{ids:[x]}];
-    const relays = rel.in_set(rel.o.r);
-    const options = {eose:'close'};
-    console.log(request,relays,options);
-    q_e.demand(request,relays,options);
-  }
+  l.classList.add('in_view');   
+  // it.to(()=>{it.fx.in_path(l)},100,'in_path');
+  it.fx.in_path(l)
+  aa.l.classList.add('viewing','view_e');
+  v_u.scroll(l);
+};
+
+v_u.req_e =a=>
+{
+  const request = ['REQ','e',{ids:a}];
+  const relays = rel.in_set(rel.o.r);
+  const options = {eose:'close'};
+  console.log(request,relays,options);
+  q_e.demand(request,relays,options);
+};
+
+v_u.req_p =a=>
+{
+  const request = ['REQ','p',{authors:a,kinds:[0,3,10002]}];
+  const relays = rel.in_set(rel.o.r);
+  const options = {eose:'close'};
+  console.log(request,relays,options);
+  q_e.demand(request,relays,options);
 };
 
 v_u.nprofile =async nprofile=>
@@ -179,10 +205,7 @@ v_u.nevent =async nevent=>
         let blank = kin.note(dat);
         blank.classList.add('blank','root');
         v_u.append(blank,document.getElementById('notes'));
-        // v_u.state(nid);
-        // kin.view(blank);
         q_e.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
-        // v_u.pop();
       }
     }
     else 
@@ -287,14 +310,15 @@ v_u.upd.path =(l,stamp)=>
   if (root && updated) v_u.append(root,document.getElementById('notes'),1)
 }
 
-v_u.upd.butt_count =(id,cla)=>
-{
-  it.to(()=>
-  {
-    let butt = document.getElementById('butt_'+id);
-    butt.dataset.count = document.querySelectorAll(cla).length;
-  },100,id+'_count');
-};
+// v_u.upd.butt_count =(id,cla)=>
+// {
+//   it.to(()=>
+//   {
+//     let butt = document.getElementById('butt_'+id);
+//     if (butt) butt.dataset.count = document.querySelectorAll(cla).length;
+//   },100,'butt_'+id+'_count');
+// };
+
 
 v_u.trusted_src =(l)=>
 {

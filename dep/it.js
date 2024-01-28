@@ -176,6 +176,59 @@ it.fx.npub =x=> NostrTools.nip19.npubEncode(x);
 it.fx.decode =x=> NostrTools.nip19.decode(x).data;
 it.fx.hash =o=> NostrTools.getEventHash(o);
 it.fx.verify =o=> NostrTools.verifyEvent(o);
+it.fx.verify_filter =o=>
+{
+  // ids, authors, kinds, 
+  for (const k in o)
+  {
+    if (k === 'since' 
+    || k === 'until' 
+    || k === 'limit')
+    {
+      if (!Number.isInteger(o[k]) || o[k] === 0) return false
+    }
+    else if (k === 'ids' 
+    || k === 'authors' 
+    || k === '#p'
+    || k === '#e')
+    {
+      const v = o[k];
+      if (Array.isArray(v))
+      {
+        for (const val of v)
+        {
+          if (!it.s.x(val)) return false
+        }
+      }
+      else return false
+    }
+    else if (k.startsWith('#'))
+    {
+      const v = o[k];
+      if (Array.isArray(v))
+      {
+        for (const val of v)
+        {
+          if (!typeof val === 'string') return false
+        }
+      }
+      else return false
+    }
+    else if (k === 'kinds')
+    {
+      const v = o[k];
+      if (Array.isArray(v))
+      {
+        for (const val of v)
+        {
+          if (!Number.isInteger(val)) return false
+        }
+      }
+      else return false
+    }
+  }
+  return true
+};
 
 it.fx.in_path =(l,k=false)=>
 {
@@ -211,10 +264,11 @@ it.get_tags =(event)=>
    let root_tag = it.get_root_tag(event.tags);
    if (root_tag.length)
    {
-    let dat = aa.e[root_tag[1]];
-    console.log(dat);
-    const is_really_root = it.get_root_tag(dat.event.tags);
-    if (is_really_root.length) console.log(is_really_root);
+    console.log(root_tag)
+    // let dat = aa.e[root_tag[1]];
+    // console.log(dat);
+    // const is_really_root = it.get_root_tag(dat.event.tags);
+    // if (is_really_root.length) console.log(is_really_root);
     // let l = document.getElementById(root_tag[1]);
     // if (l)
     // {
@@ -223,7 +277,7 @@ it.get_tags =(event)=>
    }
    if (root_tag.length) 
    {
-      console.log(root_tag);
+      // console.log(root_tag);
       if (root_tag.length > 2 && root_tag[2] === '') 
       {
         root_tag[2] = it.get_seen(event.id);
@@ -552,7 +606,7 @@ it.mk.author =async(xpub,p)=>
   if (!p) p = aa.p[xpub];
   if (!p) 
   {
-    p = author.p(xpub); //await aa.db.get_p(xpub);
+    p = author.p(xpub);
     author.load(xpub);
   }
   const pubkey = it.mk.l('a',
@@ -662,6 +716,22 @@ it.mk.butt =l=>
   return butt
 };
 
+it.butt_count =(id,cla)=>
+{
+  // it.to(()=>
+  // {
+    let butt = document.getElementById('butt_'+id);
+    
+    if (butt) 
+    {
+      const total = document.querySelectorAll(cla).length;
+      butt.dataset.count = total;
+      if (!total) butt.removeAttribute('data-count');
+    }
+    
+  // },100,id+'_count');
+};
+
 it.mk.section =(id,expanded=false)=>
 {
   const section = it.mk.l('section',{id:id});
@@ -669,4 +739,40 @@ it.mk.section =(id,expanded=false)=>
   if (expanded) section.classList.add('expanded');
   section.append(butt)
   return section
+};
+
+it.confirm =(o)=>
+{
+  const dialog = document.getElementById('dialog');
+  const dialog_close =()=>
+  {
+    dialog.close();
+    dialog.textContent = '';
+  };
+  if (o.description) dialog.append(it.mk.l('p',{con:o.description}));
+  const dialog_butts = it.mk.l('p',{cla:'dialog_butts'});
+  const dialog_cancel = it.mk.l('button',
+  {
+    con:'cancel',
+    cla:'butt',
+    clk:e=>
+    {
+      dialog_close();
+      o.no();
+    }
+  });
+  const dialog_confirm = it.mk.l('button',
+  {
+    con:'confirm',
+    cla:'butt',
+    clk:e=>
+    {
+      dialog_close();
+      o.yes()
+    }
+  });
+  dialog_butts.append(dialog_cancel,dialog_confirm);
+  dialog.append(dialog_butts,o.l);
+  dialog.showModal();
+  dialog.scrollTop = dialog.scrollHeight;
 };

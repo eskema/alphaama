@@ -251,6 +251,7 @@ kin.d0 =dat=>
   {
     aa.db.get_p(dat.event.pubkey).then(p=>
     {
+      if (!p) p = author.p(dat.event.pubkey);
       const c_at = dat.event.created_at;
       if (!p.pastdata.k0.length || p.pastdata.k0[0][1] < c_at) 
       {
@@ -298,7 +299,8 @@ kin.d3 =dat=>
     const x = dat.event.pubkey;
     const c_at = dat.event.created_at;
     aa.db.get_p(x).then(p=>
-    {      
+    {   
+      if (!p) p = author.p(dat.event.pubkey);   
       if (!p.pastdata.k3.length || p.pastdata.k3[0][1] < c_at) 
       {
         p.pastdata.k3.unshift([dat.event.id,c_at]);
@@ -347,6 +349,7 @@ kin.d10002 =dat=>
     const c_at = dat.event.created_at;
     aa.db.get_p(x).then(p=>
     {
+      if (!p) p = author.p(dat.event.pubkey);
       if (!p.pastdata.k10002.length || p.pastdata.k10002[0][1] < c_at) 
       {
         p.pastdata.k10002.unshift([dat.event.id,c_at]);
@@ -476,15 +479,7 @@ kin.tags =tags=>
   
   return tags_ol
 };
-    
-kin.view =l=>
-{
-  l.classList.add('in_view');   
-  it.to(()=>{it.fx.in_path(l)},100,'in_path');
-  // it.fx.in_path(l)
-  aa.l.classList.add('viewing','view_e');
-  v_u.scroll(l);
-};
+  
 
 aa.print =dat=>
 {
@@ -497,8 +492,9 @@ aa.print =dat=>
   if (!l)
   {
     l = kin.da(dat);
-    let butt = document.getElementById('butt_e');
-    butt.dataset.count = document.querySelectorAll('.note').length;
+    it.butt_count('e','.note');
+    // let butt = document.getElementById('butt_e');
+    // butt.dataset.count = document.querySelectorAll('.note').length;
     if (!l) console.log(dat);
     if (l?.classList.contains('draft')) v_u.scroll(l,{behavior:'smooth',block:'center'});
   }
@@ -508,7 +504,7 @@ aa.print =dat=>
     || l.classList.contains('draft')) aa.replace_note(l,dat);
   } 
 
-  if (l && history.state.view === nid) kin.view(l);
+  if (l && history.state.view === nid) v_u.dis(l);
   
 
   aa.moar();

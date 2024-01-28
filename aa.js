@@ -226,6 +226,16 @@ aa.clk.cancel =e=>
   const xid = note.dataset.id;
   delete aa.e[xid];
   note.remove();
+  it.butt_count('e','.note');
+};
+
+aa.clk.parse =e=>
+{
+  const note = e.target.closest('.note');
+  const content = note.querySelector('.content');
+  const xid = note.dataset.id;
+  const event = aa.e[xid].event;
+
 };
 
 aa.draft =event=>

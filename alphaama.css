@@ -331,6 +331,13 @@ button.butt
   animation: none;
 }
 
+button.butt:focus
+{
+  background-color: rgba(var(--color-main),.4);
+  color: rgb(var(--color-c));
+  outline: none;
+}
+
 @keyframes foo-in 
 {
   0% { opacity: 0 }
@@ -626,6 +633,11 @@ button.butt
   top: 0;
 }
 
+#butt_u.has-picture
+{
+  font-size: 0;
+}
+
 #butt_u img 
 {
   height: 100%;
@@ -636,15 +648,19 @@ button.butt
   pointer-events: none;
   position: absolute;
   top: 0;
+  transform: scale(.82);
   transition: var(--trans-quart);
   width: 100%;
+  z-index: -1;
 }
 
 #u.expanded #butt_u img
 {
   transform: scale(.618);
-  z-index: -1;
+  
 }
+
+
 
 #butt_u.has-picture:hover img 
 {
@@ -1317,20 +1333,26 @@ a.author
   color: rgb(var(--color-c));
   grid-area: created_at;
   justify-self: end;
+  line-height: 1.5;
+  padding: 0 var(--padm);
   white-space: pre;
   word-break: keep-all;
-  padding: 0 var(--padm);
+  
 }
 
-.note:hover > .by .created_at
+.note:not(.in_view) > .by .created_at
 {
   color: rgb(var(--color-d));
+  font-size: 0;
+  padding-left: 0;
 }
 
 .created_at::after 
 {
   color: rgb(var(--color-d));
   content: "~" attr(title);
+  cursor: pointer!important;
+  font-size: var(--font-size-s);
   margin-left: var(--pad);
 }
 

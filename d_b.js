@@ -64,7 +64,7 @@ aa.db.get_p =async xpub=>
       let p = e.data;
       aa.p[xpub] = p ?? author.p(xpub);
       setTimeout(()=>{db.terminate()},200);
-      resolve(aa.p[xpub]);
+      resolve(p);
     }
     db.postMessage(o);
   });

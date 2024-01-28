@@ -89,17 +89,20 @@ rel.upd_state =url=>
 rel.c_on =async(url,o=false)=> 
 {
   let relay = rel.active[url] ? rel.active[url] : rel.active[url] = {q:{},cc:[]};
-  if (relay.fc) delete relay.fc;
-  if (o)
+  if (relay.ws?.readyState !== 1)
   {
-    if (o.req?.length) relay.q[o.req[1]] = o;
-    if (o.send?.length) relay.send = o.send;
+    if (relay.fc) delete relay.fc;
+    if (o)
+    {
+      if (o.req?.length) relay.q[o.req[1]] = o;
+      if (o.send?.length) relay.send = o.send;
+    }
+    
+    relay.ws = new WebSocket(url);
+    relay.ws.onopen = rel.on_open;
+    relay.ws.onclose = rel.on_close;
+    relay.ws.onmessage = rel.on_message;
   }
-  
-  relay.ws = new WebSocket(url);
-  relay.ws.onopen = rel.on_open;
-  relay.ws.onclose = rel.on_close;
-  relay.ws.onmessage = rel.on_message;
 };
 
 rel.mk =(u,o) =>
