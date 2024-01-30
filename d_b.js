@@ -135,6 +135,7 @@ aa.db.upd =async dat=>
 
 aa.db.some =async s=>
 {
+  cli.fuck_off();
   const [n,direction] = s.trim().split(' ');
   const db_op = {};
   db_op.n = n ? parseInt(n) : 1;

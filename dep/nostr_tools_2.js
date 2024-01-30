@@ -2878,7 +2878,7 @@ var NostrTools = (() => {
       });
     }
     fire() {
-      this.relay.send('["REQ","' + this.id + '",' + JSON.stringify(this.filters).substring(1));
+      this.relay.send('["REQ","' + this.id + '",' + JSON.stringify(this.filters).slice(1));
       this.eoseTimeoutHandle = setTimeout(this.receivedEose.bind(this), this.eoseTimeout);
     }
     receivedEose() {

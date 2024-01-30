@@ -130,17 +130,7 @@ cli.keydown =e=>
   }
   else if (e.key === 'Escape') cli.collapse();
 };
-it.parse = {};
-it.parse.hashtags =(s)=>
-{
-  const hashtags = [];
-  const ma = s.match(/(\B[#])\w+/g);
-  if (ma) 
-  {
-    for (const m of ma) hashtags.push(['t',m.substr(1).toLowerCase()])
-  }
-  return hashtags
-};
+
 
 cli.compost =s=>
 {
@@ -164,7 +154,7 @@ cli.compost =s=>
       if (!aka.o.ls.xpub)
       {
         v_u.log('you need an account key (aka)');
-        v_u.log('type: ".aa aka" for options');
+        v_u.log('type: "'+localStorage.ns+' aka" for options');
       } 
     }
     cli.fuck_off();
@@ -189,7 +179,8 @@ cli.act_item =(main_act,sub_act)=>
   {
     const s = cli.t.value;
     let act = ns + ' ' + e.target.querySelector('.val').textContent;
-    cli.t.value = s.substring(0,s.length - act.length) + act.trim() + ' ';
+    // cli.t.value = s.slice(0,s.length - act.length) + act.trim() + ' ';
+    cli.t.value = s.slice(0,-Math.abs(act.length)) + act.trim() + ' ';
     cli.update();
     cli.foc();
   };
@@ -262,7 +253,7 @@ cli.otocomp =()=>
     if (w.startsWith('@') && w.length > 1) 
     {
       console.log('mention')
-      // new_mention(l_word.substring(2));
+      // new_mention(l_word.slice(2));
     }
     // else if (s.length) cli.oto.textContent = '';
   }
@@ -270,7 +261,7 @@ cli.otocomp =()=>
   if (aka.o.ls.xpub) cli.pre_compost(s)
 };
 
-cli.mk_dat =(s,dis)=>
+cli.mk_dat =async(s,dis)=>
 {
   cli.dat = 
   {
@@ -281,8 +272,7 @@ cli.mk_dat =(s,dis)=>
       created_at:it.tim.now(),
       content:s,
       tags:[]
-    },
-    replying:dis
+    }
   };
 
   if (dis)
@@ -290,8 +280,14 @@ cli.mk_dat =(s,dis)=>
     let x = it.fx.decode(dis);
     if (dis.startsWith('note'))
     {
-      const reply_e = aa.e[x].event;
-      cli.dat.event.tags.push(...it.get_tags(reply_e));
+      let reply_dat = aa.e[x];
+      if (!reply_dat) reply_dat = await aa.db.get_e(x);
+      if (reply_dat)
+      {
+        const reply_e = aa.e[x].event;
+        cli.dat.event.tags.push(...it.get_tags(reply_e));
+        cli.dat.replying = dis;
+      }      
     }
   }
 };
@@ -342,7 +338,7 @@ it.act =s=>
         snip();
         if (act[ion])
         {
-          let cut = s.substring(index);
+          let cut = s.slice(index);
           act[ion].exe(cut); 
         }
         else v_u.log(err);

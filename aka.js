@@ -74,7 +74,7 @@ aka.start =async mod=>
     if (butt_u)
     {
       it.fx.color(ls.xpub,butt_u);
-      butt_u.textContent = ls.xpub.substr(0,3);
+      butt_u.textContent = ls.xpub.slice(0,3);
     }
     let p = await aa.db.get_p(ls.xpub);
     if (p)
@@ -371,19 +371,18 @@ author.profile_butt_score =async e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
   const p = await aa.db.get_p(xpub);
-  if (p) cli.v('.aa aka score '+xpub+' '+p.trust);
+  if (p) cli.v(localStorage.ns+' aka score '+xpub+' '+p.trust);
 };
 
 author.profile_butt_follow =async e=>
 {
   const x = e.target.closest('.profile').dataset.xpub;
   const is_bff = e.target.classList.contains('is_bff');
-  console.log(is_bff);
+  // console.log('is bff?',is_bff);
   if (is_bff)
   {
     // unfollow
-    console.log('unfollow');
-    cli.v('.aa aka unfollow '+x);
+    cli.v(localStorage.ns+' aka unfollow '+x);
   }
   else
   {
@@ -431,7 +430,7 @@ author.profile_butt_follow =async e=>
     }
     else console.log('no k3')
 
-    cli.v('.aa aka follow '+a.join(', '));
+    cli.v(localStorage.ns+' aka follow '+a.join(', '));
   }
 };
 
@@ -528,10 +527,13 @@ author.list =(a,l)=>
   {    
     const bff_li = x=>
     {
-      it.mk.author(x).then(dis=>
-      {
-        l.append(it.mk.l('li',{cla:'bff',app:dis}));
-      });
+      const dis = it.mk.author(x);
+      l.append(it.mk.l('li',{cla:'bff',app:dis}));
+
+      // it.mk.author(x).then(dis=>
+      // {
+      //   l.append(it.mk.l('li',{cla:'bff',app:dis}));
+      // });
     };
     
     let keys_to_get = [];
@@ -680,11 +682,13 @@ author.mk.pubkey =p=>
     }
     pubkey.append(butt_follow);
   }
-    
-  it.mk.author(p.xpub,p).then(dis=>
-  {
-    pubkey.append(dis,it.mk.l('span',{cla:'xpub',con:p.xpub}))
-  });
+
+  pubkey.append(it.mk.author(p.xpub,p),it.mk.l('span',{cla:'xpub',con:p.xpub}))
+
+  // it.mk.author(p.xpub,p).then(dis=>
+  // {
+  //   pubkey.append(dis,it.mk.l('span',{cla:'xpub',con:p.xpub}))
+  // });
 
   return pubkey
 };
@@ -719,7 +723,7 @@ author.link =(l,p=false)=>
   {
     if (p.metadata.name) 
     {
-      let name = p.metadata.name.substr(0,100);
+      let name = p.metadata.name.slice(0,100);
       let span = l.querySelector('span');
       if (span.textContent !== name) span.textContent = name;
     }
@@ -771,16 +775,14 @@ author.ufo =(s)=>
 
 author.follow =async s=>
 {
-  
+  // console.log(s);
   if (!aka.o.ls.xpub) 
   {
     v_u.log('no aka found, set one first')
     return false;
   }
-
   cli.fuck_off();
   
-  console.log(s);
   const a = s.trim().split(',');
   let p_tag = ['p'],k,relay,petname;
   
@@ -802,7 +804,7 @@ author.follow =async s=>
   if (a.length) 
   {
     petname = a.shift().trim();
-    if (it.s.an(petname)) p_tag.push(petname);
+    p_tag.push(it.fx.an(petname));
   }
     
   let dat_k3 = await author.get_k3();
@@ -827,10 +829,10 @@ author.follow =async s=>
         event.id = it.fx.hash(event);
         aa.sign(event).then((signed)=>
         {
-          console.log('signed',signed);
+          // console.log('signed',signed);
           aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
-          aa.print(dat);
           aa.db.upd(dat);
+          aa.print(dat);
           q_e.broadcast(signed);
         });
       }
@@ -842,12 +844,70 @@ author.follow =async s=>
 author.unfollow =async s=>
 {
   console.log(s)
+  if (!aka.o.ls.xpub) 
+  {
+    v_u.log('no aka found, set one first')
+    return false;
+  }
+  cli.fuck_off();
+
+  let k = s.trim();
+  if (k.startsWith('npub')) k = it.fx.decode(k);
+  if (it.s.x(k))
+  {
+    let dat_k3 = await author.get_k3();
+    if (dat_k3)
+    {
+      const old_len = dat_k3.event.tags.length;
+      const new_follows = dat_k3.event.tags.filter(p=>p[1]!==k);
+      // console.log(new_follows);
+      it.confirm(
+      {
+        description:'new follow list:'+old_len+'->'+new_follows.length,
+        l:kin.tags(new_follows),
+        no(){},
+        yes()
+        {
+          const event = 
+          {
+            pubkey:aka.o.ls.xpub,
+            kind:3,
+            created_at:it.tim.now(),
+            content:dat_k3.event.content,
+            tags:new_follows
+          };
+          event.id = it.fx.hash(event);
+          aa.sign(event).then((signed)=>
+          {
+            // console.log('signed',signed);
+            aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+            aa.db.upd(dat);
+            aa.print(dat);
+            q_e.broadcast(signed);
+            author.score(k+' 0');
+          });
+        }
+      });
+    }
+    else v_u.log('no k3 found, create one first')
+  }
+  else v_u.log('invalid pubkey to unfollow')
 };
 
-author.score =s=>
+author.score =async s=>
 {
-  const [xpub,score] = s.trim().split(' ');
-  console.log(xpub,score);
+  let [xpub,score] = s.trim().split(' ');
+  score = parseInt(score);
+  if (it.s.x(xpub) && Number.isInteger(score))
+  {
+    cli.fuck_off();
+    const p = await aa.db.get_p(xpub);
+    console.log(p,score);
+    p.trust = score;    
+    author.update(author.profile(p),p,true);
+    author.save(p);
+  }
+  else v_u.log('invalid data to score')
 };
 
 author.process =async xpub=>

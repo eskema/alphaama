@@ -318,7 +318,7 @@ button
   font-size: inherit;
   line-height: inherit;
   margin: 0;
-  padding: 0;
+  padding: var(--padm);
   text-align: left;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -326,16 +326,50 @@ button
   user-select: none;
 }
 
-button.butt 
-{
-  animation: none;
-}
-
 button.butt:focus
 {
-  background-color: rgba(var(--color-main),.4);
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-f));
   outline: none;
+}
+
+.butt.yolo 
+{
+  color: rgb(var(--color-main));
+}
+.butt.yolo:focus
+{
+  background-color: rgb(var(--color-main));
+}
+
+.butt.sign,
+.butt.post,
+.butt.confirm  
+{
+  color: rgb(var(--color-yes));
+}
+.butt.sign:focus,
+.butt.post:focus,
+.butt.confirm:focus
+{
+  background-color: rgb(var(--color-yes));
+}
+
+.butt.edit 
+{
+  color: rgb(var(--color-maybe));
+}
+.butt.edit:focus
+{
+  background-color: rgb(var(--color-maybe));
+}
+
+.butt.cancel 
+{
+  color: rgb(var(--color-no));
+}
+.butt.cancel:focus
+{
+  background-color: rgb(var(--color-no));
 }
 
 @keyframes foo-in 
@@ -547,8 +581,8 @@ button.butt:focus
   z-index: 5;
 }
 
-#view > section > .butt:not([data-count]),
-.viewing #view > section > .butt
+.viewing #view > section > .butt,
+#view > section > .butt:not([data-count])
 {
   display: none;
 }
@@ -761,7 +795,7 @@ button.butt:focus
 {
   background: rgba(var(--color-b),.9);
   position: sticky;
-  top: 0;
+  /*top: var(--line);*/
   z-index: 4;
 }
 
@@ -1293,10 +1327,15 @@ button.butt:focus
 
 a.author 
 {
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
   grid-area: author;
   overflow-x: scroll;
   text-decoration: none;
+}
+
+a.author.is_bff
+{
+  /*color: rgb(var(--color-d));*/
 }
 
 .in_view > .by .author
@@ -1321,20 +1360,35 @@ a.author
   width: 1rem;  
 }
 
-.author::after
+.by .author[data-nip05]::after,
+.pubkey .author[data-nip05]::after
 {
   content: attr(data-nip05);
   grid-area: after;
-  opacity: .5;
+  /*opacity: .5;*/
   padding: 0 var(--padm);
   word-break: keep-all;
   white-space: pre;
 }
 
-.author span 
+.author .name 
 {
   background-color: rgb(var(--color-b));
   padding: 0 var(--padm);
+}
+
+.author .name[data-petname]::after 
+{
+  align-self: center;
+  color: rgb(var(--color-c));
+  content: "(" attr(data-petname) ")";
+  font-size: var(--font-size-s);
+  margin-left: var(--pad);
+}
+
+.author:hover .name[data-petname]::after 
+{
+  color: rgb(var(--color-d));
 }
 
 .author img
@@ -1435,12 +1489,62 @@ a.author
   color: rgb(var(--color-e)); 
 }
 
-.note:not(.in_view) > .content .paragraph:last-child::after
+.note[data-kind="1"]:not(.in_view) > .content .paragraph:last-child::after
+{
+  color: rgb(var(--color-sad));
+  content: ".";
+  margin-left: var(--pad);
+  /*display: block;*/
+  /*font-size: var(--font-size-xs);*/
+}
+
+.content-img,
+.content-video
+{
+  display: block;
+  height: auto;
+  margin: var(--pad) 0;
+  max-width: 100%;
+  max-height: var(--media-height);
+}
+
+.in_view > .content .content-img
+{
+  max-height: var(--media-max-height);
+}
+
+.content a.author
+{
+  line-height:1;
+  grid-area: unset;
+  transform: translateY(1px);
+}
+
+.content a.author span
+{
+  padding: 1px var(--padm);
+}
+
+.content .content_link
+{
+  color: rgb(var(--color-sad));
+}
+
+.content .nostr_link
+{
+  color: rgb(var(--color-alt));
+}
+
+.content .nostr_link::before
 {
   color: rgb(var(--color-c));
-  content: ".";
-  display: block;
-  font-size: var(--font-size-xs);
+  content: "#";
+}
+
+.content .nostr_link::after
+{
+  color: rgb(var(--color-c));
+  content: "…";
 }
 
 /* @end */
@@ -1480,7 +1584,7 @@ a.author
   padding: 0;
   padding-left: var(--padm);
   position: sticky;
-  transform: translateX(calc(var(--padm)*-.5));
+  transform: translateX(calc(var(--padm)*-1 + 2px));
   z-index: 5; 
 }
 
@@ -1673,6 +1777,7 @@ a.author
 {
   color: rgb(var(--color-c));
   justify-self:end;
+  padding: 0;
 }
 
 .tag button::before
@@ -1707,9 +1812,10 @@ a.author
 {
   grid-area: and;
   display: grid;
-  word-break: keep-all;
+  grid-auto-flow: column;
   pointer-events: none;
   white-space: pre;
+  word-break: keep-all;
 }
 
 .a:hover span 
@@ -1947,7 +2053,7 @@ a.author
 #oto .item::before 
 {
   color: rgb(var(--color-c));
-  opacity: .5;
+  /*opacity: .5;*/
 }
 
 #oto .item::after 
@@ -1992,15 +2098,16 @@ a.author
 
 #oto .item.pinned 
 {
-  background-color: rgb(var(--color-alt));
-  border-bottom: 1px dotted rgb(var(--color-c));
+  background-color: rgb(var(--color-main));
+  border-bottom: 1px dotted rgb(var(--color-alt));
   cursor: text;
   pointer-events: none;
   z-index: 1;
 }
 
 #oto .item.pinned > *,
-#oto .item.pinned > .required
+#oto .item.pinned > .required,
+#oto .item.pinned::before
 {
   color: rgb(var(--color-b));
 }
@@ -2008,7 +2115,7 @@ a.author
 #oto .item.pinned > .description,
 #oto .item.pinned > .optional
 {
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-b));
 }
 
 /* @end */
@@ -2534,15 +2641,9 @@ p[data-meta="about"]::before
 .note.in_view > .replies > .note[data-kind="7"],
 .note[data-kind="7"]:not(.in_view)
 {
-  border: 0;
   grid-template-areas: "content by";
   grid-template-columns: auto 1fr;
 }
-
-/*.note[data-kind="7"]:not(.in_view) > .by
-{
-  grid-template-areas: "author id created_at";
-}*/
 
 .note[data-kind="7"]:not(.in_view) > .by .author span
 {
@@ -2553,9 +2654,9 @@ p[data-meta="about"]::before
 {
   font-family: monospace;
   font-size: var(--font-size-s);
-  padding: 0;
   padding-bottom: var(--padm);
   padding-left: var(--padm);
+  padding-right: 0;
   padding-top: var(--padm);
 }
 
@@ -2568,18 +2669,13 @@ p[data-meta="about"]::before
 
 .note[data-kind="7"]:not(.in_view) > .actions,
 .note[data-kind="7"]:not(.in_view) > .replies,
-/*.note[data-kind="7"]:not(.in_view) > .by .created_at,*/
 .note[data-kind="7"]:not(.in_view) > .by .author .picture,
 .note[data-kind="7"]:not(.in_view) > .by .author::before,
 .note[data-kind="7"]:not(.in_view) > .by .author::after,
-.note[data-kind="7"]:not(.in_view) > .by .author:not(.has-picture)::before,
-.note[data-kind="7"] > .content .paragraph:last-child::after
+.note[data-kind="7"]:not(.in_view) > .by .author:not(.has-picture)::before
 {
-  content: "";
   display: none;
 }
-
-
 
 /* @end */
 
@@ -2659,12 +2755,11 @@ p[data-meta="about"]::before
   justify-content: end;
   justify-items: end;
   margin: 0;
-  opacity: 1;
   padding: 0 var(--pad);
   z-index: 3;
 }
 
-.note.in_view > .replies > .note > .actions,
+.in_view > .replies > .note > .actions,
 .root:not(.in_path) > .actions
 {
   bottom: 4rem;
@@ -2674,8 +2769,9 @@ p[data-meta="about"]::before
 
 .note.in_view > .actions
 {
-  bottom: unset;
   align-self: stretch;
+  bottom: unset;
+  color: rgb(var(--color-d));
   position: relative;
 }
 
@@ -2686,9 +2782,12 @@ p[data-meta="about"]::before
 
 .note .actions .butt 
 {
-  background: rgb(var(--color-b));
   color: rgb(var(--color-c));
-  cursor: pointer;
+}
+
+.note:hover > .actions .butt 
+{
+  color: rgb(var(--color-d));
 }
 
 .root > .actions
@@ -2702,38 +2801,7 @@ p[data-meta="about"]::before
   color: rgb(var(--color-f));
 }
 
-.butt.yolo 
-{
-  color: rgb(var(--color-main));
-}
 
-.butt.sign 
-{
-  color: rgb(var(--color-yes));
-}
-
-.butt.post 
-{
-  color: rgb(var(--color-yes));
-}
-
-/*.note:not(.draft) > .actions > .butt.yolo,
-.note:not(.draft) > .actions > .butt.sign,
-.draft > .actions > .butt.post
-{
-  display: none;
-  pointer-events: none;
-}*/
-
-.butt.edit 
-{
-  color: rgb(var(--color-maybe));
-}
-
-.butt.cancel 
-{
-  color: rgb(var(--color-no));
-}
 
 /* @end */
 
@@ -2782,6 +2850,7 @@ p[data-meta="about"]::before
 {
   grid-area: rm;
   margin-right: var(--pad);
+  padding: 0;
 }
 
 .filter .rm:hover,
@@ -2844,11 +2913,14 @@ p[data-meta="about"]::before
 
 /* @end */
 
+/* @group dialog */
+
 #dialog
 {
   background: rgb(var(--color-b));
   border: none;
   /*display: grid;*/
+  max-height: var(--media-max-height);
   padding: 0;
   padding-bottom: var(--line);
   /*justify-content: center;*/
@@ -2859,12 +2931,13 @@ p[data-meta="about"]::before
   opacity: .618;
 }
 
-.dialog_butts
+.dialog_head
 {
   display: grid;
-  grid-auto-flow: column;
+  grid-template-columns: 1fr 1fr;
   grid-gap: var(--pad);
   justify-content: center;
+  justify-items: center;
   margin: 0;
   padding: var(--pad);
   position: sticky;
@@ -2873,14 +2946,185 @@ p[data-meta="about"]::before
   background: rgb(var(--color-b));
 }
 
-#dialog button.butt
+.dialog_head h2
 {
-  color: rgb(var(--color-e));
-  
+  color: rgb(var(--color-main));
+  grid-column: span 2;
+  text-align: center;
 }
 
 #dialog .tags 
 {
   padding: 0;
 }
+
+#dialog .tags li
+{
+  color: rgb(var(--color-d));
+}
+
+#dialog .tags li:last-child
+{
+  color: rgb(var(--color-f));
+}
+
+/* @end */
+
+
+
+/* @group yo */
+
+.yo 
+{
+  color: rgb(var(--c-a-e));
+  display: grid;
+  position: relative;
+  justify-self: start;
+  grid-template-rows: 1fr auto;
+  grid-template-areas: "yo";
+  margin: 0;
+  padding-top: var(--line);
+}
+
+.yo video.started 
+{
+  
+}
+
+.yo.is-over 
+{
+  color: rgb(var(--c-a-f));
+}
+
+.yo video 
+{
+  grid-area: yo;
+  background: black;
+  opacity: .5;
+  margin: 0;
+}
+
+.yo video:hover 
+{
+  cursor: pointer;
+  opacity: 1;
+}
+
+.yo video.playin 
+{
+  opacity: 1;
+  z-index: 1;
+}
+
+.yo .controls 
+{
+  grid-area: yo;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "progress progress"
+  "before before"
+  "url url"
+  ". after";
+  padding: .5rem;
+  align-self: start;
+  align-items: start;
+  align-content: start;
+  text-align: right;
+  transform: translateY(-2rem);
+  cursor: pointer;
+}
+
+.yo figcaption:hover 
+{
+  z-index: 2;
+}
+
+.yo figcaption:hover::before 
+{
+  content: "<video rewind";
+}
+
+.yo figcaption::before 
+{
+  content: "<video " attr(data-duration)"s";
+  grid-area: before;
+  white-space: pre;
+}
+
+.yo video:over + figcaption::before 
+{
+  content: "<video play " attr(data-duration)"s";
+}
+
+.yo .started + figcaption::before 
+{
+  content: "<video " attr(data-remains)"s";
+}
+
+.yo .started + figcaption:hover::before 
+{
+  content: "<video rewind";
+}
+
+.yo video.started:hover + figcaption::before 
+{
+  content: "<video play " attr(data-remains)"s";
+}
+
+.yo video.started.playin:hover + figcaption::before 
+{
+  content: "<video pause " attr(data-remains)"s";
+}
+
+.yo .url 
+{
+  width: 100%;
+  grid-area: url;
+  word-break: break-all;
+  justify-self: start;
+  mix-blend-mode: color-dodge;
+  top: 0rem;
+  box-sizing: border-box;
+  cursor: text;
+}
+
+.over .url 
+{
+  opacity: 1;
+}
+
+.yo .url::after 
+{
+  content: ">";
+}
+
+.yo .controls progress 
+{
+  grid-area: progress;
+  align-self: center;
+  pointer-events: none;
+  width: 100%;
+}
+
+.yo .controls progress[value] 
+{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1px;
+  margin: 0;
+}
+
+.yo .controls progress[value]::-webkit-progress-bar 
+{
+  background-color: rgba(var(--c-a-e), .2);
+}
+
+.yo .controls progress[value]::-webkit-progress-value 
+{
+  background-color: rgb(var(--c-a-a));
+}
+
+/* @end */
 

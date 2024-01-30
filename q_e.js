@@ -265,7 +265,7 @@ q_e.rm_filter =s=>
     cli.fuck_off();
     v_u.log('filter removed: '+fid);
   }
-  else v_u.log('.aa qe '+fid+' not found')
+  else v_u.log(localStorage.ns+' qe '+fid+' not found')
 };
 
 q_e.raw =s=>
@@ -279,7 +279,7 @@ q_e.raw =s=>
       let request = ['REQ','raw',filtered];
       let relays = rel.in_set(relset);
       if (!relays) relays = rel.in_set(rel.o.r);
-      v_u.log('.aa qe raw '+filter);
+      v_u.log(localStorage.ns+' qe raw '+filter);
       q_e.demand(request,relays,{eose:'close'});
     }
     else v_u.log('invalid filter')
@@ -311,28 +311,11 @@ q_e.run =s=>
       console.log(request,relays,options);
       q_e.demand(request,relays,options);
       cli.fuck_off();
-      v_u.log('.aa qe run '+fid);
+      v_u.log(localStorage.ns+' qe run '+fid);
     }
     else v_u.log('qe run filter not found')
   }
 };
-
-// q_e.run =s=>
-// {
-//   let [fid,relset,options] = s.trim().split(' ');
-//   if (fid) 
-//   { if (q_e.o.ls.hasOwnProperty(fid)) 
-//     {
-//       let filter = it.fx.vars(q_e.o.ls[fid].v);
-//       let request = ['REQ', fid, filter];
-//       v_u.log('.aa qe run '+fid);
-//       if (!relset) relset = rel.o.r;
-//       q_e.demand(request,rel.in_set(relset),options);
-//       cli.fuck_off();
-//     }
-//     else v_u.log('qe run filter not found')
-//   }
-// };
 
 q_e.close =s=>
 {

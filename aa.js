@@ -240,10 +240,12 @@ aa.clk.react =e=>
 aa.clk.parse =e=>
 {
   const note = e.target.closest('.note');
-  const content = note.querySelector('.content');
   const xid = note.dataset.id;
   const event = aa.e[xid].event;
-
+  const content = note.querySelector('.content');
+  const parsed = it.parse.content(event);
+  content.replaceWith(parsed);
+  console.log(parsed);
 };
 
 aa.draft =event=>

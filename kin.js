@@ -31,7 +31,8 @@ kin.note =dat=>
   {
     note.dataset.pubkey = o.pubkey;
     it.fx.color(o.pubkey,note);
-    it.mk.author(o.pubkey).then(pubkey=> by.append(pubkey));
+    by.append(it.mk.author(o.pubkey))
+    // it.mk.author(o.pubkey).then(pubkey=> by.append(pubkey));
   }
   if (o.kind || o.kind === 0) 
   {
@@ -139,6 +140,7 @@ kin.event =message=>
     }
     let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
     if (!sub.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
+    aa.db.upd(dat);
     aa.print(dat);
   }
   else console.log('invalid event',message);
@@ -208,7 +210,7 @@ kin.blank =(tag,dat,seconds)=>
   {
     const url = it.s.url(tag[2]);
     if (url) it.a_set(seen,[url.href]);
-    else v_u.log(tag);
+    else console.log('malformed tag on',dat);
   }
   const note = kin.note({event:blank_event,seen:seen,subs:dat.subs});
   note.classList.add('blank','is_new');
@@ -464,8 +466,7 @@ kin.tags =tags=>
 aa.print =dat=>
 {
   const xid = dat.event.id;
-  aa.db.upd(dat);
-  
+  if (!aa.e[xid]) aa.e[xid] = dat;
 
   let nid = it.fx.nid(xid);
   let l = document.getElementById(nid);

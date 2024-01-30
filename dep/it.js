@@ -34,7 +34,7 @@ it.clk.a =e=>
 {
   e.preventDefault();
   let dis = e.target.getAttribute('href');
-  if (dis.startsWith('#')) dis = dis.substr(1);
+  if (dis.startsWith('#')) dis = dis.slice(1);
   v_u.state(dis);
 };
 
@@ -107,7 +107,7 @@ it.fx.an =s=>
 {
   s = s.replace(/[^a-z0-9]/gi,'_').toLowerCase();
   while (s.includes('__')) { s = s.replace('__','_') }
-  if (s.startsWith('_')) s = s.substring(1);
+  if (s.startsWith('_')) s = s.slice(1);
   if (s.endsWith('_')) s = s.slice(0,-1);
   return s
 };
@@ -146,9 +146,9 @@ it.fx.trunk =(s,sep='…',num=3)=> s.slice(0,num)+sep+s.slice(-num);
 
 it.fx.to_rgb =x=>
 {
-  return parseInt(x.substring(0,2),16)
-    +','+parseInt(x.substring(2,4),16)
-    +','+parseInt(x.substring(4,6),16)
+  return parseInt(x.slice(0,2),16)
+    +','+parseInt(x.slice(2,4),16)
+    +','+parseInt(x.slice(4,6),16)
 };
 
 it.fx.luma =rgb=>
@@ -379,8 +379,8 @@ it.tim.ago =date=>
 
 it.tim.time =s=>
 {
-  if (s.startsWith('n_')) return it.tim.n(s.substring(2));
-  if (s.startsWith('d_')) return it.tim.date(s.substring(2));
+  if (s.startsWith('n_')) return it.tim.n(s.slice(2));
+  if (s.startsWith('d_')) return it.tim.date(s.slice(2));
   if (s === 'now') return it.tim.now();    
   return parseInt(s)
 };
@@ -594,20 +594,20 @@ it.mk.mod =mod=>
 it.mk.link =(url,text=false,title=false)=>
 {
   if (!text) text = url;
-  let l = it.mk.l('a',{cla:'content-link',ref:url,con:text});
+  let l = it.mk.l('a',{cla:'content_link',ref:url,con:text});
   if (title) l.title = title;
   l.rel = 'noreferrer noopener';
   l.target = '_blank';
   return l
 };
 
-it.mk.author =async(xpub,p)=>
+it.mk.author =(xpub,p=false)=>
 {
   if (!p) p = aa.p[xpub];
   if (!p) 
   {
     p = author.p(xpub);
-    author.load(xpub);
+    // author.load(xpub);
   }
   const pubkey = it.mk.l('a',
   {
@@ -616,8 +616,12 @@ it.mk.author =async(xpub,p)=>
     ref:'#'+p.npub,
     clk:it.clk.a,
   });
-  let name = p.metadata?.name ?? p.npub.substr(0,12);
-  pubkey.append(it.mk.l('span',{con:name}));
+  let name_s = p.metadata?.name ?? p.npub.slice(0,12);
+  let name = it.mk.l('span',{cla:'name',con:name_s});
+  let petname = p.petname.length ? p.petname : p.extradata.petnames.length ? p.extradata.petnames[0] : false;
+  if (petname) name.dataset.petname = petname;
+  
+  pubkey.append(name);
   it.fx.color(p.xpub,pubkey);
   author.link(pubkey,p);
   return pubkey
@@ -749,12 +753,13 @@ it.confirm =(o)=>
     dialog.close();
     dialog.textContent = '';
   };
-  if (o.description) dialog.append(it.mk.l('p',{con:o.description}));
-  const dialog_butts = it.mk.l('p',{cla:'dialog_butts'});
+  
+  const dialog_head = it.mk.l('header',{cla:'dialog_head'});
+  if (o.description) dialog_head.append(it.mk.l('h2',{con:o.description}));
   const dialog_cancel = it.mk.l('button',
   {
     con:'cancel',
-    cla:'butt',
+    cla:'butt cancel',
     clk:e=>
     {
       dialog_close();
@@ -764,15 +769,160 @@ it.confirm =(o)=>
   const dialog_confirm = it.mk.l('button',
   {
     con:'confirm',
-    cla:'butt',
+    cla:'butt confirm',
     clk:e=>
     {
       dialog_close();
       o.yes()
     }
   });
-  dialog_butts.append(dialog_cancel,dialog_confirm);
-  dialog.append(dialog_butts,o.l);
+  dialog_head.append(dialog_cancel,dialog_confirm);
+  dialog.append(dialog_head,o.l);
   dialog.showModal();
   dialog.scrollTop = dialog.scrollHeight;
 };
+
+
+it.s.media =s=>
+{
+  let url = it.s.url(s); 
+  if (!url) return false;
+  
+  const src = url.origin + url.pathname;
+  const low = src.toLowerCase();
+  const is_img = ['jpg','jpeg','gif','webp','png'];
+  const is_av = ['mp3','mp4','mov','webm'];
+  const check_ext =extensions=>
+  {
+    for (const ext of extensions)
+    {
+      if (low.endsWith('.'+ext)
+      || (url.searchParams.has('format') && url.searchParams.get('format') === ext)) 
+      return true
+    }
+    return false
+  };
+   
+  return check_ext(is_img) ? ['img',url] : check_ext(is_av) ? ['av',url] : ['link',url]
+};
+
+it.parse = {};
+
+it.parse.hashtags =s=>
+{
+  const hashtags = [];
+  const ma = s.match(/(\B[#])\w+/g);
+  if (ma) 
+  {
+    for (const m of ma) hashtags.push(['t',m.slice(1).toLowerCase()])
+  }
+  return hashtags
+};
+
+it.parse.url =s=>
+{
+  const type = it.s.media(s);
+  let link;      
+  switch (type[0]) 
+  {
+    case 'img':
+      link = it.mk.l('img',{cla:'content-img',src:type[1].href});
+      link.loading = 'lazy';
+      break;
+
+    case 'av':
+      link = player.mk(type[1].href);
+      break;    
+    
+    default:
+      link = it.mk.link(type[1].href);
+  } 
+  return link
+}
+
+it.regx = 
+{
+  nostr: /((nostr:)[-A-Z0-9]*)\b/i,
+  url: /((https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:.,;]*[-A-Z0-9+&@$#\/%=~_|]*)\b/i,
+  magnet: /(magnet:\?xt=urn:btih:.*)/i,
+  lnbc: /((lnbc)[-A-Z0-9]*)\b/i,
+}
+
+it.parse.nostr =s=>
+{
+  const dis = s.slice(6);
+  const decoded = it.fx.decode(dis);
+  let a;
+  if (dis.startsWith('npub1')) a = it.mk.author(decoded);
+  else a = it.mk.l('a',{cla:'nostr_link',con:dis.slice(0,12),ref:'#'+dis,clk:it.clk.a});
+
+  return a
+};
+
+it.parse.content =o=>
+{
+  const content = it.mk.l('section',{cla:'content'});
+  const paragraphs = o.content.split(/\r?\n/);
+  for (const p of paragraphs)
+  {   
+    if (p.length)
+    {
+      const l = it.mk.l('p',{cla:'paragraph'});
+      const words = p.trim().split(' ');
+      // console.log(words);
+      for (let i=0;i<words.length;i++)
+      {
+        words[i].trim();
+        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i]));
+        else if (it.regx.nostr.test(words[i])) l.append(it.parse.nostr(words[i]));
+        else 
+        {
+          if (i === words.length-1) l.append(words[i]);
+          else l.append(words[i],' ');
+        }
+      }
+      l.normalize();  
+      content.append(l)
+    } 
+  } 
+  return content
+};
+
+async function parse_content(e) 
+{
+   const l = e.target ? e.target.closest('.event') : e;
+   let o; 
+   try { o = db[l.dataset.x].o } 
+   catch (error) { console.log('no data found') } 
+   
+   if (o && l) 
+   {
+      const content = l.querySelector('.content');
+      
+      if (l.classList.contains('parsed')) 
+      {
+         l.classList.remove('parsed');
+         const p = document.createElement('p');
+         p.textContent = merely_mentions(o.content, o.tags);
+         
+         if (content) content.replaceChildren(p);
+      }
+      else
+      {
+         l.classList.add('parsed');
+//         if (content) {
+//            
+//         }
+         try { content.replaceChildren(ai(o)) } 
+         catch (error) { console.log('could not parse', o) }
+         
+         let media = content.querySelector('img, video, audio, iframe');
+         if (media) 
+         { 
+            content.classList.add('has-media');
+            let videos = content.querySelectorAll('video');
+            if (videos) videos.forEach(rap);
+         }
+      }
+   }
+}

@@ -57,7 +57,7 @@ o_p.reset =s=>
 
 o_p.rm =s=>
 {
-  const dis = '.aa op rm: ';
+  const dis = localStorage.ns+' op rm: ';
   let k = s.trim();
   if (k && localStorage[k])
   {

@@ -10,7 +10,7 @@ v_u.pop =()=>
   || !history.state.hasOwnProperty('view')
   || history.state === '') 
   {
-    v_u.state(location.hash.split('?')[0].substring(1));
+    v_u.state(location.hash.split('?')[0].slice(1));
   }
   else 
   {
@@ -223,7 +223,7 @@ v_u.append =(l,mom,reverse=false)=>
   if (ma.classList.contains('note')) ma.classList.add(...classes);
 
   const f =(i)=> reverse ? l.dataset.stamp > i.dataset.stamp 
-  : l.dataset.stamp < i.dataset.stamp;
+  : l.dataset.created_at < i.dataset.created_at;
 
   const last = [...mom.children].filter(f)[0];
   mom.insertBefore(l, last ? reverse ? last : last.nextSibling : null);
