@@ -97,33 +97,42 @@ aa.db.put =async o=>
 
 aa.db.upd =async dat=>
 {
-  const xid = dat.event.id;
-
   if (!aa.q.upd) aa.q.upd = {};
-  if (!aa.q.upd[xid]) aa.q.upd[xid] = [];
-  aa.q.upd[xid].push(dat);
+  if (!aa.q.upd[dat.event.id]) aa.q.upd[dat.event.id] = [];
+  aa.q.upd[dat.event.id].push(dat);
 
   it.to(()=>
   {
-    // let q = Object.entries(aa.q.upd);
-    // aa.q.upd = {};
-    // let keys = [];
+    const q = {...aa.q.upd};
+    aa.q.upd = {};
     let values = [];
-    
-    for (const k in aa.q.upd)
+    for (const k in q)
     {
-      const v = aa.q.upd[k];
+      const v = q[k];
       if (v.length > 1)
       {
         let og = v.shift();
-        for (const o of v) it.fx.merge(og,o);
-        values.push(og);
+        for (const o of v) 
+        {
+          const merged = it.fx.merge(og,o);
+          if (merged) og = merged;
+          values.push(og);
+        }
       }
       else values.push(v[0]);
+
+      for (let i=0;i<values.length;i++)
+      {
+        let xid = values[i].event.id;
+        if (!aa.e[xid]) aa.e[xid] = values[i];
+        else 
+        {
+          const dis = it.fx.merge(aa.e[xid],values[i]);
+          if (dis) aa.e[xid] = dis;
+        }
+      }
     }
-
     aa.idb.postMessage({upd:{store:'events',a:values}});
-
   },1000,'db_upd');
 };
 
@@ -145,8 +154,12 @@ aa.db.some =async s=>
   const db = new Worker('idb.js');
   db.onmessage=e=>
   {
-    console.log('aa.db.some',e.data);
-    for (const dat of e.data) aa.print(dat);
+    // console.log('aa.db.some',e.data);
+    for (const dat of e.data) 
+    {
+      aa.db.upd(dat);
+      aa.print(dat);
+    }
     setTimeout(()=>{db.terminate()},200);
   }
   db.postMessage(o);

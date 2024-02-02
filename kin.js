@@ -4,7 +4,7 @@ kin.note =dat=>
 {
   const note = it.mk.l('article',{cla:'note'}); 
   const by = it.mk.l('header',{cla:'by'});
-  
+  let p;
   note.append(by);
   if (dat.seen) note.dataset.seen = dat.seen.join(' ');
   if (dat.subs) note.dataset.subs = dat.subs.join(' ');
@@ -29,10 +29,10 @@ kin.note =dat=>
   }
   if (o.pubkey)
   {
+    p = aa.p[o.pubkey];
     note.dataset.pubkey = o.pubkey;
     it.fx.color(o.pubkey,note);
-    by.append(it.mk.author(o.pubkey))
-    // it.mk.author(o.pubkey).then(pubkey=> by.append(pubkey));
+    by.append(it.mk.author(o.pubkey));
   }
   if (o.kind || o.kind === 0) 
   {
@@ -54,7 +54,16 @@ kin.note =dat=>
   }
   if (o.content) 
   {
-    note.append(it.mk.l('section',{cla:'content',app:it.mk.l('p',{cla:'paragraph',con:o.content})})); 
+    let content;
+    if (p && it.s.trusted(p.trust)) 
+    {
+      content = it.parse.content(o);
+    }
+    else 
+    {
+      content = it.parse.content_basic(o);
+    }
+    note.append(content); 
   }
   if (o.sig) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
 
@@ -115,6 +124,8 @@ kin.eose =message=>
   }
 };
 
+kin
+
 kin.event =message=>
 { // message = {data,origin}
   // console.log(message);
@@ -132,7 +143,11 @@ kin.event =message=>
       refs:[]
     };
     if (aa.miss.e[event.id]) delete aa.miss.e[event.id];
-    if (!aa.e[event.id]) aa.e[event.id] = dat;
+    if (!aa.e[event.id]) 
+    {
+      aa.e[event.id] = dat;
+      aa.db.upd(dat);
+    }
     else 
     {
       const dis = it.fx.merge(aa.e[event.id],dat);
@@ -140,7 +155,7 @@ kin.event =message=>
     }
     let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
     if (!sub.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
-    aa.db.upd(dat);
+    
     aa.print(dat);
   }
   else console.log('invalid event',message);
@@ -158,7 +173,7 @@ kin.da =dat=>
 kin.def =dat=>
 {
   let note = kin.note(dat);
-  v_u.append(note,document.getElementById('notes'),1);
+  v_u.append_to_notes(note);
   return note
 };
 
@@ -204,16 +219,28 @@ kin.blank =(tag,dat,seconds)=>
     id:tag[1],
     created_at:dat.event.created_at - seconds,
     tags:[tag],
+    content:'blank xid: '+tag[1]+'\nnid:'+it.fx.nid(tag[1])
   }
   const seen = rel.in_set('read');
   if (tag[2])
   {
     const url = it.s.url(tag[2]);
-    if (url) it.a_set(seen,[url.href]);
+    if (url) 
+    {
+      it.a_set(seen,[url.href]);
+      blank_event.content = blank_event.content+'\n'+url.href;
+    }
     else console.log('malformed tag on',dat);
   }
   const note = kin.note({event:blank_event,seen:seen,subs:dat.subs});
   note.classList.add('blank','is_new');
+  const butt = it.mk.l('button',{cla:'butt blank',con:'fetch',clk:e=>
+  {
+    console.log(e.target.closest('.note').dataset.id)
+  }});
+  // console.log(note)
+  const content = note.querySelector('.content');
+  content.append(butt);
   return note
 };
 
@@ -263,12 +290,15 @@ kin.d1 =dat=>
   let reply_tag = it.get_reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length)
   {
-    v_u.append_as_reply(dat,note,reply_tag);
+    note.classList.add('reply');
+    v_u.append_to_replies(dat,note,reply_tag);
+    // v_u.append_as_reply(dat,note,reply_tag);
   }
   else 
   {
     note.classList.add('root');
-    v_u.append(note,document.getElementById('notes'),1);
+    v_u.append_to_notes(note);
+    // v_u.append(note,document.getElementById('notes'),1);
   }
   return note
 };
@@ -463,7 +493,7 @@ kin.tags =tags=>
 };
   
 
-aa.print =dat=>
+aa.print =async dat=>
 {
   const xid = dat.event.id;
   if (!aa.e[xid]) aa.e[xid] = dat;

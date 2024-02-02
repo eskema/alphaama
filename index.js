@@ -33,7 +33,7 @@ window.addEventListener('load',()=>
   if (cli) cli.load();
   if (dex) dex.load();
 
-  document.body.append(it.mk.l('dialog',{id:'dialog'}));
-
+  document.body.insertBefore(it.mk.l('dialog',{id:'dialog'}),document.body.lastChild);
+  
   setTimeout(v_u.pop,100);
 });

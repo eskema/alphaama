@@ -62,6 +62,8 @@ html[data-theme="light"]
   --color-no: 204,102,102;
   --color-yes: 181,189,104;
   --color-maybe: 240,198,116;
+  --color-undefined: 138,190,183;
+  --color-sad: 129,162,190;
 }
 
 /* @end */
@@ -688,10 +690,9 @@ button.butt:focus
   z-index: -1;
 }
 
-#u.expanded #butt_u img
+#u.expanded #butt_u.has-picture img
 {
   transform: scale(.618);
-  
 }
 
 
@@ -1515,14 +1516,28 @@ a.author.is_bff
 
 .content a.author
 {
+  border-bottom: 1px solid rgb(var(--c));
   line-height:1;
   grid-area: unset;
   transform: translateY(1px);
+  margin-right: var(--pad);
 }
 
-.content a.author span
+.content a.author .name
 {
   padding: 1px var(--padm);
+  /*text-decoration: underline;*/
+}
+
+.content a.author .name::after
+{
+  display: none;
+}
+
+.content a.author:not(.has-picture)::before,
+.content a.author .picture
+{
+  display: none;
 }
 
 .content .content_link
@@ -1610,7 +1625,7 @@ a.author.is_bff
 
 .replies.expanded::after
 {
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
 }
 
 .replies.expanded:hover::after
@@ -1653,6 +1668,18 @@ a.author.is_bff
 {
   font-size: var(--font-size-s);
   line-height: 1rem;
+}
+
+.root > .replies > .note 
+{
+  /*display: none;*/
+  /*background: red!important;*/
+}
+
+.root:not(.is_viewable) > .replies > .note
+{
+  display: none;
+  /*background: red!important;*/
 }
 
 /* @end */
@@ -1841,9 +1868,9 @@ a.author.is_bff
 
 .note.blank::before
 {
-  content: "subs: "attr(data-subs) "\aseen: " attr(data-seen) "\ar: " attr(data-r) "\anope: " attr(data-nope);
+  content: "subs: "attr(data-subs) "\ar: " attr(data-r) "\anope: " attr(data-nope);
   font-size: var(--font-size-s);
-  grid-area: content;
+  /*grid-area: content;*/
   line-height: 1.5;
   padding: var(--pad);
   white-space: pre-wrap;
@@ -1860,6 +1887,11 @@ a.author.is_bff
 .blank > .by .created_at
 {
   display: none;
+}
+
+.blank > .content
+{
+  font-size: var(--font-size-s);
 }
 
 /* @end */

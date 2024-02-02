@@ -145,15 +145,27 @@ const a_set =(a,dis)=>
 
 const merge =(dis,dat)=>
 {
+  // let merged,sets = ['seen','subs','clas','refs'];
+  // for (const set of sets)
+  // { 
+  //   if (!dis.hasOwnProperty(set)) {dis[set]=[]; merged=true} 
+  //   if (!dat.hasOwnProperty(set)) dat[set] = [];
+  //   if (a_set(dis[set],dat[set])) merged=true;
+  // }
+  // return merged
+
+  dis = Object.assign({},dis);
   let merged,sets = ['seen','subs','clas','refs'];
   for (const set of sets)
   { 
-    if (!dis.hasOwnProperty(set)) {dis[set]=[]; merged=true} 
+    if (!dis.hasOwnProperty(set)) { dis[set] = [];merged=true; } 
     if (!dat.hasOwnProperty(set)) dat[set] = [];
     if (a_set(dis[set],dat[set])) merged=true;
   }
-  return merged
+  return merged ? dis : false 
 }; 
+
+  
 
 indexed_db.ops.upd =async(db,o)=>
 {
@@ -166,7 +178,8 @@ indexed_db.ops.upd =async(db,o)=>
       if (cursor) 
       { 
         // console.log('db cursor');
-        if (merge(cursor.value,item)) cursor.update(item);
+        const merged = merge(cursor.value,item);
+        if (merged) cursor.update(merged);
       }
       else odb.put(item)
     }

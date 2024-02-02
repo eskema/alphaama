@@ -77,7 +77,7 @@ it.s.one =s=>
   let seg = a[0];
   try { seg = [...new Intl.Segmenter().segment(a[0])] } 
   catch (error) { console.log('no Intl.Segmenter(), use a better browser')};
-  if (a.length === 1 && seg.length === 1) return true;
+  if (seg.length === 1) return true;
   else return false
 };
 
@@ -278,9 +278,13 @@ it.get_tags =(event)=>
    if (root_tag.length) 
    {
       // console.log(root_tag);
-      if (root_tag.length > 2 && root_tag[2] === '') 
+      if (!root_tag[2] || root_tag[2] === '')
       {
         root_tag[2] = it.get_seen(event.id);
+      }
+      if (!root_tag[3] || root_tag[3] !== 'root')
+      {
+        root_tag[3] = 'root';
       }
       tags.push(root_tag);
       tags.push(['e',event.id,it.get_seen(event.id),'reply']);
@@ -290,10 +294,7 @@ it.get_tags =(event)=>
    const pubkeys = event.tags
    .filter(t=>it.tag.p(t) && t[1] !== aka.o.ls.xpub);
    
-   for (const pub of pubkeys)
-   {
-      pubkeys_to_add.push(pub)
-   }
+   for (const pub of pubkeys) pubkeys_to_add.push(pub)
 
    let unique = [...new Set(pubkeys)];
    if (event.pubkey !== aka.o.ls.xpub && !unique.some(t=>t[1] === event.pubkey)) unique.push(['p',event.pubkey])
@@ -426,6 +427,7 @@ it.a_rm =(a,dis)=>
 
 it.fx.merge =(dis,dat)=>
 {
+  dis = Object.assign({},dis);
   let merged,sets = ['seen','subs','clas','refs'];
   for (const set of sets)
   { 
@@ -806,6 +808,15 @@ it.s.media =s=>
   return check_ext(is_img) ? ['img',url] : check_ext(is_av) ? ['av',url] : ['link',url]
 };
 
+
+it.regx = 
+{
+  get nostr() { return /((nostr:)[-A-Z0-9]*)\b/gi},
+  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~]*)/gu},
+  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi},
+  get lnbc(){ return /((lnbc)[-A-Z0-9]*)\b/gi},
+}
+
 it.parse = {};
 
 it.parse.hashtags =s=>
@@ -821,50 +832,87 @@ it.parse.hashtags =s=>
 
 it.parse.url =s=>
 {
-  const type = it.s.media(s);
-  let link;      
-  switch (type[0]) 
+  const dfrag = new DocumentFragment();
+  const matches = [...s.matchAll(/https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~]*)/gu)];
+  // console.log(matches);
+  let last_i = 0;
+  for (const m of matches)
   {
-    case 'img':
-      link = it.mk.l('img',{cla:'content-img',src:type[1].href});
-      link.loading = 'lazy';
-      break;
+    dfrag.append(m.input.slice(last_i,m.index));
+    last_i = m.index + m[0].length;
+    const type = it.s.media(m[0]);
+    let link;      
+    switch (type[0]) 
+    {
+      case 'img':
+        link = it.mk.l('img',{cla:'content-img',src:type[1].href});
+        link.loading = 'lazy';
+        break;
 
-    case 'av':
-      link = player.mk(type[1].href);
-      break;    
-    
-    default:
-      link = it.mk.link(type[1].href);
-  } 
-  return link
+      case 'av':
+        link = player.mk(type[1].href);
+        break;    
+      
+      default:
+        if (type) link = it.mk.link(type[1].href);
+    } 
+    dfrag.append(link);
+    // console.log(m.index, last_i, m[0].length, m.input.length);
+  }
+  if (last_i < s.length) dfrag.append(s.slice(last_i));
+
+  return dfrag
 }
 
-it.regx = 
-{
-  nostr: /((nostr:)[-A-Z0-9]*)\b/i,
-  url: /((https?):\/\/[-A-Z0-9+&@#\/\*%?=~_|!:.,;]*[-A-Z0-9+&@$#\/%=~_|]*)\b/i,
-  magnet: /(magnet:\?xt=urn:btih:.*)/i,
-  lnbc: /((lnbc)[-A-Z0-9]*)\b/i,
-}
 
 it.parse.nostr =s=>
 {
-  const dis = s.slice(6);
-  const decoded = it.fx.decode(dis);
-  let a;
-  if (dis.startsWith('npub1')) a = it.mk.author(decoded);
-  else a = it.mk.l('a',{cla:'nostr_link',con:dis.slice(0,12),ref:'#'+dis,clk:it.clk.a});
+  const dfrag = new DocumentFragment();
+  const matches = [...s.matchAll(/((nostr:)[-A-Z0-9]*)\b/gi)];
+  let last_i = 0
+  for (const m of matches)
+  {
+    dfrag.append(m.input.slice(last_i,m.index));
+    last_i = m.index + m[0].length;
+    let dis = m[0].slice(6);
+    // const dis = s.slice(m.index,last_i);
+    // dfrag.append(dis);
+    
+    const decoded = it.fx.decode(dis);
+    let a;
+    if (dis.startsWith('npub1')) a = it.mk.author(decoded);
+    else a = it.mk.l('a',
+    {
+      cla:'nostr_link',
+      con:dis.slice(0,12),
+      ref:'#'+dis,clk:it.clk.a
+    });
+    dfrag.append(a);
+    // return a
+    // console.log(m.index, last_i, m[0].length, m.input.length);
+  }
+  if (last_i < s.length) dfrag.append(s.slice(last_i));
 
-  return a
+  return dfrag
+};
+
+it.parse.content_basic =o=>
+{
+  let content = it.mk.l('section',
+  {
+    cla:'content',
+    app:it.mk.l('p',{cla:'paragraph',con:o.content})
+  });
+  return content
 };
 
 it.parse.content =o=>
 {
-  const content = it.mk.l('section',{cla:'content'});
+  const content = it.mk.l('section',{cla:'content parsed'});
   const paragraphs = o.content.split(/\r?\n/);
+  // console.log(paragraphs);
   for (const p of paragraphs)
-  {   
+  { 
     if (p.length)
     {
       const l = it.mk.l('p',{cla:'paragraph'});
@@ -888,41 +936,39 @@ it.parse.content =o=>
   return content
 };
 
-async function parse_content(e) 
-{
-   const l = e.target ? e.target.closest('.event') : e;
-   let o; 
-   try { o = db[l.dataset.x].o } 
-   catch (error) { console.log('no data found') } 
+// async function parse_content(e) 
+// {
+//    const l = e.target ? e.target.closest('.event') : e;
+//    let o; 
+//    try { o = db[l.dataset.x].o } 
+//    catch (error) { console.log('no data found') } 
    
-   if (o && l) 
-   {
-      const content = l.querySelector('.content');
+//    if (o && l) 
+//    {
+//       const content = l.querySelector('.content');
       
-      if (l.classList.contains('parsed')) 
-      {
-         l.classList.remove('parsed');
-         const p = document.createElement('p');
-         p.textContent = merely_mentions(o.content, o.tags);
+//       if (l.classList.contains('parsed')) 
+//       {
+//          l.classList.remove('parsed');
+//          const p = document.createElement('p');
+//          p.textContent = merely_mentions(o.content, o.tags);
          
-         if (content) content.replaceChildren(p);
-      }
-      else
-      {
-         l.classList.add('parsed');
-//         if (content) {
-//            
-//         }
-         try { content.replaceChildren(ai(o)) } 
-         catch (error) { console.log('could not parse', o) }
+//          if (content) content.replaceChildren(p);
+//       }
+//       else
+//       {
+//          l.classList.add('parsed');
+
+//          try { content.replaceChildren(ai(o)) } 
+//          catch (error) { console.log('could not parse', o) }
          
-         let media = content.querySelector('img, video, audio, iframe');
-         if (media) 
-         { 
-            content.classList.add('has-media');
-            let videos = content.querySelectorAll('video');
-            if (videos) videos.forEach(rap);
-         }
-      }
-   }
-}
+//          let media = content.querySelector('img, video, audio, iframe');
+//          if (media) 
+//          { 
+//             content.classList.add('has-media');
+//             let videos = content.querySelectorAll('video');
+//             if (videos) videos.forEach(rap);
+//          }
+//       }
+//    }
+// }

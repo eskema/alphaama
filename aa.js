@@ -234,7 +234,7 @@ aa.clk.react =e=>
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
   console.log('react',xid);
-  cli.v(localStorage.ns+' e react '+xid+' '+localStorage.reaction);
+  cli.v(localStorage.ns+' aka react '+xid+' '+localStorage.reaction);
 };
 
 aa.clk.parse =e=>
@@ -243,9 +243,16 @@ aa.clk.parse =e=>
   const xid = note.dataset.id;
   const event = aa.e[xid].event;
   const content = note.querySelector('.content');
-  const parsed = it.parse.content(event);
-  content.replaceWith(parsed);
-  console.log(parsed);
+  if (content.classList.contains('parsed'))
+  {
+    content.replaceWith(it.parse.content_basic(event));
+  }
+  else 
+  {
+    content.replaceWith(it.parse.content(event));
+  }
+  
+  // console.log(parsed);
 };
 
 aa.draft =event=>
@@ -264,7 +271,7 @@ aa.replace_note =(l,dat)=>
   if (childs.length)
   {
     let b_rep = b.querySelector('.replies');
-    for (const c of childs) v_u.append(c,b_rep);
+    for (const c of childs) v_u.append_to_rep(c,b_rep);
   }
   let is_root = b.classList.contains('root');
   let is_reply = b.classList.contains('reply');
@@ -351,5 +358,5 @@ aa.moar =()=>
     }
     if (rest && Object.keys(rest).length) aa.moar()
   }
-  it.to(f,500,'moar');
+  it.to(f,1000,'moar');
 };

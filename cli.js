@@ -250,12 +250,10 @@ cli.otocomp =()=>
   { 
     // it's not an action
     const w = a[a.length - 1].toLowerCase();
-    if (w.startsWith('@') && w.length > 1) 
+    if (w.startsWith('nostr:') && w.length > 6) 
     {
-      console.log('mention')
-      // new_mention(l_word.slice(2));
+      console.log('mention soon')
     }
-    // else if (s.length) cli.oto.textContent = '';
   }
 
   if (aka.o.ls.xpub) cli.pre_compost(s)
@@ -296,19 +294,10 @@ cli.pre_compost =s=>
 {
   if (s.length)
   {
-    const dis = v_u.viewing;
-    
-    if (dis && cli.dat?.to !== dis) 
-    {
-      delete cli.dat;
-    }
-
-    if (!cli.hasOwnProperty('dat')) 
-    {
-      cli.mk_dat(s,dis)
-    }
+    const dis = v_u.viewing;    
+    if (dis && cli.dat?.to !== dis) delete cli.dat;
+    if (!cli.hasOwnProperty('dat')) cli.mk_dat(s,dis)
     else cli.dat.event.content = s;
-    // console.log(dis,cli.dat);
   }
   else if (cli.hasOwnProperty('dat')) delete cli.dat;
 };

@@ -79,11 +79,10 @@ rel.upd_state =url=>
       {
         l.dataset.state = relay.ws.readyState;
         l.dataset.q = Object.keys(relay.q);
+        console.log(url,l.dataset.state,l.dataset.q);
       },100);
     }
-    
   }
-  
 }
 
 rel.c_on =async(url,o=false)=> 
@@ -337,6 +336,20 @@ rel.add_from_k10002 =(tags,p)=>
   }
 };
 
+rel.try =(relay,dis)=>
+{
+  if (relay.ws.readyState === 1)
+  {
+    relay.ws.send(dis);
+  }
+  else 
+  {
+    if (!relay.failed_cons) relay.failed_cons = 1; 
+    relay.failed_cons = relay.failed_cons++;
+    if (relay.failed_cons < 10) setTimeout(()=>{rel.try(relay,dis)},500)
+  }
+};
+
 rel.on_open =async e=>
 {
   let relay = rel.active[e.target.url];
@@ -355,15 +368,22 @@ rel.on_open =async e=>
           filters_i++;
         }
       }
-      relay.ws.send(JSON.stringify(sub.req));
+
+      rel.try(relay,JSON.stringify(sub.req))
+
+      // let sendit =()=> relay.ws.send();
+      // if (relay.ws.readyState !== 1)
+      // {
+      //   setTimeout(sendit,200);
+      // }
+      // else sendit()
     }
   }
   if (relay.send?.length) 
   {
     for (const ev of relay.send) 
     {
-      console.log(ev)
-      relay.ws.send(ev)
+      rel.try(relay,ev)
     }
   }
   rel.upd_state(e.target.url);

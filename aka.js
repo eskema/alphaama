@@ -57,6 +57,12 @@ aka.load =()=>
       description:'set user score',
       exe:author.score
     },
+    'react': 
+    {
+      required:['id','reaction'], 
+      description:'react to a note',
+      exe:author.react
+    },
   };
   
   aa.load_mod(aka).then(aka.start);
@@ -238,6 +244,7 @@ author.process_k3_tags =(tags,x)=>
   const to_upd = [];
   for (const tag of tags)
   {
+    if (!it.tag.p(tag)) continue;
     let updd;
     const [type,xpub,relay,petname] = tag;
     if (it.s.x(xpub))
@@ -906,6 +913,44 @@ author.score =async s=>
     p.trust = score;    
     author.update(author.profile(p),p,true);
     author.save(p);
+  }
+  else v_u.log('invalid data to score')
+};
+
+author.react =async s=>
+{
+  let [xid,reaction] = s.trim().split(' ');
+  if (it.s.x(xid) && it.s.one(reaction))
+  {
+    cli.fuck_off();
+    
+    const event = 
+    {
+      pubkey:aka.o.ls.xpub,
+      kind:7,
+      created_at:it.tim.now(),
+      content:reaction,
+      tags:[]
+    };
+
+    let reply_dat = aa.e[xid];
+    if (!reply_dat) reply_dat = await aa.db.get_e(xid);
+    if (reply_dat)
+    {
+      const reply_e = aa.e[xid].event;
+      event.tags.push(...it.get_tags(reply_e));
+    } 
+    
+    event.id = it.fx.hash(event);
+    // console.log(event);
+    aa.sign(event).then((signed)=>
+    {
+      // console.log('signed',signed);
+      aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+      aa.db.upd(dat);
+      aa.print(dat);
+      q_e.broadcast(signed);
+    });
   }
   else v_u.log('invalid data to score')
 };
