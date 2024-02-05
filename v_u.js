@@ -225,7 +225,7 @@ v_u.nevent =async nevent=>
         dat = 
         {
           event:{id:data.id,created_at:it.tim.now() - 10},
-          seen:[],subs:[],clas:[]
+          seen:[rel.in_set(rel.o.r)],subs:[],clas:[]
         };
         if (data.author) dat.event.pubkey = data.author;
         if (data.kind) dat.event.kind = data.kind;
@@ -248,7 +248,6 @@ v_u.nevent =async nevent=>
     {
       v_u.replace(nid);
     }
-    
   }
 };
 
@@ -278,7 +277,7 @@ v_u.append_to_rep =(note,mom)=>
 {
   const last = [...mom.children].filter(i=>i.dataset.created_at > note.dataset.created_at)[0];
   mom.insertBefore(note,last ? last : null);
-  v_u.upd.path(mom,l.dataset.stamp);
+  v_u.upd.path(note,note.dataset.stamp);
 };
 
 v_u.append_to_replies =(dat,note,reply_tag)=>

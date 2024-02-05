@@ -25,13 +25,13 @@ q_e.load =()=>
     'sets':
     {
       required:['set','sid'],
-      optional:['ids'],
+      optional:['fid'],
       description:'create sets of filters',
       exe:q_e.sets
     },
     'setrm':
     {
-      required:['relset'],
+      required:['set'],
       optional:['fid'],
       description:'remove set from filter',
       exe:q_e.set_rm
@@ -52,7 +52,7 @@ q_e.load =()=>
     'close':
     {
       optional:['fid'],
-      description:'stop all running filters or just one',
+      description:'stop all running filters or just one if provided',
       exe:q_e.close
     },
     'stuff':
@@ -230,29 +230,26 @@ q_e.sub =s=>
 q_e.add =s=>
 {
   let a = s.trim().split(' ');
-  let fid = a.shift();
-  fid = it.fx.an(fid);
-  if (fid) 
+  let fid = it.fx.an(a.shift());
+  a = a.join('').replace(' ','');
+  let o;
+  try { o = JSON.parse(a) } catch (er) { console.log(er,s) }
+  if (o)
   {
-    let o;
-    try { o = JSON.parse(a[0]) } catch (er) { console.log(er,s) }
-    if (o)
-    {
-      let log = localStorage.ns+' qe add '+fid+' ';
-      let filter = q_e.o.ls[fid];
-      if (filter && window.confirm('update filter?'))
-      {
-        log += filter.v + ' > ';
-        filter.v = a[0]
-      }
-      else q_e.o.ls[fid] = {v:a[0],sets:[]};
-      aa.save(q_e);
-      cli.fuck_off();
-      v_u.log(log+q_e.o.ls[fid].v);
-    }
-    else v_u.log('invalid filter');
-  } 
-  else v_u.log(localStorage.ns+' qe add requires: '+aa.ct.qe.add.required)
+    console.log(o);
+    // let log = localStorage.ns+' qe add '+fid+' ';
+    // let filter = q_e.o.ls[fid];
+    // if (filter && window.confirm('update filter?'))
+    // {
+    //   log += filter.v + ' > ';
+    //   filter.v = a[0]
+    // }
+    // else q_e.o.ls[fid] = {v:a[0],sets:[]};
+    // aa.save(q_e);
+    // cli.fuck_off();
+    // v_u.log(log+q_e.o.ls[fid].v);
+  }
+  else v_u.log('invalid filter');
 };
 
 q_e.rm_filter =s=>

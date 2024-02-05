@@ -22,7 +22,7 @@ player.vip =e=>
 
 player.rewind =e=>
 {
-  const dad = e.target.parentElement;
+  const dad = e.target.closest('.yo');
   const video = dad.querySelector('video');
   video.currentTime = 0;
 };
@@ -59,11 +59,11 @@ player.mk =(src,poster=false)=>
 
   video.addEventListener('timeupdate',e=> 
   {
-    const percentage = Math.floor((100 / this.duration) * this.currentTime);
+    const percentage = Math.floor((100 / video.duration) * video.currentTime);
     
-    controls.dataset.elapsed = Math.ceil(this.currentTime);
-    controls.dataset.remains = Math.round(this.duration - this.currentTime);
-    controls.dataset.duration = Math.floor(this.duration);
+    controls.dataset.elapsed = Math.ceil(video.currentTime);
+    controls.dataset.remains = Math.round(video.duration - video.currentTime);
+    controls.dataset.duration = Math.floor(video.duration);
     
     progress.value = percentage;
     progress.style.width = percentage + '%';

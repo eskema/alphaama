@@ -89,6 +89,29 @@ it.s.url =s=>
   return url
 };
 
+it.s.media =s=>
+{
+  let url = it.s.url(s); 
+  if (!url) return false;
+  
+  const src = url.origin + url.pathname;
+  const low = src.toLowerCase();
+  const is_img = ['jpg','jpeg','gif','webp','png'];
+  const is_av = ['mp3','mp4','mov','webm'];
+  const check_ext =extensions=>
+  {
+    for (const ext of extensions)
+    {
+      if (low.endsWith('.'+ext)
+      || (url.searchParams.has('format') && url.searchParams.get('format') === ext)) 
+      return true
+    }
+    return false
+  };
+   
+  return check_ext(is_img) ? ['img',url] : check_ext(is_av) ? ['av',url] : ['link',url]
+};
+
 it.s.tag =(i,v,a)=> a[i] && a[i] === v; //index value in array
 it.s.an =s=> /^[A-Z_0-9]+$/i.test(s); //alphanumeric and underscore
 it.s.x =s=> /^[A-F0-9]+$/i.test(s); //hexadecimal
@@ -336,7 +359,7 @@ it.get_root_tag =tags=>
 it.get_seen =(x)=>
 {
   const dat = aa.e[x];
-  if (dat) return dat.seen[0];
+  if (dat && dat.seen.length) return dat.seen[0];
   else ''
 };
 
@@ -580,6 +603,9 @@ it.mk.l =(tag_name,o=false)=>
     if (o.tit) l.title = o.tit;
     if (o.app) l.append(o.app);
     if (o.clk) l.addEventListener('click',o.clk);
+    if (o.nam) l.name = o.nam;
+    if (o.val) l.value = o.val;
+    if (o.pla) l.placeholder = o.pla;
   }
   return l
 }; 
@@ -747,6 +773,86 @@ it.mk.section =(id,expanded=false)=>
   return section
 };
 
+it.mk.input =(type,name,value,placeholder)=>
+{
+  const input = it.mk.l('input',{cla:'ee_input'});
+  input.type = type;
+  input.name = name;
+  input.value = value;
+  input.placeholder = placeholder;
+  return input
+};
+
+it.note_editor =o=>
+{
+  const e_e = it.mk.l('ul',{id:'e_e'}); 
+  for (const k in o)
+  {
+    const li = it.mk.l('li',{cla:'ee_'+k});
+    li.dataset.label = k;
+    // if (k==='id'||k==='pubkey')
+    // {
+    //   li.append(it.mk.input('text',k,o[k],''))
+    // }
+    if (k==='kind'||k==='created_at')
+    {
+      li.append(it.mk.input('number',k,o[k],''));
+      if (k==='created_at') li.append('now');
+    }
+    else if (k==='content')
+    {
+      const content = it.mk.l('textarea',{id:'content'});
+      content.name = 'content';
+      content.placeholder = 'whatever the fuck u want';
+      content.contentEditable = true;
+      content.value = o.content;
+      li.append(content); 
+    }
+    else if (k==='tags')
+    {
+      const tags = it.mk.l('ol',{cla:'ee_tags'});
+      tags.start = 0;
+      li.append(tags);
+      if (o.tags.length)
+      {
+        for (let i=0;i<o.tags.length;i++)
+        {
+          const tag_li = it.mk.l('li',{cla:'ee_tag'});
+          tag_li.append(it.mk.input('text','ee_tag_'+i,''));
+          tags.append(tag_li);
+        }     
+      }
+      li.append(it.mk.add_input())
+    }
+    e_e.append(li);
+  }
+  return e_e
+};
+
+it.mk.add_input =()=>
+{
+  const button = it.mk.l('button',{cla:'ee_add_tag',con:'add',clk:e=>
+  {
+    const l = e.target.previousSibling;
+    const input = it.mk.input('ee_tag_'+l.length,'','');
+    l.append(input);
+  }})
+  return button
+}
+
+// it.ee =(o)=>
+// {
+//   const ee = it.mk.l('div',{id:'ee'});
+//   id
+//   pubkey
+//   kind
+//   created_at
+//   content
+//   tags
+//   sig
+//   if (o.id) 
+// };
+
 it.confirm =(o)=>
 {
   const dialog = document.getElementById('dialog');
@@ -755,9 +861,8 @@ it.confirm =(o)=>
     dialog.close();
     dialog.textContent = '';
   };
-  
-  const dialog_head = it.mk.l('header',{cla:'dialog_head'});
-  if (o.description) dialog_head.append(it.mk.l('h2',{con:o.description}));
+  const dialog_stuff = it.mk.l('header',{cla:'dialog_stuff'});
+  if (o.description) dialog_stuff.append(it.mk.l('h2',{con:o.description}));
   const dialog_cancel = it.mk.l('button',
   {
     con:'cancel',
@@ -765,7 +870,7 @@ it.confirm =(o)=>
     clk:e=>
     {
       dialog_close();
-      o.no();
+      if (o.hasOwnProperty('no')) o.no();
     }
   });
   const dialog_confirm = it.mk.l('button',
@@ -775,44 +880,23 @@ it.confirm =(o)=>
     clk:e=>
     {
       dialog_close();
-      o.yes()
+      if (o.hasOwnProperty('yes')) o.yes();
     }
   });
-  dialog_head.append(dialog_cancel,dialog_confirm);
-  dialog.append(dialog_head,o.l);
+  dialog_stuff.append(dialog_cancel,dialog_confirm);
+  dialog.append(o.l,dialog_stuff);
   dialog.showModal();
   dialog.scrollTop = dialog.scrollHeight;
 };
 
 
-it.s.media =s=>
-{
-  let url = it.s.url(s); 
-  if (!url) return false;
-  
-  const src = url.origin + url.pathname;
-  const low = src.toLowerCase();
-  const is_img = ['jpg','jpeg','gif','webp','png'];
-  const is_av = ['mp3','mp4','mov','webm'];
-  const check_ext =extensions=>
-  {
-    for (const ext of extensions)
-    {
-      if (low.endsWith('.'+ext)
-      || (url.searchParams.has('format') && url.searchParams.get('format') === ext)) 
-      return true
-    }
-    return false
-  };
-   
-  return check_ext(is_img) ? ['img',url] : check_ext(is_av) ? ['av',url] : ['link',url]
-};
+
 
 
 it.regx = 
 {
   get nostr() { return /((nostr:)[-A-Z0-9]*)\b/gi},
-  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~]*)/gu},
+  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu},
   get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi},
   get lnbc(){ return /((lnbc)[-A-Z0-9]*)\b/gi},
 }
@@ -830,10 +914,60 @@ it.parse.hashtags =s=>
   return hashtags
 };
 
+it.nip19_to_tag =s=>
+{
+  const tag = [];
+  if (s.startsWith('npub')) 
+  {
+    const xpub = it.fx.decode(s);
+    tag.push('p',xpub);
+    if (aa.p[xpub].relay) tag.push(aa.p[xpub].relay)
+  }
+  else if (s.startsWith('note'))
+  {
+    const xid = it.fx.decode(s);
+    tag.push('e',xid);
+    let relay = it.get_seen(xid);
+    if (seen.length) tag.push(relay)
+  }
+  return tag
+};
+
+it.nip19_to_tags =a=>
+{
+  let tags = [];
+  for (const s of a)
+  {
+    let tag = it.nip19_to_tag(s);
+    if (tag.length) tags.push(tag);
+    
+    // else if (s.startsWith('nevent')) v_u.nevent(s);
+    // else if (s.startsWith('nprofile')) v_u.nprofile(s);
+    // else if (s.startsWith('naddress')) v_u.naddress(s);
+  }
+
+  return tags
+};
+
+it.parse.mentions =s=>
+{
+  const mentions = [];
+  const matches = [...s.matchAll(it.regx.nostr)];
+  for (const m of matches)
+  {
+    let tag = it.nip19_to_tag(m[0].slice(6));
+    if (tag.length) mentions.push(tag);
+    // let n = m[0].slice(6);
+    // if (n.)
+    // mentions.push(n)
+  }
+  return mentions
+};
+
 it.parse.url =s=>
 {
   const dfrag = new DocumentFragment();
-  const matches = [...s.matchAll(/https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~]*)/gu)];
+  const matches = [...s.matchAll(it.regx.url)];
   // console.log(matches);
   let last_i = 0;
   for (const m of matches)
@@ -868,7 +1002,7 @@ it.parse.url =s=>
 it.parse.nostr =s=>
 {
   const dfrag = new DocumentFragment();
-  const matches = [...s.matchAll(/((nostr:)[-A-Z0-9]*)\b/gi)];
+  const matches = [...s.matchAll(it.regx.nostr)];
   let last_i = 0
   for (const m of matches)
   {
@@ -921,8 +1055,8 @@ it.parse.content =o=>
       for (let i=0;i<words.length;i++)
       {
         words[i].trim();
-        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i]));
-        else if (it.regx.nostr.test(words[i])) l.append(it.parse.nostr(words[i]));
+        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i]),' ');
+        else if (it.regx.nostr.test(words[i])) l.append(it.parse.nostr(words[i]),' ');
         else 
         {
           if (i === words.length-1) l.append(words[i]);
@@ -935,40 +1069,3 @@ it.parse.content =o=>
   } 
   return content
 };
-
-// async function parse_content(e) 
-// {
-//    const l = e.target ? e.target.closest('.event') : e;
-//    let o; 
-//    try { o = db[l.dataset.x].o } 
-//    catch (error) { console.log('no data found') } 
-   
-//    if (o && l) 
-//    {
-//       const content = l.querySelector('.content');
-      
-//       if (l.classList.contains('parsed')) 
-//       {
-//          l.classList.remove('parsed');
-//          const p = document.createElement('p');
-//          p.textContent = merely_mentions(o.content, o.tags);
-         
-//          if (content) content.replaceChildren(p);
-//       }
-//       else
-//       {
-//          l.classList.add('parsed');
-
-//          try { content.replaceChildren(ai(o)) } 
-//          catch (error) { console.log('could not parse', o) }
-         
-//          let media = content.querySelector('img, video, audio, iframe');
-//          if (media) 
-//          { 
-//             content.classList.add('has-media');
-//             let videos = content.querySelectorAll('video');
-//             if (videos) videos.forEach(rap);
-//          }
-//       }
-//    }
-// }

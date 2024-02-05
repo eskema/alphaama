@@ -144,6 +144,8 @@ cli.compost =s=>
     {
       cli.dat.event.created_at = it.tim.now();
       cli.dat.event.tags.push(...it.parse.hashtags(s));
+      // console.log(it.parse.mentions(s));
+      cli.dat.event.tags.push(...it.parse.mentions(s));
       aa.draft(cli.dat.event);
       delete cli.dat;
     }
@@ -158,6 +160,45 @@ cli.compost =s=>
       } 
     }
     cli.fuck_off();
+  }
+};
+
+cli.upd_from_oto =(s,w=false)=>
+{
+  cli.t.value = cli.t.value.slice(0,-Math.abs(w.length??s.length)) + s.trim() + ' ';
+  cli.update();
+  cli.foc();
+};
+
+cli.mention =(w)=>
+{
+  let s = w.slice(1).toLowerCase();
+  const a = Object.values(aa.p).filter(p=> 
+    p.metadata?.name?.toLowerCase().startsWith(s)
+    || p.petname?.toLowerCase().startsWith(s)
+    || p.metadata?.nip05?.toLowerCase().includes(s)
+  );
+  for (p of a)
+  {
+    const l = it.mk.l('li',{cla:'item',bef:p.metadata.name??''});
+    let after =  (p.petname?p.petname:p.extradata.petnames[0])+' '+(p.metadata.nip05??'');
+    l.append(it.mk.l('span',{cla:'description',con:after,}),it.mk.l('span',{cla:'val',con:p.npub}));
+    l.tabIndex = '1';
+    const clk =e=>
+    {
+      cli.upd_from_oto('nostr:'+e.target.querySelector('.val').textContent,w);
+    };
+    l.onclick = clk;
+    l.onkeydown =e=>
+    {
+      if (e.key === 'Enter')
+      {
+        e.stopPropagation();
+        e.preventDefault();
+        clk(e)
+      }
+    };
+    cli.oto.append(l)
   }
 };
 
@@ -177,12 +218,11 @@ cli.act_item =(main_act,sub_act)=>
   l.tabIndex = '1';
   const clk =e=>
   {
-    const s = cli.t.value;
     let act = ns + ' ' + e.target.querySelector('.val').textContent;
-    // cli.t.value = s.slice(0,s.length - act.length) + act.trim() + ' ';
-    cli.t.value = s.slice(0,-Math.abs(act.length)) + act.trim() + ' ';
-    cli.update();
-    cli.foc();
+    cli.upd_from_oto(act);
+    // cli.t.value = s.slice(0,-Math.abs(act.length)) + act.trim() + ' ';
+    // cli.update();
+    // cli.foc();
   };
   l.onclick = clk;
   l.onkeydown =e=>
@@ -237,21 +277,18 @@ cli.otocomp =()=>
   const a = s.split(' ');
   
   cli.oto.textContent = ''; 
-  cli.oto.dataset.s = '';
-  cli.oto.dataset.s = s;
+  // cli.oto.dataset.s = s;
   
-  if (!s.length || localStorage.ns.startsWith(s)) 
-  {
-    let act_item = cli.act_item('','');
-    cli.oto.append(act_item);
-  }
+  if (!s.length 
+  || localStorage.ns.startsWith(s)) cli.oto.append(cli.act_item('',''));
   else if (a[0] === localStorage.ns) cli.action(s,a); // else if it's an action
   else 
   { 
     // it's not an action
     const w = a[a.length - 1].toLowerCase();
-    if (w.startsWith('nostr:') && w.length > 6) 
+    if (w.startsWith('@') && w.length > 1) 
     {
+      cli.mention(w);
       console.log('mention soon')
     }
   }

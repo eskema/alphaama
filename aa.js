@@ -255,12 +255,46 @@ aa.clk.parse =e=>
   // console.log(parsed);
 };
 
+aa.clk.editor =e=>
+{
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  const event = aa.e[xid].event;
+  it.confirm(
+  {
+    description:'event editor',
+    l:it.note_editor(event),
+    no:()=>{},
+    yes:()=>{},
+  })
+  
+  // console.log(parsed);
+};
+
 aa.draft =event=>
 {
   event.id = it.fx.hash(event);
   aa.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
   console.log(event);
   aa.print(aa.e[event.id]);
+};
+
+aa.send_it =async event=>
+{
+  const signed = await aa.sign(event);
+  if (signed)
+  {
+    aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+    aa.db.upd(dat);
+    aa.print(dat);
+    q_e.broadcast(signed);
+  }
+  // aa.sign(event).then((signed)=>
+  // {
+  //   // console.log('signed',signed);
+    
+  //   author.score(k+' 0');
+  // });
 };
 
 aa.replace_note =(l,dat)=>

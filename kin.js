@@ -427,7 +427,9 @@ kin.note_actions =clas=>
       ' ',
       it.mk.l('button',{con:'edit',cla:'butt edit',clk:aa.clk.edit}),
       ' ',
-      it.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel})
+      it.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel}),
+      ' ',
+      it.mk.l('button',{con:'editor',cla:'butt editor',clk:aa.clk.editor})
     );
   }
   else

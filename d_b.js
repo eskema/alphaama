@@ -145,7 +145,16 @@ aa.db.upd =async dat=>
 aa.db.some =async s=>
 {
   cli.fuck_off();
-  const [n,direction] = s.trim().split(' ');
+  const a = s.trim().split(' ');
+  const n = a.shift();
+  const direction = a.shift();
+  // if (a.length)
+  // {
+  //   for (const r of a)
+  //   {
+
+  //   }
+  // }
   const db_op = {};
   db_op.n = n ? parseInt(n) : 1;
   db_op.direction = direction && direction === 'next' ? 'next' : 'prev';
@@ -155,11 +164,7 @@ aa.db.some =async s=>
   db.onmessage=e=>
   {
     // console.log('aa.db.some',e.data);
-    for (const dat of e.data) 
-    {
-      aa.db.upd(dat);
-      aa.print(dat);
-    }
+    for (const dat of e.data) aa.print(dat);
     setTimeout(()=>{db.terminate()},200);
   }
   db.postMessage(o);

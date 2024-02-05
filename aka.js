@@ -63,6 +63,18 @@ aka.load =()=>
       description:'react to a note',
       exe:author.react
     },
+    'md': 
+    {
+      // required:['id','reaction'], 
+      description:'loads aka metadata',
+      exe:author.md
+    },
+    'smd': 
+    {
+      required:['metadata in JSON format'], 
+      description:'set aka metadata (kind-0)',
+      exe:author.smd
+    },
   };
   
   aa.load_mod(aka).then(aka.start);
@@ -899,6 +911,60 @@ author.unfollow =async s=>
     else v_u.log('no k3 found, create one first')
   }
   else v_u.log('invalid pubkey to unfollow')
+};
+
+author.md =()=>
+{
+  const md = aa.p[aka.o.ls.xpub].metadata;
+  if (md)
+  {
+    cli.v('.aa aka smd '+JSON.stringify(md));
+  }
+};
+
+author.smd =s=>
+{
+  cli.fuck_off();
+  
+  let md;
+
+  try { md = JSON.parse(s.trim())}
+  catch(er) { console.log('smd er',er) }
+
+  if (md)
+  {
+    console.log(md);
+    it.confirm(
+    {
+      description:'new metadata',
+      l:it.mk.ls({ls:md}),
+      yes()
+      {
+        const event = 
+        {
+          pubkey:aka.o.ls.xpub,
+          kind:0,
+          created_at:it.tim.now(),
+          content:JSON.stringify(md),
+          tags:[]
+        };
+        event.id = it.fx.hash(event);
+        
+        // console.log(event);
+        aa.send_it(event).then(e=>{console.log(e)});
+        // aa.sign(event).then((signed)=>
+        // {
+        //   // console.log('signed',signed);
+        //   aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+        //   aa.db.upd(dat);
+        //   aa.print(dat);
+        //   q_e.broadcast(signed);
+        //   author.score(k+' 0');
+        // });
+      }
+    });
+    // console.log(it.mk.ls({ls:md}))
+  }
 };
 
 author.score =async s=>
