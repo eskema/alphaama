@@ -145,7 +145,17 @@ cli.compost =s=>
       cli.dat.event.created_at = it.tim.now();
       cli.dat.event.tags.push(...it.parse.hashtags(s));
       // console.log(it.parse.mentions(s));
-      cli.dat.event.tags.push(...it.parse.mentions(s));
+      const mentions = it.parse.mentions(s);
+      for (const mention of mentions)
+      {
+        let add = true;
+        for (const t of cli.dat.event.tags)
+        {
+          if (t[0] === mention[0] && t[1] === mention[1]) add = false;
+        }
+        if (add) cli.dat.event.tags.push(mention)
+      }
+      // cli.dat.event.tags.push(...mentions);
       aa.draft(cli.dat.event);
       delete cli.dat;
     }
@@ -180,7 +190,7 @@ cli.mention =(w)=>
   );
   for (p of a)
   {
-    const l = it.mk.l('li',{cla:'item',bef:p.metadata.name??''});
+    const l = it.mk.l('li',{cla:'item mention',bef:p.metadata.name??''});
     let after =  (p.petname?p.petname:p.extradata.petnames[0])+' '+(p.metadata.nip05??'');
     l.append(it.mk.l('span',{cla:'description',con:after,}),it.mk.l('span',{cla:'val',con:p.npub}));
     l.tabIndex = '1';

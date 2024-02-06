@@ -36,13 +36,18 @@ o_p.load =(reset=false)=>
   v_u.log('o_p '+localStorage.length);
 };
 
+window.addEventListener('storage',()=>
+{
+  it.to(()=>{o_p.load()},200,'storage');
+});
+
 o_p.set =s=>
 {
   let [k,v] = s.trim().split(' ');
   if (k && v)
   {
     localStorage[k] = v;
-    o_p.load();
+    // o_p.load();
     v_u.log(localStorage.ns+' op set '+k+' to '+v);
     cli.fuck_off();
   }

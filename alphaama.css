@@ -438,13 +438,14 @@ button.butt:focus
 
 .item > .key 
 {
-  
+  margin-right: var(--padm);
 }
 
 .item > .key::after 
 {
-  content: ": ";
+  content: ":";
   white-space: pre;
+  
 }
 
 .item > .val
@@ -1662,6 +1663,7 @@ a.author.is_bff
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .by,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .actions,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies::after,
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
 {
   display: none;
@@ -1673,17 +1675,22 @@ a.author.is_bff
   line-height: 1rem;
 }
 
-.root > .replies > .note 
+.root > .replies 
 {
-  /*display: none;*/
-  /*background: red!important;*/
+  /*align-self: stretch;*/
+  /*max-height: 200px;*/
+  /*max-height: unset;*/
+  overflow-y: scroll;
 }
 
-.root:not(.is_viewable) > .replies > .note
+.root.not_yet > .replies > .note
 {
   display: none;
   /*background: red!important;*/
 }
+
+  
+  
 
 /* @end */
 
@@ -1871,7 +1878,7 @@ a.author.is_bff
 
 .note.blank::before
 {
-  content: "subs: "attr(data-subs) "\ar: " attr(data-r) "\anope: " attr(data-nope);
+  content: "nope: " attr(data-nope);
   font-size: var(--font-size-s);
   /*grid-area: content;*/
   line-height: 1.5;
@@ -2102,6 +2109,14 @@ a.author.is_bff
 {
   color: rgb(var(--color-c));
   grid-area: val;
+}
+
+#oto .item.mention .val
+{
+  align-self: center;
+  font-size: var(--font-size-s);
+  margin: 0 var(--pad);
+  opacity: .5;
 }
 
 #oto .item .required 
@@ -2906,6 +2921,30 @@ p[data-meta="about"]::before
   color: rgb(var(--color-b));
 }
 
+.item button.key 
+{
+  justify-self: start;
+  padding: 0;
+  
+}
+
+/*.item button.key:hover::before
+{
+  content: "[";
+}*/
+/*
+.item button.key:hover::after
+{
+  content: ":";
+}*/
+
+.filter button.key:hover,
+.relay button.key:hover 
+{
+  background-color: rgb(var(--color-maybe));
+  color: rgb(var(--color-e));
+}
+
 .relay .url 
 {
   grid-area: k;
@@ -2993,12 +3032,13 @@ p[data-meta="about"]::before
   background: rgb(var(--color-b));
 }
 
-.dialog_stuff h2
+#dialog[data-label]::before
 {
   color: rgb(var(--color-main));
-  grid-column: span 2;
+  content: attr(data-label);
+  display: block;
   text-align: center;
-  display: none;
+  margin: var(--pad) 0;
 }
 
 #dialog .tags 
@@ -3020,161 +3060,7 @@ p[data-meta="about"]::before
 
 
 
-/* @group yo */
 
-.yo 
-{
-  color: rgb(var(--c-a-e));
-  display: grid;
-  position: relative;
-  justify-self: start;
-  grid-template-rows: 1fr auto;
-  grid-template-areas: "yo";
-  margin: 0;
-  padding-top: var(--line);
-}
-
-.yo video.started 
-{
-  
-}
-
-.yo.is-over 
-{
-  color: rgb(var(--c-a-f));
-}
-
-.yo video 
-{
-  grid-area: yo;
-  background: black;
-  opacity: .5;
-  margin: 0;
-}
-
-.yo video:hover 
-{
-  cursor: pointer;
-  opacity: 1;
-}
-
-.yo video.playin 
-{
-  opacity: 1;
-  z-index: 1;
-}
-
-.yo .controls 
-{
-  grid-area: yo;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: "progress progress"
-  "before before"
-  "url url"
-  ". after";
-  padding: .5rem;
-  align-self: start;
-  align-items: start;
-  align-content: start;
-  text-align: right;
-  transform: translateY(-2rem);
-  cursor: pointer;
-}
-
-.yo figcaption:hover 
-{
-  z-index: 2;
-}
-
-.yo figcaption:hover::before 
-{
-  content: "<video rewind";
-}
-
-.yo figcaption::before 
-{
-  content: "<video " attr(data-duration)"s";
-  grid-area: before;
-  white-space: pre;
-}
-
-.yo video:over + figcaption::before 
-{
-  content: "<video play " attr(data-duration)"s";
-}
-
-.yo .started + figcaption::before 
-{
-  content: "<video " attr(data-remains)"s";
-}
-
-.yo .started + figcaption:hover::before 
-{
-  content: "<video rewind";
-}
-
-.yo video.started:hover + figcaption::before 
-{
-  content: "<video play " attr(data-remains)"s";
-}
-
-.yo video.started.playin:hover + figcaption::before 
-{
-  content: "<video pause " attr(data-remains)"s";
-}
-
-.yo .url 
-{
-  width: 100%;
-  grid-area: url;
-  word-break: break-all;
-  justify-self: start;
-  mix-blend-mode: color-dodge;
-  top: 0rem;
-  box-sizing: border-box;
-  cursor: text;
-}
-
-.over .url 
-{
-  opacity: 1;
-}
-
-.yo .url::after 
-{
-  content: ">";
-}
-
-.yo .controls progress 
-{
-  grid-area: progress;
-  align-self: center;
-  pointer-events: none;
-  width: 100%;
-}
-
-.yo .controls progress[value] 
-{
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  width: 100%;
-  height: 1px;
-  margin: 0;
-}
-
-.yo .controls progress[value]::-webkit-progress-bar 
-{
-  background-color: rgba(var(--c-a-e), .2);
-}
-
-.yo .controls progress[value]::-webkit-progress-value 
-{
-  background-color: rgb(var(--c-a-a));
-}
-
-/* @end */
 
 /* @group e_e */
 

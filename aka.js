@@ -25,7 +25,7 @@ aka.load =()=>
     'set': 
     {
       required:['id'], 
-      description:'set aka, can be hex or npub',
+      description:'set aka (hex or npub)',
       exe:aka.add
     },
     'rm':
@@ -35,26 +35,26 @@ aka.load =()=>
     },
     'ext':
     { 
-      description:'get aka from extension',
+      description:'get aka from extension (nip-7)',
       exe:aka.ext
     },
     'follow': 
     {
       required:['id'], 
       optional:['relay','petname'], 
-      description:'follow account (can be hex or npub)',
+      description:'follow account (hex or npub)',
       exe:author.follow
     },
     'unfollow': 
     {
       required:['id'], 
-      description:'unfollow account (can be hex or npub)',
+      description:'unfollow account (hex or npub)',
       exe:author.unfollow
     },
     'score': 
     {
       required:['id','number'], 
-      description:'set user score',
+      description:'set user score (for auto parsing and stuff)',
       exe:author.score
     },
     'react': 
@@ -128,7 +128,7 @@ aka.load_bff =async p=>
     for (const bff of bffs) aa.p[bff.xpub] = bff;
     for (const x of p.extradata.bff)
     {
-      if (!aa.p[x]) aa.p[x] = author.p(x);
+      if (!aa.p[x]) aa.p[x] = it.p(x);
       author.profile(aa.p[x])
     } 
   }
@@ -170,35 +170,6 @@ aka.rm =s=>
 };
 
 const author = {mk:{}};
-
-author.p =xpub=>
-{
-  return {
-    xpub:xpub,
-    relay:'',
-    petname:'',
-    npub: it.fx.npub(xpub),
-    trust:0,
-    updated:0,
-    verified:[], // [result,date]
-    sets:[],
-    rels:{},
-    extradata:
-    {
-      bff:[],
-      relays:[],
-      followers:[],
-      petnames:[],
-      lists:[],
-    },
-    pastdata: //[[id,created_at],...]
-    { 
-      k0:[],
-      k3:[],
-      k10002:[],
-    },
-  }
-};
 
 author.save =p=>
 {
@@ -264,7 +235,7 @@ author.process_k3_tags =(tags,x)=>
       let p = aa.p[xpub];
       if (!p) 
       {
-        p = aa.p[xpub] = author.p(xpub);
+        p = aa.p[xpub] = it.p(xpub);
         updd = true;
       }
 
@@ -951,7 +922,7 @@ author.smd =s=>
         event.id = it.fx.hash(event);
         
         // console.log(event);
-        aa.send_it(event).then(e=>{console.log(e)});
+        aa.send_it(event).then(e=>{author.score(k+' 0');console.log(e)});
         // aa.sign(event).then((signed)=>
         // {
         //   // console.log('signed',signed);

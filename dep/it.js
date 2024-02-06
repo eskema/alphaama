@@ -629,12 +629,41 @@ it.mk.link =(url,text=false,title=false)=>
   return l
 };
 
+it.p =xpub=>
+{
+  return {
+    xpub:xpub,
+    relay:'',
+    petname:'',
+    npub: it.fx.npub(xpub),
+    trust:0,
+    updated:0,
+    verified:[], // [result,date]
+    sets:[],
+    rels:{},
+    extradata:
+    {
+      bff:[],
+      relays:[],
+      followers:[],
+      petnames:[],
+      lists:[],
+    },
+    pastdata: //[[id,created_at],...]
+    { 
+      k0:[],
+      k3:[],
+      k10002:[],
+    },
+  }
+};
+
 it.mk.author =(xpub,p=false)=>
 {
   if (!p) p = aa.p[xpub];
   if (!p) 
   {
-    p = author.p(xpub);
+    p = it.p(xpub);
     // author.load(xpub);
   }
   const pubkey = it.mk.l('a',
@@ -862,7 +891,8 @@ it.confirm =(o)=>
     dialog.textContent = '';
   };
   const dialog_stuff = it.mk.l('header',{cla:'dialog_stuff'});
-  if (o.description) dialog_stuff.append(it.mk.l('h2',{con:o.description}));
+  // if (o.description) dialog_stuff.append(it.mk.l('h2',{con:o.description}));
+  if (o.description) dialog.dataset.label=o.description;
   const dialog_cancel = it.mk.l('button',
   {
     con:'cancel',
@@ -921,7 +951,9 @@ it.nip19_to_tag =s=>
   {
     const xpub = it.fx.decode(s);
     tag.push('p',xpub);
-    if (aa.p[xpub].relay) tag.push(aa.p[xpub].relay)
+    if (aa.p[xpub].relay) tag.push(aa.p[xpub].relay);
+    else tag.push('');
+    if (aa.p[xpub].petname) tag.push(aa.p[xpub].petname);
   }
   else if (s.startsWith('note'))
   {
@@ -929,6 +961,8 @@ it.nip19_to_tag =s=>
     tag.push('e',xid);
     let relay = it.get_seen(xid);
     if (seen.length) tag.push(relay)
+    else tag.push('');
+    tag.push('mention')
   }
   return tag
 };
@@ -984,7 +1018,7 @@ it.parse.url =s=>
         break;
 
       case 'av':
-        link = player.mk(type[1].href);
+        link = av.mk(type[1].href);
         break;    
       
       default:
@@ -1009,21 +1043,22 @@ it.parse.nostr =s=>
     dfrag.append(m.input.slice(last_i,m.index));
     last_i = m.index + m[0].length;
     let dis = m[0].slice(6);
-    // const dis = s.slice(m.index,last_i);
-    // dfrag.append(dis);
-    
-    const decoded = it.fx.decode(dis);
-    let a;
-    if (dis.startsWith('npub1')) a = it.mk.author(decoded);
-    else a = it.mk.l('a',
+    let decoded;
+    try { decoded = it.fx.decode(dis) }
+    catch (er) { console.log(er,dis,s) }
+    if (!decoded) dfrag.append(dis);
+    else
     {
-      cla:'nostr_link',
-      con:dis.slice(0,12),
-      ref:'#'+dis,clk:it.clk.a
-    });
-    dfrag.append(a);
-    // return a
-    // console.log(m.index, last_i, m[0].length, m.input.length);
+      let a;
+      if (dis.startsWith('npub1')) a = it.mk.author(decoded);
+      else a = it.mk.l('a',
+      {
+        cla:'nostr_link',
+        con:dis.slice(0,12),
+        ref:'#'+dis,clk:it.clk.a
+      });
+      dfrag.append(a);
+    }    
   }
   if (last_i < s.length) dfrag.append(s.slice(last_i));
 

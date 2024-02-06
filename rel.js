@@ -19,14 +19,14 @@ rel.load =(e)=>
     {
       required:['set','url'],
       description:'create sets of relays',
-      oto:rel.ls,
+      // oto:rel.ls,
       exe:rel.sets
     },
     'rm':
     {
       required:['url'], 
       description:'remove relay',
-      oto:rel.ls,
+      // oto:rel.ls,
       exe:rel.rm
     },
     'setrm':
@@ -34,14 +34,25 @@ rel.load =(e)=>
       required:['set'],
       optional:['url'],
       description:'remove set from relays',
-      oto:rel.ls,
+      // oto:rel.ls,
       exe:rel.set_rm
     },
     'ext':
     {
       description:'get relays from extension',
       exe:rel.ext
-    }
+    },
+    'list':
+    {
+      description:'loads relay list (kind-10002)',
+      exe:rel.list
+    },
+    'mklist':
+    {
+      required:['set'],
+      description:'create a relay list from set (kind-10002)',
+      exe:rel.mklist
+    },
   };
   aa.load_mod(rel).then(rel.start);
 }
@@ -333,6 +344,75 @@ rel.add_from_k10002 =(tags,p)=>
       else it.a_set(relay.sets,['read','write']);
       it.a_set(relay.sets,['k10002']);
     }
+  }
+};
+
+rel.list =s=>
+{
+  s = s.trim();
+  let relays = [];
+  for (const k in rel.o.ls)
+  { 
+    if (rel.o.ls[k].sets.includes(s))
+    {
+      let read, write;
+      const tag = ['r',k];
+      if (rel.o.ls[k].sets.includes('read')) read = true;
+      if (rel.o.ls[k].sets.includes('write')) write = true;
+      if (read && !write) tag.push('read');
+      if (!read && write) tag.push('write');
+      relays.push(tag.join(' '))
+    } 
+  }
+  cli.v('.aa rel mklist '+relays.join(','));
+};
+
+rel.mklist =s=>
+{
+  cli.fuck_off();
+  s = s.trim().split(',');
+  const relays = [];
+  for (const r of s)
+  {
+    relays.push(r.split(' '))
+  }
+
+  if (relays.length)
+  {
+    console.log(relays);
+    it.confirm(
+    {
+      description:'new relay list',
+      l:kin.tags(relays),
+      yes()
+      {
+        const event = 
+        {
+          pubkey:aka.o.ls.xpub,
+          kind:10002,
+          created_at:it.tim.now(),
+          content:'',
+          tags:relays
+        };
+        event.id = it.fx.hash(event);
+        
+        console.log(event);
+        // aa.send_it(event).then(e=>
+        // {
+        //   console.log(e);
+        // });
+        // aa.sign(event).then((signed)=>
+        // {
+        //   // console.log('signed',signed);
+        //   aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+        //   aa.db.upd(dat);
+        //   aa.print(dat);
+        //   q_e.broadcast(signed);
+        //   author.score(k+' 0');
+        // });
+      }
+    });
+    // console.log(it.mk.ls({ls:md}))
   }
 };
 

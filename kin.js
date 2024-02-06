@@ -219,7 +219,7 @@ kin.blank =(tag,dat,seconds)=>
     id:tag[1],
     created_at:dat.event.created_at - seconds,
     tags:[tag],
-    content:'blank xid: '+tag[1]+'\nnid:'+it.fx.nid(tag[1])
+    content:tag[1]+'\n'+it.fx.nid(tag[1])
   }
   const seen = rel.in_set('read');
   if (tag[2])
@@ -232,15 +232,15 @@ kin.blank =(tag,dat,seconds)=>
     }
     else console.log('malformed tag on',dat);
   }
-  const note = kin.note({event:blank_event,seen:seen,subs:dat.subs});
+  const note = kin.note({event:blank_event,seen:seen,subs:dat.subs,clas:['blank']});
   note.classList.add('blank','is_new');
-  const butt = it.mk.l('button',{cla:'butt blank',con:'fetch',clk:e=>
-  {
-    console.log(e.target.closest('.note').dataset.id)
-  }});
+  // const butt = it.mk.l('button',{cla:'butt blank',con:'fetch',clk:e=>
+  // {
+  //   console.log(e.target.closest('.note').dataset.id)
+  // }});
   // console.log(note)
-  const content = note.querySelector('.content');
-  content.append(butt);
+  // const content = note.querySelector('.content');
+  // content.append(butt);
   return note
 };
 
@@ -260,7 +260,7 @@ kin.d0 =dat=>
   {
     aa.db.get_p(dat.event.pubkey).then(p=>
     {
-      if (!p) p = author.p(dat.event.pubkey);
+      if (!p) p = it.p(dat.event.pubkey);
       const c_at = dat.event.created_at;
       if (!p.pastdata.k0.length || p.pastdata.k0[0][1] < c_at) 
       {
@@ -312,7 +312,7 @@ kin.d3 =dat=>
     const c_at = dat.event.created_at;
     aa.db.get_p(x).then(p=>
     {   
-      if (!p) p = author.p(dat.event.pubkey);   
+      if (!p) p = it.p(dat.event.pubkey);   
       if (!p.pastdata.k3.length || p.pastdata.k3[0][1] < c_at) 
       {
         p.pastdata.k3.unshift([dat.event.id,c_at]);
@@ -361,7 +361,7 @@ kin.d10002 =dat=>
     const c_at = dat.event.created_at;
     aa.db.get_p(x).then(p=>
     {
-      if (!p) p = author.p(dat.event.pubkey);
+      if (!p) p = it.p(dat.event.pubkey);
       if (!p.pastdata.k10002.length || p.pastdata.k10002[0][1] < c_at) 
       {
         p.pastdata.k10002.unshift([dat.event.id,c_at]);
@@ -432,26 +432,29 @@ kin.note_actions =clas=>
       it.mk.l('button',{con:'editor',cla:'butt editor',clk:aa.clk.editor})
     );
   }
+  else if (clas.includes('not_sent'))
+  {
+    l.append( 
+      it.mk.l('button',{con:'post',cla:'butt post',clk:aa.clk.post}),
+      ' ',
+      it.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel})  
+    );
+  }
+  else if (clas.includes('blank'))
+  {
+    l.append( 
+      it.mk.l('button',{con:'fetch',cla:'butt fetch',clk:aa.clk.fetch})
+    );
+  }
   else
   {
-    if (clas.includes('not_sent'))
-    {
-      l.append( 
-        it.mk.l('button',{con:'post',cla:'butt post',clk:aa.clk.post}),
-        ' ',
-        it.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel})  
-      );
-    }
-    else
-    {
-      l.append(
-        it.mk.l('button',{con:'<3',tit:'react',cla:'butt react',clk:aa.clk.react}),
-        ' ',
-        it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
-        ' ',
-        it.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',clk:aa.clk.hide}),
-      );
-    }
+    l.append(
+      it.mk.l('button',{con:'<3',tit:'react',cla:'butt react',clk:aa.clk.react}),
+      ' ',
+      it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
+      ' ',
+      it.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',clk:aa.clk.hide}),
+    );
   }
 
   return l

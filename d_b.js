@@ -62,7 +62,7 @@ aa.db.get_p =async xpub=>
     {
       // console.log('aa.db.get_p',xpub);
       let p = e.data;
-      aa.p[xpub] = p ?? author.p(xpub);
+      aa.p[xpub] = p ?? it.p(xpub);
       setTimeout(()=>{db.terminate()},200);
       resolve(p);
     }
@@ -98,41 +98,73 @@ aa.db.put =async o=>
 aa.db.upd =async dat=>
 {
   if (!aa.q.upd) aa.q.upd = {};
-  if (!aa.q.upd[dat.event.id]) aa.q.upd[dat.event.id] = [];
-  aa.q.upd[dat.event.id].push(dat);
+  const xid = dat.event.id;
+  if (!aa.e[xid]) aa.e[xid] = dat;
+  else 
+  {
+    const merged = it.fx.merge(aa.e[xid],dat);
+    if (merged) 
+    {
+      aa.q.upd[xid] = aa.e[xid] = merged
+    }
+  }
+  
+  
+  
+  // let v = aa.q.upd[xid];
+  // if (!v) v = aa.q.upd[xid] = [];
+  // v.push(dat);
+  // if (v.length > 1)
+  // {
+  //   let og = v.shift();
+  //   for (const o of v) 
+  //   {
+  //     const merged = it.fx.merge(og,o);
+  //     if (merged) og = merged;      
+  //   }
+  //   v = [og];   
+  // }
+  // if (!aa.e[xid]) aa.e[xid] = v[0];
+  // else 
+  // {
+  //   og = it.fx.merge(aa.e[xid],v[0]);
+  //   if (og) aa.e[xid] = og;
+  // }
 
   it.to(()=>
   {
-    const q = {...aa.q.upd};
+    // const q = {...aa.q.upd};
+    const q = Object.values(aa.q.upd);
     aa.q.upd = {};
-    let values = [];
-    for (const k in q)
-    {
-      const v = q[k];
-      if (v.length > 1)
-      {
-        let og = v.shift();
-        for (const o of v) 
-        {
-          const merged = it.fx.merge(og,o);
-          if (merged) og = merged;
-          values.push(og);
-        }
-      }
-      else values.push(v[0]);
+    // let values = [];
+    // for (const k in q)
+    // {
+    //   values.push(q[k][0])
+      // const v = q[k];
+      // if (v.length > 1)
+      // {
+      //   let og = v.shift();
+      //   for (const o of v) 
+      //   {
+      //     const merged = it.fx.merge(og,o);
+      //     if (merged) og = merged;
+      //     values.push(og);
+      //   }
+      // }
+      // else values.push(v[0]);
 
-      for (let i=0;i<values.length;i++)
-      {
-        let xid = values[i].event.id;
-        if (!aa.e[xid]) aa.e[xid] = values[i];
-        else 
-        {
-          const dis = it.fx.merge(aa.e[xid],values[i]);
-          if (dis) aa.e[xid] = dis;
-        }
-      }
-    }
-    aa.idb.postMessage({upd:{store:'events',a:values}});
+      // for (let i=0;i<values.length;i++)
+      // {
+      //   let xid = values[i].event.id;
+      //   if (!aa.e[xid]) aa.e[xid] = values[i];
+      //   else 
+      //   {
+      //     const dis = it.fx.merge(aa.e[xid],values[i]);
+      //     if (dis) aa.e[xid] = dis;
+      //   }
+      // }
+    // }
+    aa.idb.postMessage({upd:{store:'events',a:q}});
   },1000,'db_upd');
 };
 

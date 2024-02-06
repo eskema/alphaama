@@ -78,8 +78,7 @@ v_u.replace =s=>
 };
 
 
-// Create a new observer
-const e_observer = new IntersectionObserver((a)=>
+const e_observer = new IntersectionObserver(a=>
 {
 	// console.log(a);
   for (const b of a)
@@ -87,7 +86,9 @@ const e_observer = new IntersectionObserver((a)=>
     const l = b.target;
     if (b.isIntersecting)
     {
-      l.classList.add('is_viewable');
+      l.querySelector('.replies').setAttribute('style','max-height:'+b.intersectionRect.height+'px');
+      l.classList.remove('not_yet');
+      // console.log(b);
       e_observer.unobserve(l);
     }
     // else 
@@ -96,21 +97,6 @@ const e_observer = new IntersectionObserver((a)=>
     // }
   }
 },{root:null,threshold:0.1});
-
-// // The elements to observe
-// let div1 = document.querySelector('#div-1');
-// let div2 = document.querySelector('#div-2');
-
-// // Attach them to the observer
-// e_observer.observe(div1);
-// e_observer.observe(div2);
-
-
-
-
-
-
-
 
 v_u.scroll =(l,options={})=>
 {
@@ -134,7 +120,7 @@ v_u.p =async npub=>
   let p = await aa.db.get_p(xpub);
   if (!p) 
   {
-    p = author.p(xpub);
+    p = it.p(xpub);
     // v_u.req_p([xpub]);
   }
   
@@ -251,33 +237,20 @@ v_u.nevent =async nevent=>
   }
 };
 
-// v_u.append =(l,mom,reverse=false)=>
-// { 
-//   const ma = mom.parentElement;
-//   const classes = ['haz_reply','haz_new_reply'];
-//   if (ma.classList.contains('note')) ma.classList.add(...classes);
-
-//   const f =(i)=> reverse ? l.dataset.stamp > i.dataset.stamp 
-//   : l.dataset.stamp < i.dataset.stamp;
-
-//   const last = [...mom.children].filter(f)[0];
-//   mom.insertBefore(l, last ? reverse ? last : last.nextSibling : null);
-//   v_u.upd.path(mom,l.dataset.stamp);
-// };
-
 v_u.append_to_notes =(note)=>
 { 
   let notes = document.getElementById('notes');
   const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
   notes.insertBefore(note,last);
+  note.classList.add('not_yet');
   e_observer.observe(note);
 };
 
-v_u.append_to_rep =(note,mom)=>
+v_u.append_to_rep =(note,rep)=>
 {
-  const last = [...mom.children].filter(i=>i.dataset.created_at > note.dataset.created_at)[0];
-  mom.insertBefore(note,last ? last : null);
-  v_u.upd.path(note,note.dataset.stamp);
+  const last = [...rep.children].filter(i=>i.dataset.created_at > note.dataset.created_at)[0];
+  rep.insertBefore(note,last ? last : null);
+  if (note.dataset.pubkey !== aka.o.ls.xpub) v_u.upd.path(rep,note.dataset.stamp);
 };
 
 v_u.append_to_replies =(dat,note,reply_tag)=>
@@ -289,7 +262,6 @@ v_u.append_to_replies =(dat,note,reply_tag)=>
   {
     reply = kin.blank(reply_tag,dat,1);
     v_u.append_to_rep(note,reply.querySelector('.replies'));
-    // v_u.append(note,reply.querySelector('.replies'));
 
     let root_tag = it.get_root_tag(dat.event.tags);
     if (root_tag && root_tag[1] !== reply_id)
@@ -303,17 +275,14 @@ v_u.append_to_replies =(dat,note,reply_tag)=>
         root = kin.blank(root_tag,dat,10);
         root.classList.add('root');
         v_u.append_to_notes(root);
-        // v_u.append(root,document.getElementById('notes'),1);
         kin.der(root_tag,dat.subs);
       }
       v_u.append_to_rep(reply,root.querySelector('.replies'));
-      // v_u.append(reply,root.querySelector('.replies'));
     }
     else
     {
       reply.classList.add('root');
       v_u.append_to_notes(reply);
-      // v_u.append(reply,document.getElementById('notes'),1);
     }
     kin.der(reply_tag,dat.subs);
   }
@@ -334,62 +303,8 @@ v_u.append_to_replies =(dat,note,reply_tag)=>
       }
     }
     v_u.append_to_rep(note,reply.querySelector('.replies'))
-    // v_u.append(note,reply.querySelector('.replies'));
   }
 };
-
-// v_u.append_as_reply =(dat,note,reply_tag)=>
-// {
-//   const reply_id = reply_tag[1];
-//   const reply_nid = it.fx.nid(reply_id);
-//   let reply = document.getElementById(reply_nid);
-//   if (!reply)
-//   {
-//     reply = kin.blank(reply_tag,dat,1);
-//     v_u.append(note,reply.querySelector('.replies'));
-
-//     let root_tag = it.get_root_tag(dat.event.tags);
-//     if (root_tag && root_tag[1] !== reply_id)
-//     {
-//       reply.classList.add('reply');
-//       let root_id = root_tag[1];
-//       let root_nid = it.fx.nid(root_id);
-//       let root = document.getElementById(root_nid);
-//       if (!root)
-//       { 
-//         root = kin.blank(root_tag,dat,10);
-//         root.classList.add('root');
-//         v_u.append(root,document.getElementById('notes'),1);
-//         kin.der(root_tag,dat.subs);
-//       }
-//       v_u.append(reply,root.querySelector('.replies'));
-//     }
-//     else
-//     {
-//       reply.classList.add('root');
-//       v_u.append(reply,document.getElementById('notes'),1);
-//     }
-//     kin.der(reply_tag,dat.subs);
-//   }
-//   else
-//   {
-//     if (reply.classList.contains('blank'))
-//     {
-//       it.fx.merge_datasets(['seen','subs'],note,reply);
-//       if (reply_tag[2])
-//       {
-//         let relay = it.s.url(reply_tag[2]);
-//         if (relay)
-//         {
-//           let a = reply.dataset.r ? reply.dataset.r.trim().split(' ') : [];
-//           it.a_set(a,[relay]);
-//           reply.dataset.r = a.join(' ');
-//         }
-//       }
-//     }
-//     v_u.append(note,reply.querySelector('.replies'));
-//   }
-// };
 
 v_u.upd.path =(l,stamp)=> 
 {
@@ -411,7 +326,7 @@ v_u.upd.path =(l,stamp)=>
       const replies = l.querySelector('.replies');
       const some = replies.childNodes.length;
       const all = l.querySelectorAll('.note').length;
-      replies.dataset.count = some + (all > some ? '.' + all : '')
+      if (some > 0) replies.dataset.count = some + (all > some ? '.' + all : '')
     }
 	}
   if (root && updated) v_u.append_to_notes(root)
@@ -439,32 +354,4 @@ v_u.mark_read =e=>
     
   } 
 };
-
-// v_u.upd.butt_count =(id,cla)=>
-// {
-//   it.to(()=>
-//   {
-//     let butt = document.getElementById('butt_'+id);
-//     if (butt) butt.dataset.count = document.querySelectorAll(cla).length;
-//   },100,'butt_'+id+'_count');
-// };
-
-
-// v_u.trusted_src =(l)=>
-// {
-//   let trust = l.dataset.trust;
-//   let trust_needed = parseInt(localStorage.trust);
-//   if (trust && trust_needed && trust >= trust_needed)
-//   {
-//     let srcs = l.querySelectorAll('[data-src]');
-//     if (srcs)
-//     {
-//       for (const src of srcs)
-//       {
-//         src.src = src.dataset.src;
-//         src.removeAttribute('data-src');
-//       }
-//     }
-//   }
-// };
 

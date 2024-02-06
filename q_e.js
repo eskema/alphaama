@@ -4,7 +4,7 @@ const q_e =
   clk:{},
 };
 
-q_e.save =()=> { aa.save(q_e) };
+q_e.upd =()=>{it.to(()=>{ aa.save(q_e) },2000,'qe_upd')};
 
 q_e.load =()=>
 {
@@ -60,9 +60,7 @@ q_e.load =()=>
       description:'sets a bunch of queries to get you started',
       exe:q_e.stuff
     },
-    
   };
-
   aa.load_mod(q_e);
 };
 
@@ -81,7 +79,12 @@ q_e.mk =(f_id,o) =>
   const l = it.mk.l('li',{id:'f_'+f_id,cla:'item filter'});
   if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
   l.append(
-    it.mk.l('span',{cla:'key',con:f_id}),
+    it.mk.l('button',{cla:'key',con:f_id,clk:e=>
+    {
+      cli.t.value = localStorage.ns + ' qe run ' + f_id;
+      cli.foc();
+    }}),
+    // it.mk.l('span',{cla:'key',con:f_id}),
     it.mk.l('span',{cla:'val',con:o.v}),
     it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
     {
@@ -192,7 +195,7 @@ q_e.sets =s=>
       }
     }
   };
-  it.loop(work,s,q_e.save)
+  it.loop(work,s,()=>{aa.save(q_e)})
 };
 
 q_e.set_rm =(s)=>
@@ -219,7 +222,7 @@ q_e.set_rm =(s)=>
       }
     }
   };
-  it.loop(work,s,q_e.save)
+  it.loop(work,s,()=>{aa.save(q_e)})
 };
 
 q_e.sub =s=>
@@ -236,18 +239,19 @@ q_e.add =s=>
   try { o = JSON.parse(a) } catch (er) { console.log(er,s) }
   if (o)
   {
-    console.log(o);
-    // let log = localStorage.ns+' qe add '+fid+' ';
-    // let filter = q_e.o.ls[fid];
-    // if (filter && window.confirm('update filter?'))
-    // {
-    //   log += filter.v + ' > ';
-    //   filter.v = a[0]
-    // }
-    // else q_e.o.ls[fid] = {v:a[0],sets:[]};
-    // aa.save(q_e);
-    // cli.fuck_off();
-    // v_u.log(log+q_e.o.ls[fid].v);
+    // console.log(o);
+    
+    let log = localStorage.ns+' qe add '+fid+' ';
+    let filter = q_e.o.ls[fid];
+    if (filter && window.confirm('update filter?'))
+    {
+      log += filter.v + ' > ';
+      filter.v = a
+    }
+    else q_e.o.ls[fid] = {v:a,sets:[]};
+    aa.save(q_e);
+    cli.fuck_off();
+    v_u.log(log+q_e.o.ls[fid].v);
   }
   else v_u.log('invalid filter');
 };
@@ -267,17 +271,40 @@ q_e.rm_filter =s=>
 
 q_e.raw =s=>
 {
-  let [relset,filter] = s.trim().split(' ');
-  if (relset && filter) 
+  let a = s.trim().split(' ');
+  let rels = a.shift();
+  let filter = a.join('').replace(' ','');
+  // let o;
+  // try { o = JSON.parse(a) } catch (er) { console.log(er,s) }
+  // if (o)
+  // {
+
+  // }
+
+
+  // const a = s.trim().split(' ');
+  // let rel,fil;
+  // if (a.length) rel = a.shift();
+  // if (a.length) fil = a.shift();
+
+
+  // let [relset,filter] = s.trim().split(' ');
+  if (rels && filter) 
   { 
     let filtered = it.fx.vars(filter);
     if (filtered)
     {
       let request = ['REQ','raw',filtered];
-      let relays = rel.in_set(relset);
-      if (!relays) relays = rel.in_set(rel.o.r);
-      v_u.log(localStorage.ns+' qe raw '+filter);
-      q_e.demand(request,relays,{eose:'close'});
+      let relays = [];
+      let relay = it.s.url(rels);
+      if (relay) relays.push(relay);
+      else if (rel.o.sets.includes(rels)) relays.push(rel.in_set(rels));
+      if (relays.length)
+      {
+        v_u.log(localStorage.ns+' qe raw '+filter);
+        q_e.demand(request,relays,{eose:'close'});
+      }
+      else v_u.log('invalid relay / relset')
     }
     else v_u.log('invalid filter')
   }
