@@ -86,7 +86,7 @@ const e_observer = new IntersectionObserver(a=>
     const l = b.target;
     if (b.isIntersecting)
     {
-      l.querySelector('.replies').setAttribute('style','max-height:'+b.intersectionRect.height+'px');
+      // l.querySelector('.replies').setAttribute('style','max-height:'+b.intersectionRect.height+'px');
       l.classList.remove('not_yet');
       // console.log(b);
       e_observer.unobserve(l);
@@ -160,6 +160,7 @@ v_u.e =async nid=>
 
 v_u.dis =l=>
 {
+  l.classList.add('in_view'); 
   l.classList.add('in_view');   
   // it.to(()=>{it.fx.in_path(l)},100,'in_path');
   it.fx.in_path(l);
@@ -250,7 +251,7 @@ v_u.append_to_rep =(note,rep)=>
 {
   const last = [...rep.children].filter(i=>i.dataset.created_at > note.dataset.created_at)[0];
   rep.insertBefore(note,last ? last : null);
-  if (note.dataset.pubkey !== aka.o.ls.xpub) v_u.upd.path(rep,note.dataset.stamp);
+  v_u.upd.path(rep,note.dataset.stamp);
 };
 
 v_u.append_to_replies =(dat,note,reply_tag)=>

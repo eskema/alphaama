@@ -1680,7 +1680,8 @@ a.author.is_bff
   /*align-self: stretch;*/
   /*max-height: 200px;*/
   /*max-height: unset;*/
-  overflow-y: scroll;
+/*  min-height: 200px;
+  overflow-y: scroll;*/
 }
 
 .root.not_yet > .replies > .note

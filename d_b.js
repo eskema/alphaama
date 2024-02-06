@@ -105,7 +105,8 @@ aa.db.upd =async dat=>
     const merged = it.fx.merge(aa.e[xid],dat);
     if (merged) 
     {
-      aa.q.upd[xid] = aa.e[xid] = merged
+      aa.q.upd[xid] = merged;
+      aa.e[xid] = merged;
     }
   }
   
@@ -135,7 +136,10 @@ aa.db.upd =async dat=>
   {
     // const q = {...aa.q.upd};
     const q = Object.values(aa.q.upd);
+    
     aa.q.upd = {};
+
+    // console.log(q);
     // let values = [];
     // for (const k in q)
     // {

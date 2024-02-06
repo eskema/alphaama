@@ -303,7 +303,9 @@ it.get_tags =(event)=>
       // console.log(root_tag);
       if (!root_tag[2] || root_tag[2] === '')
       {
-        root_tag[2] = it.get_seen(event.id);
+        let seen = it.get_seen(event.id);
+
+        root_tag[2] = seen ?? '';
       }
       if (!root_tag[3] || root_tag[3] !== 'root')
       {
