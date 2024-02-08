@@ -74,7 +74,6 @@ v_u.replace =s=>
   const path = location.origin+location.pathname+hash_is_h;
   history.replaceState(dis,'',path);
   v_u.view(dis.view)
-  // v_u.pop();
 };
 
 
@@ -86,22 +85,14 @@ const e_observer = new IntersectionObserver(a=>
     const l = b.target;
     if (b.isIntersecting)
     {
-      // l.querySelector('.replies').setAttribute('style','max-height:'+b.intersectionRect.height+'px');
       l.classList.remove('not_yet');
       // console.log(b);
       e_observer.unobserve(l);
     }
-    // else 
-    // {
-    //   l.classList.remove('is_viewable');
-    // }
   }
 },{root:null,threshold:0.1});
 
-v_u.scroll =(l,options={})=>
-{
-  setTimeout(()=>{l.scrollIntoView(options)},50)
-}
+v_u.scroll =(l,options={})=> setTimeout(()=>{l.scrollIntoView(options)},50);
 
 v_u.log =s=>
 {
@@ -145,14 +136,7 @@ v_u.e =async nid=>
   {
     let x = it.fx.decode(nid);
     let dat = await aa.db.get_e(x);
-    if (dat) 
-    {
-      aa.print(dat);
-      if (!aa.p[dat.event.pubkey])
-      {
-        
-      }
-    }
+    if (dat) aa.print(dat);
     // else v_u.req_e([x]);
   }
   v_u.viewing = nid;
@@ -226,7 +210,7 @@ v_u.nevent =async nevent=>
         }
         console.log(dat);
         let blank = kin.note(dat);
-        blank.classList.add('blank','root');
+        blank.classList.add('blank');
         v_u.append_to_notes(blank);
         q_e.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
       }
@@ -243,7 +227,7 @@ v_u.append_to_notes =(note)=>
   let notes = document.getElementById('notes');
   const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
   notes.insertBefore(note,last);
-  note.classList.add('not_yet');
+  note.classList.add('root','not_yet');
   e_observer.observe(note);
 };
 
@@ -251,7 +235,9 @@ v_u.append_to_rep =(note,rep)=>
 {
   const last = [...rep.children].filter(i=>i.dataset.created_at > note.dataset.created_at)[0];
   rep.insertBefore(note,last ? last : null);
-  v_u.upd.path(rep,note.dataset.stamp);
+  let is_aka = note.dataset.pubkey === aka.o.ls.xpub;
+  note.classList.add('reply');
+  v_u.upd.path(rep,note.dataset.stamp,is_aka);
 };
 
 v_u.append_to_replies =(dat,note,reply_tag)=>
@@ -307,7 +293,7 @@ v_u.append_to_replies =(dat,note,reply_tag)=>
   }
 };
 
-v_u.upd.path =(l,stamp)=> 
+v_u.upd.path =(l,stamp,is_aka=false)=> 
 {
   let root,updated;
   for (;l && l !== document; l = l.parentNode ) 
@@ -316,7 +302,7 @@ v_u.upd.path =(l,stamp)=>
     {
       updated = false;
       root = l;
-      if (l.dataset.stamp < stamp)
+      if (l.dataset.stamp < stamp && !is_aka)
       {
         l.dataset.stamp = stamp;
         updated = true;
@@ -355,4 +341,3 @@ v_u.mark_read =e=>
     
   } 
 };
-

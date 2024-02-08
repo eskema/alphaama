@@ -115,16 +115,8 @@ kin.eose =message=>
   // message.data ["EOSE", <sub_id>]
   const sub_id = message.data[1];
   let sub = rel.active[message.origin].q[sub_id];
-  if (sub.eose === 'close')
-  {
-    rel.close(message.origin,sub_id)
-    // console.log(sub.eose,message.data[1],rel.active[message.origin].q[message.data[1]]);
-    // rel.active[message.origin].ws.send(JSON.stringify(['CLOSE',message.data[1]]));
-    // delete rel.active[message.origin].q[message.data[1]];
-  }
+  if (sub.eose === 'close') rel.close(message.origin,sub_id)
 };
-
-kin
 
 kin.event =message=>
 { // message = {data,origin}
@@ -143,22 +135,39 @@ kin.event =message=>
       refs:[]
     };
     if (aa.miss.e[event.id]) delete aa.miss.e[event.id];
-    if (!aa.e[event.id]) 
-    {
-      aa.e[event.id] = dat;
-      aa.db.upd(dat);
-    }
-    else 
-    {
-      const dis = it.fx.merge(aa.e[event.id],dat);
-      if (dis) aa.e[event.id] = dis;
-    }
+    aa.db.upd(dat);
     let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
     if (!sub.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
     
     aa.print(dat);
   }
   else console.log('invalid event',message);
+};
+
+
+kin.e =s=>
+{
+  let event;
+  try { event = JSON.parse(s.trim())}
+  catch (er) { console.log('kin.e',er)}
+  if (event)
+  {
+    if (!event.pubkey) event.pubkey = aka.o.ls.xpub;
+    if (!event.kind) event.kind = 1;
+    if (!event.created_at) event.created_at = it.tim.now();
+    if (!event.tags) event.tags = [];
+    kin.draft(event);
+  }
+  cli.fuck_off();
+  console.log(event)
+};
+
+kin.draft =event=>
+{
+  if (!event.id) event.id = it.fx.hash(event);
+  aa.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
+  // console.log(event);
+  aa.print(aa.e[event.id]);
 };
 
 kin.da =dat=>
@@ -222,6 +231,7 @@ kin.blank =(tag,dat,seconds)=>
     content:tag[1]+'\n'+it.fx.nid(tag[1])
   }
   const seen = rel.in_set('read');
+  let r;
   if (tag[2])
   {
     const url = it.s.url(tag[2]);
@@ -229,24 +239,14 @@ kin.blank =(tag,dat,seconds)=>
     {
       it.a_set(seen,[url.href]);
       blank_event.content = blank_event.content+'\n'+url.href;
+      r = url.href;
     }
     else console.log('malformed tag on',dat);
   }
   const note = kin.note({event:blank_event,seen:seen,subs:dat.subs,clas:['blank']});
   note.classList.add('blank','is_new');
-  // const butt = it.mk.l('button',{cla:'butt blank',con:'fetch',clk:e=>
-  // {
-  //   console.log(e.target.closest('.note').dataset.id)
-  // }});
-  // console.log(note)
-  // const content = note.querySelector('.content');
-  // content.append(butt);
+  if (r) note.dataset.r = r;
   return note
-};
-
-kin.d0_compare =(p,dat=false)=>
-{
-  console.log(p,dat);
 };
 
 kin.d0 =dat=>
@@ -290,15 +290,13 @@ kin.d1 =dat=>
   let reply_tag = it.get_reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length)
   {
-    note.classList.add('reply');
+    // note.classList.add('reply');
     v_u.append_to_replies(dat,note,reply_tag);
-    // v_u.append_as_reply(dat,note,reply_tag);
   }
   else 
   {
-    note.classList.add('root');
+    // note.classList.add('root');
     v_u.append_to_notes(note);
-    // v_u.append(note,document.getElementById('notes'),1);
   }
   return note
 };
@@ -330,9 +328,6 @@ kin.d3 =dat=>
 
           }
         }
-
-        
-
         rel.add_from_k3(rel.from_k3(dat.event.content),p);
 
         author.save(p);
@@ -351,6 +346,7 @@ kin.d3 =dat=>
   note.classList.add('root');
   return note
 };
+
 
 kin.d10002 =dat=>
 {
@@ -411,8 +407,6 @@ kin.d7 =dat=>
   const note = kin.d1(dat);
   return note
 };
-
-
 
 kin.note_actions =clas=>
 {
@@ -509,8 +503,6 @@ aa.print =async dat=>
   {
     l = kin.da(dat);
     it.butt_count('e','.note');
-    // let butt = document.getElementById('butt_e');
-    // butt.dataset.count = document.querySelectorAll('.note').length;
     if (!l) console.log(dat);
     if (l?.classList.contains('draft')) v_u.scroll(l,{behavior:'smooth',block:'center'});
   }
@@ -521,8 +513,17 @@ aa.print =async dat=>
   } 
 
   if (l && history.state.view === nid) v_u.dis(l);
-  
 
   aa.moar();
   // aa.dex();
+};
+
+aa.ct.kin = 
+{
+  'e': 
+  {
+    required:['JSON'],
+    description:'mk event from JSON',
+    exe:kin.e
+  },
 };

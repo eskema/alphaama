@@ -794,6 +794,11 @@ button.butt:focus
   display: none;
 }
 
+.viewing.cli_expanded #view #l #butt_l
+{
+  display: block;
+}
+
 .cli_expanded #l
 {
   background: rgba(var(--color-b),.9);
@@ -1028,6 +1033,11 @@ button.butt:focus
 .view_p .note:not(.in_path)
 {
   display: none;
+}
+
+#e:not(.expanded) .note.in_view .note
+{
+  display: grid;
 }
 
 .note

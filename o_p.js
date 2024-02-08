@@ -38,6 +38,7 @@ o_p.load =(reset=false)=>
 
 window.addEventListener('storage',()=>
 {
+  console.log('storage');
   it.to(()=>{o_p.load()},200,'storage');
 });
 
@@ -47,7 +48,7 @@ o_p.set =s=>
   if (k && v)
   {
     localStorage[k] = v;
-    // o_p.load();
+    o_p.load();
     v_u.log(localStorage.ns+' op set '+k+' to '+v);
     cli.fuck_off();
   }
@@ -69,7 +70,7 @@ o_p.rm =s=>
     if (!o_p.def.hasOwnProperty(k))
     {
       localStorage.removeItem(k);
-      o_p.load();
+      // o_p.load();
       v_u.log(dis+k);
     }
     else v_u.log(dis+'key cannot be removed');

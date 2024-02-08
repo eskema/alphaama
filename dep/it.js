@@ -1,22 +1,3 @@
-// generic vars cheatsheet
-// a = array
-// b = bool
-// e = event
-// f = function
-// i = index
-// l = element
-// m = message
-// n = number
-// o = object
-// p = profile
-// s = string
-// t = time
-// x = hex
-//
-// mk = create element
-// clk = click
-// 
-
 const it =
 {
   todo:{},
@@ -38,16 +19,9 @@ it.clk.a =e=>
   v_u.state(dis);
 };
 
-it.clk.clkd =l=>
-{
-  l.classList.remove('clkd');
-  setTimeout(()=>{l.classList.add('clkd')},100);
-};
-
 it.clk.expanded =e=>
 {
   e.stopPropagation();
-  // e.target.classList.toggle('expanded');
   let mom = document.getElementById(e.target.dataset.controls) ?? e.target;
   if (mom) 
   {
@@ -56,12 +30,18 @@ it.clk.expanded =e=>
   }
 };
 
+it.clk.clkd =l=>
+{
+  l.classList.remove('clkd');
+  setTimeout(()=>{l.classList.add('clkd')},100);
+};
+
 it.s ={};
 
 it.s.rigged =()=>
 {
-  try{ return window.self !== window.top } 
-  catch(er){ return true }
+  try {return window.self !== window.top} 
+  catch(er) {return true}
 };
 
 it.s.trusted =trust=>
@@ -149,7 +129,7 @@ it.loopita =(a,if_1,if_2)=>
 {
   const b = [];
   const times = a.length
-  for (let i=0;i<times; i++) 
+  for (let i=0;i<times;i++) 
   {
     if (if_1(a[i]))
     {
@@ -281,43 +261,28 @@ it.fx.rm_path =k=>
   }
 };
 
-it.get_tags =(event)=>
+it.get_tags_for_reply =(event)=>
 {  
    const tags = [];
+   const seen = it.get_seen(event.id);
    let root_tag = it.get_root_tag(event.tags);
-   if (root_tag.length)
-   {
-    console.log(root_tag)
-    // let dat = aa.e[root_tag[1]];
-    // console.log(dat);
-    // const is_really_root = it.get_root_tag(dat.event.tags);
-    // if (is_really_root.length) console.log(is_really_root);
-    // let l = document.getElementById(root_tag[1]);
-    // if (l)
-    // {
-
-    // }
-   }
    if (root_tag.length) 
    {
       // console.log(root_tag);
       if (!root_tag[2] || root_tag[2] === '')
       {
-        let seen = it.get_seen(event.id);
-
-        root_tag[2] = seen ?? '';
+        root_tag[2] = seen;
       }
       if (!root_tag[3] || root_tag[3] !== 'root')
       {
         root_tag[3] = 'root';
       }
       tags.push(root_tag);
-      tags.push(['e',event.id,it.get_seen(event.id),'reply']);
+      tags.push(['e',event.id,seen,'reply']);
    }
-   else tags.push(['e',event.id,it.get_seen(event.id),'root']);
+   else tags.push(['e',event.id,seen,'root']);
    const pubkeys_to_add = [];
-   const pubkeys = event.tags
-   .filter(t=>it.tag.p(t) && t[1] !== aka.o.ls.xpub);
+   const pubkeys = event.tags.filter(t=>it.tag.p(t) && t[1] !== aka.o.ls.xpub);
    
    for (const pub of pubkeys) pubkeys_to_add.push(pub)
 
@@ -362,7 +327,7 @@ it.get_seen =(x)=>
 {
   const dat = aa.e[x];
   if (dat && dat.seen.length) return dat.seen[0];
-  else ''
+  return ''
 };
 
 it.tim ={};
@@ -456,24 +421,11 @@ it.fx.merge =(dis,dat)=>
   let merged,sets = ['seen','subs','clas','refs'];
   for (const set of sets)
   { 
-    if (!dis.hasOwnProperty(set)) { dis[set] = [];merged=true; } 
-    if (!dat.hasOwnProperty(set)) dat[set] = [];
+    if (!dis.hasOwnProperty(set)) { dis[set]=[]; merged=true; } 
+    if (!dat.hasOwnProperty(set)) dat[set]=[];
     if (it.a_set(dis[set],dat[set])) merged=true;
   }
   return merged ? dis : false
-};
-
-it.fx.merge_sets =(a,og,oh)=>
-{
-  // ['seen','subs']
-  let b;
-  for (const set of a)
-  {
-    if (!og.hasOwnProperty(set)) { og[set] = []; b=true } 
-    if (!oh.hasOwnProperty(set)) oh[set] = [];
-    if (it.a_set(og[set],oh[set])) b=true;
-  }
-  return b
 };
 
 it.fx.merge_datasets =(a,b,c)=>
@@ -497,7 +449,7 @@ it.fx.a =a=>
   switch(type)
   {
     case 'e':
-      const relay = a[2];
+      let relay = a[2];
       const nid = it.fx.nid(value);
       l.textContent = nid;
       l.href = '#'+nid;
@@ -585,8 +537,8 @@ it.fx.sort_relays_by_sets_len =(a,b)=>
 
 it.tog =(s,l=false)=>
 {
-  let le = l ? l : aa.l;
-  le.classList.toggle(s);
+  let dis = l ? l : aa.l;
+  dis.classList.toggle(s);
 }
 
 it.mk ={};
@@ -663,11 +615,8 @@ it.p =xpub=>
 it.mk.author =(xpub,p=false)=>
 {
   if (!p) p = aa.p[xpub];
-  if (!p) 
-  {
-    p = it.p(xpub);
-    // author.load(xpub);
-  }
+  if (!p) p = it.p(xpub);
+  
   const pubkey = it.mk.l('a',
   {
     cla:'a author',
@@ -779,20 +728,15 @@ it.mk.butt =l=>
   return butt
 };
 
-it.butt_count =(id,cla)=>
+it.butt_count =async(id,cla)=>
 {
-  // it.to(()=>
-  // {
-    let butt = document.getElementById('butt_'+id);
-    
-    if (butt) 
-    {
-      const total = document.querySelectorAll(cla).length;
-      butt.dataset.count = total;
-      if (!total) butt.removeAttribute('data-count');
-    }
-    
-  // },100,id+'_count');
+  let butt = document.getElementById('butt_'+id);
+  if (butt) 
+  {
+    const total = document.querySelectorAll(cla).length;
+    butt.dataset.count = total;
+    if (!total) butt.removeAttribute('data-count');
+  }
 };
 
 it.mk.section =(id,expanded=false)=>
@@ -871,20 +815,7 @@ it.mk.add_input =()=>
   return button
 }
 
-// it.ee =(o)=>
-// {
-//   const ee = it.mk.l('div',{id:'ee'});
-//   id
-//   pubkey
-//   kind
-//   created_at
-//   content
-//   tags
-//   sig
-//   if (o.id) 
-// };
-
-it.confirm =(o)=>
+it.confirm =o=>
 {
   const dialog = document.getElementById('dialog');
   const dialog_close =()=>
@@ -893,7 +824,6 @@ it.confirm =(o)=>
     dialog.textContent = '';
   };
   const dialog_stuff = it.mk.l('header',{cla:'dialog_stuff'});
-  // if (o.description) dialog_stuff.append(it.mk.l('h2',{con:o.description}));
   if (o.description) dialog.dataset.label=o.description;
   const dialog_cancel = it.mk.l('button',
   {
@@ -918,12 +848,8 @@ it.confirm =(o)=>
   dialog_stuff.append(dialog_cancel,dialog_confirm);
   dialog.append(o.l,dialog_stuff);
   dialog.showModal();
-  dialog.scrollTop = dialog.scrollHeight;
+  if (o.scroll) dialog.scrollTop = dialog.scrollHeight;
 };
-
-
-
-
 
 it.regx = 
 {
@@ -939,10 +865,7 @@ it.parse.hashtags =s=>
 {
   const hashtags = [];
   const ma = s.match(/(\B[#])\w+/g);
-  if (ma) 
-  {
-    for (const m of ma) hashtags.push(['t',m.slice(1).toLowerCase()])
-  }
+  if (ma) for (const m of ma) hashtags.push(['t',m.slice(1).toLowerCase()])
   return hashtags
 };
 
@@ -976,12 +899,7 @@ it.nip19_to_tags =a=>
   {
     let tag = it.nip19_to_tag(s);
     if (tag.length) tags.push(tag);
-    
-    // else if (s.startsWith('nevent')) v_u.nevent(s);
-    // else if (s.startsWith('nprofile')) v_u.nprofile(s);
-    // else if (s.startsWith('naddress')) v_u.naddress(s);
   }
-
   return tags
 };
 
@@ -993,9 +911,6 @@ it.parse.mentions =s=>
   {
     let tag = it.nip19_to_tag(m[0].slice(6));
     if (tag.length) mentions.push(tag);
-    // let n = m[0].slice(6);
-    // if (n.)
-    // mentions.push(n)
   }
   return mentions
 };
@@ -1027,13 +942,11 @@ it.parse.url =s=>
         if (type) link = it.mk.link(type[1].href);
     } 
     dfrag.append(link);
-    // console.log(m.index, last_i, m[0].length, m.input.length);
   }
   if (last_i < s.length) dfrag.append(s.slice(last_i));
 
   return dfrag
 }
-
 
 it.parse.nostr =s=>
 {

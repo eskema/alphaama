@@ -12,8 +12,6 @@ const aa =
   clk:{},
 };
 
-
-
 aa.login =()=>  
 {
   if (window.nostr && aka)
@@ -62,10 +60,7 @@ aa.load_mod =async mod=>
   return mod
 };
 
-aa.base_ui =a=>
-{
-  for (const s of a) aa.mk[s]();
-};
+aa.base_ui =a=>{ for (const s of a) aa.mk[s]() };
 
 aa.save =mod=>
 {
@@ -137,28 +132,10 @@ aa.clk.yolo =e=>
         dat.clas = it.a_rm(dat.clas,['draft']);
         it.a_set(dat.clas,['not_sent']);
         aa.post(dat);
-        // aa.db.upd(dat);
-        // aa.print(dat);
       }      
     })
   }
   else v_u.log('nothing to sign')
-
-  // const note = e.target.closest('.note');
-  // const xid = note.dataset.id;
-  // const dat = aa.e[xid];
-  // aa.sign(dat.event).then(signed=>
-  // {
-  //   dat.event = signed;
-  //   dat.clas = it.a_rm(dat.clas,['draft']);
-  //   it.a_set(dat.clas,['not_sent']);
-  //   aa.db.upd(dat);
-  //   aa.print(dat);
-  // })
-  // cli.v(aa.e[xid].event.content);
-  // delete aa.e[xid];
-  // note.remove(); 
-  // console.log(e.target)
 };
 
 aa.clk.sign =e=>
@@ -251,7 +228,6 @@ aa.clk.parse =e=>
   {
     content.replaceWith(it.parse.content(event));
   }
-  
   // console.log(parsed);
 };
 
@@ -266,17 +242,8 @@ aa.clk.editor =e=>
     l:it.note_editor(event),
     no:()=>{},
     yes:()=>{},
-  })
-  
+  });
   // console.log(parsed);
-};
-
-aa.draft =event=>
-{
-  event.id = it.fx.hash(event);
-  aa.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
-  console.log(event);
-  aa.print(aa.e[event.id]);
 };
 
 aa.send_it =async event=>
@@ -289,12 +256,16 @@ aa.send_it =async event=>
     aa.print(dat);
     q_e.broadcast(signed);
   }
-  // aa.sign(event).then((signed)=>
-  // {
-  //   // console.log('signed',signed);
-    
-  //   author.score(k+' 0');
-  // });
+};
+
+aa.clk.fetch =e=>
+{
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  const relays = [];
+  if (note.dataset.r) relays.push(note.dataset.r);
+  else relays = rel.in_set(rel.o.r);
+  q_e.demand(['REQ','ids',{ids:[xid]}],relays,{eose:'done'});
 };
 
 aa.replace_note =(l,dat)=>

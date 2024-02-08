@@ -162,12 +162,12 @@ rel.add =s=>
 { 
   const work =(a)=>
   {
-    let url_string = a.shift();
+    let url_string = a.shift().trim();
     
     const u = it.s.url(url_string);
-    if (u && !rel.o.ls[u.href])
+    if (u)
     {
-      rel.o.ls[u.href] = {sets:[]};
+      if (!rel.o.ls[u.href]) rel.o.ls[u.href] = {sets:[]};
       for (const set of a) rel.o.ls[u.href].sets.push(set)
     }
   };

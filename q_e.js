@@ -123,7 +123,13 @@ q_e.demand =(request,relays,options)=>
       {
         if (!rel.o.ls[k])
         {
-          // const dialog = document.getElementById('dialog');
+          // it.confirm(
+          // {
+          //   description:'fetch missing relay '+k+' from ?',
+          //   yes(){},no(){},
+          // })
+
+          //    needs to display info from what npub
 
           if (window.confirm('fetch missing from relay '+k+'?'))
           {
@@ -274,19 +280,6 @@ q_e.raw =s=>
   let a = s.trim().split(' ');
   let rels = a.shift();
   let filter = a.join('').replace(' ','');
-  // let o;
-  // try { o = JSON.parse(a) } catch (er) { console.log(er,s) }
-  // if (o)
-  // {
-
-  // }
-
-
-  // const a = s.trim().split(' ');
-  // let rel,fil;
-  // if (a.length) rel = a.shift();
-  // if (a.length) fil = a.shift();
-
 
   // let [relset,filter] = s.trim().split(' ');
   if (rels && filter) 

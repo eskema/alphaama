@@ -519,11 +519,6 @@ author.list =(a,l)=>
     {
       const dis = it.mk.author(x);
       l.append(it.mk.l('li',{cla:'bff',app:dis}));
-
-      // it.mk.author(x).then(dis=>
-      // {
-      //   l.append(it.mk.l('li',{cla:'bff',app:dis}));
-      // });
     };
     
     let keys_to_get = [];
@@ -564,33 +559,11 @@ author.mk.extra.bff =(extr,a,p)=>
     con:'refresh follows',
     clk:author.profile_butt_bff
   });
+
   if (p.pastdata?.k3.length) butt_bff.dataset.last = it.tim.e(p.pastdata.k3[0][1]);
   bff_details.append(butt_bff);
 
-  // const butt_taglist = it.mk.l('button',
-  // {
-  //   cla:'butt taglist',
-  //   con:'view tag list',
-  //   clk:it.mk.taglist
-  // });
-  // bff_details.append(butt_taglist);
-
 };
-
-// it.mk.taglist =async e=>
-// {
-//   const xpub = e.target.closest('.profile').dataset.xpub;
-//   const ul = e.target.parentElement.querySelector('ul');
-//   ul.remove();
-//   let k3 = await author.get_k3(xpub);
-//   if (k3)
-//   {
-//     let tags = kin.tags(k3.event.tags);
-//     e.target.parentElement.append(tags);
-//   }
-  
-// };
-
 
 author.mk.extra.followers =(extr,a)=>
 {
@@ -599,7 +572,6 @@ author.mk.extra.followers =(extr,a)=>
   extr.append(followers_details);
 
   author.list(a,ul);
-  
 };
 
 author.mk.extra.relays =(extr,a,p)=>
@@ -622,6 +594,7 @@ author.mk.extra.relays =(extr,a,p)=>
     con:'refresh relays',
     clk:author.profile_butt_relays
   });
+
   if (p.pastdata.k10002.length) butt_relays.dataset.last = it.tim.e(p.pastdata.k10002[0][1]);
 
   let relays_details = it.mk.details('relays ('+ul.childNodes.length+')',ul);
@@ -647,7 +620,6 @@ author.mk.extra.relay_hints =(extr,a,p)=>
 author.mk.pubkey =p=>
 {
   const pubkey = it.mk.l('p',{cla:'pubkey'});
-    // profile.append(pubkey);
   const butt_score = it.mk.l('button',
   {
     cla:'butt score',
@@ -665,6 +637,7 @@ author.mk.pubkey =p=>
       con:'follow',
       clk:author.profile_butt_follow
     });
+
     if (author.follows(p.xpub)) 
     {
       butt_follow.classList.add('is_bff');
@@ -673,12 +646,7 @@ author.mk.pubkey =p=>
     pubkey.append(butt_follow);
   }
 
-  pubkey.append(it.mk.author(p.xpub,p),it.mk.l('span',{cla:'xpub',con:p.xpub}))
-
-  // it.mk.author(p.xpub,p).then(dis=>
-  // {
-  //   pubkey.append(dis,it.mk.l('span',{cla:'xpub',con:p.xpub}))
-  // });
+  pubkey.append(it.mk.author(p.xpub,p),it.mk.l('span',{cla:'xpub',con:p.xpub}));
 
   return pubkey
 };
@@ -706,7 +674,7 @@ author.links =p=>
   for (const l of a) author.link(l,p)
 };
 
-author.link =(l,p=false)=>
+author.link =async(l,p=false)=>
 {
   // console.log('link');
   if (p && p.metadata)
@@ -723,7 +691,6 @@ author.link =(l,p=false)=>
     if (author.follows(p.xpub)) l.classList.add('is_bff');
     else l.classList.remove('is_bff');
   }
-  
 };
 
 author.pic =(l,p)=>
@@ -796,7 +763,8 @@ author.follow =async s=>
     petname = a.shift().trim();
     p_tag.push(it.fx.an(petname));
   }
-    
+  
+  let caution;
   let dat_k3 = await author.get_k3();
   if (dat_k3)
   {
@@ -805,6 +773,7 @@ author.follow =async s=>
     {
       description: 'new follow list',
       l:kin.tags(new_follows),
+      scroll:true,
       no(){},
       yes()
       {
@@ -855,6 +824,7 @@ author.unfollow =async s=>
       {
         description:'new follow list:'+old_len+'->'+new_follows.length,
         l:kin.tags(new_follows),
+        scroll:true,
         no(){},
         yes()
         {
@@ -887,10 +857,7 @@ author.unfollow =async s=>
 author.md =()=>
 {
   const md = aa.p[aka.o.ls.xpub].metadata;
-  if (md)
-  {
-    cli.v('.aa aka smd '+JSON.stringify(md));
-  }
+  if (md) cli.v('.aa aka smd '+JSON.stringify(md));
 };
 
 author.smd =s=>
@@ -898,10 +865,8 @@ author.smd =s=>
   cli.fuck_off();
   
   let md;
-
   try { md = JSON.parse(s.trim())}
   catch(er) { console.log('smd er',er) }
-
   if (md)
   {
     console.log(md);
@@ -922,7 +887,7 @@ author.smd =s=>
         event.id = it.fx.hash(event);
         
         // console.log(event);
-        aa.send_it(event).then(e=>{author.score(k+' 0');console.log(e)});
+        aa.send_it(event).then(e=>{console.log(e)});
         // aa.sign(event).then((signed)=>
         // {
         //   // console.log('signed',signed);
@@ -975,7 +940,7 @@ author.react =async s=>
     if (reply_dat)
     {
       const reply_e = aa.e[xid].event;
-      event.tags.push(...it.get_tags(reply_e));
+      event.tags.push(...it.get_tags_for_reply(reply_e));
     } 
     
     event.id = it.fx.hash(event);

@@ -131,6 +131,17 @@ cli.keydown =e=>
   else if (e.key === 'Escape') cli.collapse();
 };
 
+cli.pre_compost =s=>
+{
+  if (s.length)
+  {
+    const dis = v_u.viewing;    
+    if (dis && cli.dat?.replying !== dis) delete cli.dat;
+    if (!cli.hasOwnProperty('dat')) cli.mk_dat(s,dis)
+    else cli.dat.event.content = s;
+  }
+  else if (cli.hasOwnProperty('dat')) delete cli.dat;
+};
 
 cli.compost =s=>
 {
@@ -155,8 +166,7 @@ cli.compost =s=>
         }
         if (add) cli.dat.event.tags.push(mention)
       }
-      // cli.dat.event.tags.push(...mentions);
-      aa.draft(cli.dat.event);
+      kin.draft(cli.dat.event);
       delete cli.dat;
     }
     else 
@@ -228,11 +238,7 @@ cli.act_item =(main_act,sub_act)=>
   l.tabIndex = '1';
   const clk =e=>
   {
-    let act = ns + ' ' + e.target.querySelector('.val').textContent;
-    cli.upd_from_oto(act);
-    // cli.t.value = s.slice(0,-Math.abs(act.length)) + act.trim() + ' ';
-    // cli.update();
-    // cli.foc();
+    cli.upd_from_oto(ns+' '+e.target.querySelector('.val').textContent);
   };
   l.onclick = clk;
   l.onkeydown =e=>
@@ -283,24 +289,20 @@ cli.action =(s,a)=>
 
 cli.otocomp =()=>
 {
+  const ns = localStorage.ns;
   const s = cli.t.value;
   const a = s.split(' ');
   
   cli.oto.textContent = ''; 
-  // cli.oto.dataset.s = s;
   
   if (!s.length 
-  || localStorage.ns.startsWith(s)) cli.oto.append(cli.act_item('',''));
-  else if (a[0] === localStorage.ns) cli.action(s,a); // else if it's an action
+  || ns.startsWith(s)) cli.oto.append(cli.act_item('',''));
+  else if (a[0] === ns) cli.action(s,a); // else if it's an action
   else 
   { 
     // it's not an action
     const w = a[a.length - 1].toLowerCase();
-    if (w.startsWith('@') && w.length > 1) 
-    {
-      cli.mention(w);
-      console.log('mention soon')
-    }
+    if (w.startsWith('@') && w.length > 1)  cli.mention(w);
   }
 
   if (aka.o.ls.xpub) cli.pre_compost(s)
@@ -330,24 +332,14 @@ cli.mk_dat =async(s,dis)=>
       if (reply_dat)
       {
         const reply_e = aa.e[x].event;
-        cli.dat.event.tags.push(...it.get_tags(reply_e));
+        cli.dat.event.tags.push(...it.get_tags_for_reply(reply_e));
         cli.dat.replying = dis;
       }      
     }
   }
 };
 
-cli.pre_compost =s=>
-{
-  if (s.length)
-  {
-    const dis = v_u.viewing;    
-    if (dis && cli.dat?.to !== dis) delete cli.dat;
-    if (!cli.hasOwnProperty('dat')) cli.mk_dat(s,dis)
-    else cli.dat.event.content = s;
-  }
-  else if (cli.hasOwnProperty('dat')) delete cli.dat;
-};
+
 
 it.act =s=>
 {
