@@ -928,7 +928,7 @@ it.parse.url =s=>
     const type = it.s.media(m[0]);
     let link;      
     switch (type[0]) 
-    {
+    {        
       case 'img':
         link = it.mk.l('img',{cla:'content-img',src:type[1].href});
         link.loading = 'lazy';

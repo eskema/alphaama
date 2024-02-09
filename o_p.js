@@ -70,7 +70,7 @@ o_p.rm =s=>
     if (!o_p.def.hasOwnProperty(k))
     {
       localStorage.removeItem(k);
-      // o_p.load();
+      o_p.load();
       v_u.log(dis+k);
     }
     else v_u.log(dis+'key cannot be removed');

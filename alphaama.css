@@ -87,7 +87,7 @@ html
   background-color: rgb(var(--color-b));
   color: rgb(var(--color-d));
   font-family: "Source Code Pro", monospace;
-  font-size: (--font-size);
+  font-size: var(--font-size);
   margin: 0;
 }
 
@@ -109,7 +109,8 @@ body
   -webkit-text-size-adjust: 100%;
 }
 
-.framed body {
+.framed body 
+{
   padding-bottom: 0;
 }
 
@@ -445,7 +446,6 @@ button.butt:focus
 {
   content: ":";
   white-space: pre;
-  
 }
 
 .item > .val
@@ -1333,6 +1333,7 @@ button.butt:focus
 .in_view > .by .id .xid
 {
   align-items: center;
+  color: rgb(var(--color-d))!important;
   display: grid;
   justify-self: end;
   padding: 0 var(--padm);
@@ -1461,6 +1462,7 @@ a.author.is_bff
 .in_view > .content
 {
   display: grid;
+  justify-content: center;
   max-height: unset;
   padding-top: var(--line);
   padding-bottom: var(--line);
@@ -1475,7 +1477,9 @@ a.author.is_bff
 }
 
 .paragraph
-{  
+{ 
+/*  justify-self: stretch;
+  justify-self: start;*/
   line-height: var(--line);
   padding: 0 var(--pad);
   padding-top: 0;
@@ -1485,7 +1489,7 @@ a.author.is_bff
 
 .in_view > .content .paragraph
 {
-  justify-self: center;
+  justify-self: stretch;
   max-width: 960px;
 }
 
@@ -1524,6 +1528,8 @@ a.author.is_bff
 .in_view > .content .content-img
 {
   max-height: var(--media-max-height);
+  margin: 0 auto;
+  justify-self: center;
 }
 
 .content a.author

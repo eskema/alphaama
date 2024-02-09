@@ -71,7 +71,7 @@ aka.load =()=>
     },
     'smd': 
     {
-      required:['metadata in JSON format'], 
+      required:['{JSON}'], 
       description:'set aka metadata (kind-0)',
       exe:author.smd
     },
@@ -722,7 +722,7 @@ author.follows =(xpub)=>
     if (ak.extradata.bff.includes(xpub)) return true;
     else return false;
   }
-  else v_u.log('no bff found to check');
+  // else v_u.log('no bff found to check');
 };
 
 author.ufo =(s)=>
@@ -866,7 +866,7 @@ author.smd =s=>
   
   let md;
   try { md = JSON.parse(s.trim())}
-  catch(er) { console.log('smd er',er) }
+  catch(er) { console.log('smd er',er,md) }
   if (md)
   {
     console.log(md);
