@@ -141,7 +141,6 @@ aa.clk.yolo =e=>
 aa.clk.sign =e=>
 {
   let dat = aa.e[e.target.closest('.note').dataset.id];
-  console.log(dat);
   if (dat)
   {
     aa.sign(dat.event).then(signed=>
@@ -262,7 +261,7 @@ aa.clk.fetch =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
-  const relays = [];
+  let relays = [];
   if (note.dataset.r) relays.push(note.dataset.r);
   else relays = rel.in_set(rel.o.r);
   q_e.demand(['REQ','ids',{ids:[xid]}],relays,{eose:'done'});

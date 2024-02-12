@@ -147,9 +147,9 @@ kin.event =message=>
 
 kin.e =s=>
 {
-  let event;
-  try { event = JSON.parse(s.trim())}
-  catch (er) { console.log('kin.e',er)}
+  let event = it.parse.j(s);;
+  // try { event = JSON.parse(s.trim())}
+  // catch (er) { console.log('kin.e',er)}
   if (event)
   {
     if (!event.pubkey) event.pubkey = aka.o.ls.xpub;
@@ -252,9 +252,9 @@ kin.blank =(tag,dat,seconds)=>
 kin.d0 =dat=>
 {
   const er = 'invalid kind:0 metadata';
-  let metadata;
-  try { metadata = JSON.parse(dat.event.content) } 
-  catch (err) { v_u.log(er) } 
+  let metadata = it.parse.j(dat.event.content);
+  // try { metadata = JSON.parse(dat.event.content) } 
+  // catch (err) { v_u.log(er) } 
   
   if (metadata)
   {
@@ -328,7 +328,11 @@ kin.d3 =dat=>
 
           }
         }
-        rel.add_from_k3(rel.from_k3(dat.event.content),p);
+        let relays = rel.from_o(it.parse.j(dat.event.content),['k3']);
+        rel.add_to_p(relays,p);
+        if (aka.is_aka(p.xpub)) rel.add_to_aka(relays);
+        
+        // rel.add_from_k3(it.parse.j(dat.event.content),p);
 
         author.save(p);
       }
@@ -336,6 +340,7 @@ kin.d3 =dat=>
       let profile = document.getElementById(p.npub);
       if (!profile) profile = author.profile(p);
       author.update(profile,p,true);
+
 
       if (p.sets.includes('aka')) aka.load_bff(p);
 
@@ -362,38 +367,16 @@ kin.d10002 =dat=>
       {
         p.pastdata.k10002.unshift([dat.event.id,c_at]);
         if (c_at > p.updated) p.updated = c_at;
-        // p.extradata.bff = author.bff_from_tags(tags);
-        // author.process_k3_tags(tags,x);
-
         
-        rel.add_from_k10002(tags,p);
-        // const relays = kin.extract_relays_from_content(dat.event.content);
-        // if (relays)
-        // {
-        //   console.log(relays);
-        //   if (!p.rels) p.rels = {};
-        //   for (const url in relays)
-        //   {
-        //     const dis = it.s.url(url);
-        //     if (dis)
-        //     {
-        //       const relay = p.rels[dis.href] = {sets:[]};
-        //       if (relays[url].read === true) it.a_set(relay.sets,['read']);
-        //       if (relays[url].write === true) it.a_set(relay.sets,['write']);
-        //       it.a_set(relay.sets,['k3']);
-        //     }
-        //   }
-        // }
-
+        let relays = rel.from_tags(tags,['k10002']);
+        rel.add_to_p(relays,p);
+        if (aka.is_aka(p.xpub)) rel.add_to_aka(relays);
         author.save(p);
       }
 
       let profile = document.getElementById(p.npub);
       if (!profile) profile = author.profile(p);
       author.update(profile,p,true);
-
-      // if (p.sets.includes('aka')) aka.load_bff(p);
-
       
     });
   }

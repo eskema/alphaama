@@ -237,6 +237,7 @@ v_u.append_to_rep =(note,rep)=>
   rep.insertBefore(note,last ? last : null);
   let is_aka = note.dataset.pubkey === aka.o.ls.xpub;
   note.classList.add('reply');
+  note.classList.remove('root');
   v_u.upd.path(rep,note.dataset.stamp,is_aka);
 };
 

@@ -1,7 +1,10 @@
 const rel = 
 {
   def:{id:'rel',ls:{},sets:['read','write'],r:'read',w:'write'}, 
-  active:{},
+  active:
+  {
+    // url:{q:[],cc:[],}
+  },
 };
 
 rel.load =(e)=>
@@ -15,19 +18,19 @@ rel.load =(e)=>
       description:'add or replace relays',
       exe:rel.add
     },
-    'sets':
-    {
-      required:['set','url'],
-      description:'create sets of relays',
-      // oto:rel.ls,
-      exe:rel.sets
-    },
     'rm':
     {
       required:['url'], 
       description:'remove relay',
       // oto:rel.ls,
       exe:rel.rm
+    },
+    'sets':
+    {
+      required:['set','url'],
+      description:'create sets of relays',
+      // oto:rel.ls,
+      exe:rel.sets
     },
     'setrm':
     {
@@ -44,13 +47,13 @@ rel.load =(e)=>
     },
     'list':
     {
-      description:'loads relay list (kind-10002)',
+      required:['set'],
+      description:'loads relay list from set to mklist',
       exe:rel.list
     },
     'mklist':
     {
-      required:['set'],
-      description:'create a relay list from set (kind-10002)',
+      description:'create a relay list (kind-10002)',
       exe:rel.mklist
     },
   };
@@ -59,18 +62,18 @@ rel.load =(e)=>
 
 rel.start =(mod)=>
 {
-  let up;
+  let changed;
   if (!mod.o.r) 
   {
     mod.o.r = 'read';
-    up = true;
+    changed = true;
   }
   if (!mod.o.w) 
   {
     mod.o.w = 'write';
-    up = true;
+    changed = true;
   }
-  if (up) rel.save()
+  if (changed) rel.save()
 };
 
 rel.save =()=>
@@ -90,11 +93,12 @@ rel.upd_state =url=>
       {
         l.dataset.state = relay.ws.readyState;
         l.dataset.q = Object.keys(relay.q);
-        console.log(url,l.dataset.state,l.dataset.q);
+        console.log('rel.upd_state '+url,l.dataset.state,l.dataset.q);
       },100);
     }
+    else console.log('rel.upd_state '+url,'no relay l found')
   }
-}
+};
 
 rel.c_on =async(url,o=false)=> 
 {
@@ -164,11 +168,11 @@ rel.add =s=>
   {
     let url_string = a.shift().trim();
     
-    const u = it.s.url(url_string);
-    if (u)
+    const url = it.s.url(url_string)?.href;
+    if (url)
     {
-      if (!rel.o.ls[u.href]) rel.o.ls[u.href] = {sets:[]};
-      for (const set of a) rel.o.ls[u.href].sets.push(set)
+      if (!rel.o.ls[url]) rel.o.ls[url] = {sets:[]};
+      it.a_set(rel.o.ls[url].sets,a);
     }
   };
   it.loop(work,s,rel.save);
@@ -203,9 +207,13 @@ rel.rm =s=>
 
 rel.close =(k,id)=>
 {
-  rel.active[k].ws.send(JSON.stringify(['CLOSE',id]));
-  delete rel.active[k].q[id];
-  setTimeout(()=>{rel.upd_state(k)},100);
+  let relay = rel.active[k];
+  if (relay)
+  {
+    if (relay.ws?.readyState === 1) relay.ws.send(JSON.stringify(['CLOSE',id]));
+    delete rel.active[k].q[id];
+    setTimeout(()=>{rel.upd_state(k)},100);
+  }
 };
 
 rel.resume =()=>
@@ -270,7 +278,6 @@ rel.in_set =relset=>
   { 
     if (rel.o.ls[k].sets.includes(relset)) relays.push(k)
   }
-  if (!relays.length) relays = false;
   return relays
 };
 
@@ -278,35 +285,47 @@ rel.ext =()=>
 {
   if (window.nostr) 
   {
-    window.nostr.getRelays().then(rel.from_ext);
-  } else v_u.log('no extension found, make sure it is enabled.')
+    window.nostr.getRelays().then(r=>
+    {
+      rel.add_to_aka(rel.from_o(r,['ext']))
+    });
+  } 
+  else v_u.log('no extension found, make sure it is enabled.')
 };
 
-rel.from_ext =(relays)=>
+rel.add_to_aka =(relays)=>
 {
   let a = [];
-  for (const rl in relays)
-  {
-    let s = rl+' ext';
-    if (relays[rl].read) s += ' read';
-    if (relays[rl].write) s += ' write';
-    a.push(s);
-  }
+  for (const r in relays) a.push(r+' '+relays[r].sets.join(' '));
   if (a.length) rel.add(a.join(','));
-  v_u.log(localStorage.ns+' rel ext: '+a.length+' added');
+  v_u.log(a.length+' relays added');
 };
 
-rel.from_k3 =(content)=>
-{
-  let relays;
-  if (content.length > 3)
-  {
-    try { relays = JSON.parse(content)}
-    catch (er) { console.log(er)}
-  }
-  console.log(relays)
-  return relays
-};
+// rel.add_from_ext =(relays)=>
+// {
+//   let a = [];
+//   for (const rl in relays)
+//   {
+//     let s = rl+' ext';
+//     if (relays[rl].read) s += ' read';
+//     if (relays[rl].write) s += ' write';
+//     a.push(s);
+//   }
+//   if (a.length) rel.add(a.join(','));
+//   v_u.log(localStorage.ns+' rel ext: '+a.length+' added');
+// };
+
+// rel.parse =(s)=>
+// {
+//   let relays;
+//   s = s.trim();
+//   if (s.length > 8)
+//   {
+//     try { relays = JSON.parse(s)}
+//     catch (er) { console.log(er)}
+//   }
+//   return relays
+// };
 
 rel.add_from_k3 =(relays,p)=>
 {
@@ -315,36 +334,123 @@ rel.add_from_k3 =(relays,p)=>
     if (!p.rels) p.rels = {};
     for (let url in relays)
     {
-      const dis = it.s.url(url);
-      if (dis)
+      const href = it.s.url(url)?.href;
+      if (href)
       {
-        let relay = p.rels[dis.href];
-        if (!relay) relay = p.rels[dis.href] = {sets:[]};
-        if (relays[url].read === true) it.a_set(relay.sets,['read']);
-        if (relays[url].write === true) it.a_set(relay.sets,['write']);
+        let relay = p.rels[href];
+        if (!relay) relay = p.rels[href] = {sets:[]};
+        if (relays[href].read === true) it.a_set(relay.sets,['read']);
+        if (relays[href].write === true) it.a_set(relay.sets,['write']);
         it.a_set(relay.sets,['k3']);
       }
     }
   }
 };
 
-rel.add_from_k10002 =(tags,p)=>
+rel.from_o =(relays,sets=false)=>
 {
-  if (!p.rels) p.rels = {};
+  let rels = {};
+
+  for (let url in relays)
+  {
+    const href = it.s.url(url)?.href;
+    if (href)
+    {
+      rels[href] = {sets:[]};
+      // if (!relay) relay = p.rels[href] = {sets:[]};
+      if (relays[url].read === true) it.a_set(rels[href].sets,['read']);
+      if (relays[url].write === true) it.a_set(rels[href].sets,['write']);
+      if (Array.isArray(sets)) it.a_set(rels[href].sets,sets);
+    }
+  }
+  
+  // for (const url in o)
+  // {
+  //   const href = it.s.url(url)?.href;
+  //   if (href)
+  //   {
+  //     if rels[href]
+  //   }
+  //   let relay = relays[]
+  //   let str = rl+' '+s;
+  //   if (relays[rl].read) str += ' read';
+  //   if (relays[rl].write) str += ' write';
+  //   a.push(str);
+  // }
+
+  // for (const url of relays)
+  // {
+  //   // const [type,url,permission] = tag;
+  //   const href = it.s.url(url)?.href;
+  //   if (href)
+  //   {
+  //     let relay = rels[href] = {sets:[]};
+      
+  //     // let relay = p.rels[dis.href];
+  //     // if (!relay) relay = p.rels[dis.href] = {sets:[]};
+  //     if (relays[url].read === 'read') it.a_set(relay.sets,[...sets,'read']);
+  //     else if (permission === 'write') it.a_set(relays.sets,[...sets,'write']);
+  //     else it.a_set(relay.sets,[...sets,'read','write']);
+  //     // it.a_set(relay.sets,sets);
+  //   }
+  // }
+  return rels
+}
+
+rel.from_tags =(tags,sets=false)=>
+{
+  let relays = {};
   for (const tag of tags)
   {
     const [type,url,permission] = tag;
-    const dis = it.s.url(url);
-    if (dis)
+    const href = it.s.url(url)?.href;
+    if (href)
     {
-      let relay = p.rels[dis.href];
-      if (!relay) relay = p.rels[dis.href] = {sets:[]};
-      if (permission === 'read') it.a_set(relay.sets,['read']);
-      else if (permission === 'write') it.a_set(relay.sets,['write']);
-      else it.a_set(relay.sets,['read','write']);
-      it.a_set(relay.sets,['k10002']);
+      let relay = relays[href] = {sets:[]};
+      if (permission === 'read') it.a_set(relay.sets,[...sets,'read']);
+      else if (permission === 'write') it.a_set(relays.sets,[...sets,'write']);
+      else it.a_set(relay.sets,[...sets,'read','write']);
     }
   }
+  return relays
+}
+
+rel.add_to_p =(relays,p)=>
+{
+  if (!p.rels) p.rels = {};
+  for (const relay in relays)
+  {
+    if (!p.rels[relay]) p.rels[relay] = relays[relay]
+    else it.a_set(p.rels[relay].sets,relays[relay].sets);
+  }
+};
+
+rel.add_from_k10002 =(tags,p)=>
+{
+  if (!p.rels) p.rels = {};
+  const relays = rel.from_tags(tags,['k10002']);
+  for (const relay in relays)
+  {
+    if (!p.rels[relay]) p.rels[relay] = relays[relay]
+    else
+    {
+      it.a_set(p.rels[relay].sets,relays[relay].sets)
+    }
+  }
+  // for (const tag of tags)
+  // {
+  //   const [type,url,permission] = tag;
+  //   const dis = it.s.url(url);
+  //   if (dis)
+  //   {
+  //     let relay = p.rels[dis.href];
+  //     if (!relay) relay = p.rels[dis.href] = {sets:[]};
+  //     if (permission === 'read') it.a_set(relay.sets,['read']);
+  //     else if (permission === 'write') it.a_set(relay.sets,['write']);
+  //     else it.a_set(relay.sets,['read','write']);
+  //     it.a_set(relay.sets,['k10002']);
+  //   }
+  // }
 };
 
 rel.list =s=>
@@ -372,14 +478,9 @@ rel.mklist =s=>
   cli.fuck_off();
   s = s.trim().split(',');
   const relays = [];
-  for (const r of s)
-  {
-    relays.push(r.split(' '))
-  }
-
+  for (const r of s) relays.push(r.split(' '))
   if (relays.length)
   {
-    console.log(relays);
     it.confirm(
     {
       description:'new relay list',
@@ -395,20 +496,11 @@ rel.mklist =s=>
           tags:relays
         };
         event.id = it.fx.hash(event);
-        
-        console.log(event);
-        // aa.send_it(event).then(e=>
+        // console.log(event);
+        aa.send_it(event)
+        // .then(e=>
         // {
         //   console.log(e);
-        // });
-        // aa.sign(event).then((signed)=>
-        // {
-        //   // console.log('signed',signed);
-        //   aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
-        //   aa.db.upd(dat);
-        //   aa.print(dat);
-        //   q_e.broadcast(signed);
-        //   author.score(k+' 0');
         // });
       }
     });
@@ -475,7 +567,7 @@ rel.on_close =async e=>
   let relay = rel.active[rl];
   rel.upd_state(e.target.url);
   
-  if (!relay.fc) 
+  if (!relay?.fc) 
   {
     let cc = relay.cc;
     const fails = cc.unshift(Math.floor(e.timeStamp));
@@ -491,9 +583,9 @@ rel.on_message =e=>
 {
   const err = ()=> { v_u.log('invalid data from '+e.target.url) };
 
-  let a;
-  try{ a = JSON.parse(e.data) }
-  catch(er){ err() }
+  let a = it.parse.j(e.data);
+  // try{ a = JSON.parse(e.data) }
+  // catch(er){ err() }
   if (a && Array.isArray(a))
   {
     let type = a[0].toLowerCase();

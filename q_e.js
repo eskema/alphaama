@@ -98,30 +98,37 @@ q_e.mk =(f_id,o) =>
 
 q_e.demand =(request,relays,options)=>
 {
-  let filters = request.slice(2);
-  for (const f of filters)
+  if (request)
   {
-    if (!it.fx.verify_filter(f)) 
+    let filters = request.slice(2);
+    for (const f of filters)
     {
-      console.log('demand failed: invalid filter',f);
-      return false;
+      if (!it.fx.verify_filter(f)) 
+      {
+        v_u.log('demand failed, invalid filter: '+f);
+        return false;
+      }
     }
-  }
-  if (request && relays && relays.length)
-  {
+
     let opts = {req:request};
-    for (const opt in options)
-    {
-      opts[opt] = options[opt];
-    }
+    for (const opt in options) opts[opt] = options[opt];
+
+    if (!relays && !relays.length) relays = rel.in_set(rel.o.r);
+    if (!relays.length) return false;
 
     for (const k of relays)
     {
-      const relay = rel.active[k];
-
-      if (!relay || !relay.ws || relay.ws.readyState === 3)
+      let url = it.s.url(k)?.href;
+      if (!url) 
       {
-        if (!rel.o.ls[k])
+        v_u.log('invalid relay url: '+k);
+        return false
+      }
+
+      const relay = rel.active[url];
+      if (!relay)
+      {
+        if (!rel.o.ls[url])
         {
           // it.confirm(
           // {
@@ -131,23 +138,24 @@ q_e.demand =(request,relays,options)=>
 
           //    needs to display info from what npub
 
-          if (window.confirm('fetch missing from relay '+k+'?'))
+          if (window.confirm('fetch missing from relay '+url+'?'))
           {
-            rel.add(k+' moar');
-            rel.c_on(k,opts);
+            rel.add(url+' moar');
+            rel.c_on(url,opts);
           }
-          else rel.add(k+' off');
+          else rel.add(url+' off');
         }
-        else
-        {
-          if (!rel.o.ls[k].sets.includes('off')) rel.c_on(k,opts);
-        }
+        else if (!rel.o.ls[url].sets.includes('off')) rel.c_on(url,opts);
       }
-      else if (relay.ws.readyState === 1)
+      else 
       {
-        relay.q[request[1]] = opts;
-        relay.ws.send(JSON.stringify(request));  
-        rel.upd_state(k);      
+        if (!relay.ws || relay.ws.readyState === 3) rel.c_on(url,opts)
+        else if (relay.ws.readyState === 1)
+        {
+          relay.q[request[1]] = opts;
+          relay.ws.send(JSON.stringify(request));  
+          rel.upd_state(k);
+        }
       }
     }
   }
@@ -162,23 +170,19 @@ q_e.demand =(request,relays,options)=>
 q_e.broadcast =(event,relays=false)=>
 {
   // ['EVENT', signed]
-  if (!relays) relays = rel.in_set(rel.o.w);
-  if (relays)
+  const dis = JSON.stringify(['EVENT',event]);
+  if (!relays || !relays.length) relays = rel.in_set(rel.o.w);
+  if (relays && relays.length)
   {
-    let dis = JSON.stringify(['EVENT',event]);
     for (const k of relays)
     {
       const relay = rel.active[k];
-      if (relay?.ws?.readyState === 1)
-      {
-        // console.log('yo',dis)
-        relay.ws.send(dis);
-      }
+      if (relay?.ws?.readyState === 1) relay.ws.send(dis);
       else
       {
-        if (!rel.o.ls[k]) rel.add(k+' post');
+        if (!rel.o.ls[k]) rel.add(k+' write');
         rel.c_on(k,{send:[dis]});
-      } 
+      }
     }
   }
 };
@@ -241,8 +245,8 @@ q_e.add =s=>
   let a = s.trim().split(' ');
   let fid = it.fx.an(a.shift());
   a = a.join('').replace(' ','');
-  let o;
-  try { o = JSON.parse(a) } catch (er) { console.log(er,s) }
+  let o = it.parse.j(a);
+  // try { o = JSON.parse(a) } catch (er) { console.log(er,s) }
   if (o)
   {
     // console.log(o);
@@ -279,59 +283,55 @@ q_e.raw =s=>
 {
   let a = s.trim().split(' ');
   let rels = a.shift();
-  let filter = a.join('').replace(' ','');
-
-  // let [relset,filter] = s.trim().split(' ');
+  let filter = a.join('').replace(' ',''); 
   if (rels && filter) 
   { 
-    let filtered = it.fx.vars(filter);
+    let [filtered,options] = it.fx.vars(filter);
     if (filtered)
     {
       let request = ['REQ','raw',filtered];
       let relays = [];
-      let relay = it.s.url(rels);
+      let relay = it.s.url(rels)?.href;
       if (relay) relays.push(relay);
-      else if (rel.o.sets.includes(rels)) relays.push(rel.in_set(rels));
+      else if (rel.o.sets.includes(rels)) relays.push(...rel.in_set(rels));
       if (relays.length)
       {
         v_u.log(localStorage.ns+' qe raw '+filter);
-        q_e.demand(request,relays,{eose:'close'});
+        console.log(request,relays,options);
+        // q_e.demand(request,relays,options});
       }
       else v_u.log('invalid relay / relset')
     }
     else v_u.log('invalid filter')
+  } 
+  else 
+  {
+    v_u.log('qe raw not ok');
+    console.log('qe raw not ok',rels,filter)
   }
 };
 
 q_e.run =s=>
 {
   const a = s.trim().split(' ');
-  let fid,relset,options={};
+  let fid,relset;
   if (a.length) fid = a.shift();
   if (a.length) relset = a.shift();
-  if (a.length)
-  {
-    for (const opt of a)
-    {
-      let option = opt.split(':');
-      if (option.length === 2) options[option[0]] = option[1];
-    }
-  }
-  if (fid) 
+  if (fid && q_e.o.ls.hasOwnProperty(fid)) 
   { 
-    if (q_e.o.ls.hasOwnProperty(fid)) 
-    {
-      let filter = it.fx.vars(q_e.o.ls[fid].v);
-      let request = ['REQ',fid,filter];
-      let relays = rel.in_set(relset);
-      if (!relays) relays = rel.in_set(rel.o.r);
-      console.log(request,relays,options);
-      q_e.demand(request,relays,options);
-      cli.fuck_off();
-      v_u.log(localStorage.ns+' qe run '+fid);
-    }
-    else v_u.log('qe run filter not found')
-  }
+
+    let [filtered,options] = it.fx.vars(q_e.o.ls[fid].v);
+    let request;
+    if (filtered) request = ['REQ',fid,filtered];
+    
+    let relays = rel.in_set(relset);
+    if (!relays.length) relays = rel.in_set(rel.o.r);
+
+    // console.log('qe run',request,relays,options);
+    q_e.demand(request,relays,options);
+    cli.fuck_off(localStorage.ns+' qe run '+fid);
+  } 
+  else v_u.log('qe run filter not found')
 };
 
 q_e.close =s=>

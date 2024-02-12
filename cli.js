@@ -59,10 +59,11 @@ cli.clear =()=>
   cli.update();
 };
 
-cli.fuck_off =()=>
+cli.fuck_off =(log=false)=>
 {
   cli.clear();
   cli.collapse();
+  if (log) v_u.log(log)
 };
 
 cli.v =s=>

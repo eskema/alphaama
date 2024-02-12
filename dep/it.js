@@ -388,12 +388,15 @@ it.tim.e =st=> it.tim.format(it.tim.std(st));
 it.a_set =(a,dis)=>
 {
   let b;
-  for (const k of dis)
-  { 
-    if (!a.includes(k)) 
-    {
-      a.push(k);
-      b = true;
+  if (Array.isArray(a) && Array.isArray(dis))
+  {
+    for (const k of dis)
+    { 
+      if (!a.includes(k)) 
+      {
+        a.push(k);
+        b = true;
+      }
     }
   }
   return b
@@ -476,17 +479,23 @@ it.fx.a =a=>
 
 it.fx.vars =(s)=>
 {
-  let o;
-  try { o = JSON.parse(s) } catch (er) { console.log(er,s) }
-  
+  let o = it.parse.j(s),options = {};  
   const aka_p = aa.p[aka.o.ls.xpub];
-  if (!aka_p) return false;
-
+  if (!aka_p) 
+  {
+    v_u.log('no aka, so no vars in qe...');
+    return [false,false];
+  }
   if (o) for (const k in o) 
   {
     const v = o[k];
     switch (k)
     {
+      case 'eose':
+        options.eose = v;
+        delete o[k];
+        break;
+
       case 'since':
       case 'until':
         if (typeof v === 'string') o[k] = it.tim.time(v);
@@ -514,7 +523,8 @@ it.fx.vars =(s)=>
         }
     }
   }
-  return o
+  if (!Object.keys(options).length) options = false
+  return [o,options]
 };
 
 it.fx.sorts =(a,s)=>
@@ -903,6 +913,18 @@ it.nip19_to_tags =a=>
   return tags
 };
 
+it.parse.j =s=>
+{
+  let o;
+  s = s.trim();
+  if (s.length > 2)
+  {
+    try { o = JSON.parse(s)}
+    catch (er) { console.log('it.parse.j',s,er)}
+  }
+  return o
+};
+
 it.parse.mentions =s=>
 {
   const mentions = [];
@@ -1005,7 +1027,7 @@ it.parse.content =o=>
       for (let i=0;i<words.length;i++)
       {
         words[i].trim();
-        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i]),' ');
+        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
         else if (it.regx.nostr.test(words[i])) l.append(it.parse.nostr(words[i]),' ');
         else 
         {
