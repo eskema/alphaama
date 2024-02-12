@@ -323,17 +323,13 @@ kin.d3 =dat=>
         {
           if (!p.extradata.bff.includes(k))
           {
-
             // handle unfollowed k
-
           }
         }
         let relays = rel.from_o(it.parse.j(dat.event.content),['k3']);
         rel.add_to_p(relays,p);
         if (aka.is_aka(p.xpub)) rel.add_to_aka(relays);
         
-        // rel.add_from_k3(it.parse.j(dat.event.content),p);
-
         author.save(p);
       }
       
@@ -341,10 +337,7 @@ kin.d3 =dat=>
       if (!profile) profile = author.profile(p);
       author.update(profile,p,true);
 
-
-      if (p.sets.includes('aka')) aka.load_bff(p);
-
-      
+      if (aka?.is_aka(p.xpub)) aka.load_bff(p);
     });
   }
   const note = kin.def(dat);

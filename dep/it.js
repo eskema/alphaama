@@ -1027,7 +1027,7 @@ it.parse.content =o=>
       for (let i=0;i<words.length;i++)
       {
         words[i].trim();
-        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
+        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i]),' ');
         else if (it.regx.nostr.test(words[i])) l.append(it.parse.nostr(words[i]),' ');
         else 
         {

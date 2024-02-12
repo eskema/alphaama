@@ -261,10 +261,12 @@ aa.clk.fetch =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
+  const request = ['REQ','ids',{ids:[xid]}];
   let relays = [];
-  if (note.dataset.r) relays.push(note.dataset.r);
-  else relays = rel.in_set(rel.o.r);
-  q_e.demand(['REQ','ids',{ids:[xid]}],relays,{eose:'done'});
+  let r = note.dataset.r?.split(' ');
+  if (r.length) relays.push(...r);
+  else relays.push(...rel.in_set(rel.o.r));
+  q_e.demand(request,relays,{eose:'done'});
 };
 
 aa.replace_note =(l,dat)=>

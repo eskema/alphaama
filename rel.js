@@ -301,49 +301,13 @@ rel.add_to_aka =(relays)=>
   v_u.log(a.length+' relays added');
 };
 
-// rel.add_from_ext =(relays)=>
-// {
-//   let a = [];
-//   for (const rl in relays)
-//   {
-//     let s = rl+' ext';
-//     if (relays[rl].read) s += ' read';
-//     if (relays[rl].write) s += ' write';
-//     a.push(s);
-//   }
-//   if (a.length) rel.add(a.join(','));
-//   v_u.log(localStorage.ns+' rel ext: '+a.length+' added');
-// };
-
-// rel.parse =(s)=>
-// {
-//   let relays;
-//   s = s.trim();
-//   if (s.length > 8)
-//   {
-//     try { relays = JSON.parse(s)}
-//     catch (er) { console.log(er)}
-//   }
-//   return relays
-// };
-
-rel.add_from_k3 =(relays,p)=>
+rel.add_to_p =(relays,p)=>
 {
-  if (relays)
+  if (!p.rels) p.rels = {};
+  for (const relay in relays)
   {
-    if (!p.rels) p.rels = {};
-    for (let url in relays)
-    {
-      const href = it.s.url(url)?.href;
-      if (href)
-      {
-        let relay = p.rels[href];
-        if (!relay) relay = p.rels[href] = {sets:[]};
-        if (relays[href].read === true) it.a_set(relay.sets,['read']);
-        if (relays[href].write === true) it.a_set(relay.sets,['write']);
-        it.a_set(relay.sets,['k3']);
-      }
-    }
+    if (!p.rels[relay]) p.rels[relay] = relays[relay]
+    else it.a_set(p.rels[relay].sets,relays[relay].sets);
   }
 };
 
@@ -415,44 +379,6 @@ rel.from_tags =(tags,sets=false)=>
   return relays
 }
 
-rel.add_to_p =(relays,p)=>
-{
-  if (!p.rels) p.rels = {};
-  for (const relay in relays)
-  {
-    if (!p.rels[relay]) p.rels[relay] = relays[relay]
-    else it.a_set(p.rels[relay].sets,relays[relay].sets);
-  }
-};
-
-rel.add_from_k10002 =(tags,p)=>
-{
-  if (!p.rels) p.rels = {};
-  const relays = rel.from_tags(tags,['k10002']);
-  for (const relay in relays)
-  {
-    if (!p.rels[relay]) p.rels[relay] = relays[relay]
-    else
-    {
-      it.a_set(p.rels[relay].sets,relays[relay].sets)
-    }
-  }
-  // for (const tag of tags)
-  // {
-  //   const [type,url,permission] = tag;
-  //   const dis = it.s.url(url);
-  //   if (dis)
-  //   {
-  //     let relay = p.rels[dis.href];
-  //     if (!relay) relay = p.rels[dis.href] = {sets:[]};
-  //     if (permission === 'read') it.a_set(relay.sets,['read']);
-  //     else if (permission === 'write') it.a_set(relay.sets,['write']);
-  //     else it.a_set(relay.sets,['read','write']);
-  //     it.a_set(relay.sets,['k10002']);
-  //   }
-  // }
-};
-
 rel.list =s=>
 {
   s = s.trim();
@@ -510,10 +436,7 @@ rel.mklist =s=>
 
 rel.try =(relay,dis)=>
 {
-  if (relay.ws.readyState === 1)
-  {
-    relay.ws.send(dis);
-  }
+  if (relay.ws.readyState === 1) relay.ws.send(dis);
   else 
   {
     if (!relay.failed_cons) relay.failed_cons = 1; 
@@ -542,22 +465,9 @@ rel.on_open =async e=>
       }
 
       rel.try(relay,JSON.stringify(sub.req))
-
-      // let sendit =()=> relay.ws.send();
-      // if (relay.ws.readyState !== 1)
-      // {
-      //   setTimeout(sendit,200);
-      // }
-      // else sendit()
     }
   }
-  if (relay.send?.length) 
-  {
-    for (const ev of relay.send) 
-    {
-      rel.try(relay,ev)
-    }
-  }
+  if (relay.send?.length) for (const ev of relay.send) rel.try(relay,ev);
   rel.upd_state(e.target.url);
 };
 
@@ -584,8 +494,6 @@ rel.on_message =e=>
   const err = ()=> { v_u.log('invalid data from '+e.target.url) };
 
   let a = it.parse.j(e.data);
-  // try{ a = JSON.parse(e.data) }
-  // catch(er){ err() }
   if (a && Array.isArray(a))
   {
     let type = a[0].toLowerCase();
