@@ -4,7 +4,7 @@ kin.note =dat=>
 {
   const note = it.mk.l('article',{cla:'note'}); 
   const by = it.mk.l('header',{cla:'by'});
-  let p;
+  let p,trusted;
   note.append(by);
   if (dat.seen) note.dataset.seen = dat.seen.join(' ');
   if (dat.subs) note.dataset.subs = dat.subs.join(' ');
@@ -30,7 +30,10 @@ kin.note =dat=>
   if (o.pubkey)
   {
     p = aa.p[o.pubkey];
+    // console.log(p);
     note.dataset.pubkey = o.pubkey;
+    trusted = it.s.trusted(p?.trust ?? 0);
+    note.dataset.trust = trusted;
     it.fx.color(o.pubkey,note);
     by.append(it.mk.author(o.pubkey));
   }
@@ -52,25 +55,72 @@ kin.note =dat=>
     tags_details.classList.add('details');
     note.append(tags_details);      
   }
+
   if (o.content) 
   {
-    let content;
-    if (p && it.s.trusted(p.trust)) 
-    {
-      content = it.parse.content(o);
-    }
-    else 
-    {
-      content = it.parse.content_basic(o);
-    }
-    note.append(content); 
+    note.append(it.parse.content(o,trusted)); 
   }
+
   if (o.sig) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
 
-  let replies = it.mk.l('ul',{cla:'replies expanded',clk:v_u.mark_read});
-  
+  // let replies = it.mk.l('ul',{cla:'replies expanded',clk:v_u.mark_read});
+  // let replies = it.mk.l('ul',{cla:'replies expanded',clk:v_u.mark_read});
+  let replies = it.mk.details('',false,true);
+  replies.classList.add('replies','expanded');
+  let summary = replies.querySelector('summary');
+  summary.append(it.mk.l('button',{cla:'butt mark_read',clk:v_u.mark_read}));
+  // summary.addEventListener('click',v_u.mark_read);
+  // console.log(replies);
   note.append(replies,kin.note_actions(dat.clas));  
   return note
+};
+
+kin.quote =o=>
+{
+  console.log(o);
+  const quote = it.mk.l('blockquote',{cla:'note_quote'});
+  if (o.dis) quote.cite = o.dis;
+  
+  if (o.id)
+  {
+    quote.dataset.id = o.id;
+    
+    let paragraph = it.mk.l('p',{cla:'note_quote_by'});
+    quote.append(paragraph);
+    let pubkey = o.author ?? o.pubkey;
+    // if (o.author) pubkey = o.author;
+    // if (!pubkey && o.pubkey) pubkey = o.pubkey;
+    if (pubkey) paragraph.append(it.mk.author(pubkey),' ');
+    else paragraph.append('? ');
+    const dis = it.fx.nid(o.id);
+    paragraph.append(it.mk.nostr_link(dis));
+
+
+    aa.db.get_e(o.id).then(e=>
+    {
+      // console.log(e);
+      if (e) 
+      {
+        quote.append(it.parse.content_quote(e.event));
+      }
+      else
+      {
+        quote.classList.add('blank_quote');
+        let req = {ids:[o.id]};
+        
+        if (o.relays) 
+        {
+          req.relays = o.relays;
+          let relays = it.mk.l('p',{con:'relays: '+o.relays});
+          quote.append(relays);
+        }
+        
+        // q_e.req.ids(req);
+      }
+    });
+  }
+  
+  return quote
 };
 
 kin.notice =message=>
@@ -105,9 +155,8 @@ kin.ok =message=>
       let actions = l.querySelector('.actions');
       actions.replaceWith(kin.note_actions(dat.clas))
     }
-    
   }
-  else console.log('not ok',id,reason)
+  else v_u.log('not ok: '+reason+' '+id);
 };
 
 kin.eose =message=>
@@ -136,20 +185,21 @@ kin.event =message=>
     };
     if (aa.miss.e[event.id]) delete aa.miss.e[event.id];
     aa.db.upd(dat);
-    let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
-    if (!sub.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
+    if (dat.subs?.length && dat.seen?.length)
+    {
+      let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
+      if (!sub?.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
+    }
+    
     
     aa.print(dat);
   }
   else console.log('invalid event',message);
 };
 
-
 kin.e =s=>
 {
   let event = it.parse.j(s);;
-  // try { event = JSON.parse(s.trim())}
-  // catch (er) { console.log('kin.e',er)}
   if (event)
   {
     if (!event.pubkey) event.pubkey = aka.o.ls.xpub;
@@ -345,6 +395,58 @@ kin.d3 =dat=>
   return note
 };
 
+kin.d6 =dat=>
+{
+  // console.log(dat);
+  dis = Object.assign({},dat);
+  dis.event.content = 'k'+dat.event.kind;
+  let note = kin.note(dis);
+  note.classList.add('is_new','tiny');
+  let reply_tag = it.get_reply_tag(dat.event.tags);
+  if (reply_tag && reply_tag.length)
+  {    
+    let repost_id = reply_tag[1];
+    if (repost_id) 
+    {
+      let dat_e = aa.db.get_e(repost_id).then(dat_e=>
+      {
+        if (!dat_e) 
+        {
+          let repost = it.parse.j(dat.event.content);
+          if (repost) kin.event({data:['EVENT','k6',repost],origin:dat.seen[0]});
+        }
+        else aa.print(dat_e);
+      });
+      
+    }
+    v_u.append_to_replies(dat,note,reply_tag);
+  }
+  else 
+  {
+    v_u.append_to_notes(note);
+  }
+  return note
+
+  // let repost_id = it.get_reply_tag();
+  // if (repost_id) 
+  // {
+  //   let e = document.querySelector('[data-id="'+repost_id+'"]');
+  //   if (!e) 
+  //   {
+  //     let repost = it.parse.j(dat.event.content);
+  //     if (repost) aa.print({event:repost});
+  //   }
+  // }
+  
+  // const note = kin.def(dat);
+  // note.classList.add('root');
+  // return note
+};
+
+kin.d16 =dat=>
+{
+  return kin.d6(dat)
+};
 
 kin.d10002 =dat=>
 {
@@ -381,6 +483,7 @@ kin.d10002 =dat=>
 kin.d7 =dat=>
 {
   const note = kin.d1(dat);
+  note.classList.add('tiny');
   return note
 };
 
@@ -486,7 +589,9 @@ aa.print =async dat=>
   {
     if (l.classList.contains('blank') 
     || l.classList.contains('draft')) aa.replace_note(l,dat);
-  } 
+  }
+
+  it.get_quotes(xid);
 
   if (l && history.state.view === nid) v_u.dis(l);
 

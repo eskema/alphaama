@@ -87,10 +87,10 @@ const e_observer = new IntersectionObserver(a=>
     {
       l.classList.remove('not_yet');
       // console.log(b);
-      e_observer.unobserve(l);
+      // e_observer.unobserve(l);
     }
   }
-},{root:null,threshold:0.1});
+},{root:null,threshold:.9});
 
 v_u.scroll =(l,options={})=> setTimeout(()=>{l.scrollIntoView(options)},50);
 
@@ -151,6 +151,7 @@ v_u.dis =l=>
   aa.l.classList.add('viewing','view_e');
   v_u.scroll(l);
 };
+
 
 v_u.req_e =a=>
 {
@@ -233,11 +234,12 @@ v_u.append_to_notes =(note)=>
 
 v_u.append_to_rep =(note,rep)=>
 {
-  const last = [...rep.children].filter(i=>i.dataset.created_at > note.dataset.created_at)[0];
+  const last = [...rep.children].filter(i=> i.tagName!== 'SUMMARY' && i.dataset.created_at > note.dataset.created_at)[0];
   rep.insertBefore(note,last ? last : null);
   let is_aka = note.dataset.pubkey === aka.o.ls.xpub;
   note.classList.add('reply');
   note.classList.remove('root');
+  rep.parentNode.classList.add('haz_new_reply','haz_reply');
   v_u.upd.path(rep,note.dataset.stamp,is_aka);
 };
 
@@ -312,9 +314,13 @@ v_u.upd.path =(l,stamp,is_aka=false)=>
       let time = l.querySelector('.by time');
       time.title = it.tim.ago(it.tim.std(time.dataset.timestamp))
       const replies = l.querySelector('.replies');
-      const some = replies.childNodes.length;
+      // console.log(replies);
+      const some = replies.childNodes.length - 1;
       const all = l.querySelectorAll('.note').length;
-      if (some > 0) replies.dataset.count = some + (all > some ? '.' + all : '')
+      const summary = replies.querySelector('summary');
+      const sum_butt = summary.querySelector('.mark_read');
+      // console.log(summary);
+      if (summary && some > 0) sum_butt.textContent = some + (all > some ? '.' + all : '')
     }
 	}
   if (root && updated) v_u.append_to_notes(root)
@@ -323,22 +329,24 @@ v_u.upd.path =(l,stamp,is_aka=false)=>
 v_u.mark_read =e=>
 {
   e.stopPropagation();
-  const dis = e.target;  
-  if (dis.classList.contains('replies'))
-  { 
+  // const dis = e.target;  
+  const replies = e.target.closest('.replies');
+  const mom = e.target.closest('.note');
+  mom.classList.remove('haz_new_reply','haz_new','is_new');
+  const new_stuff = replies.querySelectorAll('.haz_new_reply,.haz_new,.is_new');        
+  if (new_stuff.length)
+  {
     e.preventDefault();
-    
-    dis.parentNode.classList.remove('haz_new','haz_new_reply','is_new');
-    
-    const new_stuff = dis.querySelectorAll('.haz_new,.haz_new_reply,.is_new');        
-    if (new_stuff.length)
-    {
-      for (const l of new_stuff) l.classList.remove('haz_new_reply','haz_new','is_new');
-      if (dis.classList.contains('expanded')) dis.classList.remove('expanded')
-    }
-    else dis.classList.toggle('expanded');
-    
-    v_u.scroll(dis,{behavior:'smooth',block:'center'});
-    
-  } 
+    for (const l of new_stuff) l.classList.remove('haz_new_reply','haz_new','is_new');
+    if (replies.classList.contains('expanded')) replies.classList.remove('expanded')
+  }
+  else replies.classList.toggle('expanded');
+  
+  if (replies.classList.contains('expanded'))
+  {
+    v_u.scroll(replies,{behavior:'smooth',block:'start'});
+  }
+  else v_u.scroll(replies,{behavior:'smooth',block:'center'});
+  
+
 };

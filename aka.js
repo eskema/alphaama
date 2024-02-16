@@ -793,7 +793,7 @@ aka.follow =async s=>
           tags:new_follows
         };
         event.id = it.fx.hash(event);
-        aa.send_it(event).then(e=>{console.log('sent')});
+        aa.f_it(event).then(e=>{console.log('sent')});
         // aa.sign(event).then((signed)=>
         // {
         //   // console.log('signed',signed);
@@ -923,7 +923,7 @@ aka.unfollow =async s=>
         };
         event.id = it.fx.hash(event);
         // console.log(event);
-        aa.send_it(event).then(e=>{console.log('sent')});
+        aa.f_it(event).then(e=>{console.log('sent')});
       }
     });
   }
@@ -964,7 +964,7 @@ aka.smd =s=>
         };
         event.id = it.fx.hash(event);
         // console.log(event);
-        aa.send_it(event).then(e=>{console.log(e)});
+        aa.f_it(event).then(e=>{console.log(e)});
       }
     });
   }

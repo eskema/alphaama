@@ -1,13 +1,14 @@
 const rel = 
 {
-  def:{id:'rel',ls:{},sets:['read','write'],r:'read',w:'write'}, 
+  def:{id:'rel',ls:{},r:'read',w:'write'}, 
+  // def:{id:'rel',ls:{},sets:['read','write'],r:'read',w:'write'}, 
   active:
   {
-    // url:{q:[],cc:[],}
+    // url:{q:[],cc:[],...}
   },
 };
 
-rel.load =(e)=>
+rel.load =e=>
 {
   aa.ct.rel = 
   {
@@ -60,7 +61,7 @@ rel.load =(e)=>
   aa.load_mod(rel).then(rel.start);
 }
 
-rel.start =(mod)=>
+rel.start =mod=>
 {
   let changed;
   if (!mod.o.r) 
@@ -102,6 +103,12 @@ rel.upd_state =url=>
 
 rel.c_on =async(url,o=false)=> 
 {
+  if (localStorage.mode === 'lockdown') 
+  {
+    v_u.log('mode:lockdown');
+    return false;
+  }
+
   let relay = rel.active[url] ? rel.active[url] : rel.active[url] = {q:{},cc:[]};
   if (relay.ws?.readyState !== 1)
   {
@@ -237,8 +244,8 @@ rel.sets =s=>
           it.a_set(rel.o.ls[url.href].sets,[set_id]);
         }
       }
-      if (!rel.o.sets) rel.o.sets = [];
-      it.a_set(rel.o.sets,set_id);
+      // if (!rel.o.sets) rel.o.sets = [];
+      // it.a_set(rel.o.sets,[set_id]);
     }
   };
 
@@ -314,50 +321,17 @@ rel.add_to_p =(relays,p)=>
 rel.from_o =(relays,sets=false)=>
 {
   let rels = {};
-
   for (let url in relays)
   {
     const href = it.s.url(url)?.href;
     if (href)
     {
       rels[href] = {sets:[]};
-      // if (!relay) relay = p.rels[href] = {sets:[]};
       if (relays[url].read === true) it.a_set(rels[href].sets,['read']);
       if (relays[url].write === true) it.a_set(rels[href].sets,['write']);
       if (Array.isArray(sets)) it.a_set(rels[href].sets,sets);
     }
   }
-  
-  // for (const url in o)
-  // {
-  //   const href = it.s.url(url)?.href;
-  //   if (href)
-  //   {
-  //     if rels[href]
-  //   }
-  //   let relay = relays[]
-  //   let str = rl+' '+s;
-  //   if (relays[rl].read) str += ' read';
-  //   if (relays[rl].write) str += ' write';
-  //   a.push(str);
-  // }
-
-  // for (const url of relays)
-  // {
-  //   // const [type,url,permission] = tag;
-  //   const href = it.s.url(url)?.href;
-  //   if (href)
-  //   {
-  //     let relay = rels[href] = {sets:[]};
-      
-  //     // let relay = p.rels[dis.href];
-  //     // if (!relay) relay = p.rels[dis.href] = {sets:[]};
-  //     if (relays[url].read === 'read') it.a_set(relay.sets,[...sets,'read']);
-  //     else if (permission === 'write') it.a_set(relays.sets,[...sets,'write']);
-  //     else it.a_set(relay.sets,[...sets,'read','write']);
-  //     // it.a_set(relay.sets,sets);
-  //   }
-  // }
   return rels
 }
 
@@ -396,7 +370,7 @@ rel.list =s=>
       relays.push(tag.join(' '))
     } 
   }
-  cli.v('.aa rel mklist '+relays.join(','));
+  cli.v(localStorage.ns+' rel mklist '+relays.join(','));
 };
 
 rel.mklist =s=>
@@ -423,7 +397,7 @@ rel.mklist =s=>
         };
         event.id = it.fx.hash(event);
         // console.log(event);
-        aa.send_it(event)
+        aa.f_it(event)
         // .then(e=>
         // {
         //   console.log(e);
@@ -477,7 +451,7 @@ rel.on_close =async e=>
   let relay = rel.active[rl];
   rel.upd_state(e.target.url);
   
-  if (!relay?.fc) 
+  if (relay && !relay.fc) 
   {
     let cc = relay.cc;
     const fails = cc.unshift(Math.floor(e.timeStamp));

@@ -98,6 +98,12 @@ q_e.mk =(f_id,o) =>
 
 q_e.demand =(request,relays,options)=>
 {
+  if (localStorage.mode === 'lockdown') 
+  {
+    v_u.log('mode:lockdown');
+    return false;
+  }
+
   if (request)
   {
     let filters = request.slice(2);
@@ -169,6 +175,11 @@ q_e.demand =(request,relays,options)=>
 
 q_e.broadcast =(event,relays=false)=>
 {
+  if (localStorage.mode === 'lockdown') 
+  {
+    v_u.log('mode:lockdown');
+    return false;
+  }
   // ['EVENT', signed]
   const dis = JSON.stringify(['EVENT',event]);
   if (!relays || !relays.length) relays = rel.in_set(rel.o.w);
@@ -246,22 +257,33 @@ q_e.add =s=>
   let fid = it.fx.an(a.shift());
   a = a.join('').replace(' ','');
   let o = it.parse.j(a);
-  // try { o = JSON.parse(a) } catch (er) { console.log(er,s) }
   if (o)
   {
     // console.log(o);
-    
     let log = localStorage.ns+' qe add '+fid+' ';
     let filter = q_e.o.ls[fid];
-    if (filter && window.confirm('update filter?'))
+    let changed;
+    if (filter && filter.v === a)
     {
-      log += filter.v + ' > ';
-      filter.v = a
+      log += '=== is the same';
+      // v_u.log(log+'=== is the same')
     }
-    else q_e.o.ls[fid] = {v:a,sets:[]};
-    aa.save(q_e);
+    else if (filter)
+    {
+      log += filter.v+' > '+a;
+      filter.v = a;
+      changed = true;
+    }
+    else 
+    {
+      q_e.o.ls[fid] = {v:a,sets:[]};
+      log += q_e.o.ls[fid].v;
+      changed = true;
+    }
+    if (changed) aa.save(q_e);
+    v_u.log(log);
     cli.fuck_off();
-    v_u.log(log+q_e.o.ls[fid].v);
+    
   }
   else v_u.log('invalid filter');
 };
@@ -293,7 +315,8 @@ q_e.raw =s=>
       let relays = [];
       let relay = it.s.url(rels)?.href;
       if (relay) relays.push(relay);
-      else if (rel.o.sets.includes(rels)) relays.push(...rel.in_set(rels));
+      else relays.push(...rel.in_set(rels));
+      // else if (rel.o.sets.includes(rels)) relays.push(...rel.in_set(rels));
       if (relays.length)
       {
         v_u.log(localStorage.ns+' qe raw '+filter);
@@ -336,7 +359,7 @@ q_e.run =s=>
 
 q_e.close =s=>
 {
-  const log = localStorage.ns+' qe close';
+  let log = localStorage.ns+' qe close';
   let fids = s.trim().split(' ');
 
   for (const k in rel.active)
@@ -362,4 +385,15 @@ q_e.close =s=>
     }
   }
   v_u.log(log)
+};
+
+q_e.req = {};
+
+q_e.req.ids =(req={ids:[],relays:[]})=>
+{
+  const request = ['REQ','ids',{ids:req.ids}];
+  if (!req.relays?.length) req.relays = rel.in_set(rel.o.r);
+  const options = {eose:'close'};
+  console.log(request,req.relays,options);
+  q_e.demand(request,req.relays,options);
 };

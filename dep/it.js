@@ -44,9 +44,11 @@ it.s.rigged =()=>
   catch(er) {return true}
 };
 
+it.trust =()=> parseInt(localStorage.trust);
+
 it.s.trusted =trust=>
 {
-  const trust_needed = parseInt(localStorage.trust);
+  const trust_needed = it.trust();
   if (trust && trust_needed && trust >= trust_needed) return true;
   return false
 };
@@ -101,8 +103,93 @@ it.tag ={};
 it.tag.marked =(s,a)=> a[3] && a[3] === s; 
 it.tag.e =a=> it.s.tag(0,'e',a) && it.s.x(a[1]);
 it.tag.p =a=> it.s.tag(0,'p',a) && it.s.x(a[1]);
+it.tag.q =a=> it.s.tag(0,'q',a) && it.s.x(a[1]);
 it.tag.root =a=> it.tag.e(a) && it.tag.marked('root',a);
 it.tag.reply =a=> it.tag.e(a) && it.tag.marked('reply',a);
+
+it.get_tags_for_reply =(event)=>
+{  
+   const tags = [];
+   const seen = it.get_seen(event.id);
+   let root_tag = it.get_root_tag(event.tags);
+   if (root_tag.length) 
+   {
+      // console.log(root_tag);
+      if (!root_tag[2] || root_tag[2] === '')
+      {
+        root_tag[2] = seen;
+      }
+      if (!root_tag[3] || root_tag[3] !== 'root')
+      {
+        root_tag[3] = 'root';
+      }
+      tags.push(root_tag);
+      tags.push(['e',event.id,seen,'reply']);
+   }
+   else tags.push(['e',event.id,seen,'root']);
+   const pubkeys_to_add = [];
+   const pubkeys = event.tags.filter(t=>it.tag.p(t) && t[1] !== aka.o.ls.xpub);
+   
+   for (const pub of pubkeys) pubkeys_to_add.push(pub)
+
+   let unique = [...new Set(pubkeys)];
+   if (event.pubkey !== aka.o.ls.xpub && !unique.some(t=>t[1] === event.pubkey)) unique.push(['p',event.pubkey])
+   tags.push(...unique);
+
+   return tags
+};
+
+it.get_reply_tag =tags=>
+{
+  const a = it.loopita(tags, it.tag.e, it.tag.reply);
+  
+  let is_array = Array.isArray(a[0]);
+  if (a && !is_array) return a;
+  if (is_array)
+  {
+    let l = a[a.length-1];
+    if (it.tag.marked('mention',l)) return false;
+    return l
+  }
+  return false
+};
+
+it.get_root_tag =tags=>
+{
+  const a = it.loopita(tags, it.tag.e, it.tag.root);
+  
+  let is_array = Array.isArray(a[0]);
+  if (a && !is_array) return a;
+  if (is_array)
+  {
+    let l = a[0];
+    if (it.tag.marked('mention',l)) return false;
+    return l
+  }
+  return false
+};
+
+it.get_q_tag =tags=>
+{
+  for (const tag of tags) if (it.tag.q(tag)) return tag
+  return false
+};
+
+it.get_seen =(x)=>
+{
+  const dat = aa.e[x];
+  if (dat && dat.seen.length) return dat.seen[0];
+  return ''
+};
+
+it.tim ={};
+it.tim.std =st=> new Date(st*1000);
+
+it.tim.date =date_string=>
+{
+  try { return Date.parse(date_string) / 1000 } 
+  catch (er) { return false }
+};
 
 it.fx ={};
 
@@ -176,7 +263,13 @@ it.fx.color =(x,l)=>
 
 it.fx.nid =x=> NostrTools.nip19.noteEncode(x);
 it.fx.npub =x=> NostrTools.nip19.npubEncode(x);
-it.fx.decode =x=> NostrTools.nip19.decode(x).data;
+it.fx.decode =x=> 
+{
+  let decoded;
+  try { decoded = NostrTools.nip19.decode(x).data }
+  catch (er) { console.log(x) };
+  return decoded
+}
 it.fx.hash =o=> NostrTools.getEventHash(o);
 it.fx.verify =o=> NostrTools.verifyEvent(o);
 it.fx.verify_filter =o=>
@@ -261,83 +354,7 @@ it.fx.rm_path =k=>
   }
 };
 
-it.get_tags_for_reply =(event)=>
-{  
-   const tags = [];
-   const seen = it.get_seen(event.id);
-   let root_tag = it.get_root_tag(event.tags);
-   if (root_tag.length) 
-   {
-      // console.log(root_tag);
-      if (!root_tag[2] || root_tag[2] === '')
-      {
-        root_tag[2] = seen;
-      }
-      if (!root_tag[3] || root_tag[3] !== 'root')
-      {
-        root_tag[3] = 'root';
-      }
-      tags.push(root_tag);
-      tags.push(['e',event.id,seen,'reply']);
-   }
-   else tags.push(['e',event.id,seen,'root']);
-   const pubkeys_to_add = [];
-   const pubkeys = event.tags.filter(t=>it.tag.p(t) && t[1] !== aka.o.ls.xpub);
-   
-   for (const pub of pubkeys) pubkeys_to_add.push(pub)
 
-   let unique = [...new Set(pubkeys)];
-   if (event.pubkey !== aka.o.ls.xpub && !unique.some(t=>t[1] === event.pubkey)) unique.push(['p',event.pubkey])
-   tags.push(...unique);
-
-   return tags
-};
-
-it.get_reply_tag =tags=>
-{
-  const a = it.loopita(tags, it.tag.e, it.tag.reply);
-  
-  let is_array = Array.isArray(a[0]);
-  if (a && !is_array) return a;
-  if (is_array)
-  {
-    let l = a[a.length-1];
-    if (it.tag.marked('mention',l)) return false;
-    return l
-  }
-  return false
-};
-
-it.get_root_tag =tags=>
-{
-  const a = it.loopita(tags, it.tag.e, it.tag.root);
-  
-  let is_array = Array.isArray(a[0]);
-  if (a && !is_array) return a;
-  if (is_array)
-  {
-    let l = a[0];
-    if (it.tag.marked('mention',l)) return false;
-    return l
-  }
-  return false
-};
-
-it.get_seen =(x)=>
-{
-  const dat = aa.e[x];
-  if (dat && dat.seen.length) return dat.seen[0];
-  return ''
-};
-
-it.tim ={};
-it.tim.std =st=> new Date(st*1000);
-
-it.tim.date =date_string=>
-{
-  try { return Date.parse(date_string) / 1000 } 
-  catch (er) { return false }
-};
 
 it.tim.format =d=>
 { 
@@ -591,6 +608,16 @@ it.mk.link =(url,text=false,title=false)=>
   l.rel = 'noreferrer noopener';
   l.target = '_blank';
   return l
+};
+
+it.mk.nostr_link =(dis)=>
+{
+  return it.mk.l('a',
+  {
+    cla:'nostr_link',
+    con:dis.slice(0,12),
+    ref:'#'+dis,clk:it.clk.a
+  });
 };
 
 it.p =xpub=>
@@ -937,32 +964,48 @@ it.parse.mentions =s=>
   return mentions
 };
 
-it.parse.url =s=>
+it.parse.url =(s,trusted)=>
 {
   const dfrag = new DocumentFragment();
   const matches = [...s.matchAll(it.regx.url)];
   // console.log(matches);
   let last_i = 0;
+  // let trusted = trust >= it.trust();
+  // console.log(trusted);
+
   for (const m of matches)
   {
     dfrag.append(m.input.slice(last_i,m.index));
     last_i = m.index + m[0].length;
     const type = it.s.media(m[0]);
-    let link;      
-    switch (type[0]) 
-    {        
-      case 'img':
-        link = it.mk.l('img',{cla:'content-img',src:type[1].href});
-        link.loading = 'lazy';
-        break;
+    let link;
+    
+    if (trusted && type[0] === 'img')
+    {
+      link = it.mk.l('img',{cla:'content-img',src:type[1].href});
+      link.loading = 'lazy';
+    }
+    else if (trusted && type[0] === 'av')
+    {
+      link = av.mk(type[1].href);
+    }
+    else if (type) link = it.mk.link(type[1].href);
+    
+    // switch (type[0]) 
+    // {        
+    //   case 'img':
+        // link = it.mk.l('img',{cla:'content-img',src:type[1].href});
+        // link.loading = 'lazy';
+    //     break;
 
-      case 'av':
-        link = av.mk(type[1].href);
-        break;    
+    //   case 'av':
+    //     link = av.mk(type[1].href);
+    //     break;    
       
-      default:
-        if (type) link = it.mk.link(type[1].href);
-    } 
+    //   default:
+    //     if (type) link = it.mk.link(type[1].href);
+    // } 
+
     dfrag.append(link);
   }
   if (last_i < s.length) dfrag.append(s.slice(last_i));
@@ -970,36 +1013,146 @@ it.parse.url =s=>
   return dfrag
 }
 
+it.get_quotes =async id=>
+{
+  console.log(id);
+  let quotes = document.querySelectorAll('.blank_quote[data-id="'+id+'"]');
+  if (quotes.length)
+  {
+    let dat = await aa.db.get_e(id);
+
+    if (!dat) 
+    {
+      dat = {event:{"id":id}};
+    }
+      let quote = kin.quote(dat.event);
+      setTimeout(()=>
+      {
+        // let quotes = document.querySelectorAll('.note_quote[data-id="'+id+'"]');
+        for (const quo of quotes) 
+        {
+          console.log(quo);
+          quo.replaceWith(quote);
+        }
+      },100);
+      
+      // resolve(note)
+    // });
+  }
+};
+
+it.get_quote =async id=>
+{
+  console.log(id);
+  return new Promise(resolve=>
+  {
+    aa.db.get_e(id).then(dat=>
+    {
+      console.log(dat);
+      if (!dat) dat = {event:{"id":id}};
+      console.log(dat);
+      let note = kin.quote(dat.event);
+      console.log(note);
+      setTimeout(()=>
+      {
+        let quotes = document.querySelectorAll('.note_quote[data-id="'+id+'"]');
+        for (const quo of quotes) 
+        {
+          console.log(quo);
+          quo.replaceWith(note);
+        }
+      },100);
+      
+      resolve(note)
+    });
+  })
+};
+
+it.parse.quote =(dis)=>
+{
+  let l;
+  let decoded = it.fx.decode(dis);
+  if (!decoded) return dis;
+  if (dis.startsWith('npub1')) l = it.mk.author(decoded);
+  else if (dis.startsWith('note1'))
+  {
+    l = kin.quote({"id":decoded});
+    // console.log(l);
+    // it.get_quote(decoded);
+    // .then(quote => l = quote);
+    // aa.db.get_e(decoded).then(dat_e=>
+    // {
+    //   if (!dat_e) dat_e = {event:{"id":decoded}};
+    //   // console.log(dat_e);
+    //   l = kin.quote(dat_e.event);
+    // });
+  }
+  else if (dis.startsWith('nevent1') 
+  || dis.startsWith('naddress1'))
+  {
+    
+    if (decoded.id) 
+    {
+      decoded.dis = dis;
+      l = kin.quote(decoded);
+    }
+    else l = it.mk.l('span',{con:JSON.stringify(decoded)})
+    // console.log(decoded)
+  }
+  else l = it.mk.nostr_link(dis);
+  return l
+};
+
 it.parse.nostr =s=>
 {
   const dfrag = new DocumentFragment();
   const matches = [...s.matchAll(it.regx.nostr)];
-  let last_i = 0
+  let last_i = 0;
   for (const m of matches)
   {
     dfrag.append(m.input.slice(last_i,m.index));
     last_i = m.index + m[0].length;
     let dis = m[0].slice(6);
-    let decoded;
-    try { decoded = it.fx.decode(dis) }
-    catch (er) { console.log(er,dis,s) }
+    let decoded = it.fx.decode(dis);
     if (!decoded) dfrag.append(dis);
     else
     {
-      let a;
-      if (dis.startsWith('npub1')) a = it.mk.author(decoded);
-      else a = it.mk.l('a',
-      {
-        cla:'nostr_link',
-        con:dis.slice(0,12),
-        ref:'#'+dis,clk:it.clk.a
-      });
-      dfrag.append(a);
+      // let l;
+      // if (dis.startsWith('npub1')) l = it.mk.author(decoded);
+      // else if (dis.startsWith('note1'))
+      // {
+      //   l = kin.quote({"id":decoded});
+      //   // console.log(l);
+      //   // it.get_quote(decoded);
+      //   // .then(quote => l = quote);
+      //   // aa.db.get_e(decoded).then(dat_e=>
+      //   // {
+      //   //   if (!dat_e) dat_e = {event:{"id":decoded}};
+      //   //   // console.log(dat_e);
+      //   //   l = kin.quote(dat_e.event);
+      //   // });
+      // }
+      // else if (dis.startsWith('nevent1') 
+      // || dis.startsWith('naddress1'))
+      // {
+        
+      //   if (decoded.id) 
+      //   {
+      //     decoded.dis = dis;
+      //     l = kin.quote(decoded);
+      //   }
+      //   else l = it.mk.l('span',{con:JSON.stringify(decoded)})
+      //   // console.log(decoded)
+      // }
+      // else l = it.mk.nostr_link(dis);
+      
+      dfrag.append(it.parse.quote(dis));
     }    
   }
   if (last_i < s.length) dfrag.append(s.slice(last_i));
 
   return dfrag
+  
 };
 
 it.parse.content_basic =o=>
@@ -1012,22 +1165,22 @@ it.parse.content_basic =o=>
   return content
 };
 
-it.parse.content =o=>
+it.parse.content =(o,trust)=>
 {
   const content = it.mk.l('section',{cla:'content parsed'});
   const paragraphs = o.content.split(/\r?\n/);
   // console.log(paragraphs);
-  for (const p of paragraphs)
+  for (const para of paragraphs)
   { 
-    if (p.length)
+    if (para.length)
     {
       const l = it.mk.l('p',{cla:'paragraph'});
-      const words = p.trim().split(' ');
+      const words = para.trim().split(' ');
       // console.log(words);
       for (let i=0;i<words.length;i++)
       {
         words[i].trim();
-        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i]),' ');
+        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
         else if (it.regx.nostr.test(words[i])) l.append(it.parse.nostr(words[i]),' ');
         else 
         {
@@ -1037,6 +1190,48 @@ it.parse.content =o=>
       }
       l.normalize();  
       content.append(l)
+    } 
+  }
+
+  // let q_tag = it.get_q_tag(o.tags);
+  // if (q_tag)
+  // {
+  //   it.get_quote(q_tag[1]).then(quote => content.append(quote));
+  // };
+  return content
+};
+
+it.parse.content_quote =(o,trust)=>
+{
+  const content = new DocumentFragment();
+  const paragraphs = o.content.split(/\r?\n/);
+  // console.log(paragraphs);
+  for (const para of paragraphs)
+  { 
+    if (para.length)
+    {
+      const l = it.mk.l('p',{cla:'paragraph'});
+      const words = para.trim().split(' ');
+      // console.log(words);
+      for (let i=0;i<words.length;i++)
+      {
+        words[i].trim();
+        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
+        else if (it.regx.nostr.test(words[i]))
+        {
+          // l.append(it.parse.nostr(words[i]),' ');
+          if (l.childNodes.length) content.append(l);
+          content.append(it.parse.nostr(words[i]),' ');
+        } 
+        else 
+        {
+          if (i === words.length-1) l.append(words[i]);
+          else l.append(words[i],' ');
+        }
+      }
+      l.normalize(); 
+      if (l.childNodes.length) content.append(l);
+      // content.append(l)
     } 
   } 
   return content

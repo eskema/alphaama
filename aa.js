@@ -2,7 +2,7 @@ const aa =
 {
   miss:{e:{},p:{}},
   l:document.documentElement,
-  v:{},
+  // v:{},
   e:{},
   p:{},
   q:{},
@@ -36,6 +36,12 @@ aa.reset =()=>
   });
 };
 
+aa.stuff =()=>
+{
+  aa.login();
+  q_e.stuff();
+};
+
 aa.ct.u = 
 {
   'login': 
@@ -47,7 +53,12 @@ aa.ct.u =
   {
     description:'resets everything',
     exe:aa.reset
-  }
+  },
+  'stuff':
+  {
+    description:'does a bunch of stuff to get you started',
+    exe:aa.stuff
+  },
 };
 
 aa.load_mod =async mod=>
@@ -213,6 +224,12 @@ aa.clk.react =e=>
   cli.v(localStorage.ns+' aka react '+xid+' '+localStorage.reaction);
 };
 
+aa.clk.hide =e=>
+{
+  const note = e.target.closest('.note');
+  note.classList.toggle('tiny');
+};
+
 aa.clk.parse =e=>
 {
   const note = e.target.closest('.note');
@@ -225,7 +242,7 @@ aa.clk.parse =e=>
   }
   else 
   {
-    content.replaceWith(it.parse.content(event));
+    content.replaceWith(it.parse.content(event,true));
   }
   // console.log(parsed);
 };
@@ -245,7 +262,7 @@ aa.clk.editor =e=>
   // console.log(parsed);
 };
 
-aa.send_it =async event=>
+aa.f_it =async event=>
 {
   const signed = await aa.sign(event);
   if (signed)
@@ -277,7 +294,7 @@ aa.replace_note =(l,dat)=>
   if (childs.length)
   {
     let b_rep = b.querySelector('.replies');
-    for (const c of childs) v_u.append_to_rep(c,b_rep);
+    for (const c of childs) if (c.tagName !== 'SUMMARY') v_u.append_to_rep(c,b_rep);
   }
   let is_root = b.classList.contains('root');
   let is_reply = b.classList.contains('reply');
@@ -285,10 +302,11 @@ aa.replace_note =(l,dat)=>
   l.remove();
   b.classList.remove('blank','draft','not_sent');
   if (dat.clas) b.classList.add(...dat.clas);
-  if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root');
+  if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root','not_yet');
   else if (is_root) b.classList.add('root');
   if (!is_reply && !b.parentElement.closest('.note')) b.classList.remove('reply');
   else if (is_reply) b.classList.add('reply');
+  b.classList.add('replaced');
 };
 
 aa.to_print =dat=>
