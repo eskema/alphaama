@@ -1546,7 +1546,7 @@ a.author.is_bff
   color: rgb(var(--color-e)); 
 }
 
-.note[data-kind="1"]:not(.in_view) > .content .paragraph:last-child::after
+.note[data-kind="1"]:not(.in_view) > .content > .paragraph:last-child::after
 {
   color: rgb(var(--color-sad));
   content: ".";
@@ -2067,6 +2067,19 @@ a.author.is_bff
 {
   justify-self: end;
   margin: 0;
+}
+
+.note_quote > .paragraph
+{
+  font-size: var(--font-size-s);
+  line-height: 1.5;
+  padding: 0 var(--padm);
+  
+}
+
+.note_quote > .paragraph:last-child
+{
+  /*margin-bottom: 0;*/
 }
 
 /*.in_view > .content .note_quote::before
@@ -2936,6 +2949,11 @@ p[data-meta="about"]::before
 {
   border-bottom: none;
   margin-bottom: var(--line);
+}
+
+.note.tiny > .actions > .butt.hide
+{
+  color: rgb(var(--color-no));
 }
 
 /* @end */

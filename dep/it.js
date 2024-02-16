@@ -1230,8 +1230,8 @@ it.parse.content_quote =(o,trust)=>
         }
       }
       l.normalize(); 
-      if (l.childNodes.length) content.append(l);
-      // content.append(l)
+      // if (l.childNodes.length) content.append(l);
+      content.append(l)
     } 
   } 
   return content
