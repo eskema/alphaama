@@ -86,6 +86,7 @@ const e_observer = new IntersectionObserver(a=>
     if (b.isIntersecting)
     {
       l.classList.remove('not_yet');
+      l.classList.add('rendered');
       // console.log(b);
       // e_observer.unobserve(l);
     }

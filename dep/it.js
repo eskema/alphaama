@@ -663,6 +663,7 @@ it.mk.author =(xpub,p=false)=>
   });
   let name_s = p.metadata?.name ?? p.npub.slice(0,12);
   let name = it.mk.l('span',{cla:'name',con:name_s});
+  if (!name.childNodes.length) name.classList.add('empty');
   let petname = p.petname.length ? p.petname : p.extradata.petnames.length ? p.extradata.petnames[0] : false;
   if (petname) name.dataset.petname = petname;
   
@@ -1070,27 +1071,23 @@ it.get_quote =async id=>
 
 it.parse.quote =(dis)=>
 {
-  let l;
+  let l;// = it.mk.l('p',{cla:'paragraph'});
   let decoded = it.fx.decode(dis);
   if (!decoded) return dis;
-  if (dis.startsWith('npub1')) l = it.mk.author(decoded);
-  else if (dis.startsWith('note1'))
+  if (dis.startsWith('npub1'))  l = it.mk.author(decoded);
+  else if (dis.startsWith('note1')) l = kin.quote({"id":decoded});
+  else if (dis.startsWith('nevent1'))
   {
-    l = kin.quote({"id":decoded});
-    // console.log(l);
-    // it.get_quote(decoded);
-    // .then(quote => l = quote);
-    // aa.db.get_e(decoded).then(dat_e=>
-    // {
-    //   if (!dat_e) dat_e = {event:{"id":decoded}};
-    //   // console.log(dat_e);
-    //   l = kin.quote(dat_e.event);
-    // });
+    if (decoded.id) 
+    {
+      decoded.dis = dis;
+      l = kin.quote(decoded);
+    }
+    else l = it.mk.l('span',{con:JSON.stringify(decoded)})
+    // console.log(decoded)
   }
-  else if (dis.startsWith('nevent1') 
-  || dis.startsWith('naddress1'))
+  else if (dis.startsWith('naddr1'))
   {
-    
     if (decoded.id) 
     {
       decoded.dis = dis;
@@ -1114,43 +1111,15 @@ it.parse.nostr =s=>
     last_i = m.index + m[0].length;
     let dis = m[0].slice(6);
     let decoded = it.fx.decode(dis);
-    if (!decoded) dfrag.append(dis);
+    if (!decoded) dfrag.append(dis,' ');
     else
     {
-      // let l;
-      // if (dis.startsWith('npub1')) l = it.mk.author(decoded);
-      // else if (dis.startsWith('note1'))
-      // {
-      //   l = kin.quote({"id":decoded});
-      //   // console.log(l);
-      //   // it.get_quote(decoded);
-      //   // .then(quote => l = quote);
-      //   // aa.db.get_e(decoded).then(dat_e=>
-      //   // {
-      //   //   if (!dat_e) dat_e = {event:{"id":decoded}};
-      //   //   // console.log(dat_e);
-      //   //   l = kin.quote(dat_e.event);
-      //   // });
-      // }
-      // else if (dis.startsWith('nevent1') 
-      // || dis.startsWith('naddress1'))
-      // {
-        
-      //   if (decoded.id) 
-      //   {
-      //     decoded.dis = dis;
-      //     l = kin.quote(decoded);
-      //   }
-      //   else l = it.mk.l('span',{con:JSON.stringify(decoded)})
-      //   // console.log(decoded)
-      // }
-      // else l = it.mk.nostr_link(dis);
-      
-      dfrag.append(it.parse.quote(dis));
+      let parsed = it.parse.quote(dis);
+      if (parsed.tagName !== 'BLOCKQUOTE') dfrag.append(parsed,' ');
+      else dfrag.append(it.parse.quote(dis),' ');        
     }    
   }
   if (last_i < s.length) dfrag.append(s.slice(last_i));
-
   return dfrag
   
 };
@@ -1174,22 +1143,37 @@ it.parse.content =(o,trust)=>
   { 
     if (para.length)
     {
-      const l = it.mk.l('p',{cla:'paragraph'});
+      let l = it.mk.l('p',{cla:'paragraph'});
       const words = para.trim().split(' ');
       // console.log(words);
       for (let i=0;i<words.length;i++)
       {
         words[i].trim();
         if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
-        else if (it.regx.nostr.test(words[i])) l.append(it.parse.nostr(words[i]),' ');
+        else if (it.regx.nostr.test(words[i])) 
+        {
+          let parsed = it.parse.nostr(words[i]);
+          // console.log(parsed.children[0]);
+          if (parsed.tagName !== 'BLOCKQUOTE')
+          {
+            l.append(parsed);
+          }
+          else
+          {
+            if (l.childNodes.length) content.append(l);
+            content.append(parsed);
+            l = it.mk.l('p',{cla:'paragraph'});
+          }
+        }
         else 
         {
+          console.log('parse')
           if (i === words.length-1) l.append(words[i]);
           else l.append(words[i],' ');
         }
       }
-      l.normalize();  
-      content.append(l)
+      l.normalize();
+      if (l.childNodes.length) content.append(l);
     } 
   }
 
@@ -1210,28 +1194,37 @@ it.parse.content_quote =(o,trust)=>
   { 
     if (para.length)
     {
-      const l = it.mk.l('p',{cla:'paragraph'});
+      let l = it.mk.l('p',{cla:'paragraph'});
       const words = para.trim().split(' ');
       // console.log(words);
       for (let i=0;i<words.length;i++)
       {
         words[i].trim();
         if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
-        else if (it.regx.nostr.test(words[i]))
+        else if (it.regx.nostr.test(words[i])) 
         {
-          // l.append(it.parse.nostr(words[i]),' ');
-          if (l.childNodes.length) content.append(l);
-          content.append(it.parse.nostr(words[i]),' ');
-        } 
+          let parsed = it.parse.nostr(words[i]);
+          // console.log(parsed.children[0]);
+          if (parsed.tagName !== 'BLOCKQUOTE')
+          {
+            l.append(parsed);
+          }
+          else
+          {
+            if (l.childNodes.length) content.append(l);
+            content.append(parsed);
+            l = it.mk.l('p',{cla:'paragraph'});
+          }
+        }
         else 
         {
+          console.log('parse')
           if (i === words.length-1) l.append(words[i]);
           else l.append(words[i],' ');
         }
       }
-      l.normalize(); 
-      // if (l.childNodes.length) content.append(l);
-      content.append(l)
+      l.normalize();
+      if (l.childNodes.length) content.append(l);
     } 
   } 
   return content

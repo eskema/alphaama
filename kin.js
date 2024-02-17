@@ -77,49 +77,51 @@ kin.note =dat=>
 
 kin.quote =o=>
 {
-  console.log(o);
+  if (!o.id) return false;
   const quote = it.mk.l('blockquote',{cla:'note_quote'});
   if (o.dis) quote.cite = o.dis;
-  
-  if (o.id)
+  quote.dataset.id = o.id;
+  let by = it.mk.l('p',{cla:'note_quote_by'});
+  by.append(it.mk.nostr_link(it.fx.nid(o.id)));
+  quote.append(by);
+  // console.log(e);
+  let pubkey = o.author ?? o.pubkey;
+  if (pubkey) 
   {
-    quote.dataset.id = o.id;
-    
-    let paragraph = it.mk.l('p',{cla:'note_quote_by'});
-    quote.append(paragraph);
-    let pubkey = o.author ?? o.pubkey;
-    // if (o.author) pubkey = o.author;
-    // if (!pubkey && o.pubkey) pubkey = o.pubkey;
-    if (pubkey) paragraph.append(it.mk.author(pubkey),' ');
-    else paragraph.append('? ');
-    const dis = it.fx.nid(o.id);
-    paragraph.append(it.mk.nostr_link(dis));
-
-
-    aa.db.get_e(o.id).then(e=>
-    {
-      // console.log(e);
-      if (e) 
-      {
-        quote.append(it.parse.content_quote(e.event));
-      }
-      else
-      {
-        quote.classList.add('blank_quote');
-        let req = {ids:[o.id]};
-        
-        if (o.relays) 
-        {
-          req.relays = o.relays;
-          let relays = it.mk.l('p',{con:'relays: '+o.relays});
-          quote.append(relays);
-        }
-        
-        // q_e.req.ids(req);
-      }
-    });
+    pubkey  = it.mk.author(o.id);
+    by.prepend(pubkey);
   }
   
+  aa.db.get_e(o.id).then(dat=>
+  {
+    
+    if (dat) 
+    {
+      if (!pubkey) pubkey = it.mk.author(dat.event.pubkey);
+      content = it.parse.content_quote(dat.event);
+      // quote.append(it.parse.content_quote(e.event));
+    }
+    else
+    {
+      quote.classList.add('blank_quote');
+      if (!pubkey) pubkey = it.mk.l('span',{con:'?'});
+      // pubkey = o.author ?? o.pubkey ?? '?';
+      content = it.mk.l('p',{cla:'paragraph'});
+      
+      let req = {ids:[o.id]};
+      if (o.relays) 
+      {
+        req.relays = o.relays;
+        let relay_content = it.mk.l('p',{con:'relays: '+o.relays});
+        content.append(relay_content);
+      }
+      
+      // q_e.req.ids(req);
+    }
+    by.prepend(pubkey);
+    quote.append(content)
+    
+  }); 
   return quote
 };
 

@@ -69,8 +69,8 @@ q_e.stuff =()=>
   q_e.add('a {"authors":["aka"],"kinds":[0,3,10002]}');
   q_e.add('b {"authors":["bff"],"kinds":[0,3,10002]}');
   q_e.add('d {"#p":["aka"],"kinds":[4],"since":"n_2"}');
-  q_e.add('f {"authors":["aka","bff"],"kinds":[1,7,30023],"since":"n_1"}');
-  q_e.add('n {"#p":["aka"],"kinds":[1,4,7],"since":"n_1"}');
+  q_e.add('f {"authors":["aka","bff"],"kinds":[1,6,7,16,30023],"since":"n_1"}');
+  q_e.add('n {"#p":["aka"],"kinds":[1,4,6,7,16],"since":"n_1"}');
 };
 
 q_e.mk =(f_id,o) =>
@@ -321,7 +321,7 @@ q_e.raw =s=>
       {
         v_u.log(localStorage.ns+' qe raw '+filter);
         console.log(request,relays,options);
-        // q_e.demand(request,relays,options});
+        q_e.demand(request,relays,options);
       }
       else v_u.log('invalid relay / relset')
     }
@@ -336,6 +336,7 @@ q_e.raw =s=>
 
 q_e.run =s=>
 {
+  console.log('run s');
   const a = s.trim().split(' ');
   let fid,relset;
   if (a.length) fid = a.shift();

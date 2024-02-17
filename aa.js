@@ -12,18 +12,25 @@ const aa =
   clk:{},
 };
 
-aa.login =()=>  
+aa.login =async()=>  
 {
-  if (window.nostr && aka)
+  return new Promise(resolve=>
   {
-    window.nostr.getPublicKey().then(x=>
+    if (window.nostr && aka)
     {
-      aka.set(x);
-      if (rel) rel.ext();
-    });
-    cli.fuck_off()
-  }
-  else v_u.log('enable extension first and try again')
+      window.nostr.getPublicKey().then(x=>
+      {
+        aka.set(x);
+        if (rel) rel.ext().then(()=>{resolve('login done')});
+      });
+      cli.fuck_off()
+    }
+    else 
+    {
+      v_u.log('enable extension first and try again');
+      resolve('login done');
+    }
+  });
 };
 
 aa.reset =()=>
@@ -36,10 +43,23 @@ aa.reset =()=>
   });
 };
 
-aa.stuff =()=>
+aa.stuff =async()=>
 {
-  aa.login();
-  q_e.stuff();
+  let loggedin = await aa.login();
+  if (loggedin)
+  {
+    o_p.set('trust 4');
+    q_e.stuff();
+    q_e.run('a');
+    // setTimeout(()=>{q_e.run('a')},200);
+    setTimeout(()=>{q_e.run('b')},2000);
+  }
+  // if 
+  // aa.login().then(()=>
+  // {
+    
+  //   // location.reload()
+  // });
 };
 
 aa.ct.u = 

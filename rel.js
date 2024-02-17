@@ -288,16 +288,24 @@ rel.in_set =relset=>
   return relays
 };
 
-rel.ext =()=>
+rel.ext =async()=>
 {
-  if (window.nostr) 
+  return new Promise(resolve=>
   {
-    window.nostr.getRelays().then(r=>
+    if (window.nostr) 
     {
-      rel.add_to_aka(rel.from_o(r,['ext']))
-    });
-  } 
-  else v_u.log('no extension found, make sure it is enabled.')
+      window.nostr.getRelays().then(r=>
+      {
+        rel.add_to_aka(rel.from_o(r,['ext']));
+        resolve('rel ext done');
+      });
+    } 
+    else 
+    {
+      v_u.log('no extension found, make sure it is enabled.');
+      resolve('rel ext done');
+    }
+  });
 };
 
 rel.add_to_aka =(relays)=>

@@ -387,6 +387,8 @@ button.butt:focus
   100% { opacity: 1 }
 }
 
+
+
 .clkd
 {
   animation: clk 1s var(--cb) 0s 1 normal!important;
@@ -1173,6 +1175,27 @@ button.butt:focus
   /*opacity: 0;*/
 }
 
+@keyframes rendered 
+{
+  0% 
+  { 
+    opacity: 0;
+    transform: scaleY(0);
+    transform-origin: top;
+  }
+  100%
+  { 
+    opacity: 1;
+    transform: scaleY(1);
+    transform-origin: top;
+  }
+}
+
+.note.rendered:not(.not_yet) .note
+{
+  animation: rendered .5s var(--cb) 0s 1 normal!important;
+}
+
 .note:hover::before
 {
   color: rgba(var(--color-f));
@@ -1374,9 +1397,13 @@ button.butt:focus
 a.author 
 {
   color: rgb(var(--color-d));
-  grid-area: author;
   overflow-x: scroll;
   text-decoration: none;
+}
+
+.by .author
+{
+  grid-area: author;
 }
 
 a.author.is_bff
@@ -1587,7 +1614,7 @@ a.author.is_bff
   /*text-decoration: underline;*/
 }
 
-.paragraph > a.author .name::after
+.paragraph > a.author .name:not(.empty)::after
 {
   display: none;
 }
@@ -1600,14 +1627,29 @@ a.author.is_bff
 
 .content .content_link
 {
-  color: rgb(var(--color-sad));
+  color: rgba(var(--color-sad),.6);
   margin-right: var(--padm);
 }
+
+.content .content_link:hover
+{
+  color: rgba(var(--color-sad),1);
+}
+
 
 .content .nostr_link
 {
   color: rgb(var(--color-alt));
-  /*margin-right: var(--padm);*/
+}
+
+.content .nostr_link
+{
+  color: rgba(var(--color-alt),.6);
+}
+
+.content .nostr_link:hover
+{
+  color: rgba(var(--color-alt),1);
 }
 
 .content .nostr_link::before

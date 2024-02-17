@@ -154,12 +154,23 @@ aka.set =s=>
 
 aka.ext =async()=>
 {
-  if (window.nostr) 
+  return new Promise(resolve=>
   {
-    cli.fuck_off();
-    window.nostr.getPublicKey().then(aka.set);
-  } 
-  else v_u.log("no extension found, make sure it's enabled");
+    if (window.nostr) 
+    {
+      cli.fuck_off();
+      window.nostr.getPublicKey().then(k=>
+      {
+        aka.set(k);
+        resolve('aka ext done');
+      });
+    } 
+    else 
+    {
+      v_u.log("no extension found, make sure it's enabled");
+      resolve('aka ext done');
+    }
+  });
 };
 
 aka.rm =s=>
@@ -695,7 +706,13 @@ author.link =async(l,p=false)=>
     {
       let name = p.metadata.name.slice(0,100);
       let span = l.querySelector('span');
+      span.classList.add('skdsd');
       if (span.textContent !== name) span.textContent = name;
+      if (!span.childNodes.length) 
+      {
+        console.log('empty',name);
+        span.classList.add('empty');
+      }
     }
     author.pic(l,p);
     if (p.metadata.nip05) l.dataset.nip05 = p.metadata.nip05;
