@@ -5,13 +5,9 @@ const q_e =
   sn:'q',
 };
 
-// q_e.upd =()=>{it.to(()=>{ aa.save(q_e) },2000,'qe_upd')};
-
 q_e.load =()=>
 {
-  // aa.actions.push();
   let sn = q_e.sn;
-
   aa.actions.push(
     {
       action:[sn,'add'],
@@ -65,77 +61,6 @@ q_e.load =()=>
     },
   );
 
-  // aa.ct[sn] = 
-  // {
-  //   'add':
-  //   {
-  //     action:[sn,'add'],
-  //     required:['fid','filter'],
-  //     description:'add new filter',
-  //     exe:q_e.add
-  //   },
-  //   'rm':
-  //   {
-  //     action:[sn,'rm'],
-  //     required:['fid'],
-  //     description:'remove one or more filters',
-  //     exe:q_e.rm_filter
-  //   },
-  //   'sets':
-  //   {
-  //     action:[sn,'sets'],
-  //     required:['set','sid'],
-  //     optional:['fid'],
-  //     description:'create sets of filters',
-  //     exe:q_e.sets
-  //   },
-  //   'setrm':
-  //   {
-  //     action:[sn,'setrm'],
-  //     required:['set'],
-  //     optional:['fid'],
-  //     description:'remove set from filter',
-  //     exe:q_e.set_rm
-  //   },
-  //   'run':
-  //   {
-  //     action:[sn,'run'],
-  //     required:['fid'],
-  //     optional:['relset','options'],
-  //     description:'run filter on relay set',
-  //     exe:q_e.run
-  //   },
-  //   'raw':
-  //   {
-  //     action:[sn,'raw'],
-  //     required:['relset','raw_filter'],
-  //     description:'run raw filter on relay set',
-  //     exe:q_e.raw
-  //   },
-  //   'close':
-  //   {
-  //     action:[sn,'close'],
-  //     optional:['fid'],
-  //     description:'close one or all running queries',
-  //     exe:q_e.close
-  //   },
-  //   'stuff':
-  //   {
-  //     action:[sn,'stuff'],
-  //     description:'sets a bunch of queries to get you started',
-  //     exe:q_e.stuff
-  //   },
-  // };
-  // aa.actions.push(
-  //   aa.ct[q_e.sn].add,
-  //   aa.ct[q_e.sn].rm,
-  //   aa.ct[q_e.sn].sets,
-  //   aa.ct[q_e.sn].setrm,
-  //   aa.ct[q_e.sn].run,
-  //   aa.ct[q_e.sn].raw,
-  //   aa.ct[q_e.sn].close,
-  //   aa.ct[q_e.sn].stuff,
-  // );
   aa.load_mod(q_e).then(it.mk.mod);
 };
 
@@ -160,7 +85,6 @@ q_e.mk =(f_id,o) =>
       cli.t.value = localStorage.ns+' '+sn+' run '+f_id;
       cli.foc();
     }}),
-    // it.mk.l('span',{cla:'key',con:f_id}),
     it.mk.l('span',{cla:'val',con:o.v}),
     it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
     {
@@ -335,14 +259,12 @@ q_e.add =s=>
   let o = it.parse.j(a);
   if (o)
   {
-    // console.log(o);
     let log = localStorage.ns+' q add '+fid+' ';
     let filter = q_e.o.ls[fid];
     let changed;
     if (filter && filter.v === a)
     {
       log += '=== is the same';
-      // v_u.log(log+'=== is the same')
     }
     else if (filter)
     {
@@ -419,14 +341,12 @@ q_e.run =s=>
   if (a.length) relset = a.shift();
   if (fid && q_e.o.ls.hasOwnProperty(fid)) 
   { 
-
     let [filtered,options] = it.fx.vars(q_e.o.ls[fid].v);
     let request;
     if (filtered) request = ['REQ',fid,filtered];
     
     let relays = rel.in_set(relset);
     if (!relays.length) relays = rel.in_set(rel.o.r);
-
     // console.log('qe run',request,relays,options);
     q_e.demand(request,relays,options);
     cli.fuck_off(localStorage.ns+' '+q_e.sn+' run '+fid);

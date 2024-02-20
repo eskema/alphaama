@@ -64,49 +64,6 @@ aa.stuff =async()=>
   }
 };
 
-// aa.ct.u.stuff =
-// {
-//   action:['u','stuff'],
-//   description:'does a bunch of stuff to get you started',
-//   exe:aa.stuff
-// };
-// aa.actions.push(aa.ct.u.stuff);
-
-// aa.ct.u.login = 
-// {
-//   action:['u','login'],
-//   description:'load aka and relays from ext',
-//   exe:aa.login
-// };
-// aa.actions.push(aa.ct.u.login);
-
-// aa.ct.u.reset =
-// {
-//   action:['u','reset'],
-//   description:'resets everything',
-//   exe:aa.reset
-// };
-// aa.actions.push(aa.ct.u.reset);
-
-// aa.ct.u = 
-// {
-//   'login': 
-//   {
-//     description:'load aka and relays from ext',
-//     exe:aa.login
-//   },
-//   'reset':
-//   {
-//     description:'resets everything',
-//     exe:aa.reset
-//   },
-//   'stuff':
-//   {
-//     description:'does a bunch of stuff to get you started',
-//     exe:aa.stuff
-//   },
-// };
-
 aa.actions.push(
   {
     action:['u','stuff'],
@@ -134,8 +91,6 @@ aa.load_mod =async mod=>
   // it.mk.mod(mod);
   return mod
 };
-
-
 
 aa.base_ui =a=>{ for (const s of a) aa.mk[s]() };
 
@@ -372,7 +327,7 @@ aa.replace_note =(l,dat)=>
   l.remove();
   b.classList.remove('blank','draft','not_sent');
   if (dat.clas) b.classList.add(...dat.clas);
-  if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root');
+  if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root','not_yet');
   else if (is_root) b.classList.add('root');
   if (!is_reply && !b.parentElement.closest('.note')) b.classList.remove('reply');
   else if (is_reply) b.classList.add('reply');

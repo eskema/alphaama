@@ -1,6 +1,7 @@
 const it =
 {
   todo:{},
+  clk:{},
 };
 
 it.to =(f,t,s)=>
@@ -115,37 +116,26 @@ it.get_tags_for_reply =(event)=>
    if (root_tag.length) 
    {
       // console.log(root_tag);
-      if (!root_tag[2] || root_tag[2] === '')
-      {
-        root_tag[2] = seen;
-      }
-      if (!root_tag[3] || root_tag[3] !== 'root')
-      {
-        root_tag[3] = 'root';
-      }
-      tags.push(root_tag);
-      tags.push(['e',event.id,seen,'reply']);
+      if (!root_tag[2] || root_tag[2] === '') root_tag[2] = seen;
+      if (!root_tag[3] || root_tag[3] !== 'root') root_tag[3] = 'root';
+      tags.push(root_tag,['e',event.id,seen,'reply']);
    }
    else tags.push(['e',event.id,seen,'root']);
    const pubkeys_to_add = [];
    const pubkeys = event.tags.filter(t=>it.tag.p(t) && t[1] !== aka.o.ls.xpub);
-   
    for (const pub of pubkeys) pubkeys_to_add.push(pub)
-
    let unique = [...new Set(pubkeys)];
    if (event.pubkey !== aka.o.ls.xpub && !unique.some(t=>t[1] === event.pubkey)) unique.push(['p',event.pubkey])
    tags.push(...unique);
-
    return tags
 };
 
 it.get_reply_tag =tags=>
 {
-  const a = it.loopita(tags, it.tag.e, it.tag.reply);
-  
-  let is_array = Array.isArray(a[0]);
-  if (a && !is_array) return a;
-  if (is_array)
+  const a = it.loopita(tags,it.tag.e,it.tag.reply);
+  let is_a = Array.isArray(a[0]);
+  if (a && !is_a) return a;
+  if (is_a)
   {
     let l = a[a.length-1];
     if (it.tag.marked('mention',l)) return false;
@@ -156,11 +146,10 @@ it.get_reply_tag =tags=>
 
 it.get_root_tag =tags=>
 {
-  const a = it.loopita(tags, it.tag.e, it.tag.root);
-  
-  let is_array = Array.isArray(a[0]);
-  if (a && !is_array) return a;
-  if (is_array)
+  const a = it.loopita(tags,it.tag.e,it.tag.root);
+  let is_a = Array.isArray(a[0]);
+  if (a && !is_a) return a;
+  if (is_a)
   {
     let l = a[0];
     if (it.tag.marked('mention',l)) return false;
@@ -183,6 +172,7 @@ it.get_seen =(x)=>
 };
 
 it.tim ={};
+
 it.tim.std =st=> new Date(st*1000);
 
 it.tim.date =date_string=>
@@ -191,16 +181,51 @@ it.tim.date =date_string=>
   catch (er) { return false }
 };
 
-it.fx ={};
-
-it.fx.an =s=>
-{
-  s = s.replace(/[^a-z0-9]/gi,'_').toLowerCase();
-  while (s.includes('__')) { s = s.replace('__','_') }
-  if (s.startsWith('_')) s = s.slice(1);
-  if (s.endsWith('_')) s = s.slice(0,-1);
-  return s
+it.tim.format =d=>
+{ 
+  return d.getFullYear()
+  +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
+  +'/'+ (d.getDate()  + '').padStart(2,'0') 
+  +' '+ (d.getHours() + '').padStart(2,'0') 
+  +':'+ (d.getMinutes()+'').padStart(2,'0') 
+  +':'+ (d.getSeconds()+'').padStart(2,'0')
 };
+
+it.tim.now =()=> Math.floor(Date.now() / 1000);
+
+it.tim.ago =date=>
+{
+  const dis =i=> (Math.floor(i)+'').padStart(2,'0');
+  const sec = Math.floor((new Date() - date) / 1000);
+  let i = sec / 31536000;
+  if (i > 1) return dis(i)+'Y';
+  i = sec / 2592000;
+  if (i > 1) return dis(i)+'M';   
+  i = sec / 86400;
+  if (i > 1) return dis(i)+'d';
+  i = sec / 3600;
+  if (i > 1) return dis(i)+'h';
+  i = sec / 60;
+  if (i > 1) return dis(i)+'m';
+  return dis(sec)+'s';
+};
+
+it.tim.time =s=>
+{
+  if (s.startsWith('n_')) return it.tim.n(s.slice(2));
+  if (s.startsWith('d_')) return it.tim.date(s.slice(2));
+  if (s === 'now') return it.tim.now();    
+  return parseInt(s)
+};
+
+it.tim.n =number=>
+{
+  const days = new Date();
+  days.setDate(days.getDate() - number);
+  return Math.floor(days.getTime()/1000)
+};
+
+it.tim.e =st=> it.tim.format(it.tim.std(st));
 
 it.loop =(job,s,done)=>
 {
@@ -225,6 +250,17 @@ it.loopita =(a,if_1,if_2)=>
     }
   }
   return b
+};
+
+it.fx ={};
+
+it.fx.an =s=>
+{
+  s = s.replace(/[^a-z0-9]/gi,'_').toLowerCase();
+  while (s.includes('__')) { s = s.replace('__','_') }
+  if (s.startsWith('_')) s = s.slice(1);
+  if (s.endsWith('_')) s = s.slice(0,-1);
+  return s
 };
 
 it.fx.tail =(a,l,i=1)=>
@@ -354,59 +390,11 @@ it.fx.rm_path =k=>
   }
 };
 
-
-
-it.tim.format =d=>
-{ 
-  return d.getFullYear()
-  +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
-  +'/'+ (d.getDate()  + '').padStart(2,'0') 
-  +' '+ (d.getHours() + '').padStart(2,'0') 
-  +':'+ (d.getMinutes()+'').padStart(2,'0') 
-  +':'+ (d.getSeconds()+'').padStart(2,'0')
-};
-
-it.tim.now =()=> Math.floor(Date.now() / 1000);
-
-it.tim.ago =date=>
-{
-  const dis =i=> (Math.floor(i)+'').padStart(2,'0');
-  const sec = Math.floor((new Date() - date) / 1000);
-  let i = sec / 31536000;
-  if (i > 1) return dis(i)+'Y';
-  i = sec / 2592000;
-  if (i > 1) return dis(i)+'M';   
-  i = sec / 86400;
-  if (i > 1) return dis(i)+'d';
-  i = sec / 3600;
-  if (i > 1) return dis(i)+'h';
-  i = sec / 60;
-  if (i > 1) return dis(i)+'m';
-  return dis(sec)+'s';
-};
-
-it.tim.time =s=>
-{
-  if (s.startsWith('n_')) return it.tim.n(s.slice(2));
-  if (s.startsWith('d_')) return it.tim.date(s.slice(2));
-  if (s === 'now') return it.tim.now();    
-  return parseInt(s)
-};
-
-it.tim.n =number=>
-{
-  const days = new Date();
-  days.setDate(days.getDate() - number);
-  return Math.floor(days.getTime()/1000)
-};
-
-it.tim.e =st=> it.tim.format(it.tim.std(st));
-
 it.a_set =(a,dis)=>
 {
   let b;
-  if (Array.isArray(a) && Array.isArray(dis))
-  {
+  // if (Array.isArray(a) && Array.isArray(dis))
+  // {
     for (const k of dis)
     { 
       if (!a.includes(k)) 
@@ -415,7 +403,7 @@ it.a_set =(a,dis)=>
         b = true;
       }
     }
-  }
+  // }
   return b
 };
 
@@ -664,7 +652,9 @@ it.mk.author =(xpub,p=false)=>
   let name_s = p.metadata?.name ?? p.npub.slice(0,12);
   let name = it.mk.l('span',{cla:'name',con:name_s});
   if (!name.childNodes.length) name.classList.add('empty');
-  let petname = p.petname.length ? p.petname : p.extradata.petnames.length ? p.extradata.petnames[0] : false;
+  let petname = p.petname.length ? p.petname 
+  : p.extradata.petnames.length ? p.extradata.petnames[0] 
+  : false;
   if (petname) name.dataset.petname = petname;
   
   pubkey.append(name);
@@ -930,16 +920,16 @@ it.nip19_to_tag =s=>
   return tag
 };
 
-it.nip19_to_tags =a=>
-{
-  let tags = [];
-  for (const s of a)
-  {
-    let tag = it.nip19_to_tag(s);
-    if (tag.length) tags.push(tag);
-  }
-  return tags
-};
+// it.nip19_to_tags =a=>
+// {
+//   let tags = [];
+//   for (const s of a)
+//   {
+//     let tag = it.nip19_to_tag(s);
+//     if (tag.length) tags.push(tag);
+//   }
+//   return tags
+// };
 
 it.parse.j =s=>
 {
@@ -969,11 +959,7 @@ it.parse.url =(s,trusted)=>
 {
   const dfrag = new DocumentFragment();
   const matches = [...s.matchAll(it.regx.url)];
-  // console.log(matches);
   let last_i = 0;
-  // let trusted = trust >= it.trust();
-  // console.log(trusted);
-
   for (const m of matches)
   {
     dfrag.append(m.input.slice(last_i,m.index));
@@ -991,21 +977,6 @@ it.parse.url =(s,trusted)=>
       link = av.mk(type[1].href);
     }
     else if (type) link = it.mk.link(type[1].href);
-    
-    // switch (type[0]) 
-    // {        
-    //   case 'img':
-        // link = it.mk.l('img',{cla:'content-img',src:type[1].href});
-        // link.loading = 'lazy';
-    //     break;
-
-    //   case 'av':
-    //     link = av.mk(type[1].href);
-    //     break;    
-      
-    //   default:
-    //     if (type) link = it.mk.link(type[1].href);
-    // } 
 
     dfrag.append(link);
   }
@@ -1021,24 +992,16 @@ it.get_quotes =async id=>
   if (quotes.length)
   {
     let dat = await aa.db.get_e(id);
-
-    if (!dat) 
+    if (!dat) dat = {event:{"id":id}};
+    let quote = kin.quote(dat.event);
+    setTimeout(()=>
     {
-      dat = {event:{"id":id}};
-    }
-      let quote = kin.quote(dat.event);
-      setTimeout(()=>
+      for (const quo of quotes) 
       {
-        // let quotes = document.querySelectorAll('.note_quote[data-id="'+id+'"]');
-        for (const quo of quotes) 
-        {
-          console.log(quo);
-          quo.replaceWith(quote);
-        }
-      },100);
-      
-      // resolve(note)
-    // });
+        console.log(quo);
+        quo.replaceWith(quote);
+      }
+    },100);
   }
 };
 
@@ -1075,15 +1038,9 @@ it.parse.quote =(dis)=>
   let decoded = it.fx.decode(dis);
   if (!decoded) return dis;
   if (dis.startsWith('npub1'))  l = it.mk.author(decoded);
-  else if (dis.startsWith('nprofile1'))  
-  {
-    // l = it.mk.nostr_link(dis);
-    // console.log(decoded);
-    // let p = 
-    l = it.mk.author(decoded.pubkey);
-  }
+  else if (dis.startsWith('nprofile1')) l = it.mk.author(decoded.pubkey);
   else if (dis.startsWith('note1')) l = kin.quote({"id":decoded});
-  else if (dis.startsWith('nevent1'))
+  else if (dis.startsWith('nevent1') || dis.startsWith('naddr1'))
   {
     if (decoded.id) 
     {
@@ -1091,18 +1048,16 @@ it.parse.quote =(dis)=>
       l = kin.quote(decoded);
     }
     else l = it.mk.l('span',{con:JSON.stringify(decoded)})
-    // console.log(decoded)
   }
-  else if (dis.startsWith('naddr1'))
-  {
-    if (decoded.id) 
-    {
-      decoded.dis = dis;
-      l = kin.quote(decoded);
-    }
-    else l = it.mk.l('span',{con:JSON.stringify(decoded)})
-    // console.log(decoded)
-  }
+  // else if (dis.startsWith('naddr1'))
+  // {
+  //   if (decoded.id) 
+  //   {
+  //     decoded.dis = dis;
+  //     l = kin.quote(decoded);
+  //   }
+  //   else l = it.mk.l('span',{con:JSON.stringify(decoded)})
+  // }
   else l = it.mk.nostr_link(dis);
   return l
 };
@@ -1183,12 +1138,6 @@ it.parse.content =(o,trust)=>
       if (l.childNodes.length) content.append(l);
     } 
   }
-
-  // let q_tag = it.get_q_tag(o.tags);
-  // if (q_tag)
-  // {
-  //   it.get_quote(q_tag[1]).then(quote => content.append(quote));
-  // };
   return content
 };
 
@@ -1225,7 +1174,7 @@ it.parse.content_quote =(o,trust)=>
         }
         else 
         {
-          console.log('parse')
+          // console.log('parse')
           if (i === words.length-1) l.append(words[i]);
           else l.append(words[i],' ');
         }

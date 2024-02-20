@@ -35,35 +35,25 @@ o_p.load =(reset=false)=>
   else document.getElementById('u').append(it.mk.details(o_p.sn,l,1));
   
   let sn = o_p.sn;
-
-  aa.ct[sn] =
-  {
-    'set':
+  aa.actions.push(
     {
       action:[sn,'set'],
       required:['key','value'],
       description:'set option value',
       exe:o_p.set
     },
-    'reset':
     {
       action:[sn,'reset'],
       optional:['key'], 
       description:'reset all or just a single option',
       exe:o_p.reset
     },
-    'rm':
     {
       action:[sn,'rm'],
       optional:['key'], 
       description:'remove option',
       exe:o_p.rm
     }
-  };
-  aa.actions.push(
-    aa.ct[sn].set,
-    aa.ct[sn].reset,
-    aa.ct[sn].rm,
   );
 
   v_u.log('o_p '+localStorage.length);
@@ -110,18 +100,6 @@ o_p.rm =s=>
   }
   else v_u.log(dis+'key not found');
 };
-
-// o_p.mk =(k,v)=>
-// {
-//   switch (k)
-//   {
-//     case 'team':
-//       aa.l.dataset.theme = v;
-//       break;
-//   }
-//   let l = it.mk.item(k,v);
-//   return l
-// };
 
 o_p.mk =(k,v) =>
 {

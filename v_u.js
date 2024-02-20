@@ -76,19 +76,15 @@ v_u.replace =s=>
   v_u.view(dis.view)
 };
 
-
 const e_observer = new IntersectionObserver(a=>
 {
-	// console.log(a);
   for (const b of a)
   {
     const l = b.target;
-    // l.classList.add('obs');
     if (b.isIntersecting)
     {
       l.classList.remove('not_yet');
       l.classList.add('rendered');
-      // console.log(b);
       // e_observer.unobserve(l);
     }
   }
@@ -154,7 +150,6 @@ v_u.dis =l=>
   v_u.scroll(l);
 };
 
-
 v_u.req_e =a=>
 {
   const request = ['REQ','e',{ids:a}];
@@ -188,10 +183,7 @@ v_u.nevent =async nevent=>
     if (!l)
     {
       let dat = await aa.db.get_e(data.id);
-      if (dat) 
-      {
-        aa.print(dat);
-      }
+      if (dat) aa.print(dat);
       else 
       {
         console.log(data);
@@ -218,10 +210,7 @@ v_u.nevent =async nevent=>
         q_e.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
       }
     }
-    else 
-    {
-      v_u.replace(nid);
-    }
+    else v_u.replace(nid);
   }
 };
 
@@ -316,12 +305,10 @@ v_u.upd.path =(l,stamp,is_aka=false)=>
       let time = l.querySelector('.by time');
       time.title = it.tim.ago(it.tim.std(time.dataset.timestamp))
       const replies = l.querySelector('.replies');
-      // console.log(replies);
       const some = replies.childNodes.length - 1;
       const all = l.querySelectorAll('.note').length;
       const summary = replies.querySelector('summary');
       const sum_butt = summary.querySelector('.mark_read');
-      // console.log(summary);
       if (summary && some > 0) sum_butt.textContent = some + (all > some ? '.' + all : '')
     }
 	}
@@ -331,15 +318,15 @@ v_u.upd.path =(l,stamp,is_aka=false)=>
 v_u.mark_read =e=>
 {
   e.stopPropagation();
-  // const dis = e.target;  
   const replies = e.target.closest('.replies');
   const mom = e.target.closest('.note');
-  mom.classList.remove('haz_new_reply','haz_new','is_new');
+  let classes = ['haz_new_reply','haz_new','is_new']
+  mom.classList.remove(...classes);
   const new_stuff = replies.querySelectorAll('.haz_new_reply,.haz_new,.is_new');        
   if (new_stuff.length)
   {
     e.preventDefault();
-    for (const l of new_stuff) l.classList.remove('haz_new_reply','haz_new','is_new');
+    for (const l of new_stuff) l.classList.remove(...classes);
     if (replies.classList.contains('expanded')) replies.classList.remove('expanded')
   }
   else replies.classList.toggle('expanded');
@@ -349,6 +336,4 @@ v_u.mark_read =e=>
     v_u.scroll(replies,{behavior:'smooth',block:'start'});
   }
   else v_u.scroll(replies,{behavior:'smooth',block:'center'});
-  
-
 };

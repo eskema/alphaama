@@ -1,20 +1,14 @@
 const rel = 
 {
   def:{id:'rel',ls:{},r:'read',w:'write'}, 
-  // def:{id:'rel',ls:{},sets:['read','write'],r:'read',w:'write'}, 
-  active:
-  {
-    // url:{q:[],cc:[],...}
-  },
+  active:{},
   sn:'r'
 };
 
 rel.load =e=>
 {
   let sn = rel.sn;
-  aa.ct[sn] = 
-  {
-    'add': 
+  aa.actions.push(
     {
       action:[sn,'add'],
       required:['url'], 
@@ -22,7 +16,6 @@ rel.load =e=>
       description:'add or replace relays',
       exe:rel.add
     },
-    'rm':
     {
       action:[sn,'rm'],
       required:['url'], 
@@ -30,7 +23,6 @@ rel.load =e=>
       // oto:rel.ls,
       exe:rel.rm
     },
-    'sets':
     {
       action:[sn,'sets'],
       required:['set','url'],
@@ -38,7 +30,6 @@ rel.load =e=>
       // oto:rel.ls,
       exe:rel.sets
     },
-    'setrm':
     {
       action:[sn,'setrm'],
       required:['set'],
@@ -47,55 +38,43 @@ rel.load =e=>
       // oto:rel.ls,
       exe:rel.set_rm
     },
-    'ext':
     {
       action:[sn,'ext'],
       description:'get relays from extension',
       exe:rel.ext
     },
-    'list':
     {
       action:[sn,'list'],
       required:['set'],
       description:'loads relay list from set to mklist',
       exe:rel.list
     },
-    'mklist':
     {
       action:[sn,'mklist'],
       description:'create a relay list (kind-10002)',
       exe:rel.mklist
     },
-  };
-  aa.actions.push(
-    aa.ct[sn].add,
-    aa.ct[sn].rm,
-    aa.ct[sn].sets,
-    aa.ct[sn].setrm,
-    aa.ct[sn].ext,
-    aa.ct[sn].list,
-    aa.ct[sn].mklist,
   );
-  aa.load_mod(rel).then(rel.start);
+  aa.load_mod(rel).then(it.mk.mod);
 }
 
-rel.start =mod=>
-{
-  it.mk.mod(mod);
+// rel.start =mod=>
+// {
+//   it.mk.mod(mod);
   
-  let changed;
-  if (!mod.o.r) 
-  {
-    mod.o.r = 'read';
-    changed = true;
-  }
-  if (!mod.o.w) 
-  {
-    mod.o.w = 'write';
-    changed = true;
-  }
-  if (changed) rel.save()
-};
+  // let changed;
+  // if (!mod.o.r) 
+  // {
+  //   mod.o.r = 'read';
+  //   changed = true;
+  // }
+  // if (!mod.o.w) 
+  // {
+  //   mod.o.w = 'write';
+  //   changed = true;
+  // }
+  // if (changed) rel.save()
+// };
 
 rel.save =()=>
 {
@@ -264,8 +243,6 @@ rel.sets =s=>
           it.a_set(rel.o.ls[url.href].sets,[set_id]);
         }
       }
-      // if (!rel.o.sets) rel.o.sets = [];
-      // it.a_set(rel.o.sets,[set_id]);
     }
   };
 
@@ -424,15 +401,9 @@ rel.mklist =s=>
           tags:relays
         };
         event.id = it.fx.hash(event);
-        // console.log(event);
-        aa.f_it(event)
-        // .then(e=>
-        // {
-        //   console.log(e);
-        // });
+        aa.f_it(event);
       }
     });
-    // console.log(it.mk.ls({ls:md}))
   }
 };
 
@@ -507,9 +478,9 @@ rel.on_message =e=>
 
 rel.force_close =(a=[])=>
 {
-  for (const rl of a)
+  for (const r of a)
   {
-    let relay = rel.active[rl];
+    let relay = rel.active[r];
     if (relay && relay.ws)
     {
       relay.fc = true; 

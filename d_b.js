@@ -150,7 +150,7 @@ aa.db.some =async s=>
   db_op.n = n ? parseInt(n) : 1;
   db_op.direction = direction && direction === 'next' ? 'next' : 'prev';
   let o = {some:db_op};
-
+  v_u.log(localStorage.ns+' '+aa.db.sn+' some '+db_op.n);
   const db = new Worker('idb.js');
   db.onmessage=e=>
   {
@@ -167,48 +167,6 @@ aa.db.view =s=>
   cli.fuck_off();
   v_u.state(s.trim());
 };
-
-// aa.ct[aa.db.sn] =
-// {
-  
-//   'some':
-//   {
-//     action:[aa.db.sn,'some'],
-//     required:['number'],
-//     optional:['next'],
-//     description:'request n events from db',
-//     exe: aa.db.some
-//   },
-//   'view':
-//   {
-//     action:[aa.db.sn,'view'],
-//     required:['id'],
-//     description:'load event',
-//     exe: aa.db.view
-//   }
-  // 'req':
-  // {
-  //   required:['filter'],
-  //   description:'request events from db from filter',
-  //   exe: aa.db.req
-  // },
-// };
-// aa.actions.push(aa.ct[aa.db.sn].some,aa.ct[aa.db.sn].view);
-aa.actions.push(
-  {
-    action:[aa.db.sn,'some'],
-    required:['number'],
-    optional:['next'],
-    description:'request n events from db',
-    exe: aa.db.some
-  },
-  {
-    action:[aa.db.sn,'view'],
-    required:['id'],
-    description:'load event',
-    exe: aa.db.view
-  }
-);
 
 // cache - currently not used anywhere
 aa.db.cash = {};
@@ -272,3 +230,19 @@ aa.db.cash.some =(n=0)=>
   aa.db.cash.hole('e',cb);
   cli.fuck_off();
 };
+
+aa.actions.push(
+  {
+    action:[aa.db.sn,'some'],
+    required:['number'],
+    optional:['next'],
+    description:'request n events from db',
+    exe: aa.db.some
+  },
+  {
+    action:[aa.db.sn,'view'],
+    required:['id'],
+    description:'load event',
+    exe: aa.db.view
+  }
+);

@@ -92,8 +92,6 @@ indexed_db.ops.req =async(db,o)=>
   if (o.kinds) krs.push(IDBKeyRange.bound(o.kinds));
   const odb = db.transaction('events').objectStore('events');
   const idx = odb.index('created_at');
-  // {kinds:[1,7],since:1}
-  // const idx = odb.index('since');
   let done = 0;
   const a = [];
   
@@ -145,15 +143,6 @@ const a_set =(a,dis)=>
 
 const merge =(dis,dat)=>
 {
-  // let merged,sets = ['seen','subs','clas','refs'];
-  // for (const set of sets)
-  // { 
-  //   if (!dis.hasOwnProperty(set)) {dis[set]=[]; merged=true} 
-  //   if (!dat.hasOwnProperty(set)) dat[set] = [];
-  //   if (a_set(dis[set],dat[set])) merged=true;
-  // }
-  // return merged
-
   dis = Object.assign({},dis);
   let merged,sets = ['seen','subs','clas','refs'];
   for (const set of sets)
@@ -163,9 +152,7 @@ const merge =(dis,dat)=>
     if (a_set(dis[set],dat[set])) merged=true;
   }
   return merged ? dis : false 
-}; 
-
-  
+};
 
 indexed_db.ops.upd =async(db,o)=>
 {
@@ -191,30 +178,21 @@ indexed_db.upg =(e) =>
   const db = e.target.result;
   const tx = e.target.transaction;
   let st;
+
   if (!db.objectStoreNames.contains('stuff'))
   {
     db.createObjectStore('stuff',{keyPath:'id'});
   }
 
-  // db.deleteObjectStore('events');
   if (!db.objectStoreNames.contains('events'))
   {
     db.createObjectStore('events',{keyPath:'event.id'});
   }
   st = tx.objectStore('events');
-
-  // if (st.indexNames.contains('pubkey')) st.deleteIndex('pubkey');
   if (!st.indexNames.contains('pubkey')) st.createIndex('pubkey','event.pubkey',{unique:false});
-  // if (st.indexNames.contains('kind')) st.deleteIndex('kind');
   if (!st.indexNames.contains('kind')) st.createIndex('kind','event.kind',{unique:false});
-  // if (!st.indexNames.contains('p_tags')) st.createIndex('p_tags','event.kind');
-  // st.deleteIndex('created_at');
-  if (st.indexNames.contains('created_at')) st.deleteIndex('created_at');
   if (!st.indexNames.contains('created_at')) st.createIndex('created_at','event.created_at',{unique:false});
-  
   if (!st.indexNames.contains('refs')) st.createIndex('refs','refs',{unique:false,multiEntry:true});
-
-
 
   if (!db.objectStoreNames.contains('authors'))
   {
@@ -222,23 +200,14 @@ indexed_db.upg =(e) =>
   }
   st = tx.objectStore('authors');
   if (!st.indexNames.contains('npub')) st.createIndex('npub','npub');
-  // if (!st.indexNames.contains('updated')) st.createIndex('updated','updated',{unique:false});
   if (st.indexNames.contains('updated')) st.deleteIndex('updated');
-  
-  // if (st.indexNames.contains('sets')) st.deleteIndex('sets');
-  // if (st.indexNames.contains('sets')) st.deleteIndex('sets');
-  // if (!st.indexNames.contains('sets')) st.createIndex('sets','sets',{unique:false,multiEntry:true});
-  
-  // if (st.indexNames.contains('name')) st.deleteIndex('name');
   if (!st.indexNames.contains('name')) st.createIndex('name','metadata.name',{unique:false});
-  // if (st.indexNames.contains('nip05')) st.deleteIndex('nip05');
   if (!st.indexNames.contains('nip05')) st.createIndex('nip05','metadata.nip05',{unique:false});
-  
   if (st.indexNames.contains('bff')) st.deleteIndex('bff');
-  // if (!st.indexNames.contains('bff')) st.createIndex('bff','extradata.bff');
-  // xpub,
 };
+
 indexed_db.err =e=>{ console.log('db error',e) };
+
 indexed_db.ok =(db,o)=> 
 {
   const total = Object.keys(o).length;
@@ -250,6 +219,7 @@ indexed_db.ok =(db,o)=>
     if (done === total) setTimeout(db.close,200)
   }
 }
+
 onmessage =m=> 
 { 
   // console.log('db onmessage',m.data);

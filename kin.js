@@ -30,7 +30,6 @@ kin.note =dat=>
   if (o.pubkey)
   {
     p = aa.p[o.pubkey];
-    // console.log(p);
     note.dataset.pubkey = o.pubkey;
     trusted = it.s.trusted(p?.trust ?? 0);
     note.dataset.trust = trusted;
@@ -63,14 +62,10 @@ kin.note =dat=>
 
   if (o.sig) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
 
-  // let replies = it.mk.l('ul',{cla:'replies expanded',clk:v_u.mark_read});
-  // let replies = it.mk.l('ul',{cla:'replies expanded',clk:v_u.mark_read});
   let replies = it.mk.details('',false,true);
   replies.classList.add('replies','expanded');
   let summary = replies.querySelector('summary');
   summary.append(it.mk.l('button',{cla:'butt mark_read',clk:v_u.mark_read}));
-  // summary.addEventListener('click',v_u.mark_read);
-  // console.log(replies);
   note.append(replies,kin.note_actions(dat.clas));  
   return note
 };
@@ -84,7 +79,6 @@ kin.quote =o=>
   let by = it.mk.l('p',{cla:'note_quote_by'});
   by.append(it.mk.nostr_link(it.fx.nid(o.id)));
   quote.append(by);
-  // console.log(e);
   let has_pub;
   let pubkey = o.author ?? o.pubkey;
   if (pubkey) 
@@ -101,13 +95,11 @@ kin.quote =o=>
       if (!has_pub) by.prepend(it.mk.author(dat.event.pubkey));
       let trust = aa.p[dat.event.pubkey]?.trust ?? 0;
       content = it.parse.content_quote(dat.event,trust);
-      // quote.append(it.parse.content_quote(e.event));
     }
     else
     {
       quote.classList.add('blank_quote');
       if (!has_pub) by.prepend(it.mk.l('span',{con:'?'}));
-      // pubkey = o.author ?? o.pubkey ?? '?';
       content = it.mk.l('p',{cla:'paragraph'});
       
       let req = {ids:[o.id]};
@@ -193,7 +185,6 @@ kin.event =message=>
       if (!sub?.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
     }
     
-    
     aa.print(dat);
   }
   else console.log('invalid event',message);
@@ -201,9 +192,10 @@ kin.event =message=>
 
 kin.e =s=>
 {
-  let event = it.parse.j(s);;
+  let event = it.parse.j(s);
   if (event)
   {
+    cli.fuck_off();
     if (!event.pubkey) event.pubkey = aka.o.ls.xpub;
     if (!event.kind) event.kind = 1;
     if (!event.created_at) event.created_at = it.tim.now();
@@ -211,15 +203,13 @@ kin.e =s=>
     if (!event.content) event.content = '';
     kin.draft(event);
   }
-  cli.fuck_off();
-  console.log(event)
+  // console.log(event)
 };
 
 kin.draft =event=>
 {
   if (!event.id) event.id = it.fx.hash(event);
   aa.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
-  // console.log(event);
   aa.print(aa.e[event.id]);
 };
 
@@ -306,8 +296,6 @@ kin.d0 =dat=>
 {
   const er = 'invalid kind:0 metadata';
   let metadata = it.parse.j(dat.event.content);
-  // try { metadata = JSON.parse(dat.event.content) } 
-  // catch (err) { v_u.log(er) } 
   
   if (metadata)
   {
@@ -341,16 +329,8 @@ kin.d1 =dat=>
   let note = kin.note(dat);
   note.classList.add('is_new');
   let reply_tag = it.get_reply_tag(dat.event.tags);
-  if (reply_tag && reply_tag.length)
-  {
-    // note.classList.add('reply');
-    v_u.append_to_replies(dat,note,reply_tag);
-  }
-  else 
-  {
-    // note.classList.add('root');
-    v_u.append_to_notes(note);
-  }
+  if (reply_tag && reply_tag.length) v_u.append_to_replies(dat,note,reply_tag);
+  else v_u.append_to_notes(note);
   return note
 };
 
@@ -411,7 +391,7 @@ kin.d6 =dat=>
     let repost_id = reply_tag[1];
     if (repost_id) 
     {
-      let dat_e = aa.db.get_e(repost_id).then(dat_e=>
+      aa.db.get_e(repost_id).then(dat_e=>
       {
         if (!dat_e) 
         {
@@ -424,26 +404,8 @@ kin.d6 =dat=>
     }
     v_u.append_to_replies(dat,note,reply_tag);
   }
-  else 
-  {
-    v_u.append_to_notes(note);
-  }
+  else v_u.append_to_notes(note);
   return note
-
-  // let repost_id = it.get_reply_tag();
-  // if (repost_id) 
-  // {
-  //   let e = document.querySelector('[data-id="'+repost_id+'"]');
-  //   if (!e) 
-  //   {
-  //     let repost = it.parse.j(dat.event.content);
-  //     if (repost) aa.print({event:repost});
-  //   }
-  // }
-  
-  // const note = kin.def(dat);
-  // note.classList.add('root');
-  // return note
 };
 
 kin.d16 =dat=>
@@ -572,7 +534,6 @@ kin.tags =tags=>
   
   return tags_ol
 };
-  
 
 aa.print =async dat=>
 {

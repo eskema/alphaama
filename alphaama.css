@@ -416,8 +416,10 @@ button.butt:focus
 {
   color: rgb(var(--color-d));
   display: grid;
-  grid-template-areas: "key value";
-  grid-template-columns: auto 1fr;
+/*  grid-template-areas: "key value";
+  grid-template-columns: auto 1fr;*/
+  grid-template-areas: "bef k v aft";
+  grid-template-columns: auto auto 1fr auto;
   justify-items: start;
   margin: 0 var(--pad);
 }
@@ -430,13 +432,13 @@ button.butt:focus
 .item[data-before]::before 
 {
   content: attr(data-before);
-  grid-area: before;
+  grid-area: bef;
 }
 
 .item[data-after]::after 
 {
   content: attr(data-after);
-  grid-area: after;
+  grid-area: aft;
 }
 
 .item > .key 
@@ -454,6 +456,104 @@ button.butt:focus
 {
   /*color: rgb(var(--color-d));*/
 }
+
+
+
+
+
+
+/*.relay,
+.filter
+{
+  grid-template-areas: "rm k v sets";
+  grid-template-columns: auto auto 1fr auto;
+}*/
+
+.item[data-sets]::after 
+{
+  content: attr(data-sets);
+  grid-area: aft;
+  margin-right: var(--pad);
+}
+
+.item .rm 
+{
+  grid-area: bef;
+  margin-right: var(--pad);
+  padding: 0;
+}
+
+.item .rm:hover
+{
+  background-color: rgb(var(--color-no));
+  color: rgb(var(--color-b));
+}
+
+.item button.key 
+{
+  justify-self: start;
+  padding: 0; 
+}
+
+.item button.key:hover
+{
+  background-color: rgb(var(--color-f));
+  color: rgb(var(--color-b));
+}
+
+.relay .url 
+{
+  grid-area: k;
+  margin: 0;
+  margin-right: var(--pad);
+}
+
+.url .protocol 
+{
+  opacity: .6;
+}
+
+.url .pathname 
+{
+  opacity: .6;
+}
+
+.url .hashsearch 
+{
+  opacity: .6;
+}
+
+#u .relay::before
+{
+  content: "(" attr(data-state) ") " attr(data-q);
+  margin-right: var(--pad);
+}
+
+#u .relay[data-state="1"]::before
+{
+  color: rgb(var(--color-yes));
+  opacity: .7;
+}
+
+#u .relay[data-state="3"]::before
+{
+  color: rgb(var(--color-no));
+  opacity: .7;
+}
+
+/*.item .key 
+{
+  grid-area: k;
+}
+
+.item .val
+{
+  grid-area: v;
+  margin: 0;
+}*/
+
+
+
 
 /* @end */
 
@@ -1517,11 +1617,11 @@ a.author.is_bff
 .content 
 {
   background: rgb(var(--color-b));
-  border: 1px solid transparent;
+  /*border: 1px solid transparent;*/
   border-left: none;
   box-sizing: border-box;
   grid-area: content;
-  max-height: calc(100vh - 4rem);  
+  max-height: calc(90vh - 4rem);  
   overflow: hidden;
   position: relative;
 }
@@ -2079,6 +2179,12 @@ a.author.is_bff
   font-size: var(--font-size-s);
 }
 
+.blank > .content .paragraph
+{
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* @end */
 
 /* @group quote */
@@ -2297,11 +2403,12 @@ a.author.is_bff
 
 #oto::before 
 {
-  background-color: rgba(var(--color-main),.5);
+  /*background-color: rgba(var(--color-main),.5);*/
   border-bottom: 1px dotted rgb(var(--color-c));
   color: rgb(var(--color-a));
   content: attr(data-s);
   left: var(--line);
+  /*padding-bottom: 4px;*/
   pointer-events: none;
   position: absolute;
   white-space: pre;
@@ -2309,11 +2416,11 @@ a.author.is_bff
 
 #oto .item 
 {
-  border-bottom: 1px dotted rgb(var(--color-e));
+  /*border-bottom: 1px dotted rgb(var(--color-e));*/
   cursor: pointer;
   grid-gap: var(--pad);
   grid-template-columns: auto auto auto auto 1fr;
-  grid-template-areas: "before val required optional description";
+  grid-template-areas: "bef val required optional description";
   margin: 0;
   transition: var(--trans-quart);
   user-select: none;
@@ -2394,10 +2501,11 @@ a.author.is_bff
 #oto .item.pinned 
 {
   background-color: rgb(var(--color-main));
-  border-bottom: 1px dotted rgb(var(--color-alt));
+  /*border-bottom: 1px solid rgb(var(--color-e));*/
   cursor: text;
   pointer-events: none;
   z-index: 1;
+  
 }
 
 #oto .item.pinned > *,
@@ -3162,7 +3270,7 @@ p[data-meta="about"]::before
 
 /* @group relays */
 
-.relay,
+/*.relay,
 .filter
 {
   grid-template-areas: "rm k v sets";
@@ -3184,8 +3292,7 @@ p[data-meta="about"]::before
   padding: 0;
 }
 
-.filter .rm:hover,
-.relay .rm:hover 
+.item .rm:hover
 {
   background-color: rgb(var(--color-no));
   color: rgb(var(--color-b));
@@ -3194,25 +3301,13 @@ p[data-meta="about"]::before
 .item button.key 
 {
   justify-self: start;
-  padding: 0;
-  
+  padding: 0; 
 }
 
-/*.item button.key:hover::before
+.item button.key:hover
 {
-  content: "[";
-}*/
-/*
-.item button.key:hover::after
-{
-  content: ":";
-}*/
-
-.filter button.key:hover,
-.relay button.key:hover 
-{
-  background-color: rgb(var(--color-maybe));
-  color: rgb(var(--color-e));
+  background-color: rgb(var(--color-f));
+  color: rgb(var(--color-b));
 }
 
 .relay .url 
@@ -3255,16 +3350,16 @@ p[data-meta="about"]::before
   opacity: .7;
 }
 
-.filter .key 
+/*.item .key 
 {
   grid-area: k;
 }
 
-.filter .val
+.item .val
 {
   grid-area: v;
   margin: 0;
-}
+}*!/*/
 
 /* @end */
 

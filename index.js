@@ -23,8 +23,6 @@ window.addEventListener('load',()=>
     }));
   }
   else v_u.log(s);
-
-  
   
   if (o_p) o_p.load();
   if (aka) aka.load();

@@ -223,38 +223,6 @@ cli.mention =(w)=>
   }
 };
 
-cli.act_item_og =(main_act,sub_act)=>
-{
-  const ns = localStorage.ns;
-  const l = it.mk.l('li',{cla:'item',bef:ns});
-  l.append(it.mk.l('span',{cla:'val',con:main_act+(sub_act?' '+sub_act:'')}));
-  const action = aa.ct[main_act];
-  let act = action ? action[sub_act] : false;
-  if (act)
-  {
-    if (act.required) l.append(' ',it.mk.l('span',{cla:'required',con:act.required.join(' ')}));
-    if (act.optional) l.append(' ',it.mk.l('span',{cla:'optional',con:act.optional.join(' ')}));
-    if (act.description) l.append(' ',it.mk.l('span',{cla:'description',con:act.description}));
-  }
-  l.tabIndex = '1';
-  const clk =e=>
-  {
-    cli.upd_from_oto(ns+' '+e.target.querySelector('.val').textContent);
-  };
-  l.onclick = clk;
-  l.onkeydown =e=>
-  {
-    if (e.key === 'Enter')
-    {
-      e.stopPropagation();
-      e.preventDefault();
-      clk(e)
-    }
-  };
-
-  return l
-};
-
 cli.act_item =(o)=>
 {
   const l = it.mk.l('li',{cla:'item',bef:localStorage.ns});
@@ -282,61 +250,19 @@ cli.act_item =(o)=>
   return l
 };
 
-cli.action_og =(s,a)=>
-{
-  let actions = Object.keys(aa.ct).sort();
-  for (const act of actions)
-  {
-    let act_item;
-    // if (a.length <= 2) 
-    if (a.length === 2 && a[1] === '')
-    {
-      console.log('a.length<=2')
-      act_item = cli.act_item(act,'');
-      cli.oto.append(act_item);
-    }
-    else if (act.startsWith(a[1]))
-    {
-      console.log('act.startsWith(a[1])',act,a[1]);
-      const acts_a = Object.keys(aa.ct[act]);
-      for (const act_a of acts_a)
-      {
-        let action = localStorage.ns+' '+act+' '+act_a;
-        if (action.startsWith(s)) 
-        {
-          act_item = cli.act_item(act,act_a);
-          cli.oto.append(act_item);
-        }
-        else if (s.startsWith(action)) 
-        {
-          act_item = cli.act_item(act,act_a);
-          act_item.classList.add('pinned');
-          cli.oto.append(act_item);
-        }
-      }
-    }
-  }
-};
-
 cli.action =(s,a)=>
 {
-  // let actions = Object.keys(aa.ct).sort();
   if (a.length === 1 || (a.length === 2 && a[1] === ''))
   {
-    // let actions = aa.actions.filter(o=>o?.action[0].startsWith(a[1]));
     let sn = {};
     for (const act of aa.actions)
     {
-      if (!sn.hasOwnProperty(act.action[0])) sn[act.action[0]] = {action:[act.action[0]],optional:[]};
-      sn[act.action[0]].optional.push(act.action[1]);
+      let a0 = act.action[0];
+      if (!sn.hasOwnProperty(a0)) sn[a0] = {action:[a0],optional:[]};
+      sn[a0].optional.push(act.action[1]);
     }
-    let snsorted = Object.keys(sn).sort();
-    for (const act of snsorted)
-    {
-      let oto_item = cli.act_item(sn[act]);
-      // oto_item.append(' ',it.mk.l('span',{cla:'optional',con:sn[act]}));
-      cli.oto.append(oto_item);
-    }
+    let sorted = Object.keys(sn).sort();
+    for (const k of sorted) cli.oto.append(cli.act_item(sn[k]));
   }
   else
   {
@@ -354,7 +280,6 @@ cli.action =(s,a)=>
     }
   }
 };
-
 
 cli.otocomp =()=>
 {
@@ -409,17 +334,8 @@ cli.mk_dat =async(s,dis)=>
   }
 };
 
-
-
 it.act =s=>
 {
-  // pipe commands
-  // let acts = s.split('||');
-  // for (const ac of acts)
-  // {
-  //   soon™
-  // }
-
   let a = s.split(' ');
   a.shift();
   let err = 'invalid action';
@@ -435,27 +351,6 @@ it.act =s=>
     a.splice(0,2);
     let cut = a.join(' ');
     act.exe(cut);
-    
-    // let index = 0, ion = '';
-    // const snip =()=>{ion=a.shift();index=index+1+ion.length};
-    // snip();
-    // if (ion === localStorage.ns) 
-    // {
-    //   snip();
-    //   let act = aa.ct[ion];
-    //   if (act)
-    //   {
-    //     snip();
-    //     if (act[ion])
-    //     {
-    //       let cut = s.slice(index);
-    //       act[ion].exe(cut); 
-    //     }
-    //     else v_u.log(err);
-    //   }
-    //   else v_u.log(err);
-    // } 
-    // else v_u.log(err);
   }
   else v_u.log(err)
 };
@@ -468,4 +363,4 @@ it.s.act =s=>
     if (ns.startsWith(s) || s.startsWith(ns+' ') || s === ns) return true;
   }
   return false
-}; 
+};
