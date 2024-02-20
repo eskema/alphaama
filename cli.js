@@ -255,18 +255,22 @@ cli.act_item =(main_act,sub_act)=>
   return l
 };
 
-cli.action =(s,a)=>
+cli.action_og =(s,a)=>
 {
-  for (const act of Object.keys(aa.ct))
+  let actions = Object.keys(aa.ct).sort();
+  for (const act of actions)
   {
     let act_item;
-    if (a.length === 2 && a[1] === '') 
+    // if (a.length <= 2) 
+    if (a.length === 2 && a[1] === '')
     {
+      console.log('a.length<=2')
       act_item = cli.act_item(act,'');
       cli.oto.append(act_item);
     }
     else if (act.startsWith(a[1]))
     {
+      console.log('act.startsWith(a[1])',act,a[1]);
       const acts_a = Object.keys(aa.ct[act]);
       for (const act_a of acts_a)
       {
@@ -287,6 +291,47 @@ cli.action =(s,a)=>
   }
 };
 
+cli.action =(s,a)=>
+{
+  // let actions = Object.keys(aa.ct).sort();
+  if (a.length === 1 || (a.length === 2 && a[1] === ''))
+  {
+    // let actions = aa.actions.filter(o=>o?.action[0].startsWith(a[1]));
+    let sn = {};
+    for (const act of aa.actions)
+    {
+      if (!sn.hasOwnProperty(act.action[0])) sn[act.action[0]] = [];
+      sn[act.action[0]].push(act.action[1]);
+    }
+    let snsorted = Object.keys(sn).sort();
+    for (const act of snsorted)
+    {
+      let oto_item = cli.act_item(act,'');
+      oto_item.append(' ',it.mk.l('span',{cla:'optional',con:sn[act]}));
+      cli.oto.append(oto_item);
+    }
+  }
+  else
+  {
+    actions = aa.actions.filter(o=>o.action[0].startsWith(a[1]));
+    for(const act of actions)
+    {
+      let action = localStorage.ns+' '+act.action[0]+' '+act.action[1];
+      if (action.startsWith(s)) 
+      {
+        act_item = cli.act_item(act.action[0],act.action[1]);
+        cli.oto.append(act_item);
+      }
+      else if (s.startsWith(action)) 
+      {
+        act_item = cli.act_item(act.action[0],act.action[1]);
+        act_item.classList.add('pinned');
+        cli.oto.append(act_item);
+      }
+    }
+  }
+};
+
 
 cli.otocomp =()=>
 {
@@ -294,11 +339,21 @@ cli.otocomp =()=>
   const s = cli.t.value;
   const a = s.split(' ');
   
-  cli.oto.textContent = ''; 
+  cli.oto.textContent = '';
+  cli.oto.dataset.s = s;
   
   if (!s.length 
-  || ns.startsWith(s)) cli.oto.append(cli.act_item('',''));
-  else if (a[0] === ns) cli.action(s,a); // else if it's an action
+  || (ns.startsWith(a[0]) && a.length < 2)
+  ) 
+  {
+    // console.log('s',s.length);
+    cli.oto.append(cli.act_item('',''));
+  }
+  else if (a[0] === ns) 
+  {
+    // console.log('s',s,a,ns);
+    cli.action(s,a); // else if it's an action
+  }
   else 
   { 
     // it's not an action

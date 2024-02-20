@@ -1,4 +1,4 @@
-aa.db = {exe:{}};
+aa.db = {exe:{},sn:'db'};
 
 aa.idb = new Worker('idb.js');
 aa.idb.onmessage=e=>
@@ -168,10 +168,12 @@ aa.db.view =s=>
   v_u.state(s.trim());
 };
 
-aa.ct.db =
+aa.ct[aa.db.sn] =
 {
+  
   'some':
   {
+    action:[aa.db.sn,'some'],
     required:['number'],
     optional:['next'],
     description:'request n events from db',
@@ -179,6 +181,7 @@ aa.ct.db =
   },
   'view':
   {
+    action:[aa.db.sn,'view'],
     required:['id'],
     description:'load event',
     exe: aa.db.view
@@ -190,6 +193,7 @@ aa.ct.db =
   //   exe: aa.db.req
   // },
 };
+aa.actions.push(aa.ct[aa.db.sn].some,aa.ct[aa.db.sn].view);
 
 // cache - currently not used anywhere
 aa.db.cash = {};

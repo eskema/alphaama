@@ -7,7 +7,15 @@ const aa =
   p:{},
   q:{},
   state:{},
-  ct:{},
+  ct:
+  {
+    u:{},
+    // h:{},
+    e:{},
+    // l:{},
+    p:{}
+  },
+  actions:[],
   mk:{},
   clk:{},
 };
@@ -54,32 +62,50 @@ aa.stuff =async()=>
     // setTimeout(()=>{q_e.run('a')},200);
     setTimeout(()=>{q_e.run('b')},2000);
   }
-  // if 
-  // aa.login().then(()=>
-  // {
-    
-  //   // location.reload()
-  // });
 };
 
-aa.ct.u = 
+aa.ct.u.stuff =
 {
-  'login': 
-  {
-    description:'load aka and relays from ext',
-    exe:aa.login
-  },
-  'reset':
-  {
-    description:'resets everything',
-    exe:aa.reset
-  },
-  'stuff':
-  {
-    description:'does a bunch of stuff to get you started',
-    exe:aa.stuff
-  },
+  action:['u','stuff'],
+  description:'does a bunch of stuff to get you started',
+  exe:aa.stuff
 };
+aa.actions.push(aa.ct.u.stuff);
+
+aa.ct.u.login = 
+{
+  action:['u','login'],
+  description:'load aka and relays from ext',
+  exe:aa.login
+};
+aa.actions.push(aa.ct.u.login);
+
+aa.ct.u.reset =
+{
+  action:['u','reset'],
+  description:'resets everything',
+  exe:aa.reset
+};
+aa.actions.push(aa.ct.u.reset);
+
+// aa.ct.u = 
+// {
+//   'login': 
+//   {
+//     description:'load aka and relays from ext',
+//     exe:aa.login
+//   },
+//   'reset':
+//   {
+//     description:'resets everything',
+//     exe:aa.reset
+//   },
+//   'stuff':
+//   {
+//     description:'does a bunch of stuff to get you started',
+//     exe:aa.stuff
+//   },
+// };
 
 aa.load_mod =async mod=>
 {
@@ -87,9 +113,11 @@ aa.load_mod =async mod=>
   if (saved_mod) mod.o = saved_mod;
   else if (mod.def) mod.o = mod.def;
   if (!mod.o.ls) mod.o.ls = {};
-  it.mk.mod(mod);
+  // it.mk.mod(mod);
   return mod
 };
+
+
 
 aa.base_ui =a=>{ for (const s of a) aa.mk[s]() };
 
@@ -241,7 +269,7 @@ aa.clk.react =e=>
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
   console.log('react',xid);
-  cli.v(localStorage.ns+' aka react '+xid+' '+localStorage.reaction);
+  cli.v(localStorage.ns+' e react '+xid+' '+localStorage.reaction);
 };
 
 aa.clk.hide =e=>

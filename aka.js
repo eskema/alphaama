@@ -1,6 +1,7 @@
 const aka = 
 {
-  def:{id:'aka',ls:{}}
+  def:{id:'aka',ls:{}},
+  sn:'aka',
 };
 
 aka.mk =(k,v)=>
@@ -20,63 +21,124 @@ aka.mk =(k,v)=>
 
 aka.load =()=>
 {
-  aa.ct.aka = 
+  // aa.ct.aka = 
+  // {
+  //   'set': 
+  //   {
+  //     required:['id'], 
+  //     description:'set aka (hex or npub)',
+  //     exe:aka.add
+  //   },
+  //   'rm':
+  //   {
+  //     description:'remove aka',
+  //     exe:aka.rm
+  //   },
+  //   'ext':
+  //   { 
+  //     description:'get aka from extension (nip-7)',
+  //     exe:aka.ext
+  //   },
+    
+    // 'react': 
+    // {
+    //   required:['id','reaction'], 
+    //   description:'react to a note',
+    //   exe:aka.react
+    // },
+    // 'md': 
+    // {
+    //   // required:['id','reaction'], 
+    //   description:'autofills metadata to edit and set',
+    //   exe:aka.md
+    // },
+    // 'smd': 
+    // {
+    //   required:['{JSON}'], 
+    //   description:'set metadata (kind-0)',
+    //   exe:aka.smd
+    // },
+  // };
+
+  aa.ct.u.md =
   {
-    'set': 
-    {
-      required:['id'], 
-      description:'set aka (hex or npub)',
-      exe:aka.add
-    },
-    'rm':
-    {
-      description:'remove aka',
-      exe:aka.rm
-    },
-    'ext':
-    { 
-      description:'get aka from extension (nip-7)',
-      exe:aka.ext
-    },
-    'follow': 
-    {
-      required:['id'], 
-      optional:['relay','petname'], 
-      description:'follow account (hex or npub)',
-      exe:aka.follow
-    },
-    'unfollow': 
-    {
-      required:['id'], 
-      optional:['more ids..'], 
-      description:'unfollow account (hex or npub)',
-      exe:aka.unfollow
-    },
-    'score': 
-    {
-      required:['id','number'], 
-      description:'set user score (for auto parsing and stuff)',
-      exe:aka.score
-    },
-    'react': 
-    {
-      required:['id','reaction'], 
-      description:'react to a note',
-      exe:aka.react
-    },
-    'md': 
-    {
-      // required:['id','reaction'], 
-      description:'autofills metadata to edit and set',
-      exe:aka.md
-    },
-    'smd': 
-    {
-      required:['{JSON}'], 
-      description:'set metadata (kind-0)',
-      exe:aka.smd
-    },
+    // required:['id','reaction'], 
+    action:['u','md'],
+    description:'autofills metadata to edit and set',
+    exe:aka.md
   };
+  aa.actions.push(aa.ct.u.md);
+
+  aa.ct.u.smd =
+  {
+    action:['u','smd'],
+    required:['{JSON}'], 
+    description:'set metadata (kind-0)',
+    exe:aka.smd
+  };
+  aa.actions.push(aa.ct.u.smd);
+
+  aa.ct.e.react =
+  {
+    action:['e','react'],
+    required:['id','reaction'], 
+    description:'react to a note',
+    exe:aka.react
+  };
+  aa.actions.push(aa.ct.e.react);
+
+  aa.ct.p.follow = 
+  {
+    action:['p','follow'],
+    required:['id'], 
+    optional:['relay','petname'], 
+    description:'follow account (hex or npub)',
+    exe:aka.follow
+  };
+  aa.actions.push(aa.ct.p.follow);
+
+  aa.ct.p.unfollow =
+  {
+    action:['p','unfollow'],
+    required:['id'], 
+    optional:['more ids..'], 
+    description:'unfollow account (hex or npub)',
+    exe:aka.unfollow
+  };
+  aa.actions.push(aa.ct.p.unfollow);
+
+  aa.ct.p.score =
+  {
+    action:['p','score'],
+    required:['id','number'], 
+    description:'set user score (for auto parsing and stuff)',
+    exe:aka.score
+  };
+  aa.actions.push(aa.ct.p.score);
+
+  // aa.ct.p =
+  // {
+  //   'follow': 
+  //   {
+  //     required:['id'], 
+  //     optional:['relay','petname'], 
+  //     description:'follow account (hex or npub)',
+  //     exe:aka.follow
+  //   },
+  //   'unfollow': 
+  //   {
+  //     required:['id'], 
+  //     optional:['more ids..'], 
+  //     description:'unfollow account (hex or npub)',
+  //     exe:aka.unfollow
+  //   },
+  //   'score': 
+  //   {
+  //     required:['id','number'], 
+  //     description:'set user score (for auto parsing and stuff)',
+  //     exe:aka.score
+  //   },
+  // };
   
   aa.load_mod(aka).then(aka.start);
 };
@@ -86,8 +148,8 @@ aka.start =async mod=>
   let ls = mod.o.ls;
   if (ls.xpub)
   {
-    v_u.log('aka xpub '+ls.xpub);
-    v_u.log('aka npub '+ls.npub);
+    v_u.log('u xpub '+ls.xpub);
+    v_u.log('u npub '+ls.npub);
     
     let butt_u = document.getElementById('butt_u');
     if (butt_u)
@@ -347,6 +409,14 @@ author.profile =p=>
   return profile
 };
 
+author.profile_butt_all =e=>
+{
+  const xpub = e.target.closest('.profile').dataset.xpub;
+  const request = ['REQ','p',{authors:[xpub],kinds:[0,3,10002]}];
+  q_e.demand(request,rel.in_set(rel.o.r),{eose:'close'});
+  // console.log(request);
+};
+
 author.profile_butt_metadata =e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
@@ -375,7 +445,7 @@ author.profile_butt_score =async e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
   const p = await aa.db.get_p(xpub);
-  if (p) cli.v(localStorage.ns+' aka score '+xpub+' '+p.trust);
+  if (p) cli.v(localStorage.ns+' p score '+xpub+' '+p.trust);
 };
 
 author.profile_butt_follow =async e=>
@@ -387,7 +457,7 @@ author.profile_butt_follow =async e=>
   {
     // unfollow
     // let s = localStorage.ns+' aka unfollow ';
-    let s = localStorage.ns+' aka unfollow ';
+    let s = localStorage.ns+' p unfollow ';
     let dis = s+x;
     // wip, trying to be able to 
     if (cli.t.value.length >= dis.length && cli.t.value.startsWith(s)) 
@@ -443,7 +513,7 @@ author.profile_butt_follow =async e=>
     }
     else console.log('no k3')
 
-    cli.v(localStorage.ns+' aka follow '+a.join(', '));
+    cli.v(localStorage.ns+' p follow '+a.join(', '));
   }
 };
 
@@ -952,7 +1022,7 @@ aka.unfollow =async s=>
 aka.md =()=>
 {
   const md = aa.p[aka.o.ls.xpub].metadata;
-  if (md) cli.v(localStorage.ns+' aka smd '+JSON.stringify(md));
+  if (md) cli.v(localStorage.ns+' u smd '+JSON.stringify(md));
 };
 
 aka.smd =s=>

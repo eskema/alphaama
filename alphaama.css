@@ -1599,6 +1599,13 @@ a.author.is_bff
   justify-self: center;
 }
 
+.in_view > .content .note_quote .content-img
+{
+  max-height: var(--media-height);
+  margin: 0 auto;
+  justify-self: center;
+}
+
 .paragraph > a.author
 {
   border-bottom: 1px solid rgb(var(--c));
@@ -1610,7 +1617,8 @@ a.author.is_bff
 
 .paragraph > a.author .name
 {
-  padding: 1px var(--padm);
+  padding: 2px 0;
+  margin: 0;
   /*text-decoration: underline;*/
 }
 
@@ -1806,7 +1814,8 @@ a.author.is_bff
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .content,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .by,
 .replies:not(.expanded) .note:not(.is_new) > .actions,
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies > summary
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before
 {
   display: none;
 }

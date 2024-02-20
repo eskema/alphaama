@@ -597,7 +597,7 @@ it.mk.mod =mod=>
   if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
   mod.l = it.mk.ls(o);
   const u = document.getElementById('u');
-  if (u) u.append(it.mk.details(mod.o.id,mod.l,1))
+  if (u) u.append(it.mk.details(mod.sn,mod.l,1))
 };
 
 it.mk.link =(url,text=false,title=false)=>
@@ -1075,6 +1075,13 @@ it.parse.quote =(dis)=>
   let decoded = it.fx.decode(dis);
   if (!decoded) return dis;
   if (dis.startsWith('npub1'))  l = it.mk.author(decoded);
+  else if (dis.startsWith('nprofile1'))  
+  {
+    // l = it.mk.nostr_link(dis);
+    // console.log(decoded);
+    // let p = 
+    l = it.mk.author(decoded.pubkey);
+  }
   else if (dis.startsWith('note1')) l = kin.quote({"id":decoded});
   else if (dis.startsWith('nevent1'))
   {

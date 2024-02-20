@@ -19,7 +19,8 @@ const o_p =
 //       'replies':'\\',
 //       'exit':'Escape'
 //     }
-  }
+  },
+  sn:'o',
 };
 
 o_p.load =(reset=false)=>
@@ -31,8 +32,40 @@ o_p.load =(reset=false)=>
 
   let l = it.mk.ls({id:'o_p',ls:localStorage,mk:o_p.mk});
   if (document.getElementById(l.id)) document.getElementById(l.id).replaceWith(l);
-  else document.getElementById('u').append(it.mk.details('o_p',l,1));
+  else document.getElementById('u').append(it.mk.details(o_p.sn,l,1));
   
+  let sn = o_p.sn;
+
+  aa.ct[sn] =
+  {
+    'set':
+    {
+      action:[sn,'set'],
+      required:['key','value'],
+      description:'set option value',
+      exe:o_p.set
+    },
+    'reset':
+    {
+      action:[sn,'reset'],
+      optional:['key'], 
+      description:'reset all or just a single option',
+      exe:o_p.reset
+    },
+    'rm':
+    {
+      action:[sn,'rm'],
+      optional:['key'], 
+      description:'remove option',
+      exe:o_p.rm
+    }
+  };
+  aa.actions.push(
+    aa.ct[sn].set,
+    aa.ct[sn].reset,
+    aa.ct[sn].rm,
+  );
+
   v_u.log('o_p '+localStorage.length);
 };
 
@@ -49,7 +82,7 @@ o_p.set =s=>
   {
     localStorage[k] = v;
     o_p.load();
-    v_u.log(localStorage.ns+' op set '+k+' to '+v);
+    v_u.log(localStorage.ns+' o set '+k+' to '+v);
     cli.fuck_off();
   }
 };
@@ -88,26 +121,4 @@ o_p.mk =(k,v)=>
   }
   let l = it.mk.item(k,v);
   return l
-};
-
-aa.ct.op =
-{
-  'set':
-  {
-    required:['key','value'],
-    description:'set option value',
-    exe:o_p.set
-  },
-  'reset':
-  {
-    optional:['key'], 
-    description:'reset all or just a single option',
-    exe:o_p.reset
-  },
-  'rm':
-  {
-    optional:['key'], 
-    description:'remove option',
-    exe:o_p.rm
-  }
 };

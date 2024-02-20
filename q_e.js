@@ -2,28 +2,34 @@ const q_e =
 { 
   def:{id:'q_e',ls:{}},
   clk:{},
+  sn:'q',
 };
 
-q_e.upd =()=>{it.to(()=>{ aa.save(q_e) },2000,'qe_upd')};
+// q_e.upd =()=>{it.to(()=>{ aa.save(q_e) },2000,'qe_upd')};
 
 q_e.load =()=>
 {
-  aa.ct.qe = 
+  // aa.actions.push();
+  let sn = q_e.sn;
+  aa.ct[sn] = 
   {
     'add':
     {
+      action:[sn,'add'],
       required:['fid','filter'],
       description:'add new filter',
       exe:q_e.add
     },
     'rm':
     {
+      action:[sn,'rm'],
       required:['fid'],
       description:'remove one or more filters',
       exe:q_e.rm_filter
     },
     'sets':
     {
+      action:[sn,'sets'],
       required:['set','sid'],
       optional:['fid'],
       description:'create sets of filters',
@@ -31,6 +37,7 @@ q_e.load =()=>
     },
     'setrm':
     {
+      action:[sn,'setrm'],
       required:['set'],
       optional:['fid'],
       description:'remove set from filter',
@@ -38,6 +45,7 @@ q_e.load =()=>
     },
     'run':
     {
+      action:[sn,'run'],
       required:['fid'],
       optional:['relset','options'],
       description:'run filter on relay set',
@@ -45,23 +53,36 @@ q_e.load =()=>
     },
     'raw':
     {
+      action:[sn,'raw'],
       required:['relset','raw_filter'],
       description:'run raw filter on relay set',
       exe:q_e.raw
     },
     'close':
     {
+      action:[sn,'close'],
       optional:['fid'],
       description:'stop all running filters or just one if provided',
       exe:q_e.close
     },
     'stuff':
     {
+      action:[sn,'stuff'],
       description:'sets a bunch of queries to get you started',
       exe:q_e.stuff
     },
   };
-  aa.load_mod(q_e);
+  aa.actions.push(
+    aa.ct[q_e.sn].add,
+    aa.ct[q_e.sn].rm,
+    aa.ct[q_e.sn].sets,
+    aa.ct[q_e.sn].setrm,
+    aa.ct[q_e.sn].run,
+    aa.ct[q_e.sn].raw,
+    aa.ct[q_e.sn].close,
+    aa.ct[q_e.sn].stuff,
+  );
+  aa.load_mod(q_e).then(it.mk.mod);
 };
 
 q_e.stuff =()=>
@@ -75,13 +96,14 @@ q_e.stuff =()=>
 
 q_e.mk =(f_id,o) =>
 {
+  let sn = q_e.sn;
   f_id = it.fx.an(f_id);
   const l = it.mk.l('li',{id:'f_'+f_id,cla:'item filter'});
   if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
   l.append(
     it.mk.l('button',{cla:'key',con:f_id,clk:e=>
     {
-      cli.t.value = localStorage.ns + ' qe run ' + f_id;
+      cli.t.value = localStorage.ns+' '+sn+' run '+f_id;
       cli.foc();
     }}),
     // it.mk.l('span',{cla:'key',con:f_id}),
@@ -89,7 +111,7 @@ q_e.mk =(f_id,o) =>
     it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
     {
       const filter = e.target.parentNode.querySelector('.key').innerText;
-      cli.t.value = localStorage.ns + ' qe rm ' + filter;
+      cli.t.value = localStorage.ns+' '+sn+' rm ' + filter;
       cli.foc();
     }})
   );
@@ -260,7 +282,7 @@ q_e.add =s=>
   if (o)
   {
     // console.log(o);
-    let log = localStorage.ns+' qe add '+fid+' ';
+    let log = localStorage.ns+' q add '+fid+' ';
     let filter = q_e.o.ls[fid];
     let changed;
     if (filter && filter.v === a)
@@ -298,7 +320,7 @@ q_e.rm_filter =s=>
     cli.fuck_off();
     v_u.log('filter removed: '+fid);
   }
-  else v_u.log(localStorage.ns+' qe '+fid+' not found')
+  else v_u.log(localStorage.ns+' '+q_e.sn+' '+fid+' not found')
 };
 
 q_e.raw =s=>
@@ -319,7 +341,7 @@ q_e.raw =s=>
       // else if (rel.o.sets.includes(rels)) relays.push(...rel.in_set(rels));
       if (relays.length)
       {
-        v_u.log(localStorage.ns+' qe raw '+filter);
+        v_u.log(localStorage.ns+' q  raw '+filter);
         console.log(request,relays,options);
         q_e.demand(request,relays,options);
       }
@@ -329,8 +351,8 @@ q_e.raw =s=>
   } 
   else 
   {
-    v_u.log('qe raw not ok');
-    console.log('qe raw not ok',rels,filter)
+    v_u.log(q_e.sn+' raw not ok');
+    console.log(q_e.sn+' raw not ok',rels,filter)
   }
 };
 
@@ -353,14 +375,14 @@ q_e.run =s=>
 
     // console.log('qe run',request,relays,options);
     q_e.demand(request,relays,options);
-    cli.fuck_off(localStorage.ns+' qe run '+fid);
+    cli.fuck_off(localStorage.ns+' '+q_e.sn+' run '+fid);
   } 
-  else v_u.log('qe run filter not found')
+  else v_u.log(q_e.sn+' run filter not found')
 };
 
 q_e.close =s=>
 {
-  let log = localStorage.ns+' qe close';
+  let log = localStorage.ns+' '+q_e.sn+' close';
   let fids = s.trim().split(' ');
 
   for (const k in rel.active)

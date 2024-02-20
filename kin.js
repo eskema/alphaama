@@ -85,26 +85,28 @@ kin.quote =o=>
   by.append(it.mk.nostr_link(it.fx.nid(o.id)));
   quote.append(by);
   // console.log(e);
+  let has_pub;
   let pubkey = o.author ?? o.pubkey;
   if (pubkey) 
   {
-    pubkey  = it.mk.author(o.id);
+    has_pub = true;
+    pubkey = it.mk.author(pubkey);
     by.prepend(pubkey);
   }
   
   aa.db.get_e(o.id).then(dat=>
   {
-    
     if (dat) 
     {
-      if (!pubkey) pubkey = it.mk.author(dat.event.pubkey);
-      content = it.parse.content_quote(dat.event);
+      if (!has_pub) by.prepend(it.mk.author(dat.event.pubkey));
+      let trust = aa.p[dat.event.pubkey]?.trust ?? 0;
+      content = it.parse.content_quote(dat.event,trust);
       // quote.append(it.parse.content_quote(e.event));
     }
     else
     {
       quote.classList.add('blank_quote');
-      if (!pubkey) pubkey = it.mk.l('span',{con:'?'});
+      if (!has_pub) by.prepend(it.mk.l('span',{con:'?'}));
       // pubkey = o.author ?? o.pubkey ?? '?';
       content = it.mk.l('p',{cla:'paragraph'});
       
@@ -115,10 +117,8 @@ kin.quote =o=>
         let relay_content = it.mk.l('p',{con:'relays: '+o.relays});
         content.append(relay_content);
       }
-      
       // q_e.req.ids(req);
     }
-    by.prepend(pubkey);
     quote.append(content)
     
   }); 
@@ -208,6 +208,7 @@ kin.e =s=>
     if (!event.kind) event.kind = 1;
     if (!event.created_at) event.created_at = it.tim.now();
     if (!event.tags) event.tags = [];
+    if (!event.content) event.content = '';
     kin.draft(event);
   }
   cli.fuck_off();
@@ -601,12 +602,11 @@ aa.print =async dat=>
   // aa.dex();
 };
 
-aa.ct.kin = 
+aa.ct.e.mk = 
 {
-  'e': 
-  {
-    required:['JSON'],
-    description:'mk event from JSON',
-    exe:kin.e
-  },
+  action:['e','mk'],
+  required:['JSON'],
+  description:'mk event from JSON',
+  exe:kin.e
 };
+aa.actions.push(aa.ct.e.mk);

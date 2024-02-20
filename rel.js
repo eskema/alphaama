@@ -6,14 +6,17 @@ const rel =
   {
     // url:{q:[],cc:[],...}
   },
+  sn:'r'
 };
 
 rel.load =e=>
 {
-  aa.ct.rel = 
+  let sn = rel.sn;
+  aa.ct[sn] = 
   {
     'add': 
     {
+      action:[sn,'add'],
       required:['url'], 
       optional:['set'], 
       description:'add or replace relays',
@@ -21,6 +24,7 @@ rel.load =e=>
     },
     'rm':
     {
+      action:[sn,'rm'],
       required:['url'], 
       description:'remove relay',
       // oto:rel.ls,
@@ -28,6 +32,7 @@ rel.load =e=>
     },
     'sets':
     {
+      action:[sn,'sets'],
       required:['set','url'],
       description:'create sets of relays',
       // oto:rel.ls,
@@ -35,6 +40,7 @@ rel.load =e=>
     },
     'setrm':
     {
+      action:[sn,'setrm'],
       required:['set'],
       optional:['url'],
       description:'remove set from relays',
@@ -43,26 +49,40 @@ rel.load =e=>
     },
     'ext':
     {
+      action:[sn,'ext'],
       description:'get relays from extension',
       exe:rel.ext
     },
     'list':
     {
+      action:[sn,'list'],
       required:['set'],
       description:'loads relay list from set to mklist',
       exe:rel.list
     },
     'mklist':
     {
+      action:[sn,'mklist'],
       description:'create a relay list (kind-10002)',
       exe:rel.mklist
     },
   };
+  aa.actions.push(
+    aa.ct[sn].add,
+    aa.ct[sn].rm,
+    aa.ct[sn].sets,
+    aa.ct[sn].setrm,
+    aa.ct[sn].ext,
+    aa.ct[sn].list,
+    aa.ct[sn].mklist,
+  );
   aa.load_mod(rel).then(rel.start);
 }
 
 rel.start =mod=>
 {
+  it.mk.mod(mod);
+  
   let changed;
   if (!mod.o.r) 
   {
@@ -138,7 +158,7 @@ rel.mk =(u,o) =>
       clk:e=>
       {
         const url = e.target.parentNode.querySelector('.url').innerText;
-        cli.t.value = localStorage.ns + ' rel rm ' + url;
+        cli.t.value = localStorage.ns + ' r rm ' + url;
         cli.foc();
       }
     }));
@@ -378,7 +398,7 @@ rel.list =s=>
       relays.push(tag.join(' '))
     } 
   }
-  cli.v(localStorage.ns+' rel mklist '+relays.join(','));
+  cli.v(localStorage.ns+' r mklist '+relays.join(','));
 };
 
 rel.mklist =s=>
