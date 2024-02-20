@@ -2088,7 +2088,7 @@ a.author.is_bff
   /*background: rgba(var(--color-c),.2);*/
   border: 1px dotted rgba(var(--color-c),1);
   display: grid;
-  margin: 0;
+  margin: var(--pad) 0;
   
   position: relative;
 }
@@ -2340,7 +2340,7 @@ a.author.is_bff
 #oto .item::before 
 {
   color: rgb(var(--color-c));
-  /*opacity: .5;*/
+  opacity: .69;
 }
 
 #oto .item::after 
@@ -3113,7 +3113,7 @@ p[data-meta="about"]::before
 
 .note .actions .butt 
 {
-  color: rgb(var(--color-c));
+  /*color: rgb(var(--color-c));*/
 }
 
 .note:hover > .actions .butt 

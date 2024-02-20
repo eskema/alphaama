@@ -602,11 +602,11 @@ aa.print =async dat=>
   // aa.dex();
 };
 
-aa.ct.e.mk = 
-{
-  action:['e','mk'],
-  required:['JSON'],
-  description:'mk event from JSON',
-  exe:kin.e
-};
-aa.actions.push(aa.ct.e.mk);
+aa.actions.push(
+  {
+    action:['e','mk'],
+    required:['JSON'],
+    description:'mk event from JSON',
+    exe:kin.e
+  }
+);

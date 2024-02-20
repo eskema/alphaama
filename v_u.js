@@ -83,6 +83,7 @@ const e_observer = new IntersectionObserver(a=>
   for (const b of a)
   {
     const l = b.target;
+    // l.classList.add('obs');
     if (b.isIntersecting)
     {
       l.classList.remove('not_yet');

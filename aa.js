@@ -64,29 +64,29 @@ aa.stuff =async()=>
   }
 };
 
-aa.ct.u.stuff =
-{
-  action:['u','stuff'],
-  description:'does a bunch of stuff to get you started',
-  exe:aa.stuff
-};
-aa.actions.push(aa.ct.u.stuff);
+// aa.ct.u.stuff =
+// {
+//   action:['u','stuff'],
+//   description:'does a bunch of stuff to get you started',
+//   exe:aa.stuff
+// };
+// aa.actions.push(aa.ct.u.stuff);
 
-aa.ct.u.login = 
-{
-  action:['u','login'],
-  description:'load aka and relays from ext',
-  exe:aa.login
-};
-aa.actions.push(aa.ct.u.login);
+// aa.ct.u.login = 
+// {
+//   action:['u','login'],
+//   description:'load aka and relays from ext',
+//   exe:aa.login
+// };
+// aa.actions.push(aa.ct.u.login);
 
-aa.ct.u.reset =
-{
-  action:['u','reset'],
-  description:'resets everything',
-  exe:aa.reset
-};
-aa.actions.push(aa.ct.u.reset);
+// aa.ct.u.reset =
+// {
+//   action:['u','reset'],
+//   description:'resets everything',
+//   exe:aa.reset
+// };
+// aa.actions.push(aa.ct.u.reset);
 
 // aa.ct.u = 
 // {
@@ -106,6 +106,24 @@ aa.actions.push(aa.ct.u.reset);
 //     exe:aa.stuff
 //   },
 // };
+
+aa.actions.push(
+  {
+    action:['u','stuff'],
+    description:'does a bunch of stuff to get you started',
+    exe:aa.stuff
+  },
+  {
+    action:['u','login'],
+    description:'load aka and relays from ext',
+    exe:aa.login
+  },
+  {
+    action:['u','reset'],
+    description:'resets everything',
+    exe:aa.reset
+  }
+);
 
 aa.load_mod =async mod=>
 {
@@ -328,10 +346,14 @@ aa.clk.fetch =e=>
   const xid = note.dataset.id;
   const request = ['REQ','ids',{ids:[xid]}];
   let relays = [];
-  let r = note.dataset.r?.split(' ');
-  if (r.length) relays.push(...r);
+  if (note.dataset.r?.length)
+  {
+    let r = note.dataset.r?.split(' ');
+    if (r.length) relays.push(...r);
+  }
   else relays.push(...rel.in_set(rel.o.r));
-  q_e.demand(request,relays,{eose:'done'});
+  console.log(request,relays);
+  // q_e.demand(request,relays,{eose:'done'});
 };
 
 aa.replace_note =(l,dat)=>
@@ -350,11 +372,16 @@ aa.replace_note =(l,dat)=>
   l.remove();
   b.classList.remove('blank','draft','not_sent');
   if (dat.clas) b.classList.add(...dat.clas);
-  if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root','not_yet');
+  if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root');
   else if (is_root) b.classList.add('root');
   if (!is_reply && !b.parentElement.closest('.note')) b.classList.remove('reply');
   else if (is_reply) b.classList.add('reply');
   b.classList.add('replaced');
+  if (b.classList.contains('not_yet')) 
+  {
+    // console.log('replaced',b);
+    e_observer.observe(b);
+  }
 };
 
 aa.to_print =dat=>

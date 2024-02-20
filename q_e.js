@@ -11,23 +11,20 @@ q_e.load =()=>
 {
   // aa.actions.push();
   let sn = q_e.sn;
-  aa.ct[sn] = 
-  {
-    'add':
+
+  aa.actions.push(
     {
       action:[sn,'add'],
       required:['fid','filter'],
       description:'add new filter',
       exe:q_e.add
     },
-    'rm':
     {
       action:[sn,'rm'],
       required:['fid'],
       description:'remove one or more filters',
       exe:q_e.rm_filter
     },
-    'sets':
     {
       action:[sn,'sets'],
       required:['set','sid'],
@@ -35,7 +32,6 @@ q_e.load =()=>
       description:'create sets of filters',
       exe:q_e.sets
     },
-    'setrm':
     {
       action:[sn,'setrm'],
       required:['set'],
@@ -43,7 +39,6 @@ q_e.load =()=>
       description:'remove set from filter',
       exe:q_e.set_rm
     },
-    'run':
     {
       action:[sn,'run'],
       required:['fid'],
@@ -51,37 +46,96 @@ q_e.load =()=>
       description:'run filter on relay set',
       exe:q_e.run
     },
-    'raw':
     {
       action:[sn,'raw'],
       required:['relset','raw_filter'],
       description:'run raw filter on relay set',
       exe:q_e.raw
     },
-    'close':
     {
       action:[sn,'close'],
       optional:['fid'],
-      description:'stop all running filters or just one if provided',
+      description:'close one or all running queries',
       exe:q_e.close
     },
-    'stuff':
     {
       action:[sn,'stuff'],
       description:'sets a bunch of queries to get you started',
       exe:q_e.stuff
     },
-  };
-  aa.actions.push(
-    aa.ct[q_e.sn].add,
-    aa.ct[q_e.sn].rm,
-    aa.ct[q_e.sn].sets,
-    aa.ct[q_e.sn].setrm,
-    aa.ct[q_e.sn].run,
-    aa.ct[q_e.sn].raw,
-    aa.ct[q_e.sn].close,
-    aa.ct[q_e.sn].stuff,
   );
+
+  // aa.ct[sn] = 
+  // {
+  //   'add':
+  //   {
+  //     action:[sn,'add'],
+  //     required:['fid','filter'],
+  //     description:'add new filter',
+  //     exe:q_e.add
+  //   },
+  //   'rm':
+  //   {
+  //     action:[sn,'rm'],
+  //     required:['fid'],
+  //     description:'remove one or more filters',
+  //     exe:q_e.rm_filter
+  //   },
+  //   'sets':
+  //   {
+  //     action:[sn,'sets'],
+  //     required:['set','sid'],
+  //     optional:['fid'],
+  //     description:'create sets of filters',
+  //     exe:q_e.sets
+  //   },
+  //   'setrm':
+  //   {
+  //     action:[sn,'setrm'],
+  //     required:['set'],
+  //     optional:['fid'],
+  //     description:'remove set from filter',
+  //     exe:q_e.set_rm
+  //   },
+  //   'run':
+  //   {
+  //     action:[sn,'run'],
+  //     required:['fid'],
+  //     optional:['relset','options'],
+  //     description:'run filter on relay set',
+  //     exe:q_e.run
+  //   },
+  //   'raw':
+  //   {
+  //     action:[sn,'raw'],
+  //     required:['relset','raw_filter'],
+  //     description:'run raw filter on relay set',
+  //     exe:q_e.raw
+  //   },
+  //   'close':
+  //   {
+  //     action:[sn,'close'],
+  //     optional:['fid'],
+  //     description:'close one or all running queries',
+  //     exe:q_e.close
+  //   },
+  //   'stuff':
+  //   {
+  //     action:[sn,'stuff'],
+  //     description:'sets a bunch of queries to get you started',
+  //     exe:q_e.stuff
+  //   },
+  // };
+  // aa.actions.push(
+  //   aa.ct[q_e.sn].add,
+  //   aa.ct[q_e.sn].rm,
+  //   aa.ct[q_e.sn].sets,
+  //   aa.ct[q_e.sn].setrm,
+  //   aa.ct[q_e.sn].run,
+  //   aa.ct[q_e.sn].raw,
+  //   aa.ct[q_e.sn].close,
+  //   aa.ct[q_e.sn].stuff,
+  // );
   aa.load_mod(q_e).then(it.mk.mod);
 };
 

@@ -60,61 +60,101 @@ aka.load =()=>
     // },
   // };
 
-  aa.ct.u.md =
-  {
-    // required:['id','reaction'], 
-    action:['u','md'],
-    description:'autofills metadata to edit and set',
-    exe:aka.md
-  };
-  aa.actions.push(aa.ct.u.md);
+  // aa.ct.u.md =
+  // {
+  //   // required:['id','reaction'], 
+  //   action:['u','md'],
+  //   description:'autofills metadata to edit and set',
+  //   exe:aka.md
+  // };
+  // aa.actions.push(aa.ct.u.md);
 
-  aa.ct.u.smd =
-  {
-    action:['u','smd'],
-    required:['{JSON}'], 
-    description:'set metadata (kind-0)',
-    exe:aka.smd
-  };
-  aa.actions.push(aa.ct.u.smd);
+  // aa.ct.u.smd =
+  // {
+  //   action:['u','smd'],
+  //   required:['{JSON}'], 
+  //   description:'set metadata (kind-0)',
+  //   exe:aka.smd
+  // };
+  // aa.actions.push(aa.ct.u.smd);
 
-  aa.ct.e.react =
-  {
-    action:['e','react'],
-    required:['id','reaction'], 
-    description:'react to a note',
-    exe:aka.react
-  };
-  aa.actions.push(aa.ct.e.react);
+  // aa.ct.e.react =
+  // {
+  //   action:['e','react'],
+  //   required:['id','reaction'], 
+  //   description:'react to a note',
+  //   exe:aka.react
+  // };
+  // aa.actions.push(aa.ct.e.react);
 
-  aa.ct.p.follow = 
-  {
-    action:['p','follow'],
-    required:['id'], 
-    optional:['relay','petname'], 
-    description:'follow account (hex or npub)',
-    exe:aka.follow
-  };
-  aa.actions.push(aa.ct.p.follow);
+  // aa.ct.p.follow = 
+  // {
+  //   action:['p','follow'],
+  //   required:['id'], 
+  //   optional:['relay','petname'], 
+  //   description:'follow account (hex or npub)',
+  //   exe:aka.follow
+  // };
+  // aa.actions.push(aa.ct.p.follow);
 
-  aa.ct.p.unfollow =
-  {
-    action:['p','unfollow'],
-    required:['id'], 
-    optional:['more ids..'], 
-    description:'unfollow account (hex or npub)',
-    exe:aka.unfollow
-  };
-  aa.actions.push(aa.ct.p.unfollow);
+  // aa.ct.p.unfollow =
+  // {
+  //   action:['p','unfollow'],
+  //   required:['id'], 
+  //   optional:['more ids..'], 
+  //   description:'unfollow account (hex or npub)',
+  //   exe:aka.unfollow
+  // };
+  // aa.actions.push(aa.ct.p.unfollow);
 
-  aa.ct.p.score =
-  {
-    action:['p','score'],
-    required:['id','number'], 
-    description:'set user score (for auto parsing and stuff)',
-    exe:aka.score
-  };
-  aa.actions.push(aa.ct.p.score);
+  // aa.ct.p.score =
+  // {
+  //   action:['p','score'],
+  //   required:['id','number'], 
+  //   description:'set user score (for auto parsing and stuff)',
+  //   exe:aka.score
+  // };
+  // aa.actions.push(aa.ct.p.score);
+  
+  aa.actions.push(
+    {
+      action:['u','md'],
+      description:'autofills metadata to edit and set',
+      exe:aka.md
+    },
+    {
+      action:['u','smd'],
+      required:['{JSON}'], 
+      description:'set metadata (kind-0)',
+      exe:aka.smd
+    },
+    {
+      action:['e','react'],
+      required:['id','reaction'], 
+      description:'react to a note',
+      exe:aka.react
+    },
+    {
+      action:['p','follow'],
+      required:['id'], 
+      optional:['relay','petname'], 
+      description:'follow account (hex or npub)',
+      exe:aka.follow
+    },
+    {
+      action:['p','unfollow'],
+      required:['id'], 
+      optional:['more ids..'], 
+      description:'unfollow account (hex or npub)',
+      exe:aka.unfollow
+    },
+    {
+      action:['p','score'],
+      required:['id','number'], 
+      description:'set user score (for auto parsing and stuff)',
+      exe:aka.score
+    }
+  );
 
   // aa.ct.p =
   // {

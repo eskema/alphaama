@@ -168,10 +168,33 @@ aa.db.view =s=>
   v_u.state(s.trim());
 };
 
-aa.ct[aa.db.sn] =
-{
+// aa.ct[aa.db.sn] =
+// {
   
-  'some':
+//   'some':
+//   {
+//     action:[aa.db.sn,'some'],
+//     required:['number'],
+//     optional:['next'],
+//     description:'request n events from db',
+//     exe: aa.db.some
+//   },
+//   'view':
+//   {
+//     action:[aa.db.sn,'view'],
+//     required:['id'],
+//     description:'load event',
+//     exe: aa.db.view
+//   }
+  // 'req':
+  // {
+  //   required:['filter'],
+  //   description:'request events from db from filter',
+  //   exe: aa.db.req
+  // },
+// };
+// aa.actions.push(aa.ct[aa.db.sn].some,aa.ct[aa.db.sn].view);
+aa.actions.push(
   {
     action:[aa.db.sn,'some'],
     required:['number'],
@@ -179,21 +202,13 @@ aa.ct[aa.db.sn] =
     description:'request n events from db',
     exe: aa.db.some
   },
-  'view':
   {
     action:[aa.db.sn,'view'],
     required:['id'],
     description:'load event',
     exe: aa.db.view
   }
-  // 'req':
-  // {
-  //   required:['filter'],
-  //   description:'request events from db from filter',
-  //   exe: aa.db.req
-  // },
-};
-aa.actions.push(aa.ct[aa.db.sn].some,aa.ct[aa.db.sn].view);
+);
 
 // cache - currently not used anywhere
 aa.db.cash = {};

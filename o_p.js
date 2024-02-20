@@ -111,7 +111,19 @@ o_p.rm =s=>
   else v_u.log(dis+'key not found');
 };
 
-o_p.mk =(k,v)=>
+// o_p.mk =(k,v)=>
+// {
+//   switch (k)
+//   {
+//     case 'team':
+//       aa.l.dataset.theme = v;
+//       break;
+//   }
+//   let l = it.mk.item(k,v);
+//   return l
+// };
+
+o_p.mk =(k,v) =>
 {
   switch (k)
   {
@@ -119,6 +131,21 @@ o_p.mk =(k,v)=>
       aa.l.dataset.theme = v;
       break;
   }
-  let l = it.mk.item(k,v);
+  let sn = o_p.sn;
+  const l = it.mk.l('li',{id:'o_'+k,cla:'item o'});
+  l.append(
+    it.mk.l('button',{cla:'key',con:k,clk:e=>
+    {
+      cli.t.value = localStorage.ns+' '+sn+' set '+k+' '+v;
+      cli.foc();
+    }}),
+    it.mk.l('span',{cla:'val',con:v}),
+    // it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
+    // {
+    //   const filter = e.target.parentNode.querySelector('.key').innerText;
+    //   cli.t.value = localStorage.ns+' '+sn+' rm ' + filter;
+    //   cli.foc();
+    // }})
+  );
   return l
 };

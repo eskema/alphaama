@@ -223,7 +223,7 @@ cli.mention =(w)=>
   }
 };
 
-cli.act_item =(main_act,sub_act)=>
+cli.act_item_og =(main_act,sub_act)=>
 {
   const ns = localStorage.ns;
   const l = it.mk.l('li',{cla:'item',bef:ns});
@@ -240,6 +240,33 @@ cli.act_item =(main_act,sub_act)=>
   const clk =e=>
   {
     cli.upd_from_oto(ns+' '+e.target.querySelector('.val').textContent);
+  };
+  l.onclick = clk;
+  l.onkeydown =e=>
+  {
+    if (e.key === 'Enter')
+    {
+      e.stopPropagation();
+      e.preventDefault();
+      clk(e)
+    }
+  };
+
+  return l
+};
+
+cli.act_item =(o)=>
+{
+  const l = it.mk.l('li',{cla:'item',bef:localStorage.ns});
+  l.append(it.mk.l('span',{cla:'val',con:o.action.join(' ')}));
+  l.tabIndex = '1';
+  if (o.required) l.append(' ',it.mk.l('span',{cla:'required',con:o.required.join(' ')}));
+  if (o.optional) l.append(' ',it.mk.l('span',{cla:'optional',con:o.optional.join(' ')}));
+  if (o.description) l.append(' ',it.mk.l('span',{cla:'description',con:o.description}));
+  
+  const clk =e=>
+  {
+    cli.upd_from_oto(localStorage.ns+' '+e.target.querySelector('.val').textContent);
   };
   l.onclick = clk;
   l.onkeydown =e=>
@@ -300,14 +327,14 @@ cli.action =(s,a)=>
     let sn = {};
     for (const act of aa.actions)
     {
-      if (!sn.hasOwnProperty(act.action[0])) sn[act.action[0]] = [];
-      sn[act.action[0]].push(act.action[1]);
+      if (!sn.hasOwnProperty(act.action[0])) sn[act.action[0]] = {action:[act.action[0]],optional:[]};
+      sn[act.action[0]].optional.push(act.action[1]);
     }
     let snsorted = Object.keys(sn).sort();
     for (const act of snsorted)
     {
-      let oto_item = cli.act_item(act,'');
-      oto_item.append(' ',it.mk.l('span',{cla:'optional',con:sn[act]}));
+      let oto_item = cli.act_item(sn[act]);
+      // oto_item.append(' ',it.mk.l('span',{cla:'optional',con:sn[act]}));
       cli.oto.append(oto_item);
     }
   }
@@ -317,16 +344,12 @@ cli.action =(s,a)=>
     for(const act of actions)
     {
       let action = localStorage.ns+' '+act.action[0]+' '+act.action[1];
-      if (action.startsWith(s)) 
-      {
-        act_item = cli.act_item(act.action[0],act.action[1]);
-        cli.oto.append(act_item);
-      }
+      if (action.startsWith(s)) cli.oto.append(cli.act_item(act));
       else if (s.startsWith(action)) 
       {
-        act_item = cli.act_item(act.action[0],act.action[1]);
-        act_item.classList.add('pinned');
-        cli.oto.append(act_item);
+        let item = cli.act_item(act);
+        item.classList.add('pinned');
+        cli.oto.append(item);
       }
     }
   }
@@ -342,18 +365,9 @@ cli.otocomp =()=>
   cli.oto.textContent = '';
   cli.oto.dataset.s = s;
   
-  if (!s.length 
-  || (ns.startsWith(a[0]) && a.length < 2)
-  ) 
-  {
-    // console.log('s',s.length);
-    cli.oto.append(cli.act_item('',''));
-  }
-  else if (a[0] === ns) 
-  {
-    // console.log('s',s,a,ns);
-    cli.action(s,a); // else if it's an action
-  }
+  if (!s.length || (ns.startsWith(a[0]) && a.length < 2))  
+  cli.oto.append(cli.act_item({action:[]}));
+  else if (a[0] === ns) cli.action(s,a); // else if it's an action
   else 
   { 
     // it's not an action
@@ -407,29 +421,41 @@ it.act =s=>
   // }
 
   let a = s.split(' ');
+  a.shift();
   let err = 'invalid action';
   if (a.length > 1) 
   {
-    let index = 0, ion = '';
-    const snip =()=>{ion=a.shift();index=index+1+ion.length};
-    snip();
-    if (ion === localStorage.ns) 
+    let actions = aa.actions.filter(o=>o.action[0] === a[0] && o.action[1] === a[1]);
+    if (actions.length > 1)
     {
-      snip();
-      let act = aa.ct[ion];
-      if (act)
-      {
-        snip();
-        if (act[ion])
-        {
-          let cut = s.slice(index);
-          act[ion].exe(cut); 
-        }
-        else v_u.log(err);
-      }
-      else v_u.log(err);
-    } 
-    else v_u.log(err);
+      console.log(actions);
+      actions.filter(o=>o.action[2] === a[2]);
+    }
+    let act = actions[0];
+    a.splice(0,2);
+    let cut = a.join(' ');
+    act.exe(cut);
+    
+    // let index = 0, ion = '';
+    // const snip =()=>{ion=a.shift();index=index+1+ion.length};
+    // snip();
+    // if (ion === localStorage.ns) 
+    // {
+    //   snip();
+    //   let act = aa.ct[ion];
+    //   if (act)
+    //   {
+    //     snip();
+    //     if (act[ion])
+    //     {
+    //       let cut = s.slice(index);
+    //       act[ion].exe(cut); 
+    //     }
+    //     else v_u.log(err);
+    //   }
+    //   else v_u.log(err);
+    // } 
+    // else v_u.log(err);
   }
   else v_u.log(err)
 };

@@ -1016,7 +1016,7 @@ it.parse.url =(s,trusted)=>
 
 it.get_quotes =async id=>
 {
-  console.log(id);
+  // console.log(id);
   let quotes = document.querySelectorAll('.blank_quote[data-id="'+id+'"]');
   if (quotes.length)
   {
@@ -1174,7 +1174,7 @@ it.parse.content =(o,trust)=>
         }
         else 
         {
-          console.log('parse')
+          // console.log('parse')
           if (i === words.length-1) l.append(words[i]);
           else l.append(words[i],' ');
         }
