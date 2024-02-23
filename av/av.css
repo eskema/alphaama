@@ -37,9 +37,9 @@
   grid-area: av;
   grid-template-columns: 1fr auto;
   grid-template-areas: 
-  "progress progress progress"
-  "before rewind mute"
-  "url url url";
+  "progress progress progress progress"
+  "before rewind mute sticky"
+  "url url url url";
   line-height: 2;
   
   text-align: right;

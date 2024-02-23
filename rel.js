@@ -44,37 +44,19 @@ rel.load =e=>
       exe:rel.ext
     },
     {
-      action:[sn,'list'],
+      action:[sn,'ls'],
       required:['set'],
-      description:'loads relay list from set to mklist',
+      description:'loads relay list from sets',
       exe:rel.list
     },
     {
-      action:[sn,'mklist'],
+      action:[sn,'mkls'],
       description:'create a relay list (kind-10002)',
       exe:rel.mklist
     },
   );
   aa.load_mod(rel).then(it.mk.mod);
 }
-
-// rel.start =mod=>
-// {
-//   it.mk.mod(mod);
-  
-  // let changed;
-  // if (!mod.o.r) 
-  // {
-  //   mod.o.r = 'read';
-  //   changed = true;
-  // }
-  // if (!mod.o.w) 
-  // {
-  //   mod.o.w = 'write';
-  //   changed = true;
-  // }
-  // if (changed) rel.save()
-// };
 
 rel.save =()=>
 {
@@ -96,18 +78,23 @@ rel.upd_state =url=>
         console.log('rel.upd_state '+url,l.dataset.state,l.dataset.q);
       },100);
     }
-    else console.log('rel.upd_state '+url,'no relay l found')
+    else console.log('rel.upd_state '+url,'no relay found')
   }
 };
 
 rel.c_on =async(url,o=false)=> 
 {
-  if (localStorage.mode === 'lockdown') 
+  if (localStorage.mode === 'hard') 
   {
-    v_u.log('mode:lockdown');
+    v_u.log('mode:hard, no connections allowed');
     return false;
   }
-
+  let r = rel.o.ls[url];
+  if (r.sets.includes('off')) 
+  {
+    rel.force_close([url]);
+    return false
+  }
   let relay = rel.active[url] ? rel.active[url] : rel.active[url] = {q:{},cc:[]};
   if (relay.ws?.readyState !== 1)
   {
@@ -130,17 +117,17 @@ rel.mk =(u,o) =>
   const l = rel.mk_item(u,o);
   if (l)
   {
-    l.append(it.mk.l('button',
-    {
-      cla:'rm',
-      con:'rm',
-      clk:e=>
-      {
-        const url = e.target.parentNode.querySelector('.url').innerText;
-        cli.t.value = localStorage.ns + ' r rm ' + url;
-        cli.foc();
-      }
-    }));
+    // l.append(it.mk.l('button',
+    // {
+    //   cla:'rm',
+    //   con:'rm',
+    //   clk:e=>
+    //   {
+    //     const url = e.target.parentNode.querySelector('.url').innerText;
+    //     cli.t.value = localStorage.ns + ' r rm ' + url;
+    //     cli.foc();
+    //   }
+    // }));
     return l
   }
   else return false
@@ -160,9 +147,48 @@ rel.mk_item =(u,o)=>
       it.mk.l('span',{cla:'pathname',con:u.pathname}),
       it.mk.l('span',{cla:'hashsearch',con:u.hash+u.search})
     );
+    l.append(url_l,it.mk.l('button',
+    {
+      cla:'rm',
+      con:'rm',
+      clk:e=>
+      {
+        const url = e.target.parentNode.querySelector('.url').innerText;
+        cli.t.value = localStorage.ns + ' r rm ' + url;
+        cli.foc();
+      }
+    }));
     
+    let sets = it.mk.l('span',{cla:'sets'});
+    if (o.sets && o.sets.length)
+    {
+      l.dataset.sets = o.sets; 
+      
+      for (const set of o.sets)
+      {
+        sets.append(it.mk.l('button',
+        {
+          cla:'butt',
+          con:set,
+          clk:e=>
+          {
+            cli.v(localStorage.ns+' '+rel.sn+' setrm '+set+' '+u.href)
+          }
+        }))
+      }
+    }
+    sets.append(it.mk.l('button',
+    {
+      cla:'butt',
+      con:'+',
+      clk:e=>
+      {
+        cli.v(localStorage.ns+' '+rel.sn+' sets off '+u.href);
+      }
+    }))
+    l.append(sets);
     if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
-    l.append(url_l);
+    
     return l
   }
   return false
@@ -275,12 +301,16 @@ rel.set_rm =s=>
   cli.clear();
 };
 
-rel.in_set =relset=>
+rel.in_set =(relset,filter=true)=>
 {
   let relays = [];
   for (const k in rel.o.ls)
   { 
-    if (rel.o.ls[k].sets.includes(relset)) relays.push(k)
+    if (rel.o.ls[k].sets.includes(relset))
+    {
+      if (!filter) relays.push(k);
+      else if (!rel.o.ls[k].sets.includes('off')) relays.push(k);
+    } 
   }
   return relays
 };
@@ -360,22 +390,34 @@ rel.from_tags =(tags,sets=false)=>
 
 rel.list =s=>
 {
-  s = s.trim();
+  const err = ()=> {v_u.log(rel.sn+' ls: no relays found')};
+  a = s.trim().split(' ');
+  if (!a.length || a[0] === '') a[0]= 'k10002';
+  console.log(a);
   let relays = [];
-  for (const k in rel.o.ls)
-  { 
-    if (rel.o.ls[k].sets.includes(s))
-    {
+  for (const set of a)
+  {
+    relays.push(...rel.in_set(set,false))
+  }
+  relays = [...new Set(relays)];
+  console.log(relays);
+  let rels = [];
+  if (relays.length)
+  {
+    for (const k of relays)
+    { 
       let read, write;
-      const tag = ['r',k];
+      const tag = [k];
       if (rel.o.ls[k].sets.includes('read')) read = true;
       if (rel.o.ls[k].sets.includes('write')) write = true;
       if (read && !write) tag.push('read');
       if (!read && write) tag.push('write');
-      relays.push(tag.join(' '))
-    } 
+      rels.push(tag.join(' '))
+    }
   }
-  cli.v(localStorage.ns+' r mklist '+relays.join(','));
+
+  if (rels.length) cli.v(localStorage.ns+' '+rel.sn+' mkls '+rels);
+  else err();
 };
 
 rel.mklist =s=>
@@ -383,7 +425,12 @@ rel.mklist =s=>
   cli.fuck_off();
   s = s.trim().split(',');
   const relays = [];
-  for (const r of s) relays.push(r.split(' '))
+  for (const r of s) 
+  {
+    let relay = r.split(' ');
+    relay.unshift('r');
+    relays.push(relay);
+  }
   if (relays.length)
   {
     it.confirm(

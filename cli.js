@@ -223,7 +223,7 @@ cli.mention =(w)=>
   }
 };
 
-cli.act_item =(o)=>
+cli.act_item =(o,s)=>
 {
   const l = it.mk.l('li',{cla:'item',bef:localStorage.ns});
   l.append(it.mk.l('span',{cla:'val',con:o.action.join(' ')}));
@@ -231,21 +231,47 @@ cli.act_item =(o)=>
   if (o.required) l.append(' ',it.mk.l('span',{cla:'required',con:o.required.join(' ')}));
   if (o.optional) l.append(' ',it.mk.l('span',{cla:'optional',con:o.optional.join(' ')}));
   if (o.description) l.append(' ',it.mk.l('span',{cla:'description',con:o.description}));
-  
-  const clk =e=>
+  if (o.acts?.length)
   {
-    cli.upd_from_oto(localStorage.ns+' '+e.target.querySelector('.val').textContent);
-  };
-  l.onclick = clk;
-  l.onkeydown =e=>
-  {
-    if (e.key === 'Enter')
+    let acts = it.mk.l('span',{cla:'acts'})
+    l.append(' ',acts);
+    for (const act of o.acts)
     {
-      e.stopPropagation();
-      e.preventDefault();
-      clk(e)
+      let butt = it.mk.l('button',{cla:'butt acts',con:act,clk:e=>
+      {
+        e.stopPropagation();
+        e.preventDefault();
+        let text = localStorage.ns+' ';
+        text += e.target.closest('.item').querySelector('.val').textContent+' ';
+        text += act+' ';
+        cli.upd_from_oto(text);
+      }});
+      acts.append(butt);
     }
-  };
+  }
+  
+  if (s === 'pinned')
+  {
+    l.classList.add('pinned');
+  }
+  else
+  {
+    const clk =e=>
+    {
+      cli.upd_from_oto(localStorage.ns+' '+e.target.querySelector('.val').textContent);
+    };
+    l.onclick = clk;
+    l.onkeydown =e=>
+    {
+      if (e.key === 'Enter')
+      {
+        e.stopPropagation();
+        e.preventDefault();
+        clk(e)
+      }
+    };
+  }
+  
 
   return l
 };
@@ -258,25 +284,25 @@ cli.action =(s,a)=>
     for (const act of aa.actions)
     {
       let a0 = act.action[0];
-      if (!sn.hasOwnProperty(a0)) sn[a0] = {action:[a0],optional:[]};
-      sn[a0].optional.push(act.action[1]);
+      if (!sn.hasOwnProperty(a0)) sn[a0] = {action:[a0],acts:[]};
+      sn[a0].acts.push(act.action[1]);
     }
     let sorted = Object.keys(sn).sort();
     for (const k of sorted) cli.oto.append(cli.act_item(sn[k]));
   }
   else
   {
-    actions = aa.actions.filter(o=>o.action[0].startsWith(a[1]));
+    let actions = aa.actions.filter(o=>o.action[0].startsWith(a[1]));
+    // console.log(actions);
     for(const act of actions)
     {
       let action = localStorage.ns+' '+act.action[0]+' '+act.action[1];
       if (action.startsWith(s)) cli.oto.append(cli.act_item(act));
-      else if (s.startsWith(action)) 
-      {
-        let item = cli.act_item(act);
-        item.classList.add('pinned');
-        cli.oto.append(item);
-      }
+      else if (s.startsWith(action)) cli.oto.append(cli.act_item(act,'pinned'));
+    }
+    if (!cli.oto.childNodes.length)
+    {
+      cli.oto.append(cli.act_item({action:['invalid action']},'pinned'));
     }
   }
 };
@@ -326,6 +352,7 @@ cli.mk_dat =async(s,dis)=>
       if (!reply_dat) reply_dat = await aa.db.get_e(x);
       if (reply_dat)
       {
+        console.log(reply_dat);
         const reply_e = aa.e[x].event;
         cli.dat.event.tags.push(...it.get_tags_for_reply(reply_e));
         cli.dat.replying = dis;

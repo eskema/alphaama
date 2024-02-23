@@ -30,9 +30,13 @@ o_p.load =(reset=false)=>
     if (reset||!localStorage[k]) localStorage[k] = o_p.def[k];
   }
 
-  let l = it.mk.ls({id:'o_p',ls:localStorage,mk:o_p.mk});
-  if (document.getElementById(l.id)) document.getElementById(l.id).replaceWith(l);
-  else document.getElementById('u').append(it.mk.details(o_p.sn,l,1));
+  // if (!o_p.o) o_p.o = {id:'o_p',ls:localStorage};
+  // if (!o_p.mk) o_p.mk =
+
+  // it.mk.mod(o_p);
+  // let l = it.mk.ls({id:'o_p',ls:localStorage,mk:o_p.mk});
+  // if (document.getElementById(l.id)) document.getElementById(l.id).replaceWith(l);
+  // else document.getElementById('u').append(it.mk.details(o_p.sn,l,1));
   
   let sn = o_p.sn;
   aa.actions.push(
@@ -56,14 +60,22 @@ o_p.load =(reset=false)=>
     }
   );
 
-  v_u.log('o_p '+localStorage.length);
+  o_p.save();
+
+  // v_u.log('o_p '+localStorage.length);
 };
 
-window.addEventListener('storage',()=>
+// window.addEventListener('storage',()=>
+// {
+//   console.log('storage');
+//   it.to(()=>{o_p.load()},200,'storage');
+// });
+
+o_p.save =()=>
 {
-  console.log('storage');
-  it.to(()=>{o_p.load()},200,'storage');
-});
+  o_p.o = {id:'o_p',ls:localStorage};
+  it.mk.mod(o_p);
+};
 
 o_p.set =s=>
 {
@@ -71,7 +83,8 @@ o_p.set =s=>
   if (k && v)
   {
     localStorage[k] = v;
-    o_p.load();
+    it.mk.mod(o_p);
+    o_p.save();
     v_u.log(localStorage.ns+' o set '+k+' to '+v);
     cli.fuck_off();
   }

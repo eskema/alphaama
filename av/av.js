@@ -1,5 +1,23 @@
 const av = {};
 
+av.sticky =e=>
+{ 
+  // video.pause();
+  // video.classList.remove('playin');
+  
+  let l = e.target.closest('.av');
+  if (l.classList.contains('av_sticky'))
+  {
+    l.classList.remove('av_sticky');
+    it.fx.rm_path(l,'av_sticky');
+  }
+  else
+  {
+    l.classList.add('av_sticky');
+    it.fx.in_path(l,'av_sticky');
+  }
+};
+
 av.pause =video=>
 { 
   video.pause();
@@ -81,7 +99,12 @@ av.mk =(src,poster=false)=>
   mute.textContent = 'mute';
   mute.onclick = av.mute;
   
-  controls.append(rewind,mute,url,progress);
+  const sticky = document.createElement('button');
+  sticky.classList.add('sticky');
+  sticky.textContent = 'sticky';
+  sticky.onclick = av.sticky;
+  
+  controls.append(rewind,mute,sticky,url,progress);
   // controls.addEventListener('click',av.rewind);
 
   video_player.append(video,controls);

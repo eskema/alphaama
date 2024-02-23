@@ -204,12 +204,18 @@ author.load =async xpub=>
 
 author.get_k3 =async(xpub)=>
 {
-  let k3_id;
-  const p = xpub ? aa.p[xpub] : aa.p[aka.o.ls.xpub];
-  if (p && p.pastdata.k3) k3_id = p.pastdata.k3[0][0];
-  if (k3_id) return await aa.db.get_e(k3_id);
-  else v_u.log('no k3 found');
-  return false
+  return new Promise(resolve=>
+  {
+    let k3_id;
+    const p = xpub ? aa.p[xpub] : aa.p[aka.o.ls.xpub];
+    if (p && p.pastdata.k3.length) k3_id = p.pastdata.k3[0][0];
+    console.log(k3_id);
+    aa.db.get_e(k3_id).then(dat=>
+    {
+      if (dat) resolve(dat);
+      else resolve(false);
+    });
+  });
 };
 
 aka.is_aka =(x)=> aka?.o.ls.xpub === x;
@@ -683,24 +689,22 @@ author.link =async(l,p=false)=>
   // console.log('link');
   if (p && p.metadata)
   {
-    if (p.metadata.name) 
-    {
-      let name = p.metadata.name.slice(0,100);
-      let span = l.querySelector('span');
-      span.classList.add('skdsd');
-      if (span.textContent !== name) span.textContent = name;
-      if (!span.childNodes.length) 
-      {
-        console.log('empty',name);
-        span.classList.add('empty');
-      }
-    }
+    let name_s = p.metadata?.name || p.metadata?.display_name || p.npub.slice(0,12);
+    let name = l.querySelector('.name');
+    if (name.textContent !== name_s) name.textContent = name_s;
+    if (!name.childNodes.length) name.classList.add('empty');
+    else name.classList.remove('empty');
+    
+    let petname = p.petname.length ? p.petname 
+    : p.extradata.petnames.length ? p.extradata.petnames[0] 
+    : false;
+    if (petname) name.dataset.petname = petname;
+
     author.pic(l,p);
     if (p.metadata.nip05) l.dataset.nip05 = p.metadata.nip05;
-    
-    if (author.follows(p.xpub)) l.classList.add('is_bff');
-    else l.classList.remove('is_bff');
   }
+  if (author.follows(p.xpub)) l.classList.add('is_bff');
+  else l.classList.remove('is_bff');
 };
 
 author.pic =(l,p)=>

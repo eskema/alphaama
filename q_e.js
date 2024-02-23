@@ -23,7 +23,7 @@ q_e.load =()=>
     },
     {
       action:[sn,'sets'],
-      required:['set','sid'],
+      required:['set'],
       optional:['fid'],
       description:'create sets of filters',
       exe:q_e.sets
@@ -38,7 +38,7 @@ q_e.load =()=>
     {
       action:[sn,'run'],
       required:['fid'],
-      optional:['relset','options'],
+      optional:['relset'],
       description:'run filter on relay set',
       exe:q_e.run
     },
@@ -61,7 +61,13 @@ q_e.load =()=>
     },
   );
 
-  aa.load_mod(q_e).then(it.mk.mod);
+  aa.load_mod(q_e).then(q_e.start);
+};
+
+q_e.start =mod=>
+{
+  it.mk.mod(mod);
+  // v_u.log(mod.l);
 };
 
 q_e.stuff =()=>
@@ -78,7 +84,7 @@ q_e.mk =(f_id,o) =>
   let sn = q_e.sn;
   f_id = it.fx.an(f_id);
   const l = it.mk.l('li',{id:'f_'+f_id,cla:'item filter'});
-  if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
+  // if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
   l.append(
     it.mk.l('button',{cla:'key',con:f_id,clk:e=>
     {
@@ -93,14 +99,42 @@ q_e.mk =(f_id,o) =>
       cli.foc();
     }})
   );
+  let sets = it.mk.l('span',{cla:'sets'});
+  if (o.sets && o.sets.length)
+  {
+    l.dataset.sets = o.sets; 
+    
+    for (const set of o.sets)
+    {
+      sets.append(it.mk.l('button',
+      {
+        cla:'butt',
+        con:set,
+        clk:e=>
+        {
+          cli.v(localStorage.ns+' '+q_e.sn+' setrm '+set+' '+f_id)
+        }
+      }))
+    }
+  }
+  sets.append(it.mk.l('button',
+  {
+    cla:'butt',
+    con:'+',
+    clk:e=>
+    {
+      cli.v(localStorage.ns+' '+q_e.sn+' sets _ '+f_id)
+    }
+  }))
+  l.append(sets);
   return l
 };
 
 q_e.demand =(request,relays,options)=>
 {
-  if (localStorage.mode === 'lockdown') 
+  if (localStorage.mode === 'hard') 
   {
-    v_u.log('mode:lockdown');
+    v_u.log('mode:hard, no connections allowed');
     return false;
   }
 
@@ -143,13 +177,34 @@ q_e.demand =(request,relays,options)=>
           // })
 
           //    needs to display info from what npub
-
-          if (window.confirm('fetch missing from relay '+url+'?'))
+          let notice = {title:'add relay '+url+'?'};
+          notice.yes =
           {
-            rel.add(url+' moar');
-            rel.c_on(url,opts);
-          }
-          else rel.add(url+' off');
+            title:'yes',
+            exe:e=>
+            {
+              console.log(url,opts);
+              rel.add(url+' hint');
+              rel.c_on(url,opts);
+              e.target.parentElement.textContent = notice.title+' yes';
+            }
+          };
+          notice.no =
+          {
+            title:'no',
+            exe:e=>
+            {
+              rel.add(url+' off');
+              e.target.parentElement.textContent = notice.title+' no';
+            }
+          };
+          it.notice(notice);
+          // if (window.confirm('fetch missing from relay '+url+'?'))
+          // {
+          //   rel.add(url+' moar');
+          //   rel.c_on(url,opts);
+          // }
+          // else rel.add(url+' off');
         }
         else if (!rel.o.ls[url].sets.includes('off')) rel.c_on(url,opts);
       }
@@ -175,9 +230,9 @@ q_e.demand =(request,relays,options)=>
 
 q_e.broadcast =(event,relays=false)=>
 {
-  if (localStorage.mode === 'lockdown') 
+  if (localStorage.mode === 'hard') 
   {
-    v_u.log('mode:lockdown');
+    v_u.log('mode:hard, no connections allowed');
     return false;
   }
   // ['EVENT', signed]
@@ -262,7 +317,7 @@ q_e.add =s=>
     let log = localStorage.ns+' q add '+fid+' ';
     let filter = q_e.o.ls[fid];
     let changed;
-    if (filter && filter.v === a)
+    if (filter?.v === a)
     {
       log += '=== is the same';
     }
@@ -332,7 +387,7 @@ q_e.raw =s=>
   }
 };
 
-q_e.run =s=>
+q_e.run =async s=>
 {
   console.log('run s');
   const a = s.trim().split(' ');
@@ -349,7 +404,22 @@ q_e.run =s=>
     if (!relays.length) relays = rel.in_set(rel.o.r);
     // console.log('qe run',request,relays,options);
     q_e.demand(request,relays,options);
-    cli.fuck_off(localStorage.ns+' '+q_e.sn+' run '+fid);
+    cli.fuck_off();
+    let close_butt = it.mk.l('button',
+    {
+      cla:'button close',
+      con:'[x]',
+      clk:e=>
+      {
+        cli.v(localStorage.ns+' '+q_e.sn+' close '+fid)
+      }
+    });
+    let log = it.mk.l('p',
+    {
+      con:localStorage.ns+' '+q_e.sn+' run '+fid+' ('+it.tim.now()+') '+relays+' ',
+      app:close_butt
+    });
+    v_u.log(log);
   } 
   else v_u.log(q_e.sn+' run filter not found')
 };

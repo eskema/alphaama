@@ -8,7 +8,6 @@
 
 :root 
 {
-  font-size: 16px;
   --cb: cubic-bezier(0.25, 1, 0.5, 1);
   --cb-io: cubic-bezier(0.76, 0, 0.24, 1);
   --trans: all .3s ease-in-out 0s;
@@ -17,6 +16,7 @@
   --font-size: 16px;
   --font-size-s: .69420rem;
   --font-size-xs: .5236rem;
+  --font-size-m: 1.2rem;
   --font-size-l: 2.1rem;
   --line: 2rem;
   --pad: .6rem;
@@ -469,21 +469,41 @@ button.butt:focus
   grid-template-columns: auto auto 1fr auto;
 }*/
 
-.item[data-sets]::after 
+/*.item[data-sets]::after 
 {
   content: attr(data-sets);
   grid-area: aft;
-  margin-right: var(--pad);
+  margin: 0 var(--pad);
+}*/
+
+.item button
+{
+  padding: 0;
+}
+
+.item button:hover
+{
+  background-color: rgb(var(--color-f));
+  color: rgb(var(--color-b));
+}
+
+.item .sets
+{
+  grid-area: aft;
+}
+
+.item .sets .butt
+{
+  margin-left: var(--padm);
 }
 
 .item .rm 
 {
   grid-area: bef;
   margin-right: var(--pad);
-  padding: 0;
 }
 
-.item .rm:hover
+.item button.rm:hover
 {
   background-color: rgb(var(--color-no));
   color: rgb(var(--color-b));
@@ -492,14 +512,10 @@ button.butt:focus
 .item button.key 
 {
   justify-self: start;
-  padding: 0; 
+  /*padding: 0; */
 }
 
-.item button.key:hover
-{
-  background-color: rgb(var(--color-f));
-  color: rgb(var(--color-b));
-}
+
 
 .relay .url 
 {
@@ -672,7 +688,7 @@ button.butt:focus
   position: sticky;
   text-align: left;
   top: 0;
-  z-index: 1;
+  z-index: 4;
 }
 
 #view > section.expanded > .butt
@@ -882,10 +898,10 @@ button.butt:focus
   /*background: none;*/
   grid-area: l;
   /*margin: 0; */
-  max-height: 50vh;
+  /*max-height: 50vh;*/
   width: 100vw;;
   opacity: 1;
-  overflow-y: scroll;
+  /*overflow-y: scroll;*/
   padding: 0;
   top: 0; 
 }
@@ -909,25 +925,27 @@ button.butt:focus
   z-index: 4;
 }
 
-#l:not(.expanded) #logs
+#logs
 {
-  /*margin: 0;*/
+  max-height: 50vh;
+  overflow-y: scroll;
 }
 
 #butt_l
 {
-  position: relative;
+  /*position: relative;*/
+  /*z-index: 4;*/
 }
 
-.cli_expanded #butt_l
+/*.cli_expanded #butt_l
 {
   position: sticky;
-}
+}*/
 
-.cli_expanded #view > #butt_l.expanded
+/*.cli_expanded #view > #butt_l.expanded
 {
   z-index: 5;
-}
+}*/
 
 .l
 {
@@ -948,11 +966,17 @@ button.butt:focus
 }
 
 
-.l p 
+.l > p 
 {
   margin: 0;
-  white-space: normal;
-  word-break: break-all;
+  line-height: 1.5;
+/*  white-space: normal;
+  word-break: break-all;*/
+}
+
+.l p
+{
+  /*line-height: 1.5;*/
 }
 
 .l ul::before,
@@ -1120,6 +1144,11 @@ button.butt:focus
   grid-area: e;
 }
 
+#view #butt_e
+{
+  z-index: 1;
+}
+
 #notes
 {
   padding-left: var(--line);
@@ -1155,9 +1184,9 @@ button.butt:focus
   "content content"
   "tags tags"
   "actions actions"
+  "after after"
   "replies replies"
   "sig sig"
-  "after after"
   ;
   grid-template-columns: 1fr auto;
   position: relative;
@@ -1314,6 +1343,21 @@ button.butt:focus
   text-align: center;
 }
 
+.note::before
+{
+  background: rgb(var(--color-b));
+  content: "kind-" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
+  font-size: var(--font-size-xs);
+  grid-area: after;
+  padding: 1rem var(--padm);
+  /*text-align: center;*/
+}
+.note.in_path::before,
+.note.in_view::before
+{
+  display: none;
+}
+
 .note.in_view::after
 {
   background: rgb(var(--color-b));
@@ -1323,6 +1367,13 @@ button.butt:focus
   padding: 1rem var(--padm);
   text-align: center;
 }
+
+/*
+.note.root.in_path[data-path="av_sticky"]
+{
+  position: sticky;
+  top: 0;
+}*/
 
 /* @end */
 
@@ -1623,6 +1674,7 @@ a.author.is_bff
   grid-area: content;
   max-height: calc(90vh - 4rem);  
   overflow: hidden;
+  padding-top: var(--pad);
   position: relative;
 }
 
@@ -1647,16 +1699,19 @@ a.author.is_bff
 { 
 /*  justify-self: stretch;
   justify-self: start;*/
-  line-height: var(--line);
+  hyphens: auto;
+  /*line-height: var(--line);*/
   padding: 0 var(--pad);
   padding-top: 0;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-.in_view > .content .paragraph
+.in_view > .content > .paragraph
 {
   justify-self: stretch;
+  line-height: calc(var(--font-size-m)*1.5);
+  font-size: var(--font-size-m);
   max-width: 960px;
 }
 
@@ -1665,6 +1720,12 @@ a.author.is_bff
   font-size: var(--font-size-s);
   line-height: 1.5;
   padding: var(--padm);
+}
+
+.view_e .note.in_path:not(.in_view) > .content .content-img,
+.view_e .note.in_path:not(.in_view) > .content .content-video,
+{
+  max-height: var(--size);
 }
 
 .content:hover > .paragraph,
@@ -1770,6 +1831,18 @@ a.author.is_bff
 {
   color: rgb(var(--color-c));
   content: "…";
+}
+
+/* @end */
+
+/* @group av */
+
+.note:not(.in_view) .av video.playin
+{
+/*  position: sticky;
+  position: fixed;
+  top: 1rem;*/
+  /*z-index: 9;*/
 }
 
 /* @end */
@@ -2412,6 +2485,7 @@ a.author.is_bff
   pointer-events: none;
   position: absolute;
   white-space: pre;
+  z-index: 1;
 }
 
 #oto .item 
@@ -2424,6 +2498,10 @@ a.author.is_bff
   margin: 0;
   transition: var(--trans-quart);
   user-select: none;
+  
+  word-break: keep-all;
+  white-space: pre;
+  overflow-x: scroll;
 }
 
 #oto .item:focus
@@ -2436,9 +2514,10 @@ a.author.is_bff
 #oto .item:hover
 {
   background-color: rgb(var(--color-f));
+  z-index: 2;
 }
 
-#oto .item > * 
+#oto .item > *
 {
   pointer-events: none;
   border-bottom: 1px solid rgba(var(--color-c),0);
@@ -2503,7 +2582,7 @@ a.author.is_bff
   background-color: rgb(var(--color-main));
   /*border-bottom: 1px solid rgb(var(--color-e));*/
   cursor: text;
-  pointer-events: none;
+  /*pointer-events: none;*/
   z-index: 1;
   
 }
@@ -2521,6 +2600,23 @@ a.author.is_bff
   color: rgb(var(--color-b));
 }
 
+#oto .item .acts
+{
+  pointer-events: auto;
+  border-bottom: 1px solid rgba(var(--color-c),0);
+}
+
+#oto .item .acts .butt
+{
+  color: rgb(var(--color-d));
+  margin-right: var(--pad);
+}
+
+#oto .item .acts .butt:hover
+{
+  color: rgb(var(--color-b));
+}
+
 /* @end */
 
 /* @group p / authors */
@@ -2528,6 +2624,11 @@ a.author.is_bff
 #p
 {
   grid-area: p;
+}
+
+#butt_p
+{
+  z-index: 4;
 }
 
 #authors
@@ -2676,7 +2777,7 @@ a.author.is_bff
 
 .profile.in_view .pubkey .author
 {
-  font-size: 0;
+  /*font-size: 0;*/
 }
 
 .profile .pubkey .author::before
@@ -2712,8 +2813,8 @@ a.author.is_bff
   padding: var(--padm);
 }
 
-.profile.in_view .pubkey .author::after,
-.profile.in_view  .pubkey .author span
+.profile.in_view .pubkey .author::after
+/*.profile.in_view  .pubkey .author span*/
 {
   display: none;
 }
@@ -2726,7 +2827,7 @@ a.author.is_bff
 
 .profile.in_view .pubkey .author img
 {
-  display: none;
+  /*display: none;*/
 }
 
 .profile .metadata
@@ -3029,6 +3130,11 @@ p[data-meta="about"]::before
   
 }
 
+.note[data-kind="1"]::before
+{
+  display: none;
+}
+
 .note[data-kind="1"] > .content
 {
   
@@ -3060,6 +3166,11 @@ p[data-meta="about"]::before
 .note.tiny:not(.in_view) > .by .author span
 {
   margin-left: 0;
+}
+
+.note.tiny::before
+{
+  display: none;
 }
 
 /*.note.tiny[data-kind="6"]:not(.in_view) > .content
@@ -3150,6 +3261,11 @@ p[data-meta="about"]::before
   white-space: nowrap;
 }
 
+.note[data-kind="0"]:not(.in_view):not(.in_path) > .actions
+{
+  display: none;
+}
+
 /* @end */
 
 /* @group kind-3 */
@@ -3175,6 +3291,35 @@ p[data-meta="about"]::before
 
 .note[data-kind="3"]:not(.in_view):not(.in_path) > .content,
 .note[data-kind="3"]:not(.in_view):not(.in_path) > .actions
+{
+  display: none;
+}
+
+/* @end */
+
+/* @group kind-10002 */
+
+.note.root[data-kind="10002"]
+{
+  grid-template-columns: 38.2vw 1fr;
+  grid-template-areas: 
+  "by      by"
+  "content content"
+  "tags    tags"
+  "actions replies"
+  "sig     sig"
+  "after   after"
+  ;
+  margin-bottom: var(--line);
+}
+
+#notes .note[data-kind="10002"] > .details
+{
+  display: unset;
+}
+
+/*.note[data-kind="10002"]:not(.in_view):not(.in_path) > .content,*/
+.note[data-kind="10002"]:not(.in_view):not(.in_path) > .actions
 {
   display: none;
 }
@@ -3231,7 +3376,7 @@ p[data-meta="about"]::before
 
 .root > .actions
 {
-  padding-bottom: var(--pad);
+  /*padding-bottom: var(--pad);*/
 }
 
 .actions .butt:hover 
@@ -3441,9 +3586,40 @@ p[data-meta="about"]::before
 
 /* @end */
 
+/* @group notice */
 
+.notice
+{
+  align-items: start;
+  /*background: red;*/
+  display: grid;
+  grid-gap: 0 var(--pad);
+  grid-template-areas:
+  "title no yes"
+  "description . ."
+}
 
+.notice .title
+{
+  grid-area: title;
+}
 
+.notice .description
+{
+  grid-area: description;
+}
+
+.notice .no
+{
+  grid-area: no;
+}
+
+.notice .yes
+{
+  grid-area: yes;
+}
+
+/* @end */
 
 /* @group e_e */
 
@@ -3506,3 +3682,10 @@ p[data-meta="about"]::before
 }
 
 /* @end */
+
+@media screen and (max-width: 769px) 
+{
+  :root {
+    --font-size: 12px;
+  }
+}

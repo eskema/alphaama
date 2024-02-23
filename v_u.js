@@ -135,6 +135,12 @@ v_u.e =async nid=>
     let x = it.fx.decode(nid);
     let dat = await aa.db.get_e(x);
     if (dat) aa.print(dat);
+    else 
+    {
+      let blank = kin.note({event:{id:x},clas:['blank','root']});
+      v_u.append_to_notes(blank);
+      v_u.dis(blank);
+    }
     // else v_u.req_e([x]);
   }
   v_u.viewing = nid;
@@ -142,7 +148,6 @@ v_u.e =async nid=>
 
 v_u.dis =l=>
 {
-  l.classList.add('in_view'); 
   l.classList.add('in_view');   
   // it.to(()=>{it.fx.in_path(l)},100,'in_path');
   it.fx.in_path(l);

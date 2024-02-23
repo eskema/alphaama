@@ -10,7 +10,7 @@ kin.note =dat=>
   if (dat.subs) note.dataset.subs = dat.subs.join(' ');
   if (dat.clas) note.classList.add(...dat.clas);
   let o = dat.event;
-  if (o.id)
+  if (o.hasOwnProperty('id'))
   {
     const nid = it.fx.nid(o.id)
     note.id = nid;
@@ -27,7 +27,7 @@ kin.note =dat=>
     h1.append(h1_nid,h1_xid);
     by.prepend(h1);
   }
-  if (o.pubkey)
+  if (o.hasOwnProperty('pubkey'))
   {
     p = aa.p[o.pubkey];
     note.dataset.pubkey = o.pubkey;
@@ -36,18 +36,18 @@ kin.note =dat=>
     it.fx.color(o.pubkey,note);
     by.append(it.mk.author(o.pubkey));
   }
-  if (o.kind || o.kind === 0) 
+  if (o.hasOwnProperty('kind')) 
   {
     note.dataset.kind = o.kind;
   }
-  if (o.created_at)
+  if (o.hasOwnProperty('created_at'))
   {
     note.dataset.created_at = o.created_at;
     note.dataset.stamp = o.created_at;
     by.append(it.mk.time(o.created_at));
   }
 
-  if (o.tags && o.tags.length)
+  if (o.hasOwnProperty('tags') && o.tags.length)
   {
     let tags = kin.tags(o.tags);
     let tags_details = it.mk.details('#['+o.tags.length+']',tags);
@@ -55,12 +55,12 @@ kin.note =dat=>
     note.append(tags_details);      
   }
 
-  if (o.content) 
+  if (o.hasOwnProperty('content')) 
   {
     note.append(it.parse.content(o,trusted)); 
   }
 
-  if (o.sig) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
+  if (o.hasOwnProperty('sig')) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
 
   let replies = it.mk.details('',false,true);
   replies.classList.add('replies','expanded');

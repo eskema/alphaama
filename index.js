@@ -23,13 +23,21 @@ window.addEventListener('load',()=>
     }));
   }
   else v_u.log(s);
-  
-  if (o_p) o_p.load();
-  if (aka) aka.load();
-  if (rel) rel.load();
-  if (q_e) q_e.load();
-  if (cli) cli.load();
-  if (dex) dex.load();
+
+  fetch('/README.md').then(dis=>dis.text()).then(dis=>
+  {
+    let readme_text = it.parse.content_quote({content:dis});
+    let readme_l = it.mk.l('article',{cla:'content',app:readme_text});
+    v_u.log(it.mk.details('readme',readme_l));
+  }).then(()=>
+  {
+    if (o_p) o_p.load();
+    if (aka) aka.load();
+    if (rel) rel.load();
+    if (q_e) q_e.load();
+    if (cli) cli.load();
+    if (dex) dex.load();
+  });
 
   document.body.insertBefore(it.mk.l('dialog',{id:'dialog'}),document.body.lastChild);
   

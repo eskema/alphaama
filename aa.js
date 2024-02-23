@@ -20,7 +20,17 @@ const aa =
   clk:{},
 };
 
-aa.login =async()=>  
+aa.reset =()=>
+{
+  aa.db.clear(['stuff','authors','events']).then(()=>
+  {
+    localStorage.clear();
+    sessionStorage.clear();
+    setTimeout(()=>{location.reload()},500)
+  });
+};
+
+aa.login =async s=>  
 {
   return new Promise(resolve=>
   {
@@ -29,7 +39,13 @@ aa.login =async()=>
       window.nostr.getPublicKey().then(x=>
       {
         aka.set(x);
-        if (rel) rel.ext().then(()=>{resolve('login done')});
+        if (rel) rel.ext().then(()=>
+        {
+          s.trim();
+          if (s === 'easy') aa.easy();
+          else if (s === 'hard') aa.hard();
+          resolve('login done')
+        });
       });
       cli.fuck_off()
     }
@@ -41,38 +57,37 @@ aa.login =async()=>
   });
 };
 
-aa.reset =()=>
+aa.easy =async()=>
 {
-  aa.db.clear(['stuff','authors','events']).then(()=>
-  {
-    localStorage.clear();
-    sessionStorage.clear();
-    setTimeout(()=>{location.reload()},500)
-  });
+  o_p.set('mode easy');
+  v_u.log('a bunch of stuff will load then the page will reload');
+  q_e.stuff();
+  q_e.run('a')
+  .then(()=>{setTimeout(()=>{q_e.run('b')},2000)})
+  .then(()=>{setTimeout(()=>{o_p.set('trust 4')},9000)})
+  .then(()=>{setTimeout(()=>{location.reload()},10000)});
 };
 
-aa.stuff =async()=>
+aa.normal =async()=>
 {
-  let loggedin = await aa.login();
-  if (loggedin)
-  {
-    o_p.set('trust 4');
-    q_e.stuff();
-    q_e.run('a');
-    // setTimeout(()=>{q_e.run('a')},200);
-    setTimeout(()=>{q_e.run('b')},2000);
-  }
+  o_p.set('mode normal')
+};
+
+aa.hard =async()=>
+{
+  o_p.set('mode hard')
 };
 
 aa.actions.push(
-  {
-    action:['u','stuff'],
-    description:'does a bunch of stuff to get you started',
-    exe:aa.stuff
-  },
+  // {
+  //   action:['u','stuff'],
+  //   description:'does a bunch of stuff to get you started',
+  //   exe:aa.stuff
+  // },
   {
     action:['u','login'],
-    description:'load aka and relays from ext',
+    optional:['easy || hard'],
+    description:'load aka and relays from ext with optional mode, leave blank for default',
     exe:aa.login
   },
   {
@@ -99,10 +114,11 @@ aa.save =mod=>
   if (mod && mod.o && mod.o.id)
   {
     aa.db.put({put:{store:'stuff',a:[mod.o]}});
-    let o = {ls:mod.o.ls};
-    if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
-    if (mod.l) o.l = mod.l;
-    mod.l = it.mk.ls(o);
+    it.mk.mod(mod);
+    // let o = {ls:mod.o.ls};
+    // if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
+    // if (mod.l) o.l = mod.l;
+    // mod.l = it.mk.ls(o);
   }
 };
 
@@ -283,18 +299,6 @@ aa.clk.editor =e=>
   // console.log(parsed);
 };
 
-aa.f_it =async event=>
-{
-  const signed = await aa.sign(event);
-  if (signed)
-  {
-    aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
-    aa.db.upd(dat);
-    aa.print(dat);
-    q_e.broadcast(signed);
-  }
-};
-
 aa.clk.fetch =e=>
 {
   const note = e.target.closest('.note');
@@ -307,8 +311,21 @@ aa.clk.fetch =e=>
     if (r.length) relays.push(...r);
   }
   else relays.push(...rel.in_set(rel.o.r));
-  console.log(request,relays);
-  // q_e.demand(request,relays,{eose:'done'});
+  it.a_dataset(note,'nope',relays);
+  // console.log(request,relays);
+  q_e.demand(request,relays,{eose:'done'});
+};
+
+aa.f_it =async event=>
+{
+  const signed = await aa.sign(event);
+  if (signed)
+  {
+    aa.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+    aa.db.upd(dat);
+    aa.print(dat);
+    q_e.broadcast(signed);
+  }
 };
 
 aa.replace_note =(l,dat)=>
@@ -353,10 +370,10 @@ aa.to_print =dat=>
   },50,q_id);
 };
 
-aa.mia_relays =a=>
+aa.mia_relays =nodelist=>
 {
   let relays = {};
-  for (const l of a)
+  for (const l of nodelist)
   {
     let nope = l.dataset.nope ? l.dataset.nope.trim().split(' ') : [];
     

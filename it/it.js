@@ -23,7 +23,7 @@ it.clk.a =e=>
 it.clk.expanded =e=>
 {
   e.stopPropagation();
-  let mom = document.getElementById(e.target.dataset.controls) ?? e.target;
+  let mom = document.getElementById(e.target.dataset.controls) || e.target;
   if (mom) 
   {
     mom.classList.toggle('expanded');
@@ -581,11 +581,22 @@ it.mk.l =(tag_name,o=false)=>
 
 it.mk.mod =mod=>
 {
-  let o = {id:mod.o.id,ls:mod.o.ls};
+  let o = {id:mod.sn,ls:mod.o.ls};
   if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
-  mod.l = it.mk.ls(o);
-  const u = document.getElementById('u');
-  if (u) u.append(it.mk.details(mod.sn,mod.l,1))
+  let mod_ls = it.mk.ls(o);
+  let mod_l = it.mk.details(mod.sn,mod_ls,1);
+  if (mod.l) 
+  {
+    mod.l.replaceWith(mod_l);
+    mod.l = mod_l;
+  }
+  else 
+  {
+    mod.l = mod_l;
+    const u = document.getElementById('u');
+    if (u) u.append(mod_l)
+    // v_u.log(mod_l)
+  }
 };
 
 it.mk.link =(url,text=false,title=false)=>
@@ -637,28 +648,30 @@ it.p =xpub=>
   }
 };
 
-it.mk.author =(xpub,p=false)=>
+it.mk.author =(x,p=false)=>
 {
-  if (!p) p = aa.p[xpub];
-  if (!p) p = it.p(xpub);
+  if (!p) p = aa.p[x];
+  if (!p) p = it.p(x);
   
   const pubkey = it.mk.l('a',
   {
     cla:'a author',
-    tit:p.npub+' \n '+xpub,
+    tit:p.npub+' \n '+x,
     ref:'#'+p.npub,
     clk:it.clk.a,
+    app:it.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
   });
-  let name_s = p.metadata?.name ?? p.npub.slice(0,12);
-  let name = it.mk.l('span',{cla:'name',con:name_s});
-  if (!name.childNodes.length) name.classList.add('empty');
-  let petname = p.petname.length ? p.petname 
-  : p.extradata.petnames.length ? p.extradata.petnames[0] 
-  : false;
-  if (petname) name.dataset.petname = petname;
+  // let name_s = p.metadata?.name ?? p.metadata?.display_name ?? p.npub.slice(0,12);
+  // let name = it.mk.l('span',{cla:'name',con:name_s});
+  // if (!name.childNodes.length) name.classList.add('empty');
+  // let petname = p.petname.length ? p.petname 
+  // : p.extradata.petnames.length ? p.extradata.petnames[0] 
+  // : false;
+  // if (petname) name.dataset.petname = petname;
   
-  pubkey.append(name);
-  it.fx.color(p.xpub,pubkey);
+  // pubkey.append(name);
+  // pubkey.append(it.mk.l('span',{cla:'name',con:p.npub.slice(0,12)}));
+  it.fx.color(x,pubkey);
   author.link(pubkey,p);
   return pubkey
 };
@@ -842,6 +855,42 @@ it.mk.add_input =()=>
   }})
   return button
 }
+
+it.notice =o=>
+{
+  let notice = it.mk.l('div',{cla:'notice'});
+  notice.append(it.mk.l('p',{cla:'title',con:o.title}));
+  notice.append(it.mk.l('p',{cla:'description',con:o.description}));
+  if (o.hasOwnProperty('yes'))
+  {
+    const notice_no = it.mk.l('button',
+    {
+      con:o.no.title,
+      cla:'butt no',
+      clk:e=>
+      {
+        o.no.exe(e);
+      }
+    });
+    notice.append(notice_no)
+  }
+  if (o.hasOwnProperty('no'))
+  {
+    const notice_yes = it.mk.l('button',
+    {
+      con:o.yes.title,
+      cla:'butt yes',
+      clk:e=>
+      {
+        o.yes.exe(e);
+      }
+    });
+    notice.append(notice_yes)
+  }
+
+  v_u.log(notice);
+
+};
 
 it.confirm =o=>
 {
@@ -1099,7 +1148,7 @@ it.parse.content_basic =o=>
 it.parse.content =(o,trust)=>
 {
   const content = it.mk.l('section',{cla:'content parsed'});
-  const paragraphs = o.content.split(/\r?\n/);
+  const paragraphs = o.content.split(/\n\s*\n/);
   // console.log(paragraphs);
   for (const para of paragraphs)
   { 
@@ -1144,7 +1193,7 @@ it.parse.content =(o,trust)=>
 it.parse.content_quote =(o,trust)=>
 {
   const content = new DocumentFragment();
-  const paragraphs = o.content.split(/\r?\n/);
+  const paragraphs = o.content.split(/\n\s*\n/);
   // console.log(paragraphs);
   for (const para of paragraphs)
   { 
