@@ -84,7 +84,6 @@ q_e.mk =(f_id,o) =>
   let sn = q_e.sn;
   f_id = it.fx.an(f_id);
   const l = it.mk.l('li',{id:'f_'+f_id,cla:'item filter'});
-  // if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
   l.append(
     it.mk.l('button',{cla:'key',con:f_id,clk:e=>
     {
@@ -121,10 +120,7 @@ q_e.mk =(f_id,o) =>
   {
     cla:'butt',
     con:'+',
-    clk:e=>
-    {
-      cli.v(localStorage.ns+' '+q_e.sn+' sets _ '+f_id)
-    }
+    clk:e=> { cli.v(localStorage.ns+' '+q_e.sn+' sets _ '+f_id) }
   }))
   l.append(sets);
   return l
@@ -170,12 +166,6 @@ q_e.demand =(request,relays,options)=>
       {
         if (!rel.o.ls[url])
         {
-          // it.confirm(
-          // {
-          //   description:'fetch missing relay '+k+' from ?',
-          //   yes(){},no(){},
-          // })
-
           //    needs to display info from what npub
           let act_yes = url+' hint';
           let notice = {title:'r add '+act+'?'};
@@ -330,7 +320,6 @@ q_e.add =s=>
     if (changed) aa.save(q_e);
     v_u.log(log);
     cli.fuck_off();
-    
   }
   else v_u.log('invalid filter');
 };
@@ -363,7 +352,6 @@ q_e.raw =s=>
       let relay = it.s.url(rels)?.href;
       if (relay) relays.push(relay);
       else relays.push(...rel.in_set(rels));
-      // else if (rel.o.sets.includes(rels)) relays.push(...rel.in_set(rels));
       if (relays.length)
       {
         v_u.log(localStorage.ns+' q  raw '+filter);
@@ -396,17 +384,13 @@ q_e.run =async s=>
     
     let relays = rel.in_set(relset);
     if (!relays.length) relays = rel.in_set(rel.o.r);
-    // console.log('qe run',request,relays,options);
     q_e.demand(request,relays,options);
     cli.fuck_off();
     let close_butt = it.mk.l('button',
     {
       cla:'button close',
       con:'[x]',
-      clk:e=>
-      {
-        cli.v(localStorage.ns+' '+q_e.sn+' close '+fid)
-      }
+      clk:e=>{ cli.v(localStorage.ns+' '+q_e.sn+' close '+fid) }
     });
     let log = it.mk.l('p',
     {
@@ -432,7 +416,7 @@ q_e.close =s=>
         if (rel.active[k].q[fid]) 
         {
           rel.close(k,fid);
-          log += ' '+fid;
+          log+=' '+fid;
         }
       }
     }
@@ -441,7 +425,7 @@ q_e.close =s=>
       for (const fid in rel.active[k].q) 
       {
         rel.close(k,fid);
-        log += ' '+fid;
+        log+=' '+fid;
       }
     }
   }
@@ -467,4 +451,3 @@ q_e.req.authors =(req={ids:[],relays:[]})=>
   console.log(request,req.relays,options);
   q_e.demand(request,req.relays,options);
 };
-

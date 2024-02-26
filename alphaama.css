@@ -2172,6 +2172,10 @@ a.author
   resize: none;
   transition: var(--trans-quart);
 }
+#is:focus
+{
+  font-size: 16px;
+}
 
 #is:hover 
 {

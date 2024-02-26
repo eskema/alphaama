@@ -145,7 +145,6 @@ v_u.e =async nid=>
 v_u.dis =l=>
 {
   l.classList.add('in_view');   
-  // it.to(()=>{it.fx.in_path(l)},100,'in_path');
   it.fx.in_path(l);
   aa.l.classList.add('viewing','view_e');
   v_u.scroll(l);
@@ -187,13 +186,12 @@ v_u.nevent =async nevent=>
       if (dat) aa.print(dat);
       else 
       {
-        console.log(data);
-        
         dat = 
         {
           event:{id:data.id,created_at:it.tim.now() - 10},
           seen:[rel.in_set(rel.o.r)],subs:[],clas:[]
         };
+
         if (data.author) dat.event.pubkey = data.author;
         if (data.kind) dat.event.kind = data.kind;
         if (data.relays)
@@ -204,7 +202,7 @@ v_u.nevent =async nevent=>
             if (url) it.a_set(dat.seen,[url.href]);
           }
         }
-        console.log(dat);
+        // console.log(dat);
         let blank = kin.note(dat);
         blank.classList.add('blank');
         v_u.append_to_notes(blank);

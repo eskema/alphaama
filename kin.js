@@ -64,7 +64,9 @@ kin.note =dat=>
 
   if (o.hasOwnProperty('content')) 
   {
-    note.append(it.parse.content(o,trust)); 
+    const content = it.mk.l('section',{cla:'content parsed'});
+    content.append(it.parse.content(o,trust));
+    note.append(content); 
   }
 
   if (o.hasOwnProperty('sig')) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
@@ -101,7 +103,7 @@ kin.quote =o=>
     {
       if (!has_pub) by.prepend(it.mk.author(dat.event.pubkey));
       let trust = aa.p[dat.event.pubkey]?.trust ?? 0;
-      content = it.parse.content_quote(dat.event,trust);
+      content = it.parse.content(dat.event,trust);
     }
     else
     {
@@ -119,7 +121,6 @@ kin.quote =o=>
         for (const r of o.relays) relays.push(r);
       }
       kin.miss_e(o.id,relays);
-      // q_e.req.ids(req);
     }
     quote.append(content)
     
@@ -306,7 +307,6 @@ kin.d0 =dat=>
         if (c_at > p.updated) p.updated = c_at;
         p.metadata = metadata;
         author.save(p);        
-        // if (!profile) profile = author.profile(p);
         if (v_u.viewing === p.npub) 
         {
           let profile = document.getElementById(p.npub) || author.profile(p);
@@ -563,7 +563,6 @@ aa.print =async dat=>
   
   aa.missing('e');
   aa.missing('p');
-  // aa.moar();
   // aa.dex();
 };
 

@@ -448,17 +448,7 @@ it.fx.rm_path =k=>
 it.a_set =(a,dis)=>
 {
   let b;
-  // if (Array.isArray(a) && Array.isArray(dis))
-  // {
-    for (const k of dis)
-    { 
-      if (!a.includes(k)) 
-      {
-        a.push(k);
-        b = true;
-      }
-    }
-  // }
+  for (const k of dis) if (!a.includes(k)){a.push(k);b=true}
   return b
 };
 
@@ -471,10 +461,7 @@ it.a_dataset =(l,set,dis)=>
 
 it.a_rm =(a,dis)=>
 {
-  for (const s of dis) 
-  { 
-    if (a.includes(s)) a = a.filter((i)=>i!==s) 
-  }
+  for (const s of dis) if (a.includes(s)) a=a.filter((i)=>i!==s)
   return a
 };
 
@@ -541,11 +528,7 @@ it.fx.vars =(s)=>
 {
   let o = it.parse.j(s),options = {};  
   const aka_p = aa.p[aka.o.ls.xpub];
-  if (!aka_p) 
-  {
-    v_u.log('no aka, so no vars in qe...');
-    return [false,false];
-  }
+  if (!aka_p) v_u.log('no aka, so no vars in qe...');
   if (o) for (const k in o) 
   {
     const v = o[k];
@@ -569,13 +552,12 @@ it.fx.vars =(s)=>
           { 
             switch (val) 
             {
-              case 'aka': 
-                o[k][i] = aka_p.xpub; 
+              case 'aka':
+                o[k] = o[k].filter(dis=>dis!==val);
+                if (aka_p) o[k].push(aka_p.xpub); 
                 break;
-
               case 'bff':
-              case 'k3': 
-                o[k] = o[k].filter((dis)=>dis!==val);
+                o[k] = o[k].filter(dis=>dis!==val);
                 o[k].push(...aka_p.extradata.bff);                    
                 break;
             }
@@ -599,7 +581,7 @@ it.fx.sorts =(a,s)=>
   return ab
 };
 
-it.fx.sort_relays_by_sets_len =(a,b)=>
+it.fx.sort_items_by_sets_len =(a,b)=>
 {
   if (a[1].sets.length > b[1].sets.length) return -1;
   else return 1
@@ -650,7 +632,6 @@ it.mk.mod =mod=>
     mod.l = mod_l;
     const u = document.getElementById('u');
     if (u) u.append(mod_l)
-    // v_u.log(mod_l)
   }
 };
 
@@ -703,23 +684,6 @@ it.p =xpub=>
   }
 };
 
-// it.req = {};
-
-// it.req.authors =o=>
-// {
-//   if (!aa.q.authors) aa.q.authors = {};
-//   for (const k in o)
-//   {
-//     if (!aa.q.authors[k]) aa.q.authors[k] = [];
-//     it.a_set(aa.q.authors[k],o[k])
-//   }
-//   it.to(()=>
-//   {
-//     let keys = Object.keys(aa.q.authors);
-//     q_e.demand(stuff);
-//   },500,'authors');
-// };
-
 it.mk.author =(x,p=false)=>
 {
   if (!p) p = aa.p[x];
@@ -733,16 +697,7 @@ it.mk.author =(x,p=false)=>
     clk:it.clk.a,
     app:it.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
   });
-  // let name_s = p.metadata?.name ?? p.metadata?.display_name ?? p.npub.slice(0,12);
-  // let name = it.mk.l('span',{cla:'name',con:name_s});
-  // if (!name.childNodes.length) name.classList.add('empty');
-  // let petname = p.petname.length ? p.petname 
-  // : p.extradata.petnames.length ? p.extradata.petnames[0] 
-  // : false;
-  // if (petname) name.dataset.petname = petname;
-  
-  // pubkey.append(name);
-  // pubkey.append(it.mk.l('span',{cla:'name',con:p.npub.slice(0,12)}));
+
   it.fx.color(x,pubkey);
   author.link(pubkey,p);
   return pubkey
@@ -878,10 +833,6 @@ it.note_editor =o=>
   {
     const li = it.mk.l('li',{cla:'ee_'+k});
     li.dataset.label = k;
-    // if (k==='id'||k==='pubkey')
-    // {
-    //   li.append(it.mk.input('text',k,o[k],''))
-    // }
     if (k==='kind'||k==='created_at')
     {
       li.append(it.mk.input('number',k,o[k],''));
@@ -1040,17 +991,6 @@ it.nip19_to_tag =s=>
   }
   return tag
 };
-
-// it.nip19_to_tags =a=>
-// {
-//   let tags = [];
-//   for (const s of a)
-//   {
-//     let tag = it.nip19_to_tag(s);
-//     if (tag.length) tags.push(tag);
-//   }
-//   return tags
-// };
 
 it.parse.j =s=>
 {
@@ -1217,52 +1157,52 @@ it.parse.content_basic =o=>
   return content
 };
 
-it.parse.content =(o,trust)=>
-{
-  const content = it.mk.l('section',{cla:'content parsed'});
-  const paragraphs = o.content.split(/\n\s*\n/);
-  // console.log(paragraphs);
-  for (const para of paragraphs)
-  { 
-    if (para.length)
-    {
-      let l = it.mk.l('p',{cla:'paragraph'});
-      const words = para.trim().split(' ');
-      // console.log(words);
-      for (let i=0;i<words.length;i++)
-      {
-        words[i].trim();
-        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
-        else if (it.regx.nostr.test(words[i])) 
-        {
-          let parsed = it.parse.nostr(words[i]);
-          // console.log(parsed.children[0]);
-          if (parsed.tagName !== 'BLOCKQUOTE')
-          {
-            l.append(parsed);
-          }
-          else
-          {
-            if (l.childNodes.length) content.append(l);
-            content.append(parsed);
-            l = it.mk.l('p',{cla:'paragraph'});
-          }
-        }
-        else 
-        {
-          // console.log('parse')
-          if (i === words.length-1) l.append(words[i]);
-          else l.append(words[i],' ');
-        }
-      }
-      l.normalize();
-      if (l.childNodes.length) content.append(l);
-    } 
-  }
-  return content
-};
+// it.parse.content =(o,trust)=>
+// {
+//   const content = it.mk.l('section',{cla:'content parsed'});
+//   const paragraphs = o.content.split(/\n\s*\n/);
+//   // console.log(paragraphs);
+//   for (const para of paragraphs)
+//   { 
+//     if (para.length)
+//     {
+//       let l = it.mk.l('p',{cla:'paragraph'});
+//       const words = para.trim().split(' ');
+//       // console.log(words);
+//       for (let i=0;i<words.length;i++)
+//       {
+//         words[i].trim();
+//         if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
+//         else if (it.regx.nostr.test(words[i])) 
+//         {
+//           let parsed = it.parse.nostr(words[i]);
+//           // console.log(parsed.children[0]);
+//           if (parsed.tagName !== 'BLOCKQUOTE')
+//           {
+//             l.append(parsed);
+//           }
+//           else
+//           {
+//             if (l.childNodes.length) content.append(l);
+//             content.append(parsed);
+//             l = it.mk.l('p',{cla:'paragraph'});
+//           }
+//         }
+//         else 
+//         {
+//           // console.log('parse')
+//           if (i === words.length-1) l.append(words[i]);
+//           else l.append(words[i],' ');
+//         }
+//       }
+//       l.normalize();
+//       if (l.childNodes.length) content.append(l);
+//     } 
+//   }
+//   return content
+// };
 
-it.parse.content_quote =(o,trust)=>
+it.parse.content =(o,trust)=>
 {
   const content = new DocumentFragment();
   const paragraphs = o.content.split(/\n\s*\n/);

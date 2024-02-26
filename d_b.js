@@ -55,7 +55,6 @@ aa.db.get_p =async xpub=>
   if (aa.p[xpub]) return aa.p[xpub];
   return new Promise(resolve=>
   {
-    // console.log('aa.db.get_p',xpub);
     const o = {get:{store:'authors',key:xpub}};
     const db = new Worker('idb.js');
     db.onmessage=e=>
@@ -63,7 +62,6 @@ aa.db.get_p =async xpub=>
       // console.log('aa.db.get_p',xpub);
       let p = e.data;
       if (p) aa.p[xpub] = p;
-      // aa.p[xpub] = p ?? it.p(xpub);
       setTimeout(()=>{db.terminate()},200);
       resolve(p);
     }
@@ -170,7 +168,7 @@ aa.db.view =s=>
   v_u.state(s.trim());
 };
 
-// cache - currently not used anywhere
+// cache - currently not used anywhere, soon™
 aa.db.cash = {};
 aa.db.cash.get =async(store,key)=>
 {

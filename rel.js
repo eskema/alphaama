@@ -150,10 +150,7 @@ rel.butts =(l,o)=>
       {
         cla:'butt',
         con:set,
-        clk:e=>
-        {
-          cli.v(localStorage.ns+' '+rel.sn+' setrm '+set+' '+url)
-        }
+        clk:e=>{ cli.v(localStorage.ns+' '+rel.sn+' setrm '+set+' '+url) }
       }))
     }
   }
@@ -161,10 +158,7 @@ rel.butts =(l,o)=>
   {
     cla:'butt',
     con:'+',
-    clk:e=>
-    {
-      cli.v(localStorage.ns+' '+rel.sn+' sets off '+url);
-    }
+    clk:e=>{ cli.v(localStorage.ns+' '+rel.sn+' sets off '+url) }
   }))
   l.append(sets);
 };
@@ -191,18 +185,9 @@ rel.mk_item =(u,o)=>
 
 rel.add =s=>
 { 
-  // const a = s.split(',').map(v=>v.trim());
-  // if (a.length)
-  // {
-  //   for (const task of a) job(task.split(' '));
-  //   done();
-  // }
-
-
   const work =(a)=>
   {
     let url_string = a.shift().trim();
-    
     const url = it.s.url(url_string)?.href;
     if (url)
     {
@@ -250,10 +235,7 @@ rel.close =(k,id)=>
   }
 };
 
-rel.resume =()=>
-{
-  for (const url in rel.active) { rel.c_on(url) }
-};
+rel.resume =()=>{ for (const url in rel.active) { rel.c_on(url) } };
 
 rel.sets =s=>
 {
@@ -386,7 +368,6 @@ rel.from_tags =(tags,sets=[])=>
       else if (permission === 'write') it.a_set(relay.sets,[...sets,'write']);
       else it.a_set(relay.sets,[...sets,'read','write']);
     }
-    
   }
   return relays
 }
@@ -396,14 +377,10 @@ rel.list =s=>
   const err = ()=> {v_u.log(rel.sn+' ls: no relays found')};
   a = s.trim().split(' ');
   if (!a.length || a[0] === '') a[0]= 'k10002';
-  console.log(a);
   let relays = [];
-  for (const set of a)
-  {
-    relays.push(...rel.in_set(set,false))
-  }
+  for (const set of a) relays.push(...rel.in_set(set,false));
   relays = [...new Set(relays)];
-  console.log(relays);
+  // console.log(relays);
   let rels = [];
   if (relays.length)
   {
@@ -418,7 +395,6 @@ rel.list =s=>
       rels.push(tag.join(' '))
     }
   }
-
   if (rels.length) cli.v(localStorage.ns+' '+rel.sn+' mkls '+rels);
   else err();
 };
@@ -479,14 +455,12 @@ rel.on_open =async e=>
       if (sub.stamp)
       {
         let filters_i = 2;
-        // console.log(sub);
         while (filters_i < sub.req.length)
         {
           sub.req[filters_i].since = sub.stamp + 1;
           filters_i++;
         }
       }
-
       rel.try(relay,JSON.stringify(sub.req))
     }
   }

@@ -156,7 +156,6 @@ cli.compost =s=>
     {
       cli.dat.event.created_at = it.tim.now();
       cli.dat.event.tags.push(...it.parse.hashtags(s));
-      // console.log(it.parse.mentions(s));
       const mentions = it.parse.mentions(s);
       for (const mention of mentions)
       {
@@ -250,10 +249,7 @@ cli.act_item =(o,s)=>
     }
   }
   
-  if (s === 'pinned')
-  {
-    l.classList.add('pinned');
-  }
+  if (s === 'pinned') l.classList.add('pinned');
   else
   {
     const clk =e=>
@@ -271,8 +267,6 @@ cli.act_item =(o,s)=>
       }
     };
   }
-  
-
   return l
 };
 

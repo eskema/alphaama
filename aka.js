@@ -412,7 +412,7 @@ author.profile_butt_follow =async e=>
         if (rels.length)
         {
           let relays = rels.filter(r=>r[1].sets.includes('write'))
-          .sort(it.fx.sort_relays_by_sets_len);
+          .sort(it.fx.sort_items_by_sets_len);
           if (!relays.length)
           {
             const yours = Object.keys(rel.o.ls);
@@ -678,8 +678,6 @@ author.mk.extradata =p=>
   }
   return extradata
 };
-
-
 
 author.links =p=>
 {

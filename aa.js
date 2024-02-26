@@ -7,14 +7,6 @@ const aa =
   p:{},
   q:{},
   state:{},
-  ct:
-  {
-    u:{},
-    // h:{},
-    e:{},
-    // l:{},
-    p:{}
-  },
   actions:[],
   mk:{},
   clk:{},
@@ -65,7 +57,6 @@ aa.easy =async()=>
   q_e.run('a')
   .then(()=>{setTimeout(()=>{q_e.run('b')},2000)})
   .then(()=>{setTimeout(()=>{o_p.set('trust 4')},9000)})
-  // .then(()=>{setTimeout(()=>{location.reload()},10000)});
 };
 
 aa.normal =async()=>
@@ -79,11 +70,6 @@ aa.hard =async()=>
 };
 
 aa.actions.push(
-  // {
-  //   action:['u','stuff'],
-  //   description:'does a bunch of stuff to get you started',
-  //   exe:aa.stuff
-  // },
   {
     action:['u','login'],
     optional:['easy || hard'],
@@ -103,7 +89,6 @@ aa.load_mod =async mod=>
   if (saved_mod) mod.o = saved_mod;
   else if (mod.def) mod.o = mod.def;
   if (!mod.o.ls) mod.o.ls = {};
-  // it.mk.mod(mod);
   return mod
 };
 
@@ -115,10 +100,6 @@ aa.save =mod=>
   {
     aa.db.put({put:{store:'stuff',a:[mod.o]}});
     it.mk.mod(mod);
-    // let o = {ls:mod.o.ls};
-    // if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
-    // if (mod.l) o.l = mod.l;
-    // mod.l = it.mk.ls(o);
   }
 };
 
@@ -279,9 +260,10 @@ aa.clk.parse =e=>
   }
   else 
   {
-    content.replaceWith(it.parse.content(event,true));
+    const new_content = it.mk.l('section',{cla:'content parsed'});
+    new_content.append(it.parse.content(event,true));
+    content.replaceWith(new_content);
   }
-  // console.log(parsed);
 };
 
 aa.clk.editor =e=>
@@ -296,7 +278,6 @@ aa.clk.editor =e=>
     no:()=>{},
     yes:()=>{},
   });
-  // console.log(parsed);
 };
 
 aa.clk.fetch =e=>
@@ -312,7 +293,6 @@ aa.clk.fetch =e=>
   }
   else relays.push(...rel.in_set(rel.o.r));
   it.a_dataset(note,'nope',relays);
-  // console.log(request,relays);
   q_e.demand(request,relays,{eose:'done'});
   setTimeout(()=>{v_u.scroll(note)},200);
 };
@@ -345,14 +325,16 @@ aa.replace_note =(l,dat)=>
   l.remove();
   b.classList.remove('blank','draft','not_sent');
   if (dat.clas) b.classList.add(...dat.clas);
-  if (!is_root && b.parentElement.closest('.note')) b.classList.remove('root','not_yet');
+  if (!is_root && b.parentElement.closest('.note')) 
+  {
+    b.classList.remove('root','not_yet');
+  }
   else if (is_root) b.classList.add('root');
   if (!is_reply && !b.parentElement.closest('.note')) b.classList.remove('reply');
   else if (is_reply) b.classList.add('reply');
   b.classList.add('replaced');
   if (b.classList.contains('not_yet')) 
   {
-    // console.log('replaced',b);
     e_observer.observe(b);
   }
 };
@@ -371,48 +353,6 @@ aa.to_print =dat=>
   },50,q_id);
 };
 
-// aa.mia_relays =nodelist=>
-// {
-//   let relays = {};
-//   for (const l of nodelist)
-//   {
-//     let nope = l.dataset.nope ? l.dataset.nope.trim().split(' ') : [];
-    
-//     const f =set=>
-//     {
-//       set.split(' ').map((url)=>
-//       {
-//         if (!nope.includes(url))
-//         {
-//           if (!relays[url]) relays[url] = [];
-//           it.a_set(relays[url],[l.dataset.id]);
-//         }
-//       });
-//     };
-    
-//     if (l.dataset.seen) f(l.dataset.seen);
-//     if (l.dataset.r) f(l.dataset.r);
-//   }
-
-//   return relays;
-// };
-
-// aa.get_mia =()=>
-// {
-//   let mia = document.querySelectorAll('.blank');
-//   if (mia)
-//   {
-//     let relays = aa.mia_relays(mia);
-//     if (relays && Object.keys(relays).length)
-//     {
-//       let [url,tranche] = Object.entries(relays).sort((a,b)=>a.length - b.length)[0];
-//       delete relays[url];
-//       return [url,tranche,relays]
-//     }
-//     else return [0,0]
-//   }
-// };
-
 aa.missing =async s=>
 {
   it.to(()=>
@@ -426,7 +366,6 @@ aa.missing =async s=>
         {
           if (!miss[url]) miss[url] = [];
           it.a_set(miss[url],[xid]);
-          // it.a_set(b,[url]);
         }
       }
     };
@@ -446,8 +385,6 @@ aa.missing =async s=>
       if (s === 'p') 
       {
         filter = {authors:ids,kinds:[0]};
-        console.log(filter);
-        q_e.demand(['REQ',s,filter],[url],{});
       }
       else if (s === 'e')
       {
@@ -457,87 +394,8 @@ aa.missing =async s=>
           for (const note of notes) note.dataset.nope = aa.miss.e[id].nope;
         }
         filter = {ids:ids};
-        q_e.demand(['REQ',s,filter],[url],{});
       }
-      
+      q_e.demand(['REQ',s,filter],[url],{});
     }
   },1000,'miss_'+s);
 };
-
-// aa.missing_e =async()=>
-// {
-//   it.to(()=>
-//   {
-//     let miss = {};
-//     const nope =(xid,a,b)=>
-//     {
-//       for (const url of a) 
-//       {
-//         if (!b.includes(url))
-//         {
-//           if (!miss[url]) miss[url] = [];
-//           it.a_set(miss[url],[xid]);
-//           it.a_set(b,[url]);
-//         }
-//       }
-//     };
-//     let def_relays = rel.in_set(rel.o.r);
-//     for (const xid in aa.miss.e)
-//     {
-//       let v = aa.miss.e[xid];
-//       nope(xid,def_relays,v.nope);
-//       nope(xid,v.relays,v.nope);
-//     }
-
-//     if (Object.keys(miss).length)
-//     {
-//       let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
-//       console.log(url,ids);
-//       for (const id of ids)
-//       {
-//         let notes = document.querySelectorAll('[data-id="'+id+'"]');
-//         for (const note of notes) note.dataset.nope = aa.miss.e[id].nope;
-//       }
-      
-//       q_e.demand(['REQ','e',{ids:ids}],[url],{eose:'done'});
-//     }
-//   },1000,'miss_e');
-// };
-
-
-
-// aa.get_miss =()=>
-// {
-//   let mia = document.querySelectorAll('.blank');
-//   if (mia)
-//   {
-//     let relays = aa.mia_relays(mia);
-//     if (relays && Object.keys(relays).length)
-//     {
-//       let [url,tranche] = Object.entries(relays).sort((a,b)=>a.length - b.length)[0];
-//       delete relays[url];
-//       return [url,tranche,relays]
-//     }
-//     else return [0,0]
-//   }
-// };
-
-// aa.moar =()=>
-// {
-//   const f =()=>
-//   {
-//     let [url,ids,rest] = aa.get_mia();
-//     // console.log('moar',url,ids,rest);
-//     if (ids.length)
-//     {
-//       ids.map((id)=>
-//       {
-//         let l = document.getElementById(it.fx.nid(id));
-//         it.a_dataset(l,'nope',[url]);
-//       });
-//       q_e.demand(['REQ','ids',{ids:ids}],[url],{eose:'done'});
-//     }
-//     if (rest && Object.keys(rest).length) aa.moar()
-//   }
-//   it.to(f,1000,'moar');
-// };

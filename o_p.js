@@ -23,36 +23,32 @@ const o_p =
   sn:'o',
 };
 
-o_p.load =(reset=false,actions=false)=>
+aa.actions.push(
+  {
+    action:[o_p.sn,'set'],
+    required:['key','value'],
+    description:'set option value',
+    exe:o_p.set
+  },
+  {
+    action:[o_p.sn,'reset'],
+    optional:['key'], 
+    description:'reset all or just a single option',
+    exe:o_p.reset
+  },
+  {
+    action:[o_p.sn,'rm'],
+    optional:['key'], 
+    description:'remove option',
+    exe:o_p.rm
+  }
+);
+
+o_p.load =(reset=false)=>
 {
   for (const k in o_p.def)
   {
     if (reset||!localStorage[k]) localStorage[k] = o_p.def[k];
-  }
-
-  if (actions)
-  {
-    let sn = o_p.sn;
-    aa.actions.push(
-      {
-        action:[sn,'set'],
-        required:['key','value'],
-        description:'set option value',
-        exe:o_p.set
-      },
-      {
-        action:[sn,'reset'],
-        optional:['key'], 
-        description:'reset all or just a single option',
-        exe:o_p.reset
-      },
-      {
-        action:[sn,'rm'],
-        optional:['key'], 
-        description:'remove option',
-        exe:o_p.rm
-      }
-    );
   }
   o_p.save();
 };
@@ -121,13 +117,7 @@ o_p.mk =(k,v) =>
       cli.t.value = localStorage.ns+' '+sn+' set '+k+' '+v;
       cli.foc();
     }}),
-    it.mk.l('span',{cla:'val',con:v}),
-    // it.mk.l('button',{cla:'rm',con:'rm',clk:e=>
-    // {
-    //   const filter = e.target.parentNode.querySelector('.key').innerText;
-    //   cli.t.value = localStorage.ns+' '+sn+' rm ' + filter;
-    //   cli.foc();
-    // }})
+    it.mk.l('span',{cla:'val',con:v})
   );
   return l
 };
