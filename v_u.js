@@ -107,11 +107,7 @@ v_u.p =async npub=>
 {
   let xpub = it.fx.decode(npub);
   let p = await aa.db.get_p(xpub);
-  if (!p) 
-  {
-    p = it.p(xpub);
-    // v_u.req_p([xpub]);
-  }
+  if (!p) p = it.p(xpub);
   
   let l = document.getElementById(npub);  
   if (!l)
@@ -261,7 +257,7 @@ v_u.append_to_replies =(dat,note,reply_tag)=>
         root = kin.blank(root_tag,dat,10);
         root.classList.add('root');
         v_u.append_to_notes(root);
-        kin.der(root_tag,dat.subs);
+        kin.der(root_tag);
       }
       v_u.append_to_rep(reply,root.querySelector('.replies'));
     }
@@ -270,7 +266,7 @@ v_u.append_to_replies =(dat,note,reply_tag)=>
       reply.classList.add('root');
       v_u.append_to_notes(reply);
     }
-    kin.der(reply_tag,dat.subs);
+    kin.der(reply_tag);
   }
   else
   {

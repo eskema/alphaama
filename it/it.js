@@ -68,7 +68,10 @@ it.s.url =s=>
 {
   let url;
   try{ url = new URL(s) } 
-  catch(er){ console.log('not url '+s) };
+  catch(er)
+  { 
+    // console.log('not url '+s) 
+  };
   return url
 };
 
@@ -169,6 +172,58 @@ it.get_seen =(x)=>
   const dat = aa.e[x];
   if (dat && dat.seen.length) return dat.seen[0];
   return ''
+};
+
+it.get_pub =xpub=>
+{
+  it.get_pubs([['p',xpub]])
+};
+
+it.get_pubs =async tags=>
+{
+  if (!aa.q.pubs) aa.q.pubs = [];
+  let pubs = {};
+  for (const tag of tags)
+  {
+    let x = tag[1];
+    let r = tag[2];
+    if (it.tag.p(tag)) 
+    {
+      if (!aa.p[x] || !aa.p[x].pastdata.k0.length)
+      {
+        aa.q.pubs[x] = [];
+        let url = it.s.url(r);
+        if (url) it.a_set(aa.q.pubs[x],[url.href]);
+      }
+    }
+  }
+  let pubkeys = Object.keys(aa.q.pubs);
+  if (pubkeys.length)
+  {
+    it.to(()=>
+    {
+      aa.db.get({get_a:{store:'authors',a:pubkeys}}).then(dat=>
+      {
+        for (const p of dat) 
+        {
+          if (p.pastdata.k0.length)
+          {
+            aa.p[p.xpub] = p;
+            delete aa.q.pubs[p.xpub];
+            author.links(p);
+          }          
+        }
+        console.log('it.get_pubs',pubkeys.length,dat.length);
+        for (const x in aa.q.pubs) 
+        {
+          if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]}
+          it.a_set(aa.miss.p[x].relays,aa.q.pubs[x]);
+          delete aa.q.pubs[p.xpub];
+        }
+        aa.missing('p');
+      });
+    },500,'get_pubs');
+  }
 };
 
 it.tim ={};
@@ -647,6 +702,23 @@ it.p =xpub=>
     },
   }
 };
+
+// it.req = {};
+
+// it.req.authors =o=>
+// {
+//   if (!aa.q.authors) aa.q.authors = {};
+//   for (const k in o)
+//   {
+//     if (!aa.q.authors[k]) aa.q.authors[k] = [];
+//     it.a_set(aa.q.authors[k],o[k])
+//   }
+//   it.to(()=>
+//   {
+//     let keys = Object.keys(aa.q.authors);
+//     q_e.demand(stuff);
+//   },500,'authors');
+// };
 
 it.mk.author =(x,p=false)=>
 {
@@ -1233,4 +1305,10 @@ it.parse.content_quote =(o,trust)=>
     } 
   } 
   return content
+};
+
+it.query_nip05 =async s=>
+{
+  let nip05 = await NostrTools.nip05.queryProfile(s);
+  console.log(nip05);
 };

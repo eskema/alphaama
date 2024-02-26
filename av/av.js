@@ -2,19 +2,16 @@ const av = {};
 
 av.sticky =e=>
 { 
-  // video.pause();
-  // video.classList.remove('playin');
-  
   let l = e.target.closest('.av');
   if (l.classList.contains('av_sticky'))
   {
     l.classList.remove('av_sticky');
-    it.fx.rm_path(l,'av_sticky');
+    // it.fx.rm_path(l,'av_sticky');
   }
   else
   {
     l.classList.add('av_sticky');
-    it.fx.in_path(l,'av_sticky');
+    // it.fx.in_path(l,'av_sticky');
   }
 };
 

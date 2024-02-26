@@ -117,20 +117,56 @@ rel.mk =(u,o) =>
   const l = rel.mk_item(u,o);
   if (l)
   {
-    // l.append(it.mk.l('button',
-    // {
-    //   cla:'rm',
-    //   con:'rm',
-    //   clk:e=>
-    //   {
-    //     const url = e.target.parentNode.querySelector('.url').innerText;
-    //     cli.t.value = localStorage.ns + ' r rm ' + url;
-    //     cli.foc();
-    //   }
-    // }));
+    rel.butts(l,o);
+    setTimeout(()=>{rel.upd_state(u)},200);
     return l
   }
   else return false
+};
+
+rel.butts =(l,o)=>
+{
+  
+  let url = l.querySelector('.url').innerText;
+  l.id = it.fx.an(url);
+  l.dataset.state = 0;
+  l.append(it.mk.l('button',
+  {
+    cla:'rm',
+    con:'rm',
+    clk:e=>
+    {
+      cli.t.value = localStorage.ns + ' r rm ' + url;
+      cli.foc();
+    }
+  }));
+  
+  let sets = it.mk.l('span',{cla:'sets'});
+  if (o.sets && o.sets.length)
+  {    
+    for (const set of o.sets)
+    {
+      sets.append(it.mk.l('button',
+      {
+        cla:'butt',
+        con:set,
+        clk:e=>
+        {
+          cli.v(localStorage.ns+' '+rel.sn+' setrm '+set+' '+url)
+        }
+      }))
+    }
+  }
+  sets.append(it.mk.l('button',
+  {
+    cla:'butt',
+    con:'+',
+    clk:e=>
+    {
+      cli.v(localStorage.ns+' '+rel.sn+' sets off '+url);
+    }
+  }))
+  l.append(sets);
 };
 
 rel.mk_item =(u,o)=>
@@ -138,57 +174,16 @@ rel.mk_item =(u,o)=>
   u = it.s.url(u);
   if (u) 
   {
-    const l = it.mk.l('li',{id:it.fx.an(u.href),cla:'item relay'});
-    l.dataset.state = 0;
+    const l = it.mk.l('li',{cla:'item relay'});
     const url_l = it.mk.l('p',{cla:'url'});
     url_l.append(
       it.mk.l('span',{cla:'protocol',con:u.protocol+'//'}),
       it.mk.l('span',{cla:'host',con:u.host}),
       it.mk.l('span',{cla:'pathname',con:u.pathname}),
       it.mk.l('span',{cla:'hashsearch',con:u.hash+u.search})
-    );
-    l.append(url_l,it.mk.l('button',
-    {
-      cla:'rm',
-      con:'rm',
-      clk:e=>
-      {
-        const url = e.target.parentNode.querySelector('.url').innerText;
-        cli.t.value = localStorage.ns + ' r rm ' + url;
-        cli.foc();
-      }
-    }));
-    
-    let sets = it.mk.l('span',{cla:'sets'});
-    if (o.sets && o.sets.length)
-    {
-      l.dataset.sets = o.sets; 
-      
-      for (const set of o.sets)
-      {
-        sets.append(it.mk.l('button',
-        {
-          cla:'butt',
-          con:set,
-          clk:e=>
-          {
-            cli.v(localStorage.ns+' '+rel.sn+' setrm '+set+' '+u.href)
-          }
-        }))
-      }
-    }
-    sets.append(it.mk.l('button',
-    {
-      cla:'butt',
-      con:'+',
-      clk:e=>
-      {
-        cli.v(localStorage.ns+' '+rel.sn+' sets off '+u.href);
-      }
-    }))
-    l.append(sets);
-    if (o.sets && o.sets.length) l.dataset.sets = o.sets;    
-    
+    ); 
+    l.append(url_l); 
+    if (o.sets && o.sets.length) l.dataset.sets = o.sets;   
     return l
   }
   return false
@@ -196,6 +191,14 @@ rel.mk_item =(u,o)=>
 
 rel.add =s=>
 { 
+  // const a = s.split(',').map(v=>v.trim());
+  // if (a.length)
+  // {
+  //   for (const task of a) job(task.split(' '));
+  //   done();
+  // }
+
+
   const work =(a)=>
   {
     let url_string = a.shift().trim();
@@ -243,8 +246,7 @@ rel.close =(k,id)=>
   if (relay)
   {
     if (relay.ws?.readyState === 1) relay.ws.send(JSON.stringify(['CLOSE',id]));
-    delete rel.active[k].q[id];
-    setTimeout(()=>{rel.upd_state(k)},100);
+    setTimeout(()=>{delete rel.active[k].q[id];rel.upd_state(k)},100);
   }
 };
 
@@ -370,7 +372,7 @@ rel.from_o =(relays,sets=false)=>
   return rels
 }
 
-rel.from_tags =(tags,sets=false)=>
+rel.from_tags =(tags,sets=[])=>
 {
   let relays = {};
   for (const tag of tags)
@@ -381,9 +383,10 @@ rel.from_tags =(tags,sets=false)=>
     {
       let relay = relays[href] = {sets:[]};
       if (permission === 'read') it.a_set(relay.sets,[...sets,'read']);
-      else if (permission === 'write') it.a_set(relays.sets,[...sets,'write']);
+      else if (permission === 'write') it.a_set(relay.sets,[...sets,'write']);
       else it.a_set(relay.sets,[...sets,'read','write']);
     }
+    
   }
   return relays
 }

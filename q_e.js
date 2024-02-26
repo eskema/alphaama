@@ -153,7 +153,7 @@ q_e.demand =(request,relays,options)=>
     let opts = {req:request};
     for (const opt in options) opts[opt] = options[opt];
 
-    if (!relays && !relays.length) relays = rel.in_set(rel.o.r);
+    if (!relays?.length) relays = rel.in_set(rel.o.r);
     if (!relays.length) return false;
 
     for (const k of relays)
@@ -177,34 +177,30 @@ q_e.demand =(request,relays,options)=>
           // })
 
           //    needs to display info from what npub
-          let notice = {title:'add relay '+url+'?'};
+          let act_yes = url+' hint';
+          let notice = {title:'r add '+act+'?'};
           notice.yes =
           {
             title:'yes',
             exe:e=>
             {
               console.log(url,opts);
-              rel.add(url+' hint');
+              rel.add(act_yes);
               rel.c_on(url,opts);
-              e.target.parentElement.textContent = notice.title+' yes';
+              e.target.parentElement.textContent = act_yes;
             }
           };
+          let act_no = url+' off';
           notice.no =
           {
             title:'no',
             exe:e=>
             {
-              rel.add(url+' off');
-              e.target.parentElement.textContent = notice.title+' no';
+              rel.add(act_no);
+              e.target.parentElement.textContent = act_no;
             }
           };
           it.notice(notice);
-          // if (window.confirm('fetch missing from relay '+url+'?'))
-          // {
-          //   rel.add(url+' moar');
-          //   rel.c_on(url,opts);
-          // }
-          // else rel.add(url+' off');
         }
         else if (!rel.o.ls[url].sets.includes('off')) rel.c_on(url,opts);
       }
@@ -274,27 +270,25 @@ q_e.sets =s=>
   it.loop(work,s,()=>{aa.save(q_e)})
 };
 
-q_e.set_rm =(s)=>
+q_e.set_rm =s=>
 {
-  const work =(a)=>
+  const work =a=>
   { 
     const set_id = a.shift();
-    if (it.s.an(set_id)) 
-    { 
-      if (a.length)
+    if (!it.s.an(set_id)) return false;
+    if (a.length)
+    {
+      for (const f_id of a)
       {
-        for (const f_id of a)
-        {
-          let r = q_e.o.ls[f_id];
-          if (r && r.sets) r.sets = it.a_rm(r.sets,[set_id]);
-        }
+        let r = q_e.o.ls[f_id];
+        if (r && r.sets) r.sets = it.a_rm(r.sets,[set_id]);
       }
-      else
+    }
+    else
+    {
+      for (const k in q_e.o.ls)
       {
-        for (const k in q_e.o.ls)
-        {
-          q_e.o.ls[k].sets = it.a_rm(q_e.o.ls[k].sets,[set_id]);
-        }
+        q_e.o.ls[k].sets = it.a_rm(q_e.o.ls[k].sets,[set_id]);
       }
     }
   };
@@ -389,7 +383,7 @@ q_e.raw =s=>
 
 q_e.run =async s=>
 {
-  console.log('run s');
+  // console.log('run s');
   const a = s.trim().split(' ');
   let fid,relset;
   if (a.length) fid = a.shift();
@@ -464,3 +458,13 @@ q_e.req.ids =(req={ids:[],relays:[]})=>
   console.log(request,req.relays,options);
   q_e.demand(request,req.relays,options);
 };
+
+q_e.req.authors =(req={ids:[],relays:[]})=>
+{
+  const request = ['REQ','ids',{authors:req.ids}];
+  if (!req.relays?.length) req.relays = rel.in_set(rel.o.r);
+  const options = {eose:'close'};
+  console.log(request,req.relays,options);
+  q_e.demand(request,req.relays,options);
+};
+

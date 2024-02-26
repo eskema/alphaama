@@ -80,6 +80,7 @@ aka.start =async mod=>
     }
 
     let p = await aa.db.get_p(ls.xpub);
+    if (!p) p = it.p(ls.xpub);
     if (p)
     {
       let changed;
@@ -96,6 +97,7 @@ aka.start =async mod=>
       else aka.load_bff(p);
       author.profile(p);
       if (changed) author.save(p);
+      aa.aka = p;
     } 
   }
   else v_u.log('no aka')
@@ -103,7 +105,7 @@ aka.start =async mod=>
 
 aka.load_bff =async p=>
 {
-  console.log('load_bff');
+  // console.log('load_bff');
   
   if (p.extradata.bff.length)
   {
@@ -129,7 +131,7 @@ aka.set =s=>
     aa.save(aka);
     aka.start(aka);
   } 
-  else console.log('aka mk requires', aa.ct.aka.add.required)
+  else console.log('aka mk requires')
 };
 
 aka.ext =async()=>
@@ -173,8 +175,10 @@ author.save =p=>
   aa.q[q_id].push(p);
   it.to(()=>
   {
-    aa.db.put({put:{store:'authors',a:aa.q[q_id]}}).then(()=>
-    {aa.q[q_id] = [];});
+    let pq = [...aa.q[q_id]];
+    aa.q[q_id] = [];
+    aa.db.put({put:{store:'authors',a:pq}})
+    // .then(()=> {aa.q[q_id] = [];});
   },1000,q_id);
 };
 
@@ -238,6 +242,8 @@ author.process_k3_tags =(tags,x)=>
         p = aa.p[xpub] = it.p(xpub);
         updd = true;
       }
+
+      if (!p.metadata) it.get_pub(xpub);
 
       if (relay)
       {
@@ -673,10 +679,7 @@ author.mk.extradata =p=>
   return extradata
 };
 
-author.verify_nip5 =()=>
-{
 
-};
 
 author.links =p=>
 {
@@ -704,7 +707,16 @@ author.link =async(l,p=false)=>
     if (p.metadata.nip05) l.dataset.nip05 = p.metadata.nip05;
   }
   if (author.follows(p.xpub)) l.classList.add('is_bff');
-  else l.classList.remove('is_bff');
+  else 
+  {
+    let common = 0;
+    for (const k of p.extradata.followers)
+    {
+      if (author.follows(k)) common++;
+    }
+    l.dataset.followers = common+'.'+p.extradata.followers.length;
+    l.classList.remove('is_bff');
+  }
 };
 
 author.pic =(l,p)=>
@@ -908,6 +920,7 @@ aka.score =async s=>
   {
     cli.fuck_off();
     const p = await aa.db.get_p(xpub);
+    if (!p) p = it.p(xpub);
     console.log(p,score);
     p.trust = score;    
     author.update(author.profile(p),p,true);
@@ -972,4 +985,51 @@ author.process_bff =(xpub=false)=>
   if (!xpub) xpub = aka.o.ls.xpub;
   const bff = aa.p[xpub]?.extradata.bff;
   for (const x of bff) author.process(x);
+};
+
+author.wot =async()=>
+{
+  let ff = {};
+  let to_get = [];
+  let bff = aa.aka?.extradata.bff;
+  if (!bff?.length) return false;  
+  for (const x of bff)
+  {
+    
+    let p = aa.p[x];
+    let p_bff = p?.extradata.bff;
+    if (p_bff?.length)
+    {      
+      for (const xid of p_bff)
+      {
+        if (!author.follows(xid))
+        {
+          if (!ff[xid]) ff[xid] = [];
+          it.a_set(ff[xid],[x]);
+          if (!aa.p[xid]) it.a_set(to_get,[xid]);
+        }
+      }
+    }
+  }
+
+  if (to_get.length)
+  {
+    // let found = 0;
+    let dat = await aa.db.get({get_a:{store:'authors',a:to_get}});
+    console.log('dat',dat);
+    if (dat) for (const p of dat) aa.p[p.xpub] = p;
+  }
+  
+  aa.ff = ff;
+  let wot = {};
+  let sorted = Object.entries(aa.ff).sort((a,b)=>b[1].length - a[1].length);
+  for (const f of sorted)
+  {
+    let x = f[0];
+    let n = f[1].length;
+    let id = aa.p[x]?.extradata.petnames[0] || aa.p[x]?.metadata?.name || x;
+    wot[id] = n;
+  }
+
+  return wot
 };

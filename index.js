@@ -31,7 +31,7 @@ window.addEventListener('load',()=>
     v_u.log(it.mk.details('readme',readme_l));
   }).then(()=>
   {
-    if (o_p) o_p.load();
+    if (o_p) o_p.load(false,true);
     if (aka) aka.load();
     if (rel) rel.load();
     if (q_e) q_e.load();

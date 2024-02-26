@@ -65,7 +65,7 @@ aa.easy =async()=>
   q_e.run('a')
   .then(()=>{setTimeout(()=>{q_e.run('b')},2000)})
   .then(()=>{setTimeout(()=>{o_p.set('trust 4')},9000)})
-  .then(()=>{setTimeout(()=>{location.reload()},10000)});
+  // .then(()=>{setTimeout(()=>{location.reload()},10000)});
 };
 
 aa.normal =async()=>
@@ -314,6 +314,7 @@ aa.clk.fetch =e=>
   it.a_dataset(note,'nope',relays);
   // console.log(request,relays);
   q_e.demand(request,relays,{eose:'done'});
+  setTimeout(()=>{v_u.scroll(note)},200);
 };
 
 aa.f_it =async event=>
@@ -370,64 +371,173 @@ aa.to_print =dat=>
   },50,q_id);
 };
 
-aa.mia_relays =nodelist=>
-{
-  let relays = {};
-  for (const l of nodelist)
-  {
-    let nope = l.dataset.nope ? l.dataset.nope.trim().split(' ') : [];
+// aa.mia_relays =nodelist=>
+// {
+//   let relays = {};
+//   for (const l of nodelist)
+//   {
+//     let nope = l.dataset.nope ? l.dataset.nope.trim().split(' ') : [];
     
-    const f =set=>
+//     const f =set=>
+//     {
+//       set.split(' ').map((url)=>
+//       {
+//         if (!nope.includes(url))
+//         {
+//           if (!relays[url]) relays[url] = [];
+//           it.a_set(relays[url],[l.dataset.id]);
+//         }
+//       });
+//     };
+    
+//     if (l.dataset.seen) f(l.dataset.seen);
+//     if (l.dataset.r) f(l.dataset.r);
+//   }
+
+//   return relays;
+// };
+
+// aa.get_mia =()=>
+// {
+//   let mia = document.querySelectorAll('.blank');
+//   if (mia)
+//   {
+//     let relays = aa.mia_relays(mia);
+//     if (relays && Object.keys(relays).length)
+//     {
+//       let [url,tranche] = Object.entries(relays).sort((a,b)=>a.length - b.length)[0];
+//       delete relays[url];
+//       return [url,tranche,relays]
+//     }
+//     else return [0,0]
+//   }
+// };
+
+aa.missing =async s=>
+{
+  it.to(()=>
+  {
+    let miss = {};
+    const nope =(xid,a,b)=>
     {
-      set.split(' ').map((url)=>
+      for (const url of a) 
       {
-        if (!nope.includes(url))
+        if (!b.includes(url))
         {
-          if (!relays[url]) relays[url] = [];
-          it.a_set(relays[url],[l.dataset.id]);
+          if (!miss[url]) miss[url] = [];
+          it.a_set(miss[url],[xid]);
+          // it.a_set(b,[url]);
         }
-      });
+      }
     };
-    
-    if (l.dataset.seen) f(l.dataset.seen);
-    if (l.dataset.r) f(l.dataset.r);
-  }
-
-  return relays;
-};
-
-aa.get_mia =()=>
-{
-  let mia = document.querySelectorAll('.blank');
-  if (mia)
-  {
-    let relays = aa.mia_relays(mia);
-    if (relays && Object.keys(relays).length)
+    let def_relays = rel.in_set(rel.o.r);
+    for (const xid in aa.miss[s])
     {
-      let [url,tranche] = Object.entries(relays).sort((a,b)=>a.length - b.length)[0];
-      delete relays[url];
-      return [url,tranche,relays]
+      let v = aa.miss[s][xid];
+      nope(xid,def_relays,v.nope);
+      nope(xid,v.relays,v.nope);
     }
-    else return [0,0]
-  }
-};
 
-aa.moar =()=>
-{
-  const f =()=>
-  {
-    let [url,ids,rest] = aa.get_mia();
-    // console.log('moar',url,ids,rest);
-    if (ids.length)
+    if (Object.keys(miss).length)
     {
-      ids.map((id)=>
+      let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
+      for (const id of ids) it.a_set(aa.miss[s][id].nope,[url]);
+      let filter;
+      if (s === 'p') 
       {
-        let l = document.getElementById(it.fx.nid(id));
-        it.a_dataset(l,'nope',[url]);
-      });
-      q_e.demand(['REQ','ids',{ids:ids}],[url],{eose:'done'});
+        filter = {authors:ids,kinds:[0]};
+        console.log(filter);
+        q_e.demand(['REQ',s,filter],[url],{});
+      }
+      else if (s === 'e')
+      {
+        for (const id of ids)
+        {
+          let notes = document.querySelectorAll('[data-id="'+id+'"]');
+          for (const note of notes) note.dataset.nope = aa.miss.e[id].nope;
+        }
+        filter = {ids:ids};
+        q_e.demand(['REQ',s,filter],[url],{});
+      }
+      
     }
-    if (rest && Object.keys(rest).length) aa.moar()
-  }
-  it.to(f,1000,'moar');
+  },1000,'miss_'+s);
 };
+
+// aa.missing_e =async()=>
+// {
+//   it.to(()=>
+//   {
+//     let miss = {};
+//     const nope =(xid,a,b)=>
+//     {
+//       for (const url of a) 
+//       {
+//         if (!b.includes(url))
+//         {
+//           if (!miss[url]) miss[url] = [];
+//           it.a_set(miss[url],[xid]);
+//           it.a_set(b,[url]);
+//         }
+//       }
+//     };
+//     let def_relays = rel.in_set(rel.o.r);
+//     for (const xid in aa.miss.e)
+//     {
+//       let v = aa.miss.e[xid];
+//       nope(xid,def_relays,v.nope);
+//       nope(xid,v.relays,v.nope);
+//     }
+
+//     if (Object.keys(miss).length)
+//     {
+//       let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
+//       console.log(url,ids);
+//       for (const id of ids)
+//       {
+//         let notes = document.querySelectorAll('[data-id="'+id+'"]');
+//         for (const note of notes) note.dataset.nope = aa.miss.e[id].nope;
+//       }
+      
+//       q_e.demand(['REQ','e',{ids:ids}],[url],{eose:'done'});
+//     }
+//   },1000,'miss_e');
+// };
+
+
+
+// aa.get_miss =()=>
+// {
+//   let mia = document.querySelectorAll('.blank');
+//   if (mia)
+//   {
+//     let relays = aa.mia_relays(mia);
+//     if (relays && Object.keys(relays).length)
+//     {
+//       let [url,tranche] = Object.entries(relays).sort((a,b)=>a.length - b.length)[0];
+//       delete relays[url];
+//       return [url,tranche,relays]
+//     }
+//     else return [0,0]
+//   }
+// };
+
+// aa.moar =()=>
+// {
+//   const f =()=>
+//   {
+//     let [url,ids,rest] = aa.get_mia();
+//     // console.log('moar',url,ids,rest);
+//     if (ids.length)
+//     {
+//       ids.map((id)=>
+//       {
+//         let l = document.getElementById(it.fx.nid(id));
+//         it.a_dataset(l,'nope',[url]);
+//       });
+//       q_e.demand(['REQ','ids',{ids:ids}],[url],{eose:'done'});
+//     }
+//     if (rest && Object.keys(rest).length) aa.moar()
+//   }
+//   it.to(f,1000,'moar');
+// };

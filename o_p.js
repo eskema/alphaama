@@ -23,46 +23,38 @@ const o_p =
   sn:'o',
 };
 
-o_p.load =(reset=false)=>
+o_p.load =(reset=false,actions=false)=>
 {
   for (const k in o_p.def)
   {
     if (reset||!localStorage[k]) localStorage[k] = o_p.def[k];
   }
 
-  // if (!o_p.o) o_p.o = {id:'o_p',ls:localStorage};
-  // if (!o_p.mk) o_p.mk =
-
-  // it.mk.mod(o_p);
-  // let l = it.mk.ls({id:'o_p',ls:localStorage,mk:o_p.mk});
-  // if (document.getElementById(l.id)) document.getElementById(l.id).replaceWith(l);
-  // else document.getElementById('u').append(it.mk.details(o_p.sn,l,1));
-  
-  let sn = o_p.sn;
-  aa.actions.push(
-    {
-      action:[sn,'set'],
-      required:['key','value'],
-      description:'set option value',
-      exe:o_p.set
-    },
-    {
-      action:[sn,'reset'],
-      optional:['key'], 
-      description:'reset all or just a single option',
-      exe:o_p.reset
-    },
-    {
-      action:[sn,'rm'],
-      optional:['key'], 
-      description:'remove option',
-      exe:o_p.rm
-    }
-  );
-
+  if (actions)
+  {
+    let sn = o_p.sn;
+    aa.actions.push(
+      {
+        action:[sn,'set'],
+        required:['key','value'],
+        description:'set option value',
+        exe:o_p.set
+      },
+      {
+        action:[sn,'reset'],
+        optional:['key'], 
+        description:'reset all or just a single option',
+        exe:o_p.reset
+      },
+      {
+        action:[sn,'rm'],
+        optional:['key'], 
+        description:'remove option',
+        exe:o_p.rm
+      }
+    );
+  }
   o_p.save();
-
-  // v_u.log('o_p '+localStorage.length);
 };
 
 // window.addEventListener('storage',()=>
@@ -83,7 +75,6 @@ o_p.set =s=>
   if (k && v)
   {
     localStorage[k] = v;
-    it.mk.mod(o_p);
     o_p.save();
     v_u.log(localStorage.ns+' o set '+k+' to '+v);
     cli.fuck_off();

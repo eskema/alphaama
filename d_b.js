@@ -55,14 +55,15 @@ aa.db.get_p =async xpub=>
   if (aa.p[xpub]) return aa.p[xpub];
   return new Promise(resolve=>
   {
-    console.log('aa.db.get_p',xpub);
+    // console.log('aa.db.get_p',xpub);
     const o = {get:{store:'authors',key:xpub}};
     const db = new Worker('idb.js');
     db.onmessage=e=>
     {
       // console.log('aa.db.get_p',xpub);
       let p = e.data;
-      aa.p[xpub] = p ?? it.p(xpub);
+      if (p) aa.p[xpub] = p;
+      // aa.p[xpub] = p ?? it.p(xpub);
       setTimeout(()=>{db.terminate()},200);
       resolve(p);
     }
@@ -83,12 +84,13 @@ aa.db.get_e =async xid=>
       let dat = e.data;
       if (dat)
       {
+        aa.e[xid] = dat;
         if (!aa.e[xid]) aa.e[xid] = dat;
-        else 
-        {
-          let merged = aa.merge_e(dat);
-          if (merged) aa.db.upd(merged);
-        }
+        // else 
+        // {
+        //   let merged = aa.merge_e(dat);
+        //   if (merged) aa.db.upd(merged);
+        // }
       } 
 
       setTimeout(()=>{db.terminate()},200);
