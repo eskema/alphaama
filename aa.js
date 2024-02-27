@@ -14,11 +14,13 @@ const aa =
 
 aa.reset =()=>
 {
+  v_u.log('bbbb');
   aa.db.clear(['stuff','authors','events']).then(()=>
   {
+    v_u.log('boom biddy bye bye');
     localStorage.clear();
     sessionStorage.clear();
-    setTimeout(()=>{location.reload()},500)
+    setTimeout(()=>{location.reload()},1000)
   });
 };
 
@@ -36,6 +38,7 @@ aa.login =async s=>
           s.trim();
           if (s === 'easy') aa.easy();
           else if (s === 'hard') aa.hard();
+          else aa.normal();
           resolve('login done')
         });
       });
@@ -51,12 +54,13 @@ aa.login =async s=>
 
 aa.easy =async()=>
 {
+  let butt_u = document.getElementById('butt_u');
+  if (!butt_u.parentElement.classList.contains('.expanded')) butt_u.click();
   o_p.set('mode easy');
-  v_u.log('a bunch of stuff will load then the page will reload');
   q_e.stuff();
-  q_e.run('a')
-  .then(()=>{setTimeout(()=>{q_e.run('b')},2000)})
-  .then(()=>{setTimeout(()=>{o_p.set('trust 4')},9000)})
+  // q_e.run('a')
+  // .then(()=>{setTimeout(()=>{q_e.run('b')},2000)})
+  // .then(()=>{setTimeout(()=>{o_p.set('trust 4')},9000)})
 };
 
 aa.normal =async()=>
@@ -69,20 +73,6 @@ aa.hard =async()=>
   o_p.set('mode hard')
 };
 
-aa.actions.push(
-  {
-    action:['u','login'],
-    optional:['easy || hard'],
-    description:'load aka and relays from ext with optional mode, leave blank for default',
-    exe:aa.login
-  },
-  {
-    action:['u','reset'],
-    description:'resets everything',
-    exe:aa.reset
-  }
-);
-
 aa.load_mod =async mod=>
 {
   const saved_mod = await aa.db.get({get:{store:'stuff',key:mod.def.id}});
@@ -94,13 +84,16 @@ aa.load_mod =async mod=>
 
 aa.base_ui =a=>{ for (const s of a) aa.mk[s]() };
 
-aa.save =mod=>
+aa.save = async mod=>
 {
-  if (mod && mod.o && mod.o.id)
+  return new Promise(resolve=>
   {
-    aa.db.put({put:{store:'stuff',a:[mod.o]}});
-    it.mk.mod(mod);
-  }
+    if (mod && mod.o && mod.o.id)
+    {
+      aa.db.put({put:{store:'stuff',a:[mod.o]}});
+    }
+    resolve(mod)
+  })  
 };
 
 aa.mk.u =()=>
@@ -248,22 +241,23 @@ aa.clk.hide =e=>
   note.classList.toggle('tiny');
 };
 
+aa.clk.req =e=>
+{
+  const note = e.target.closest('.note');
+  cli.v(localStorage.ns+' '+q_e.sn+' raw read {"#e":["'+note.dataset.id+'"],"kinds":[1],"limit":100}');
+};
+
+aa.clk.zap =e=>
+{
+  v_u.log('soon™')
+};
+
 aa.clk.parse =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
   const event = aa.e[xid].event;
-  const content = note.querySelector('.content');
-  if (content.classList.contains('parsed'))
-  {
-    content.replaceWith(it.parse.content_basic(event));
-  }
-  else 
-  {
-    const new_content = it.mk.l('section',{cla:'content parsed'});
-    new_content.append(it.parse.content(event,true));
-    content.replaceWith(new_content);
-  }
+  it.parse.context(note,event,true);
 };
 
 aa.clk.editor =e=>
@@ -294,7 +288,7 @@ aa.clk.fetch =e=>
   else relays.push(...rel.in_set(rel.o.r));
   it.a_dataset(note,'nope',relays);
   q_e.demand(request,relays,{eose:'done'});
-  setTimeout(()=>{v_u.scroll(note)},200);
+  setTimeout(()=>{v_u.scroll(document.getElementById(note.id))},200);
 };
 
 aa.f_it =async event=>
@@ -399,3 +393,17 @@ aa.missing =async s=>
     }
   },1000,'miss_'+s);
 };
+
+aa.actions.push(
+  {
+    action:['u','login'],
+    optional:['easy || hard'],
+    description:'load aka and relays from ext with optional mode, leave blank for default',
+    exe:aa.login
+  },
+  {
+    action:['u','reset'],
+    description:'resets everything',
+    exe:aa.reset
+  }
+);

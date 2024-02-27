@@ -36,7 +36,7 @@ aa.db.clear = async a=>
 
 aa.db.get =async o=>
 {
-  console.log('aa.db.get',o);
+  // console.log('aa.db.get',o);
   return new Promise(resolve=>
   {
     const db = new Worker('idb.js');

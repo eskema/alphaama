@@ -70,13 +70,18 @@ q_e.start =mod=>
   // v_u.log(mod.l);
 };
 
+q_e.save =()=>{ aa.save(q_e).then(it.mk.mod) };
+
 q_e.stuff =()=>
 {
-  q_e.add('a {"authors":["aka"],"kinds":[0,3,10002]}');
-  q_e.add('b {"authors":["bff"],"kinds":[0,3,10002]}');
-  q_e.add('d {"#p":["aka"],"kinds":[4],"since":"n_2"}');
-  q_e.add('f {"authors":["aka","bff"],"kinds":[1,6,7,16,30023],"since":"n_1"}');
-  q_e.add('n {"#p":["aka"],"kinds":[1,4,6,7,16],"since":"n_1"}');
+  v_u.log(localStorage.ns+' '+q_e.sn+' stuff:');
+  q_e.add('a {"authors":["u_x"],"kinds":[0,3,10002]}');
+  q_e.add('b {"authors":["b_f"],"kinds":[0,3,10002]}');
+  q_e.add('a {"authors":["u_x"],"kinds":[0,3,10002]}');
+  q_e.add('d {"#p":["u_x"],"kinds":[4],"since":"n_2"}');
+  q_e.add('f {"authors":["u_x","b_f"],"kinds":[1,6,7,16,30023],"since":"n_1"}');
+  q_e.add('n {"#p":["u_x"],"kinds":[1,4,6,7,16],"since":"n_1"}');
+  q_e.add('s {"#t":["soveng"],"kinds":[1],"since":"n_3"}');
 };
 
 q_e.mk =(f_id,o) =>
@@ -168,7 +173,7 @@ q_e.demand =(request,relays,options)=>
         {
           //    needs to display info from what npub
           let act_yes = url+' hint';
-          let notice = {title:'r add '+act+'?'};
+          let notice = {title:'r add '+act_yes+'?'};
           notice.yes =
           {
             title:'yes',
@@ -257,7 +262,7 @@ q_e.sets =s=>
       }
     }
   };
-  it.loop(work,s,()=>{aa.save(q_e)})
+  it.loop(work,s,()=>{q_e.save()})
 };
 
 q_e.set_rm =s=>
@@ -282,7 +287,7 @@ q_e.set_rm =s=>
       }
     }
   };
-  it.loop(work,s,()=>{aa.save(q_e)})
+  it.loop(work,s,()=>{q_e.save()})
 };
 
 q_e.sub =s=>
@@ -317,7 +322,7 @@ q_e.add =s=>
       log += q_e.o.ls[fid].v;
       changed = true;
     }
-    if (changed) aa.save(q_e);
+    if (changed) q_e.save();
     v_u.log(log);
     cli.fuck_off();
   }
@@ -330,7 +335,7 @@ q_e.rm_filter =s=>
   if (q_e.o.ls.hasOwnProperty(fid)) 
   {
     delete q_e.o.ls[fid];
-    aa.save(q_e);
+    q_e.save();
     cli.fuck_off();
     v_u.log('filter removed: '+fid);
   }
@@ -354,9 +359,26 @@ q_e.raw =s=>
       else relays.push(...rel.in_set(rels));
       if (relays.length)
       {
-        v_u.log(localStorage.ns+' q  raw '+filter);
-        console.log(request,relays,options);
+        // v_u.log(localStorage.ns+' q  raw '+filter);
+        // console.log(request,relays,options);
         q_e.demand(request,relays,options);
+        cli.fuck_off();
+        let log = it.mk.l('p',
+        {
+          con:localStorage.ns+' '+q_e.sn+' run '+filter+' ('+it.tim.now()+') '+relays+' '
+        });
+        let butt_close = it.mk.l('button',
+        {
+          cla:'button close',
+          con:'[x]',
+          clk:e=>
+          { 
+            cli.v(localStorage.ns+' '+q_e.sn+' close raw');
+            log.textContent = "raw closed";
+          }
+        });
+        log.append(butt_close)
+        v_u.log(log);
       }
       else v_u.log('invalid relay / relset')
     }
@@ -404,9 +426,9 @@ q_e.run =async s=>
 
 q_e.close =s=>
 {
-  let log = localStorage.ns+' '+q_e.sn+' close';
+  let log = localStorage.ns+' '+q_e.sn+' close ';
   let fids = s.trim().split(' ');
-
+  log+= ' '+fids.length?fids:'all'+' ';
   for (const k in rel.active)
   {
     if (fids.length) 
@@ -416,7 +438,7 @@ q_e.close =s=>
         if (rel.active[k].q[fid]) 
         {
           rel.close(k,fid);
-          log+=' '+fid;
+          log+=' '+k;
         }
       }
     }
@@ -425,7 +447,7 @@ q_e.close =s=>
       for (const fid in rel.active[k].q) 
       {
         rel.close(k,fid);
-        log+=' '+fid;
+        log+=' '+k;
       }
     }
   }

@@ -58,10 +58,7 @@ rel.load =e=>
   aa.load_mod(rel).then(it.mk.mod);
 }
 
-rel.save =()=>
-{
-  aa.save(rel);
-};
+rel.save =()=>{ aa.save(rel).then(it.mk.mod) };
 
 rel.upd_state =url=>
 {
@@ -73,9 +70,9 @@ rel.upd_state =url=>
     {
       setTimeout(()=>
       {
-        l.dataset.state = relay.ws.readyState;
+        l.dataset.state = relay?.ws?.readyState ||  '';
         l.dataset.q = Object.keys(relay.q);
-        console.log('rel.upd_state '+url,l.dataset.state,l.dataset.q);
+        // console.log('rel.upd_state '+url,l.dataset.state,l.dataset.q);
       },100);
     }
     else console.log('rel.upd_state '+url,'no relay found')
@@ -193,6 +190,14 @@ rel.add =s=>
     {
       if (!rel.o.ls[url]) rel.o.ls[url] = {sets:[]};
       it.a_set(rel.o.ls[url].sets,a);
+      // let act = localStorage.ns+' '+rel.sn;
+      // let log = it.mk.l('l',{con:act+' add '+url+' '+a.join(' ')});
+      // v_u.log(log);
+      // log.append(it.mk.l('button',{con:'[set]',clk:e=>
+      // {
+      //   e.target.remove();
+      //   cli.v(act+' sets off '+url);
+      // }}))
     }
   };
   it.loop(work,s,rel.save);

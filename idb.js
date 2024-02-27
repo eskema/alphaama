@@ -2,12 +2,17 @@ const indexed_db = {ops:{}};
 
 indexed_db.ops.clear =async(db,o)=>
 {
+  let times = 0;
   for (const store of o.stores)
   {
     console.log(store);
     const odb = db.transaction(store,'readwrite').objectStore(store);
     const store_clear = odb.clear();
-    store_clear.onsuccess =e=> postMessage('db '+o.store+' cleared');
+    store_clear.onsuccess =e=> 
+    {
+      times++;
+      if (times === o.stores.length) postMessage('db '+o.store+' cleared');
+    }
   }
 };
 

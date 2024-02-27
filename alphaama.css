@@ -1218,9 +1218,9 @@ button.butt:focus
   margin: 0;
 }
 
-.note.not_yet
+#notes .root.note.not_yet > .content
 {
-  /*opacity: 0;*/
+  /*display: none;*/
 }
 
 @keyframes rendered 
@@ -1470,16 +1470,19 @@ a.author
   width: 1rem;  
 }
 
+.note_quote_by .author::after,
 .by .author::after,
 .pubkey .author::after
 {
-  content: attr(data-nip05) " (" attr(data-followers)")";
+  content: attr(data-followers);
   grid-area: after;
   padding: 0 var(--padm);
   word-break: keep-all;
   white-space: pre;
 }
 
+.note_quote_by .author:not(.is_bff)::after,
+.pubkey .author:not(.is_bff)::after,
 .by .author:not(.is_bff)::after
 {
   color: rgb(var(--color-no));
@@ -2015,7 +2018,7 @@ a.author
   border-top: 1px dashed rgba(var(--color-c),1);
 }
 
-.note.blank::before
+.note.blank::after
 {
   content: "nope: " attr(data-nope);
   font-size: var(--font-size-s);
@@ -2057,7 +2060,7 @@ a.author
   /*background: rgba(var(--color-c),.2);*/
   border: 1px dotted rgba(var(--color-c),1);
   display: grid;
-  margin: var(--pad) 0;
+  margin: var(--pad);
   max-height: var(--media-height);
   overflow-y: scroll;
   position: relative;
@@ -2921,7 +2924,7 @@ p[data-meta="about"]::before
   padding: 0;
 }
 
-.note.tiny:not(.in_view) > .content,
+.note.tiny:not(.in_view) > .content > *,
 .note.tiny:not(.in_view) > .actions,
 .note.tiny:not(.in_view) > .replies,
 .note.tiny:not(.in_view) > .by .author .picture,
@@ -2931,11 +2934,15 @@ p[data-meta="about"]::before
   display: none;
 }
 
-.note.tiny[data-kind="16"]:not(.in_view) > .content,
-.note.tiny[data-kind="7"]:not(.in_view) > .content,
-.note.tiny[data-kind="6"]:not(.in_view) > .content
+.note.tiny[data-kind="7"]:not(.in_view) > .content > *
 {
   display: block;
+}
+
+.note.tiny[data-kind="6"]:not(.in_view) > .content::before,
+.note.tiny[data-kind="16"]:not(.in_view) > .content::before
+{
+  content: "repost";
 }
 
 .note.root:not(.in_path).tiny 

@@ -45,12 +45,25 @@ it.s.rigged =()=>
   catch(er) {return true}
 };
 
-it.trust =()=> parseInt(localStorage.trust);
+it.trust =()=> 
+{
+  let trust;
+  try { trust = parseInt(localStorage.trust) } 
+  catch (er) {}
+  if (Number.isInteger(trust)) return trust;
+  else return false
+}
 
 it.s.trusted =trust=>
 {
   const trust_needed = it.trust();
   if (trust && trust_needed && trust >= trust_needed) return true;
+  return false
+};
+
+it.s.trust_x =x=>
+{
+  if (aa.p[x]) return it.s.trusted(aa.p[x].trust);
   return false
 };
 
@@ -213,7 +226,7 @@ it.get_pubs =async tags=>
             author.links(p);
           }          
         }
-        console.log('it.get_pubs',pubkeys.length,dat.length);
+        // console.log('it.get_pubs',pubkeys.length,dat.length);
         for (const x in aa.q.pubs) 
         {
           if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]}
@@ -465,6 +478,24 @@ it.a_rm =(a,dis)=>
   return a
 };
 
+it.rm_selector =(l,s)=>
+{
+  let dis = l.querySelector(s);
+  if (dis) dis.remove();
+};
+
+it.clone =(note)=>
+{
+  let clone = note.cloneNode(true);
+  clone.removeAttribute('id');
+  it.rm_selector(clone,'.replies');
+  it.rm_selector(clone,'.details');
+  it.rm_selector(clone,'.sig');
+  it.rm_selector(clone,'.actions');
+  clone.className = 'note quoted';
+  return clone
+}
+
 it.fx.merge =(dis,dat)=>
 {
   dis = Object.assign({},dis);
@@ -495,11 +526,12 @@ it.fx.a =a=>
 {
   const type = a[0];
   const value = a[1];
+  let relay;
   const l = it.mk.l('a',{cla:'tag_a_'+type,clk:it.clk.a});
   switch(type)
   {
     case 'e':
-      let relay = a[2];
+      relay = a[2];
       const nid = it.fx.nid(value);
       l.textContent = nid;
       l.href = '#'+nid;
@@ -553,9 +585,11 @@ it.fx.vars =(s)=>
             switch (val) 
             {
               case 'aka':
+              case 'u_x':
                 o[k] = o[k].filter(dis=>dis!==val);
                 if (aka_p) o[k].push(aka_p.xpub); 
                 break;
+              case 'b_f':
               case 'bff':
                 o[k] = o[k].filter(dis=>dis!==val);
                 o[k].push(...aka_p.extradata.bff);                    
@@ -1059,7 +1093,7 @@ it.get_quotes =async id=>
     {
       for (const quo of quotes) 
       {
-        console.log(quo);
+        // console.log(quo);
         quo.replaceWith(quote);
       }
     },100);
@@ -1147,6 +1181,22 @@ it.parse.nostr =s=>
   
 };
 
+it.parse.context =(note,event,trust)=>
+{
+  const content = note.querySelector('.content');
+  if (content.classList.contains('parsed'))
+  {
+    content.replaceWith(it.parse.content_basic(event));
+  }
+  else 
+  {
+    content.textContent = '';
+    content.classList.add('parsed');
+    content.append(it.parse.content(event,trust))
+  }
+};
+
+
 it.parse.content_basic =o=>
 {
   let content = it.mk.l('section',
@@ -1202,29 +1252,33 @@ it.parse.content_basic =o=>
 //   return content
 // };
 
-it.parse.content =(o,trust)=>
+it.parse.content =(o,trusted)=>
 {
   const content = new DocumentFragment();
   const paragraphs = o.content.split(/\n\s*\n/);
   // console.log(paragraphs);
   for (const para of paragraphs)
   { 
-    if (para.length)
+    if (!para.length) return content;
+
+    let l = it.mk.l('p',{cla:'paragraph'});
+    const words = para.trim().split(' ');
+    // console.log(words);
+    for (let i=0;i<words.length;i++)
     {
-      let l = it.mk.l('p',{cla:'paragraph'});
-      const words = para.trim().split(' ');
-      // console.log(words);
-      for (let i=0;i<words.length;i++)
+      words[i].trim();
+      if (!words[i].length) continue;
+
+      if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trusted),' ');
+      else if (it.regx.nostr.test(words[i])) 
       {
-        words[i].trim();
-        if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
-        else if (it.regx.nostr.test(words[i])) 
+        let parsed = it.parse.nostr(words[i]);
+        for (const node of parsed.childNodes)
         {
-          let parsed = it.parse.nostr(words[i]);
-          // console.log(parsed.children[0]);
-          if (parsed.tagName !== 'BLOCKQUOTE')
+          if (!node.textContent.trim()) continue;
+          else if (node.tagName !== 'BLOCKQUOTE')
           {
-            l.append(parsed);
+            l.append(node);
           }
           else
           {
@@ -1233,16 +1287,18 @@ it.parse.content =(o,trust)=>
             l = it.mk.l('p',{cla:'paragraph'});
           }
         }
-        else 
-        {
-          // console.log('parse')
-          if (i === words.length-1) l.append(words[i]);
-          else l.append(words[i],' ');
-        }
+        // console.log(parsed.children[0]);
+        
       }
-      l.normalize();
-      if (l.childNodes.length) content.append(l);
-    } 
+      else 
+      {
+        // console.log('parse')
+        if (i === words.length-1) l.append(words[i]);
+        else l.append(words[i],' ');
+      }
+    }
+    l.normalize();
+    if (l.childNodes.length) content.append(l);
   } 
   return content
 };

@@ -69,8 +69,8 @@ aka.start =async mod=>
   let ls = mod.o.ls;
   if (ls.xpub)
   {
-    v_u.log('u xpub '+ls.xpub);
-    v_u.log('u npub '+ls.npub);
+    v_u.log('u_x '+ls.xpub);
+    v_u.log('--> '+ls.npub);
     
     let butt_u = document.getElementById('butt_u');
     if (butt_u)
@@ -92,15 +92,27 @@ aka.start =async mod=>
       }
       if (it.a_set(p.sets,['aka'])) changed = true;
       if (butt_u) author.pic(butt_u,p);
-      if (!p.pastdata.k0.length) v_u.log('aka !metadata');
-      if (!p.pastdata.k3.length) v_u.log('aka !bffs');
+      if (!p.pastdata.k0.length) v_u.log('u !metadata');
+      if (!p.pastdata.k3.length) v_u.log('u !bffs');
       else aka.load_bff(p);
       author.profile(p);
       if (changed) author.save(p);
       aa.aka = p;
     } 
   }
-  else v_u.log('no aka')
+  else 
+  {
+    let act = localStorage.ns+' u login ';
+    let log = it.mk.l('p');
+    v_u.log(log)
+    let butt_log = it.mk.l('button',{con:act,clk:e=>
+    {
+      cli.v(act);
+      log.parentElement.remove();
+      it.butt_count('l','.l');
+    }});
+    log.append(butt_log);
+  }
 };
 
 aka.load_bff =async p=>
@@ -213,7 +225,7 @@ author.get_k3 =async(xpub)=>
     let k3_id;
     const p = xpub ? aa.p[xpub] : aa.p[aka.o.ls.xpub];
     if (p && p.pastdata.k3.length) k3_id = p.pastdata.k3[0][0];
-    console.log(k3_id);
+    // console.log(k3_id);
     aa.db.get_e(k3_id).then(dat=>
     {
       if (dat) resolve(dat);
@@ -243,7 +255,7 @@ author.process_k3_tags =(tags,x)=>
         updd = true;
       }
 
-      if (!p.metadata) it.get_pub(xpub);
+      // if (!p.metadata) it.get_pub(xpub);
 
       if (relay)
       {
@@ -311,7 +323,7 @@ author.bff_from_tags =tags=>
 
   if (p_to_get.length)
   {
-    console.log('author.bff_from_tags');
+    // console.log('author.bff_from_tags');
     aa.db.get({get_a:{store:'authors',a:p_to_get}}).then(a=>
     {
       for (p of a) aa.p[p.xpub] = p;
@@ -544,7 +556,7 @@ author.list =(a,l)=>
     }
     if (keys_to_get.length)
     {
-      console.log('author.list');
+      // console.log('author.list');
       aa.db.get({get_a:{store:'authors',a:keys_to_get}})
       .then(all=>
       {
@@ -647,19 +659,24 @@ author.mk.pubkey =p=>
 
   if (aka.o.ls.xpub)
   {
-    const butt_follow = it.mk.l('button',
+    if (p.xpub !== aka.o.ls.xpub)
     {
-      cla:'butt follow',
-      con:'follow',
-      clk:author.profile_butt_follow
-    });
-
-    if (author.follows(p.xpub)) 
-    {
-      butt_follow.classList.add('is_bff');
-      butt_follow.textContent = 'unfollow';
+      const butt_follow = it.mk.l('button',
+      {
+        cla:'butt follow',
+        con:'follow',
+        clk:author.profile_butt_follow
+      });
+  
+      if (author.follows(p.xpub)) 
+      {
+        butt_follow.classList.add('is_bff');
+        butt_follow.textContent = 'unfollow';
+      }
+      pubkey.append(butt_follow);
     }
-    pubkey.append(butt_follow);
+    // else pubkey.append(it.mk.l('button',{cla:'butt_follow',con:'u',clk:e=>{}}))
+    
   }
 
   pubkey.append(it.mk.author(p.xpub,p),it.mk.l('span',{cla:'xpub',con:p.xpub}));
@@ -712,7 +729,7 @@ author.link =async(l,p=false)=>
     {
       if (author.follows(k)) common++;
     }
-    l.dataset.followers = common+'.'+p.extradata.followers.length;
+    l.dataset.followers = common;
     l.classList.remove('is_bff');
   }
 };

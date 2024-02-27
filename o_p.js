@@ -23,27 +23,6 @@ const o_p =
   sn:'o',
 };
 
-aa.actions.push(
-  {
-    action:[o_p.sn,'set'],
-    required:['key','value'],
-    description:'set option value',
-    exe:o_p.set
-  },
-  {
-    action:[o_p.sn,'reset'],
-    optional:['key'], 
-    description:'reset all or just a single option',
-    exe:o_p.reset
-  },
-  {
-    action:[o_p.sn,'rm'],
-    optional:['key'], 
-    description:'remove option',
-    exe:o_p.rm
-  }
-);
-
 o_p.load =(reset=false)=>
 {
   for (const k in o_p.def)
@@ -121,3 +100,24 @@ o_p.mk =(k,v) =>
   );
   return l
 };
+
+aa.actions.push(
+  {
+    action:[o_p.sn,'set'],
+    required:['key','value'],
+    description:'set option value',
+    exe:o_p.set
+  },
+  {
+    action:[o_p.sn,'reset'],
+    optional:['key'], 
+    description:'reset all or just a single option',
+    exe:o_p.reset
+  },
+  {
+    action:[o_p.sn,'rm'],
+    optional:['key'], 
+    description:'remove option',
+    exe:o_p.rm
+  }
+);

@@ -172,12 +172,12 @@ cli.compost =s=>
     else 
     {
       v_u.log('unable to create note:');
-      v_u.log(s);
       if (!aka.o.ls.xpub)
       {
-        v_u.log('you need an account key (aka)');
-        v_u.log('type: "'+localStorage.ns+' aka" for options');
-      } 
+        v_u.log('you need to login first');
+        v_u.log(localStorage.ns+' u login');
+      }
+      v_u.log(s);
     }
     cli.fuck_off();
   }
@@ -254,7 +254,9 @@ cli.act_item =(o,s)=>
   {
     const clk =e=>
     {
-      cli.upd_from_oto(localStorage.ns+' '+e.target.querySelector('.val').textContent);
+      e.stopPropagation();
+      e.preventDefault();
+      cli.upd_from_oto(localStorage.ns+' '+e.target.closest('.item').querySelector('.val').textContent);
     };
     l.onclick = clk;
     l.onkeydown =e=>

@@ -4,72 +4,73 @@ kin.note =dat=>
 {
   const note = it.mk.l('article',{cla:'note'}); 
   const by = it.mk.l('header',{cla:'by'});
-  let o = dat.event;
-  const x = o.pubkey;
-  let trust = aa.p[x] ? aa.p[x].trust : 0;
+  // let trusted = it.s.trusted(aa.p[x]?.trust);
   
   note.append(by);
   if (dat.seen) note.dataset.seen = dat.seen.join(' ');
   if (dat.subs) note.dataset.subs = dat.subs.join(' ');
   if (dat.clas) note.classList.add(...dat.clas);
   
-  if (o.hasOwnProperty('id'))
+  if (dat.event.hasOwnProperty('id'))
   {
-    const nid = it.fx.nid(o.id)
+    const nid = it.fx.nid(dat.event.id)
     note.id = nid;
-    note.dataset.id = o.id;
+    note.dataset.id = dat.event.id;
     const h1 = it.mk.l('h1',{cla:'id'});
     const h1_nid = it.mk.l('a',
     {
       cla:'a nid',
       ref:'#'+nid,
-      con:it.fx.trunk(o.id),
+      con:it.fx.trunk(dat.event.id),
       clk:it.clk.a
     });
-    const h1_xid = it.mk.l('span',{cla:'xid',con:o.id});
+    const h1_xid = it.mk.l('span',{cla:'xid',con:dat.event.id});
     h1.append(h1_nid,h1_xid);
     by.prepend(h1);
   }
-  if (o.hasOwnProperty('pubkey'))
+  if (dat.event.hasOwnProperty('pubkey'))
   {
+    const x = dat.event.pubkey;
+    note.dataset.pubkey = x;
+    it.fx.color(x,note);
     aa.db.get_p(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
-      if (p) trust = aa.p[x].trust;
-      note.dataset.trust = trust;
+      if (!p) p = it.p(x);
+      note.dataset.trust = p.trust;
       by.append(it.mk.author(x));
-    });
-    note.dataset.pubkey = x;
-    it.fx.color(x,note);
+    });    
   }
-  if (o.hasOwnProperty('kind')) 
+  
+  if (dat.event.hasOwnProperty('kind')) 
   {
-    note.dataset.kind = o.kind;
-  }
-  if (o.hasOwnProperty('created_at'))
-  {
-    note.dataset.created_at = o.created_at;
-    note.dataset.stamp = o.created_at;
-    by.append(it.mk.time(o.created_at));
+    note.dataset.kind = dat.event.kind;
   }
 
-  if (o.hasOwnProperty('tags') && o.tags.length)
+  if (dat.event.hasOwnProperty('created_at'))
   {
-    it.get_pubs(o.tags);
-    let tags = kin.tags(o.tags);
-    let tags_details = it.mk.details('#['+o.tags.length+']',tags);
+    note.dataset.created_at = dat.event.created_at;
+    note.dataset.stamp = dat.event.created_at;
+    by.append(it.mk.time(dat.event.created_at));
+  }
+
+  if (dat.event.hasOwnProperty('tags') && dat.event.tags.length)
+  {
+    let tags = kin.tags(dat.event.tags);
+    let tags_details = it.mk.details('#['+dat.event.tags.length+']',tags);
     tags_details.classList.add('details');
     note.append(tags_details);      
   }
 
-  if (o.hasOwnProperty('content')) 
+  if (dat.event.hasOwnProperty('content'))
   {
-    const content = it.mk.l('section',{cla:'content parsed'});
-    content.append(it.parse.content(o,trust));
-    note.append(content); 
+    note.append(it.parse.content_basic(dat.event));
   }
 
-  if (o.hasOwnProperty('sig')) note.append(it.mk.l('p',{cla:'sig',con:o.sig}));
+  if (dat.event.hasOwnProperty('sig')) 
+  {
+    note.append(it.mk.l('p',{cla:'sig',con:dat.event.sig}));
+  }
 
   let replies = it.mk.details('',false,true);
   replies.classList.add('replies','expanded');
@@ -77,6 +78,52 @@ kin.note =dat=>
   summary.append(it.mk.l('button',{cla:'butt mark_read',clk:v_u.mark_read}));
   note.append(replies,kin.note_actions(dat.clas));  
   return note
+};
+
+
+
+
+kin.quote_new =o=>
+{
+  if (!o.id) return false;
+  const quote = it.mk.l('blockquote',{cla:'note_quote'});
+  quote.dataset.id = o.id;
+  
+  let nid = it.fx.nid(o.id);
+  let note = document.getElementById(nid);
+  if (note) quote.append(it.clone(note));
+  else aa.db.get_e(o.id).then(dat=>
+  {
+    if (dat) 
+    {
+      aa.print(dat);
+      note = document.getElementById(nid);
+      if (note) quote.append(it.clone(note));
+    }
+    else
+    {
+      quote.classList.add('blank_quote');
+      let by = it.mk.l('p',{cla:'note_quote_by'});
+      let pubkey = o.author ?? o.pubkey;
+      if (pubkey) by.append(pubkey);
+      else by.append(it.mk.l('span',{con:'?'}));
+      by.append(it.mk.nostr_link(nid));
+      content = it.mk.l('p',{cla:'paragraph'});
+      
+      let req = {ids:[o.id]};
+      let relays = [];
+      if (o.relays?.length) 
+      {
+        req.relays = o.relays;
+        let relay_content = it.mk.l('p',{con:'relays: '+o.relays});
+        content.append(relay_content);
+        for (const r of o.relays) relays.push(r);
+      }
+      kin.miss_e(o.id,relays);
+      quote.append(content)
+    }
+  }); 
+  return quote
 };
 
 kin.quote =o=>
@@ -101,9 +148,18 @@ kin.quote =o=>
   {
     if (dat) 
     {
-      if (!has_pub) by.prepend(it.mk.author(dat.event.pubkey));
-      let trust = aa.p[dat.event.pubkey]?.trust ?? 0;
-      content = it.parse.content(dat.event,trust);
+      aa.db.get_p(dat.event.pubkey).then(p=>
+      {
+        if (!p) p = it.p(dat.event.pubkey);
+        if (!has_pub) by.prepend(it.mk.author(p.xpub));
+        // by.prepend(it.mk.author(p.xpub));
+        it.get_pub(dat.event.pubkey);
+        content = it.parse.content(dat.event,it.s.trusted(p.trust));
+        quote.append(content)
+      })
+      // if (!has_pub) by.prepend(it.mk.author(p.xpub));
+      // content = it.parse.content(dat.event,it.s.trust_x(dat.event.pubkey));
+      // quote.append(content)
     }
     else
     {
@@ -120,9 +176,10 @@ kin.quote =o=>
         content.append(relay_content);
         for (const r of o.relays) relays.push(r);
       }
+      quote.append(content)
       kin.miss_e(o.id,relays);
     }
-    quote.append(content)
+    
     
   }); 
   return quote
@@ -193,7 +250,7 @@ kin.event =message=>
     if (dat.subs?.length && dat.seen?.length)
     {
       let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
-      if (!sub?.stamp || sub.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
+      if (sub && !sub?.stamp || sub?.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
     }
     
     aa.print(dat);
@@ -295,11 +352,7 @@ kin.d0 =dat=>
     if (aa.miss.p[dat.event.pubkey]) delete aa.miss.p[dat.event.pubkey];
     aa.db.get_p(dat.event.pubkey).then(p=>
     {
-      if (!p) 
-      {
-        console.log('!p');
-        p = it.p(dat.event.pubkey);
-      }
+      if (!p) p = it.p(dat.event.pubkey);
       const c_at = dat.event.created_at;
       if (!p.pastdata.k0.length || p.pastdata.k0[0][1] < c_at) 
       {
@@ -332,6 +385,8 @@ kin.d1 =dat=>
   let reply_tag = it.get_reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length) v_u.append_to_replies(dat,note,reply_tag);
   else v_u.append_to_notes(note);
+  it.get_pubs(dat.event.tags);
+  it.parse.context(note,dat.event,it.s.trust_x(dat.event.pubkey));
   return note
 };
 
@@ -362,15 +417,19 @@ kin.d3 =dat=>
             // handle unfollowed k
           }
         }
-        let con = it.parse.j(dat.event.content);
-        if (con)
+        let s = dat.event.content+''.trim();
+        if (s.startsWith('{') && s.endsWith('}'))
         {
-          let relays = rel.from_o(con,['k3']);
-          rel.add_to_p(relays,p);
-          if (aka.is_aka(dat.event.pubkey)) rel.add_to_aka(relays);
-          let content = note.querySelector('.content');
-          content.textContent = '';
-          content.append(it.mk.ls({ls:con}))
+          let con = it.parse.j(dat.event.content);
+          if (con)
+          {
+            let relays = rel.from_o(con,['k3']);
+            rel.add_to_p(relays,p);
+            if (aka.is_aka(dat.event.pubkey)) rel.add_to_aka(relays);
+            let content = note.querySelector('.content');
+            content.textContent = '';
+            content.append(it.mk.ls({ls:con}))
+          }
         }
         author.save(p);
       }
@@ -387,10 +446,12 @@ kin.d3 =dat=>
 kin.d6 =dat=>
 {
   // console.log(dat);
-  dis = Object.assign({},dat);
-  dis.event.content = 'k'+dat.event.kind+' repost:';
-  let note = kin.note(dis);
+  // dis = Object.assign({},dat);
+  // dis.event.content = 'k'+dat.event.kind+' repost:';
+  let note = kin.note(dat);
   note.classList.add('is_new','tiny');
+  // note.querySelector('.content').textContent = 'k6 repost:'
+  // it.rm_selector(note,'.content');
   let reply_tag = it.get_reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length)
   {    
@@ -411,6 +472,7 @@ kin.d6 =dat=>
     v_u.append_to_replies(dat,note,reply_tag);
   }
   else v_u.append_to_notes(note);
+  it.get_pubs(dat.event.tags);
   return note
 };
 
@@ -490,6 +552,10 @@ kin.note_actions =clas=>
   {
     l.append(
       it.mk.l('button',{con:'<3',tit:'react',cla:'butt react',clk:aa.clk.react}),
+      ' ',
+      // it.mk.l('button',{con:'z',tit:'zap note',cla:'butt zap',clk:aa.clk.zap}),
+      // ' ',
+      it.mk.l('button',{con:'+',tit:'req replies',cla:'butt req',clk:aa.clk.req}),
       ' ',
       it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
       ' ',
@@ -586,9 +652,10 @@ kin.e.mk =s=>
 
 kin.e.clear =s=>
 {
+  cli.fuck_off();
   document.getElementById('notes').textContent = '';
   it.butt_count('e','.note');
-  // console.log(event)
+  v_u.log('events cleared')
 };
 
 aa.actions.push(
