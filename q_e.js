@@ -81,8 +81,8 @@ q_e.stuff =()=>
   q_e.add('d {"#p":["u_x"],"kinds":[4],"since":"n_2"}');
   q_e.add('f {"authors":["u_x","b_f"],"kinds":[1,6,7,16,30023],"since":"n_1"}');
   q_e.add('n {"#p":["u_x"],"kinds":[1,4,6,7,16],"since":"n_1"}');
-  q_e.add('soveng {"#t":["soveng"],"kinds":[1],"since":"n_3"}');
-  q_e.add('u {"authors":["u_x"],"kinds":[1,4,6,7,16],"since":"n_1"}');
+  q_e.add('soveng {"#t":["soveng"],"kinds":[1,30023],"since":"n_3"}');
+  q_e.add('u {"authors":["u_x"],"since":"n_3"}');
 };
 
 q_e.mk =(f_id,o) =>
