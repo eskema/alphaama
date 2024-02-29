@@ -555,7 +555,7 @@ kin.note_actions =clas=>
       ' ',
       // it.mk.l('button',{con:'z',tit:'zap note',cla:'butt zap',clk:aa.clk.zap}),
       // ' ',
-      it.mk.l('button',{con:'+',tit:'req replies',cla:'butt req',clk:aa.clk.req}),
+      it.mk.l('button',{con:'+',tit:'fetch all replies',cla:'butt req',clk:aa.clk.req}),
       ' ',
       it.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
       ' ',

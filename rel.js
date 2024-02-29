@@ -236,7 +236,7 @@ rel.close =(k,id)=>
   if (relay)
   {
     if (relay.ws?.readyState === 1) relay.ws.send(JSON.stringify(['CLOSE',id]));
-    setTimeout(()=>{delete rel.active[k].q[id];rel.upd_state(k)},100);
+    setTimeout(()=>{delete rel.active[k].q[id];rel.upd_state(k)},500);
   }
 };
 

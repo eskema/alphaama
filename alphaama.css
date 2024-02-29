@@ -1115,6 +1115,7 @@ button.butt:focus
   "sig sig"
   ;
   grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
   position: relative;
   --who: attr(data-who);
   z-index: 1;
@@ -1474,6 +1475,7 @@ a.author
 .by .author::after,
 .pubkey .author::after
 {
+  color: rgb(var(--color-c));
   content: attr(data-followers);
   grid-area: after;
   padding: 0 var(--padm);
@@ -1481,17 +1483,13 @@ a.author
   white-space: pre;
 }
 
-.note_quote_by .author:not(.is_bff)::after,
-.pubkey .author:not(.is_bff)::after,
-.by .author:not(.is_bff)::after
+.note_quote_by .author.is_mf::after,
+.pubkey .author.is_mf::after,
+.by .author.is_mf::after
 {
   color: rgb(var(--color-no));
 }
 
-.by .author.is_bff::after
-{
-  content: "";
-}
 
 .author .name 
 {
@@ -1572,7 +1570,7 @@ a.author
 
 .root:not(.in_view):not(.in_path) > .content
 {
-  margin-bottom: 2rem;
+  margin-bottom: 4rem;
   position: sticky;
   top: 1rem;
   z-index: 2;
@@ -1882,11 +1880,17 @@ a.author
 
 .details
 {
-  background: rgb(var(--color-b));
   grid-area: tags;
 }
 
-.note:not(.in_view):not(.draft) > .details
+.details:hover,
+.details[open]
+{
+  background: rgb(var(--color-b));
+  z-index: 3;
+}
+
+.note:not(.in_view):not(.draft):not(.root) > .details
 {
   display: none;
 }
@@ -1902,10 +1906,11 @@ a.author
   font-size: var(--font-size-s);
   list-style: none;
   margin: 0;
-  padding: 0 var(--pad);
+  /*padding: 0 var(--pad);*/
+  padding-bottom: var(--pad);
 }
 
-#tags 
+/*#tags 
 {
   counter-reset: tags -1;
   cursor: pointer;
@@ -1935,14 +1940,14 @@ a.author
 {
   content: "(" attr(data-name) ")";
   margin-left: var(--pad);
-}
+}*/
 
 .tag
 {
   display: grid;
   grid-auto-flow: column;
   grid-gap: var(--pad);
-  grid-template-columns: 4em 1fr auto;
+  grid-template-columns: 3.15em 1fr auto;
   overflow-x: scroll;
   white-space: pre;
 }
@@ -2915,6 +2920,7 @@ p[data-meta="about"]::before
   padding-left: var(--padm);
   padding-right: 0;
   padding-top: var(--padm);
+  margin: 0;
 }
 
 .note.tiny:not(.in_view) .paragraph
@@ -2926,12 +2932,17 @@ p[data-meta="about"]::before
 
 .note.tiny:not(.in_view) > .content > *,
 .note.tiny:not(.in_view) > .actions,
+.note.tiny:not(.in_view) > .details,
 .note.tiny:not(.in_view) > .replies,
 .note.tiny:not(.in_view) > .by .author .picture,
-.note.tiny:not(.in_view) > .by .author::before,
-.note.tiny:not(.in_view) > .by .author::after
+.note.tiny:not(.in_view) > .by .author::before
 {
   display: none;
+}
+
+.note.root.tiny.not(.in_view) > .details
+{
+  display: none!important;
 }
 
 .note.tiny[data-kind="7"]:not(.in_view) > .content > *
@@ -2942,7 +2953,8 @@ p[data-meta="about"]::before
 .note.tiny[data-kind="6"]:not(.in_view) > .content::before,
 .note.tiny[data-kind="16"]:not(.in_view) > .content::before
 {
-  content: "repost";
+  color: rgb(var(--color-c));
+  content: "reposted by ";
 }
 
 .note.root:not(.in_path).tiny 
@@ -3201,5 +3213,52 @@ p[data-meta="about"]::before
 {
   :root {
     --font-size: 12px;
+  }
+  
+  .note
+  {
+/*    background: rgba(var(--c),.1);
+    box-sizing: border-box;
+    border-left: 1px dotted rgba(var(--color-c),.5);
+    border-top: 1px dotted rgba(var(--color-c),.5);
+    cursor: auto;
+    display: grid;*/
+    grid-template-areas: 
+    "by by"
+    "content content"
+    "tags tags"
+    "actions actions"
+    "after after"
+    "replies replies"
+    "sig sig"
+    ;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto 1fr auto;
+/*    position: relative;
+    --who: attr(data-who);
+    z-index: 1;*/
+  }
+  
+  .note.root:not(.in_path),
+  .note.in_view > .replies > .note,
+  #notes > .note:not(.root):not(.in_path)
+  {
+    grid-template-areas: 
+    "by      by"
+    "content content"
+    "tags    tags"
+    "actions actions"
+    "replies replies"
+    "sig     sig"
+    "after   after"
+    ;
+  }
+  
+  .root:not(.in_view):not(.in_path) > .content
+  {
+    margin-bottom: var(--pad);
+    position: relative;
+    top: 0;
+    z-index: 0;
   }
 }

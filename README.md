@@ -1,5 +1,5 @@
 # alphaama A<3 
-https://alphaama.com
+https://wip.alphaama.com
 
 alphaama is just a nostr fucking client
 that:
@@ -17,7 +17,7 @@ that:
 - you can do whatever the fuck you want with it.
 
 source code:
-- https://github.com/eskema/alphaama
+- https://github.com/eskema/alphaama/tree/v3 
 
 nostr:
 - https://github.com/nostr-protocol/nostr

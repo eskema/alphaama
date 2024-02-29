@@ -721,17 +721,25 @@ author.link =async(l,p=false)=>
     author.pic(l,p);
     if (p.metadata.nip05) l.dataset.nip05 = p.metadata.nip05;
   }
-  if (author.follows(p.xpub)) l.classList.add('is_bff');
+  if (aka.is_aka(p.xpub)) l.classList.add('is_u');
+  else l.classList.remove('is_u');
+
+  if (author.follows(p.xpub)) 
+  {
+    l.classList.add('is_bff');
+  }
   else 
   {
-    let common = 0;
-    for (const k of p.extradata.followers)
-    {
-      if (author.follows(k)) common++;
-    }
-    l.dataset.followers = common;
     l.classList.remove('is_bff');
+    l.classList.add('is_mf');
   }
+  
+  let common = 0;
+  for (const k of p.extradata.followers)
+  {
+    if (author.follows(k)) common++;
+  }
+  l.dataset.followers = common;
 };
 
 author.pic =(l,p)=>

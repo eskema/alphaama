@@ -146,6 +146,20 @@ it.get_tags_for_reply =(event)=>
    return tags
 };
 
+it.get_reply_tags =tags=>
+{
+  const a = it.loopita(tags,it.tag.e,it.tag.reply);
+  let is_a = Array.isArray(a[0]);
+  if (a && !is_a) return a;
+  if (is_a)
+  {
+    let l = a[a.length-1];
+    if (it.tag.marked('mention',l)) return false;
+    return l
+  }
+  return false
+};
+
 it.get_reply_tag =tags=>
 {
   const a = it.loopita(tags,it.tag.e,it.tag.reply);
@@ -827,6 +841,17 @@ it.mk.butt =l=>
     clk:it.clk.expanded
   });
   butt.dataset.controls = id
+  return butt
+};
+
+it.mk.butt_action =s=>
+{
+  const butt = it.mk.l('button',
+  {
+    con:s,
+    cla:'butt',
+    clk:e=> { cli.v(s)}
+  });
   return butt
 };
 

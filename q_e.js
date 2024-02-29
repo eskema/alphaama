@@ -39,7 +39,7 @@ q_e.load =()=>
       action:[sn,'run'],
       required:['fid'],
       optional:['relset'],
-      description:'run filter on relay set',
+      description:'run filter on relay set (relset), if no relset given default will be used',
       exe:q_e.run
     },
     {
@@ -81,7 +81,8 @@ q_e.stuff =()=>
   q_e.add('d {"#p":["u_x"],"kinds":[4],"since":"n_2"}');
   q_e.add('f {"authors":["u_x","b_f"],"kinds":[1,6,7,16,30023],"since":"n_1"}');
   q_e.add('n {"#p":["u_x"],"kinds":[1,4,6,7,16],"since":"n_1"}');
-  q_e.add('s {"#t":["soveng"],"kinds":[1],"since":"n_3"}');
+  q_e.add('soveng {"#t":["soveng"],"kinds":[1],"since":"n_3"}');
+  q_e.add('u {"authors":["u_x"],"kinds":[1,4,6,7,16],"since":"n_1"}');
 };
 
 q_e.mk =(f_id,o) =>
@@ -155,7 +156,11 @@ q_e.demand =(request,relays,options)=>
     for (const opt in options) opts[opt] = options[opt];
 
     if (!relays?.length) relays = rel.in_set(rel.o.r);
-    if (!relays.length) return false;
+    if (!relays.length) 
+    {
+      v_u.log('no relays in request')
+      return false;
+    }
 
     for (const k of relays)
     {
@@ -369,7 +374,7 @@ q_e.raw =s=>
         });
         let butt_close = it.mk.l('button',
         {
-          cla:'button close',
+          cla:'butt close',
           con:'[x]',
           clk:e=>
           { 
@@ -410,13 +415,14 @@ q_e.run =async s=>
     cli.fuck_off();
     let close_butt = it.mk.l('button',
     {
-      cla:'button close',
+      cla:'butt close',
       con:'[x]',
       clk:e=>{ cli.v(localStorage.ns+' '+q_e.sn+' close '+fid) }
     });
+    v_u.log(localStorage.ns+' '+q_e.sn+' run '+fid+' ('+it.tim.now()+')');
     let log = it.mk.l('p',
     {
-      con:localStorage.ns+' '+q_e.sn+' run '+fid+' ('+it.tim.now()+') '+relays+' ',
+      con:'on: '+relays,
       app:close_butt
     });
     v_u.log(log);

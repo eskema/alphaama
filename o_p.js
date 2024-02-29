@@ -51,7 +51,8 @@ o_p.set =s=>
   {
     localStorage[k] = v;
     o_p.save();
-    v_u.log(localStorage.ns+' o set '+k+' to '+v);
+    let butt = it.mk
+    v_u.log(it.mk.butt_action(localStorage.ns+' o set '+k+' '+v));
     cli.fuck_off();
   }
 };
