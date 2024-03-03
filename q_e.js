@@ -77,7 +77,6 @@ q_e.stuff =()=>
   v_u.log(localStorage.ns+' '+q_e.sn+' stuff:');
   q_e.add('a {"authors":["u_x"],"kinds":[0,3,10002]}');
   q_e.add('b {"authors":["b_f"],"kinds":[0,3,10002]}');
-  q_e.add('a {"authors":["u_x"],"kinds":[0,3,10002]}');
   q_e.add('d {"#p":["u_x"],"kinds":[4],"since":"n_2"}');
   q_e.add('f {"authors":["u_x","b_f"],"kinds":[1,6,7,16,30023],"since":"n_1"}');
   q_e.add('n {"#p":["u_x"],"kinds":[1,4,6,7,16],"since":"n_1"}');

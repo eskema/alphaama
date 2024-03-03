@@ -1162,6 +1162,7 @@ it.parse.quote =(dis)=>
   else if (dis.startsWith('note1')) l = kin.quote({"id":decoded});
   else if (dis.startsWith('nevent1') || dis.startsWith('naddr1'))
   {
+    console.log('nevent');
     if (decoded.id) 
     {
       decoded.dis = dis;
@@ -1192,14 +1193,15 @@ it.parse.nostr =s=>
     dfrag.append(m.input.slice(last_i,m.index));
     last_i = m.index + m[0].length;
     let dis = m[0].slice(6);
+    // dfrag.append(it.parse.quote(dis),' ')
     let decoded = it.fx.decode(dis);
     if (!decoded) dfrag.append(dis,' ');
-    else
-    {
-      let parsed = it.parse.quote(dis);
-      if (parsed.tagName !== 'BLOCKQUOTE') dfrag.append(parsed,' ');
-      else dfrag.append(it.parse.quote(dis),' ');        
-    }    
+    else dfrag.append(it.parse.quote(dis),' ')
+    // {
+    //   let parsed = it.parse.quote(dis);
+    //   if (parsed.tagName !== 'BLOCKQUOTE') dfrag.append(parsed,' ');
+    //   else dfrag.append(it.parse.quote(dis),' ');        
+    // }    
   }
   if (last_i < s.length) dfrag.append(s.slice(last_i));
   return dfrag
@@ -1298,18 +1300,23 @@ it.parse.content =(o,trusted)=>
       else if (it.regx.nostr.test(words[i])) 
       {
         let parsed = it.parse.nostr(words[i]);
-        for (const node of parsed.childNodes)
+        while (parsed.childNodes.length)
+        // for (const node of parsed.childNodes)
         {
-          if (!node.textContent.trim()) continue;
-          else if (node.tagName !== 'BLOCKQUOTE')
+          let node = parsed.firstChild;
+          // if (node.textContent === ' ') continue;
+          if (node.tagName !== 'BLOCKQUOTE')
           {
             l.append(node);
           }
           else
           {
-            if (l.childNodes.length) content.append(l);
-            content.append(parsed);
-            l = it.mk.l('p',{cla:'paragraph'});
+            if (l.childNodes.length) 
+            {
+              content.append(l);
+              l = it.mk.l('p',{cla:'paragraph'});
+            }
+            content.append(node);
           }
         }
         // console.log(parsed.children[0]);

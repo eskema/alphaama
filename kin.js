@@ -148,10 +148,10 @@ kin.quote =o=>
   {
     if (dat) 
     {
-      aa.db.get_p(dat.event.pubkey).then(p=>
+      aa.db.get_p(dat.event.pubkey).then(pp=>
       {
-        if (!p) p = it.p(dat.event.pubkey);
-        if (!has_pub) by.prepend(it.mk.author(p.xpub));
+        if (!pp) pp = it.p(dat.event.pubkey);
+        if (!has_pub) by.prepend(it.mk.author(pp.xpub));
         // by.prepend(it.mk.author(p.xpub));
         it.get_pub(dat.event.pubkey);
         content = it.parse.content(dat.event,it.s.trusted(p.trust));
@@ -623,7 +623,7 @@ aa.print =async dat=>
     || l.classList.contains('draft')) aa.replace_note(l,dat);
   }
 
-  it.get_quotes(xid);
+  // it.get_quotes(xid);
 
   if (l && history.state.view === nid) v_u.dis(l);
   
