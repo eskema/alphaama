@@ -493,7 +493,11 @@ rel.on_close =async e=>
 
 rel.on_message =e=>
 {
-  const err = ()=> { v_u.log('invalid data from '+e.target.url) };
+  const err = ()=> 
+  { 
+    v_u.log('invalid data from '+e.target.url);
+    console.log('invalid data from '+e.target.url,e);
+  };
 
   let a = it.parse.j(e.data);
   if (a && Array.isArray(a))

@@ -387,9 +387,15 @@ it.fx.decode =x=>
   try { decoded = NostrTools.nip19.decode(x).data }
   catch (er) { console.log(x) };
   return decoded
-}
+};
 it.fx.hash =o=> NostrTools.getEventHash(o);
-it.fx.verify =o=> NostrTools.verifyEvent(o);
+it.fx.verify =o=> 
+{
+  let verified;
+  try { verified = NostrTools.verifyEvent(o) }
+  catch (er) { console.log('unable to verify',o) };
+  return verified
+};
 it.fx.verify_filter =o=>
 {
   // ids, authors, kinds, 

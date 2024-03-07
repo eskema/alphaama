@@ -708,6 +708,7 @@ author.link =async(l,p=false)=>
   if (p && p.metadata)
   {
     let name_s = p.metadata?.name || p.metadata?.display_name || p.npub.slice(0,12);
+    name_s.trim();
     let name = l.querySelector('.name');
     if (name.textContent !== name_s) name.textContent = name_s;
     if (!name.childNodes.length) name.classList.add('empty');

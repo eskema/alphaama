@@ -1109,7 +1109,6 @@ button.butt:focus
   "by by"
   "content content"
   "tags tags"
-  "actions actions"
   "after after"
   "replies replies"
   "sig sig"
@@ -1139,6 +1138,11 @@ button.butt:focus
 .note.root:not(.in_path)
 {
   border-bottom: var(--line) solid rgb(var(--color-b));
+}
+
+.note.in_view > .replies > .note
+{
+  margin-bottom: var(--line);
 }
 
 .note.reply:last-child
@@ -1221,6 +1225,7 @@ button.butt:focus
 
 #notes .root.note.not_yet > .content
 {
+  /*position: absolute;*/
   /*display: none;*/
 }
 
@@ -1242,7 +1247,7 @@ button.butt:focus
 
 .note.rendered:not(.not_yet) .note
 {
-  animation: rendered .5s var(--cb) 0s 1 normal!important;
+  /*animation: rendered .5s var(--cb) 0s 1 normal!important;*/
 }
 
 .note:hover::before
@@ -1475,12 +1480,20 @@ a.author
 .by .author::after,
 .pubkey .author::after
 {
+  
+  
   color: rgb(var(--color-c));
   content: attr(data-followers);
   grid-area: after;
-  padding: 0 var(--padm);
+  /*padding: 0 var(--padm);*/
+  /*padding: var(--padm);*/
   word-break: keep-all;
   white-space: pre;
+}
+.pubkey .author::after
+{
+  background: rgb(var(--color-a));
+  padding: var(--padm);
 }
 
 .note_quote_by .author.is_mf::after,
@@ -1488,6 +1501,13 @@ a.author
 .by .author.is_mf::after
 {
   color: rgb(var(--color-no));
+}
+
+.note_quote_by .author.is_u::after,
+.pubkey .author.is_u::after,
+.by .author.is_u::after
+{
+  color: rgb(var(--color-yes));
 }
 
 
@@ -1518,6 +1538,7 @@ a.author
   justify-self: end;
   line-height: 1.5;
   padding: 0 var(--padm);
+  padding-left: 0;
   white-space: pre;
   word-break: keep-all;
 }
@@ -1535,6 +1556,10 @@ a.author
   content: "~" attr(title);
   cursor: pointer!important;
   font-size: var(--font-size-s);
+}
+
+.in_view > .by .created_at::after 
+{
   margin-left: var(--pad);
 }
 
@@ -1549,13 +1574,16 @@ a.author
 
 .content 
 {
-  background: rgb(var(--color-b));
+  /*background: rgb(var(--color-b));*/
   border-left: none;
+  
   box-sizing: border-box;
   grid-area: content;
-  max-height: calc(90vh - 4rem);  
+  max-height: calc(100vh - 4rem);  
   overflow: hidden;
-  padding-top: var(--pad);
+  /*padding-top: var(--pad);*/
+  /*padding-left: 5px;*/
+  /*padding-bottom: 2px;*/
   position: relative;
 }
 
@@ -1568,9 +1596,10 @@ a.author
   padding-bottom: var(--line);
 }
 
+.note.in_view > .replies > .note > .content,
 .root:not(.in_view):not(.in_path) > .content
 {
-  margin-bottom: 4rem;
+  /*margin-bottom: 4rem;*/
   position: sticky;
   top: 1rem;
   z-index: 2;
@@ -1578,12 +1607,19 @@ a.author
 
 .paragraph
 { 
+  
   hyphens: auto;
+  margin-bottom: 0;
   padding: 0 var(--pad);
   padding-top: 0;
   white-space: pre-wrap;
   word-break: break-word;
   transition: var(--trans);
+}
+
+.content .paragraph
+{
+  background: rgb(var(--color-b));
 }
 
 .in_view > .content > .paragraph
@@ -1602,7 +1638,7 @@ a.author
 }
 
 .view_e .note.in_path:not(.in_view) > .content .content-img,
-.view_e .note.in_path:not(.in_view) > .content .content-video,
+.view_e .note.in_path:not(.in_view) > .content .content-video
 {
   max-height: var(--size);
 }
@@ -1613,11 +1649,15 @@ a.author
   color: rgb(var(--color-e)); 
 }
 
-.note[data-kind="1"]:not(.in_view) > .content > .paragraph:last-child::after
+/*.note[data-kind="1"]:not(.in_view) > .content > .paragraph:last-child::after*/
+.note[data-kind="1"]:not(.in_view) > .content::after
 {
-  color: rgb(var(--color-sad));
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-b));
   content: ".";
-  margin-left: var(--pad);
+  display: block;
+  line-height: 1.5;
+  /*margin-left: var(--pad);*/
 }
 
 .content-img,
@@ -1625,7 +1665,7 @@ a.author
 {
   display: block;
   height: auto;
-  margin: var(--pad) 0;
+  padding: var(--pad) 0;
   max-width: 100%;
   max-height: var(--media-height);
 }
@@ -1646,6 +1686,7 @@ a.author
 
 .paragraph > a.author
 {
+  
   border-bottom: 1px solid rgb(var(--c));
   line-height:1;
   grid-area: unset;
@@ -1654,8 +1695,10 @@ a.author
 
 .paragraph > a.author .name
 {
+  /*color: rgb(var(--color-e));*/
   padding: 2px 0;
   margin: 0;
+  /*display: none;*/
 }
 
 .paragraph > a.author .name:not(.empty)::after
@@ -1739,18 +1782,22 @@ a.author
 
 .note .replies > summary
 {
-  background-color: rgb(var(--color-e));
+  background-color: rgb(var(--color-b));
   color: rgb(var(--color-d));
   display: grid;
   display: none;
   grid-auto-flow: column;
   grid-template-columns: auto 1fr;
-  font-size: var(--font-size-xs);
+  /*float: right;*/
+  /*font-size: var(--font-size);*/
+  /*justify-items: end;*/
   line-height: 1.5rem;
-  padding: 0 var(--padm);
+  margin-left: 5.9rem;
+  margin-bottom: 4px;
+  /*padding: 0 var(--padm);*/
   z-index: 5; 
 }
-.note.in_path:not(.in_view) .replies[open] > summary
+.note.in_path:not(.in_view) > .replies[open] > summary
 {
   display: none;
 }
@@ -1777,7 +1824,7 @@ a.author
 .note .replies[open] > summary
 {
   color: rgb(var(--color-d));
-  background-color: rgb(var(--color-b));
+  /*background-color: rgb(var(--color-b));*/
 }
 
 .note .replies > summary:hover
@@ -1842,6 +1889,7 @@ a.author
 {
   color: rgb(var(--color-c));
   padding: 0;
+  padding-left: var(--padm);
 }
 
 .mark_read:hover
@@ -1876,18 +1924,95 @@ a.author
 
 /* @end */
 
+/* @group note actions */
+
+.note > .actions 
+{
+  align-self: start;
+  /*background: rgba(var(--color-b),.5);*/
+  display: grid;
+  /*font-size: var(--font-size-s);*/
+  grid-area: replies;
+  grid-auto-flow: column;
+  grid-gap: var(--padm);
+  grid-gap: 0;
+  /*justify-content: end;*/
+  /*justify-items: end;*/
+  justify-self: start;
+  line-height: 1.5;
+  margin: 0;
+  margin-bottom: 4px;
+  /*margin-top: var(--padm);*/
+  padding: 0;
+  /*padding-left: 5px;*/
+  /*padding-bottom: var(--padm);*/
+  z-index: 3;
+}
+
+.note > .actions:hover
+{
+  /*background: rgb(var(--color-b));*/
+}
+
+.note.root:not(.in_path) > .actions ,
+.note.in_view > .replies > .note > .actions ,
+#notes > .note:not(.root):not(.in_path) > .actions 
+{
+  /*grid-area: actions;*/
+}
+
+.in_view > .replies > .note > .actions,
+.root:not(.in_path) > .actions
+{
+  /*bottom: 4rem;*/
+  /*justify-self: start;*/
+  position: sticky;
+  top: 1rem;
+}
+
+.note.in_view > .actions
+{
+  align-self: stretch;
+  bottom: unset;
+  color: rgb(var(--color-d));
+  position: relative;
+}
+
+.note.in_path:not(.in_view) > .actions
+{
+  display: none;
+}
+
+.actions .butt
+{
+  background: rgba(var(--color-b),1);
+  color: rgb(var(--color-c));
+  padding: 0 var(--padm);
+}
+
+.actions .butt:hover 
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-f));
+}
+
+/* @end */
+
 /* @group tags */
 
 .details
 {
   grid-area: tags;
+  position: sticky;
+  bottom: 4rem;
+  z-index: 3;
 }
 
 .details:hover,
 .details[open]
 {
   background: rgb(var(--color-b));
-  z-index: 3;
+  /*z-index: 3;*/
 }
 
 .note:not(.in_view):not(.draft):not(.root) > .details
@@ -2062,12 +2187,15 @@ a.author
 
 .note_quote
 {
-  /*background: rgba(var(--color-c),.2);*/
+  background: rgba(var(--color-c),.2);
+  background-color: rgb(var(--color-b));
   border: 1px dotted rgba(var(--color-c),1);
   display: grid;
   margin: var(--pad);
+  margin: 0;
   max-height: var(--media-height);
   overflow-y: scroll;
+  padding: var(--pad);
   position: relative;
 }
 
@@ -2078,6 +2206,7 @@ a.author
 
 .note_quote_by
 {
+  background: rgb(var(--color-b));
   display: grid;
   font-size: var(--font-size-s);
   grid-area: unset;
@@ -2289,7 +2418,8 @@ a.author
   outline: none;
 }
 
-#oto .item:hover
+#oto .item:hover,
+#oto .item.mention:hover
 {
   background-color: rgb(var(--color-f));
   z-index: 2;
@@ -2316,6 +2446,12 @@ a.author
 {
   color: rgb(var(--color-c));
   grid-area: val;
+}
+
+#oto .item.mention
+{
+  background: rgb(var(--color-e));
+  z-index: 2;
 }
 
 #oto .item.mention .val
@@ -2546,11 +2682,11 @@ a.author
   width: auto;
 }
 
-.profile .pubkey .author[data-nip05]::after
+/*.profile .pubkey .author[data-nip05]::after
 {
   background: rgb(var(--color-a));
   padding: var(--padm);
-}
+}*/
 
 .profile .pubkey .author span
 {
@@ -2876,7 +3012,13 @@ p[data-meta="about"]::before
 
 .note[data-kind="1"].root:not(.in_view):not(.in_path) > .content::after
 {
-  padding-bottom: var(--line);
+  /*padding-bottom: var(--line);*/
+}
+
+/*.note[data-kind="1"] > .content*/
+.note:not(.tiny) > .content
+{
+  border-top: var(--padm) solid rgb(var(--color-b));
 }
 
 /* @end */
@@ -2913,6 +3055,7 @@ p[data-meta="about"]::before
   display: none;
 }
 
+.note.in_view > .replies > .note.note.tiny > .content,
 .note.tiny:not(.in_view) > .content
 {
   font-size: var(--font-size-s);
@@ -2970,50 +3113,7 @@ p[data-meta="about"]::before
 
 /* @end */
 
-/* @group note actions */
 
-.note > .actions 
-{
-  align-self: start;
-  background: rgb(var(--color-b));
-  display: grid;
-  grid-area: actions;
-  grid-auto-flow: column;
-  grid-gap: var(--line);
-  justify-content: end;
-  justify-items: end;
-  margin: 0;
-  padding: 0 var(--pad);
-  z-index: 3;
-}
-
-.in_view > .replies > .note > .actions,
-.root:not(.in_path) > .actions
-{
-  bottom: 4rem;
-  justify-self: start;
-  position: sticky;
-}
-
-.note.in_view > .actions
-{
-  align-self: stretch;
-  bottom: unset;
-  color: rgb(var(--color-d));
-  position: relative;
-}
-
-.note.in_path:not(.in_view) > .actions
-{
-  display: none;
-}
-
-.actions .butt:hover 
-{
-  color: rgb(var(--color-f));
-}
-
-/* @end */
 
 /* @group profile actions */
 
@@ -3212,7 +3312,7 @@ p[data-meta="about"]::before
 @media screen and (max-width: 769px) 
 {
   :root {
-    --font-size: 12px;
+    /*--font-size: 12px;*/
   }
   
   .note

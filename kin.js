@@ -80,9 +80,6 @@ kin.note =dat=>
   return note
 };
 
-
-
-
 kin.quote_new =o=>
 {
   if (!o.id) return false;
@@ -603,34 +600,7 @@ kin.tags =tags=>
   return tags_ol
 };
 
-aa.print =async dat=>
-{
-  const xid = dat.event.id;
-  if (!aa.e[xid]) aa.e[xid] = dat;
 
-  let nid = it.fx.nid(xid);
-  let l = document.getElementById(nid);
-  if (!l)
-  {
-    l = kin.da(dat);
-    it.butt_count('e','.note');
-    if (!l) console.log(dat);
-    if (l?.classList.contains('draft')) v_u.scroll(l,{behavior:'smooth',block:'center'});
-  }
-  else
-  {
-    if (l.classList.contains('blank') 
-    || l.classList.contains('draft')) aa.replace_note(l,dat);
-  }
-
-  // it.get_quotes(xid);
-
-  if (l && history.state.view === nid) v_u.dis(l);
-  
-  aa.missing('e');
-  aa.missing('p');
-  // aa.dex();
-};
 
 kin.e = {};
 

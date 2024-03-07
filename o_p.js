@@ -7,7 +7,7 @@ const o_p =
     'team':'dark', // 'light'
     'trust':'11', // user score needed for loading media
 
-    //     'nav_keys':
+//     'nav_keys':
 //     {
 //       'parent':'j',
 //       'next':'k',
@@ -19,6 +19,7 @@ const o_p =
 //       'replies':'\\',
 //       'exit':'Escape'
 //     }
+
   },
   sn:'o',
 };
@@ -85,16 +86,13 @@ o_p.mk =(k,v) =>
 {
   switch (k)
   {
-    case 'team':
-      aa.l.dataset.theme = v;
-      break;
+    case 'team': if (aa.l.dataset.theme !== v) aa.l.dataset.theme = v; break;
   }
-  let sn = o_p.sn;
   const l = it.mk.l('li',{id:'o_'+k,cla:'item o'});
   l.append(
     it.mk.l('button',{cla:'key',con:k,clk:e=>
     {
-      cli.t.value = localStorage.ns+' '+sn+' set '+k+' '+v;
+      cli.t.value = localStorage.ns+' '+o_p.sn+' set '+k+' '+v;
       cli.foc();
     }}),
     it.mk.l('span',{cla:'val',con:v})
