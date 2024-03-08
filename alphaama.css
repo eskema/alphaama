@@ -38,7 +38,7 @@ html[data-theme="dark"]
   --color-b: 23,23,23;
   --color-c: 82,82,82;
   --color-d: 136,136,136;
-  --color-e: 182,182,182;
+  --color-e: 211,211,211;
   --color-f: 233,233,233;
   --color-main: 222,147, 95;
   --color-alt: 178,148,187;
@@ -53,7 +53,7 @@ html[data-theme="light"]
 {
   --color-a: 255,255,255;
   --color-b: 233,233,233;
-  --color-c: 182,182,182;
+  --color-c: 211,211,211;
   --color-d: 136,136,136;
   --color-e: 82,82,82;
   --color-f: 23,23,23;
@@ -1101,8 +1101,8 @@ button.butt:focus
 {
   background: rgba(var(--c),.1);
   box-sizing: border-box;
-  border-left: 1px dotted rgba(var(--color-c),.5);
-  border-top: 1px dotted rgba(var(--color-c),.5);
+  border-left: 1px dotted rgba(var(--c),0);
+  border-top: 1px dotted rgba(var(--c),0);
   cursor: auto;
   display: grid;
   grid-template-areas: 
@@ -1115,6 +1115,7 @@ button.butt:focus
   ;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto 1fr auto;
+  margin-bottom: var(--padm);
   position: relative;
   --who: attr(data-who);
   z-index: 1;
@@ -1137,7 +1138,8 @@ button.butt:focus
 
 .note.root:not(.in_path)
 {
-  border-bottom: var(--line) solid rgb(var(--color-b));
+  /*border-bottom: var(--line) solid rgb(var(--color-b));*/
+  margin-bottom: calc(var(--line)*2);
 }
 
 .note.in_view > .replies > .note
@@ -1147,7 +1149,7 @@ button.butt:focus
 
 .note.reply:last-child
 {
-  margin-bottom: 0;
+  /*margin-bottom: 0;*/
 }
 
 .note.draft
@@ -1167,7 +1169,9 @@ button.butt:focus
 .note.in_path.in_view,
 .note:hover
 {
-  border-color: rgb(var(--color-c));
+  background: rgba(var(--c),.06);
+  border-color: rgb(var(--color-e));
+  transition: var(--trans);
 }
 
 .note.in_view
@@ -1372,7 +1376,7 @@ button.butt:focus
 .nid
 {
   align-items: center;
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
   display: grid;
   grid-area: nid;
   grid-template-columns: 1fr 1fr;
@@ -1397,6 +1401,16 @@ button.butt:focus
 .note[data-luma="dark"].in_view > .by .id .nid
 {
   color: rgb(var(--color-b));
+}
+
+.note[data-luma="light"] > .by .nid:hover
+{
+  color: rgb(var(--color-f));
+}
+
+.note[data-luma="dark"] > .by .nid:hover
+{
+  color: rgb(var(--color-a));
 }
 
 .nid::before
@@ -1482,7 +1496,7 @@ a.author
 {
   
   
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
   content: attr(data-followers);
   grid-area: after;
   /*padding: 0 var(--padm);*/
@@ -1579,6 +1593,7 @@ a.author
   
   box-sizing: border-box;
   grid-area: content;
+  
   max-height: calc(100vh - 4rem);  
   overflow: hidden;
   /*padding-top: var(--pad);*/
@@ -1609,6 +1624,7 @@ a.author
 { 
   
   hyphens: auto;
+  /*line-height: 2;*/
   margin-bottom: 0;
   padding: 0 var(--pad);
   padding-top: 0;
@@ -1634,7 +1650,7 @@ a.author
 {
   font-size: var(--font-size-s);
   line-height: 1.5;
-  padding: var(--padm);
+  /*padding: var(--padm);*/
 }
 
 .view_e .note.in_path:not(.in_view) > .content .content-img,
@@ -1650,7 +1666,7 @@ a.author
 }
 
 /*.note[data-kind="1"]:not(.in_view) > .content > .paragraph:last-child::after*/
-.note[data-kind="1"]:not(.in_view) > .content::after
+.note:not(.tiny):not(.in_view) > .content::after
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-b));
@@ -1767,7 +1783,9 @@ a.author
 {
   border-left: none;
   grid-area: replies;
-  padding-left: 6px;
+  padding-left: var(--padm);
+  /*padding-bottom: var(--pad);*/
+  /*margin-bottom: 8px;*/
 }
 
 .in_path:not(.in_view) > .replies
@@ -1793,7 +1811,7 @@ a.author
   /*justify-items: end;*/
   line-height: 1.5rem;
   margin-left: 5.9rem;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   /*padding: 0 var(--padm);*/
   z-index: 5; 
 }
@@ -1818,7 +1836,7 @@ a.author
   position: sticky;
   top: var(--line);
   display: grid;
-  margin: 0 auto;
+  /*margin: 0 auto;*/
 }
 
 .note .replies[open] > summary
@@ -1867,6 +1885,7 @@ a.author
 {
   padding-left: 0;
   margin-top: 0;
+  margin-bottom: 0;
 }
 
 .root.not_yet > .replies > .note,
@@ -1941,7 +1960,7 @@ a.author
   justify-self: start;
   line-height: 1.5;
   margin: 0;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
   /*margin-top: var(--padm);*/
   padding: 0;
   /*padding-left: 5px;*/
@@ -1972,9 +1991,10 @@ a.author
 
 .note.in_view > .actions
 {
-  align-self: stretch;
+  /*align-self: stretch;*/
   bottom: unset;
   color: rgb(var(--color-d));
+  /*grid-area: actions;*/
   position: relative;
 }
 
@@ -2194,6 +2214,7 @@ a.author
   margin: var(--pad);
   margin: 0;
   max-height: var(--media-height);
+  max-width: 960px;
   overflow-y: scroll;
   padding: var(--pad);
   position: relative;
@@ -2603,8 +2624,8 @@ a.author
 
 .profile.in_view .pubkey
 {
-  background: rgb(var(--color-e));
-  color: rgb(var(--color-b));
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-d));
   font-size: var(--font-size-s);
   padding: var(--padm);
 }
@@ -2612,7 +2633,7 @@ a.author
 .profile .score
 {
   box-sizing: border-box;
-  color: rgb(var(--color-b));
+  color: rgb(var(--color-d));
   grid-area: trust;
   font-size: var(--font-size-s);
   height: var(--size-s);
@@ -3096,7 +3117,7 @@ p[data-meta="about"]::before
 .note.tiny[data-kind="6"]:not(.in_view) > .content::before,
 .note.tiny[data-kind="16"]:not(.in_view) > .content::before
 {
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
   content: "reposted by ";
 }
 

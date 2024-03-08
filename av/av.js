@@ -1,8 +1,23 @@
 const av = {};
 
-av.sticky =e=>
-{ 
-  let l = e.target.closest('.av');
+av.pip =e=>
+{
+  const l = e.target.closest('.av');
+  const video = l.querySelector('video');
+
+  const pip =()=>
+  {
+    if (document.pictureInPictureElement) 
+    {
+      document.exitPictureInPicture();
+    } 
+    else if (document.pictureInPictureEnabled) 
+    {
+      video.requestPictureInPicture();
+    }
+  };
+  pip();
+
   if (l.classList.contains('av_sticky'))
   {
     l.classList.remove('av_sticky');
@@ -13,6 +28,9 @@ av.sticky =e=>
     l.classList.add('av_sticky');
     // it.fx.in_path(l,'av_sticky');
   }
+
+  
+
 };
 
 av.pause =video=>
@@ -97,9 +115,9 @@ av.mk =(src,poster=false)=>
   mute.onclick = av.mute;
   
   const sticky = document.createElement('button');
-  sticky.classList.add('sticky');
-  sticky.textContent = 'sticky';
-  sticky.onclick = av.sticky;
+  sticky.classList.add('pip');
+  sticky.textContent = 'pip';
+  sticky.onclick = av.pip;
   
   controls.append(rewind,mute,sticky,url,progress);
   // controls.addEventListener('click',av.rewind);
