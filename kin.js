@@ -137,49 +137,58 @@ kin.quote =o=>
   if (pubkey) 
   {
     has_pub = true;
+    it.fx.color(pubkey,quote);
     pubkey = it.mk.author(pubkey);
     by.prepend(pubkey);
   }
-  
-  aa.db.get_e(o.id).then(dat=>
-  {
-    if (dat) 
-    {
-      aa.db.get_p(dat.event.pubkey).then(pp=>
-      {
-        if (!pp) pp = it.p(dat.event.pubkey);
-        if (!has_pub) by.prepend(it.mk.author(pp.xpub));
-        // by.prepend(it.mk.author(p.xpub));
-        it.get_pub(dat.event.pubkey);
-        content = it.parse.content(dat.event,it.s.trusted(p.trust));
-        quote.append(content)
-      })
-      // if (!has_pub) by.prepend(it.mk.author(p.xpub));
-      // content = it.parse.content(dat.event,it.s.trust_x(dat.event.pubkey));
-      // quote.append(content)
-    }
-    else
-    {
-      quote.classList.add('blank_quote');
-      if (!has_pub) by.prepend(it.mk.l('span',{con:'?'}));
-      content = it.mk.l('p',{cla:'paragraph'});
-      
-      let req = {ids:[o.id]};
-      let relays = [];
-      if (o.relays?.length) 
-      {
-        req.relays = o.relays;
-        let relay_content = it.mk.l('p',{con:'relays: '+o.relays});
-        content.append(relay_content);
-        for (const r of o.relays) relays.push(r);
-      }
-      quote.append(content)
-      kin.miss_e(o.id,relays);
-    }
-    
-    
-  }); 
+  kin.quote_upd(quote,o);
   return quote
+};
+
+kin.quote_upd =async(quote,o)=>
+{
+  let dat = await aa.db.get_e(o.id);
+  let by = quote.querySelector('.note_quote_by');
+  let has_pub = by.querySelector('a.author') ? true : false;
+  let content;
+  if (dat) 
+  {
+    aa.db.get_p(dat.event.pubkey).then(pp=>
+    {
+      if (!pp) pp = it.p(dat.event.pubkey);
+      if (!has_pub) 
+      {
+        by.prepend(it.mk.author(pp.xpub));
+        it.fx.color(pp.xpub,quote);
+      }
+      // by.prepend(it.mk.author(p.xpub));
+      it.get_pub(dat.event.pubkey);
+      content = it.parse.content(dat.event,it.s.trusted(pp.trust));
+      quote.append(content);
+      quote.classList.add('parsed');
+    })
+    // if (!has_pub) by.prepend(it.mk.author(p.xpub));
+    // content = it.parse.content(dat.event,it.s.trust_x(dat.event.pubkey));
+    // quote.append(content)
+  }
+  else
+  {
+    quote.classList.add('blank_quote');
+    if (!has_pub) by.prepend(it.mk.l('span',{con:'?'}));
+    content = it.mk.l('p',{cla:'paragraph'});
+    
+    let req = {ids:[o.id]};
+    let relays = [];
+    if (o.relays?.length) 
+    {
+      req.relays = o.relays;
+      let relay_content = it.mk.l('p',{con:'relays: '+o.relays});
+      content.append(relay_content);
+      for (const r of o.relays) relays.push(r);
+    }
+    quote.append(content)
+    kin.miss_e(o.id,relays);
+  }  
 };
 
 kin.notice =message=>
@@ -512,6 +521,8 @@ kin.d7 =dat=>
   note.classList.add('tiny');
   return note
 };
+
+kin.d30023 =dat=> kin.d1(dat);
 
 kin.note_actions =clas=>
 {

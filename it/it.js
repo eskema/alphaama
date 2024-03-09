@@ -569,8 +569,8 @@ it.fx.a =a=>
       it.fx.tail(a,l,4);
       break;
     default:
-      l.textContent = s;
-      l.href = '#'+s;
+      l.textContent = value;
+      l.href = '#'+it.fx.an(value);
       it.fx.tail(a,l,2);
   }
   return l
@@ -1292,7 +1292,8 @@ it.parse.content =(o,trusted)=>
   // console.log(paragraphs);
   for (const para of paragraphs)
   { 
-    if (!para.length) return content;
+    // if (!para.length) return content;
+    if (!para.length) continue;
 
     let l = it.mk.l('p',{cla:'paragraph'});
     const words = para.trim().split(' ');
@@ -1336,9 +1337,19 @@ it.parse.content =(o,trusted)=>
       }
     }
     l.normalize();
-    if (l.childNodes.length) content.append(l);
+    // console.log('p',it.s.empty(l),l.childNodes.length,l.firstChild);
+
+    if (!it.s.empty(l)) content.append(l);
   } 
   return content
+};
+
+it.s.empty =l=>
+{
+  if (!l) return true;
+  if (!l.childNodes.length) return true;
+  if (l.childNodes.length === 1 && l.firstChild.textContent === ' ') return true;
+  return false;
 };
 
 it.query_nip05 =async s=>

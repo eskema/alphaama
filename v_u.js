@@ -83,9 +83,10 @@ const e_observer = new IntersectionObserver(a=>
     const l = b.target;
     if (b.isIntersecting)
     {
+      e_observer.unobserve(l);
       l.classList.remove('not_yet');
       l.classList.add('rendered');
-      // e_observer.unobserve(l);
+      l.querySelector('.replies').setAttribute('open','')
     }
   }
 },{root:null,threshold:.9});
@@ -219,6 +220,7 @@ v_u.append_to_notes =(note)=>
   const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
   notes.insertBefore(note,last);
   note.classList.add('root','not_yet');
+  note.querySelector('.replies').removeAttribute('open');
   e_observer.observe(note);
 };
 

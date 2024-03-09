@@ -307,10 +307,10 @@ aa.replace_note =(l,dat)=>
 {
   l.id = 'temp-'+dat.event.id;
   let b = kin.da(dat);
+  let b_rep = b.querySelector('.replies');
   let childs = l.querySelector('.replies').childNodes;
   if (childs.length)
   {
-    let b_rep = b.querySelector('.replies');
     for (const c of childs) if (c.tagName !== 'SUMMARY') v_u.append_to_rep(c,b_rep);
   }
   let is_root = b.classList.contains('root');
@@ -329,6 +329,7 @@ aa.replace_note =(l,dat)=>
   b.classList.add('replaced');
   if (b.classList.contains('not_yet')) 
   {
+    b_rep.removeAttribute('open');
     e_observer.observe(b);
   }
 };
@@ -416,11 +417,12 @@ aa.print =async dat=>
 
   it.get_quotes(xid);
 
-  if (l && history.state.view === nid) v_u.dis(l);
+  
   
   aa.missing('e');
   aa.missing('p');
   // aa.dex();
+  if (l && history.state.view === nid) setTimeout(()=>{v_u.dis(l)},500);
 };
 
 aa.actions.push(

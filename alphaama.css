@@ -24,6 +24,7 @@
   --pad-l: calc(calc(var(--size) - 1.5rem)/2);
   --size: calc(4 * var(--font-size));
   --size-s: 1.8rem;
+  --size-l: 20vh;
   
   --media-height: 50vh; /* calc(1rem * 4); */
   --media-max-height: calc(100vh - 8rem - var(--line));
@@ -617,6 +618,7 @@ button.butt:focus
   color: rgb(var(--color-alt));
   font-size: var(--font-size-s);
   line-height: 1.5;
+  padding-top: 0;
   padding-bottom: var(--padm);
   padding-left: var(--pad);
   padding-right: var(--padm);
@@ -928,7 +930,7 @@ button.butt:focus
 
 /* @group index */
 
-#index 
+/*#index 
 {
   align-items:  center;
   display: grid;
@@ -938,17 +940,17 @@ button.butt:focus
   position: sticky;
   top: calc(50vh - 1rem);
   z-index: 4;
-}
+}*/
 
-#index::before
+/*#index::before
 {
   content: "Y";
   font-size: var(--font-size-s);
   line-height: 1rem;
   text-align: center;
-}
+}*/
 
-#index.expanded::before
+/*#index.expanded::before
 {
   content: "X";
 }
@@ -957,15 +959,15 @@ button.butt:focus
 {
   cursor: pointer;
   color: rgb(var(--color-f));
-}
+}*/
 
-#index.empty,
+/*#index.empty,
 #index:not(.expanded) > *
 {
   display: none!important;
-}
+}*/
 
-#index > .list
+/*#index > .list
 {
   align-self:  center;
   align-items: start;
@@ -976,9 +978,9 @@ button.butt:focus
   overflow-y:  scroll;
   padding: var(--pad);
   position: absolute;
-}
+}*/
 
-#index > .list > .item 
+/*#index > .list > .item 
 {
   grid-gap: var(--pad);
   margin-left: 0;
@@ -989,9 +991,9 @@ button.butt:focus
 {
   color: rgb(var(--color-no));
   text-decoration: line-through;
-}
+}*/
 
-#index .key::after
+/*#index .key::after
 {
   content: none;
 }
@@ -1006,9 +1008,9 @@ button.butt:focus
 #index .list .list .val::before
 {
   content: 'x';
-}
+}*/
 
-#index details
+/*#index details
 {
   align-self: start;
 }
@@ -1021,9 +1023,9 @@ button.butt:focus
 #index details[open]
 {
   margin-bottom: 0;
-}
+}*/
 
-#index summary[data-after]::after
+/*#index summary[data-after]::after
 {
   content: "("attr(data-after)")";
   color: rgb(var(--color-c));
@@ -1035,9 +1037,9 @@ button.butt:focus
   color: rgb(var(--color-b));
   content: ":";
   margin: 0;
-}
+}*/
 
-#index details > summary
+/*#index details > summary
 {
   background: rgb(var(--color-e));
   color: rgb(var(--color-b));
@@ -1054,12 +1056,12 @@ button.butt:focus
   color: rgb(var(--color-a));
   white-space: pre;
   word-break: keep-all;
-}
+}*/
 
-#index .val 
+/*#index .val 
 {
   color: rgb(var(--color-c));
-}
+}*/
 
 /* @end */
 
@@ -1079,6 +1081,16 @@ button.butt:focus
 {
   padding-left: var(--line);
 }
+
+/*#notes > .note
+{
+  display: none!important;
+}
+
+#notes > .note:nth-child(-n+100)
+{
+  display: grid!important;
+}*/
 
 .view_e #notes
 {
@@ -1115,7 +1127,7 @@ button.butt:focus
   ;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto 1fr auto;
-  margin-bottom: var(--padm);
+  margin-bottom: var(--pad);
   position: relative;
   --who: attr(data-who);
   z-index: 1;
@@ -1125,6 +1137,7 @@ button.butt:focus
 .note.in_view > .replies > .note,
 #notes > .note:not(.root):not(.in_path)
 {
+  border-color: rgb(var(--color-d));
   grid-template-columns: 38.2vw 1fr;
   grid-template-areas: 
   "by      by"
@@ -1136,15 +1149,10 @@ button.butt:focus
   ;
 }
 
-.note.root:not(.in_path)
-{
-  /*border-bottom: var(--line) solid rgb(var(--color-b));*/
-  margin-bottom: calc(var(--line)*2);
-}
-
+.note.root:not(.in_path),
 .note.in_view > .replies > .note
 {
-  margin-bottom: var(--line);
+  margin: var(--line) 0;
 }
 
 .note.reply:last-child
@@ -1166,7 +1174,7 @@ button.butt:focus
   !important;
 }
 
-.note.in_path.in_view,
+/*.note.in_path.in_view,*/
 .note:hover
 {
   background: rgba(var(--c),.06);
@@ -1174,15 +1182,16 @@ button.butt:focus
   transition: var(--trans);
 }
 
-.note.in_view
+.note.in_path.in_view
 {
+  background: rgb(var(--color-b));
+  border-color: rgb(var(--color-e));
   grid-template-areas: 
   "by by"
   "content content"
-  "tags tags"
-  "actions actions"
   "sig sig"
   "after after"
+  "tags tags"
   "replies replies"
   ;
 }
@@ -1238,20 +1247,22 @@ button.butt:focus
   0% 
   { 
     opacity: 0;
+    height: 0;
     transform: scaleY(0);
-    transform-origin: bottom;
+    transform-origin: top;
   }
   100%
   { 
     opacity: 1;
+    height: unset;
     transform: scaleY(1);
-    transform-origin: bottom;
+    transform-origin: top;
   }
 }
 
-.note.rendered:not(.not_yet) .note
+.note.rendered:not(.not_yet) > .replies
 {
-  /*animation: rendered .5s var(--cb) 0s 1 normal!important;*/
+  /*animation: rendered .4s ease-out 0s 1 forwards normal;*/
 }
 
 .note:hover::before
@@ -1279,6 +1290,7 @@ button.butt:focus
   font-size: var(--font-size-xs);
   grid-area: after;
   padding: 1rem var(--padm);
+  z-index: 3;
 }
 
 .note.in_path::before,
@@ -1496,13 +1508,19 @@ a.author
 {
   
   
-  color: rgb(var(--color-d));
+  color: rgb(var(--color-c));
   content: attr(data-followers);
   grid-area: after;
   /*padding: 0 var(--padm);*/
   /*padding: var(--padm);*/
   word-break: keep-all;
   white-space: pre;
+}
+.note_quote_by .author:hover::after,
+.by .author:hover::after,
+.pubkey .author:hover::after
+{
+  color: rgb(var(--color-d));
 }
 .pubkey .author::after
 {
@@ -1588,13 +1606,14 @@ a.author
 
 .content 
 {
-  /*background: rgb(var(--color-b));*/
+  align-self: start;
+  background: rgb(var(--color-b));
   border-left: none;
   
   box-sizing: border-box;
   grid-area: content;
   
-  max-height: calc(100vh - 4rem);  
+  max-height: calc(100vh - 8rem);  
   overflow: hidden;
   /*padding-top: var(--pad);*/
   /*padding-left: 5px;*/
@@ -1624,7 +1643,7 @@ a.author
 { 
   
   hyphens: auto;
-  /*line-height: 2;*/
+  line-height: 1;
   margin-bottom: 0;
   padding: 0 var(--pad);
   padding-top: 0;
@@ -1636,6 +1655,13 @@ a.author
 .content .paragraph
 {
   background: rgb(var(--color-b));
+}
+
+.parsed > .paragraph
+{
+  line-height: 1.5;
+  background: rgb(var(--color-b));
+  padding: var(--pad);
 }
 
 .in_view > .content > .paragraph
@@ -1666,15 +1692,15 @@ a.author
 }
 
 /*.note[data-kind="1"]:not(.in_view) > .content > .paragraph:last-child::after*/
-.note:not(.tiny):not(.in_view) > .content::after
+/*.note:not(.tiny):not(.in_path) > .content::after
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-b));
   content: ".";
   display: block;
   line-height: 1.5;
-  /*margin-left: var(--pad);*/
-}
+  /*margin-left: var(--pad);*!/
+}*/
 
 .content-img,
 .content-video
@@ -1810,7 +1836,8 @@ a.author
   /*font-size: var(--font-size);*/
   /*justify-items: end;*/
   line-height: 1.5rem;
-  margin-left: 5.9rem;
+  /*margin-left: 5.9rem;*/
+  margin-right: 5.9rem;
   margin-bottom: 2px;
   /*padding: 0 var(--padm);*/
   z-index: 5; 
@@ -1826,9 +1853,14 @@ a.author
   top: 1rem;
 }
 
-.note.root.in_view > .replies[open]
+.in_view > .replies > summary
 {
-  
+  border-bottom: 1px dashed rgb(var(--color-d));
+}
+
+.in_view > .replies > summary .mark_read
+{
+  color: rgb(var(--color-d));
 }
 
 .note.root.in_view > .replies[open] > summary
@@ -1913,8 +1945,8 @@ a.author
 
 .mark_read:hover
 {
-  background-color: rgba(var(--color-c),.5);
-  color: rgb(var(--color-e));
+  background-color: rgba(var(--color-a),1);
+  color: rgb(var(--color-d));
 }
 
 .mark_read:hover::after
@@ -1957,7 +1989,7 @@ a.author
   grid-gap: 0;
   /*justify-content: end;*/
   /*justify-items: end;*/
-  justify-self: start;
+  justify-self: end;
   line-height: 1.5;
   margin: 0;
   margin-bottom: 2px;
@@ -1989,13 +2021,16 @@ a.author
   top: 1rem;
 }
 
-.note.in_view > .actions
+.in_view > .actions
 {
   /*align-self: stretch;*/
-  bottom: unset;
+  border-bottom: 1px dashed rgb(var(--color-d));
+  /*bottom: unset;*/
   color: rgb(var(--color-d));
   /*grid-area: actions;*/
-  position: relative;
+  /*position: relative;*/
+  position: sticky;
+  top: var(--line);
 }
 
 .note.in_path:not(.in_view) > .actions
@@ -2006,14 +2041,19 @@ a.author
 .actions .butt
 {
   background: rgba(var(--color-b),1);
-  color: rgb(var(--color-c));
+  color: rgba(var(--color-d),.5);
   padding: 0 var(--padm);
 }
 
 .actions .butt:hover 
 {
   background: rgb(var(--color-b));
-  color: rgb(var(--color-f));
+  color: rgb(var(--color-e));
+}
+
+.in_view > .actions .butt
+{
+  color: rgb(var(--color-d));
 }
 
 /* @end */
@@ -2022,9 +2062,13 @@ a.author
 
 .details
 {
+  background: rgba(var(--color-b),1);
   grid-area: tags;
   position: sticky;
   bottom: 4rem;
+  margin-top: 2px;
+  /*margin: 2px 0;*/
+  /*bottom: 0;*/
   z-index: 3;
 }
 
@@ -2040,6 +2084,24 @@ a.author
   display: none;
 }
 
+.in_view > .details
+{
+  /*display: inline;*/
+  position: relative;
+  bottom: 0;
+  /*margin: 0 auto;*/
+}
+
+.in_view > .details summary
+{
+  text-align: center;
+}
+
+.in_view > .details .tags
+{
+  justify-content: center;
+}
+
 .details summary
 {
   color: rgb(var(--color-d));
@@ -2048,9 +2110,11 @@ a.author
 
 .tags 
 {
+  display: grid;
   font-size: var(--font-size-s);
   list-style: none;
   margin: 0;
+  margin: 0 auto;
   /*padding: 0 var(--pad);*/
   padding-bottom: var(--pad);
 }
@@ -2209,19 +2273,21 @@ a.author
 {
   background: rgba(var(--color-c),.2);
   background-color: rgb(var(--color-b));
-  border: 1px dotted rgba(var(--color-c),1);
+  border: 1px dashed rgba(var(--color-c),1);
+  box-shadow: 0px .2rem var(--padm) rgba(var(--c),1);
   display: grid;
   margin: var(--pad);
-  margin: 0;
+  /*margin: 0;*/
   max-height: var(--media-height);
   max-width: 960px;
-  overflow-y: scroll;
-  padding: var(--pad);
+  overflow: hidden;
+  /*padding: var(--pad);*/
   position: relative;
 }
 
 .note.in_view .note_quote
 {
+  margin: var(--line);
   max-height: unset;
 }
 
@@ -2252,6 +2318,12 @@ a.author
   font-size: var(--font-size-s);
   line-height: 1.5;
   padding: 0 var(--padm);
+  padding: var(--padm);
+}
+
+.note_quote > .paragraph > .content-img
+{
+  max-height: var(--size-l);
 }
 
 /* @end */
@@ -3049,13 +3121,14 @@ p[data-meta="about"]::before
 .note.tiny
 {
   background: rgba(var(--color-b));
+  margin-bottom: 0;
 }
 
 .note.in_view > .replies > .note.tiny,
 .note.tiny:not(.in_view)
 {
-  grid-template-areas: "after content by";
-  grid-template-columns: auto auto 1fr;
+  grid-template-areas: "before content after by";
+  grid-template-columns: auto auto auto 1fr;
 }
 
 .note.tiny:not(.in_view) > .by .author span
@@ -3065,13 +3138,19 @@ p[data-meta="about"]::before
 
 .note.tiny::before
 {
+  content: attr(data-kind);
+  font-size: var(--font-size-s);
   padding: 0 var(--padm);
   align-self: center;
+  grid-area: before;
 }
 
 .note.tiny[data-kind="7"]::before,
 .note.tiny[data-kind="6"]::before,
-.note.tiny[data-kind="16"]::before
+.note.tiny[data-kind="16"]::before,
+.note.tiny[data-kind="7"]::after,
+.note.tiny[data-kind="6"]::after,
+.note.tiny[data-kind="16"]::after
 {
   display: none;
 }
@@ -3082,6 +3161,7 @@ p[data-meta="about"]::before
   font-size: var(--font-size-s);
   padding-bottom: var(--padm);
   padding-left: var(--padm);
+  padding-left: 5px;
   padding-right: 0;
   padding-top: var(--padm);
   margin: 0;
@@ -3124,12 +3204,24 @@ p[data-meta="about"]::before
 .note.root:not(.in_path).tiny 
 {
   border-bottom: none;
-  margin-bottom: var(--line);
+  margin-bottom: 0;
+  margin-top: 0;
 }
 
 .note.tiny > .actions > .butt.hide
 {
   color: rgb(var(--color-no));
+}
+
+.note.tiny::after
+{
+  align-self: center;
+  background: rgb(var(--color-b));
+  content: attr(data-seen) " - " attr(data-subs);
+  font-size: var(--font-size-xs);
+  grid-area: after;
+  padding: 0 var(--padm);
+  text-align: center;
 }
 
 /* @end */

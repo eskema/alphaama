@@ -17,8 +17,8 @@ aa.dex =()=>
     index.classList.remove('empty');
     index.textContent = '';
     index.append(dex.header(dex.head));
-    let butt = document.getElementById('butt_e');
-    butt.dataset.count = document.querySelectorAll('.note').length;
+    // let butt = document.getElementById('butt_e');
+    // butt.dataset.count = document.querySelectorAll('.note').length;
     
   };
   it.to(f,50,'index');
@@ -49,6 +49,7 @@ dex.header_butt =(k,v)=>
 
 dex.header =(o)=>
 {
+  console.log('dex.header',o);
   const l = it.mk.l('ul',{cla:'list header'});
 
   Object.entries(o).map(([k,v])=>
