@@ -213,9 +213,12 @@ aa.clk.edit =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
+  if (v_u.viewing === note.id) v_u.clear()
+  note.remove();
+  it.butt_count('e','.note');
+  
   cli.v(aa.e[xid].event.content);
   delete aa.e[xid];
-  note.remove();
 };
 
 aa.clk.cancel =e=>
@@ -223,6 +226,7 @@ aa.clk.cancel =e=>
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
   delete aa.e[xid];
+  if (v_u.viewing === note.id) v_u.clear()
   note.remove();
   it.butt_count('e','.note');
 };
@@ -231,8 +235,16 @@ aa.clk.react =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
-  console.log('react',xid);
+  // console.log('react',xid);
   cli.v(localStorage.ns+' e react '+xid+' '+localStorage.reaction);
+};
+
+aa.clk.decrypt =e=>
+{
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  // console.log('react',xid);
+  cli.v(localStorage.ns+' e decrypt '+xid);
 };
 
 aa.clk.hide =e=>

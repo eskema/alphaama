@@ -155,17 +155,21 @@ cli.compost =s=>
     if (cli.dat) 
     {
       cli.dat.event.created_at = it.tim.now();
-      cli.dat.event.tags.push(...it.parse.hashtags(s));
-      const mentions = it.parse.mentions(s);
-      for (const mention of mentions)
+      if (cli.dat.event.kind === 1)
       {
-        let add = true;
-        for (const t of cli.dat.event.tags)
+        cli.dat.event.tags.push(...it.parse.hashtags(s));
+        const mentions = it.parse.mentions(s);
+        for (const mention of mentions)
         {
-          if (t[0] === mention[0] && t[1] === mention[1]) add = false;
+          let add = true;
+          for (const t of cli.dat.event.tags)
+          {
+            if (t[0] === mention[0] && t[1] === mention[1]) add = false;
+          }
+          if (add) cli.dat.event.tags.push(mention)
         }
-        if (add) cli.dat.event.tags.push(mention)
       }
+      
       kin.draft(cli.dat.event);
       delete cli.dat;
     }
@@ -306,7 +310,7 @@ cli.action =(s,a)=>
 cli.otocomp =()=>
 {
   const ns = localStorage.ns;
-  const s = cli.t.value;
+  const s = cli.t.value.replace(/\u2028/g,'');
   const a = s.split(' ');
   
   cli.oto.textContent = '';
@@ -338,7 +342,6 @@ cli.mk_dat =async(s,dis)=>
       tags:[]
     }
   };
-
   if (dis)
   {
     let x = it.fx.decode(dis);
@@ -353,6 +356,11 @@ cli.mk_dat =async(s,dis)=>
         cli.dat.event.tags.push(...it.get_tags_for_reply(reply_e));
         cli.dat.replying = dis;
       }      
+    }
+    else if (dis.startsWith('npub'))
+    {
+      cli.dat.event.kind = 4;
+      cli.dat.event.tags.push(['p',x])
     }
   }
 };

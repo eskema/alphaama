@@ -121,6 +121,9 @@ v_u.p =async npub=>
   aa.l.classList.add('viewing','view_p');
   v_u.scroll(l);
   v_u.viewing = npub;
+  
+  let notes_by = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
+  let notes_ref = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
 };
 
 v_u.e =async nid=>
@@ -219,9 +222,13 @@ v_u.append_to_notes =(note)=>
   let notes = document.getElementById('notes');
   const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
   notes.insertBefore(note,last);
-  note.classList.add('root','not_yet');
-  note.querySelector('.replies').removeAttribute('open');
-  e_observer.observe(note);
+  if (!note.classList.contains('rendered')) 
+  {
+    note.classList.add('root');
+    note.querySelector('.replies').removeAttribute('open');
+    note.classList.add('not_yet');
+    e_observer.observe(note);
+  }
 };
 
 v_u.append_to_rep =(note,rep)=>

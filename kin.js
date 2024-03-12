@@ -161,15 +161,11 @@ kin.quote_upd =async(quote,o)=>
         by.prepend(it.mk.author(pp.xpub));
         it.fx.color(pp.xpub,quote);
       }
-      // by.prepend(it.mk.author(p.xpub));
       it.get_pub(dat.event.pubkey);
       content = it.parse.content(dat.event,it.s.trusted(pp.trust));
       quote.append(content);
       quote.classList.add('parsed');
     })
-    // if (!has_pub) by.prepend(it.mk.author(p.xpub));
-    // content = it.parse.content(dat.event,it.s.trust_x(dat.event.pubkey));
-    // quote.append(content)
   }
   else
   {
@@ -365,10 +361,10 @@ kin.d0 =dat=>
         p.pastdata.k0.unshift([dat.event.id,c_at]);
         if (c_at > p.updated) p.updated = c_at;
         p.metadata = metadata;
-        author.save(p);        
+        author.save(p);
+        let profile = document.getElementById(p.npub) || author.profile(p);
         if (v_u.viewing === p.npub) 
         {
-          let profile = document.getElementById(p.npub) || author.profile(p);
           author.update(profile,p,true);
         }
         setTimeout(()=>{author.links(p)},100);
@@ -446,6 +442,36 @@ kin.d3 =dat=>
     });
   }
 
+  return note
+};
+
+kin.d4 =dat=>
+{
+  let note = kin.note(dat);
+  let content = note.querySelector('.content');
+  if (!dat.clas.includes('draft'))
+  {
+    content.classList.add('encrypted');
+    content.querySelector('.paragraph').classList.add('cypher');
+  }
+
+  let u_x = aka.o.ls.xpub;
+  let p_x = it.get_tags(dat.event,'p')[0][1];
+  console.log(p_x);
+  if (u_x === p_x)
+  {
+    let butt_decrypt = it.mk.l('button',
+    {
+      cla:'butt decrypt',
+      con:'decrypt',
+      clk:e=>{ cli.v(localStorage.ns+' e decrypt '+dat.event.id) }
+    });
+    note.classList.add('for_u');
+    content.append(butt_decrypt);
+  }
+  v_u.append_to_notes(note);
+  note.querySelector('.actions .butt.react').remove();
+  note.querySelector('.actions .butt.req').remove();
   return note
 };
 
@@ -639,6 +665,57 @@ kin.e.clear =s=>
   v_u.log('events cleared')
 };
 
+kin.e.decrypt =async s=>
+{
+  cli.fuck_off();
+  if (window.nostr)
+  {
+    let x = s.trim();
+    if (!it.s.x(x))
+    {
+      v_u.log('invalid id');
+      return false;
+    }
+    
+    let dat = await aa.db.get_e(x);
+    if (!dat) 
+    {
+      v_u.log('event not found');
+      return false;
+    }
+    let u_x = aka.o.ls.xpub;
+    let p_x = it.get_tags(dat.event,'p')[0][1];
+    if (u_x !== p_x)
+    {
+      v_u.log('content not for you');
+      return false;
+    }
+    let decrypted = await window.nostr.nip04.decrypt(dat.event.pubkey,dat.event.content);
+    if (!decrypted)
+    {
+      v_u.log('not possible to deccrypt');
+      return false;
+    }
+    let l = document.getElementById(it.fx.nid(x));
+    if (!l) 
+    {
+      v_u.log('decrypted cyphertext:');
+      v_u.log(decrypted);
+    }
+    else
+    {
+      let content = l.querySelector('.content');
+      content.classList.add('decrypted');
+      content.classList.remove('encrypted');
+      content.querySelector('.butt.decrypt').remove();
+      l.querySelector('.content').append(it.parse.content({content:decrypted}));
+    }
+
+    console.log(decrypted);
+  }
+  else v_u.log('no extension found')  
+};
+
 aa.actions.push(
   {
     action:['e','mk'],
@@ -650,5 +727,10 @@ aa.actions.push(
     action:['e','clear'],
     description:'clear e section',
     exe:kin.e.clear
+  },
+  {
+    action:['e','decrypt'],
+    description:'decrypt note',
+    exe:kin.e.decrypt
   }
 );

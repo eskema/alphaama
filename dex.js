@@ -85,37 +85,21 @@ const get_index_clk =(e)=>
     e.target.classList.contains('key')?'key':'val', // kv
   ]
 };
-const get_index_items =(k,v,kv)=>
+
+const get_all_with_tag =(k,v)=>
 {
-  let items;
-  switch (k)
+  let ids = [];
+  let notes = [];
+  let tagged = document.querySelectorAll('.tag_'+k+'[data-tag="'+v+'"]');
+  console.log(tagged.length);
+  for (const tag of tagged)
   {
-    case 'subs': 
-      items = document.querySelectorAll('.note[data-subs="'+v+'"]');
-      break;
-    case 'authors': 
-      items = document.querySelectorAll('.note[data-pubkey="'+v+'"]');
-      break;
-    case 'kinds': 
-      items = document.querySelectorAll('.note[data-kind="'+v+'"]');
-      break;
-    case 'tag_t':
-    case 'tag_subject': 
-    case 'tag_d':
-      let tagged = {};
-      let tags = document.querySelectorAll('.'+k+'[data-tag="'+v+'"]');
-      tags.forEach((tag)=>
-      {
-        let l = tag.closest('.note');
-        if (!tagged[l.id]) tagged[l.id] = l;
-      });
-      items = Object.values(tagged);
-      break;
-    case 'since': s2 = ' .note[data-pubkey="'+v+'"]'; break;
-    case 'until': s2 = ' .note[data-pubkey="'+v+'"]'; break;
-    // default: console.log(sect)
+    let note = tag.closest('.note');
+    let note_id = note.dataset.id;
+    let is_new = it.a_set(ids,[note_id]);
+    if (is_new)  notes.push(note);
   }
-  return items
+  return notes
 };
 
 const index_filter_key =(e,items,k)=>
@@ -183,7 +167,7 @@ dex.clk.head =(e)=>
 {
   const [k,v,kv] = get_index_clk(e);
   console.log(k,v);
-  let items = get_index_items(k,v,kv);
+  let items = it.get_index_items(k,v,kv);
   if (kv === 'key') index_filter_key(e,items,k);
   else index_filter_val(e,items,k);
 }

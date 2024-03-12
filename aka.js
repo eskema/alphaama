@@ -236,7 +236,7 @@ author.get_k3 =async(xpub)=>
 
 aka.is_aka =(x)=> aka?.o.ls.xpub === x;
 
-author.process_k3_tags =(tags,x)=>
+author.process_k3_tags =async(tags,x)=>
 {
   const is_aka = aka.is_aka(x);
   const to_upd = [];
@@ -244,6 +244,7 @@ author.process_k3_tags =(tags,x)=>
   for (const tag of tags)
   {
     if (!it.tag.p(tag)) continue;
+    
     let updd;
     const [type,xpub,relay,petname] = tag;
     if (it.s.x(xpub))
@@ -698,41 +699,39 @@ author.mk.extradata =p=>
 
 author.links =p=>
 {
+  const options = author.link_options(p);
   const a = document.querySelectorAll('.author[href="#'+p.npub+'"]');
-  for (const l of a) author.link(l,p)
+  for (const l of a) author.link(l,options)
 };
 
-author.link =async(l,p=false)=>
+author.link_options =p=>
 {
-  // console.log('link');
-  if (p && p.metadata)
+  let options = {clas_add:[],clas_rm:[],src:false};
+  if (p.metadata)
   {
-    let name_s = p.metadata?.name || p.metadata?.display_name || p.npub.slice(0,12);
-    name_s.trim();
-    let name = l.querySelector('.name');
-    if (name.textContent !== name_s) name.textContent = name_s;
-    if (!name.childNodes.length) name.classList.add('empty');
-    else name.classList.remove('empty');
+    let name_s = p.metadata.name || p.metadata.display_name || p.npub.slice(0,12);
+    options.name = name_s.trim();
     
     let petname = p.petname.length ? p.petname 
     : p.extradata.petnames.length ? p.extradata.petnames[0] 
     : false;
-    if (petname) name.dataset.petname = petname;
+    if (petname) options.petname = petname;
 
-    author.pic(l,p);
-    if (p.metadata.nip05) l.dataset.nip05 = p.metadata.nip05;
+    // author.pic(l,p);
+    if (p.metadata.nip05) options.nip05 = p.metadata.nip05;
   }
-  if (aka.is_aka(p.xpub)) l.classList.add('is_u');
-  else l.classList.remove('is_u');
+
+  if (aka.is_aka(p.xpub)) options.clas_add.push('is_u');
+  else options.clas_rm.push('is_u');
 
   if (author.follows(p.xpub)) 
   {
-    l.classList.add('is_bff');
+    options.clas_add.push('is_bff');
   }
   else 
   {
-    l.classList.remove('is_bff');
-    l.classList.add('is_mf');
+    options.clas_rm.push('is_bff');
+    options.clas_add.push('is_mf');
   }
   
   let common = 0;
@@ -740,7 +739,47 @@ author.link =async(l,p=false)=>
   {
     if (author.follows(k)) common++;
   }
-  l.dataset.followers = common;
+  options.followers = common;
+  if (p.metadata?.picture && it.s.trusted(p.trust))
+  {
+    let url = it.s.url(p.metadata.picture.trim());
+    if (url) options.src = url.href;
+  } 
+  return options
+};
+
+author.link =async(l,o)=>
+{
+  let name = l.querySelector('.name');
+  if (name.textContent !== o.name) name.textContent = o.name;
+  if (!name.childNodes.length) name.classList.add('empty');
+  else name.classList.remove('empty');
+  if (o.petname) name.dataset.petname = o.petname;
+  author.pic_2(l,o.src);
+  if (o.nip05) l.dataset.nip05 = o.nip05;
+  l.classList.add(...o.clas_add);
+  l.classList.remove(...o.clas_rm);
+  l.dataset.followers = o.followers;
+};
+
+author.pic_2 =(l,src=false)=>
+{
+  let pic = l.querySelector('img');
+  if (src)
+  {
+    if (!pic) 
+    {
+      pic = it.mk.l('img',{cla:'picture'});
+      l.append(pic);
+      l.classList.add('has-picture');
+    }
+    if (!pic.src||pic.src!==src) pic.src = src;
+  } 
+  else if (pic) 
+  {
+    l.removeChild(pic);
+    l.classList.remove('has-picture');
+  }
 };
 
 author.pic =(l,p)=>
@@ -763,6 +802,47 @@ author.pic =(l,p)=>
     l.classList.remove('has-picture');
   }
 };
+
+// author.link =async(l,p=false)=>
+// {
+//   // console.log('link');
+//   if (p && p.metadata)
+//   {
+//     let name_s = p.metadata?.name || p.metadata?.display_name || p.npub.slice(0,12);
+//     name_s.trim();
+//     let name = l.querySelector('.name');
+//     if (name.textContent !== name_s) name.textContent = name_s;
+//     if (!name.childNodes.length) name.classList.add('empty');
+//     else name.classList.remove('empty');
+    
+//     let petname = p.petname.length ? p.petname 
+//     : p.extradata.petnames.length ? p.extradata.petnames[0] 
+//     : false;
+//     if (petname) name.dataset.petname = petname;
+
+//     author.pic(l,p);
+//     if (p.metadata.nip05) l.dataset.nip05 = p.metadata.nip05;
+//   }
+//   if (aka.is_aka(p.xpub)) l.classList.add('is_u');
+//   else l.classList.remove('is_u');
+
+//   if (author.follows(p.xpub)) 
+//   {
+//     l.classList.add('is_bff');
+//   }
+//   else 
+//   {
+//     l.classList.remove('is_bff');
+//     l.classList.add('is_mf');
+//   }
+  
+//   let common = 0;
+//   for (const k of p.extradata.followers)
+//   {
+//     if (author.follows(k)) common++;
+//   }
+//   l.dataset.followers = common;
+// };
 
 author.follows =(xpub)=>
 {

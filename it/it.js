@@ -124,6 +124,16 @@ it.tag.q =a=> it.s.tag(0,'q',a) && it.s.x(a[1]);
 it.tag.root =a=> it.tag.e(a) && it.tag.marked('root',a);
 it.tag.reply =a=> it.tag.e(a) && it.tag.marked('reply',a);
 
+it.get_tags =(event,type)=>
+{  
+   const tags = [];
+   for (const tag of event.tags)
+   {
+    if (tag[0] === type) tags.push(tag);
+   }
+   return tags
+};
+
 it.get_tags_for_reply =(event)=>
 {  
    const tags = [];
@@ -251,6 +261,39 @@ it.get_pubs =async tags=>
       });
     },500,'get_pubs');
   }
+};
+
+it.get_index_items =(k,v,kv)=>
+{
+  let items;
+  switch (k)
+  {
+    case 'subs': 
+      items = document.querySelectorAll('.note[data-subs="'+v+'"]');
+      break;
+    case 'authors': 
+      items = document.querySelectorAll('.note[data-pubkey="'+v+'"]');
+      break;
+    case 'kinds': 
+      items = document.querySelectorAll('.note[data-kind="'+v+'"]');
+      break;
+    case 'tag_t':
+    case 'tag_subject': 
+    case 'tag_d':
+      let tagged = {};
+      let tags = document.querySelectorAll('.'+k+'[data-tag="'+v+'"]');
+      tags.forEach((tag)=>
+      {
+        let l = tag.closest('.note');
+        if (!tagged[l.id]) tagged[l.id] = l;
+      });
+      items = Object.values(tagged);
+      break;
+    case 'since': s2 = ' .note[data-pubkey="'+v+'"]'; break;
+    case 'until': s2 = ' .note[data-pubkey="'+v+'"]'; break;
+    // default: console.log(sect)
+  }
+  return items
 };
 
 it.tim ={};
@@ -743,7 +786,7 @@ it.mk.author =(x,p=false)=>
   if (!p) p = aa.p[x];
   if (!p) p = it.p(x);
   
-  const pubkey = it.mk.l('a',
+  const l = it.mk.l('a',
   {
     cla:'a author',
     tit:p.npub+' \n '+x,
@@ -752,9 +795,10 @@ it.mk.author =(x,p=false)=>
     app:it.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
   });
 
-  it.fx.color(x,pubkey);
-  author.link(pubkey,p);
-  return pubkey
+  it.fx.color(x,l);
+  
+  author.link(l,author.link_options(p));
+  return l
 };
 
 it.mk.details =(summary,l=false,open=false)=>
@@ -1229,7 +1273,6 @@ it.parse.context =(note,event,trust)=>
   }
 };
 
-
 it.parse.content_basic =o=>
 {
   let content = it.mk.l('section',
@@ -1239,51 +1282,6 @@ it.parse.content_basic =o=>
   });
   return content
 };
-
-// it.parse.content =(o,trust)=>
-// {
-//   const content = it.mk.l('section',{cla:'content parsed'});
-//   const paragraphs = o.content.split(/\n\s*\n/);
-//   // console.log(paragraphs);
-//   for (const para of paragraphs)
-//   { 
-//     if (para.length)
-//     {
-//       let l = it.mk.l('p',{cla:'paragraph'});
-//       const words = para.trim().split(' ');
-//       // console.log(words);
-//       for (let i=0;i<words.length;i++)
-//       {
-//         words[i].trim();
-//         if (it.regx.url.test(words[i])) l.append(it.parse.url(words[i],trust),' ');
-//         else if (it.regx.nostr.test(words[i])) 
-//         {
-//           let parsed = it.parse.nostr(words[i]);
-//           // console.log(parsed.children[0]);
-//           if (parsed.tagName !== 'BLOCKQUOTE')
-//           {
-//             l.append(parsed);
-//           }
-//           else
-//           {
-//             if (l.childNodes.length) content.append(l);
-//             content.append(parsed);
-//             l = it.mk.l('p',{cla:'paragraph'});
-//           }
-//         }
-//         else 
-//         {
-//           // console.log('parse')
-//           if (i === words.length-1) l.append(words[i]);
-//           else l.append(words[i],' ');
-//         }
-//       }
-//       l.normalize();
-//       if (l.childNodes.length) content.append(l);
-//     } 
-//   }
-//   return content
-// };
 
 it.parse.content =(o,trusted)=>
 {
@@ -1318,7 +1316,7 @@ it.parse.content =(o,trusted)=>
           }
           else
           {
-            if (l.childNodes.length) 
+            if (!it.s.empty(l)) 
             {
               content.append(l);
               l = it.mk.l('p',{cla:'paragraph'});
@@ -1348,7 +1346,9 @@ it.s.empty =l=>
 {
   if (!l) return true;
   if (!l.childNodes.length) return true;
-  if (l.childNodes.length === 1 && l.firstChild.textContent === ' ') return true;
+  if (l.childNodes.length === 1 
+    && (l.childNodes[0].textContent === ' '||l.childNodes[0].textContent === '')) 
+    return true;
   return false;
 };
 
