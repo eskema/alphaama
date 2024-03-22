@@ -21,12 +21,12 @@ av.pip =e=>
   if (l.classList.contains('av_sticky'))
   {
     l.classList.remove('av_sticky');
-    // it.fx.rm_path(l,'av_sticky');
+    // it.fx.path_rm(l,'av_sticky');
   }
   else
   {
     l.classList.add('av_sticky');
-    // it.fx.in_path(l,'av_sticky');
+    // it.fx.path(l,'av_sticky');
   }
 
   

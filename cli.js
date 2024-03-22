@@ -87,19 +87,26 @@ cli.grow_hack =()=>
 
 cli.update =e=>
 {
-  // console.log(e);
-  if (e?.inputType === "insertFromPaste")
-  {
-    const pasted = cli.t.value;
-    cli.t.value = pasted.trim();
-  }
+  // let hist_len = cli.history.ls.length-1;
+  // if (cli.history.index === hist_len)
+  // {
+  //   let s = cli.t.value;
+  //   if (cli.history.ls[hist_len] !== s) cli.add_to_index(s);
+  // }
+  
+  // if (e?.inputType === "insertFromPaste")
+  // {
+  //   const pasted = cli.t.value;
+  //   cli.t.value = pasted.trim();
+  // }
   cli.grow_hack();
   cli.otocomp();
 };
 
 cli.goto =index=>
 {
-  cli.t.value = cli.history.ls[index] ? cli.history.ls[index] : '';
+  let v = cli.t.value;
+  cli.t.value = cli.history.ls[index] ? cli.history.ls[index] : v;
   cli.t.setSelectionRange(0,0);
   cli.update();
 };
@@ -144,21 +151,25 @@ cli.pre_compost =s=>
   else if (cli.hasOwnProperty('dat')) delete cli.dat;
 };
 
-cli.compost =s=>
+cli.add_to_index =s=>
 {
-  it.a_set(cli.history.ls,[s]);
+  it.fx.a_add(cli.history.ls,[s]);
   cli.history.index = cli.history.ls.length;
-  
+};
+
+cli.compost =async s=>
+{
+  cli.add_to_index(s);
   if (it.s.act(s)) it.act(s);
   else 
   {
     if (cli.dat) 
     {
-      cli.dat.event.created_at = it.tim.now();
+      cli.dat.event.created_at = it.t.now();
       if (cli.dat.event.kind === 1)
       {
         cli.dat.event.tags.push(...it.parse.hashtags(s));
-        const mentions = it.parse.mentions(s);
+        const mentions = await it.parse.mentions(s);
         for (const mention of mentions)
         {
           let add = true;
@@ -337,7 +348,7 @@ cli.mk_dat =async(s,dis)=>
     {
       pubkey:aka.o.ls.xpub,
       kind:1,
-      created_at:it.tim.now(),
+      created_at:it.t.now(),
       content:s,
       tags:[]
     }
@@ -353,7 +364,7 @@ cli.mk_dat =async(s,dis)=>
       {
         console.log(reply_dat);
         const reply_e = aa.e[x].event;
-        cli.dat.event.tags.push(...it.get_tags_for_reply(reply_e));
+        cli.dat.event.tags.push(...it.get.tags_for_reply(reply_e));
         cli.dat.replying = dis;
       }      
     }

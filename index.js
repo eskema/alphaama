@@ -1,5 +1,6 @@
 window.addEventListener('load',()=>
 {
+  it.wl.lock();
   aa.base_ui(['header','view','u']);
   v_u.log('running from '+location.origin);
   
@@ -26,8 +27,8 @@ window.addEventListener('load',()=>
 
   fetch('/README.md').then(dis=>dis.text()).then(dis=>
   {
-    let readme_text = it.parse.content({content:dis});
-    let readme_l = it.mk.l('article',{cla:'content',app:readme_text});
+    let readme_text = it.parse.content(dis);
+    let readme_l = it.mk.l('article',{cla:'content parsed',app:readme_text});
     v_u.log(it.mk.details('readme',readme_l));
   }).then(()=>
   {

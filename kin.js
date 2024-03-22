@@ -1,5 +1,15 @@
 const kin ={};
 
+kin.clone =note=>
+{
+  let clone = note.cloneNode(true);
+  clone.removeAttribute('id');
+  let rm = clone.querySelectorAll('.details,.sig,.replies,.actions');
+  for (const l of rm) l.remove();
+  clone.className = 'note quoted';
+  return clone
+};
+
 kin.note =dat=>
 {
   const note = it.mk.l('article',{cla:'note'}); 
@@ -13,7 +23,7 @@ kin.note =dat=>
   
   if (dat.event.hasOwnProperty('id'))
   {
-    const nid = it.fx.nid(dat.event.id)
+    const nid = it.fx.encode('nid',dat.event.id)
     note.id = nid;
     note.dataset.id = dat.event.id;
     const h1 = it.mk.l('h1',{cla:'id'});
@@ -56,7 +66,7 @@ kin.note =dat=>
 
   if (dat.event.hasOwnProperty('tags') && dat.event.tags.length)
   {
-    let tags = kin.tags(dat.event.tags);
+    let tags = it.mk.tags(dat.event.tags);
     let tags_details = it.mk.details('#['+dat.event.tags.length+']',tags);
     tags_details.classList.add('details');
     note.append(tags_details);      
@@ -64,7 +74,11 @@ kin.note =dat=>
 
   if (dat.event.hasOwnProperty('content'))
   {
-    note.append(it.parse.content_basic(dat.event));
+    note.append(it.mk.l('section',
+    {
+      cla:'content',
+      app:it.mk.l('p',{cla:'paragraph',con:dat.event.content})
+    }));
   }
 
   if (dat.event.hasOwnProperty('sig')) 
@@ -86,16 +100,16 @@ kin.quote_new =o=>
   const quote = it.mk.l('blockquote',{cla:'note_quote'});
   quote.dataset.id = o.id;
   
-  let nid = it.fx.nid(o.id);
+  let nid = it.fx.encode('nid',o.id);
   let note = document.getElementById(nid);
-  if (note) quote.append(it.clone(note));
+  if (note) quote.append(kin.clone(note));
   else aa.db.get_e(o.id).then(dat=>
   {
     if (dat) 
     {
       aa.print(dat);
       note = document.getElementById(nid);
-      if (note) quote.append(it.clone(note));
+      if (note) quote.append(kin.clone(note));
     }
     else
     {
@@ -130,7 +144,7 @@ kin.quote =o=>
   if (o.dis) quote.cite = o.dis;
   quote.dataset.id = o.id;
   let by = it.mk.l('p',{cla:'note_quote_by'});
-  by.append(it.mk.nostr_link(it.fx.nid(o.id)));
+  by.append(it.mk.nostr_link(it.fx.encode('nid',o.id)));
   quote.append(by);
   let has_pub;
   let pubkey = o.author ?? o.pubkey;
@@ -161,8 +175,8 @@ kin.quote_upd =async(quote,o)=>
         by.prepend(it.mk.author(pp.xpub));
         it.fx.color(pp.xpub,quote);
       }
-      it.get_pub(dat.event.pubkey);
-      content = it.parse.content(dat.event,it.s.trusted(pp.trust));
+      it.get.pubs([['p',dat.event.pubkey]]);
+      content = it.parse.content(dat.event.content,it.s.trusted(pp.trust));
       quote.append(content);
       quote.classList.add('parsed');
     })
@@ -207,15 +221,15 @@ kin.ok =message=>
   {
     console.log('ok',id,message.origin);
     let dat = aa.e[id];
-    dat.clas = it.a_rm(dat.clas,['not_sent','draft']);
-    it.a_set(dat.seen,[message.origin]);
+    dat.clas = it.fx.a_rm(dat.clas,['not_sent','draft']);
+    it.fx.a_add(dat.seen,[message.origin]);
     aa.db.upd(dat);
 
-    const l = document.getElementById(it.fx.nid(id));
+    const l = document.getElementById(it.fx.encode('nid',id));
     if (l) 
     {
       l.classList.remove('not_sent','draft');
-      it.a_dataset(l,'seen',[message.origin]);
+      it.fx.dataset_add(l,'seen',[message.origin]);
       let actions = l.querySelector('.actions');
       actions.replaceWith(kin.note_actions(dat.clas))
     }
@@ -237,7 +251,7 @@ kin.event =message=>
   const sub_id = message.data[1];
   const event = message.data[2];
 
-  if (it.fx.verify(event)) 
+  if (it.fx.verify_event(event)) 
   {
     const dat = 
     {
@@ -251,7 +265,7 @@ kin.event =message=>
     aa.db.upd(dat);
     if (dat.subs?.length && dat.seen?.length)
     {
-      let sub = rel.active[dat.seen[0]].q[dat.subs[0]];
+      let sub = rel.active[dat.seen[0]]?.q[dat.subs[0]];
       if (sub && !sub?.stamp || sub?.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
     }
     
@@ -324,7 +338,7 @@ kin.blank =(tag,dat,seconds)=>
     id:tag[1],
     created_at:dat.event.created_at - seconds,
     tags:[tag],
-    content:tag[1]+'\n'+it.fx.nid(tag[1])
+    content:tag[1]+'\n'+it.fx.encode('nid',tag[1])
   }
   const seen = rel.in_set('read');
   let r;
@@ -333,7 +347,7 @@ kin.blank =(tag,dat,seconds)=>
     const url = it.s.url(tag[2]);
     if (url) 
     {
-      it.a_set(seen,[url.href]);
+      it.fx.a_add(seen,[url.href]);
       blank_event.content = blank_event.content+'\n'+url.href;
       r = url.href;
     }
@@ -384,64 +398,62 @@ kin.d1 =dat=>
 {
   let note = kin.note(dat);
   note.classList.add('is_new');
-  let reply_tag = it.get_reply_tag(dat.event.tags);
+  let reply_tag = it.get.reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length) v_u.append_to_replies(dat,note,reply_tag);
   else v_u.append_to_notes(note);
-  it.get_pubs(dat.event.tags);
+  it.get.pubs(dat.event.tags);
   it.parse.context(note,dat.event,it.s.trust_x(dat.event.pubkey));
   return note
+};
+
+kin.d3_post =async(dat,note)=>
+{
+  let p = await aa.db.get_p(dat.event.pubkey);
+  if (!p) p = it.p(dat.event.pubkey);   
+  const c_at = dat.event.created_at;
+  if (!p.pastdata.k3.length || p.pastdata.k3[0][1] < c_at) 
+  {
+    p.pastdata.k3.unshift([dat.event.id,c_at]);
+    if (c_at > p.updated) p.updated = c_at;
+
+    const old_bff = [...p.extradata.bff];
+    p.extradata.bff = author.bff_from_tags(dat.event.tags);
+    author.process_k3_tags(dat.event.tags,dat.event.pubkey);
+
+    // for (const k of old_bff)
+    // {
+    //   if (!p.extradata.bff.includes(k))
+    //   {
+    //     // handle unfollowed k
+    //   }
+    // }
+    let s = dat.event.content+''.trim();
+    if (s.startsWith('{') && s.endsWith('}'))
+    {
+      let con = it.parse.j(dat.event.content);
+      if (con)
+      {
+        let relays = rel.from_o(con,['k3']);
+        rel.add_to_p(relays,p);
+        if (aka.is_aka(dat.event.pubkey)) rel.add_to_aka(relays);
+        let content = note.querySelector('.content');
+        content.textContent = '';
+        content.append(it.mk.ls({ls:con}))
+      }
+    }
+    author.save(p);
+    let profile = document.getElementById(p.npub);
+    if (!profile) profile = author.profile(p);
+    if (v_u.viewing === p.npub) author.update(profile,p,true);
+    if (aka?.is_aka(dat.event.pubkey)) aka.load_bff(p);
+  }
 };
 
 kin.d3 =dat=>
 {
   const note = kin.def(dat);
   note.classList.add('root','tiny');
-
-  const tags = dat.event.tags;
-  if (tags.length) //  && !dat.clas?.includes('draft')
-  {
-    aa.db.get_p(dat.event.pubkey).then(p=>
-    {   
-      if (!p) p = it.p(dat.event.pubkey);   
-      const c_at = dat.event.created_at;
-      if (!p.pastdata.k3.length || p.pastdata.k3[0][1] < c_at) 
-      {
-        p.pastdata.k3.unshift([dat.event.id,c_at]);
-        if (c_at > p.updated) p.updated = c_at;
-        const old_bff = [...p.extradata.bff];
-        p.extradata.bff = author.bff_from_tags(tags);
-        author.process_k3_tags(tags,dat.event.pubkey);
-
-        for (const k of old_bff)
-        {
-          if (!p.extradata.bff.includes(k))
-          {
-            // handle unfollowed k
-          }
-        }
-        let s = dat.event.content+''.trim();
-        if (s.startsWith('{') && s.endsWith('}'))
-        {
-          let con = it.parse.j(dat.event.content);
-          if (con)
-          {
-            let relays = rel.from_o(con,['k3']);
-            rel.add_to_p(relays,p);
-            if (aka.is_aka(dat.event.pubkey)) rel.add_to_aka(relays);
-            let content = note.querySelector('.content');
-            content.textContent = '';
-            content.append(it.mk.ls({ls:con}))
-          }
-        }
-        author.save(p);
-      }
-      let profile = document.getElementById(p.npub);
-      if (!profile) profile = author.profile(p);
-      if (v_u.viewing === p.npub) author.update(profile,p,true);
-      if (aka?.is_aka(dat.event.pubkey)) aka.load_bff(p);
-    });
-  }
-
+  kin.d3_post(dat,note);
   return note
 };
 
@@ -453,11 +465,11 @@ kin.d4 =dat=>
   {
     content.classList.add('encrypted');
     content.querySelector('.paragraph').classList.add('cypher');
+    note.querySelector('.actions .butt.react').remove();
+    note.querySelector('.actions .butt.req').remove();
   }
-
   let u_x = aka.o.ls.xpub;
-  let p_x = it.get_tags(dat.event,'p')[0][1];
-  console.log(p_x);
+  let p_x = it.get.tags(dat.event,'p')[0][1];
   if (u_x === p_x)
   {
     let butt_decrypt = it.mk.l('button',
@@ -470,8 +482,6 @@ kin.d4 =dat=>
     content.append(butt_decrypt);
   }
   v_u.append_to_notes(note);
-  note.querySelector('.actions .butt.react').remove();
-  note.querySelector('.actions .butt.req').remove();
   return note
 };
 
@@ -484,7 +494,7 @@ kin.d6 =dat=>
   note.classList.add('is_new','tiny');
   // note.querySelector('.content').textContent = 'k6 repost:'
   // it.rm_selector(note,'.content');
-  let reply_tag = it.get_reply_tag(dat.event.tags);
+  let reply_tag = it.get.reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length)
   {    
     let repost_id = reply_tag[1];
@@ -504,7 +514,7 @@ kin.d6 =dat=>
     v_u.append_to_replies(dat,note,reply_tag);
   }
   else v_u.append_to_notes(note);
-  it.get_pubs(dat.event.tags);
+  it.get.pubs(dat.event.tags);
   return note
 };
 
@@ -600,42 +610,7 @@ kin.note_actions =clas=>
   return l
 };
 
-kin.tag =(a,i,li=false)=>
-{
-  let l = li ? li : it.mk.l('li',{cla:'tag tag_'+a[0]});
-  
-  l.textContent = '';
-  l.append(it.mk.l('button',
-  {
-    con:''+i,
-    clk:e=>
-    {
-      const mom = e.target.parentElement;
-      mom.classList.toggle('parsed');
-      kin.tag(a,i,mom)
-    }
-  }));
 
-  if (l.classList.contains('parsed')) l.append(it.fx.a(a));
-  else l.append(a.join(', '));
-  if (!li) 
-  {
-    l.dataset.tag = a[1];
-    if (it.s.x(a[1])) it.fx.color(a[1],l);
-    return l
-  }
-};
-
-kin.tags =tags=>
-{
-  const tags_ol = it.mk.l('ol',{cla:'tags'});
-  tags_ol.start = 0;
-  
-  const times = tags.length;
-  for (let i=0;i<times;i++) tags_ol.append(kin.tag(tags[i],i));
-  
-  return tags_ol
-};
 
 
 
@@ -649,7 +624,7 @@ kin.e.mk =s=>
     cli.fuck_off();
     if (!event.pubkey) event.pubkey = aka.o.ls.xpub;
     if (!event.kind) event.kind = 1;
-    if (!event.created_at) event.created_at = it.tim.now();
+    if (!event.created_at) event.created_at = it.t.now();
     if (!event.tags) event.tags = [];
     if (!event.content) event.content = '';
     kin.draft(event);
@@ -684,7 +659,7 @@ kin.e.decrypt =async s=>
       return false;
     }
     let u_x = aka.o.ls.xpub;
-    let p_x = it.get_tags(dat.event,'p')[0][1];
+    let p_x = it.get.tags(dat.event,'p')[0][1];
     if (u_x !== p_x)
     {
       v_u.log('content not for you');
@@ -696,7 +671,7 @@ kin.e.decrypt =async s=>
       v_u.log('not possible to deccrypt');
       return false;
     }
-    let l = document.getElementById(it.fx.nid(x));
+    let l = document.getElementById(it.fx.encode('nid',x));
     if (!l) 
     {
       v_u.log('decrypted cyphertext:');
@@ -708,7 +683,7 @@ kin.e.decrypt =async s=>
       content.classList.add('decrypted');
       content.classList.remove('encrypted');
       content.querySelector('.butt.decrypt').remove();
-      l.querySelector('.content').append(it.parse.content({content:decrypted}));
+      l.querySelector('.content').append(it.parse.content(decrypted));
     }
 
     console.log(decrypted);

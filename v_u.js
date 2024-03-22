@@ -6,11 +6,20 @@ const v_u =
 
 v_u.pop =()=>
 {
+  let hash = location.hash;
+  let search = location.search;
+  if (hash.length)
+  {
+    [hash,search] = location.hash.split('?');
+  }
+  if (!search) search = '';
+  console.log('v_u.pop',[hash,search,location]);
+  
   if (!history.state
   || !history.state.hasOwnProperty('view')
   || history.state === '') 
   {
-    v_u.state(location.hash.split('?')[0].slice(1));
+    v_u.state(hash,search);
   }
   else 
   {
@@ -20,7 +29,7 @@ v_u.pop =()=>
     if (state.length) 
     {
       document.title = 'A<3 '+state;
-      v_u.view(state);  
+      v_u.view(state,search);  
     }
     else document.title = 'alphaama';
   }
@@ -30,6 +39,10 @@ window.addEventListener('popstate',v_u.pop);
 
 v_u.view =s=>
 {
+  // if (o_p.mode==='dev')
+  // console.log('v_u.view',s);
+  if (s.startsWith('#')) s = s.substring(1);
+  console.log('v_u.view',s);
   if (s.startsWith('npub')) v_u.p(s);
   else if (s.startsWith('note')) v_u.e(s);
   else if (s.startsWith('nevent')) v_u.nevent(s);
@@ -52,14 +65,18 @@ v_u.clear =()=>
   v_u.viewing = false;
 };
 
-v_u.state =s=>
+v_u.state =(s,search='')=>
 {
-  if (!history.state || history.state.view !== s)
+  if (search?.length) search = s.length?'?'+search:search;
+  let ss = s+search;
+  // console.log('v_u.state',s,search,ss);
+  if (!history.state || history.state.view !== ss)
   {
     const last = history.state&&history.state.view?history.state.view:'';
-    const dis = {view:s,last:last}
-    const hash_is_h = dis.view.length ? '#'+dis.view : '';
-    const pat = location.origin+location.pathname+hash_is_h;
+    // console.log('v_u.state last',last);
+    const dis = {view:ss,last:last};
+    const hash_is_h = dis.view.length ? dis.view : '';
+    const pat = location.origin+location.pathname+dis.view;
     history.pushState(dis,'',pat);
     v_u.pop()
   }
@@ -70,20 +87,51 @@ v_u.replace =s=>
 {
   const dis = history.state;
   dis.view = s;
-  const hash_is_h = dis.view.length ? '#'+dis.view : '';
+  const hash_is_h = dis.view.length ? dis.view : '';
   const path = location.origin+location.pathname+hash_is_h;
   history.replaceState(dis,'',path);
   v_u.view(dis.view)
 };
 
-const e_observer = new IntersectionObserver(a=>
+v_u.replace_note =(l,dat)=>
+{
+  l.id = 'temp-'+dat.event.id;
+  let b = kin.da(dat);
+  let b_rep = b.querySelector('.replies');
+  let childs = l.querySelector('.replies').childNodes;
+  if (childs.length)
+  {
+    for (const c of childs) if (c.tagName !== 'SUMMARY') v_u.append_to_rep(c,b_rep);
+  }
+  let is_root = b.classList.contains('root');
+  let is_reply = b.classList.contains('reply');
+  b.className = l.className;
+  l.remove();
+  b.classList.remove('blank','draft','not_sent');
+  if (dat.clas) b.classList.add(...dat.clas);
+  if (!is_root && b.parentElement.closest('.note')) 
+  {
+    b.classList.remove('root','not_yet');
+  }
+  else if (is_root) b.classList.add('root');
+  if (!is_reply && !b.parentElement.closest('.note')) b.classList.remove('reply');
+  else if (is_reply) b.classList.add('reply');
+  b.classList.add('replaced');
+  if (b.classList.contains('not_yet')) 
+  {
+    b_rep.removeAttribute('open');
+    v_u.observer.observe(b);
+  }
+};
+
+v_u.observer = new IntersectionObserver(a=>
 {
   for (const b of a)
   {
     const l = b.target;
     if (b.isIntersecting)
     {
-      e_observer.unobserve(l);
+      v_u.observer.unobserve(l);
       l.classList.remove('not_yet');
       l.classList.add('rendered');
       l.querySelector('.replies').setAttribute('open','')
@@ -91,7 +139,6 @@ const e_observer = new IntersectionObserver(a=>
   }
 },{root:null,threshold:.9});
 
-v_u.scroll =(l,options={})=> setTimeout(()=>{l.scrollIntoView(options)},50);
 
 v_u.log =s=>
 {
@@ -101,11 +148,12 @@ v_u.log =s=>
   
   const logs = document.getElementById('logs');
   logs.append(log);
-  document.getElementById('butt_l').dataset.count = logs.childNodes.length;
+  it.fx.data_count(document.getElementById('butt_l'),'.l');
 };
   
 v_u.p =async npub=>
 {
+  console.log(npub);
   let xpub = it.fx.decode(npub);
   let p = await aa.db.get_p(xpub);
   if (!p) p = it.p(xpub);
@@ -119,15 +167,16 @@ v_u.p =async npub=>
   if (l.classList.contains('simp')) author.update(l,p);
   l.classList.add('in_view');
   aa.l.classList.add('viewing','view_p');
-  v_u.scroll(l);
+  it.scroll(l);
   v_u.viewing = npub;
-  
+
   let notes_by = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
   let notes_ref = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
 };
 
 v_u.e =async nid=>
 {
+  v_u.viewing = nid;
   let l = document.getElementById(nid);
   if (l) v_u.dis(l);
   else
@@ -143,15 +192,15 @@ v_u.e =async nid=>
     }
     // else v_u.req_e([x]);
   }
-  v_u.viewing = nid;
+  
 };
 
 v_u.dis =l=>
 {
   l.classList.add('in_view');   
-  it.fx.in_path(l);
+  it.fx.path(l);
   aa.l.classList.add('viewing','view_e');
-  v_u.scroll(l);
+  it.scroll(l);
 };
 
 v_u.req_e =a=>
@@ -182,7 +231,7 @@ v_u.nevent =async nevent=>
   let data = it.fx.decode(nevent);
   if (data && data.id)
   {
-    let nid = it.fx.nid(data.id);
+    let nid = it.fx.encode('nid',data.id);
     let l = document.getElementById(nid);
     if (!l)
     {
@@ -192,7 +241,7 @@ v_u.nevent =async nevent=>
       {
         dat = 
         {
-          event:{id:data.id,created_at:it.tim.now() - 10},
+          event:{id:data.id,created_at:it.t.now() - 10},
           seen:[rel.in_set(rel.o.r)],subs:[],clas:[]
         };
 
@@ -203,7 +252,7 @@ v_u.nevent =async nevent=>
           for (let url of data.relays)
           {
             url = it.s.url(url);
-            if (url) it.a_set(dat.seen,[url.href]);
+            if (url) it.fx.a_add(dat.seen,[url.href]);
           }
         }
         // console.log(dat);
@@ -221,43 +270,43 @@ v_u.append_to_notes =(note)=>
 { 
   let notes = document.getElementById('notes');
   const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
-  notes.insertBefore(note,last);
   if (!note.classList.contains('rendered')) 
   {
     note.classList.add('root');
     note.querySelector('.replies').removeAttribute('open');
     note.classList.add('not_yet');
-    e_observer.observe(note);
+    v_u.observer.observe(note);
   }
+  notes.insertBefore(note,last);
 };
 
 v_u.append_to_rep =(note,rep)=>
 {
   const last = [...rep.children].filter(i=> i.tagName!== 'SUMMARY' && i.dataset.created_at > note.dataset.created_at)[0];
   rep.insertBefore(note,last ? last : null);
-  let is_aka = note.dataset.pubkey === aka.o.ls.xpub;
+  // let is_aka = note.dataset.pubkey === aka.o.ls.xpub;
   note.classList.add('reply');
   note.classList.remove('root');
   rep.parentNode.classList.add('haz_new_reply','haz_reply');
-  v_u.upd.path(rep,note.dataset.stamp,is_aka);
+  v_u.upd.path(rep,note.dataset.stamp,aka.is_aka(note.dataset.pubkey));
 };
 
 v_u.append_to_replies =(dat,note,reply_tag)=>
 {
   const reply_id = reply_tag[1];
-  const reply_nid = it.fx.nid(reply_id);
+  const reply_nid = it.fx.encode('nid',reply_id);
   let reply = document.getElementById(reply_nid);
   if (!reply)
   {
     reply = kin.blank(reply_tag,dat,1);
     v_u.append_to_rep(note,reply.querySelector('.replies'));
 
-    let root_tag = it.get_root_tag(dat.event.tags);
+    let root_tag = it.get.root_tag(dat.event.tags);
     if (root_tag && root_tag[1] !== reply_id)
     {
       reply.classList.add('reply');
       let root_id = root_tag[1];
-      let root_nid = it.fx.nid(root_id);
+      let root_nid = it.fx.encode('nid',root_id);
       let root = document.getElementById(root_nid);
       if (!root)
       { 
@@ -286,7 +335,7 @@ v_u.append_to_replies =(dat,note,reply_tag)=>
         if (relay)
         {
           let a = reply.dataset.r ? reply.dataset.r.trim().split(' ') : [];
-          it.a_set(a,[relay]);
+          it.fx.a_add(a,[relay]);
           reply.dataset.r = a.join(' ');
         }
       }
@@ -311,7 +360,7 @@ v_u.upd.path =(l,stamp,is_aka=false)=>
       }
       l.classList.add('haz_new');
       let time = l.querySelector('.by time');
-      time.title = it.tim.ago(it.tim.std(time.dataset.timestamp))
+      time.title = it.t.ago(it.t.to_date(time.dataset.timestamp))
       const replies = l.querySelector('.replies');
       const some = replies.childNodes.length - 1;
       const all = l.querySelectorAll('.note').length;
@@ -341,7 +390,7 @@ v_u.mark_read =e=>
   
   if (replies.classList.contains('expanded'))
   {
-    v_u.scroll(replies,{behavior:'smooth',block:'start'});
+    it.scroll(replies,{behavior:'smooth',block:'start'});
   }
-  else v_u.scroll(replies,{behavior:'smooth',block:'center'});
+  else it.scroll(replies,{behavior:'smooth',block:'center'});
 };

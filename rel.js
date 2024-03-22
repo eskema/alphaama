@@ -189,7 +189,7 @@ rel.add =s=>
     if (url)
     {
       if (!rel.o.ls[url]) rel.o.ls[url] = {sets:[]};
-      it.a_set(rel.o.ls[url].sets,a);
+      it.fx.a_add(rel.o.ls[url].sets,a);
       // let act = localStorage.ns+' '+rel.sn;
       // let log = it.mk.l('l',{con:act+' add '+url+' '+a.join(' ')});
       // v_u.log(log);
@@ -200,7 +200,7 @@ rel.add =s=>
       // }}))
     }
   };
-  it.loop(work,s,rel.save);
+  it.fx.loop(work,s,rel.save);
   cli.clear();
 };
 
@@ -226,7 +226,7 @@ rel.rm =s=>
     }
   };
 
-  it.loop(work,s,rel.save);
+  it.fx.loop(work,s,rel.save);
   cli.clear();
 };
 
@@ -255,13 +255,13 @@ rel.sets =s=>
         if (url)
         {
           if (!rel.o.ls[url.href].sets) rel.o.ls[url.href].sets = [];
-          it.a_set(rel.o.ls[url.href].sets,[set_id]);
+          it.fx.a_add(rel.o.ls[url.href].sets,[set_id]);
         }
       }
     }
   };
 
-  it.loop(work,s,rel.save);
+  it.fx.loop(work,s,rel.save);
   cli.clear();
 };
 
@@ -286,7 +286,7 @@ rel.set_rm =s=>
       }
     }
   };
-  it.loop(work,s,rel.save);
+  it.fx.loop(work,s,rel.save);
   cli.clear();
 };
 
@@ -338,7 +338,7 @@ rel.add_to_p =(relays,p)=>
   for (const relay in relays)
   {
     if (!p.rels[relay]) p.rels[relay] = relays[relay]
-    else it.a_set(p.rels[relay].sets,relays[relay].sets);
+    else it.fx.a_add(p.rels[relay].sets,relays[relay].sets);
   }
 };
 
@@ -351,9 +351,9 @@ rel.from_o =(relays,sets=false)=>
     if (href)
     {
       rels[href] = {sets:[]};
-      if (relays[url].read === true) it.a_set(rels[href].sets,['read']);
-      if (relays[url].write === true) it.a_set(rels[href].sets,['write']);
-      if (Array.isArray(sets)) it.a_set(rels[href].sets,sets);
+      if (relays[url].read === true) it.fx.a_add(rels[href].sets,['read']);
+      if (relays[url].write === true) it.fx.a_add(rels[href].sets,['write']);
+      if (Array.isArray(sets)) it.fx.a_add(rels[href].sets,sets);
     }
   }
   return rels
@@ -369,9 +369,9 @@ rel.from_tags =(tags,sets=[])=>
     if (href)
     {
       let relay = relays[href] = {sets:[]};
-      if (permission === 'read') it.a_set(relay.sets,[...sets,'read']);
-      else if (permission === 'write') it.a_set(relay.sets,[...sets,'write']);
-      else it.a_set(relay.sets,[...sets,'read','write']);
+      if (permission === 'read') it.fx.a_add(relay.sets,[...sets,'read']);
+      else if (permission === 'write') it.fx.a_add(relay.sets,[...sets,'write']);
+      else it.fx.a_add(relay.sets,[...sets,'read','write']);
     }
   }
   return relays
@@ -420,14 +420,14 @@ rel.mklist =s=>
     it.confirm(
     {
       description:'new relay list',
-      l:kin.tags(relays),
+      l:it.mk.tags(relays),
       yes()
       {
         const event = 
         {
           pubkey:aka.o.ls.xpub,
           kind:10002,
-          created_at:it.tim.now(),
+          created_at:it.t.now(),
           content:'',
           tags:relays
         };

@@ -11,7 +11,7 @@ aa.idb.onmessage=e=>
   {
     if (aa.db.exe.hasOwnProperty(k))
     {
-      it.a_set(exes,[k]);
+      it.fx.a_add(exes,[k]);
       aa.db.exe[k](o[k]);
     } 
   }
@@ -137,7 +137,7 @@ aa.db.upd =async dat=>
 // aa.db.req =s=>
 // {
 //   let filter = 
-//   aa.db.get({req:it.fx.vars('{"since":"n_2"}')}).then(a=>a.forEach(dat=>aa.print(dat)))
+//   aa.db.get({req:aa.vars('{"since":"n_2"}')}).then(a=>a.forEach(dat=>aa.print(dat)))
 // };
 
 aa.db.some =async s=>

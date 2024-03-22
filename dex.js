@@ -29,7 +29,7 @@ dex.header_butt_authors =(k,v)=>
   let li = it.mk.l('li',{cla:'item item_'+k});
   li.dataset.v = k;
   let spanval = it.mk.l('button',{cla:'val',con:v,clk:dex.clk.head});
-  let name = aa.p[k]?.metadata?.name ?? it.fx.npub(k);
+  let name = aa.p[k]?.metadata?.name ?? it.fx.encode('npub',k);
   // if (aa.p[k]?.metadata?.name && aa.p[k].metadata.name) name = aa.p[npub].metadata.name;
   let spankey = it.mk.l('button',{cla:'key',con:name,clk:dex.clk.head});
   
@@ -96,7 +96,7 @@ const get_all_with_tag =(k,v)=>
   {
     let note = tag.closest('.note');
     let note_id = note.dataset.id;
-    let is_new = it.a_set(ids,[note_id]);
+    let is_new = it.fx.a_add(ids,[note_id]);
     if (is_new)  notes.push(note);
   }
   return notes
@@ -110,7 +110,7 @@ const index_filter_key =(e,items,k)=>
     {
       items.forEach((l)=>
       {
-        let a = it.a_rm(l.dataset.out.trim().split(' '),[k]);
+        let a = it.fx.a_rm(l.dataset.out.trim().split(' '),[k]);
         if (a.length) l.dataset.out = a.join(' ');
         else
         {
@@ -124,7 +124,7 @@ const index_filter_key =(e,items,k)=>
       items.forEach((l)=>
       {
         let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
-        it.a_set(a,[k]);
+        it.fx.a_add(a,[k]);
         l.dataset.out = a.join(' ');
         l.classList.add('out')
       });
@@ -138,7 +138,7 @@ const index_filter_val =(e,items,k)=>
   {
     items.forEach((l)=>
     {
-      let a = aa.l.dataset.solo ? it.a_rm(aa.l.dataset.solo.trim().split(' '),[k]) : [];
+      let a = aa.l.dataset.solo ? it.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k]) : [];
       if (a.length) aa.l.dataset.solo = a.join(' ');
       else
       {
@@ -146,7 +146,7 @@ const index_filter_val =(e,items,k)=>
         aa.l.classList.remove('haz_solo');
       }
       l.classList.remove('solo')
-      it.fx.rm_path(k);
+      it.fx.path_rm(k);
     });
   }
   else
@@ -155,10 +155,10 @@ const index_filter_val =(e,items,k)=>
     {
       let solos = document.querySelectorAll('.solo');
       if (solos) solos.forEach((i)=>{i.classList.remove('solo')});
-      it.fx.rm_path(k);
+      it.fx.path_rm(k);
     }
     else aa.l.classList.add('haz_solo');
-    if (items) items.forEach((l)=>{ l.classList.add('solo'); it.fx.in_path(l,k)});
+    if (items) items.forEach((l)=>{ l.classList.add('solo'); it.fx.path(l,k)});
   }
   e.target.classList.toggle('solo')
 };
@@ -167,7 +167,7 @@ dex.clk.head =(e)=>
 {
   const [k,v,kv] = get_index_clk(e);
   console.log(k,v);
-  let items = it.get_index_items(k,v,kv);
+  let items = it.get.index_items(k,v,kv);
   if (kv === 'key') index_filter_key(e,items,k);
   else index_filter_val(e,items,k);
 }

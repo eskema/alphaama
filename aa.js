@@ -98,9 +98,10 @@ aa.save = async mod=>
 
 aa.mk.u =()=>
 {
-  const u = it.mk.l('aside',{id:'u'});
+  const id = 'u';
+  const u = it.mk.l('aside',{id:id});
   document.body.insertBefore(u,document.body.lastChild);
-  u.append(it.mk.butt(u))
+  u.append(it.mk.butt_expand(id))
 }
 
 aa.mk.header =()=>
@@ -108,7 +109,7 @@ aa.mk.header =()=>
   if (it.s.rigged()) aa.l.classList.add('rigged');
  
   const header = it.mk.l('header',{id:'header'});
-  const caralho =  it.mk.l('a',{id:'caralho',ref:'#',con:'A<3',tit:'vai pró caralho',clk:it.clk.a});
+  const caralho =  it.mk.l('a',{id:'caralho',ref:'/',con:'A<3',tit:'vai pró caralho',clk:it.clk.a});
   const state = it.mk.l('h1',{id:'state',con:'dickbutt'});
   const description = it.mk.l('p',{id:'description',cla:'paragraph'});
   const alphaama = it.mk.link('https://github.com/eskema/alphaama','alphaama','alphaama repo');
@@ -151,8 +152,8 @@ aa.clk.yolo =e=>
       if (signed)
       {
         dat.event = signed;
-        dat.clas = it.a_rm(dat.clas,['draft']);
-        it.a_set(dat.clas,['not_sent']);
+        dat.clas = it.fx.a_rm(dat.clas,['draft']);
+        it.fx.a_add(dat.clas,['not_sent']);
         aa.post(dat);
       }      
     })
@@ -170,8 +171,8 @@ aa.clk.sign =e=>
       if (signed)
       {
         dat.event = signed;
-        dat.clas = it.a_rm(dat.clas,['draft']);
-        it.a_set(dat.clas,['not_sent']);
+        dat.clas = it.fx.a_rm(dat.clas,['draft']);
+        it.fx.a_add(dat.clas,['not_sent']);
         aa.db.upd(dat);
         aa.print(dat);
       }
@@ -205,7 +206,7 @@ aa.clk.post =e=>
 
 aa.post =dat=>
 {
-  // if (dat.clas?.includes('not_sent')) dat.clas = it.a_rm(dat.clas,['not_sent']);
+  // if (dat.clas?.includes('not_sent')) dat.clas = it.fx.a_rm(dat.clas,['not_sent']);
   q_e.broadcast(dat.event);
 };
 
@@ -215,7 +216,7 @@ aa.clk.edit =e=>
   const xid = note.dataset.id;
   if (v_u.viewing === note.id) v_u.clear()
   note.remove();
-  it.butt_count('e','.note');
+  it.fx.data_count(document.getElementById('butt_e'),'.note');
   
   cli.v(aa.e[xid].event.content);
   delete aa.e[xid];
@@ -228,7 +229,7 @@ aa.clk.cancel =e=>
   delete aa.e[xid];
   if (v_u.viewing === note.id) v_u.clear()
   note.remove();
-  it.butt_count('e','.note');
+  it.fx.data_count(document.getElementById('butt_e'),'.note');
 };
 
 aa.clk.react =e=>
@@ -298,9 +299,9 @@ aa.clk.fetch =e=>
     if (r.length) relays.push(...r);
   }
   else relays.push(...rel.in_set(rel.o.r));
-  it.a_dataset(note,'nope',relays);
+  it.fx.dataset_add(note,'nope',relays);
   q_e.demand(request,relays,{eose:'done'});
-  setTimeout(()=>{v_u.scroll(document.getElementById(note.id))},200);
+  setTimeout(()=>{it.scroll(document.getElementById(note.id))},200);
 };
 
 aa.f_it =async event=>
@@ -315,36 +316,7 @@ aa.f_it =async event=>
   }
 };
 
-aa.replace_note =(l,dat)=>
-{
-  l.id = 'temp-'+dat.event.id;
-  let b = kin.da(dat);
-  let b_rep = b.querySelector('.replies');
-  let childs = l.querySelector('.replies').childNodes;
-  if (childs.length)
-  {
-    for (const c of childs) if (c.tagName !== 'SUMMARY') v_u.append_to_rep(c,b_rep);
-  }
-  let is_root = b.classList.contains('root');
-  let is_reply = b.classList.contains('reply');
-  b.className = l.className;
-  l.remove();
-  b.classList.remove('blank','draft','not_sent');
-  if (dat.clas) b.classList.add(...dat.clas);
-  if (!is_root && b.parentElement.closest('.note')) 
-  {
-    b.classList.remove('root','not_yet');
-  }
-  else if (is_root) b.classList.add('root');
-  if (!is_reply && !b.parentElement.closest('.note')) b.classList.remove('reply');
-  else if (is_reply) b.classList.add('reply');
-  b.classList.add('replaced');
-  if (b.classList.contains('not_yet')) 
-  {
-    b_rep.removeAttribute('open');
-    e_observer.observe(b);
-  }
-};
+
 
 aa.to_print =dat=>
 {
@@ -372,7 +344,7 @@ aa.missing =async s=>
         if (!b.includes(url))
         {
           if (!miss[url]) miss[url] = [];
-          it.a_set(miss[url],[xid]);
+          it.fx.a_add(miss[url],[xid]);
         }
       }
     };
@@ -387,7 +359,7 @@ aa.missing =async s=>
     if (Object.keys(miss).length)
     {
       let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
-      for (const id of ids) it.a_set(aa.miss[s][id].nope,[url]);
+      for (const id of ids) it.fx.a_add(aa.miss[s][id].nope,[url]);
       let filter;
       if (s === 'p') 
       {
@@ -412,29 +384,26 @@ aa.print =async dat=>
   const xid = dat.event.id;
   if (!aa.e[xid]) aa.e[xid] = dat;
 
-  let nid = it.fx.nid(xid);
+  let nid = it.fx.encode('nid',xid);
   let l = document.getElementById(nid);
   if (!l)
   {
     l = kin.da(dat);
-    it.butt_count('e','.note');
+    it.fx.data_count(document.getElementById('butt_e'),'.note');
     if (!l) console.log(dat);
-    if (l?.classList.contains('draft')) v_u.scroll(l,{behavior:'smooth',block:'center'});
+    if (l?.classList.contains('draft')) it.scroll(l,{behavior:'smooth',block:'center'});
   }
   else
   {
     if (l.classList.contains('blank') 
-    || l.classList.contains('draft')) aa.replace_note(l,dat);
+    || l.classList.contains('draft')) v_u.replace_note(l,dat);
   }
 
-  it.get_quotes(xid);
-
-  
-  
+  it.get.quotes(xid);
   aa.missing('e');
   aa.missing('p');
   // aa.dex();
-  if (l && history.state.view === nid) setTimeout(()=>{v_u.dis(l)},500);
+  if (l && history.state.view === '#'+nid) setTimeout(()=>{v_u.dis(l)},200);
 };
 
 aa.actions.push(
@@ -450,3 +419,54 @@ aa.actions.push(
     exe:aa.reset
   }
 );
+
+
+aa.vars ={};
+// takes a string and
+// returns an array with a request filter and options
+// requires it.parse, aka, v_u, it.t
+
+aa.vars.filter =(s)=>
+{
+  let o = it.parse.j(s),options = {};  
+  const aka_p = aa.p[aka.o.ls.xpub];
+  if (!aka_p) v_u.log('no aka, so no vars in qe...');
+  if (o) for (const k in o) 
+  {
+    const v = o[k];
+    switch (k)
+    {
+      case 'eose':
+        options.eose = v;
+        delete o[k];
+        break;
+      case 'since':
+      case 'until':
+        if (typeof v === 'string') o[k] = it.t.convert(v);
+        break;
+      default:
+        if (Array.isArray(v)) for (let i=0;i<v.length;i++)
+        {
+          const val = v[i];
+          if (typeof val === 'string') 
+          { 
+            switch (val) 
+            {
+              case 'aka':
+              case 'u_x':
+                o[k] = o[k].filter(dis=>dis!==val);
+                if (aka_p) o[k].push(aka_p.xpub); 
+                break;
+              case 'b_f':
+              case 'bff':
+                o[k] = o[k].filter(dis=>dis!==val);
+                if (aka_p) o[k].push(...aka_p.extradata.bff);                    
+                break;
+            }
+          }
+        }
+    }
+  }
+  if (!Object.keys(options).length) options = false
+  return [o,options]
+};

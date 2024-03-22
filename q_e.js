@@ -144,9 +144,9 @@ q_e.demand =(request,relays,options)=>
     let filters = request.slice(2);
     for (const f of filters)
     {
-      if (!it.fx.verify_filter(f)) 
+      if (!it.fx.verify_req_filter(f)) 
       {
-        v_u.log('demand failed, invalid filter: '+f);
+        v_u.log('demand failed, invalid filter: '+JSON.stringify(f));
         return false;
       }
     }
@@ -261,12 +261,12 @@ q_e.sets =s=>
         if (r) 
         {
           if (!r.sets) r.sets = [];
-          it.a_set(q_e.o.ls[f_id].sets,[set_id]);
+          it.fx.a_add(q_e.o.ls[f_id].sets,[set_id]);
         }
       }
     }
   };
-  it.loop(work,s,()=>{q_e.save()})
+  it.fx.loop(work,s,()=>{q_e.save()})
 };
 
 q_e.set_rm =s=>
@@ -280,18 +280,18 @@ q_e.set_rm =s=>
       for (const f_id of a)
       {
         let r = q_e.o.ls[f_id];
-        if (r && r.sets) r.sets = it.a_rm(r.sets,[set_id]);
+        if (r && r.sets) r.sets = it.fx.a_rm(r.sets,[set_id]);
       }
     }
     else
     {
       for (const k in q_e.o.ls)
       {
-        q_e.o.ls[k].sets = it.a_rm(q_e.o.ls[k].sets,[set_id]);
+        q_e.o.ls[k].sets = it.fx.a_rm(q_e.o.ls[k].sets,[set_id]);
       }
     }
   };
-  it.loop(work,s,()=>{q_e.save()})
+  it.fx.loop(work,s,()=>{q_e.save()})
 };
 
 q_e.sub =s=>
@@ -353,7 +353,7 @@ q_e.raw =s=>
   let filter = a.join('').replace(' ',''); 
   if (rels && filter) 
   { 
-    let [filtered,options] = it.fx.vars(filter);
+    let [filtered,options] = aa.vars(filter);
     if (filtered)
     {
       let request = ['REQ','raw',filtered];
@@ -369,7 +369,7 @@ q_e.raw =s=>
         cli.fuck_off();
         let log = it.mk.l('p',
         {
-          con:localStorage.ns+' '+q_e.sn+' run '+filter+' ('+it.tim.now()+') '+relays+' '
+          con:localStorage.ns+' '+q_e.sn+' run '+filter+' ('+it.t.now()+') '+relays+' '
         });
         let butt_close = it.mk.l('button',
         {
@@ -404,7 +404,7 @@ q_e.run =async s=>
   if (a.length) relset = a.shift();
   if (fid && q_e.o.ls.hasOwnProperty(fid)) 
   { 
-    let [filtered,options] = it.fx.vars(q_e.o.ls[fid].v);
+    let [filtered,options] = aa.vars.filter(q_e.o.ls[fid].v);
     let request;
     if (filtered) request = ['REQ',fid,filtered];
     
@@ -415,10 +415,10 @@ q_e.run =async s=>
     let close_butt = it.mk.l('button',
     {
       cla:'butt close',
-      con:'[x]',
+      con:'['+q_e.sn+' close '+fid+']',
       clk:e=>{ cli.v(localStorage.ns+' '+q_e.sn+' close '+fid) }
     });
-    v_u.log(localStorage.ns+' '+q_e.sn+' run '+fid+' ('+it.tim.now()+')');
+    v_u.log(localStorage.ns+' '+q_e.sn+' run '+fid+' ('+it.t.now()+')');
     let log = it.mk.l('p',
     {
       con:'on: '+relays,
