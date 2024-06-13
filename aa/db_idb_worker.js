@@ -1,11 +1,16 @@
 const indexed_db = {ops:{}};
 
+indexed_db.ops.stores =async(db,o)=>
+{
+  console.log(db.objectStoreNames);
+  // postMessage(db.objectStoreNames);
+};
+
 indexed_db.ops.clear =async(db,o)=>
 {
   let times = 0;
   for (const store of o.stores)
   {
-    // console.log(store);
     const odb = db.transaction(store,'readwrite').objectStore(store);
     const store_clear = odb.clear();
     store_clear.onsuccess =e=> 
@@ -132,22 +137,21 @@ indexed_db.ops.some =async(db,o)=>
   }
 };
 
-const a_set =(a,dis)=>
-{
-  let b;
-  for (const k of dis)
-  {
-    if (!a.includes(k)) 
-    {
-      a.push(k);
-      b = true;
-    }
-  }
-  return b
-};
-
 const merge =(dis,dat)=>
 {
+  const a_set =(a,dis)=>
+  {
+    let b;
+    for (const k of dis)
+    {
+      if (!a.includes(k)) 
+      {
+        a.push(k);
+        b = true;
+      }
+    }
+    return b
+  };
   dis = Object.assign({},dis);
   let merged,sets = ['seen','subs','clas','refs'];
   for (const set of sets)
@@ -159,12 +163,31 @@ const merge =(dis,dat)=>
   return merged ? dis : false 
 };
 
-indexed_db.ops.upd =async(db,o)=>
+indexed_db.ops.upd_e =async(db,o)=>
 {
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
   for (const item of o.a)
   {
     odb.openCursor(item.event.id).onsuccess=e=>
+    {
+      const cursor = e.target.result; 
+      if (cursor) 
+      { 
+        // console.log('db cursor');
+        const merged = merge(cursor.value,item);
+        if (merged) cursor.update(merged);
+      }
+      else odb.put(item)
+    }
+  }
+};
+
+indexed_db.ops.upd_p =async(db,o)=>
+{
+  const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
+  for (const item of o.a)
+  {
+    odb.openCursor(item.xpub).onsuccess=e=>
     {
       const cursor = e.target.result; 
       if (cursor) 
@@ -211,8 +234,6 @@ indexed_db.upg =(e) =>
   if (st.indexNames.contains('bff')) st.deleteIndex('bff');
 };
 
-indexed_db.err =e=>{ console.log('db error',e) };
-
 indexed_db.ok =(db,o)=> 
 {
   const total = Object.keys(o).length;
@@ -229,7 +250,7 @@ onmessage =m=>
 { 
   // console.log('db onmessage',m.data);
   const db = indexedDB.open("alphaama", 15);
-  db.onerror = indexed_db.err;
+  db.onerror =e=>{ console.log('db error',e)};
   db.onupgradeneeded = indexed_db.upg;
   db.onsuccess =e=> indexed_db.ok(e.target.result,m.data);  
 }

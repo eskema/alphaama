@@ -1,11 +1,16 @@
 // it's true or false, boolean stuff, also quantum
-it.s ={};
+
+aa.is ={};
+
 
 // alphanumeric and underscore
-it.s.an =s=> it.regx.an.test(s);
+
+aa.is.an =s=> aa.regx.an.test(s);
+
 
 // checks if element has no children and is empty, ignores trailing spaces
-it.s.empty =l=>
+
+aa.is.empty =l=>
 {
   if (!l) return true;
   const len = l.childNodes.length;
@@ -15,8 +20,10 @@ it.s.empty =l=>
   return false;
 };
 
+
 // checks if string is only one character long
-it.s.one =s=>
+
+aa.is.one =s=>
 {
   let a = s.split(' ');
   let seg = a[0];
@@ -26,39 +33,50 @@ it.s.one =s=>
   else return false
 };
 
+
 // checks if page is loading from iframe
-it.s.rigged =()=>
+
+aa.is.rigged =()=>
 {
   try {return window.self !== window.top} 
   catch(er) {return true}
 };
 
+
 // converts string to URL and returns it or false
-it.s.url =s=>
+
+aa.is.url =s=>
 {
   let url;
-  try { url = new URL(s) } 
-  catch(er) {} // console.log('not url '+s)
+  try { url = new URL(s) } catch(er) {}
   return url
 };
 
+
 // it's a valid nostr key
-it.s.key =x=> it.s.x(x) && x.length === 64; 
+
+aa.is.key =x=> aa.is.x(x) && x.length === 64; 
+
 
 // it's tag conditions
-it.s.tag ={};
-it.s.tag.e =a=> it.s.tax(0,'e',a) && it.s.x(a[1]);
-it.s.tag.p =a=> it.s.tax(0,'p',a) && it.s.x(a[1]);
-it.s.tag.q =a=> it.s.tax(0,'q',a) && it.s.x(a[1]);
-it.s.tag.marked =(s,a)=> a[3] && a[3] === s; 
-it.s.tag.root =a=> it.s.tag.e(a) && it.s.tag.marked('root',a);
-it.s.tag.reply =a=> it.s.tag.e(a) && it.s.tag.marked('reply',a);
+
+aa.is.tag ={};
+aa.is.tag.e =a=> aa.is.tax(0,'e',a) && aa.is.x(a[1]);
+aa.is.tag.p =a=> aa.is.tax(0,'p',a) && aa.is.x(a[1]);
+aa.is.tag.q =a=> aa.is.tax(0,'q',a) && aa.is.x(a[1]);
+aa.is.tag.marked =(s,a)=> a[3] && a[3] === s; 
+aa.is.tag.root =a=> aa.is.tag.e(a) && aa.is.tag.marked('root',a);
+aa.is.tag.reply =a=> aa.is.tag.e(a) && aa.is.tag.marked('reply',a);
+
 
 // has index value in array
-it.s.tax =(i,v,a)=> a[i] && a[i] === v;
+
+aa.is.tax =(i,v,a)=> a[i] && a[i] === v;
+
 
 // returns wether or not a given level is trusted
-it.s.trusted =trust=>
+
+aa.is.trusted =trust=>
 {
   let trust_needed;
   try { trust_needed = parseInt(localStorage.trust) } 
@@ -67,33 +85,39 @@ it.s.trusted =trust=>
   return false
 };
 
+
 // returns user trust
-it.s.trust_x =x=> it.s.trusted(aa.p[x]?.trust ?? 0);
+
+aa.is.trust_x =x=> aa.is.trusted(aa.db.p[x]?.trust ?? 0);
+
 
 // checks if string is valid url and then checks extension for media file types.
 // returns false if no media found or array with extension,URL
-it.s.url_type =s=>
+
+aa.is.url_type =s=>
 {
-  let url = it.s.url(s); 
+  let url = aa.is.url(s); 
   if (!url) return false;
-  
-  const src = url.origin + url.pathname;
-  const low = src.toLowerCase();
-  const is_img = ['jpg','jpeg','gif','webp','png'];
+  const is_img = ['jpg','jpeg','gif','webp','png','heic'];
   const is_av = ['mp3','mp4','mov','webm'];
   const check_ext =extensions=>
   {
+    const src = (url.origin + url.pathname).toLowerCase();
     for (const ext of extensions)
     {
-      if (low.endsWith('.'+ext)
+      if (src.endsWith('.'+ext)
       || (url.searchParams.has('format') && url.searchParams.get('format') === ext)) 
       return true
     }
     return false
   };
    
-  return check_ext(is_img) ? ['img',url] : check_ext(is_av) ? ['av',url] : ['link',url]
+  return check_ext(is_img) ? ['img',url] 
+  : check_ext(is_av) ? ['av',url] 
+  : ['link',url]
 };
 
+
 // it's hexadecimal
-it.s.x =s=> /^[A-F0-9]+$/i.test(s); 
+
+aa.is.x =s=> /^[A-F0-9]+$/i.test(s); 
