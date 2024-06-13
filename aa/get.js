@@ -1,8 +1,5 @@
 // get stuff from stuff
 
-aa.get ={};
-
-
 // get the dialog element or create it if not found
 aa.get.dialog =()=>
 {

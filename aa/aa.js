@@ -6,6 +6,7 @@ const aa =
     '/dep/nostr_tools_2.js?v=20000',
     '/dep/blurhash.js?v=10000',
   ],
+  get:{},
   l:document.documentElement,
   kinds:{},
   miss:{e:{},p:{}},
