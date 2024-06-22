@@ -15,7 +15,7 @@ aa.q.load =()=>
   aa.actions.push(
     {
       action:[aa.q.sn,'add'],
-      required:['fid','json_filter'],
+      required:['fid','JSON_filter'],
       description:'add new filter',
       exe:aa.q.add
     },
@@ -65,13 +65,13 @@ aa.q.load =()=>
     },
   );
 
-  aa.db.mod_load(aa.q).then(aa.mk.mod);
+  aa.mod_load(aa.q).then(aa.mk.mod);
 };
 
 
 // save 
 
-aa.q.save =()=>{ aa.db.mod_save(aa.q).then(aa.mk.mod) };
+aa.q.save =()=>{ aa.mod_save(aa.q).then(aa.mk.mod) };
 
 
 // default queries
@@ -199,7 +199,8 @@ aa.q.add =s=>
     }
     if (changed) aa.q.save();
     aa.log(log);
-    aa.cli.fuck_off();
+    // aa.cli.fuck_off();
+    aa.cli.clear();
   }
   else aa.log('invalid filter');
 };
@@ -263,7 +264,8 @@ aa.q.rm_filter =s=>
   {
     delete aa.q.o.ls[fid];
     aa.q.save();
-    aa.cli.fuck_off();
+    // aa.cli.fuck_off();
+    aa.cli.clear();
     aa.log('filter removed: '+fid);
   }
   else aa.log(localStorage.ns+' '+aa.q.sn+' '+fid+' not found')
@@ -274,7 +276,8 @@ aa.q.rm_filter =s=>
 
 aa.q.req =s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   let a = s.trim().split(' ');
   let rels = a.shift();
   let relays = aa.r.rel(rels);
@@ -300,7 +303,8 @@ aa.q.req =s=>
 
 aa.q.run =async s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   const tasks = s.split(',');
   for (const task of tasks)
   {
@@ -331,29 +335,9 @@ aa.q.close =s=>
   aa.log(localStorage.ns+' '+aa.q.sn+' close');  
   for (const k in aa.r.active)
   {
-    const a = fids.length ? fids : Object.keys(q);
+    const a = fids.length ? fids : Object.keys(aa.r.active[k].q);
     if (a.length) for (const fid of a) aa.r.close(k,fid);
   }
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
 };
-
-// aa.q.req = {};
-
-// aa.q.req.ids =(req={ids:[],relays:[]})=>
-// {
-//   const request = ['REQ','ids',{ids:req.ids}];
-//   if (!req.relays?.length) req.relays = aa.r.in_set(aa.r.o.r);
-//   const options = {eose:'close'};
-//   console.log(request,req.relays,options);
-//   aa.r.demand(request,req.relays,options);
-// };
-
-// aa.q.req.authors =(req={ids:[],relays:[]})=>
-// {
-//   const request = ['REQ','ids',{authors:req.ids}];
-//   if (!req.relays?.length) req.relays = aa.r.in_set(aa.r.o.r);
-//   const options = {eose:'close'};
-//   console.log(request,req.relays,options);
-//   aa.r.demand(request,req.relays,options);
-// };
-

@@ -34,18 +34,11 @@ aa.o =
 
 aa.o.load =()=>
 {
-  const id = aa.o.def.id;
   // ensure default options
   for (const k in aa.o.def.ls)
   {
     if (!localStorage[k]) localStorage[k] = aa.o.def.ls[k];
   }
-
-  
-  // aa.mk.mod(aa.o); 
-
-  // aa.o.save();
-
 
   aa.actions.push(
     {
@@ -67,14 +60,10 @@ aa.o.load =()=>
       exe:aa.o.rm
     }
   );
-  aa.o.o = {id:'o',ls:localStorage};
-  aa.db.mod_load(aa.o).then(aa.mk.mod);
+  aa.o.o = {id:aa.o.def.id,ls:localStorage};
+  aa.mod_load(aa.o).then(aa.mk.mod);
 
-  window.addEventListener('storage',e=>
-  {
-    console.log('storage',e);
-    // aa.to(()=>{aa.o.load()},200,'storage');
-  });
+  window.addEventListener('storage',e=> { console.log('storage',e); });
 };
 
 
@@ -88,15 +77,10 @@ aa.o.mk =(k,v)=>
   {
     case 'team': if (aa.l.dataset.team !== v) aa.l.dataset.team = v; break;
   }
-  const id = aa.o.sn;
+  const id = aa.o.def.id;
   const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
   l.append(
     aa.mk.butt_action(id+' set '+k+' '+v,k,'key'),
-    // aa.mk.l('button',{cla:'key',con:k,clk:e=>
-    // {
-    //   aa.cli.t.value = localStorage.ns+' '+id+' set '+k+' '+v;
-    //   aa.cli.foc();
-    // }}),
     aa.mk.l('span',{cla:'val',con:v})
   );
   return l
@@ -107,7 +91,8 @@ aa.o.mk =(k,v)=>
 
 aa.o.reset =s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   s.trim();
   if (s)
   {
@@ -117,11 +102,11 @@ aa.o.reset =s=>
       if (aa.o.def.ls[v])
       {
         localStorage[v] = aa.o.def.ls[v];
-        aa.db.mod_item_upd(aa.o,k,v);
+        aa.mod_ui(aa.o,k,v);
       }
     }
     aa.fx.loop(work,s);
-    aa.log(aa.mk.butt_action(aa.o.sn+' reset '+s));
+    aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
   } 
   else if (window.confirm('reset all options?')) 
   {
@@ -135,19 +120,20 @@ aa.o.reset =s=>
 
 aa.o.rm =s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   const work =a=>
   {
-    const dis = localStorage.ns+' op rm: ';
-    const v = a.shift().trim();
-    if (v && localStorage[v])
+    const dis = localStorage.ns+' '+aa.o.def.id+' rm ';
+    const k = a.shift().trim();
+    if (k && localStorage[k])
     {
-      if (!aa.o.def.hasOwnProperty(v))
+      if (!aa.o.def.hasOwnProperty(k))
       {
-        localStorage.removeItem(v);
-        document.getElementById(aa.o.sn+'_'+v).remove();
+        localStorage.removeItem(k);
+        document.getElementById(aa.o.def.id+'_'+k).remove();
         // aa.o.load();
-        aa.log(dis+v);
+        aa.log(dis+k);
       }
       else aa.log(dis+'key cannot be removed');
     }
@@ -170,15 +156,16 @@ aa.o.save =()=>
 
 aa.o.set =s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   const work =a=>
   {
     let [k,v] = a;
     if (k && v)
     {
       localStorage[k] = v;
-      aa.db.mod_item_upd(aa.o,k,v);
-      aa.log(aa.mk.butt_action(aa.o.sn+' set '+k+' '+v));
+      aa.mod_ui(aa.o,k,v);
+      aa.log(aa.mk.butt_action(aa.o.def.id+' set '+k+' '+v));
     }
   };
   aa.fx.loop(work,s)

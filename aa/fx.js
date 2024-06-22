@@ -1,7 +1,4 @@
-// fix stuff
-
-aa.fx ={};
-
+// fx stuff
 
 // checks if array includes items
 // adds them if not and returns if anything was added

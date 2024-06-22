@@ -20,7 +20,14 @@ aa.state.clear =()=>
 aa.state.load =e=>
 {
   const header = aa.mk.l('header',{id:'header'});
-  const caralho =  aa.mk.l('a',{id:'caralho',ref:'/',con:'A<3',tit:'vai pró caralho',clk:aa.clk.a});
+  const caralho =  aa.mk.l('a',
+  {
+    id:'caralho',
+    ref:'/',
+    con:'A<3',
+    tit:'vai pró caralho',
+    clk:aa.clk.a
+  });
   const state = aa.mk.l('h1',{id:'state',con:'dickbutt'});
   header.append(caralho,state);
   document.body.prepend(header);
@@ -104,6 +111,7 @@ aa.state.resolve =(s,search)=>
 
 aa.state.view =(s,search='')=>
 {
+  if (s?.length) s.trim();
   if (search?.length) search = s.length?'?'+search:search;
   let ss = s+search;
   console.log('aa.state.view',history.state,ss);

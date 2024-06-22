@@ -20,7 +20,6 @@ aa.p.load =()=>
   section.append(aa.p.l);
 
   aa.p.section_observer.observe(aa.p.l,{attributes:false,childList:true});
-  // document.getElementById('view').append(section);
 };
 
 aa.p.section_mutated =a=> 
@@ -47,7 +46,7 @@ aa.p.save =p=>
   {
     let pq = [...aa.temp[q_id]];
     aa.temp[q_id] = [];
-    aa.db.put({put:{store:'authors',a:pq}})
+    aa.db.idb.worker.postMessage({put:{store:'authors',a:pq}})
     // .then(()=> {aa.temp[q_id] = [];});
   },1000,q_id);
 };
@@ -88,7 +87,7 @@ aa.p.authors_from_tags =tags=>
   
   if (p_to_get.length)
   {
-    aa.db.get({get_a:{store:'authors',a:p_to_get}}).then(a=>
+    aa.db.idb.ops({get_a:{store:'authors',a:p_to_get}}).then(a=>
     {
       for (p of a) aa.db.p[p.xpub] = p;
     });
@@ -107,12 +106,54 @@ aa.p.profile =p=>
     profile.dataset.updated = p.updated ?? 0;
     aa.fx.color(p.xpub,profile);
     profile.append(aa.mk.pubkey(p));
+    profile.append(aa.p.profile_actions(p));
     profile.append(aa.mk.l('section',{cla:'metadata'}));
     profile.append(aa.mk.l('section',{cla:'extradata'}));
     
     aa.p.l.append(profile);
   }
   return profile
+};
+
+aa.p.profile_actions =p=>
+{
+  const butt = (id)=> aa.mk.l('button',{con:id,cla:'butt '+id,clk:aa.clk[id]});
+  
+  const l = aa.mk.l('p',{cla:'actions'});
+
+  const butt_score = aa.mk.l('button',
+  {
+    cla:'butt score',
+    con:p.trust+'',
+    clk:aa.p.profile_butt_score
+  });
+  
+  l.append(butt_score);
+
+  if (aa.u.o.ls.xpub)
+  {
+    if (p.xpub !== aa.u.o.ls.xpub)
+    {
+      const butt_follow = aa.mk.l('button',
+      {
+        cla:'butt follow',
+        con:'follow',
+        clk:aa.p.profile_butt_follow
+      });
+  
+      if (aa.u.is_following(p.xpub)) 
+      {
+        butt_follow.classList.add('is_bff');
+        butt_follow.textContent = 'unfollow';
+      }
+      l.append(butt_follow);
+    }
+    
+  }
+  
+  // let a = ['score','follow'];
+  // for (const s of a) l.append(butt(s),' ');
+  return l
 };
 
 aa.p.profile_butt_all =e=>
@@ -326,7 +367,7 @@ aa.p.list =(a,l)=>
     if (keys_to_get.length)
     {
       // console.log('aa.p.list');
-      aa.db.get({get_a:{store:'authors',a:keys_to_get}})
+      aa.db.idb.ops({get_a:{store:'authors',a:keys_to_get}})
       .then(all=>
       {
         for (const bff of all) aa.db.p[bff.xpub] = bff;
@@ -417,37 +458,6 @@ aa.mk.relay_hints =(extr,a,p)=>
 aa.mk.pubkey =p=>
 {
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
-  const butt_score = aa.mk.l('button',
-  {
-    cla:'butt score',
-    con:p.trust+'',
-    clk:aa.p.profile_butt_score
-  });
-  
-  pubkey.append(butt_score);
-
-  if (aa.u.o.ls.xpub)
-  {
-    if (p.xpub !== aa.u.o.ls.xpub)
-    {
-      const butt_follow = aa.mk.l('button',
-      {
-        cla:'butt follow',
-        con:'follow',
-        clk:aa.p.profile_butt_follow
-      });
-  
-      if (aa.u.is_following(p.xpub)) 
-      {
-        butt_follow.classList.add('is_bff');
-        butt_follow.textContent = 'unfollow';
-      }
-      pubkey.append(butt_follow);
-    }
-    // else pubkey.append(aa.mk.l('button',{cla:'butt_follow',con:'u',clk:e=>{}}))
-    
-  }
-
   pubkey.append(aa.mk.p_link(p.xpub,p));
   pubkey.append(aa.mk.l('span',{cla:'xpub',con:p.xpub}));
   pubkey.append(aa.mk.time(p.updated));
@@ -478,7 +488,7 @@ aa.p.score =async s=>
   {
     aa.cli.fuck_off();
     const p = await aa.db.get_p(xpub);
-    if (!p) p = it.p(xpub);
+    if (!p) p = aa.p.p(xpub);
     console.log(p,score);
     p.trust = score;    
     aa.p.update(aa.p.profile(p),p,true);
@@ -489,7 +499,7 @@ aa.p.score =async s=>
 
 // generic p object
 
-it.p =xpub=>
+aa.p.p =xpub=>
 {
   return {
     xpub:xpub,
@@ -617,7 +627,7 @@ aa.get.pubs =async tags=>
   {
     aa.to(()=>
     {
-      aa.db.get({get_a:{store:'authors',a:pubkeys}}).then(dat=>
+      aa.db.idb.ops({get_a:{store:'authors',a:pubkeys}}).then(dat=>
       {
         for (const p of dat) 
         {
@@ -646,7 +656,7 @@ aa.get.pubs =async tags=>
 aa.mk.p_link =(x,p=false)=>
 {
   if (!p) p = aa.db.p[x];
-  if (!p) p = it.p(x);
+  if (!p) p = aa.p.p(x);
   const l = aa.mk.l('a',
   {
     cla:'a author',
@@ -706,7 +716,7 @@ aa.kinds[0] =dat=>
     if (aa.miss.p[dat.event.pubkey]) delete aa.miss.p[dat.event.pubkey];
     aa.db.get_p(dat.event.pubkey).then(p=>
     {
-      if (!p) p = it.p(dat.event.pubkey);
+      if (!p) p = aa.p.p(dat.event.pubkey);
       const c_at = dat.event.created_at;
       if (!p.pastdata.k0.length || p.pastdata.k0[0][1] < c_at) 
       {
@@ -740,7 +750,7 @@ aa.kinds[3] =dat=>
   const d3_post =async(dat,note)=>
   {
     let p = await aa.db.get_p(dat.event.pubkey);
-    if (!p) p = it.p(dat.event.pubkey);   
+    if (!p) p = aa.p.p(dat.event.pubkey);   
     const c_at = dat.event.created_at;
     if (!p.pastdata.k3.length || p.pastdata.k3[0][1] < c_at) 
     {
@@ -795,7 +805,7 @@ aa.kinds[10002] =dat=>
   {    
     aa.db.get_p(dat.event.pubkey).then(p=>
     {
-      if (!p) p = it.p(dat.event.pubkey);
+      if (!p) p = aa.p.p(dat.event.pubkey);
       const c_at = dat.event.created_at;
       if (!p.pastdata.k10002.length || p.pastdata.k10002[0][1] < c_at) 
       {
@@ -824,7 +834,7 @@ aa.views.npub1 =async npub=>
   console.log(npub);
   let xpub = aa.fx.decode(npub);
   let p = await aa.db.get_p(xpub);
-  if (!p) p = it.p(xpub);
+  if (!p) p = aa.p.p(xpub);
   
   let l = document.getElementById(npub);  
   if (!l)
@@ -845,4 +855,12 @@ aa.views.npub1 =async npub=>
 aa.views.nprofile1 =async nprofile=>
 {
 
+};
+
+// nip05 (wip)
+
+aa.get.nip05 =async s=>
+{
+  let nip05 = await NostrTools.nip05.queryProfile(s);
+  console.log(nip05);
 };

@@ -13,7 +13,8 @@ aa.r =
 
 aa.r.add =s=>
 { 
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   
   const work =a=>
   {
@@ -23,18 +24,44 @@ aa.r.add =s=>
     {
       if (!aa.r.o.ls[url]) aa.r.o.ls[url] = {sets:[]};
       aa.fx.a_add(aa.r.o.ls[url].sets,a);
-      // let act = localStorage.ns+' '+aa.r.sn;
-      // let log = aa.mk.l('l',{con:act+' add '+url+' '+a.join(' ')});
-      // aa.log(log);
-      // log.append(aa.mk.l('button',{con:'[set]',clk:e=>
-      // {
-      //   e.target.remove();
-      //   aa.cli.v(act+' sets off '+url);
-      // }}))
+      aa.mod_ui(aa.r,url,aa.r.o.ls[url]);
     }
   };
-  aa.fx.loop(work,s,aa.r.save);
+  aa.fx.loop(work,s);
+  aa.mod_save(aa.r);
 };
+
+
+// hint notice
+
+aa.r.hint_notice =(url,opts)=> // if (!aa.r.o.ls[url])
+{
+  //    needs to display info from what npub
+  let act_yes = url+' hint';
+  let notice = {title:'r add '+act_yes+'?'};
+  notice.yes =
+  {
+    title:'yes',
+    exe:e=>
+    {
+      console.log(url,opts);
+      aa.r.add(act_yes);
+      aa.r.c_on(url,opts);
+      e.target.parentElement.textContent = act_yes;
+    }
+  };
+  let act_no = url+' off';
+  notice.no =
+  {
+    title:'no',
+    exe:e=>
+    {
+      aa.r.add(act_no);
+      e.target.parentElement.textContent = act_no;
+    }
+  };
+  aa.notice(notice);
+}
 
 
 // add relays from object
@@ -88,8 +115,6 @@ aa.r.broadcast =(event,relays=false)=>
 aa.r.butts =(l,o)=>
 {
   let url = l.querySelector('.url').innerText;
-  l.id = aa.fx.an(url);
-  l.dataset.state = 0;
   l.append(aa.mk.butt_action(aa.r.sn+' rm '+url,'rm','rm'));
   
   let sets = aa.mk.l('span',{cla:'sets'});
@@ -109,17 +134,20 @@ aa.r.butts =(l,o)=>
 
 aa.r.c_on =(url,o=false)=> 
 {
+  let r = aa.r.o.ls[url];
+
   if (localStorage.mode === 'hard') 
   {
     aa.log('aa.r.c_on: mode=hard');
     return
   }
-  let r = aa.r.o.ls[url];
-  if (r.sets.includes('off')) 
+  
+  if (aa.r.o.ls[url].sets.includes('off')) 
   {
     aa.r.force_close([url]);
     return
   }
+
   let relay = aa.r.active[url] ? aa.r.active[url] : aa.r.active[url] = {q:{},cc:[]};
   if (relay.ws?.readyState !== 1)
   {
@@ -161,7 +189,7 @@ aa.r.close =(k,id)=>
 
 aa.r.demand =(request,relays,options)=>
 {
-  console.log('aa.r.demand',{request:request,relays:relays,options:options});
+  // console.log('aa.r.demand',{request:request,relays:relays,options:options});
 
   if (!request || !Array.isArray(request)) 
   {
@@ -200,34 +228,7 @@ aa.r.demand =(request,relays,options)=>
     const rel_active = aa.r.active[url];
     if (!rel_active)
     {
-      if (!aa.r.o.ls[url])
-      {
-        //    needs to display info from what npub
-        let act_yes = url+' hint';
-        let notice = {title:'r add '+act_yes+'?'};
-        notice.yes =
-        {
-          title:'yes',
-          exe:e=>
-          {
-            console.log(url,opts);
-            aa.r.add(act_yes);
-            aa.r.c_on(url,opts);
-            e.target.parentElement.textContent = act_yes;
-          }
-        };
-        let act_no = url+' off';
-        notice.no =
-        {
-          title:'no',
-          exe:e=>
-          {
-            aa.r.add(act_no);
-            e.target.parentElement.textContent = act_no;
-          }
-        };
-        aa.notice(notice);
-      }
+      if (!aa.r.o.ls[url]) aa.r.hint_notice(url,opts)
       else 
       {
         if (!aa.r.o.ls[url].sets.includes('off')) aa.r.c_on(url,opts);
@@ -383,7 +384,8 @@ aa.r.list =s=>
 
 aa.r.list_mk =s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   const a = s.trim().split(',');
   const relays = [];
   for (const r of a) 
@@ -466,7 +468,7 @@ aa.r.load =()=>
     },
   );
 
-  aa.db.mod_load(aa.r).then(aa.mk.mod);
+  aa.mod_load(aa.r).then(aa.mk.mod);
 }
 
 
@@ -559,6 +561,8 @@ aa.r.mk =(k,v) =>
   const l = aa.r.mk_item(k,v);
   if (l)
   {
+    l.id = aa.r.def.id+'_'+aa.fx.an(k);
+    l.dataset.state = 0;
     aa.r.butts(l,v);
     aa.r.upd_state(k);
     // setTimeout(()=>{aa.r.upd_state(k)},200);
@@ -636,7 +640,11 @@ aa.r.resume =()=>{ for (const url in aa.r.active) { aa.r.c_on(url) } };
 
 // save
 
-aa.r.save =()=>{ aa.db.mod_save(aa.r).then(aa.mk.mod) };
+aa.r.save =()=>
+{ 
+  aa.mod_save(aa.r)
+  .then(aa.mk.mod) 
+};
 
 
 // add set to relays
@@ -655,12 +663,14 @@ aa.r.sets =s=>
         {
           if (!aa.r.o.ls[url].sets) aa.r.o.ls[url].sets = [];
           aa.fx.a_add(aa.r.o.ls[url].sets,[set_id]);
+          aa.mod_ui(aa.r,url,aa.r.o.ls[url]);
         }
       }
     }
   };
 
-  aa.fx.loop(work,s,aa.r.save);
+  aa.fx.loop(work,s);
+  aa.mod_save(aa.r)
   aa.cli.clear();
 };
 
@@ -713,7 +723,7 @@ aa.r.upd_state =url=>
   const relay = aa.r.active[url];
   if (relay)
   {
-    let l = document.getElementById(aa.fx.an(url));
+    let l = document.getElementById(aa.r.def.id+'_'+aa.fx.an(url));
     if (l)
     {
       setTimeout(()=>

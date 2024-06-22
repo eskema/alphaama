@@ -1,7 +1,5 @@
-# alphaama A<3 
-https://wip.alphaama.com
+# alphaama is just a nostr fucking client
 
-alphaama is just a nostr fucking client
 that:
 - is a research in UI/UX on how a command line interface (cli) can merge with a graphical user interface (gui)
 - tries to be fun and weird.
@@ -24,3 +22,6 @@ nostr:
 
 depends on:
 - https://github.com/nbd-wtf/nostr-tools
+
+dev deployment:
+- https://wip.alphaama.com

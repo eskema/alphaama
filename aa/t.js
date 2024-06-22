@@ -1,8 +1,5 @@
 // time / date stuff
 
-aa.t ={};
-
-
 // timestamp to date
 
 aa.t.to_date =s=> new Date(s*1000);

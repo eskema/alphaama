@@ -485,18 +485,15 @@ aa.cli.upd =e=>
     if (aa.u.o.ls.xpub) aa.cli.dat_upd()
   }
 
-  // because textareas don't auto adjust to it's content,
-  // another div with the same content is needed in order 
-  // to make the input area grow as you type
+  // update textarea height
 
-  const grow_hack_id = 'cli_t_grow_hack';
-  let grow_hack_l = document.getElementById(grow_hack_id);
-  if (!grow_hack_l) 
-  { 
-    grow_hack_l = aa.mk.l('div',{id:grow_hack_id}); 
-    aa.cli.l.append(grow_hack_l) 
+  aa.cli.t.style.height = 'unset';
+  aa.cli.t.style.height = `${aa.cli.t.scrollHeight}px`;
+  if (aa.cli.t.selectionStart === aa.cli.t.value.length) 
+  {
+    aa.cli.t.scrollTop = aa.cli.t.scrollHeight;
   }
-  grow_hack_l.textContent = s;
+
 };
 
 

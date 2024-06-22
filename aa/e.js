@@ -93,7 +93,7 @@ aa.e.append_to_replies =(dat,note,reply_tag)=>
 
 aa.e.clear =s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
   document.getElementById('notes').textContent = '';
   it.butt_count('e','.note');
   aa.log('events cleared')
@@ -155,6 +155,19 @@ aa.e.load =()=>
       description:'clear e section',
       exe:aa.e.clear
     },
+    {
+      action:['db','some'],
+      required:['number'],
+      optional:['next'],
+      description:'request n events from db',
+      exe: aa.db.some
+    },
+    {
+      action:['db','view'],
+      required:['id'],
+      description:'view event',
+      exe: aa.state.view
+    }
   );
 
   const section = aa.mk.section('e');
@@ -262,7 +275,7 @@ aa.e.note =dat=>
     aa.db.get_p(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
-      if (!p) p = it.p(x);
+      if (!p) p = aa.p.p(x);
       note.dataset.trust = p.trust;
       by.append(aa.mk.p_link(x));
     });    
@@ -315,9 +328,11 @@ aa.e.note =dat=>
 
 aa.e.note_actions =clas=>
 {
-  const l = aa.mk.l('p',{cla:'actions'});
   const butt = (id)=> aa.mk.l('button',{con:id,cla:'butt '+id,clk:aa.clk[id]});
-  let a = [];
+  
+  const l = aa.mk.l('p',{cla:'actions'});
+  
+  let a;
   if (!clas) clas = [];
   if (clas.includes('draft'))
   {
@@ -335,8 +350,7 @@ aa.e.note_actions =clas=>
     //   aa.mk.l('button',{con:'editor',cla:'butt editor',clk:aa.clk.editor})
     // );
   }
-  
-  if (clas.includes('not_sent'))
+  else if (clas.includes('not_sent'))
   {
     a = ['post','cancel'];
     for (const s of a) l.append(butt(s));
@@ -626,7 +640,7 @@ aa.e.quote_upd =async(quote,o)=>
   {
     aa.db.get_p(dat.event.pubkey).then(pp=>
     {
-      if (!pp) pp = it.p(dat.event.pubkey);
+      if (!pp) pp = aa.p.p(dat.event.pubkey);
       if (!has_pub) 
       {
         by.prepend(aa.mk.p_link(pp.xpub));
@@ -860,3 +874,154 @@ aa.views.nevent1 =async nevent=>
     }
   }
 };
+
+
+
+
+
+// returns a relay that has event x or empty string
+
+aa.get.seen =(x)=>
+{
+  const dat = aa.db.e[x];
+  if (dat && dat.seen.length) return dat.seen[0];
+  return ''
+};
+
+
+// returns tags of type from event
+
+aa.get.tags =(event,type)=> event.tags.filter(tag=>tag[0]===type);
+
+
+// returns tags for building a reply
+
+aa.get.tags_for_reply =(event)=>
+{  
+  // needs to account for "a" tag
+  const tags = [];
+  const seen = aa.get.seen(event.id);
+  let tag = aa.get.root_tag(event.tags);
+  if (tag) 
+  {
+    tag[2] = aa.is.url(tag[2])?.href || seen;
+    tag[3] = 'root';
+    tag.splice(4);
+    tags.push(tag,['e',event.id,seen,'reply']);
+  }
+  else tags.push(['e',event.id,seen,'root']);
+
+  const p_tags = event.tags.filter(t=>aa.is.tag.p(t) && t[1] !== aa.u.o.ls.xpub);
+  let dis_p_tags = [...new Set(p_tags)];
+  if (event.pubkey !== aa.u.o.ls.xpub 
+  && !dis_p_tags.some(t=>t[1] === event.pubkey)) dis_p_tags.push(['p',event.pubkey]);
+  // needs to do more here...
+  tags.push(...dis_p_tags);
+  return tags
+};
+
+
+// gets e tag marked 'reply' or the last not marked mention
+
+aa.get.reply_tag =tags=>
+{
+  let tag = tags.filter(t=>t[0]==='e'&&t[3]==='reply')[0];
+  if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop();
+  if (tag && aa.is.tag.e(tag)) return tag;
+  return false
+};
+
+
+// gets e tag marked 'root' or the first not marked mention
+
+aa.get.root_tag =tags=>
+{
+  let tag = tags.filter(t=>t[0]==='e'&&t[3]==='root')[0];
+  if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention')[0];
+  if (tag && aa.is.tag.e(tag)) return tag;
+  return false
+};
+
+
+
+
+
+// returns event if already loaded or get it from database
+
+aa.db.get_e =async xid=>
+{
+  if (aa.db.e[xid]) return aa.db.e[xid];  
+  let dat = await aa.db.idb.ops({get:{store:'events',key:xid}});
+  if (dat) aa.db.e[xid] = dat;
+  return dat
+};
+
+
+// merge event dat
+
+aa.db.merge_e =dat=>
+{
+  const xid = dat.event.id;
+  if (!aa.db.e[xid])
+  {
+    aa.db.e[xid] = dat;
+    return dat;
+  } 
+  else 
+  {
+    const merged = aa.fx.merge(aa.db.e[xid],dat);
+    if (merged) 
+    {
+      aa.db.e[xid] = merged;
+      return merged
+    }
+    else return false
+  }
+};
+
+
+// update event on database
+
+aa.db.upd_e =async dat=>
+{
+  const id = 'upd_e';
+  if (!aa.db.q[id]) aa.db.q[id] = {};
+  let merged = aa.db.merge_e(dat);
+  if (merged) aa.db.q[id][dat.event.id] = merged;
+
+  aa.to(()=>
+  {
+    const q = Object.values(aa.db.q[id]);
+    aa.db.q[id] = {};
+    if (q.length) aa.db.idb.worker.postMessage({upd_e:{store:'events',a:q}});
+  },2000,id);
+};
+
+
+aa.db.some =async s=>
+{
+  aa.cli.fuck_off();
+  const a = s.trim().split(' ');
+  const n = a.shift();
+  const direction = a.shift();
+  const db_op = {};
+  db_op.n = n ? parseInt(n) : 1;
+  db_op.direction = direction && direction === 'next' ? 'next' : 'prev';
+  let o = {some:db_op};
+  aa.log(localStorage.ns+' '+aa.db.sn+' some '+db_op.n);
+  const db = aa.db.idb.new;
+  db.onmessage=e=>
+  {
+    // console.log('aa.db.some',e.data);
+    for (const dat of e.data) aa.e.print(dat);
+    setTimeout(()=>{db.terminate()},200);
+  }
+  db.postMessage(o);
+};
+
+// aa.db.view =s=>
+// {
+//   console.log(s);
+//   aa.cli.fuck_off();
+//   aa.state.view(s.trim());
+// };

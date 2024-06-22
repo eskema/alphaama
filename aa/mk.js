@@ -232,7 +232,7 @@ aa.mk.ls =o=>
 };
 
 
-// make mod u
+// make mod
 
 aa.mk.mod =mod=>
 {
@@ -272,7 +272,8 @@ aa.mk.nostr_link =(dis,con=false)=>
 aa.mk.section =(id,expanded=false,l=false)=>
 {
   const section = aa.mk.l('section',{id:id});
-  aa.fx.expanded(id,expanded,section);
+  // aa.fx.expanded(id,expanded,section);
+  if (expanded) section.classList.add('expanded');
   const section_header = aa.mk.l('header');
   section_header.append(aa.mk.butt_expand(id))
   section.append(section_header);

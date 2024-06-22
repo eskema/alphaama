@@ -1,7 +1,5 @@
 // it's true or false, boolean stuff, also quantum
 
-aa.is ={};
-
 
 // alphanumeric and underscore
 
@@ -61,17 +59,10 @@ aa.is.key =x=> aa.is.x(x) && x.length === 64;
 // it's tag conditions
 
 aa.is.tag ={};
-aa.is.tag.e =a=> aa.is.tax(0,'e',a) && aa.is.x(a[1]);
-aa.is.tag.p =a=> aa.is.tax(0,'p',a) && aa.is.x(a[1]);
-aa.is.tag.q =a=> aa.is.tax(0,'q',a) && aa.is.x(a[1]);
-aa.is.tag.marked =(s,a)=> a[3] && a[3] === s; 
-aa.is.tag.root =a=> aa.is.tag.e(a) && aa.is.tag.marked('root',a);
-aa.is.tag.reply =a=> aa.is.tag.e(a) && aa.is.tag.marked('reply',a);
+aa.is.tag.e =a=> a[0]==='e' && aa.is.x(a[1]);
+aa.is.tag.p =a=> a[0]==='p' && aa.is.x(a[1]);
+aa.is.tag.q =a=> a[0]==='q' && aa.is.x(a[1]);
 
-
-// has index value in array
-
-aa.is.tax =(i,v,a)=> a[i] && a[i] === v;
 
 
 // returns wether or not a given level is trusted

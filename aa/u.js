@@ -111,11 +111,11 @@ aa.u.is_following_load_profiles =async p=>
   
   if (p.extradata.bff.length)
   {
-    let bffs = await aa.db.get({get_a:{store:'authors',a:p.extradata.bff}});
+    let bffs = await aa.db.idb.ops({get_a:{store:'authors',a:p.extradata.bff}});
     for (const bff of bffs) aa.db.p[bff.xpub] = bff;
     for (const x of p.extradata.bff)
     {
-      if (!aa.db.p[x]) aa.db.p[x] = it.p(x);
+      if (!aa.db.p[x]) aa.db.p[x] = aa.p.p(x);
       aa.p.profile(aa.db.p[x])
     } 
   }
@@ -245,6 +245,7 @@ aa.u.load =()=>
     },
     {
       action:['u','decrypt'],
+      required:['id'],
       description:'decrypt note',
       exe:aa.u.decrypt
     },
@@ -281,13 +282,12 @@ aa.u.load =()=>
     },
     
   );
-  console.log('u load');
-  const id = 'u';
+  const id = 'u_u';
   const u = aa.mk.l('aside',{id:id});
   document.body.insertBefore(u,document.body.lastChild);
   u.append(aa.mk.butt_expand(id))
   
-  aa.db.mod_load(aa.u).then(aa.u.start);
+  aa.mod_load(aa.u).then(aa.u.start);
 };
 
 
@@ -295,7 +295,8 @@ aa.u.load =()=>
 
 aa.u.login =async s=>  
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   aa.u.set_mode(s.trim());
 
   return new Promise(resolve=>
@@ -336,7 +337,8 @@ aa.u.metadata_load =()=>
 
 aa.u.metadata_set =async s=>
 {
-  aa.cli.fuck_off();
+  // aa.cli.fuck_off();
+  aa.cli.clear();
   let md = aa.parse.j(s);
   if (!md) return;
   aa.confirm(
@@ -379,7 +381,7 @@ aa.u.process_k3_tags =async(tags,x)=>
       let p = aa.db.p[xpub];
       if (!p) 
       {
-        p = aa.db.p[xpub] = it.p(xpub);
+        p = aa.db.p[xpub] = aa.p.p(xpub);
         updd = true;
       }  
 
@@ -478,9 +480,34 @@ aa.u.set_u_p =s=>
     if (!aa.is.x(pub) && pub.startsWith('npub')) o = {xpub:aa.fx.decode(pub),npub:pub};
     else if (aa.is.x(pub)) o = {xpub:pub,npub:aa.fx.encode('npub',pub)};
     aa.u.o.ls = o;
-    aa.db.mod_save(aa.u);
+    aa.mod_save(aa.u);
     aa.u.start(aa.u);
   } 
+};
+
+
+// 
+
+aa.u.mk =(k,v)=>
+{
+  let l;
+  switch (k)
+  {
+    case 'npub':
+      l = aa.mk.l('li',{id:aa.u.def.id+'_'+k,cla:'item'});
+      let link = aa.mk.nostr_link(v,'-->');
+      link.classList.add('key');
+      link.title = 'view u';
+      l.append(
+        link,' ',
+        // aa.mk.l('span',{cla:'key',app:link}),
+        aa.mk.l('span',{cla:'val',con:v})
+      );
+      break;
+      
+    default: l = aa.mk.item(k,v);
+  }
+  return l
 };
 
 
@@ -491,11 +518,17 @@ aa.u.start =async mod=>
   let ls = mod.o.ls;
   if (ls.xpub)
   {
-    aa.log('u_x '+ls.xpub);
-    const user_link = aa.mk.nostr_link(ls.npub);
-    aa.log('--> '+ls.npub);
+    aa.mk.mod(mod);
+
+    // aa.log('u_x '+ls.xpub);
+    // const user_link = aa.mk.nostr_link(ls.npub,'-->');
+    // const up = aa.mk.l('p');
+    // up.append(user_link,' ',ls.npub);
+    // aa.log(up);
     
-    let butt_u = document.getElementById('butt_u');
+
+
+    let butt_u = document.getElementById('butt_u_u');
     if (butt_u)
     {
       aa.fx.color(ls.xpub,butt_u);
@@ -503,7 +536,7 @@ aa.u.start =async mod=>
     }
 
     let p = await aa.db.get_p(ls.xpub);
-    if (!p) p = it.p(ls.xpub);
+    if (!p) p = aa.p.p(ls.xpub);
     if (p)
     {
       let changed;
@@ -619,7 +652,7 @@ aa.u.wot =async()=>
   if (to_get.length)
   {
     // let found = 0;
-    let dat = await aa.db.get({get_a:{store:'authors',a:to_get}});
+    let dat = await aa.db.idb.ops({get_a:{store:'authors',a:to_get}});
     // console.log('dat',dat);
     if (dat) for (const p of dat) aa.db.p[p.xpub] = p;
   }

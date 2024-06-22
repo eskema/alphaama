@@ -1,7 +1,5 @@
 // click stuff
 
-aa.clk ={};
-
 
 // general nostr links
 
@@ -201,7 +199,8 @@ aa.clk.hide =e=>
 aa.clk.req =e=>
 {
   const note = e.target.closest('.note');
-  aa.cli.v(localStorage.ns+' '+aa.q.sn+' raw read {"#e":["'+note.dataset.id+'"],"kinds":[1],"limit":100}');
+  const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
+  aa.cli.v(localStorage.ns+' '+aa.q.def.id+' req read '+filter);
 };
 
 aa.clk.zap =e=>

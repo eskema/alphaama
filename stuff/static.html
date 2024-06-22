@@ -29,8 +29,9 @@ const request = JSON.stringify(['REQ','static',
   authors:["9ec7a778167afb1d30c4833de9322da0c08ba71a69e1911d5578d3144bb56437"],
   kinds:[0,1]
 }]);
-relay.addEventListener('open',e=>{ relay.send(request) }); 
-relay.addEventListener('message',e=> 
+relay.onerror =e=>{console.error(e)};
+relay.onopen =e=>{relay.send(request)}; 
+relay.onmessage=e=> 
 {
   const message = JSON.parse(e.data);
   switch (message[0])
@@ -56,5 +57,5 @@ relay.addEventListener('message',e=>
           main.insertBefore(article,last);
       }
   }
-});
-</script> </body> </html>
+};
+</script></body></html>
