@@ -1307,10 +1307,10 @@ button.butt:focus
 .note.root:not(.in_path),
 .note.in_view > .replies > .note
 {
-  margin: 0;
-  margin-bottom: var(--line);
+  margin: var(--line) 0;
 }
 
+.note.root:not(.in_path):first-child,
 .note.reply:nth-child(2)
 {
   margin-top: 0;
@@ -3560,13 +3560,13 @@ p[data-meta="about"]::before
 .profile > .actions
 {
   align-self: stretch;
-  display: none;
+  /*display: none;*/
   grid-area: actions;
   margin: 0;
   padding: var(--padm);
   padding: 0;
   
-  /*display: grid;*/
+  display: grid;
   /*font-size: var(--font-size-s);*/
   grid-auto-flow: column;
   grid-gap: var(--padm);

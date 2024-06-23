@@ -11,7 +11,8 @@ aa.cli =
 aa.cli.clear =()=>
 {
   aa.cli.t.value = '';
-  aa.cli.dat_upd('');
+  aa.cli.dat_upd();
+  aa.cli.upd();
 };
 
 

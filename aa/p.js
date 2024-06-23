@@ -44,10 +44,9 @@ aa.p.save =p=>
   aa.temp[q_id].push(p);
   aa.to(()=>
   {
-    let pq = [...aa.temp[q_id]];
+    let q = [...aa.temp[q_id]];
     aa.temp[q_id] = [];
-    aa.db.idb.worker.postMessage({put:{store:'authors',a:pq}})
-    // .then(()=> {aa.temp[q_id] = [];});
+    aa.db.idb.worker.postMessage({put:{store:'authors',a:q}})
   },1000,q_id);
 };
 
@@ -271,6 +270,9 @@ aa.p.update =async(profile,p,b=false)=>
     const pubkey = profile.querySelector('.pubkey');
     pubkey.replaceWith(aa.mk.pubkey(p));
 
+    const actions = profile.querySelector('.actions');
+    actions.replaceWith(aa.p.profile_actions(p));
+
     const metadata = profile.querySelector('.metadata');
     metadata.replaceWith(aa.mk.metadata(p));
     
@@ -336,13 +338,19 @@ aa.mk.metadata =p=>
       metadata.append(l);
     }
   }
+
   const butt_metadata = aa.mk.l('button',
   {
     cla:'butt profile_metadata refresh',
     con:'refresh metadata',
     clk:aa.p.profile_butt_metadata
   });
-  if (p.pastdata.k0.length) butt_metadata.dataset.last = aa.t.display(p.pastdata.k0[0][1]);
+  const ts = p.pastdata.k0[0][1];
+  const last_date = aa.t.display(ts)+' ~'+aa.t.elapsed(aa.t.to_date(ts));
+  if (p.pastdata.k0.length) 
+    butt_metadata.dataset.last = last_date;
+
+
   metadata.append(butt_metadata);
 
   return metadata

@@ -407,11 +407,12 @@ aa.u.process_k3_tags =async(tags,x)=>
       if (is_u && p.trust === 0) { p.trust = 5; updd = true; }
       
       if (updd) to_upd.push(p);
+      if (aa.viewing === p.npub) aa.p.update(aa.p.profile(p),p,true);
     }
     else console.log('invalid hex key in k3 of '+x,xpub)
   }
 
-  if (to_upd.length) aa.db.put({put:{store:'authors',a:to_upd}});
+  if (to_upd.length) aa.db.idb.worker.postMessage({put:{store:'authors',a:to_upd}});
 };
 
 // new reaction event (kind-7)

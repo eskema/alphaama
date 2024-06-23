@@ -624,7 +624,8 @@ aa.r.rm =s=>
             aa.r.force_close([url]);
             delete aa.r.active[url];
           }
-          delete aa.r.o.ls[url]
+          delete aa.r.o.ls[url];
+          document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
         }
       }
     }
@@ -661,14 +662,14 @@ aa.r.sets =s=>
         url = aa.is.url(url)?.href;
         if (url)
         {
-          if (!aa.r.o.ls[url].sets) aa.r.o.ls[url].sets = [];
-          aa.fx.a_add(aa.r.o.ls[url].sets,[set_id]);
-          aa.mod_ui(aa.r,url,aa.r.o.ls[url]);
+          let r = aa.r.o.ls[url];
+          if (!r.sets) r.sets = [];
+          aa.fx.a_add(r.sets,[set_id]);
+          aa.mod_ui(aa.r,url,r);
         }
       }
     }
   };
-
   aa.fx.loop(work,s);
   aa.mod_save(aa.r)
   aa.cli.clear();
@@ -691,13 +692,16 @@ aa.r.set_rm =s=>
           let r = aa.r.o.ls[url];
           if (r && r.sets.includes(set_id))
           {
-            r.sets = r.sets.filter(set=> set !== set_id)
+            r.sets = r.sets.filter(set=> set !== set_id);
+            aa.mod_ui(aa.r,url,r);
           }
+          
         }
       }
     }
   };
-  aa.fx.loop(work,s,aa.r.save);
+  aa.fx.loop(work,s);
+  aa.mod_save(aa.r)
   aa.cli.clear();
 };
 
