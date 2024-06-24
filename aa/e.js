@@ -28,7 +28,8 @@ aa.e.append_to_rep =(note,rep)=>
   rep.insertBefore(note,last ? last : null);
   note.classList.add('reply');
   note.classList.remove('root');
-  rep.parentNode.classList.add('haz_new_reply','haz_reply');
+  rep.parentNode.classList.add('haz_reply');
+  if (note.classList.contains('is_new')) rep.parentNode.classList.add('haz_new_reply');
   aa.e.upd_note_path(rep,note.dataset.stamp,aa.u.is_u(note.dataset.pubkey));
 };
 
@@ -250,7 +251,8 @@ aa.e.note =dat=>
   if (dat.subs) note.dataset.subs = dat.subs.join(' ');
   if (dat.clas) note.classList.add(...dat.clas);
   
-  if (dat.event.hasOwnProperty('id'))
+  let replies_id;
+  if ('id' in dat.event)
   {
     const nid = aa.fx.encode('nid',dat.event.id)
     note.id = nid;
@@ -266,8 +268,9 @@ aa.e.note =dat=>
     const h1_xid = aa.mk.l('span',{cla:'xid',con:dat.event.id});
     h1.append(h1_nid,h1_xid);
     by.prepend(h1);
+    replies_id = dat.event.id+'_replies';
   }
-  if (dat.event.hasOwnProperty('pubkey'))
+  if ('pubkey' in dat.event)
   {
     const x = dat.event.pubkey;
     note.dataset.pubkey = x;
@@ -281,19 +284,19 @@ aa.e.note =dat=>
     });    
   }
   
-  if (dat.event.hasOwnProperty('kind')) 
+  if ('kind' in dat.event) 
   {
     note.dataset.kind = dat.event.kind;
   }
 
-  if (dat.event.hasOwnProperty('created_at'))
+  if ('created_at' in dat.event)
   {
     note.dataset.created_at = dat.event.created_at;
     note.dataset.stamp = dat.event.created_at;
     by.append(aa.mk.time(dat.event.created_at));
   }
 
-  if (dat.event.hasOwnProperty('tags') && dat.event.tags.length)
+  if ('tags' in dat.event && dat.event.tags.length)
   {
     let tags = aa.mk.tag_list(dat.event.tags);
     let tags_details = aa.mk.details('#['+dat.event.tags.length+']',tags);
@@ -301,7 +304,7 @@ aa.e.note =dat=>
     note.append(tags_details);      
   }
 
-  if (dat.event.hasOwnProperty('content'))
+  if ('content' in dat.event)
   {
     note.append(aa.mk.l('section',
     {
@@ -310,13 +313,19 @@ aa.e.note =dat=>
     }));
   }
 
-  if (dat.event.hasOwnProperty('sig')) 
+  if ('sig' in dat.event) 
   {
     note.append(aa.mk.l('p',{cla:'sig',con:dat.event.sig}));
   }
 
   let replies = aa.mk.details('',false,true);
-  replies.classList.add('replies','expanded');
+  replies.classList.add('replies');
+  if (replies_id)
+  {
+    replies.id = replies_id;
+    aa.fx.expanded(replies_id,1,replies);
+  }
+  // replies.classList.add('replies','expanded');
   let summary = replies.querySelector('summary');
   summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
   note.append(replies,aa.e.note_actions(dat.clas));  
@@ -434,12 +443,13 @@ aa.e.note_by_kind =dat=>
 
 aa.e.note_blank =(tag,dat,seconds)=>
 {
+  const id = tag[1];
   const blank_event = 
   {
-    id:tag[1],
+    id:id,
     created_at:dat.event.created_at - seconds,
     tags:[tag],
-    content:tag[1]+'\n'+aa.fx.encode('nid',tag[1])
+    content:id+'\n'+aa.fx.encode('nid',id)
   }
   const seen = aa.r.in_set('read');
   let r;
@@ -455,7 +465,8 @@ aa.e.note_blank =(tag,dat,seconds)=>
     else console.log('malformed tag on',dat);
   }
   const note = aa.e.note({event:blank_event,seen:seen,subs:dat.subs,clas:['blank']});
-  note.classList.add('blank','is_new');
+  note.classList.add('blank');
+  if (!sessionStorage[id]) note.classList.add('is_new');
   if (r) note.dataset.r = r;
   return note
 };
@@ -704,7 +715,8 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
         l.dataset.stamp = stamp;
         updated = true;
       }
-      l.classList.add('haz_new');
+      let haz_new = l.querySelector('.note.is_new');
+      if (haz_new) l.classList.add('haz_new');
       let time = l.querySelector('.by time');
       time.title = aa.t.elapsed(aa.t.to_date(time.dataset.timestamp))
       const replies = l.querySelector('.replies');
@@ -736,7 +748,7 @@ aa.e.view =l=>
 aa.kinds[1] =dat=>
 {
   let note = aa.e.note(dat);
-  note.classList.add('is_new');
+  if (!sessionStorage[dat.event.id]) note.classList.add('is_new');
   let reply_tag = aa.get.reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length) aa.e.append_to_replies(dat,note,reply_tag);
   else aa.e.append_to_notes(note);
@@ -1025,3 +1037,6 @@ aa.db.some =async s=>
 //   aa.cli.fuck_off();
 //   aa.state.view(s.trim());
 // };
+
+
+window.addEventListener('load',aa.e.load);

@@ -81,6 +81,35 @@ aa.mk.l =(tag_name,o=false)=>
 
 aa.head_meat =()=>
 {
+  document.head.append(aa.mk.l('link',{rel:'manifest',ref:'/site.webmanifest'}));
+  fetch('/site.webmanifest')
+  .then(dis=>dis.json()).then(manifest=>
+  {
+    console.log(manifest);
+    
+    for (const icon of manifest.icons)
+    {
+      let link = aa.mk.l('link');
+      if (icon.src.includes('apple-touch-icon'))
+      {
+        link.rel = 'apple-touch-icon';
+        link.sizes = icon.sizes;
+      }
+      else if (icon.src.includes('safari-pinned-tab'))
+      {
+        link.rel = 'mask-icon';
+        link.color = manifest.theme_color
+      }
+      else
+      {
+        link.rel = 'icon';
+        if ('sizes' in icon) link.sizes = icon.sizes;
+        if ('type' in icon) link.type = icon.type;
+      }
+      link.href = icon.src;
+      document.head.append(link);
+    }
+  });
   // <link rel="apple-touch-icon" sizes="180x180" href="/stuff/apple-touch-icon.png">
   // <link rel="icon" type="image/png" sizes="32x32" href="/stuff/favicon-32x32.png">
   // <link rel="icon" type="image/png" sizes="16x16" href="/stuff/favicon-16x16.png">
@@ -104,6 +133,7 @@ aa.head_scripts =scripts=>
 
 aa.load =(o={})=>
 {
+  aa.head_meat();
   aa.styles_loaded = o.styles ? o.styles : aa.styles;
   aa.dependencies_loaded = o.dependencies ? o.dependencies : aa.dependencies;
   aa.tools_loaded = o.tools ? o.tools : aa.tools;
@@ -122,11 +152,30 @@ aa.log =async(s,l=false)=>
   const log = aa.mk.l('li',{cla:'l item'});
   if (typeof s === 'string') s = aa.mk.l('p',{con:s});
   log.append(s);
-  
+  if (!l) l = aa.logs;
   if (!l) l = document.getElementById('logs');
   if (l) l.append(log);
   else console.log('log:',s)
 };
+
+aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
+
+// logs mutation observer
+
+aa.mo_logs = new MutationObserver(a=> 
+{
+  for (const mutation of a) 
+  {
+    const section = mutation.target.closest('section');
+    if (section)
+    {
+      let butt = section.querySelector('section > header > .butt');
+      aa.fx.data_count(butt,'.l');
+    }
+  }
+});
+
+
 
 
 
@@ -155,37 +204,34 @@ aa.actions.push(
 });
 
 
+
+
+
+
 // run 
 
 aa.run =(o={})=>
 {
   // do stuff
+  aa.mo_logs.observe(aa.logs,{attributes:false,childList:true});
   const main = aa.mk.l('main',{id:'view'});
   document.body.prepend(main);
-  if (aa.cli) aa.cli.load();
-  aa.stuff();
-  // aa.get.md('/README.md').then(md=>
-  // {
-  //   main.append(md);
-  //   aa.log('running '+location.origin);  
-  //   aa.u.check_signer();
-  //   if (aa.o) aa.o.load();
-  //   if (aa.e) aa.e.load();
-  //   if (aa.p) aa.p.load();
-  //   if (aa.q) aa.q.load();
-  //   if (aa.r) aa.r.load();
-  //   if (aa.u) aa.u.load();
-  // });
+  // if (aa.cli) aa.cli.load();
+  
+  if (aa.is.rigged()) aa.l.classList.add('rigged');
+  aa.wl.lock();
+  aa.fx.scrolled();
 
   aa.log('running '+location.origin);  
   aa.u.check_signer();
-  if (aa.o) aa.o.load();
-  if (aa.e) aa.e.load();
-  if (aa.p) aa.p.load();
-  if (aa.q) aa.q.load();
-  if (aa.r) aa.r.load();
-  if (aa.u) aa.u.load();
   
+  // // load mods
+  // if (aa.o) aa.o.load();
+  // if (aa.e) aa.e.load();
+  // if (aa.p) aa.p.load();
+  // if (aa.q) aa.q.load();
+  // if (aa.r) aa.r.load();
+  // if (aa.u) aa.u.load();
   
 };
 

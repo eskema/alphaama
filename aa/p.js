@@ -695,7 +695,11 @@ aa.mk.p_link_data =p=>
   if (p.metadata?.nip05) o.nip05 = p.metadata.nip05;
   if (aa.u.is_u(p.xpub)) o.class_add.push('is_u');
   else o.class_rm.push('is_u');
-  if (aa.u.is_following(p.xpub)) o.class_add.push('is_bff');
+  if (aa.u.is_following(p.xpub)) 
+  {
+    o.class_rm.push('is_mf');
+    o.class_add.push('is_bff');
+  }
   else 
   {
     o.class_rm.push('is_bff');
@@ -872,3 +876,5 @@ aa.get.nip05 =async s=>
   let nip05 = await NostrTools.nip05.queryProfile(s);
   console.log(nip05);
 };
+
+window.addEventListener('load',aa.p.load);

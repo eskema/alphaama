@@ -99,11 +99,15 @@ aa.r.broadcast =(event,relays=false)=>
     for (const k of relays)
     {
       const relay = aa.r.active[k];
+      if (relay?.sent?.includes(event.id)) continue;
+      
       if (relay?.ws?.readyState === 1) relay.ws.send(dis);
       else
       {
         if (!aa.r.o.ls[k]) aa.r.add(k+' write');
-        aa.r.c_on(k,{send:[dis]});
+        const opts = {send:{}};
+        opts.send[event.id] = dis;
+        aa.r.c_on(k,opts);
       }
     }
   }
@@ -148,14 +152,15 @@ aa.r.c_on =(url,o=false)=>
     return
   }
 
-  let relay = aa.r.active[url] ? aa.r.active[url] : aa.r.active[url] = {q:{},cc:[]};
+  let relay = aa.r.active[url] ? aa.r.active[url] : aa.r.active[url] = {q:{},send:{},sent:[],cc:[]};
   if (relay.ws?.readyState !== 1)
   {
     if (relay.fc) delete relay.fc;
     if (o)
     {
       if (o.req?.length) relay.q[o.req[1]] = o;
-      if (o.send?.length) relay.send = o.send;
+      for (const ev in o.send) relay.send[ev] = o.send[ev];
+      // if (o.send?.length) relay.send = o.send;
     }
     
     relay.ws = new WebSocket(url);
@@ -536,6 +541,9 @@ aa.r.message_type.ok =message=>
   if (is_ok) 
   {
     console.log('ok',id,message.origin);
+    let r = aa.r.active[message.origin];
+    if (id in r.send) delete r.send[id];
+    aa.fx.a_add(r.sent,[id]);
     let dat = aa.db.e[id];
     dat.clas = aa.fx.a_rm(dat.clas,['not_sent','draft']);
     aa.fx.a_add(dat.seen,[message.origin]);
@@ -813,6 +821,9 @@ aa.r.ws_open =async e=>
       aa.r.try(relay,JSON.stringify(sub.req))
     }
   }
-  if (relay.send?.length) for (const ev of relay.send) aa.r.try(relay,ev);
+  for (const ev in relay.send) aa.r.try(relay,relay.send[ev]);
+  // relay.send = [];
   aa.r.upd_state(e.target.url);
 };
+
+window.addEventListener('load',aa.r.load);

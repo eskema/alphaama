@@ -108,14 +108,34 @@ aa.clk.mark_read =e=>
   const mom = e.target.closest('.note');
   let classes = ['haz_new_reply','haz_new','is_new']
   mom.classList.remove(...classes);
-  const new_stuff = replies.querySelectorAll('.haz_new_reply,.haz_new,.is_new');        
+  const new_stuff = replies.querySelectorAll('.'+classes.join(',.')); //'.haz_new_reply,.haz_new,.is_new'        
   if (new_stuff.length)
   {
     e.preventDefault();
-    for (const l of new_stuff) l.classList.remove(...classes);
-    if (replies.classList.contains('expanded')) replies.classList.remove('expanded')
+    for (const l of new_stuff) 
+    {
+      l.classList.remove(...classes);
+      sessionStorage[l.dataset.id] = 'is_read';
+    }
+    if (replies.classList.contains('expanded')) 
+    {
+      replies.classList.remove('expanded');
+      sessionStorage[replies.id] = '';
+    }
   }
-  else replies.classList.toggle('expanded');
+  else 
+  {
+    if (replies.classList.contains('expanded')) 
+    {
+      replies.classList.remove('expanded');
+      sessionStorage[replies.id] = '';
+    }
+    else 
+    {
+      replies.classList.add('expanded');
+      sessionStorage[replies.id] = 'expanded';
+    }
+  }
 
   aa.fx.scroll(replies,
   {

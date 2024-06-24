@@ -341,3 +341,5 @@ aa.q.close =s=>
   // aa.cli.fuck_off();
   aa.cli.clear();
 };
+
+window.addEventListener('load',aa.q.load);

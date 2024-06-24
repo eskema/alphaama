@@ -695,3 +695,5 @@ aa.kinds[4] =dat=>
   }
   return note
 };
+
+window.addEventListener('load',aa.u.load);

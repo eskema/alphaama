@@ -171,4 +171,4 @@ aa.o.set =s=>
   aa.fx.loop(work,s)
 };
 
-
+window.addEventListener('load',aa.o.load);

@@ -79,18 +79,6 @@ aa.regx =
 
 
 
-
-
-// stuff to run on load
-
-aa.stuff =()=>
-{
-  if (aa.is.rigged()) aa.l.classList.add('rigged');
-  aa.wl.lock();
-  aa.fx.scrolled();
-};
-
-
 // timeout
 // delays function if not called again before for some time
 

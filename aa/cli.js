@@ -193,27 +193,9 @@ aa.cli.load =e=>
   aa.cli.t.autocorrect = 'off';
   aa.cli.t.contentEditable = true;
   aa.cli.t.oninput = aa.cli.upd;
-  // aa.cli.t.onchange = aa.cli.upd;
   aa.cli.t.onfocus = aa.cli.expand;
   aa.cli.t.onkeydown = aa.cli.keydown;
   aa.cli.t.rows = 1;
-
-
-  // logs mutation observer
-
-  aa.cli.mo_logs = new MutationObserver(a=> 
-  {
-    for (const mutation of a) 
-    {
-      const section = mutation.target.closest('section');
-      let butt = section.querySelector('section > header > .butt');
-      aa.fx.data_count(butt,'.l');
-    }
-  });
-  const logs = aa.mk.l('ul',{id:'logs',cla:'list'});
-  
-  aa.cli.mo_logs.observe(logs,{attributes:false,childList:true});
-  
 
   aa.cli.l.append(
     aa.mk.l('button',
@@ -224,7 +206,7 @@ aa.cli.load =e=>
       clk:aa.cli.collapse,
       tab:2
     }),
-    aa.mk.section('l',1,logs),
+    aa.mk.section('l',1,aa.logs),
     aa.cli.t,
     aa.cli.oto
   );
@@ -515,3 +497,5 @@ aa.cli.v =s=>
   aa.cli.t.value = s;
   aa.cli.expand();
 };
+
+window.addEventListener('load',aa.cli.load);
