@@ -1,3 +1,5 @@
+// web cache service worker
+
 const cash = 
 {
   def:
@@ -22,6 +24,11 @@ const cash =
     ]
   }
 };
+
+
+// if we have cached the request, serve that,
+// if not, then fetch, cache and serve it
+
 
 cash.flow =async e=>
 {
@@ -49,6 +56,10 @@ cash.flow =async e=>
   }
 };
 
+addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});
+
+
+
 cash.get =async a=> 
 {
   const cache = await caches.open(cash.def.id);
@@ -75,8 +86,6 @@ cash.rm =async key=>
   cache.delete(key)
 };
 
-addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});
-
 onactivate =e=>
 {
   e.waitUntil(async()=>
@@ -99,4 +108,3 @@ onmessage =e=>
     }
   }
 };
-

@@ -73,7 +73,7 @@ aa.regx =
   get hashtag(){ return /(\B[#])\w+/g},
   get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi},
   get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi},
-  get nostr() { return /((nostr:)[A-Z0-9]*)\b/gi},
+  get nostr() { return /((nostr:)[A-Z0-9]{12,})\b/gi},
   get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu}, 
 };
 

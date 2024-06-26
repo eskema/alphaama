@@ -25,28 +25,35 @@ aa.parse.content =(s,trusted)=>
       }
     };
 
-    const words = paragraph.trim().split(' ');
-    for (let i=0;i<words.length;i++)
+    const lines = paragraph.trim().split(/\n/);
+    for (let li=0;li<lines.length;li++)
     {
-      let word = words[i].trim();
-      if (!word.length) continue;
-      if (aa.regx.url.test(word)) l.append(aa.parse.url(word,trusted),' ');
-      else if (aa.regx.nostr.test(word)) 
+      if (li!==0) l.append(aa.mk.l('br'));
+      const words = lines[li].trim().split(' ');
+      for (let i=0;i<words.length;i++)
       {
-        let parsed = aa.parse.nostr(word);
-        while (parsed.childNodes.length)
+        let word = words[i].trim();
+        if (!word.length) continue;
+        if (aa.regx.url.test(word)) l.append(aa.parse.url(word,trusted),' ');
+        else if (aa.regx.nostr.test(word)) 
         {
-          let node = parsed.firstChild;
-          if (node.tagName !== 'BLOCKQUOTE') l.append(node);
-          else { another_l(l); df.append(node)}
-        }        
-      }
-      else 
-      {
-        if (i === words.length-1) l.append(word);
-        else l.append(word,' ');
+          let parsed = aa.parse.nostr(word);
+          while (parsed.childNodes.length)
+          {
+            let node = parsed.firstChild;
+            if (node.tagName !== 'BLOCKQUOTE') l.append(node);
+            else { another_l(l); df.append(node)}
+          }        
+        }
+        else 
+        {
+          if (i === words.length-1) l.append(word);
+          else l.append(word,' ');
+        }
       }
     }
+
+    
     another_l(l);
   } 
   return df
@@ -107,21 +114,21 @@ aa.parse.mentions =async s=>
     for (const m of matches)
     {
       const tags = [];
-      let dis = s.slice(6);
-      if (m[0].startsWith('nostr:npub')) 
+      let dis = m[0].slice(6);
+      if (dis.startsWith('npub')) 
       {
         let p_x = aa.fx.decode(dis);
         if (p_x) tags.push(aa.fx.tag.p(p_x));
       }
-      else if (s.startsWith('nostr:note'))
+      else if (dis.startsWith('note'))
       {
         const e_x = aa.fx.decode(dis);
         if (e_x) 
         {
-          tags.push(aa.fx.tag.e(e_x,'mention'));
-          let dat = await aa.db.get_e(e_x);
-          if (dat) p_x = dat.event.pubkey;
-          if (p_x) tags.push(aa.fx.tag.p(p_x));
+          tags.push(aa.fx.tag.q(e_x));
+          // let dat = await aa.db.get_e(e_x);
+          // if (dat) p_x = dat.event.pubkey;
+          // if (p_x) tags.push(aa.fx.tag.p(p_x));
         }
       }
       if (tags.length) mentions.push(...tags);

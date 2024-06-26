@@ -202,7 +202,7 @@ aa.e.mk =s=>
     aa.cli.fuck_off();
     if (!event.pubkey) event.pubkey = aa.u.o.ls.xpub;
     if (!event.kind) event.kind = 1;
-    if (!event.created_at) event.created_at = aa.t.now();
+    if (!event.created_at) event.created_at = aa.t.now;
     if (!event.tags) event.tags = [];
     if (!event.content) event.content = '';
     aa.e.draft(event);
@@ -858,7 +858,7 @@ aa.views.nevent1 =async nevent=>
       {
         dat = 
         {
-          event:{id:data.id,created_at:aa.t.now() - 10},
+          event:{id:data.id,created_at:aa.t.now - 10},
           seen:[aa.r.in_set(aa.r.o.r)],subs:[],clas:[]
         };
 

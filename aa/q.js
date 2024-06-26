@@ -293,7 +293,7 @@ aa.q.req =s=>
     aa.log('invalid filter:'+filt);
     return false
   }
-  let rid = 'raw_'+aa.t.now();
+  let rid = 'raw_'+aa.t.now;
   aa.r.demand(['REQ',rid,filtered],relays,options);
   aa.log(aa.mk.butt_action(aa.q.sn+' close '+rid));
 };

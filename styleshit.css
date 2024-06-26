@@ -49,6 +49,8 @@ html[data-team="dark"]
   --color-maybe: 240,198,116;
   --color-undefined: 138,190,183;
   --color-sad: 129,162,190;
+  --color-dark: var(--color-a);
+  --color-light: var(--color-f);
 }
 
 html[data-team="light"] 
@@ -66,6 +68,8 @@ html[data-team="light"]
   --color-maybe: 240,198,116;
   --color-undefined: 138,190,183;
   --color-sad: 129,162,190;
+  --color-dark: var(--color-f);
+  --color-light: var(--color-a);
 }
 
 /* @end */
@@ -971,7 +975,6 @@ button.butt:focus
 
 #l.expanded > header
 {
-  background: red;
   height: 100%;
   left: 0;
   top: 0;
@@ -982,8 +985,8 @@ button.butt:focus
 
 #butt_l
 {
-  background: rgb(var(--color-e));
-  color: rgb(var(--color-b));
+  /*background: rgb(var(--color-e));*/
+  /*color: rgb(var(--color-b));*/
   display: block;
   padding: var(--pad);
   text-align: center;
@@ -1584,17 +1587,19 @@ button.butt:focus
   font-size: 0;
 }
 
+.note[data-luma="light"] > .by .nid:hover,
 .note[data-luma="light"].in_view > .by .id .nid
 {
-  color: rgb(var(--color-e));
+  color: rgb(var(--color-dark));
 }
 
+.note[data-luma="dark"] > .by .nid:hover,
 .note[data-luma="dark"].in_view > .by .id .nid
 {
-  color: rgb(var(--color-b));
+  color: rgb(var(--color-light));
 }
 
-.note[data-luma="light"] > .by .nid:hover
+/*.note[data-luma="light"] > .by .nid:hover
 {
   color: rgb(var(--color-a));
 }
@@ -1602,25 +1607,27 @@ button.butt:focus
 .note[data-luma="dark"] > .by .nid:hover
 {
   color: rgb(var(--color-f));
-}
+}*/
 
 .nid::before
 {
   content: "   ";
   font-size: var(--font-size-s);
   grid-column: 1;
+  
 }
 
 .in_view > .by .nid:hover
 {
-  background-color: rgb(var(--color-f));
-  color: rgb(var(--color-b));
+/*  background-color: rgb(var(--color-f));
+  color: rgb(var(--color-f))!important;*/
 }
 
 .nid:hover::before
 {
   content: "-->";
   text-align: left;
+  /*color: rgb(var(--color-b))!important;*/
 }
 
 .in_view > .by .nid:hover::before
@@ -2334,8 +2341,8 @@ a.author
 
 .mark_read:hover
 {
-  background-color: rgba(var(--color-no),1);
-  color: rgb(var(--color-b));
+  /*background-color: rgba(var(--color-no),1);*/
+  color: rgb(var(--color-d));
   text-align: left;
 }
 
@@ -2438,14 +2445,14 @@ note.in_view > .actions
   display: none;
 }
 
-.butt
+.actions .butt
 {
   background: rgba(var(--color-b),1);
   color: rgba(var(--color-d),.5);
   padding: 0 var(--padm);
 }
 
-.butt:hover 
+.actions .butt:hover 
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-e));
@@ -2762,7 +2769,7 @@ note.in_view > .actions
 
 .cli_expanded #cli
 {
-  background: rgb(var(--color-e));
+  background: rgb(var(--color-a));
   grid-template-rows: auto minmax(1fr,60vh) auto minmax(1fr,40vh);
   /*box-shadow: 0px -.1rem 1rem 0 rgba(var(--color-e),.5);*/
   max-height: 100vh;
@@ -2837,8 +2844,8 @@ note.in_view > .actions
 
 .cli_expanded #cli_t
 {
-  background: rgb(var(--color-e));
-  color: rgb(var(--color-a));
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-f));
   /*max-height: 40vh;*/
   /*opacity: 1;*/
   padding: var(--line);
@@ -2863,7 +2870,7 @@ note.in_view > .actions
 #oto 
 {
   align-self: end;
-  background: rgb(var(--color-e));
+  background: rgb(var(--color-b));
   display: none;
   grid-area: oto;
   overflow: hidden;
@@ -2913,7 +2920,7 @@ note.in_view > .actions
 #oto .item:hover,
 #oto .item.mention:hover
 {
-  background-color: rgb(var(--color-f));
+  background-color: rgb(var(--color-c));
   z-index: 2;
 }
 
@@ -2925,7 +2932,7 @@ note.in_view > .actions
 
 #oto .item::before 
 {
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
   /*opacity: .69;*/
 }
 
@@ -2936,25 +2943,25 @@ note.in_view > .actions
 
 #oto .item .val 
 {
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-e));
   grid-area: val;
 }
 
 #oto .item.mention
 {
-  background: rgb(var(--color-e));
+  /*background: rgb(var(--color-e));*/
   z-index: 2;
 }
 
 #oto .item.mention:focus
 {
-  background: rgb(var(--color-a));
+  /*background: rgb(var(--color-a));*/
 }
 
 #oto .item.mention:focus::before,
 #oto .item.mention:focus *
 {
-  color: rgb(var(--color-f));
+  /*color: rgb(var(--color-f));*/
 }
 
 #oto .item.mention .val
@@ -2967,15 +2974,15 @@ note.in_view > .actions
 
 #oto .item .required 
 {
-  border-bottom: 1px solid rgb(var(--color-c));
-  color: rgb(var(--color-c));
+  border-bottom: 1px solid rgb(var(--color-d));
+  color: rgb(var(--color-d));
   grid-area: required;
 }
 
 #oto .item .optional 
 {
-  color: rgb(var(--color-c));
-  border-bottom: 1px dashed rgb(var(--color-c));
+  color: rgb(var(--color-d));
+  border-bottom: 1px dashed rgb(var(--color-d));
   grid-area: required;
 }
 
@@ -2987,7 +2994,7 @@ note.in_view > .actions
 #oto .item .description 
 {
   align-self: center;
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
   font-size: var(--font-size-s);
   grid-area: description;
   justify-self: end;
@@ -3121,38 +3128,6 @@ note.in_view > .actions
   z-index: 3;
 }
 
-.profile .score
-{
-/*  box-sizing: border-box;
-  color: rgb(var(--color-d));
-  display: none;
-  /*grid-area: trust;*!/
-  font-size: var(--font-size-s);
-  height: var(--size-s);
-  /*position: absolute;*!/
-  text-align: center;
-  width: var(--line);*/
-}
-
-.profile.in_view .score
-{
-/*  border: 1px dashed rgb(var(--color-b));
-  display: unset;
-  margin-right: var(--padm);
-  position: relative;*/
-}
-
-.profile:not(.in_view) .score
-{
-  /*color: rgb(var(--color-c));*/
-}
-
-.profile .follow 
-{
-  /*grid-area: follow;*/
-  /*padding: 0 var(--pad);*/
-}
-
 .profile .pubkey .xpub
 {
   display: none;
@@ -3161,6 +3136,7 @@ note.in_view > .actions
   max-width: calc(var(--size) - var(--pad));
   overflow-x: scroll;
   text-align: right;
+  padding: 0 var(--pad);
 }
 
 .profile.in_view .pubkey .xpub 
@@ -3375,13 +3351,19 @@ note.in_view > .actions
   justify-self: start;
   margin-bottom: 0;
   margin-top: 1.4rem;
-  padding-bottom: 1px;
+  /*padding-bottom: 1px;*/
 }
 
 [data-meta="nip05"]::after 
 {
   color: rgb(var(--color-c));
-  content: " " attr(data-verified);
+  content: " never verified";
+}
+
+[data-meta="nip05"][data-verified]::after 
+{
+  color: rgb(var(--color-c));
+  content: " " attr(data-verified) " on " attr(data-verified_on);
 }
 
 [data-meta="picture"], 

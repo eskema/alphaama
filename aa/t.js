@@ -39,7 +39,12 @@ aa.t.nice =d=>
 
 // timestamp in seconds of now
 
-aa.t.now =()=> Math.floor(Date.now() / 1000);
+// Object.defineProperty(aa.t,'now', 
+// {
+//   get() {return Math.floor(Date.now() / 1000) }
+// });
+
+// aa.t.now =()=> Math.floor(Date.now() / 1000);
 
 
 // time elapsed from date to string
@@ -66,7 +71,7 @@ aa.t.elapsed =date=>
 
 aa.t.convert =s=>
 {
-  if (s === 'now') return aa.t.now(); 
+  if (s === 'now') return aa.t.now; 
   if (s.startsWith('n_')) return aa.t.n(s.slice(2));
   if (s.startsWith('d_')) return aa.t.d(s.slice(2));  
   return parseInt(s)
@@ -76,3 +81,4 @@ aa.t.convert =s=>
 // for display
 
 aa.t.display =timestamp=> aa.t.nice(aa.t.to_date(timestamp));
+aa.t.display_ext =ts=>aa.t.display(ts)+' ~'+aa.t.elapsed(aa.t.to_date(ts));

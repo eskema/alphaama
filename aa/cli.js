@@ -35,7 +35,7 @@ aa.cli.dat_mk =async(s,dis)=>
     {
       pubkey:aa.u.o.ls.xpub,
       kind:1,
-      created_at:aa.t.now(),
+      created_at:aa.t.now,
       content:s,
       tags:[]
     }
@@ -219,11 +219,29 @@ aa.cli.load =e=>
 aa.cli.mention =w=>
 {
   let s = w.slice(1).toLowerCase();
-  const a = Object.values(aa.db.p).filter(p=> 
-    p.metadata?.name?.toLowerCase().startsWith(s)
-    || p.petname?.toLowerCase().startsWith(s)
-    || p.metadata?.nip05?.toLowerCase().includes(s)
-  );
+  const filter =p=> 
+  {
+    if ('metadata' in p)
+    {
+      if ('name' in p.metadata)
+      {
+        if (p.metadata.name.toLowerCase().includes(s)) return true;
+      }
+      if ('nip05' in p.metadata)
+      {
+        if (p.metadata.nip05.toLowerCase().includes(s)) return true;
+      }
+    }
+    if ('petname' in p.metadata)
+    {
+      if (p.petname.toLowerCase().includes(s)) return true;
+    }
+  };
+    // p.metadata?.name?.toLowerCase().startsWith(s)
+    // || p.petname?.toLowerCase().startsWith(s)
+    // || p.metadata?.nip05.toLowerCase().includes(s);
+  
+  const a = Object.values(aa.db.p).filter(filter);
   for (p of a)
   {
     const l = aa.mk.l('li',{cla:'item mention',bef:p.metadata.name??''});
@@ -408,7 +426,7 @@ aa.cli.run =async s=>
     if (aa.cli.dat) 
     {
       console.log(aa.cli.dat);
-      aa.cli.dat.event.created_at = aa.t.now();
+      aa.cli.dat.event.created_at = aa.t.now;
       if (aa.cli.dat.event.kind === 1)
       {
         aa.cli.dat.event.tags.push(...aa.parse.hashtags(s));

@@ -138,8 +138,6 @@ aa.r.butts =(l,o)=>
 
 aa.r.c_on =(url,o=false)=> 
 {
-  let r = aa.r.o.ls[url];
-
   if (localStorage.mode === 'hard') 
   {
     aa.log('aa.r.c_on: mode=hard');
@@ -152,7 +150,8 @@ aa.r.c_on =(url,o=false)=>
     return
   }
 
-  let relay = aa.r.active[url] ? aa.r.active[url] : aa.r.active[url] = {q:{},send:{},sent:[],cc:[]};
+  let relay = aa.r.active[url] ? aa.r.active[url] 
+  : aa.r.active[url] = {q:{},send:{},sent:[],cc:[]};
   if (relay.ws?.readyState !== 1)
   {
     if (relay.fc) delete relay.fc;
@@ -160,7 +159,6 @@ aa.r.c_on =(url,o=false)=>
     {
       if (o.req?.length) relay.q[o.req[1]] = o;
       for (const ev in o.send) relay.send[ev] = o.send[ev];
-      // if (o.send?.length) relay.send = o.send;
     }
     
     relay.ws = new WebSocket(url);
@@ -184,7 +182,6 @@ aa.r.close =(k,id)=>
     {
       delete r.q[id];
       aa.r.upd_state(k);
-      aa.log('r close '+k+' '+id);
     },500);
   }
 };
@@ -412,7 +409,7 @@ aa.r.list_mk =s=>
         {
           pubkey:aa.u.o.ls.xpub,
           kind:10002,
-          created_at:aa.t.now(),
+          created_at:aa.t.now,
           content:'',
           tags:relays
         };

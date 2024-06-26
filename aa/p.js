@@ -8,12 +8,19 @@ aa.p = {};
 aa.p.load =()=>
 {
   aa.actions.push(
-  {
-    action:['p','score'],
-    required:['id','number'], 
-    description:'set user score (for auto parsing and stuff)',
-    exe:aa.p.score
-  });
+    {
+      action:['p','score'],
+      required:['id','number'], 
+      description:'set user score (for auto parsing and stuff)',
+      exe:aa.p.score
+    },
+    {
+      action:['p','nip5'],
+      required:['name@domain'], 
+      description:'check nip5 validity',
+      exe:aa.p.nip5
+    }
+  );
 
   const section = aa.mk.section('p');
   aa.p.l = aa.mk.l('div',{id:'authors'});
@@ -311,17 +318,28 @@ aa.mk.metadata =p=>
         let [username,domain] = v.split('@');
         if (username && domain) 
         {
-          const url = new URL('https://'+domain+'/.well-known/nostr.json?name='+username);
+          const url = new URL('https://'+domain+'/.well-known/nostr.json?name='+username).href;
           if (url) 
           {
-            l.href = url.href;
+            l.href = url;
             if (p.verified.length)
             {
               l.dataset.verified = p.verified[0][0];
-              l.dataset.verified_on = aa.t.display(p.verified[0][1]);
+              l.dataset.verified_on = aa.t.display_ext(p.verified[0][1]);
               if (p.verified[0][0] === true) l.classList.add('nip05-verified');
             }
-            l.addEventListener('click',aa.p.verify_nip5)
+            l.addEventListener('click',e=>
+            {
+              e.preventDefault();
+              aa.p.nip5(v);
+              // aa.get.nip05(v).then(o=>
+              // {
+              //   let verified = false;
+              //   if (o && o.pubkey === p.xpub) verified = true;
+              //   p.verified.unshift([verified,aa.t.now]);
+              //   aa.p.save(p);
+              // });
+            })
           }
         }
       }
@@ -346,7 +364,7 @@ aa.mk.metadata =p=>
     clk:aa.p.profile_butt_metadata
   });
   const ts = p.pastdata.k0[0][1];
-  const last_date = aa.t.display(ts)+' ~'+aa.t.elapsed(aa.t.to_date(ts));
+  const last_date = aa.t.display_ext(ts);
   if (p.pastdata.k0.length) 
     butt_metadata.dataset.last = last_date;
 
@@ -356,25 +374,23 @@ aa.mk.metadata =p=>
   return metadata
 };
   
-aa.p.list =(a,l)=>
+aa.p.author_list =(a,l)=>
 {
   l.classList.add('author_list');
   if (a.length)
   {    
+    let keys_to_get = [];
+    for (const x of a) { if (!aa.db.p[x]) keys_to_get.push(x) }
+    
+    
     const bff_li = x=>
     {
       const dis = aa.mk.p_link(x);
       l.append(aa.mk.l('li',{cla:'bff',app:dis}));
     };
-    
-    let keys_to_get = [];
-    for (const x of a)
-    {
-      if (!aa.db.p[x]) keys_to_get.push(x)
-    }
+
     if (keys_to_get.length)
     {
-      // console.log('aa.p.list');
       aa.db.idb.ops({get_a:{store:'authors',a:keys_to_get}})
       .then(all=>
       {
@@ -396,7 +412,7 @@ aa.mk.bff =(extr,a,p)=>
   let bff_details = aa.mk.details('follows ('+a.length+')', ul);
   extr.append(bff_details);
 
-  aa.p.list(a,ul);
+  aa.p.author_list(a,ul);
   
   const butt_bff = aa.mk.l('button',
   {
@@ -416,7 +432,7 @@ aa.mk.followers =(extr,a)=>
   let followers_details = aa.mk.details('followers ('+a.length+')', ul);
   extr.append(followers_details);
 
-  aa.p.list(a,ul);
+  aa.p.author_list(a,ul);
   setTimeout(()=>{aa.fx.sort_l(ul,'text_asc')},50);
 };
 
@@ -566,7 +582,15 @@ aa.p.p_link_data_upd =async(l,o)=>
   else name.classList.remove('empty');
   if (o.petname) name.dataset.petname = o.petname;
   aa.p.pic(l,o.src);
-  if (o.nip05) l.dataset.nip05 = o.nip05;
+  if (o.nip05) 
+  {
+    l.dataset.nip05 = o.nip05;
+    if (o.verified) 
+    {
+      l.dataset.verified = o.verified[0];
+      l.dataset.verified_on = o.verified[1];
+    }
+  }
   l.classList.add(...o.class_add);
   l.classList.remove(...o.class_rm);
   l.dataset.followers = o.followers;
@@ -693,6 +717,7 @@ aa.mk.p_link_data =p=>
   : false;
   if (petname) o.petname = petname;
   if (p.metadata?.nip05) o.nip05 = p.metadata.nip05;
+  if (p.verified.length) o.verified = p.verified[0];
   if (aa.u.is_u(p.xpub)) o.class_add.push('is_u');
   else o.class_rm.push('is_u');
   if (aa.u.is_following(p.xpub)) 
@@ -871,10 +896,25 @@ aa.views.nprofile1 =async nprofile=>
 
 // nip05 (wip)
 
-aa.get.nip05 =async s=>
+aa.p.nip5 =async s=>
 {
-  let nip05 = await NostrTools.nip05.queryProfile(s);
-  console.log(nip05);
+  s = s.trim();
+  let verified = false;
+  let dis = await aa.get.nip05(s);
+  if (dis)
+  {
+    let p = await aa.db.get_p(dis.pubkey);
+    if (p)
+    {
+      if (dis.pubkey === p.xpub) verified = true;
+      p.verified.unshift([verified,aa.t.now]);
+      aa.p.save(p);
+      if (aa.viewing === p.npub) aa.p.update(aa.p.profile(p),p,1);
+    }
+  }
+  aa.log('nip5 '+verified+' for '+s);
 };
+
+aa.get.nip05 =async s=> await NostrTools.nip05.queryProfile(s);
 
 window.addEventListener('load',aa.p.load);

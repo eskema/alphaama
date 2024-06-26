@@ -28,7 +28,10 @@ const aa =
   temp:{},
   state:{},
   styles:['/styleshit.css'],
-  t:{},
+  t:
+  {
+    get now(){return Math.floor(Date.now()/1000)}
+  },
   tools:
   [
     '/aa/fun.js',
@@ -110,11 +113,6 @@ aa.head_meat =()=>
       document.head.append(link);
     }
   });
-  // <link rel="apple-touch-icon" sizes="180x180" href="/stuff/apple-touch-icon.png">
-  // <link rel="icon" type="image/png" sizes="32x32" href="/stuff/favicon-32x32.png">
-  // <link rel="icon" type="image/png" sizes="16x16" href="/stuff/favicon-16x16.png">
-  // <link rel="mask-icon" href="/stuff/safari-pinned-tab.svg" color="#171717">
-  // <link rel="manifest" href="/site.webmanifest?v=1"></link>
 };
 
 aa.head_styles =styles=>

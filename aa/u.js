@@ -204,7 +204,7 @@ aa.u.follow =async s=>
     {
       pubkey:aa.u.o.ls.xpub,
       kind:3,
-      created_at:aa.t.now(),
+      created_at:aa.t.now,
       content:dat_k3.event.content,
       tags:[...dat_k3.event.tags,p_tag]
     };
@@ -220,7 +220,7 @@ aa.u.follow =async s=>
         // {
         //   pubkey:aa.u.o.ls.xpub,
         //   kind:3,
-        //   created_at:aa.t.now(),
+        //   created_at:aa.t.now,
         //   content:dat_k3.event.content,
         //   tags:new_follows
         // };
@@ -352,7 +352,7 @@ aa.u.metadata_set =async s=>
       {
         pubkey:aa.u.o.ls.xpub,
         kind:0,
-        created_at:aa.t.now(),
+        created_at:aa.t.now,
         content:JSON.stringify(md),
         tags:[]
       };
@@ -429,7 +429,7 @@ aa.u.react =async s=>
     {
       pubkey:aa.u.o.ls.xpub,
       kind:7,
-      created_at:aa.t.now(),
+      created_at:aa.t.now,
       content:reaction,
       tags:[]
     };
@@ -613,7 +613,7 @@ aa.u.unfollow =async s=>
         {
           pubkey:aa.u.o.ls.xpub,
           kind:3,
-          created_at:aa.t.now(),
+          created_at:aa.t.now,
           content:dat_k3.event.content,
           tags:new_follows
         };

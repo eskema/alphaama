@@ -319,10 +319,15 @@ aa.fx.tag.p =(x)=>
 {
   let tag = [];
   tag.push('p',x);
-  if (aa.db.p[x])
+  let p = aa.db.p[x];
+  if (p)
   {
-    tag.push(aa.db.p[x].relay);
-    if (aa.db.p[x].petname.length) tag.push(aa.db.p[x].petname);
+    if (p.relay.length) tag.push(p.relay);
+    if (p.petname.length) 
+    {
+      if (!p.relay.length) tag.push('');
+      tag.push(p.petname);
+    }
   }
   return tag
 };
@@ -330,12 +335,29 @@ aa.fx.tag.p =(x)=>
 
 // create e tag from hex id
 
-aa.fx.tag.e =(x,mark)=>
+aa.fx.tag.e =(x,mark=false)=>
 {
   let tag = [];
   tag.push('e',x);
-  tag.push(aa.get.seen(x));
-  if (mark) tag.push(mark);
+  let relay = aa.get.seen(x);
+  if (relay) tag.push(relay);
+  if (mark) 
+  {
+    if (!relay) tag.push('');
+    tag.push(mark);
+  }  
+  return tag
+};
+
+
+// create q tag from hex id
+
+aa.fx.tag.q =(x)=>
+{
+  let tag = [];
+  tag.push('q',x);
+  let relay = aa.get.seen(x);
+  if (relay) tag.push(relay);
   return tag
 };
 
