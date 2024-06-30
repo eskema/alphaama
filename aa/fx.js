@@ -26,6 +26,7 @@ aa.fx.a_rm =(a,items_to_rm)=>
 
 aa.fx.an =s=>
 {
+  s = s+'';
   s = s.replace(/[^a-z_0-9]/gi,'_').toLowerCase();
   while (s.includes('__')) { s = s.replace('__','_') }
   if (s.startsWith('_')) s = s.slice(1);
@@ -308,6 +309,18 @@ aa.fx.sorts =
   rand(){return ()=> 0.5 - Math.random()},
   text_asc(a,b){return a.textContent.toLowerCase() > b.textContent.toLowerCase() ? 1 : -1},
   text_desc(a,b){return a.textContent.toLowerCase() < b.textContent.toLowerCase() ? 1 : -1},
+  i_asc(a,b)
+  {
+    let a_val = parseInt(a.querySelector('.val').textContent);
+    let b_val = parseInt(b.querySelector('.val').textContent);
+    return a_val > b_val ? 1 : -1
+  },
+  i_desc(a,b)
+  {
+    let a_val = parseInt(a.querySelector('.val').textContent);
+    let b_val = parseInt(b.querySelector('.val').textContent);
+    return a_val < b_val ? 1 : -1
+  },
 };
 
 

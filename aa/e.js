@@ -534,14 +534,24 @@ aa.e.print =async dat=>
   }
   else
   {
-    if (l.classList.contains('blank') 
-    || l.classList.contains('draft')) aa.e.note_replace(l,dat);
+    if (l.classList.contains('blank') || l.classList.contains('draft')) 
+    {
+      aa.e.note_replace(l,dat);
+    }
+    else
+    {
+      let seen = dat.seen.join(' ');
+      let subs = dat.subs.join(' ');
+      if (l.dataset.seen !== seen) l.dataset.seen = seen;
+      if (l.dataset.subs !== subs) l.dataset.subs = subs;
+    }
   }
 
   aa.get.quotes(xid);
   aa.get.missing('e');
   aa.get.missing('p');
-  // aa.dex();
+  aa.i.d(dat);
+  // aa.i.run();
   if (l && history.state.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
 };
 
@@ -769,7 +779,7 @@ aa.kinds[6] =dat=>
   note.classList.add('is_new','tiny');
   // note.querySelector('.content').textContent = 'k6 repost:'
   // it.rm_selector(note,'.content');
-  let reply_tag = aa.get.reply_tag(dat.event.tags);
+  let reply_tag = aa.get.last_e_tag(dat.event.tags);
   if (reply_tag && reply_tag.length)
   {    
     let repost_id = reply_tag[1];
@@ -798,7 +808,13 @@ aa.kinds[6] =dat=>
 
 aa.kinds[7] =dat=>
 {
-  const note = aa.kinds[1](dat);
+  let note = aa.e.note(dat);
+  if (!sessionStorage[dat.event.id]) note.classList.add('is_new');
+  let reply_tag = aa.get.last_e_tag(dat.event.tags);
+  if (reply_tag && reply_tag.length) aa.e.append_to_replies(dat,note,reply_tag);
+  else aa.e.append_to_notes(note);
+  aa.get.pubs(dat.event.tags);
+  
   note.classList.add('tiny');
   return note
 };
@@ -954,6 +970,13 @@ aa.get.root_tag =tags=>
   return false
 };
 
+aa.get.last_e_tag =tags=>
+{
+  let tag = tags.filter(t=>t[0]==='e').pop();
+  if (tag && aa.is.tag.e(tag)) return tag;
+  return false
+};
+
 
 
 
@@ -1022,10 +1045,15 @@ aa.db.some =async s=>
   let o = {some:db_op};
   aa.log(localStorage.ns+' '+aa.db.sn+' some '+db_op.n);
   const db = aa.db.idb.new;
+  const exe =async e=>
+  {
+    for (const dat of e.data) aa.e.print(dat);
+  };
   db.onmessage=e=>
   {
     // console.log('aa.db.some',e.data);
-    for (const dat of e.data) aa.e.print(dat);
+    // for (const dat of e.data) aa.e.print(dat);
+    exe(e);
     setTimeout(()=>{db.terminate()},200);
   }
   db.postMessage(o);

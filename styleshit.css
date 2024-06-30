@@ -740,11 +740,12 @@ button.butt:focus
 #u_u 
 {
   align-items: center;
-  align-self: end;
+  align-self: center;
   bottom: 0;
   box-sizing: border-box;
   display: grid;
   grid-area: u;
+  grid-template-areas:"u_u";
   grid-auto-flow: dense;
   margin: 0;
   max-height: 100vh;
@@ -752,7 +753,7 @@ button.butt:focus
   min-width: var(--size);
   overflow-y: scroll;
   padding: 0;
-  padding-bottom: var(--size);
+  /*padding-bottom: var(--size);*/
   position: fixed;
   right: 0;
   z-index: 12;
@@ -761,6 +762,7 @@ button.butt:focus
 
 #u_u.expanded
 {
+  height: 100vh;
   /*background-color: rgb(var(--color-a));*/
 }
 
@@ -768,6 +770,7 @@ button.butt:focus
 {
   bottom: unset;
   top: 0;
+  z-index: 8;
 /*  padding-bottom: 0;
   padding-top:var(--size);*/
 }
@@ -784,9 +787,15 @@ button.butt:focus
   box-sizing: border-box;
   display: grid;
   height: var(--size);
+  justify-self: end;
   padding: 0;
+  position: relative;
+  /*position: sticky;*/
+  /*top: 50%;*/
+  /*grid-area: u_u;*/
   position: fixed;
   right: 0;
+  
   text-align: center;
   width: var(--size);
   z-index: 1;
@@ -800,7 +809,7 @@ button.butt:focus
 .cli_expanded #butt_u_u
 {
   bottom: unset;
-  top: 50;
+  top: 0;
 }
 
 #butt_u_u.has-picture
@@ -824,6 +833,14 @@ button.butt:focus
   z-index: -1;
 }
 
+#u_u.expanded #butt_u_u
+{
+  /*position: sticky;*/
+  /*top: calc(50vh);*/
+  /*bottom: -50vh;*/
+  bottom: unset;
+}
+
 #u_u.expanded #butt_u_u.has-picture img
 {
   transform: scale(.618);
@@ -840,6 +857,11 @@ button.butt:focus
 {
   opacity: 0;
 }
+
+
+
+
+
 
 #u_u > details
 {
@@ -1083,38 +1105,36 @@ button.butt:focus
 
 /* @end */
 
-/* @group index */
+/* @group i */
 
-/*#index 
+#i 
 {
-  align-items:  center;
-  display: grid;
+  grid-area: u_u;
+  background: rgb(var(--color-e));
+  display: none;
+  font-size: var(--font-size-s);
+/*  align-items:  center;
+  display: none;
   font-size: var(--font-size-s);
   justify-self: start;
   min-width: var(--line);
   position: sticky;
   top: calc(50vh - 1rem);
-  z-index: 4;
-}*/
-
-/*#index::before
-{
-  content: "Y";
-  font-size: var(--font-size-s);
-  line-height: 1rem;
-  text-align: center;
-}*/
-
-/*#index.expanded::before
-{
-  content: "X";
+  z-index: 4;*/
 }
 
-#index:hover::before
+.expanded > #i
 {
-  cursor: pointer;
-  color: rgb(var(--color-f));
-}*/
+  display: grid;
+  margin-right: var(--size);
+  /*padding-right: var(--size);*/
+  /*padding-left: var(--size);*/
+}
+
+.cli_expanded #i
+{
+  align-self: start;
+}
 
 /*#index.empty,
 #index:not(.expanded) > *
@@ -1122,7 +1142,7 @@ button.butt:focus
   display: none!important;
 }*/
 
-/*#index > .list
+/*#index
 {
   align-self:  center;
   align-items: start;
@@ -1132,91 +1152,105 @@ button.butt:focus
   max-height: 80vh;
   overflow-y:  scroll;
   padding: var(--pad);
-  position: absolute;
+  /*position: absolute;*!/
 }*/
 
-/*#index > .list > .item 
+#i > .list > .item 
 {
   grid-gap: var(--pad);
   margin-left: 0;
 }
 
-#index .list .list .key:hover,
-#index .key.out
+#i .key:hover,
+#i .key.solo
 {
-  color: rgb(var(--color-no));
-  text-decoration: line-through;
-}*/
+  color: rgb(var(--color-maybe));
+}
 
-/*#index .key::after
+#i .key::after
 {
   content: none;
 }
 
-#index .list .list .val:hover,
-#index .val.solo
+#i .val:hover,
+#i .val.out
 {
-  color: rgb(var(--color-maybe));
-  text-decoration: underline;
+  
+  color: rgb(var(--color-no));
+  text-decoration: line-through;
+  /*text-decoration: underline;*/
 }
 
-#index .list .list .val::before
+#i .val::before
 {
   content: 'x';
-}*/
+}
 
-/*#index details
+#i .val::after
+{
+  content: '';
+}
+
+#i details
 {
   align-self: start;
 }
 
-#index details.empty
-{
-  display: none;
-}
-
-#index details[open]
+#i details[open]
 {
   margin-bottom: 0;
-}*/
+}
 
-/*#index summary[data-after]::after
+#i details > summary[data-after]::after
 {
-  content: "("attr(data-after)")";
+  content: "("attr(data-after)")"!important;
   color: rgb(var(--color-c));
   margin-left: var(--padm);
 }
 
-#index details[open] summary[data-after]::after
+#i details[open] > summary[data-after]::after
 {
   color: rgb(var(--color-b));
   content: ":";
   margin: 0;
-}*/
+}
 
-/*#index details > summary
+#i details > summary
 {
   background: rgb(var(--color-e));
   color: rgb(var(--color-b));
   font-size: var(--font-size);
+  position: sticky;
+  top: 0;
 }
 
-#index details[open] > summary
+#i details > summary:not([data-after])
+{
+  display: none;
+}
+
+#i details[open] > summary
 {
   color: rgb(var(--color-a));
 }
 
-#index .key 
+#i .key 
 {
   color: rgb(var(--color-a));
   white-space: pre;
   word-break: keep-all;
-}*/
+}
 
-/*#index .val 
+#i .val 
 {
   color: rgb(var(--color-c));
-}*/
+}
+
+#i_item_since,
+#i_item_until
+{
+  font-size: var(--font-size);
+} 
 
 /* @end */
 
@@ -1291,11 +1325,12 @@ button.butt:focus
   z-index: 1;
 }
 
+.note.root.solo,
+.haz_solo .note.root.in_path:not(.in_view),
 .note.root:not(.in_path),
 .note.in_view > .replies > .note,
 #notes > .note:not(.root):not(.in_path)
 {
-  /*border-color: rgb(var(--color-d));*/
   grid-template-columns: 38.2vw 1fr;
   grid-template-areas: 
   "by      by"
@@ -1324,26 +1359,10 @@ button.butt:focus
   margin-bottom: 0;
 }
 
-/*.note.draft
-{
-  grid-template-columns: 38.2vw 1fr;
-  grid-template-areas: 
-  "by      by"
-  "content content"
-  "tags    tags"
-  "actions actions"
-  "replies replies"
-  "sig     sig"
-  "after   after"
-  !important;
-}*/
 
-/*.note.in_path.in_view,*/
 .note:hover
 {
   background: rgba(var(--c),.06);
-  /*border-color: rgb(var(--color-e));*/
-  /*transition: var(--trans-fast);*/
 }
 
 .note.in_path.in_view
@@ -1361,6 +1380,7 @@ button.butt:focus
 }
 
 .haz_solo .note:not(.in_path),
+.note.root:not(.in_path).out,
 .note.out 
 {
   border: none;
@@ -1374,15 +1394,23 @@ button.butt:focus
 }
 
 .haz_solo .note:not(.in_path) > .by,
+.haz_solo .note:not(.in_path) > .actions,
 .haz_solo .note:not(.in_path) > .content,
 .haz_solo .note:not(.in_path) > .details,
 .haz_solo .note:not(.in_path) > .sig,
 .haz_solo .note:not(.in_path) > .replies::after,
+.haz_solo .note:not(.in_path) > .replies > summary,
+.haz_solo .note:not(.in_path)::after,
+.haz_solo .note:not(.in_path)::before,
 .note.out > .by,
+.note.out > .actions,
 .note.out > .content,
 .note.out > .details,
 .note.out > .sig,
 .note.out > .replies::after,
+.note.out > .replies > summary,
+.note.out::after,
+.note.out::before,
 .note:not(.in_view) > .sig,
 .hide_e #e .note:not(.in_path),
 .view_e .note:not(.in_path)
@@ -1516,6 +1544,7 @@ button.butt:focus
   "author created_at clas";
 }
 
+.haz_solo .note.root.in_path:not(.in_view) > .by,
 .note.root:not(.in_view):not(.in_path) > .by,
 .note.in_view > .by
 {
@@ -2201,7 +2230,7 @@ a.author
   /*margin-bottom: 8px;*/
 }
 
-.in_path:not(.in_view) > .replies
+.view_e .in_path:not(.in_view) > .replies
 {
   padding-left: 0;
 }
@@ -2230,7 +2259,7 @@ a.author
   z-index: 5; 
 }
 
-.note.in_path:not(.in_view) > .replies[open] > summary
+.view_e .note.in_path:not(.in_view) > .replies[open] > summary
 {
   display: none;
 }
@@ -2428,7 +2457,7 @@ a.author
   top: 1rem;
 }
 
-note.in_view > .actions
+.note.in_view > .actions
 {
   /*align-self: stretch;*/
   border-bottom: 1px dashed rgb(var(--color-d));
@@ -2437,10 +2466,10 @@ note.in_view > .actions
   /*grid-area: actions;*/
   /*position: relative;*/
   position: sticky;
-  top: var(--line);
+  top: 2rem;
 }
 
-.note.in_path:not(.in_view) > .actions
+.view_e .note.in_path:not(.in_view) > .actions
 {
   display: none;
 }
@@ -2648,6 +2677,7 @@ note.in_view > .actions
   line-height: 1.5;
   padding: var(--pad);
   white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .note.blank > .by::before

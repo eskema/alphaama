@@ -6,6 +6,8 @@ window.addEventListener('load',()=>
 {
   // run with defaults
   aa.run();
+
+  // fetch and append readme
   fetch('/README.md')
   .then(dis=>dis.text()).then(text=>
   {

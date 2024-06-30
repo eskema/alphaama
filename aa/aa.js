@@ -1,6 +1,12 @@
 const aa = 
 {
   actions:[],
+  db: 
+  {
+    e:{}, // memory events (dat)
+    p:{}, // memory profiles (pro)
+    q:{},
+  },
   clk:{},
   dependencies:
   [
@@ -23,7 +29,7 @@ const aa =
     '/aa/q.js',
     '/aa/r.js',
     '/aa/u.js',
-    // '/aa/dex.js',
+    '/wip/dex.js',
   ],
   temp:{},
   state:{},
@@ -174,18 +180,13 @@ aa.mo_logs = new MutationObserver(a=>
 });
 
 
-
-
-
-
-
 // tries to delete everything saved locally 
 // and then reload clean
 
 aa.reset =()=>
 {
   aa.log('shh... go to sleep now.');
-  // aa.db.cash.ops.({clear:'ALL'));
+  aa.db.cash.ops({clear:'ALL'});
   aa.db.idb.ops({clear:{stores:['stuff','authors','events']}})
   .then(()=>
   {
@@ -194,6 +195,7 @@ aa.reset =()=>
     setTimeout(()=>{location.reload()},1000)
   });
 };
+
 aa.actions.push(
 {
   action:['zzz'],

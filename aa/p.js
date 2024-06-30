@@ -154,8 +154,15 @@ aa.p.profile_actions =p=>
       }
       l.append(butt_follow);
     }
-    
   }
+
+  const butt_all = aa.mk.l('button',
+  {
+    cla:'butt profile_all',
+    con:'refresh',
+    clk:aa.p.profile_butt_all
+  });
+  l.append(butt_all);
   
   // let a = ['score','follow'];
   // for (const s of a) l.append(butt(s),' ');
@@ -568,7 +575,34 @@ aa.p.p_links_upd =async p=>
 {
   const options = aa.mk.p_link_data(p);
   const a = document.querySelectorAll('.author[href="#'+p.npub+'"]');
-  for (const l of a) aa.p.p_link_data_upd(l,options)
+  for (const l of a) aa.p.p_link_data_upd(l,options);
+  
+  // let key;
+  let item = document.getElementById('i_item_'+p.xpub);
+  if (item) 
+  {
+    let p_name = a[0]?.querySelector('.name');
+    let key = item.querySelector('.key');
+    if (key && p_name)
+    {
+      key.textContent = '';
+      key.append(p_name.cloneNode(true));
+    }
+  }
+  // if (key) 
+  // {
+  //   key.textContent = '';
+  //   key.append(p_name||aa.fx.encode('npub',k).slice(0,12));
+  //   key.textContent = options.name || options.petname;
+
+  //   let p_name = aa.mk.p_link(k).querySelector('name');
+  // let key = li.querySelector('.key');
+  // // let p = aa.db.p[k];
+  // // if (p)
+  // // key.textContent = aa.db.p[k]?.metadata?.name ?? aa.fx.encode('npub',k).slice(0,12);
+
+  // key.textContent = '';
+  // key.append(p_name||aa.fx.encode('npub',k).slice(0,12));
 };
 
 
@@ -576,12 +610,16 @@ aa.p.p_links_upd =async p=>
 
 aa.p.p_link_data_upd =async(l,o)=>
 {
+  // name
   let name = l.querySelector('.name');
   if (name.textContent !== o.name) name.textContent = o.name;
   if (!name.childNodes.length) name.classList.add('empty');
   else name.classList.remove('empty');
+  // petname
   if (o.petname) name.dataset.petname = o.petname;
+  // picture
   aa.p.pic(l,o.src);
+  // nip05
   if (o.nip05) 
   {
     l.dataset.nip05 = o.nip05;
@@ -709,8 +747,8 @@ aa.mk.p_link_data =p=>
 {
   let o = {class_add:[],class_rm:[],src:false};
 
-  let name_s = p.metadata?.name || p.metadata?.display_name || p.npub.slice(0,12);
-  o.name = name_s.trim();
+  let name = p.metadata?.name || p.metadata?.display_name || p.metadata?.displayName || p.npub.slice(0,12);
+  o.name = name.trim();
   
   let petname = p.petname.length ? p.petname 
   : p.extradata.petnames.length ? p.extradata.petnames[0] 

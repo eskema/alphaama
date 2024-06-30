@@ -24,7 +24,7 @@ aa.mk.av =(src,poster=false)=>
   const play =l=>
   {
     let playin = document.querySelector('.playin');
-    if (playin) av.pause(playin);
+    if (playin) pause(playin);
     l.classList.add('started','playin');
     l.play();
   };
@@ -59,6 +59,7 @@ aa.mk.av =(src,poster=false)=>
   // toggle play / pause
   const vip =e=>
   {
+    e.preventDefault();
     if (e.target.paused) play(e.target);
     else pause(e.target);
   };

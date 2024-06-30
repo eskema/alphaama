@@ -520,21 +520,10 @@ aa.u.start =async mod=>
   if (ls.xpub)
   {
     aa.mk.mod(mod);
-
-    // aa.log('u_x '+ls.xpub);
-    // const user_link = aa.mk.nostr_link(ls.npub,'-->');
-    // const up = aa.mk.l('p');
-    // up.append(user_link,' ',ls.npub);
-    // aa.log(up);
-    
-
+    aa.fx.color(ls.xpub,document.getElementById('u_u'));
 
     let butt_u = document.getElementById('butt_u_u');
-    if (butt_u)
-    {
-      aa.fx.color(ls.xpub,butt_u);
-      butt_u.textContent = ls.xpub.slice(0,3);
-    }
+    if (butt_u) butt_u.textContent = ls.xpub.slice(0,3);
 
     let p = await aa.db.get_p(ls.xpub);
     if (!p) p = aa.p.p(ls.xpub);

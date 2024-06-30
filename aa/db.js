@@ -1,12 +1,12 @@
 // database stuff
 
-aa.db = 
-{
-  def:{id:'db'},
-  e:{}, // memory events (dat)
-  p:{}, // memory profiles (pro)
-  q:{},
-};
+// aa.db = 
+// {
+//   def:{id:'db'},
+//   e:{}, // memory events (dat)
+//   p:{}, // memory profiles (pro)
+//   q:{},
+// };
 
 
 // web cache navigation for offline use

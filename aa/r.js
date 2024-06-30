@@ -325,9 +325,9 @@ aa.r.from_tags =(tags,sets=[])=>
     if (href)
     {
       let relay = relays[href] = {sets:[]};
-      if (permission === 'read') aa.fx.a_add(relay.sets,[...sets,'read']);
-      else if (permission === 'write') aa.fx.a_add(relay.sets,[...sets,'write']);
-      else aa.fx.a_add(relay.sets,[...sets,'read','write']);
+      if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
+      else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
+      else aa.fx.a_add(relay.sets,['read','write',...sets]);
     }
   }
   return relays
@@ -377,7 +377,7 @@ aa.r.list =s=>
       rels.push(tag.join(' '))
     }
   }
-  if (rels.length) aa.cli.v(localStorage.ns+' '+aa.r.sn+' mkls '+rels);
+  if (rels.length) aa.cli.v(localStorage.ns+' '+aa.r.sn+' mkls '+rels.join(', '));
   else err();
 };
 

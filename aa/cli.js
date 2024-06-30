@@ -413,8 +413,7 @@ aa.cli.run =async s=>
       }
       let act = actions[0];
       let cut = a.join(' ');
-      act.exe(cut);
-      
+      if (act && 'exe' in act) act.exe(cut);
     }
     else aa.log('invalid action: '+s)
   };

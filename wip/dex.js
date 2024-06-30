@@ -1,178 +1,255 @@
-const dex =
+// index stuff
+
+aa.i =
 {
   clk:{},
-};
-
-dex.load =()=>
-{
-  const index = aa.mk.l('nav',{id:'index',cla:'empty',clk:aa.clk.expanded});
-  document.getElementById('u').append(index);
-};
-
-dex.kindex =dat=>
-{
-  let header = dex.head;
-  if (dat.subs) for (const sub of dat.subs) aa.index.e('subs',sub);
-  if (dat.seen) for (const seen of dat.seen) aa.index.e('seen',seen);
-  aa.index.e('authors',dat.event.pubkey);
-  aa.index.e('kinds',dat.event.kind);
-  aa.index.at(header,dat.event.created_at);
-  aa.index.tags(header,dat.event.tags);
-};
-
-aa.dex =()=>
-{
-  const f = ()=>
+  ls:['pubkey','kind','tag_t','tag_d','tag_subject','subs','seen','clas'],
+  head:
   {
-    let index = document.getElementById('index');
-    index.classList.remove('empty');
-    index.textContent = '';
-    index.append(dex.header(dex.head));
-    // let butt = document.getElementById('butt_e');
-    // butt.dataset.count = document.querySelectorAll('.note').length;
-    
+    "id":{},
+    "pubkey":{},
+    "kind":{},
+    "tag_t":{},
+    "tag_d":{},
+    "tag_subject":{},
+    "subs":{},
+    "seen":{},
+    "since":0,
+    "until":0,
+  }
+};
+
+
+// on load
+
+aa.i.load =()=>
+{
+  // const index = aa.mk.l('nav',{id:'index',cla:'empty',clk:aa.clk.expanded});
+  // document.getElementById('u').append(index);
+  // const section = aa.mk.section('i');
+  aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
+  const app_u = ()=>
+  {
+    console.log('app_u', document.getElementById('u_u'))
+    let u = document.getElementById('u_u');
+    if (u) u.append(aa.i.l);
+    else setTimeout(()=>{app_u()}, 100);
   };
-  aa.to(f,50,'index');
-};
-
-dex.header_butt_authors =(k,v)=>
-{
-  let li = aa.mk.l('li',{cla:'item item_'+k});
-  li.dataset.v = k;
-  let spanval = aa.mk.l('button',{cla:'val',con:v,clk:dex.clk.head});
-  let name = aa.db.p[k]?.metadata?.name ?? aa.fx.encode('npub',k);
-  // if (aa.db.p[k]?.metadata?.name && aa.db.p[k].metadata.name) name = aa.db.p[npub].metadata.name;
-  let spankey = aa.mk.l('button',{cla:'key',con:name,clk:dex.clk.head});
+  app_u();
   
-  li.append (spankey,spanval);
-  return li
+  
+  // section.append(aa.i.l);
+  
+  aa.i.run();
 };
 
-dex.header_butt =(k,v)=>
-{
-  let li = aa.mk.l('li',{cla:'item item_'+k});
-  li.dataset.v = k;
-  let spankey = aa.mk.l('button',{cla:'key',con:k,clk:dex.clk.head});
-  let spanval = aa.mk.l('button',{cla:'val',con:v,clk:dex.clk.head});
-  li.append (spankey,spanval);
-  return li
-};
 
-dex.header =(o)=>
-{
-  console.log('dex.header',o);
-  const l = aa.mk.l('ul',{cla:'list header'});
 
-  Object.entries(o).map(([k,v])=>
+
+// index dat
+
+aa.i.d =dat=>
+{
+  if (!aa.i.head.id.hasOwnProperty(dat.event.id))
   {
-    let li;
-    switch (k)
-    {
-      case 'since':
-      case 'until': 
-        li = dex.header_butt(k,v);
-        break;
-      case 'authors': 
-        li = aa.mk.l('li',{cla:'item item_'+k});
-        li.append(aa.mk.details(k,aa.mk.ls({ls:v,mk:dex.header_butt_authors,sort:'desc'})));
-        break;
-      default:
-        li = aa.mk.l('li',{cla:'item item_'+k});
-        li.append(aa.mk.details(k,aa.mk.ls({ls:v,mk:dex.header_butt,sort:'desc'})));
-    }
-    l.append(li);
+    aa.i.head.id[dat.event.id] = 1;
+    if (dat.subs) for (const sub of dat.subs) aa.i.dex.e('subs',sub);
+    if (dat.seen) for (const seen of dat.seen) aa.i.dex.e('seen',seen);
+    if (dat.clas) for (const clas of dat.clas) aa.i.dex.e('clas',clas);
     
-  });
-
-  return l
+    aa.i.dex.e('pubkey',dat.event.pubkey);
+    aa.i.dex.e('kind',dat.event.kind);
+    aa.i.dex.at(dat.event.created_at);
+    aa.i.dex.tags(dat.event.tags);
+  }
+  else aa.i.head.id[dat.event.id]++
 };
 
-const get_index_clk =(e)=>
+
+// build index
+
+aa.i.run =()=>
 {
-  return [
-    e.target.closest('details').querySelector('summary').innerText, // k
-    e.target.parentElement.dataset.v, // v
-    // e.target.parentElement.querySelector('.key').textContent, // v
-    e.target.classList.contains('key')?'key':'val', // kv
-  ]
+  aa.i.l.classList.remove('empty');
+  aa.i.l.textContent = '';
+  
+  for (const k of aa.i.ls)
+  {
+    let li = aa.mk.l('li',{cla:'item',id:'i_'+k});
+    let list = aa.mk.l('ul',{id:'i_list_'+k});
+    // let list = aa.mk.ls({id:'i_list_'+k});
+    li.append(
+      aa.mk.details(k,list)
+    );
+
+    aa.i.l.append(li);
+  }
+  aa.i.l.append(aa.mk.i_item('since',0,'since'));
+  aa.i.l.append(aa.mk.i_item('until',0,'until'));
+}; 
+
+
+// make index author item
+
+aa.mk.i_pubkey =(k,v,id)=>
+{
+  let li = aa.mk.i_item(k,v,id);
+  let p_name = aa.mk.p_link(k).querySelector('.name');
+  let key = li.querySelector('.key');
+  // let p = aa.db.p[k];
+  // if (p)
+  // key.textContent = aa.db.p[k]?.metadata?.name ?? aa.fx.encode('npub',k).slice(0,12);
+
+  key.textContent = '';
+  key.append(p_name||aa.fx.encode('npub',k).slice(0,12));
+  return li
 };
 
-const get_all_with_tag =(k,v)=>
+// make index seen item
+
+aa.mk.i_seen =(k,v,id)=>
+{
+  let ank = aa.fx.an(k);
+  let li = aa.mk.l('li',{cla:'item',id:'i_item_'+ank});
+  li.dataset.v = k;
+  if (id) li.dataset.k = id;
+  let key = aa.mk.l('button',{cla:'key',con:k,clk:aa.clk.key});
+  let val = aa.mk.l('button',{cla:'val',con:v,clk:aa.clk.val});
+  li.append (key,val);
+  return li
+};
+
+aa.mk.i_tag_subject =(k,v,id)=>
+{
+  return aa.mk.i_seen(k,v,id)
+};
+
+
+// make index item
+
+aa.mk.i_item =(k,v,id)=>
+{
+  let ank = aa.fx.an(k);
+  let li = aa.mk.l('li',{cla:'item',id:'i_item_'+ank});
+  li.dataset.v = k;
+  if (id) li.dataset.k = id;
+  let key = aa.mk.l('button',{cla:'key',con:k,clk:aa.clk.key});
+  let val = aa.mk.l('button',{cla:'val',con:v,clk:aa.clk.val});
+  li.append (key,val);
+  return li
+};
+
+
+// returns all the notes that have a tag with value
+
+aa.get.notes_with_tag =(k,v)=>
 {
   let ids = [];
   let notes = [];
-  let tagged = document.querySelectorAll('.tag_'+k+'[data-tag="'+v+'"]');
-  console.log(tagged.length);
+  let tagged = document.querySelectorAll('.'+k+'[data-tag="'+v+'"]');
   for (const tag of tagged)
   {
     let note = tag.closest('.note');
-    let note_id = note.dataset.id;
-    let is_new = aa.fx.a_add(ids,[note_id]);
-    if (is_new)  notes.push(note);
+    if (ids.includes(note.dataset.id)) continue;
+    ids.push(note.dataset.id);
+    notes.push(note);
+    // let is_new = aa.fx.a_add(ids,[note.dataset.id]);
+    // if (is_new) notes.push(note);
   }
   return notes
 };
 
-const index_filter_key =(e,items,k)=>
+
+aa.i.filter_out_rm =(items,k_v)=>
 {
-  if (items)
+  for (const l of items)
   {
-    if (e.target.classList.contains('out'))
-    {
-      items.forEach((l)=>
-      {
-        let a = aa.fx.a_rm(l.dataset.out.trim().split(' '),[k]);
-        if (a.length) l.dataset.out = a.join(' ');
-        else
-        {
-          l.dataset.out = '';
-          l.classList.remove('out')
-        }
-      });
-    }
+    let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
+    a = aa.fx.a_rm(a,[k_v]);
+    if (a.length) l.dataset.out = a.join(' ');
     else
     {
-      items.forEach((l)=>
-      {
-        let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
-        aa.fx.a_add(a,[k]);
-        l.dataset.out = a.join(' ');
-        l.classList.add('out')
-      });
+      l.dataset.out = '';
+      l.classList.remove('out');
     }
-    e.target.classList.toggle('out')
   }
 };
-const index_filter_val =(e,items,k)=>
+
+
+aa.i.filter_solo_rm =(items,k_v)=>
 {
-  if (e.target.classList.contains('solo'))
+  for (const l of items)
   {
-    items.forEach((l)=>
+    let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k_v]) : [];
+    if (a.length) aa.l.dataset.solo = a.join(' ');
+    else
     {
-      let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k]) : [];
-      if (a.length) aa.l.dataset.solo = a.join(' ');
-      else
-      {
-        aa.l.dataset.solo = '';
-        aa.l.classList.remove('haz_solo');
-      }
-      l.classList.remove('solo')
-      aa.fx.path_rm(k);
-    });
-  }
-  else
-  {
-    if (aa.l.classList.contains('haz_solo'))
-    {
-      let solos = document.querySelectorAll('.solo');
-      if (solos) solos.forEach((i)=>{i.classList.remove('solo')});
-      aa.fx.path_rm(k);
+      aa.l.dataset.solo = '';
+      aa.l.classList.remove('haz_solo');
     }
-    else aa.l.classList.add('haz_solo');
-    if (items) items.forEach((l)=>{ l.classList.add('solo'); aa.fx.path(l,k)});
+    l.classList.remove('solo')
+    aa.fx.path_rm(k_v);
   }
-  e.target.classList.toggle('solo')
 };
+
+
+
+
+aa.i.filter_out_apply =(items,k_v)=>
+{
+  for (const l of items)
+  {
+    let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
+    aa.fx.a_add(a,[k_v]);
+    l.dataset.out = a.join(' ');
+    l.classList.add('out');
+  }
+};
+
+
+aa.i.filter_solo_apply =(items,k_v)=>
+{ 
+  aa.l.classList.add('haz_solo');
+  if (!aa.l.dataset.solo) aa.l.dataset.solo = k_v;
+  else 
+  {
+    let a = aa.l.dataset.solo.trim().split(' ');
+    aa.fx.a_add(a,[k_v]);
+    aa.l.dataset.solo = a.join(' ');
+  }
+
+  for (const l of items) 
+  { 
+    l.classList.add('solo'); 
+    aa.fx.path(l,k_v)
+  }
+};
+
+
+// filter events by key
+
+aa.i.filter_out =(dis,items,k,v)=>
+{
+  const k_v = k+'_'+v;
+  if (items)
+  {
+    if (dis.classList.contains('out')) aa.i.filter_out_rm(items,k_v)
+    else aa.i.filter_out_apply(items,k_v);
+    dis.classList.toggle('out');
+  }
+};
+
+
+// filter events by value
+
+aa.i.filter_solo =(dis,items,k,v)=>
+{
+  const k_v = k+'_'+v;
+  if (dis.classList.contains('solo')) aa.i.filter_solo_rm(items,k_v)
+  else aa.i.filter_solo_apply(items,k_v);
+  dis.classList.toggle('solo')
+};
+
 
 // get elements with key:value
 
@@ -181,79 +258,118 @@ aa.get.index_items =(k,v)=>
   let items;
   switch (k)
   {
+    case 'seen':
     case 'subs': 
-      items = document.querySelectorAll('.note[data-subs="'+v+'"]');
+      items = document.querySelectorAll('.note[data-'+k+']');
+      items = Array.from(items).filter(i=>i.dataset[k].includes(v));
       break;
-    case 'authors': 
+    case 'pubkey': 
       items = document.querySelectorAll('.note[data-pubkey="'+v+'"]');
       break;
-    case 'kinds': 
+    case 'kind': 
       items = document.querySelectorAll('.note[data-kind="'+v+'"]');
       break;
     case 'tag_t':
     case 'tag_subject': 
-    case 'tag_d':
-      let tagged = {};
-      let tags = document.querySelectorAll('.'+k+'[data-tag="'+v+'"]');
-      for (const tag of tags)
-      {
-        let l = tag.closest('.note');
-        if (!tagged[l.id]) tagged[l.id] = l;
-      }
-      items = Object.values(tagged);
-      break;
-    case 'since': s2 = ' .note[data-pubkey="'+v+'"]'; break;
-    case 'until': s2 = ' .note[data-pubkey="'+v+'"]'; break;
+    case 'tag_d': 
+      items = aa.get.notes_with_tag(k,v); break;
+    // case 'since': 
+    //   items = document.querySelectorAll(' .note[data-pubkey="'+v+'"]'); 
+    //   break;
+    // case 'until': 
+    //   items = document.querySelectorAll(' .note[data-pubkey="'+v+'"]'); 
+    //   break;
   }
   return items
 };
 
-dex.clk.head =(e)=>
+
+// click event for index items
+
+aa.clk.i_head =e=>
 {
-  const [k,v,kv] = get_index_clk(e);
-  console.log(k,v);
-  let items = aa.get.index_items(k,v,kv);
-  if (kv === 'key') index_filter_key(e,items,k);
-  else index_filter_val(e,items,k);
+  const k = e.target.closest('details').querySelector('summary').innerText;
+  const v = e.target.parentElement.dataset.v;
+
+  let items = aa.get.index_items(k,v);
+  if (e.target.classList.contains('key')) aa.i.filter_by_key(e,items,k);
+  else aa.i.filter_by_val(e,items,k);
 }
 
-dex.head =
+aa.clk.key =e=>
 {
-  "authors":{},
-  "kinds":{},
-  "tag_t":{},
-  "tag_d":{},
-  "tag_subject":{},
-  "subs":{},
-  "seen":{},
-  "since":0,
-  "until":0,
-  "mia_e":{},
-  "mia_p":{},
+  let l = e.target.closest('.item');
+  const k = l.dataset.k;
+  const v = l.dataset.v;
+  let dis = e.target.classList.contains('.key') ? e.target : e.target.closest('.key');
+  let items = aa.get.index_items(k,v);
+  aa.i.filter_solo(dis,items,k,v);
 }
 
-aa.index = {};
-aa.index.e =(k,v)=>
+aa.clk.val =e=>
 {
-  let header = dex.head;
-  if (!header[k][v]) header[k][v] = 1;
-  else header[k][v]++;
+  let l = e.target.closest('.item');
+  const k = l.dataset.k;
+  const v = l.dataset.v;
+  let dis = e.target.classList.contains('.val') ? e.target : e.target.closest('.val');
+  let items = aa.get.index_items(k,v);
+  aa.i.filter_out(dis,items,k,v);
+}
+
+
+aa.i.dex = {};
+
+// index key value pair
+
+aa.i.dex.e =(k,v)=>
+{
+  let h = aa.i.head;
+  let list = document.getElementById('i_list_'+k);
+  let item;
+  if (!h[k]) h[k] = {};
+  if (!h[k][v])
+  {
+    h[k][v] = 1;
+    if (!list.previousElementSibling.dataset.after)
+      list.previousElementSibling.dataset.after = 0;
+    list.previousElementSibling.dataset.after++;
+    item = aa.mk.hasOwnProperty('i_'+k) ? aa.mk['i_'+k](v,1,k) : aa.mk.i_item(v,1,k);
+    list.append(item);
+  } 
+  else 
+  {
+    h[k][v]++;
+    item = aa.i.l.querySelector('#i_item_'+aa.fx.an(v)+' .val');
+    item.textContent = h[k][v];
+    aa.fx.sort_l(list,'i_desc');
+  }
 };
-aa.index.at =(h,v)=> 
+
+
+// index oldest and newest timestamp
+
+aa.i.dex.at =(v)=> 
 {
+  let h = aa.i.head;
   if (!h.since || v < h.since) h.since = v;
   if (!h.until || v > h.until) h.until = v;
 };
-aa.index.tags =(h,tags)=>
+
+
+// index tags
+
+aa.i.dex.tags =(tags)=>
 {
-  tags.map((tag)=>{aa.index.tag(header,tag)});
-}
-aa.index.tag =(h,a)=>
-{
-  switch (a[0])
+  for (const tag of tags)
   {
-    case 't':
-      aa.index.e('tag_'+a[0],a[1]);
-      break;
+    const [k,v] = tag;
+    switch (k)
+    {
+      case 't': aa.i.dex.e('tag_'+k,v); break;
+      case 'd': aa.i.dex.e('tag_'+k,v); break;
+      case 'subject': aa.i.dex.e('tag_'+k,v); break;
+    }
   }
 };
+
+window.addEventListener('load',aa.i.load);
