@@ -210,7 +210,7 @@ aa.clk.yolo =e=>
 };
 
 
-aa.clk.hide =e=>
+aa.clk.tiny =e=>
 {
   const note = e.target.closest('.note');
   note.classList.toggle('tiny');

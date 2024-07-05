@@ -3,20 +3,22 @@
 aa.i =
 {
   clk:{},
-  ls:['pubkey','kind','tag_t','tag_d','tag_subject','subs','seen','clas'],
+  dex:{},
   head:
   {
-    "id":{},
-    "pubkey":{},
-    "kind":{},
-    "tag_t":{},
-    "tag_d":{},
-    "tag_subject":{},
-    "subs":{},
-    "seen":{},
-    "since":0,
-    "until":0,
-  }
+    'id':{},
+    'pubkey':{},
+    'kind':{},
+    'tag_t':{},
+    'tag_d':{},
+    'tag_subject':{},
+    'subs':{},
+    'seen':{},
+    'clas':{},
+    'since':0,
+    'until':0,
+  },
+  ls:['pubkey','kind','tag_t','tag_d','tag_subject','subs','seen','clas'],
 };
 
 
@@ -24,9 +26,6 @@ aa.i =
 
 aa.i.load =()=>
 {
-  // const index = aa.mk.l('nav',{id:'index',cla:'empty',clk:aa.clk.expanded});
-  // document.getElementById('u').append(index);
-  // const section = aa.mk.section('i');
   aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
   const app_u = ()=>
   {
@@ -36,14 +35,8 @@ aa.i.load =()=>
     else setTimeout(()=>{app_u()}, 100);
   };
   app_u();
-  
-  
-  // section.append(aa.i.l);
-  
   aa.i.run();
 };
-
-
 
 
 // index dat
@@ -59,7 +52,7 @@ aa.i.d =dat=>
     
     aa.i.dex.e('pubkey',dat.event.pubkey);
     aa.i.dex.e('kind',dat.event.kind);
-    aa.i.dex.at(dat.event.created_at);
+    aa.i.dex.at(dat.event.created_at,dat.event.id);
     aa.i.dex.tags(dat.event.tags);
   }
   else aa.i.head.id[dat.event.id]++
@@ -69,43 +62,44 @@ aa.i.d =dat=>
 // build index
 
 aa.i.run =()=>
-{
-  aa.i.l.classList.remove('empty');
-  aa.i.l.textContent = '';
-  
+{  
   for (const k of aa.i.ls)
   {
     let li = aa.mk.l('li',{cla:'item',id:'i_'+k});
     let list = aa.mk.l('ul',{id:'i_list_'+k});
-    // let list = aa.mk.ls({id:'i_list_'+k});
-    li.append(
-      aa.mk.details(k,list)
-    );
-
+    li.append(aa.mk.details(k,list));
     aa.i.l.append(li);
   }
-  aa.i.l.append(aa.mk.i_item('since',0,'since'));
-  aa.i.l.append(aa.mk.i_item('until',0,'until'));
-}; 
+  aa.i.l.append(aa.mk.i_at('until',0));
+  aa.i.l.append(aa.mk.i_at('since',0));
+ }; 
 
 
-// make index author item
+// make index items
+
+aa.mk.i_at=(k,v,id)=> aa.mk.l('li',{cla:'item',id:'i_'+k,app:aa.mk.nostr_link(id,k)});
+
+aa.mk.i_item =(k,v,id)=>
+{
+  let ank = aa.fx.an(k);
+  let li = aa.mk.l('li',{cla:'item',id:'i_item_'+ank});
+  li.dataset.v = k;
+  if (id) li.dataset.k = id;
+  let key = aa.mk.l('button',{cla:'key',con:k,clk:aa.clk.key});
+  let val = aa.mk.l('button',{cla:'val',con:v,clk:aa.clk.val});
+  li.append (key,val);
+  return li
+};
 
 aa.mk.i_pubkey =(k,v,id)=>
 {
   let li = aa.mk.i_item(k,v,id);
   let p_name = aa.mk.p_link(k).querySelector('.name');
   let key = li.querySelector('.key');
-  // let p = aa.db.p[k];
-  // if (p)
-  // key.textContent = aa.db.p[k]?.metadata?.name ?? aa.fx.encode('npub',k).slice(0,12);
-
   key.textContent = '';
   key.append(p_name||aa.fx.encode('npub',k).slice(0,12));
   return li
 };
-
-// make index seen item
 
 aa.mk.i_seen =(k,v,id)=>
 {
@@ -125,21 +119,6 @@ aa.mk.i_tag_subject =(k,v,id)=>
 };
 
 
-// make index item
-
-aa.mk.i_item =(k,v,id)=>
-{
-  let ank = aa.fx.an(k);
-  let li = aa.mk.l('li',{cla:'item',id:'i_item_'+ank});
-  li.dataset.v = k;
-  if (id) li.dataset.k = id;
-  let key = aa.mk.l('button',{cla:'key',con:k,clk:aa.clk.key});
-  let val = aa.mk.l('button',{cla:'val',con:v,clk:aa.clk.val});
-  li.append (key,val);
-  return li
-};
-
-
 // returns all the notes that have a tag with value
 
 aa.get.notes_with_tag =(k,v)=>
@@ -153,12 +132,12 @@ aa.get.notes_with_tag =(k,v)=>
     if (ids.includes(note.dataset.id)) continue;
     ids.push(note.dataset.id);
     notes.push(note);
-    // let is_new = aa.fx.a_add(ids,[note.dataset.id]);
-    // if (is_new) notes.push(note);
   }
   return notes
 };
 
+
+// remove class 'out' from items
 
 aa.i.filter_out_rm =(items,k_v)=>
 {
@@ -175,6 +154,8 @@ aa.i.filter_out_rm =(items,k_v)=>
   }
 };
 
+
+// remove class 'solo' from items
 
 aa.i.filter_solo_rm =(items,k_v)=>
 {
@@ -193,7 +174,7 @@ aa.i.filter_solo_rm =(items,k_v)=>
 };
 
 
-
+// apply class 'out' to items
 
 aa.i.filter_out_apply =(items,k_v)=>
 {
@@ -206,6 +187,8 @@ aa.i.filter_out_apply =(items,k_v)=>
   }
 };
 
+
+// apply class 'solo' to items
 
 aa.i.filter_solo_apply =(items,k_v)=>
 { 
@@ -226,7 +209,7 @@ aa.i.filter_solo_apply =(items,k_v)=>
 };
 
 
-// filter events by key
+// hides specific items
 
 aa.i.filter_out =(dis,items,k,v)=>
 {
@@ -240,7 +223,7 @@ aa.i.filter_out =(dis,items,k,v)=>
 };
 
 
-// filter events by value
+// hides all but specific items
 
 aa.i.filter_solo =(dis,items,k,v)=>
 {
@@ -255,46 +238,27 @@ aa.i.filter_solo =(dis,items,k,v)=>
 
 aa.get.index_items =(k,v)=>
 {
-  let items;
   switch (k)
   {
+    case 'clas':
     case 'seen':
     case 'subs': 
-      items = document.querySelectorAll('.note[data-'+k+']');
-      items = Array.from(items).filter(i=>i.dataset[k].includes(v));
-      break;
+      let items = document.querySelectorAll('.note[data-'+k+']');
+      return Array.from(items).filter(i=>i.dataset[k].includes(v));
     case 'pubkey': 
-      items = document.querySelectorAll('.note[data-pubkey="'+v+'"]');
-      break;
+      return document.querySelectorAll('.note[data-pubkey="'+v+'"]');
     case 'kind': 
-      items = document.querySelectorAll('.note[data-kind="'+v+'"]');
-      break;
+      return document.querySelectorAll('.note[data-kind="'+v+'"]');
     case 'tag_t':
     case 'tag_subject': 
     case 'tag_d': 
-      items = aa.get.notes_with_tag(k,v); break;
-    // case 'since': 
-    //   items = document.querySelectorAll(' .note[data-pubkey="'+v+'"]'); 
-    //   break;
-    // case 'until': 
-    //   items = document.querySelectorAll(' .note[data-pubkey="'+v+'"]'); 
-    //   break;
+      return aa.get.notes_with_tag(k,v);
   }
-  return items
+  return []
 };
 
 
-// click event for index items
-
-aa.clk.i_head =e=>
-{
-  const k = e.target.closest('details').querySelector('summary').innerText;
-  const v = e.target.parentElement.dataset.v;
-
-  let items = aa.get.index_items(k,v);
-  if (e.target.classList.contains('key')) aa.i.filter_by_key(e,items,k);
-  else aa.i.filter_by_val(e,items,k);
-}
+// click events
 
 aa.clk.key =e=>
 {
@@ -316,8 +280,6 @@ aa.clk.val =e=>
   aa.i.filter_out(dis,items,k,v);
 }
 
-
-aa.i.dex = {};
 
 // index key value pair
 
@@ -348,11 +310,28 @@ aa.i.dex.e =(k,v)=>
 
 // index oldest and newest timestamp
 
-aa.i.dex.at =(v)=> 
+aa.i.dex.at =(v,id)=> 
 {
   let h = aa.i.head;
-  if (!h.since || v < h.since) h.since = v;
-  if (!h.until || v > h.until) h.until = v;
+  let l,s;
+  if (!h.since || v < h.since) 
+  {
+    h.since = v;
+    l = document.querySelector('#i_since a');
+    s = 'since ';
+  }
+  if (!h.until || v > h.until)
+  {
+    h.until = v;
+    l = document.querySelector('#i_until a');
+    s = 'until ';
+  }
+  if (l)
+  {
+    l.textContent = s+aa.t.display_ext(v);
+    l.href = '#'+aa.fx.encode('nid',id);
+    // l.dataset.nid = aa.fx.encode('nid',id);
+  } 
 };
 
 

@@ -345,50 +345,33 @@ aa.e.note_actions =clas=>
   if (!clas) clas = [];
   if (clas.includes('draft'))
   {
-    a = ['yolo','sign','edit','cancel','editor'];
+    a = ['yolo','sign','edit','cancel']; //,'editor'
     for (const s of a) l.append(butt(s),' ');
-    // l.append(
-    //   aa.mk.l('button',{con:'yolo',cla:'butt yolo',clk:aa.clk.yolo}),
-    //   ' ',
-    //   aa.mk.l('button',{con:'sign',cla:'butt sign',clk:aa.clk.sign}),      
-    //   ' ',
-    //   aa.mk.l('button',{con:'edit',cla:'butt edit',clk:aa.clk.edit}),
-    //   ' ',
-    //   aa.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel}),
-    //   ' ',
-    //   aa.mk.l('button',{con:'editor',cla:'butt editor',clk:aa.clk.editor})
-    // );
   }
   else if (clas.includes('not_sent'))
   {
     a = ['post','cancel'];
-    for (const s of a) l.append(butt(s));
-    // l.append( 
-    //   aa.mk.l('button',{con:'post',cla:'butt post',clk:aa.clk.post}),
-    //   ' ',
-    //   aa.mk.l('button',{con:'cancel',cla:'butt cancel',clk:aa.clk.cancel})  
-    // );
+    for (const s of a) l.append(butt(s),' ');
   }
   else if (clas.includes('blank'))
   {
-    l.append(butt('fetch'));
-    // l.append( 
-    //   aa.mk.l('button',{con:'fetch',cla:'butt fetch',clk:aa.clk.fetch})
-    // );
+    l.append(butt('fetch'),' ');
   }
   else
   {
-    l.append(
-      aa.mk.l('button',{con:'<3',tit:'react',cla:'butt react',clk:aa.clk.react}),
-      ' ',
-      // aa.mk.l('button',{con:'z',tit:'zap note',cla:'butt zap',clk:aa.clk.zap}),
-      // ' ',
-      aa.mk.l('button',{con:'+',tit:'fetch all replies',cla:'butt req',clk:aa.clk.req}),
-      ' ',
-      aa.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
-      ' ',
-      aa.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',clk:aa.clk.hide}),
-    );
+    a = ['react','req','parse','tiny']; //,'editor'
+    for (const s of a) l.append(butt(s),' ');
+    // l.append(
+    //   aa.mk.l('button',{con:'<3',tit:'react',cla:'butt react',clk:aa.clk.react}),
+    //   ' ',
+    //   // aa.mk.l('button',{con:'z',tit:'zap note',cla:'butt zap',clk:aa.clk.zap}),
+    //   // ' ',
+    //   aa.mk.l('button',{con:'+',tit:'fetch all replies',cla:'butt req',clk:aa.clk.req}),
+    //   ' ',
+    //   aa.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
+    //   ' ',
+    //   aa.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',clk:aa.clk.hide}),
+    // );
   }
 
   return l

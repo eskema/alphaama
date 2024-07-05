@@ -1181,15 +1181,7 @@ button.butt:focus
   /*text-decoration: underline;*/
 }
 
-#i .val::before
-{
-  content: 'x';
-}
 
-#i .val::after
-{
-  content: '';
-}
 
 #i details
 {
@@ -1239,17 +1231,23 @@ button.butt:focus
   color: rgb(var(--color-a));
   white-space: pre;
   word-break: keep-all;
+  cursor: pointer;
+  user-select: none;
 }
 
 #i .val 
 {
   color: rgb(var(--color-c));
+  cursor: pointer;
+  user-select: none;
 }
 
-#i_item_since,
-#i_item_until
+#i_since a,
+#i_until a
 {
-  font-size: var(--font-size);
+  text-decoration: none;
+  color: rgb(var(--color-c));
+  /*font-size: var(--font-size);*/
 } 
 
 /* @end */
@@ -1310,16 +1308,13 @@ button.butt:focus
   grid-template-areas: 
   "by by"
   "content content"
-  "tags tags"
+  "tags actions"
   "after after"
-  "replies replies"
-  "sig sig"
-  ;
+  "replies replies";
   grid-template-columns: 1fr auto;
   grid-template-rows: auto 1fr auto;
   align-self: stretch;
   margin: var(--pad) 0;
-  /*margin-bottom: var(--pad);*/
   position: relative;
   --who: attr(data-who);
   z-index: 1;
@@ -1343,6 +1338,7 @@ button.butt:focus
 }
 
 .note.root:not(.in_path),
+.haz_solo .note.root,
 .note.in_view > .replies > .note
 {
   margin: var(--line) 0;
@@ -1362,7 +1358,7 @@ button.butt:focus
 
 .note:hover
 {
-  background: rgba(var(--c),.06);
+  /*background: rgba(var(--c),.06);*/
 }
 
 .note.in_path.in_view
@@ -1375,6 +1371,7 @@ button.butt:focus
   "sig sig"
   "after after"
   "tags tags"
+  "actions actions"
   "replies replies"
   ;
 }
@@ -1393,20 +1390,23 @@ button.butt:focus
   border-top: 1px dotted rgba(var(--c),1);
 }
 
-.haz_solo .note:not(.in_path) > .by,
+.haz_solo .note:not(.in_path) > *:not(.replies),
+/*.haz_solo .note:not(.in_path) > .by,
 .haz_solo .note:not(.in_path) > .actions,
 .haz_solo .note:not(.in_path) > .content,
 .haz_solo .note:not(.in_path) > .details,
-.haz_solo .note:not(.in_path) > .sig,
+.haz_solo .note:not(.in_path) > .sig,*/
 .haz_solo .note:not(.in_path) > .replies::after,
 .haz_solo .note:not(.in_path) > .replies > summary,
 .haz_solo .note:not(.in_path)::after,
 .haz_solo .note:not(.in_path)::before,
-.note.out > .by,
+
+.note.out > *:not(.replies),
+/*.note.out > .by,
 .note.out > .actions,
 .note.out > .content,
 .note.out > .details,
-.note.out > .sig,
+.note.out > .sig,*/
 .note.out > .replies::after,
 .note.out > .replies > summary,
 .note.out::after,
@@ -1428,34 +1428,6 @@ button.butt:focus
   margin: 0;
 }
 
-#notes .root.note.not_yet > .content
-{
-  /*position: absolute;*/
-  /*display: none;*/
-}
-
-@keyframes rendered 
-{
-  0% 
-  { 
-    opacity: 0;
-    height: 0;
-    transform: scaleY(0);
-    transform-origin: top;
-  }
-  100%
-  { 
-    opacity: 1;
-    height: unset;
-    transform: scaleY(1);
-    transform-origin: top;
-  }
-}
-
-.note.rendered:not(.not_yet) > .replies
-{
-  /*animation: rendered .4s ease-out 0s 1 forwards normal;*/
-}
 
 .note:hover::before
 {
@@ -2242,7 +2214,7 @@ a.author
 
 .note .replies > summary
 {
-  background-color: rgb(var(--color-b));
+  /*background-color: rgb(var(--color-b));*/
   color: rgb(var(--color-d));
   display: grid;
   display: none;
@@ -2253,8 +2225,8 @@ a.author
   /*justify-items: end;*/
   line-height: 1.5rem;
   /*margin-left: 5.9rem;*/
-  margin-right: 5.9rem;
-  margin-bottom: 2px;
+  /*margin-right: 5.9rem;*/
+  /*margin-bottom: 2px;*/
   /*padding: 0 var(--padm);*/
   z-index: 5; 
 }
@@ -2266,6 +2238,7 @@ a.author
 
 .note.root:not(.in_view) > .replies > summary
 {
+  background-color: rgb(var(--color-b));
   position: sticky;
   top: 1rem;
 }
@@ -2302,7 +2275,7 @@ a.author
 
 .note .replies > summary:hover
 {
-  background-color: rgb(var(--color-b));
+  /*background-color: rgb(var(--color-b));*/
 }
 
 .note .replies > summary:hover:after
@@ -2344,9 +2317,9 @@ a.author
 }
 
 .root.not_yet > .replies > .note,
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .content,
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .by,
-.replies:not(.expanded) .note:not(.is_new) > .actions,
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+/*.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .by,
+.replies:not(.expanded) .note:not(.is_new) > .actions,*/
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
@@ -2365,12 +2338,12 @@ a.author
   color: rgb(var(--color-c));
   padding: 0;
   padding-left: var(--padm);
-  text-align: right;
+  /*text-align: right;*/
 }
 
 .mark_read:hover
 {
-  /*background-color: rgba(var(--color-no),1);*/
+  background-color: rgba(var(--color-b),1);
   color: rgb(var(--color-d));
   text-align: left;
 }
@@ -2419,8 +2392,8 @@ a.author
   align-self: start;
   /*background: rgba(var(--color-b),.5);*/
   display: grid;
-  /*font-size: var(--font-size-s);*/
-  grid-area: replies;
+  font-size: var(--font-size-s);
+  grid-area: actions;
   grid-auto-flow: column;
   grid-gap: 0;
   /*justify-content: end;*/
@@ -2428,7 +2401,8 @@ a.author
   justify-self: end;
   line-height: 1.5;
   margin: 0;
-  margin-bottom: 2px;
+  opacity: 0;
+  /*margin-bottom: 2px;*/
   /*margin-top: var(--padm);*/
   padding: 0;
   /*padding-left: 5px;*/
@@ -2446,6 +2420,8 @@ a.author
 #notes > .note:not(.root):not(.in_path) > .actions 
 {
   /*grid-area: actions;*/
+  position: sticky;
+  bottom: 4rem;
 }
 
 .in_view > .replies > .note > .actions,
@@ -2457,6 +2433,12 @@ a.author
   top: 1rem;
 }
 
+.note:hover > .actions,
+.note.in_view > .actions
+{
+  opacity: 1;
+}
+
 .note.in_view > .actions
 {
   /*align-self: stretch;*/
@@ -2464,6 +2446,7 @@ a.author
   /*bottom: unset;*/
   color: rgb(var(--color-d));
   /*grid-area: actions;*/
+  
   /*position: relative;*/
   position: sticky;
   top: 2rem;
@@ -2477,8 +2460,8 @@ a.author
 .actions .butt
 {
   background: rgba(var(--color-b),1);
-  color: rgba(var(--color-d),.5);
-  padding: 0 var(--padm);
+  /*color: rgba(var(--color-d),.5);*/
+  padding: var(--padm);
 }
 
 .actions .butt:hover 
@@ -2503,7 +2486,7 @@ a.author
   grid-area: tags;
   position: sticky;
   bottom: 4rem;
-  margin-top: 2px;
+  /*margin-top: 2px;*/
   /*margin: 2px 0;*/
   /*bottom: 0;*/
   z-index: 3;
@@ -2516,8 +2499,8 @@ a.author
   /*z-index: 3;*/
 }
 
-.note:not(.in_view):not(.draft):not(.root) > .details,
-.note.in_path:not(.in_view) > .details
+/*.note:not(.in_view):not(.draft):not(.root) > .details,*/
+.view_e .note.in_path:not(.in_view) > .details
 {
   display: none;
 }
@@ -2542,8 +2525,9 @@ a.author
 
 .details summary
 {
-  color: rgb(var(--color-d));
-  padding: var(--pad);
+  color: rgb(var(--color-c));
+  padding: var(--padm);
+  line-height: 1.5;
 }
 
 .tags 
@@ -2731,7 +2715,7 @@ a.author
   /*box-shadow: 0px .2rem var(--padm) rgba(var(--c),1);*/
 }
 
-.note.in_view .note_quote
+.note.in_view > .content .note_quote
 {
   margin: var(--line);
   max-height: unset;
@@ -3351,8 +3335,8 @@ a.author
   text-decoration: none;
 }
 
-.metadata [data-meta="name"]::before, 
-.metadata [data-meta="nip05"]::before
+.metadata [data-meta="name"]:not(.empty)::before, 
+.metadata [data-meta="nip05"]:not(.empty)::before
 {
   content: none;
 }
@@ -3384,7 +3368,7 @@ a.author
   /*padding-bottom: 1px;*/
 }
 
-[data-meta="nip05"]::after 
+[data-meta="nip05"]:not(.empty)::after 
 {
   color: rgb(var(--color-c));
   content: " never verified";

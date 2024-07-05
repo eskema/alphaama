@@ -29,7 +29,7 @@ const aa =
     '/aa/q.js',
     '/aa/r.js',
     '/aa/u.js',
-    '/wip/dex.js',
+    '/aa/i.js',
   ],
   temp:{},
   state:{},
