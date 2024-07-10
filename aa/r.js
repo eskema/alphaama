@@ -398,7 +398,7 @@ aa.r.list_mk =s=>
   }
   if (relays.length)
   {
-    aa.confirm(
+    aa.dialog(
     {
       title:'new relay list',
       l:aa.mk.tag_list(relays),

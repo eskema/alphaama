@@ -9,6 +9,12 @@ aa.p.load =()=>
 {
   aa.actions.push(
     {
+      action:['p','view'],
+      required:['hex_pub'],
+      description:'view profile by hex pubkey',
+      exe:(s)=>{ aa.state.view(aa.fx.encode('npub',s)) }
+    },
+    {
       action:['p','score'],
       required:['id','number'], 
       description:'set user score (for auto parsing and stuff)',
@@ -338,7 +344,7 @@ aa.mk.metadata =p=>
             l.addEventListener('click',e=>
             {
               e.preventDefault();
-              aa.p.nip5(v);
+              aa.p.nip5(v,p);
               // aa.get.nip05(v).then(o=>
               // {
               //   let verified = false;
@@ -370,10 +376,14 @@ aa.mk.metadata =p=>
     con:'refresh metadata',
     clk:aa.p.profile_butt_metadata
   });
-  const ts = p.pastdata.k0[0][1];
-  const last_date = aa.t.display_ext(ts);
-  if (p.pastdata.k0.length) 
+
+  if (p.pastdata.k0?.length) 
+  {
+    const ts = p.pastdata.k0[0][1];
+    const last_date = aa.t.display_ext(ts);
     butt_metadata.dataset.last = last_date;
+  }
+    
 
 
   metadata.append(butt_metadata);
@@ -623,10 +633,13 @@ aa.p.p_link_data_upd =async(l,o)=>
   if (o.nip05) 
   {
     l.dataset.nip05 = o.nip05;
+    name.dataset.nip05 = o.nip05;
     if (o.verified) 
     {
       l.dataset.verified = o.verified[0];
       l.dataset.verified_on = o.verified[1];
+      name.dataset.verified = o.verified[0];
+      name.dataset.verified_on = o.verified[1];
     }
   }
   l.classList.add(...o.class_add);
@@ -808,7 +821,7 @@ aa.kinds[0] =dat=>
       }      
     });
   }
-  const note = aa.e.note_default(dat);
+  const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
   let content = note.querySelector('.content');
   content.textContent = '';
@@ -864,7 +877,7 @@ aa.kinds[3] =dat=>
       if (aa.u?.is_u(dat.event.pubkey)) aa.u.is_following_load_profiles(p);
     }
   };
-  const note = aa.e.note_default(dat);
+  const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
   d3_post(dat,note);
   return note
@@ -899,7 +912,7 @@ aa.kinds[10002] =dat=>
       
     });
   }
-  const note = aa.e.note_default(dat);
+  const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
   return note
 };
@@ -934,22 +947,24 @@ aa.views.nprofile1 =async nprofile=>
 
 // nip05 (wip)
 
-aa.p.nip5 =async s=>
+aa.p.nip5 =async(s,p)=>
 {
   s = s.trim();
   let verified = false;
   let dis = await aa.get.nip05(s);
   if (dis)
   {
-    let p = await aa.db.get_p(dis.pubkey);
-    if (p)
-    {
-      if (dis.pubkey === p.xpub) verified = true;
-      p.verified.unshift([verified,aa.t.now]);
-      aa.p.save(p);
-      if (aa.viewing === p.npub) aa.p.update(aa.p.profile(p),p,1);
-    }
+    if (!p) p = await aa.db.get_p(dis.pubkey);
+    if (p && dis.pubkey === p.xpub) verified = true
   }
+  
+  if (p)
+  {
+    p.verified.unshift([verified,aa.t.now]);
+    aa.p.save(p);
+    if (aa.viewing === p.npub) aa.p.update(aa.p.profile(p),p,1);
+  }
+
   aa.log('nip5 '+verified+' for '+s);
 };
 

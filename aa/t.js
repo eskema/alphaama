@@ -1,12 +1,16 @@
-// time / date stuff
+/*
+
+alphaama
+time / date stuff
+
+*/
+
 
 // timestamp to date
-
 aa.t.to_date =s=> new Date(s*1000);
 
 
 // timestamp from date string
-
 aa.t.d =s=>
 {
   try { return Date.parse(s) / 1000 } 
@@ -15,7 +19,6 @@ aa.t.d =s=>
 
 
 // timestamp from n days ago 
-
 aa.t.n =days=>
 {
   const d = new Date();
@@ -25,7 +28,6 @@ aa.t.n =days=>
 
 
 // nice format date to string
-
 aa.t.nice =d=>
 { 
   return d.getFullYear()
@@ -37,18 +39,7 @@ aa.t.nice =d=>
 };
 
 
-// timestamp in seconds of now
-
-// Object.defineProperty(aa.t,'now', 
-// {
-//   get() {return Math.floor(Date.now() / 1000) }
-// });
-
-// aa.t.now =()=> Math.floor(Date.now() / 1000);
-
-
 // time elapsed from date to string
-
 aa.t.elapsed =date=>
 {
   const seconds_ago = Math.floor((new Date() - date) / 1000);
@@ -68,7 +59,6 @@ aa.t.elapsed =date=>
 
 
 // timestamp from string variable
-
 aa.t.convert =s=>
 {
   if (s === 'now') return aa.t.now; 
@@ -79,6 +69,5 @@ aa.t.convert =s=>
 
 
 // for display
-
 aa.t.display =timestamp=> aa.t.nice(aa.t.to_date(timestamp));
 aa.t.display_ext =ts=>aa.t.display(ts)+' ~'+aa.t.elapsed(aa.t.to_date(ts));

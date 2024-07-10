@@ -6,4 +6,30 @@
   <title>alphaama</title>
   <script src="/aa/aa.js"></script>
 </head>
-<body><script src="/aa/index.js"></script></body></html>
+<body>
+<script>
+// load alphaama, 
+// optionally override defaults with options object
+aa.load({
+  //styles:[], tools:[], mods:[],
+});
+window.addEventListener('load',()=>
+{
+  // run with defaults
+  aa.run();
+  // fetch and append readme
+  fetch('/README.md').then(dis=>dis.text()).then(text=>
+  {
+    let content = aa.parse.content(text);
+    let title = text.slice(0,text.indexOf('\n'));
+    if (title.startsWith('#')) title = title.slice(1);
+    title = title.trim();
+    let l = aa.mk.l('article',{cla:'content parsed',app:content});
+    let details = aa.mk.details(title,l);
+    details.id = 'aa_read_me';
+    document.getElementById('view').prepend(details);
+  })
+});
+</script>
+<!-- <script src="/aa/index.js"></script> -->
+</body></html>

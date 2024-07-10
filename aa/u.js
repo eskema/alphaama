@@ -209,7 +209,7 @@ aa.u.follow =async s=>
       tags:[...dat_k3.event.tags,p_tag]
     };
     // const new_follows = [...dat_k3.event.tags,p_tag];
-    aa.confirm(
+    aa.dialog(
     {
       title: 'new follow list',
       l:aa.mk.tag_list(new_k3.tags),
@@ -341,7 +341,7 @@ aa.u.metadata_set =async s=>
   aa.cli.clear();
   let md = aa.parse.j(s);
   if (!md) return;
-  aa.confirm(
+  aa.dialog(
   {
     title:'new metadata',
     l:aa.mk.ls({ls:md}),
@@ -590,7 +590,7 @@ aa.u.unfollow =async s=>
     const l = aa.mk.l('div',{cla:'wrap'});
     l.append(aa.mk.tag_list(new_follows),ul);
     // console.log(new_follows);
-    aa.confirm(
+    aa.dialog(
     {
       title:'new follow list:'+old_len+'->'+new_follows.length,
       l:l,
@@ -666,7 +666,7 @@ aa.u.wot =async()=>
 
 aa.kinds[4] =dat=>
 {
-  let note = aa.e.note_default(dat);
+  let note = aa.e.note_regular(dat);
   let content = note.querySelector('.content');
   if (!dat.clas.includes('draft'))
   {

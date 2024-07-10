@@ -66,7 +66,7 @@ aa.clk.editor =e=>
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
   const event = aa.db.e[xid].event;
-  aa.confirm(
+  aa.dialog(
   {
     title:'event editor',
     l:aa.note_editor(event),

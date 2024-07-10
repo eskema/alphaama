@@ -1,8 +1,13 @@
-// fx stuff
+/*
+
+alphaama
+fx stuff
+
+*/
+
 
 // checks if array includes items
 // adds them if not and returns if anything was added
-
 aa.fx.a_add =(a,items_to_add)=>
 {
   let b = 0;
@@ -12,7 +17,6 @@ aa.fx.a_add =(a,items_to_add)=>
 
 
 // returns filtered array
-
 aa.fx.a_rm =(a,items_to_rm)=>
 {
   for (const item of items_to_rm) if (a.includes(item)) a=a.filter(i=>i!==item);
@@ -23,7 +27,6 @@ aa.fx.a_rm =(a,items_to_rm)=>
 // converts string to alphanumeric, 
 // replaces everything else with underscore
 // to be used as valid element ids
-
 aa.fx.an =s=>
 {
   s = s+'';
@@ -37,7 +40,6 @@ aa.fx.an =s=>
 
 // adds css color in rgb to element from hex string
 // and also sets luma
-
 aa.fx.color =async(x,l)=> 
 { 
   const rgb = aa.fx.to_rgb(aa.fx.leading_zero_rm(x));
@@ -47,7 +49,6 @@ aa.fx.color =async(x,l)=>
 
 
 // counts items from selector and sets result on element dataset
-
 aa.fx.data_count =async(l,s)=>
 {
   const n = document.querySelectorAll(s).length;
@@ -57,7 +58,6 @@ aa.fx.data_count =async(l,s)=>
 
 
 // add items to a dataset
-
 aa.fx.dataset_add =async(l,s,items)=>
 {
   let a = l.dataset[s] ? l.dataset[s].trim().split(' ') : [];
@@ -66,7 +66,6 @@ aa.fx.dataset_add =async(l,s,items)=>
 
 
 // decodes nip19 (bech32)
-
 aa.fx.decode =s=> 
 {
   let decoded;
@@ -77,7 +76,6 @@ aa.fx.decode =s=>
 
 
 // encodes to bech32 (nip19)
-
 aa.fx.encode =(s,x)=>
 {
   let encoded;
@@ -95,7 +93,6 @@ aa.fx.encode =(s,x)=>
 
 
 // expanded class, checks sessionStorage for saved value
-
 aa.fx.expanded =(id,expanded,l)=>
 {
   if (expanded)
@@ -117,14 +114,12 @@ aa.fx.expanded =(id,expanded,l)=>
 
 
 // hash event
-
 aa.fx.hash =o=> NostrTools.getEventHash(o);
 
 
 // removes up to 5 leading zeroes from beginning of hexstring
 // to be used as a hex color from pubkeys 
 // but not too dark if pow/mined
-
 aa.fx.leading_zero_rm =x=>
 {
   try { return x.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/,(x0,x_x)=>x_x) } 
@@ -135,7 +130,6 @@ aa.fx.leading_zero_rm =x=>
 // splits a string and then 
 // for each item, split and pass through function
 // then a callback
-
 aa.fx.loop =(job,s,done)=>
 {
   const a = s.split(',');
@@ -148,7 +142,6 @@ aa.fx.loop =(job,s,done)=>
 
 
 // returns if color is dark or light 
-
 aa.fx.luma =rgb=>
 {
   const [r,g,b] = rgb.split(',');
@@ -158,7 +151,6 @@ aa.fx.luma =rgb=>
 
 
 // merge two dat objects
-
 aa.fx.merge =(dis,dat)=>
 {
   dis = Object.assign({},dis);
@@ -174,7 +166,6 @@ aa.fx.merge =(dis,dat)=>
 
 
 // merge datasets from one element to another
-
 aa.fx.merge_datasets =(a,l_1,l_2)=>
 {
   if (a.length) for (const set of a)
@@ -191,7 +182,6 @@ aa.fx.merge_datasets =(a,l_1,l_2)=>
 
 // adds classes to notes up the parent tree starting from element
 // if a string is given, it will be added to a dataset array 
-
 aa.fx.path =(l,s=false)=>
 {
   for (;l&&l!==document;l=l.parentNode) 
@@ -211,7 +201,6 @@ aa.fx.path =(l,s=false)=>
 
 
 // removes path class and dataset from element
-
 aa.fx.path_remove =l=>
 {
   l.classList.remove('in_path');
@@ -220,7 +209,6 @@ aa.fx.path_remove =l=>
 
 
 // removes path dataset from element and class if empty dataset 
-
 aa.fx.path_rm =s=>
 {
   let in_path = document.querySelectorAll('.in_path');
@@ -238,12 +226,10 @@ aa.fx.path_rm =s=>
 
 
 // scroll with delay
-
 aa.fx.scroll =(l,options={})=> setTimeout(()=>{l.scrollIntoView(options)},50);
 
 
 // scroll stuff
-
 aa.fx.scrolled =()=>
 {
   let last_top = 0;
@@ -259,7 +245,6 @@ aa.fx.scrolled =()=>
 
 
 // sign event
-
 aa.fx.sign =async event=>
 {
   return new Promise(resolve=>
@@ -279,7 +264,6 @@ aa.fx.sign =async event=>
 
 
 // sorts array by order, defaults to ascending
-
 aa.fx.sort_by =(a,by)=>
 {
   switch (by)
@@ -293,15 +277,14 @@ aa.fx.sort_by =(a,by)=>
 
 
 // sorts element children
-
 aa.fx.sort_l =(l,by)=>
 {
   let a = [...l.children].sort(aa.fx.sorts[by]);
   for (const node of a) l.append(node)
 };
 
-// sorting functions to use in .sort()
 
+// sorting functions to use in .sort()
 aa.fx.sorts =
 {
   asc(a,b){return a[1] - b[1] ? 1 : -1},
@@ -325,9 +308,7 @@ aa.fx.sorts =
 
 
 aa.fx.tag ={};
-
 // create p tag from hex pubkey
-
 aa.fx.tag.p =(x)=>
 {
   let tag = [];
@@ -344,10 +325,7 @@ aa.fx.tag.p =(x)=>
   }
   return tag
 };
-
-
 // create e tag from hex id
-
 aa.fx.tag.e =(x,mark=false)=>
 {
   let tag = [];
@@ -361,10 +339,7 @@ aa.fx.tag.e =(x,mark=false)=>
   }  
   return tag
 };
-
-
 // create q tag from hex id
-
 aa.fx.tag.q =(x)=>
 {
   let tag = [];
@@ -376,8 +351,6 @@ aa.fx.tag.q =(x)=>
 
 
 // creates a link from tag array
-// requires aa.mk,aa.clk
-
 aa.fx.tag_a =a=>
 {
   const tail =(a,l,i=1)=>{if (a.length>i)l.dataset.tail=a.slice(i).join(', ')};
@@ -415,7 +388,6 @@ aa.fx.tag_a =a=>
 
 
 // converts hex to rgb
-
 aa.fx.to_rgb =x=>
 {
   return parseInt(x.slice(0,2),16)
@@ -426,12 +398,36 @@ aa.fx.to_rgb =x=>
 
 // truncate string to start and end 
 // with given length and a separator in between (000…000)
-
 aa.fx.trunk =(s,len=3,sep='…')=> s.slice(0,len)+sep+s.slice(-len);
 
 
-// verify event object
+// checks if string is valid url and then checks extension for media file types.
+// returns false if no media found or array with extension,URL
+aa.fx.url_type =s=>
+{
+  let url = aa.is.url(s); 
+  if (!url) return false;
+  const is_img = aa.extensions.img;
+  const is_av = aa.extensions.av;
+  const check_ext =extensions=>
+  {
+    const src = (url.origin + url.pathname).toLowerCase();
+    for (const ext of extensions)
+    {
+      if (src.endsWith('.'+ext)
+      || (url.searchParams.has('format') && url.searchParams.get('format') === ext)) 
+      return true
+    }
+    return false
+  };
+   
+  return check_ext(is_img)?['img',url]
+  :check_ext(is_av)?['av',url] 
+  :['link',url]
+};
 
+
+// verify event object
 aa.fx.verify_event =o=> 
 {
   let verified;
@@ -442,7 +438,6 @@ aa.fx.verify_event =o=>
 
 
 // verify request filter object
-
 aa.fx.verify_req_filter =o=>
 {
   for (const k in o)
@@ -475,8 +470,8 @@ aa.fx.verify_req_filter =o=>
   return true
 };
 
-// verify multiple request filter objects
 
+// verify multiple request filter objects
 aa.fx.verify_req_filters =a=>
 {
   for (const f of a)

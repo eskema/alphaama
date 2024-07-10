@@ -1,30 +1,30 @@
-// parse stuff
+/*
 
-aa.parse = {};
+alphaama
+aa parse stuff
+
+*/
 
 
-// parse event.content
-// splits a string into lines and then into words 
-// and process each part acoording to it's content
-
+// splits a string into paragraphs, then into lines and then into words 
+// and process each part separately
 aa.parse.content =(s,trusted)=>
 {
   const df = new DocumentFragment();
+  let l = aa.mk.l('p',{cla:'paragraph'});
+  const another_l =(last_l)=>
+  {
+    if (!aa.is.empty(last_l)) 
+    {
+      last_l.normalize();
+      df.append(last_l);
+      l = aa.mk.l('p',{cla:'paragraph'});
+    }
+  };
   const paragraphs = s.split(/\n\s*\n/);
   for (const paragraph of paragraphs)
   { 
-    if (!paragraph.length) continue;
-    let l = aa.mk.l('p',{cla:'paragraph'});
-    const another_l =(last)=>
-    {
-      if (!aa.is.empty(last)) 
-      {
-        last.normalize();
-        df.append(last);
-        l = aa.mk.l('p',{cla:'paragraph'});
-      }
-    };
-
+    if (!paragraph.length) continue;    
     const lines = paragraph.trim().split(/\n/);
     for (let li=0;li<lines.length;li++)
     {
@@ -34,10 +34,10 @@ aa.parse.content =(s,trusted)=>
       {
         let word = words[i].trim();
         if (!word.length) continue;
-        if (aa.regx.url.test(word)) l.append(aa.parse.url(word,trusted),' ');
+        if (aa.regx.url.test(word)) l.append(aa.parser('url',word,trusted),' ');
         else if (aa.regx.nostr.test(word)) 
         {
-          let parsed = aa.parse.nostr(word);
+          let parsed = aa.parser('nostr',word);
           while (parsed.childNodes.length)
           {
             let node = parsed.firstChild;
@@ -52,16 +52,13 @@ aa.parse.content =(s,trusted)=>
         }
       }
     }
-
-    
     another_l(l);
   } 
   return df
 };
 
 
-// toggles parsed content on note from event
-
+// toggle parsed content on note
 aa.parse.context =(note,event,trust)=>
 {
   const content = note.querySelector('.content');
@@ -73,173 +70,49 @@ aa.parse.context =(note,event,trust)=>
 };
 
 
-// returns array of tags with all #hashtags in string
-
-aa.parse.hashtags =s=>
-{
-  const tags = [];
-  const hashtags = s.match(aa.regx.hashtag);
-  if (hashtags) for (const h of hashtags) tags.push(['t',h.slice(1).toLowerCase()])
-  return tags
-};
-
-
 // parse JSON
-
-aa.parse.j =s=>
+aa.parse.j =son=>
 {
   let o;
-  s = s.trim();
-  if (s.length > 2)
+  son = son.trim();
+  if (son.length > 2)
   {
-    try {o = JSON.parse(s)}
-    catch (er) { console.log('aa.parse.j',s); console.error(er)}
+    try { o = JSON.parse(son) }
+    catch (er) 
+    { 
+      console.log('aa.parse.j',son); 
+      console.error(er) 
+    }
   }
   return o
 };
 
 
-// gets all nostr:stuff from string 
-// and returns array of tags
-// to use when creating a new note
-// requires aa.fx,aa.mk,aa.regx
-
-aa.parse.mentions =async s=>
+// parse url as link or media given trust
+aa.parse.url =(match,tru)=>
 {
-  return new Promise(async resolve=>
-  {
-    const mentions = [];
-    const matches = [...s.matchAll(aa.regx.nostr)];
-    console.log(matches);
-    for (const m of matches)
-    {
-      const tags = [];
-      let dis = m[0].slice(6);
-      if (dis.startsWith('npub')) 
-      {
-        let p_x = aa.fx.decode(dis);
-        if (p_x) tags.push(aa.fx.tag.p(p_x));
-      }
-      else if (dis.startsWith('note'))
-      {
-        const e_x = aa.fx.decode(dis);
-        if (e_x) 
-        {
-          tags.push(aa.fx.tag.q(e_x));
-          // let dat = await aa.db.get_e(e_x);
-          // if (dat) p_x = dat.event.pubkey;
-          // if (p_x) tags.push(aa.fx.tag.p(p_x));
-        }
-      }
-      if (tags.length) mentions.push(...tags);
-    }
-    resolve(mentions)
-  })
-};
-
-
-// parse nip19 to mention / quote
-
-aa.parse.nip19 =(s)=>
-{
-  let l;
-  let decoded = aa.fx.decode(s);
-  if (!decoded) return s;
-  if (s.startsWith('npub1'))  l = aa.mk.p_link(decoded);
-  else if (s.startsWith('nprofile1')) l = aa.mk.p_link(decoded.pubkey);
-  else if (s.startsWith('note1')) l = aa.e.quote({"id":decoded});
-  else if (s.startsWith('nevent1') || s.startsWith('naddr1'))
-  {
-    if (decoded.id) 
-    {
-      decoded.s = s;
-      l = aa.e.quote(decoded);
-    }
-    else l = aa.mk.l('span',{con:JSON.stringify(decoded)})
-  }
-  else l = aa.mk.nostr_link(s);
-  return l
-};
-
-
-// parse nostr:stuff
-
-aa.parse.nostr =s=>
-{
-  const df = new DocumentFragment();
-  const matches = [...s.matchAll(aa.regx.nostr)];
-  let last_i = 0;
-  for (const m of matches)
-  {
-    df.append(m.input.slice(last_i,m.index));
-    last_i = m.index + m[0].length;
-    let dis = m[0].slice(6);
-    let decoded = aa.fx.decode(dis);
-    if (!decoded) df.append(dis,' ');
-    else df.append(aa.parse.nip19(dis),' ')    
-  }
-  if (last_i < s.length) df.append(s.slice(last_i));
-  return df
-};
-
-
-// get all url elements from string as link or media given trust
-// requires aa.fx,aa.mk,aa.regx,aa.mk.av
-
-aa.parse.url =(s,tru)=>
-{
-  const df = new DocumentFragment();
-  const matches = [...s.matchAll(aa.regx.url)];
-  let last_i = 0;
-  for (const m of matches)
-  {
-    df.append(m.input.slice(last_i,m.index));
-    
-    last_i = m.index + m[0].length;
-    let link;
-    const type = aa.is.url_type(m[0]);
-    if (tru && type[0] === 'img') link = aa.mk.img(type[1].href);
-    else if (tru && type[0] === 'av') link = aa.mk.av(type[1].href);
-    else if (type) link = aa.mk.link(type[1].href);
-
-    df.append(link);
-  }
-  if (last_i < s.length) df.append(s.slice(last_i));
-
-  return df
+  let link;
+  const type = aa.fx.url_type(match[0]);
+  if (tru && type[0] === 'img') link = aa.mk.img(type[1].href);
+  else if (tru && type[0] === 'av') link = aa.mk.av(type[1].href);
+  else if (type) link = aa.mk.link(type[1].href);
+  return link
 }
 
 
-// trying to wrap the parse functions to avoid repetition
-// wip
-
-aa.parser =(s,regex,fun)=>
+// wrapper for aa.parse functions
+aa.parser =(parse_id,s,trust,regex_id)=>
 {
-  const l = new DocumentFragment();
-  const matches = [...s.matchAll(aa.regx[regex])];
-  let i = 0;
-  for (const m of matches) 
+  const df = new DocumentFragment();
+  if (!regex_id) regex_id = parse_id;
+  const matches = [...s.matchAll(aa.regx[regex_id])];
+  let index = 0;
+  for (const match of matches) 
   {
-    l.append(m.input.slice(i,m.index));
-    i = fun(l,m,i);
+    df.append(match.input.slice(index,match.index));
+    index = match.index + match[0].length;
+    df.append(aa.parse[parse_id](match,trust));
   }
-  if (i < s.length) l.append(s.slice(i));
-  return l
-};
-
-aa.parse.test =(l,match,index)=>
-{
-  l.append(match.input.slice(index,match.index));
-  index = match.index + match[0].length;
-  let link;
-  const type = aa.is.url_type(match[0]);
-  if (tru && type[0] === 'img')
-  {
-    link = aa.mk.l('img',{cla:'content-img',src:type[1].href});
-    link.loading = 'lazy';
-  }
-  else if (tru && type[0] === 'av' && av) link = aa.mk.av(type[1].href);
-  else if (type) link = aa.mk.link(type[1].href);
-  l.append(link);
-  return index
+  if (index < s.length) df.append(s.slice(index));
+  return df
 };

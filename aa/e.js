@@ -1,10 +1,15 @@
-// event stuff
+/*
+
+alphaama
+event
+
+*/
+
 
 aa.e = {};
 
 
 // append note to notes section
-
 aa.e.append_to_notes =(note)=>
 { 
   let notes = document.getElementById('notes');
@@ -20,22 +25,22 @@ aa.e.append_to_notes =(note)=>
 };
 
 
-// append to note as reply
-
+// append to another note as reply
 aa.e.append_to_rep =(note,rep)=>
 {
-  const last = [...rep.children].filter(i=> i.tagName!== 'SUMMARY' && i.dataset.created_at > note.dataset.created_at)[0];
-  rep.insertBefore(note,last ? last : null);
+  const last = [...rep.children].filter(i=> 
+    i.tagName === 'ARTICLE' 
+    && i.dataset.created_at > note.dataset.created_at)[0];
+  rep.insertBefore(note,last?last:null);
   note.classList.add('reply');
   note.classList.remove('root');
-  rep.parentNode.classList.add('haz_reply');
+  rep.parentNode.classList.add('haz_reply'); 
   if (note.classList.contains('is_new')) rep.parentNode.classList.add('haz_new_reply');
   aa.e.upd_note_path(rep,note.dataset.stamp,aa.u.is_u(note.dataset.pubkey));
 };
 
 
 // decides where to append a reply
-
 aa.e.append_to_replies =(dat,note,reply_tag)=>
 {
   const reply_id = reply_tag[1];
@@ -91,10 +96,8 @@ aa.e.append_to_replies =(dat,note,reply_tag)=>
 
 
 // clear notes from section
-
 aa.e.clear =s=>
 {
-  // aa.cli.fuck_off();
   document.getElementById('notes').textContent = '';
   it.butt_count('e','.note');
   aa.log('events cleared')
@@ -102,7 +105,6 @@ aa.e.clear =s=>
 
 
 // clone note
-
 aa.e.clone =note=>
 {
   let clone = note.cloneNode(true);
@@ -115,7 +117,6 @@ aa.e.clone =note=>
 
 
 // draft event
-
 aa.e.draft =event=>
 {
   if (!event.id) event.id = aa.fx.hash(event);
@@ -125,7 +126,6 @@ aa.e.draft =event=>
 
 
 // finalize event creation
-
 aa.e.finalize_event =async event=>
 {
   event.id = aa.fx.hash(event);
@@ -141,7 +141,6 @@ aa.e.finalize_event =async event=>
 
 
 // on load
-
 aa.e.load =()=>
 {
   aa.actions.push(
@@ -157,25 +156,29 @@ aa.e.load =()=>
       exe:aa.e.clear
     },
     {
+      action:['e','view'],
+      required:['hex_id'],
+      description:'view event by hex_id',
+      exe:(s)=>{ aa.state.view(aa.fx.encode('nid',s)) }
+    },
+    {
       action:['db','some'],
       required:['number'],
-      optional:['next'],
+      optional:['oldest'],
       description:'request n events from db',
-      exe: aa.db.some
+      exe:aa.db.some
     },
     {
       action:['db','view'],
       required:['id'],
       description:'view event',
-      exe: aa.state.view
+      exe:aa.state.view
     }
   );
-
   const section = aa.mk.section('e');
   const notes = aa.mk.l('div',{id:'notes'});
   section.append(notes);
   aa.e.section_observer.observe(notes,{attributes:false,childList:true});
-  
 };
 
 
@@ -193,7 +196,6 @@ aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
 
 
 // make event from JSON string, autocompletes missing fields
-
 aa.e.mk =s=>
 {
   let event = aa.parse.j(s);
@@ -211,7 +213,6 @@ aa.e.mk =s=>
 
 
 // add to missing event list
-
 aa.e.miss_e =(xid,relays)=>
 {
   if (!aa.miss.e[xid]) aa.miss.e[xid] = {nope:[],relays:[]};
@@ -225,7 +226,6 @@ aa.e.miss_e =(xid,relays)=>
 
 // get event from tag and prints it,
 // otherwise add to missing list
-
 aa.e.miss_print =(tag)=>
 {
   const xid = tag[1];
@@ -238,13 +238,95 @@ aa.e.miss_print =(tag)=>
 };
 
 
-// make generic note element
+// get missing e or p from def relays
+aa.get.missing =async type=>
+{
+  aa.to(()=>
+  {
+    let miss = {};
+    const nope =(xid,a,b)=>
+    {
+      for (const url of a) 
+      {
+        if (!b.includes(url))
+        {
+          if (!miss[url]) miss[url] = [];
+          aa.fx.a_add(miss[url],[xid]);
+        }
+      }
+    };
+    let def_relays = aa.r.in_set(aa.r.o.r);
+    for (const xid in aa.miss[type])
+    {
+      let v = aa.miss[type][xid];
+      nope(xid,def_relays,v.nope);
+      nope(xid,v.relays,v.nope);
+    }
 
+    if (Object.keys(miss).length)
+    {
+      let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
+      for (const id of ids) aa.fx.a_add(aa.miss[type][id].nope,[url]);
+      
+      let filter;
+      if (type === 'p') filter = {authors:ids,kinds:[0]};
+      else if (type === 'e')
+      {
+        for (const id of ids)
+        {
+          let notes = document.querySelectorAll('[data-id="'+id+'"]');
+          for (const note of notes) note.dataset.nope = aa.miss.e[id].nope;
+        }
+        filter = {ids:ids};
+      }
+      aa.r.demand(['REQ',type,filter],[url],{});
+    }
+  },1000,'miss_'+type);
+};
+
+
+// parse nip19 to render as mention or quote
+aa.parse.nip19 =s=>
+{
+  let decoded = aa.fx.decode(s);
+  if (!decoded) return s;
+  let l;
+  if (s.startsWith('npub1'))  l = aa.mk.p_link(decoded);
+  else if (s.startsWith('nprofile1')) l = aa.mk.p_link(decoded.pubkey);
+  else if (s.startsWith('note1')) l = aa.e.quote({"id":decoded});
+  else if (s.startsWith('nevent1') || s.startsWith('naddr1'))
+  {
+    if (decoded.id) 
+    {
+      decoded.s = s;
+      l = aa.e.quote(decoded);
+    }
+    else l = aa.mk.l('span',{con:JSON.stringify(decoded)})
+  }
+  else l = aa.mk.nostr_link(s);
+  return l
+};
+
+
+// parse nostr:stuff
+// use with aa.parser('nostr',s)
+aa.parse.nostr =(match)=>
+{
+  let df = new DocumentFragment();
+  let s = match[0].slice(6);
+  let decoded = aa.fx.decode(s);
+  let dis = decoded ? aa.parse.nip19(s) : s;
+  df.append(dis,' ');
+  // if (!decoded) df.append(s,' ');
+  // else df.append(aa.parse.nip19(s),' ')
+  return df
+};
+
+// make generic note element
 aa.e.note =dat=>
 {
   const note = aa.mk.l('article',{cla:'note'}); 
   const by = aa.mk.l('header',{cla:'by'});
-  // let trusted = aa.is.trusted(aa.db.p[x]?.trust);
   
   note.append(by);
   if (dat.seen) note.dataset.seen = dat.seen.join(' ');
@@ -254,7 +336,7 @@ aa.e.note =dat=>
   let replies_id;
   if ('id' in dat.event)
   {
-    const nid = aa.fx.encode('nid',dat.event.id)
+    const nid = aa.fx.encode('nid',dat.event.id);
     note.id = nid;
     note.dataset.id = dat.event.id;
     const h1 = aa.mk.l('h1',{cla:'id'});
@@ -270,6 +352,7 @@ aa.e.note =dat=>
     by.prepend(h1);
     replies_id = dat.event.id+'_replies';
   }
+
   if ('pubkey' in dat.event)
   {
     const x = dat.event.pubkey;
@@ -325,7 +408,6 @@ aa.e.note =dat=>
     replies.id = replies_id;
     aa.fx.expanded(replies_id,1,replies);
   }
-  // replies.classList.add('replies','expanded');
   let summary = replies.querySelector('summary');
   summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
   note.append(replies,aa.e.note_actions(dat.clas));  
@@ -334,59 +416,41 @@ aa.e.note =dat=>
 
 
 // note actions
-
 aa.e.note_actions =clas=>
 {
-  const butt = (id)=> aa.mk.l('button',{con:id,cla:'butt '+id,clk:aa.clk[id]});
+  // mk action butt function
+  const butt =sa=> 
+  {
+    let con,cla,clk;
+    if (Array.isArray(sa))
+    {
+      con = sa[0];
+      if (sa[1]) 
+      {
+        cla = sa[1];
+        if (sa[2]) clk = sa[2];
+        else clk = cla;
+      }
+      else clk = cla = con;      
+    }
+    else clk = cla = con = sa;
+    return aa.mk.l('button',{con:con,cla:'butt '+cla,clk:aa.clk[clk]});
+  };
   
   const l = aa.mk.l('p',{cla:'actions'});
   
-  let a;
+  let a = [];
   if (!clas) clas = [];
-  if (clas.includes('draft'))
-  {
-    a = ['yolo','sign','edit','cancel']; //,'editor'
-    for (const s of a) l.append(butt(s),' ');
-  }
-  else if (clas.includes('not_sent'))
-  {
-    a = ['post','cancel'];
-    for (const s of a) l.append(butt(s),' ');
-  }
-  else if (clas.includes('blank'))
-  {
-    l.append(butt('fetch'),' ');
-  }
-  else
-  {
-    a = ['react','req','parse','tiny']; //,'editor'
-    for (const s of a) l.append(butt(s),' ');
-    // l.append(
-    //   aa.mk.l('button',{con:'<3',tit:'react',cla:'butt react',clk:aa.clk.react}),
-    //   ' ',
-    //   // aa.mk.l('button',{con:'z',tit:'zap note',cla:'butt zap',clk:aa.clk.zap}),
-    //   // ' ',
-    //   aa.mk.l('button',{con:'+',tit:'fetch all replies',cla:'butt req',clk:aa.clk.req}),
-    //   ' ',
-    //   aa.mk.l('button',{con:':',tit:'parse content',cla:'butt parse',clk:aa.clk.parse}),
-    //   ' ',
-    //   aa.mk.l('button',{con:'x',tit:'hide note',cla:'butt hide',clk:aa.clk.hide}),
-    // );
-  }
-
+  if (clas.includes('draft')) a.push('yolo','sign','edit','cancel');
+  else if (clas.includes('not_sent')) a.push('post','cancel');
+  else if (clas.includes('blank')) a.push('fetch',['x','tiny']);
+  else a.push(['<3','react'],'req','parse',['x','tiny']);
+  if (a.length) for (const s of a) l.append(butt(s),' ');
   return l
 };
 
 
 // process note kind if available, otherwise default
-
-// aa.e.note_by_kind =dat=>
-// {
-//   let note;
-//   if (aa.kinds.hasOwnProperty('d'+dat.event.kind)) note = aa.kinds['d'+dat.event.kind](dat);
-//   else note = aa.e.note_default(dat);
-//   return note
-// };
 
 // aa.e.note_types = 
 // {
@@ -410,20 +474,19 @@ aa.e.note_by_kind =dat=>
   let k = dat.event.kind;
   
   if (aa.kinds.hasOwnProperty(k)) return aa.kinds[k](dat);
-
+  // need to work on all these types, only regular for now...
   switch (true)
   {
     case k >= 1000  && k <= 9999: // regular
     case k >= 10000 && k <= 19999: // replaceable
     case k >= 20000 && k <= 29999: // ephemeral
-    case k >= 30000 && k <= 39999: // parameterized replaceable
-    default: return aa.e.note_default(dat);
+    case k >= 30000 && k <= 39999: // parameterized_replaceable
+    default: return aa.e.note_regular(dat);
   }
 };
 
 
 // blank note
-
 aa.e.note_blank =(tag,dat,seconds)=>
 {
   const id = tag[1];
@@ -455,9 +518,8 @@ aa.e.note_blank =(tag,dat,seconds)=>
 };
 
 
-// default note
-
-aa.e.note_default =dat=>
+// regular note
+aa.e.note_regular =dat=>
 {
   let note = aa.e.note(dat);
   aa.e.append_to_notes(note);
@@ -466,7 +528,6 @@ aa.e.note_default =dat=>
 
 
 // note replace
-
 aa.e.note_replace =(l,dat)=>
 {
   l.id = 'temp-'+dat.event.id;
@@ -475,7 +536,7 @@ aa.e.note_replace =(l,dat)=>
   let childs = l.querySelector('.replies').childNodes;
   if (childs.length)
   {
-    for (const c of childs) if (c.tagName !== 'SUMMARY') aa.e.append_to_rep(c,b_rep);
+    for (const c of childs) if (c.tagName === 'ARTICLE') aa.e.append_to_rep(c,b_rep);
   }
   let is_root = b.classList.contains('root');
   let is_reply = b.classList.contains('reply');
@@ -500,7 +561,6 @@ aa.e.note_replace =(l,dat)=>
 
 
 // print event
-
 aa.e.print =async dat=>
 {
   const xid = dat.event.id;
@@ -534,13 +594,11 @@ aa.e.print =async dat=>
   aa.get.missing('e');
   aa.get.missing('p');
   aa.i.d(dat);
-  // aa.i.run();
   if (l && history.state.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
 };
 
 
-// create note observer
-
+// create note intersection observer
 aa.e.note_observer = new IntersectionObserver(a=>
 {
   for (const b of a)
@@ -548,10 +606,7 @@ aa.e.note_observer = new IntersectionObserver(a=>
     if (b.isIntersecting) aa.e.note_intersect(b.target)
   }
 },{root:null,threshold:.9});
-
-
-// on observer note intersect
-
+// on observed note intersection
 aa.e.note_intersect =l=>
 {
   aa.e.note_observer.unobserve(l);
@@ -562,7 +617,6 @@ aa.e.note_intersect =l=>
 
 
 // quote event
-
 aa.e.quote =o=>
 {
   if (!o.id) return false;
@@ -587,7 +641,6 @@ aa.e.quote =o=>
 
 
 // new quote event, still wip
-
 aa.e.quote_new =o=>
 {
   if (!o.id) return false;
@@ -633,7 +686,6 @@ aa.e.quote_new =o=>
 
 
 // update blank quotes
-
 aa.e.quote_upd =async(quote,o)=>
 {
   let dat = await aa.db.get_e(o.id);
@@ -678,7 +730,6 @@ aa.e.quote_upd =async(quote,o)=>
 
 
 // gets all blank quotes and replaces with actual data
-
 aa.get.quotes =async id=>
 {
   let quotes = document.querySelectorAll('.blank_quote[data-id="'+id+'"]');
@@ -693,7 +744,6 @@ aa.get.quotes =async id=>
 
 
 // update note path when appending
-
 aa.e.upd_note_path =(l,stamp,is_u=false)=> 
 {
   let root,updated;
@@ -725,7 +775,6 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
 
 
 // view event
-
 aa.e.view =l=>
 {
   if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
@@ -737,7 +786,6 @@ aa.e.view =l=>
 
 
 // plain note
-
 aa.kinds[1] =dat=>
 {
   let note = aa.e.note(dat);
@@ -752,16 +800,10 @@ aa.kinds[1] =dat=>
 
 
 // repost of kind-1 note
-
 aa.kinds[6] =dat=>
 {
-  // console.log(dat);
-  // dis = Object.assign({},dat);
-  // dis.event.content = 'k'+dat.event.kind+' repost:';
   let note = aa.e.note(dat);
   note.classList.add('is_new','tiny');
-  // note.querySelector('.content').textContent = 'k6 repost:'
-  // it.rm_selector(note,'.content');
   let reply_tag = aa.get.last_e_tag(dat.event.tags);
   if (reply_tag && reply_tag.length)
   {    
@@ -788,7 +830,6 @@ aa.kinds[6] =dat=>
 
 
 // reaction
-
 aa.kinds[7] =dat=>
 {
   let note = aa.e.note(dat);
@@ -804,15 +845,12 @@ aa.kinds[7] =dat=>
 
 
 // repost of generic note
-
 aa.kinds[16] = aa.kinds[6];
 
 // zap template
-
 aa.kinds[9735] = aa.kinds[1];
 
 // long-form template
-
 aa.kinds[30023] = aa.kinds[1];
 
 
@@ -835,11 +873,10 @@ aa.views.note1 =async nid=>
   }
 };
 
-
-
 aa.views.naddr1 =async naddress=>
 {
-
+  let data = aa.fx.decode(naddress);
+  console.log(data);
 };
 
 aa.views.nevent1 =async nevent=>
@@ -887,12 +924,8 @@ aa.views.nevent1 =async nevent=>
 };
 
 
-
-
-
 // returns a relay that has event x or empty string
-
-aa.get.seen =(x)=>
+aa.get.seen =x=>
 {
   const dat = aa.db.e[x];
   if (dat && dat.seen.length) return dat.seen[0];
@@ -901,15 +934,13 @@ aa.get.seen =(x)=>
 
 
 // returns tags of type from event
-
 aa.get.tags =(event,type)=> event.tags.filter(tag=>tag[0]===type);
 
 
 // returns tags for building a reply
-
-aa.get.tags_for_reply =(event)=>
+aa.get.tags_for_reply =event=>
 {  
-  // needs to account for "a" tag
+  // wip... needs to account for "a" tag
   const tags = [];
   const seen = aa.get.seen(event.id);
   let tag = aa.get.root_tag(event.tags);
@@ -933,7 +964,6 @@ aa.get.tags_for_reply =(event)=>
 
 
 // gets e tag marked 'reply' or the last not marked mention
-
 aa.get.reply_tag =tags=>
 {
   let tag = tags.filter(t=>t[0]==='e'&&t[3]==='reply')[0];
@@ -944,7 +974,6 @@ aa.get.reply_tag =tags=>
 
 
 // gets e tag marked 'root' or the first not marked mention
-
 aa.get.root_tag =tags=>
 {
   let tag = tags.filter(t=>t[0]==='e'&&t[3]==='root')[0];
@@ -953,6 +982,8 @@ aa.get.root_tag =tags=>
   return false
 };
 
+
+// gets last e tag
 aa.get.last_e_tag =tags=>
 {
   let tag = tags.filter(t=>t[0]==='e').pop();
@@ -961,11 +992,44 @@ aa.get.last_e_tag =tags=>
 };
 
 
+// returns array of tags with all #hashtags in string
+aa.get.hashtag =s=>
+{
+  const tags = [];
+  const hashtags = s.match(aa.regx.hashtag);
+  if (hashtags) for (const h of hashtags) tags.push(['t',h.slice(1).toLowerCase()])
+  return tags
+};
 
+
+
+// gets all nostr:stuff from string 
+// and returns array of tags
+// to use when creating a new note
+aa.get.mentions =s=>
+{
+  const mentions = [];
+  const matches = [...s.matchAll(aa.regx.nostr)];
+  console.log(matches);
+  for (const m of matches)
+  {
+    let dis = m[0].slice(6);
+    if (dis.startsWith('npub')) 
+    {
+      let p_x = aa.fx.decode(dis);
+      if (p_x) mentions.push(aa.fx.tag.p(p_x));
+    }
+    else if (dis.startsWith('note'))
+    {
+      const e_x = aa.fx.decode(dis);
+      if (e_x) mentions.push(aa.fx.tag.q(e_x));
+    }
+  }
+  return mentions
+};
 
 
 // returns event if already loaded or get it from database
-
 aa.db.get_e =async xid=>
 {
   if (aa.db.e[xid]) return aa.db.e[xid];  
@@ -976,7 +1040,6 @@ aa.db.get_e =async xid=>
 
 
 // merge event dat
-
 aa.db.merge_e =dat=>
 {
   const xid = dat.event.id;
@@ -999,7 +1062,6 @@ aa.db.merge_e =dat=>
 
 
 // update event on database
-
 aa.db.upd_e =async dat=>
 {
   const id = 'upd_e';
@@ -1015,7 +1077,9 @@ aa.db.upd_e =async dat=>
   },2000,id);
 };
 
-
+// get n events from database
+// default direction: newest
+// other direction: oldest
 aa.db.some =async s=>
 {
   aa.cli.fuck_off();
@@ -1024,22 +1088,25 @@ aa.db.some =async s=>
   const direction = a.shift();
   const db_op = {};
   db_op.n = n ? parseInt(n) : 1;
-  db_op.direction = direction && direction === 'next' ? 'next' : 'prev';
+  db_op.direction = direction && direction === 'oldest' ? 'next' : 'prev';
   let o = {some:db_op};
   aa.log(localStorage.ns+' '+aa.db.sn+' some '+db_op.n);
-  const db = aa.db.idb.new;
-  const exe =async e=>
-  {
-    for (const dat of e.data) aa.e.print(dat);
-  };
-  db.onmessage=e=>
-  {
-    // console.log('aa.db.some',e.data);
-    // for (const dat of e.data) aa.e.print(dat);
-    exe(e);
-    setTimeout(()=>{db.terminate()},200);
-  }
-  db.postMessage(o);
+
+  const events = await aa.db.get('idb',o);
+  for (const dat of events) aa.e.print(dat);
+  // const db = aa.db.idb.new;
+  // const exe =async e=>
+  // {
+  //   for (const dat of e.data) aa.e.print(dat);
+  // };
+  // db.onmessage=e=>
+  // {
+  //   // exe(e);
+  //   for (const dat of e.data) aa.e.print(dat);
+  //   aa.to(()=>{db.terminate()},2000,'aa_db_some');
+  //   // setTimeout(()=>{db.terminate()},200);
+  // }
+  // db.postMessage(o);
 };
 
 // aa.db.view =s=>

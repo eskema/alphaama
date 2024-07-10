@@ -1,4 +1,10 @@
-// command line interface stuff
+/*
+
+alphaama
+command line interface
+
+*/
+
 
 aa.cli = 
 {
@@ -7,7 +13,6 @@ aa.cli =
 
 
 // clear input
-
 aa.cli.clear =()=>
 {
   aa.cli.t.value = '';
@@ -17,7 +22,6 @@ aa.cli.clear =()=>
 
 
 // on cli collapse
-
 aa.cli.collapse =e=>
 {
   aa.l.classList.remove('cli_expanded');
@@ -26,7 +30,6 @@ aa.cli.collapse =e=>
 
 
 // creates new dat object (event)
-
 aa.cli.dat_mk =async(s,dis)=>
 {
   aa.cli.dat = 
@@ -65,8 +68,7 @@ aa.cli.dat_mk =async(s,dis)=>
 };
 
 
-// creates / updates / deletes new event from input
-
+// creates / updates / deletes dat event from input
 aa.cli.dat_upd =async()=>
 {
   const s = aa.cli.t.value;
@@ -91,7 +93,6 @@ aa.cli.expand =e=>
 
 
 // focus input
-
 aa.cli.foc =()=>
 {
   aa.cli.t.setSelectionRange(aa.cli.t.value.length,aa.cli.t.value.length);
@@ -100,7 +101,6 @@ aa.cli.foc =()=>
 
 
 // clear and collapse cli with optional log reason
-
 aa.cli.fuck_off =(reason=false)=>
 {
   aa.cli.clear();
@@ -110,7 +110,6 @@ aa.cli.fuck_off =(reason=false)=>
 
 
 // go to index on cli history
-
 aa.cli.history_goto =index=>
 {
   let v = aa.cli.t.value;
@@ -121,7 +120,6 @@ aa.cli.history_goto =index=>
 
 
 // go to next on cli history
-
 aa.cli.history_next =()=>
 {
   if (aa.cli.o.index < aa.cli.o.history.length)
@@ -133,7 +131,6 @@ aa.cli.history_next =()=>
 
 
 // go to previous on cli history
-
 aa.cli.history_previous =()=>
 {
   if (aa.cli.o.index > 0) 
@@ -145,7 +142,6 @@ aa.cli.history_previous =()=>
 
 
 // add input value to history
-
 aa.cli.history_upd =s=>
 {
   aa.fx.a_add(aa.cli.o.history,[s]);
@@ -154,7 +150,6 @@ aa.cli.history_upd =s=>
 
 
 // on cli keydown events
-
 aa.cli.keydown =async e=>
 { 
   if (e.key === 'Enter' && e.shiftKey === false) 
@@ -177,7 +172,6 @@ aa.cli.keydown =async e=>
 
 
 // on load
-
 aa.cli.load =e=>
 {
   aa.cli.l = aa.mk.l('search',{id:'cli'});
@@ -215,34 +209,29 @@ aa.cli.load =e=>
 
 
 // creates a mention
-
 aa.cli.mention =w=>
 {
+  // remove @ from start of word string
   let s = w.slice(1).toLowerCase();
-  const filter =p=> 
+  // filter p conditions
+  const for_mentions =p=> 
   {
-    if ('metadata' in p)
+    if (p.hasOwnProperty('metadata'))
     {
-      if ('name' in p.metadata)
-      {
-        if (p.metadata.name.toLowerCase().includes(s)) return true;
-      }
-      if ('nip05' in p.metadata)
-      {
-        if (p.metadata.nip05.toLowerCase().includes(s)) return true;
-      }
+      if (p.metadata.hasOwnProperty('name')
+      && p.metadata.name.toLowerCase().includes(s)) 
+        return true;
+      if (p.metadata.hasOwnProperty('nip05')
+      && p.metadata.nip05.toLowerCase().includes(s)) 
+        return true;
     }
-    if ('petname' in p.metadata)
-    {
-      if (p.petname.toLowerCase().includes(s)) return true;
-    }
+    if (p.petname?.length
+    && p.petname.toLowerCase().includes(s)) 
+      return true;
   };
-    // p.metadata?.name?.toLowerCase().startsWith(s)
-    // || p.petname?.toLowerCase().startsWith(s)
-    // || p.metadata?.nip05.toLowerCase().includes(s);
-  
-  const a = Object.values(aa.db.p).filter(filter);
-  for (p of a)
+  // 
+  const a = Object.values(aa.db.p).filter(for_mentions);
+  for (const p of a)
   {
     const l = aa.mk.l('li',{cla:'item mention',bef:p.metadata.name??''});
     let after = (p.petname?p.petname:p.extradata.petnames[0])+' '+(p.metadata.nip05??'');
@@ -268,25 +257,7 @@ aa.cli.mention =w=>
 };
 
 
-// makes and returns the collapse button
-
-// aa.mk.cli_butt_collapse =()=>
-// {
-//   const l = aa.mk.l('button',
-//   {
-//     id:'cli_collapse',
-//     con:'-',
-//     tit:'hide input',
-//     clk:aa.cli.collapse
-//   });
-//   l.tabIndex = 2;
-//   return l
-// };
-
-
-
 // filters actions for autocomplete and add items to oto
-
 aa.cli.oto_act =(s,a)=>
 {
   if (a.length === 1 || (a.length === 2 && a[1] === ''))
@@ -304,7 +275,6 @@ aa.cli.oto_act =(s,a)=>
   else
   {
     let actions = aa.actions.filter(o=>o.action[0].startsWith(a[1]));
-    // console.log(actions);
     for(const act of actions)
     {
       let action = localStorage.ns+' '+act.action[0]+' '+act.action[1];
@@ -320,7 +290,6 @@ aa.cli.oto_act =(s,a)=>
 
 
 // makes an action item for otocomplete
-
 aa.cli.oto_act_item =(o,s)=>
 {
   const l = aa.mk.l('li',{cla:'item',bef:localStorage.ns});
@@ -372,17 +341,10 @@ aa.cli.oto_act_item =(o,s)=>
 };
 
 
-// checks for otocomplete stuff
-
-
-
-
 // when input is triggered
-
 aa.cli.run =async s=>
 {
   // returns false or true if the string is an action
-
   const is_act =s=>
   {
     const ns = localStorage.ns;
@@ -393,7 +355,6 @@ aa.cli.run =async s=>
   };
 
   // parses string as action and executes it
-
   const exe_act =s=>
   {
     let a = s.split(' ');
@@ -424,19 +385,16 @@ aa.cli.run =async s=>
   {
     if (aa.cli.dat) 
     {
-      console.log(aa.cli.dat);
       aa.cli.dat.event.created_at = aa.t.now;
       if (aa.cli.dat.event.kind === 1)
       {
-        aa.cli.dat.event.tags.push(...aa.parse.hashtags(s));
-        const mentions = await aa.parse.mentions(s);
-        console.log(mentions);
+        aa.cli.dat.event.tags.push(...aa.get.hashtag(s));
+        const mentions = aa.get.mentions(s);
         for (const mention of mentions)
         {
           let add = true;
           for (const t of aa.cli.dat.event.tags)
           {
-            console.log('mention_check',t,mention);
             if (t[0] === mention[0] && t[1] === mention[1]) add = false;
           }
           if (add) aa.cli.dat.event.tags.push(mention)
@@ -462,7 +420,6 @@ aa.cli.run =async s=>
 
 
 // on cli update event
-
 aa.cli.upd =e=>
 {
   const s = aa.cli.t.value.replace(/\u2028/g,'');
@@ -472,7 +429,6 @@ aa.cli.upd =e=>
   const is_action = a[0] === ns;
 
   aa.cli.oto.textContent = '';
-  // aa.cli.oto.dataset.s = s;
   
   if (maybe_action) aa.cli.oto.append(aa.cli.oto_act_item({action:[]}));
   else if (is_action) aa.cli.oto_act(s,a); 
@@ -486,19 +442,16 @@ aa.cli.upd =e=>
   }
 
   // update textarea height
-
   aa.cli.t.style.height = 'unset';
-  aa.cli.t.style.height = `${aa.cli.t.scrollHeight}px`;
+  aa.cli.t.style.height = aa.cli.t.scrollHeight+'px';
   if (aa.cli.t.selectionStart === aa.cli.t.value.length) 
   {
     aa.cli.t.scrollTop = aa.cli.t.scrollHeight;
   }
-
 };
 
 
 // when updating from otocomplete options
-
 aa.cli.upd_from_oto =(s,w=false)=>
 {
   aa.cli.t.value = aa.cli.t.value.slice(0,-Math.abs(w.length??s.length)) + s.trim() + ' ';
@@ -508,7 +461,6 @@ aa.cli.upd_from_oto =(s,w=false)=>
 
 
 // changes input value and expands cli
-
 aa.cli.v =s=>
 {
   aa.cli.t.value = s;

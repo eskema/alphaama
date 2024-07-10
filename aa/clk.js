@@ -1,8 +1,12 @@
-// click stuff
+/*
+
+alphaama
+click stuff
+
+*/
 
 
 // general nostr links
-
 aa.clk.a =e=>
 {
   e.preventDefault();
@@ -13,7 +17,6 @@ aa.clk.a =e=>
 
 
 // cancel event draft
-
 aa.clk.cancel =e=>
 {
   const note = e.target.closest('.note');
@@ -26,7 +29,6 @@ aa.clk.cancel =e=>
 
 
 // adds a clicked class to show interaction
-
 aa.clk.clkd =l=>
 {
   l.classList.remove('clkd');
@@ -35,7 +37,6 @@ aa.clk.clkd =l=>
 
 
 // edit event
-
 aa.clk.edit =e=>
 {
   const note = e.target.closest('.note');
@@ -49,38 +50,7 @@ aa.clk.edit =e=>
 };
 
 
-// toggle class on either a provided element
-// or event target
-
-aa.clk.expanded =e=>
-{
-  e.stopPropagation();
-  let l = document.getElementById(e.target.dataset.controls) || e.target;
-  if (!l) return;
-  
-  let block;
-  if (l.classList.contains('expanded'))
-  {
-    l.classList.remove('expanded');
-    sessionStorage[l.id] = '';
-    block = 'center';
-  }
-  else
-  {
-    l.classList.add('expanded');
-    sessionStorage[l.id] = 'expanded';
-    block = 'start';
-  }
-  aa.fx.scroll(l,
-  {
-    behavior:'smooth',
-    block:block
-  });
-};
-
-
 // fetch note
-
 aa.clk.fetch =e=>
 {
   const note = e.target.closest('.note');
@@ -100,7 +70,6 @@ aa.clk.fetch =e=>
 
 
 // mark replies as read
-
 aa.clk.mark_read =e=>
 {
   e.stopPropagation();
@@ -145,8 +114,17 @@ aa.clk.mark_read =e=>
 };
 
 
-// post event
+// toggle parsed content
+aa.clk.parse =e=>
+{
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  const event = aa.db.e[xid].event;
+  aa.parse.context(note,event,true);
+};
 
+
+// post event
 aa.clk.post =e=>
 {
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
@@ -155,7 +133,6 @@ aa.clk.post =e=>
 
 
 // react to event
-
 aa.clk.react =e=>
 {
   const note = e.target.closest('.note');
@@ -165,8 +142,16 @@ aa.clk.react =e=>
 };
 
 
-// sign event
+// request replies to note
+aa.clk.req =e=>
+{
+  const note = e.target.closest('.note');
+  const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
+  aa.cli.v(localStorage.ns+' '+aa.q.def.id+' req read '+filter);
+};
 
+
+// sign event
 aa.clk.sign =e=>
 {
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
@@ -188,8 +173,15 @@ aa.clk.sign =e=>
 };
 
 
-// sign and broadcast event
+// make note tiny
+aa.clk.tiny =e=>
+{
+  const note = e.target.closest('.note');
+  note.classList.toggle('tiny');
+};
 
+
+// sign and broadcast event
 aa.clk.yolo =e=>
 {
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
@@ -210,31 +202,8 @@ aa.clk.yolo =e=>
 };
 
 
-aa.clk.tiny =e=>
-{
-  const note = e.target.closest('.note');
-  note.classList.toggle('tiny');
-};
-
-aa.clk.req =e=>
-{
-  const note = e.target.closest('.note');
-  const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
-  aa.cli.v(localStorage.ns+' '+aa.q.def.id+' req read '+filter);
-};
-
+// zap note
 aa.clk.zap =e=>
 {
   aa.log('soon™')
 };
-
-aa.clk.parse =e=>
-{
-  const note = e.target.closest('.note');
-  const xid = note.dataset.id;
-  const event = aa.db.e[xid].event;
-  aa.parse.context(note,event,true);
-};
-
-
-

@@ -1,4 +1,10 @@
-// basic key/value options using localStorage
+/*
+
+alphaama
+basic key/value options using localStorage
+
+*/
+
 
 aa.o =
 {
@@ -26,15 +32,13 @@ aa.o =
 //       'exit':'Escape'
 //     }
   },
-  sn:'o',
 };
 
 
 // on load
-
 aa.o.load =()=>
 {
-  // ensure default options
+  // ensure default options are set
   for (const k in aa.o.def.ls)
   {
     if (!localStorage[k]) localStorage[k] = aa.o.def.ls[k];
@@ -62,17 +66,14 @@ aa.o.load =()=>
   );
   aa.o.o = {id:aa.o.def.id,ls:localStorage};
   aa.mod_load(aa.o).then(aa.mk.mod);
-
   window.addEventListener('storage',e=> { console.log('storage',e); });
 };
 
 
 // makes a mod option item, to use with aa.mk.mod()
-
 aa.o.mk =(k,v)=>
 {
   // update 
-
   switch (k)
   {
     case 'team': if (aa.l.dataset.team !== v) aa.l.dataset.team = v; break;
@@ -88,10 +89,8 @@ aa.o.mk =(k,v)=>
 
 
 // reset one, multiple or all values
-
 aa.o.reset =s=>
 {
-  // aa.cli.fuck_off();
   aa.cli.clear();
   s.trim();
   if (s)
@@ -117,10 +116,8 @@ aa.o.reset =s=>
 
 
 // remove option (if not default)
-
 aa.o.rm =s=>
 {
-  // aa.cli.fuck_off();
   aa.cli.clear();
   const work =a=>
   {
@@ -132,7 +129,6 @@ aa.o.rm =s=>
       {
         localStorage.removeItem(k);
         document.getElementById(aa.o.def.id+'_'+k).remove();
-        // aa.o.load();
         aa.log(dis+k);
       }
       else aa.log(dis+'key cannot be removed');
@@ -144,7 +140,6 @@ aa.o.rm =s=>
 
 
 // saves
-
 aa.o.save =()=>
 {
   aa.o.o = {id:'o',ls:localStorage};
@@ -153,7 +148,6 @@ aa.o.save =()=>
 
 
 // set key as value
-
 aa.o.set =s=>
 {
   // aa.cli.fuck_off();
@@ -170,5 +164,6 @@ aa.o.set =s=>
   };
   aa.fx.loop(work,s)
 };
+
 
 window.addEventListener('load',aa.o.load);

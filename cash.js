@@ -1,4 +1,8 @@
-// web cache service worker
+/*
+
+web cache service worker
+
+*/
 
 const cash = 
 {
@@ -26,9 +30,8 @@ const cash =
 };
 
 
-// if we have cached the request, serve that,
+// if we have the request cached, serve that,
 // if not, then fetch, cache and serve it
-
 
 cash.flow =async e=>
 {
@@ -58,7 +61,7 @@ cash.flow =async e=>
 
 addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});
 
-
+// cache ops
 
 cash.get =async a=> 
 {
@@ -86,6 +89,13 @@ cash.rm =async key=>
   cache.delete(key)
 };
 
+cash.clear =async()=>
+{
+  const cache = await caches.open(cash.def.id);
+  const results = await cache.matchAll([]);
+  for (const res of results) cash.rm(res);
+};
+
 onactivate =e=>
 {
   e.waitUntil(async()=>
@@ -100,11 +110,5 @@ oninstall =e=>{e.waitUntil(cash.add(cash.def.ls))};
 onmessage =e=>
 {
   const ops = e.data;
-  for (const k in ops)
-  {
-    if (k in cash) 
-    {
-      cash[k](ops[k])
-    }
-  }
+  for (const k in ops) if (cash.hasOwnProperty(k)) cash[k](ops[k])
 };

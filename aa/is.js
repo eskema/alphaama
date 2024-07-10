@@ -1,13 +1,16 @@
-// it's true or false, boolean stuff, also quantum
+/*
+
+alphaama
+boolish stuff
+
+*/
 
 
-// alphanumeric and underscore
-
+// is alphanumeric and underscore
 aa.is.an =s=> aa.regx.an.test(s);
 
 
 // checks if element has no children and is empty, ignores trailing spaces
-
 aa.is.empty =l=>
 {
   if (!l) return true;
@@ -19,8 +22,11 @@ aa.is.empty =l=>
 };
 
 
-// checks if string is only one character long
+// is a valid nostr key
+aa.is.key =x=> aa.is.x(x) && x.length === 64; 
 
+
+// checks if string is only one character long
 aa.is.one =s=>
 {
   let a = s.split(' ');
@@ -33,7 +39,6 @@ aa.is.one =s=>
 
 
 // checks if page is loading from iframe
-
 aa.is.rigged =()=>
 {
   try {return window.self !== window.top} 
@@ -42,7 +47,6 @@ aa.is.rigged =()=>
 
 
 // converts string to URL and returns it or false
-
 aa.is.url =s=>
 {
   let url;
@@ -51,22 +55,14 @@ aa.is.url =s=>
 };
 
 
-// it's a valid nostr key
-
-aa.is.key =x=> aa.is.x(x) && x.length === 64; 
-
-
-// it's tag conditions
-
+// is tag conditions
 aa.is.tag ={};
 aa.is.tag.e =a=> a[0]==='e' && aa.is.x(a[1]);
 aa.is.tag.p =a=> a[0]==='p' && aa.is.x(a[1]);
 aa.is.tag.q =a=> a[0]==='q' && aa.is.x(a[1]);
 
 
-
 // returns wether or not a given level is trusted
-
 aa.is.trusted =trust=>
 {
   let trust_needed;
@@ -78,37 +74,8 @@ aa.is.trusted =trust=>
 
 
 // returns user trust
-
 aa.is.trust_x =x=> aa.is.trusted(aa.db.p[x]?.trust ?? 0);
 
 
-// checks if string is valid url and then checks extension for media file types.
-// returns false if no media found or array with extension,URL
-
-aa.is.url_type =s=>
-{
-  let url = aa.is.url(s); 
-  if (!url) return false;
-  const is_img = ['jpg','jpeg','gif','webp','png','heic'];
-  const is_av = ['mp3','mp4','mov','webm'];
-  const check_ext =extensions=>
-  {
-    const src = (url.origin + url.pathname).toLowerCase();
-    for (const ext of extensions)
-    {
-      if (src.endsWith('.'+ext)
-      || (url.searchParams.has('format') && url.searchParams.get('format') === ext)) 
-      return true
-    }
-    return false
-  };
-   
-  return check_ext(is_img) ? ['img',url] 
-  : check_ext(is_av) ? ['av',url] 
-  : ['link',url]
-};
-
-
-// it's hexadecimal
-
+// is hexadecimal
 aa.is.x =s=> /^[A-F0-9]+$/i.test(s); 

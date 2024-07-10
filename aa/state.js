@@ -1,5 +1,12 @@
-// clear view
+/*
 
+alphaama
+state
+
+*/
+
+
+// clear view
 aa.state.clear =()=>
 {
   if (aa.l.classList.contains('viewing'))
@@ -16,7 +23,6 @@ aa.state.clear =()=>
 
 
 // on load
-
 aa.state.load =e=>
 {
   const header = aa.mk.l('header',{id:'header'});
@@ -31,32 +37,22 @@ aa.state.load =e=>
   const state = aa.mk.l('h1',{id:'state',con:'dickbutt'});
   header.append(caralho,state);
   document.body.prepend(header);
-
   state.dataset.pathname = location.pathname;
   aa.state.l = state;
-
   setTimeout(aa.state.pop,100);
 };
 
 
 // pop state into view
-
 aa.state.pop =()=>
 {
   let hash = location.hash;
   let search = location.search;
-  if (hash.length)
-  {
-    [hash,search] = location.hash.split('?');
-  }
+  if (hash.length) [hash,search] = location.hash.split('?');
   if (!search) search = '';
-  
-  if (!history.state
-  || !history.state.hasOwnProperty('view')
-  || history.state === '') 
-  {
-    aa.state.view(hash,search);
-  }
+  let no_state = !history.state || !history.state.hasOwnProperty('view')
+  || history.state === '';
+  if (no_state) aa.state.view(hash,search);
   else 
   {
     aa.state.clear();
@@ -66,17 +62,13 @@ aa.state.pop =()=>
       document.title = 'A<3 '+state;
       aa.state.resolve(state,search);  
     }
-    else 
-    {
-      document.title = 'alphaama';
-    }
+    else document.title = 'alphaama';
     if (aa.state.l) aa.state.l.textContent = state;
   }
 };
 
 
 // replace state
-
 aa.state.replace =s=>
 {
   const dis = history.state;
@@ -88,7 +80,6 @@ aa.state.replace =s=>
 
 
 // resolve state view
-
 aa.state.resolve =(s,search)=>
 {
   if (s.startsWith('#')) s = s.slice(1);
@@ -108,26 +99,20 @@ aa.state.resolve =(s,search)=>
 
 
 // view state or go back if same state
-
 aa.state.view =(s,search='')=>
 {
   if (s?.length) s.trim();
   if (search?.length) search = s.length?'?'+search:search;
   let ss = s+search;
-  console.log('aa.state.view',history.state,ss);
   if (!history.state || history.state.view !== ss)
   {
     const last = history.state&&history.state.view?history.state.view:'';
-    // console.log('aa.state.view last',last);
     const dis = {view:ss,last:last};
     const path = location.origin+location.pathname+dis.view;
     history.pushState(dis,'',path);
     aa.state.pop()
   }
-  else 
-  {
-    history.back();
-  }
+  else history.back();
 };
 
 window.addEventListener('popstate',aa.state.pop);

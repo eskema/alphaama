@@ -1,3 +1,11 @@
+/*
+
+alphaama
+aa
+
+*/
+
+
 const aa = 
 {
   actions:[],
@@ -13,6 +21,11 @@ const aa =
     '/dep/nostr_tools_2.js?v=20000',
     '/dep/blurhash.js?v=10000',
   ],
+  extensions:
+  {
+    img:['jpg','jpeg','gif','webp','png','heic'],
+    av:['mp3','mp4','webm'],
+  },
   fx:{},
   get:{},
   is:{},
@@ -31,13 +44,14 @@ const aa =
     '/aa/u.js',
     '/aa/i.js',
   ],
-  temp:{},
+  parse:{},
   state:{},
-  styles:['/styleshit.css'],
-  t:
-  {
-    get now(){return Math.floor(Date.now()/1000)}
-  },
+  styles:
+  [
+    '/styleshit.css'
+  ],
+  t:{ get now(){ return Math.floor(Date.now()/1000) }},
+  temp:{},
   tools:
   [
     '/aa/fun.js',
@@ -55,8 +69,7 @@ const aa =
 };
 
 
-// make element
-
+// make element with options
 aa.mk.l =(tag_name,o=false)=>
 {
   const l = document.createElement(tag_name);
@@ -88,7 +101,9 @@ aa.mk.l =(tag_name,o=false)=>
   return l
 };
 
-aa.head_meat =()=>
+
+// head meta elements
+aa.head_meat =async()=>
 {
   document.head.append(aa.mk.l('link',{rel:'manifest',ref:'/site.webmanifest'}));
   fetch('/site.webmanifest')
@@ -121,20 +136,24 @@ aa.head_meat =()=>
   });
 };
 
-aa.head_styles =styles=>
+
+// head styles
+aa.head_styles =async styles=>
 {
   for (const s of styles)
   document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:s}));
 };
 
-aa.head_scripts =scripts=>
+
+// head scripts
+aa.head_scripts =async scripts=>
 {
-  for (const s of scripts) document.head.append(aa.mk.l('script',{src:s}));
+  for (const s of scripts) 
+  document.head.append(aa.mk.l('script',{src:s}));
 };
 
 
-// on load
-
+// if no options found, load with defaults
 aa.load =(o={})=>
 {
   aa.head_meat();
@@ -150,23 +169,19 @@ aa.load =(o={})=>
 
 
 // log stuff
-
 aa.log =async(s,l=false)=>
 {
   const log = aa.mk.l('li',{cla:'l item'});
   if (typeof s === 'string') s = aa.mk.l('p',{con:s});
   log.append(s);
-  if (!l) l = aa.logs;
-  if (!l) l = document.getElementById('logs');
+  if (!l) l = aa.logs || document.getElementById('logs');
   if (l) l.append(log);
   else console.log('log:',s)
 };
-
+// logs container element
 aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
-
 // logs mutation observer
-
-aa.mo_logs = new MutationObserver(a=> 
+aa.logs_mo = new MutationObserver(a=> 
 {
   for (const mutation of a) 
   {
@@ -182,7 +197,6 @@ aa.mo_logs = new MutationObserver(a=>
 
 // tries to delete everything saved locally 
 // and then reload clean
-
 aa.reset =()=>
 {
   aa.log('shh... go to sleep now.');
@@ -195,7 +209,7 @@ aa.reset =()=>
     setTimeout(()=>{location.reload()},1000)
   });
 };
-
+// reset action
 aa.actions.push(
 {
   action:['zzz'],
@@ -204,19 +218,12 @@ aa.actions.push(
 });
 
 
-
-
-
-
-// run 
-
+// if no options found, run with defaults
 aa.run =(o={})=>
 {
-  // do stuff
-  aa.mo_logs.observe(aa.logs,{attributes:false,childList:true});
+  aa.logs_mo.observe(aa.logs,{attributes:false,childList:true});
   const main = aa.mk.l('main',{id:'view'});
   document.body.prepend(main);
-  // if (aa.cli) aa.cli.load();
   
   if (aa.is.rigged()) aa.l.classList.add('rigged');
   aa.wl.lock();
@@ -224,17 +231,10 @@ aa.run =(o={})=>
 
   aa.log('running '+location.origin);  
   aa.u.check_signer();
-  
-  // // load mods
-  // if (aa.o) aa.o.load();
-  // if (aa.e) aa.e.load();
-  // if (aa.p) aa.p.load();
-  // if (aa.q) aa.q.load();
-  // if (aa.r) aa.r.load();
-  // if (aa.u) aa.u.load();
-  
 };
 
+
+// load mod
 aa.mod_load =async mod=>
 {
   console.log(mod);
@@ -262,6 +262,8 @@ aa.mod_load =async mod=>
   return mod
 };
 
+
+// save mod
 aa.mod_save = async mod=>
 {
   return new Promise(resolve=>
@@ -276,8 +278,7 @@ aa.mod_save = async mod=>
 };
 
 
-// mod update item element
-
+// update mod item element
 aa.mod_ui =(mod,k,v)=>
 {
   let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));

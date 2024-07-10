@@ -1,8 +1,12 @@
-// make elements and stuff
+/*
+
+alphaama
+make elements and stuff
+
+*/
 
 
-// make video element
-
+// video element
 aa.mk.av =(src,poster=false)=>
 {
   // toggle sound
@@ -12,14 +16,12 @@ aa.mk.av =(src,poster=false)=>
     l.muted = !l.muted;
     l.classList.toggle('muted')
   };
-  
   // pause video
   const pause =l=>
   { 
     l.pause();
     l.classList.remove('playin');
   };
-
   // play video
   const play =l=>
   {
@@ -28,7 +30,6 @@ aa.mk.av =(src,poster=false)=>
     l.classList.add('started','playin');
     l.play();
   };
-
   // picture-in-picture
   const pip =e=>
   {
@@ -36,7 +37,6 @@ aa.mk.av =(src,poster=false)=>
     if (document.pictureInPictureElement) document.exitPictureInPicture();
     else if (document.pictureInPictureEnabled) l.requestPictureInPicture();
   };
-
   // update progress
   const progress =e=>
   { 
@@ -48,14 +48,12 @@ aa.mk.av =(src,poster=false)=>
     trols.dataset.duration = Math.floor(l.duration);
     trols.querySelector('progress').value = percentage;
   };
-
   // rewind video
   const rewind =e=>
   {
     const l = e.target.closest('.av').querySelector('.mf');
     l.currentTime = 0;
   };
-
   // toggle play / pause
   const vip =e=>
   {
@@ -113,8 +111,7 @@ aa.mk.av =(src,poster=false)=>
 };
 
 
-// make action button
-
+// a button that will populate the input with a command text
 aa.mk.butt_action =(s,con=false,cla=false)=>
 {
   const butt = aa.mk.l('button',
@@ -128,8 +125,7 @@ aa.mk.butt_action =(s,con=false,cla=false)=>
 };
 
 
-// make expand button
-
+// button that toggles the class 'expanded'
 aa.mk.butt_expand =id=>
 {
   const butt = aa.mk.l('button',
@@ -137,7 +133,27 @@ aa.mk.butt_expand =id=>
     con:id,
     cla:'butt',
     id:'butt_'+id,
-    clk:aa.clk.expanded
+    clk:e=>
+    {
+      e.stopPropagation();
+      let l = document.getElementById(e.target.dataset.controls) || e.target;
+      if (!l) return;
+      
+      let block;
+      if (l.classList.contains('expanded'))
+      {
+        l.classList.remove('expanded');
+        sessionStorage[l.id] = '';
+        block = 'center';
+      }
+      else
+      {
+        l.classList.add('expanded');
+        sessionStorage[l.id] = 'expanded';
+        block = 'start';
+      }
+      aa.fx.scroll(l,{behavior:'smooth',block:block});
+    }
   });
   butt.dataset.controls = id
   return butt
@@ -145,7 +161,6 @@ aa.mk.butt_expand =id=>
 
 
 // make details element
-
 aa.mk.details =(s,l=false,open=false)=>
 { 
   const details = aa.mk.l('details');
@@ -155,14 +170,12 @@ aa.mk.details =(s,l=false,open=false)=>
   if (!l) return details;
   details.append(l);
   if (l.classList.contains('empty')) details.classList.add('empty');
-  else if (l.classList.contains('list')) 
-  summary.dataset.after = l.childNodes.length;
+  else if (l.classList.contains('list')) summary.dataset.after = l.childNodes.length;
   return details;
 };
 
 
 // make generic image
-
 aa.mk.img =(src)=>
 {
   const l = aa.mk.l('img',{cla:'content-img',src:src});
@@ -172,7 +185,6 @@ aa.mk.img =(src)=>
 
 
 // make generic list item from key / value
-
 aa.mk.item =(k,v,tag_name='li')=>
 {
   let l = aa.mk.l(tag_name,{cla:'item item_'+k});
@@ -192,7 +204,6 @@ aa.mk.item =(k,v,tag_name='li')=>
 
 
 // make a regular link
-
 aa.mk.link =(url,text=false,title=false)=>
 {
   if (!text) text = url;
@@ -205,10 +216,18 @@ aa.mk.link =(url,text=false,title=false)=>
 
 
 // make list element from object
-// o = { id:string,cla:array,ls:object,sort:string,mk:function };
-
 aa.mk.ls =o=>
 {
+  // o = 
+  // { 
+  //   id:string,
+  //   cla:array,
+  //   l:element,
+  //   ls:object,
+  //   sort:string,
+  //   mk:function 
+  // }
+
   let l = o.l;
   if (!l)
   {
@@ -234,7 +253,6 @@ aa.mk.ls =o=>
 
 
 // make mod
-
 aa.mk.mod =mod=>
 {
   let o = {id:mod.def.id,ls:mod.o.ls};
@@ -249,13 +267,11 @@ aa.mk.mod =mod=>
   {
     mod.l = mod_l;
     aa.log(mod_l)
-    // document.getElementById('view')?.append(mod_l);
   }
 };
 
 
 // make a nostr link
-
 aa.mk.nostr_link =(dis,con=false)=>
 {
   return aa.mk.l('a',
@@ -269,19 +285,16 @@ aa.mk.nostr_link =(dis,con=false)=>
 
 
 // make section element
-
 aa.mk.section =(id,expanded=false,l=false)=>
 {
   const section = aa.mk.l('section',{id:id});
-  // aa.fx.expanded(id,expanded,section);
   if (expanded) section.classList.add('expanded');
   const section_header = aa.mk.l('header');
-  section_header.append(aa.mk.butt_expand(id))
+  section_header.append(aa.mk.butt_expand(id));
   section.append(section_header);
   
   let view = document.getElementById('view');
   if (view) view.append(section);
-  
   if (l) section.append(l);
 
   return section
@@ -289,7 +302,6 @@ aa.mk.section =(id,expanded=false,l=false)=>
 
 
 // make tag list item
-
 aa.mk.tag =(a,i,li=false)=>
 {
   let l = li ? li : aa.mk.l('li',{cla:'tag tag_'+a[0]});
@@ -318,19 +330,17 @@ aa.mk.tag =(a,i,li=false)=>
 
 
 // make tag list
-
 aa.mk.tag_list =tags=>
 {
+  const times = tags.length;
   const l = aa.mk.l('ol',{cla:'tags'});
   l.start = 0;
-  const times = tags.length;
   for (let i=0;i<times;i++) l.append(aa.mk.tag(tags[i],i));
   return l
 };
 
 
 // make time element from timestamp
-
 aa.mk.time =timestamp=>
 {
   const d = aa.t.to_date(timestamp);

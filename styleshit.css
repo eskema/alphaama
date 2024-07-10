@@ -1363,15 +1363,14 @@ button.butt:focus
 
 .note.in_path.in_view
 {
-  background: rgb(var(--color-b));
+  /*background: rgb(var(--c));*/
   border-color: rgb(var(--color-e));
   grid-template-areas: 
-  "by by"
+  "by actions"
   "content content"
   "sig sig"
   "after after"
   "tags tags"
-  "actions actions"
   "replies replies"
   ;
 }
@@ -1398,6 +1397,7 @@ button.butt:focus
 .haz_solo .note:not(.in_path) > .sig,*/
 .haz_solo .note:not(.in_path) > .replies::after,
 .haz_solo .note:not(.in_path) > .replies > summary,
+.haz_solo .note.root:not(.in_view) > .replies > summary,
 .haz_solo .note:not(.in_path)::after,
 .haz_solo .note:not(.in_path)::before,
 
@@ -1412,13 +1412,19 @@ button.butt:focus
 .note.out::after,
 .note.out::before,
 .note:not(.in_view) > .sig,
+.note.in_path:not(.in_view) > .actions,
+.note.in_path:not(.in_view) > .details,
+/*.note:not(.in_view):not(.is_new) > .details,*/
+/*.note:not(.in_view):not(.is_new) > .actions,*/
+.note.in_path:not(.in_view) > .replies[open] > summary,
 .hide_e #e .note:not(.in_path),
+.view_e #notes > .note:not(.in_path),
 .view_e .note:not(.in_path)
 {
   display: none;
 }
 
-.view_e .note.in_view .note
+.view_e .note.in_view.in_path .note
 {
   display: grid;
 }
@@ -1512,7 +1518,7 @@ button.butt:focus
 .in_view > .by
 {
   grid-template-areas: 
-  "id id id"
+  "author id id"
   "author created_at clas";
 }
 
@@ -1541,6 +1547,61 @@ button.butt:focus
 .note.not_sent .by::after
 {
   content: 'not_sent';
+}
+
+.by .author
+{
+  grid-area: author;
+  align-self: start;
+  
+}
+
+.in_view > .by .author::before
+{
+  /*grid-area: nip5;*/
+}
+
+.in_view > .by .author::after
+{
+  align-self: stretch;
+  align-content: center;
+  font-size: var(--font-size-m);
+  grid-area: flw;
+  padding: 0 var(--pad);
+}
+
+.in_view > .by .author
+{
+  color: rgb(var(--color-d));
+  grid-template-areas: "img name flw" "img nip5 flw"
+}
+
+.in_view > .by .author .picture
+{
+  height: var(--size-s);
+  width: var(--size-s);
+}
+
+.in_view > .by .author .name
+{
+  align-self: start;
+  display: grid;
+  grid-template-areas: "name petname" "nip5 nip5";
+}
+
+.in_view > .by .author .name::after
+{
+/*  grid-column: 1;
+  grid-row: 2;*/
+  display: block;
+  grid-area: petname;
+}
+
+.in_view > .by .author .name::before
+{
+  
+  /*content: attr(data-nip05);*/
+  /*padding-left: var(--padm);*/
 }
 
 .by .id 
@@ -1658,7 +1719,7 @@ button.butt:focus
 
 .created_at 
 {
-  color: rgb(var(--color-c));
+  color: rgb(var(--color-d));
   grid-area: created_at;
   justify-self: end;
   line-height: 1.5;
@@ -1673,6 +1734,14 @@ button.butt:focus
   color: rgb(var(--color-d));
   font-size: 0;
   padding-left: 0;
+}
+
+.note.in_view > .by .created_at
+{
+  /*justify-self: center;*/
+/*  color: rgb(var(--color-d));
+  font-size: 0;
+  padding-left: 0;*/
 }
 
 .created_at::after 
@@ -1703,23 +1772,14 @@ a.author
   color: rgb(var(--color-d));
   overflow-x: scroll;
   text-decoration: none;
-}
-
-.by .author
-{
-  grid-area: author;
-}
-
-.in_view > .by .author
-{
-  color: rgb(var(--color-d));
+  grid-template-areas: "img name nip5 flw"
 }
 
 .a.author.has-picture img 
 {
   background: rgb(var(--c));
   display: block;
-  grid-area: before;
+  grid-area: img;
   height: calc(1rem); 
   object-fit: cover;
   padding: 0;
@@ -1730,20 +1790,30 @@ a.author
 {
   background: rgb(var(--c));
   content: "";
+  grid-area: img;
   height: 1rem;
   width: 1rem;  
+}
+
+.in_view > .by .author:not(.has-picture)::before
+{
+  height: 2rem;
+  width: 2rem;
+  grid-area: img;
 }
 
 .note_quote_by .author::after,
 .by .author::after,
 .pubkey .author::after
 {
-  
-  
+  align-self: stretch;
+  align-content: center;
+  /*background: rgb(var(--color-a));*/
   color: rgb(var(--color-c));
   content: attr(data-followers);
-  grid-area: after;
-  /*padding: 0 var(--padm);*/
+  display: block;
+  grid-area: flw;
+  padding: 0 var(--padm);
   /*padding: var(--padm);*/
   word-break: keep-all;
   white-space: pre;
@@ -1754,11 +1824,11 @@ a.author
 {
   color: rgb(var(--color-d));
 }
-.pubkey .author::after
+/*.pubkey .author::after
 {
   background: rgb(var(--color-a));
   padding: var(--padm);
-}
+}*/
 
 .note_quote_by .author.is_mf::after,
 .pubkey .author.is_mf::after,
@@ -1779,6 +1849,7 @@ a.author
 {
   background-color: rgb(var(--color-b));
   padding: 0 var(--padm);
+  grid-area: name;
 }
 
 .author .name.empty
@@ -1788,6 +1859,14 @@ a.author
 .author .name.empty::before
 {
   content: attr(title)!important;
+}
+
+.in_view > .by .author .name[data-nip05]::before
+{
+  color: rgb(var(--color-d));
+  content: attr(data-nip05);
+  /*margin-right: var(--pad);*/
+  grid-area: nip5;
 }
 
 .author .name[data-petname]::after 
@@ -1870,6 +1949,7 @@ a.author
   max-height: unset;
   padding-top: var(--line);
   padding-bottom: var(--line);
+  /*margin: var(--padm);*/
 }
 
 .note.in_view > .replies > .note > .content,
@@ -1922,10 +2002,16 @@ a.author
   max-width: 80vw;
 }
 
+.note.in_path:not(.in_view) > .content .paragraph
+{
+  /*padding: var(--padm);*/
+}
+
 .view_e .note.in_path:not(.in_view) > .content .paragraph
 {
   font-size: var(--font-size-s);
   line-height: 1.5;
+  /*margin: 0;*/
   /*padding: var(--padm);*/
 }
 
@@ -2210,13 +2296,13 @@ a.author
 .note:not(.haz_reply) > .replies[open]
 {
   padding-bottom: 0;
+  display: grid;
 }
 
 .note .replies > summary
 {
   /*background-color: rgb(var(--color-b));*/
   color: rgb(var(--color-d));
-  display: grid;
   display: none;
   grid-auto-flow: column;
   grid-template-columns: auto 1fr;
@@ -2231,11 +2317,6 @@ a.author
   z-index: 5; 
 }
 
-.view_e .note.in_path:not(.in_view) > .replies[open] > summary
-{
-  display: none;
-}
-
 .note.root:not(.in_view) > .replies > summary
 {
   background-color: rgb(var(--color-b));
@@ -2246,6 +2327,7 @@ a.author
 .note.in_view > .replies > summary
 {
   border-bottom: 1px dashed rgb(var(--color-d));
+  background-color: rgb(var(--color-b));
   /*display: inline-grid;*/
   width: auto;
 }
@@ -2259,17 +2341,19 @@ a.author
 {
   position: sticky;
   top: var(--line);
-  /*display: inline-grid;*/
+  
   /*margin: 0 auto;*/
 }
 .note.in_view > .replies[open] > summary
 {
+  /*display: grid;*/
   /*display: inline-grid;*/
 }
 
-.note .replies[open] > summary
+.note.haz_reply > .replies[open] > summary
 {
   color: rgb(var(--color-d));
+  display: grid;
   /*background-color: rgb(var(--color-b));*/
 }
 
@@ -2283,7 +2367,7 @@ a.author
   font-size: var(--font-size);
 }
 
-.haz_reply > .replies > summary
+.haz_new > .replies > summary
 {
   display: grid;
 }
@@ -2331,6 +2415,7 @@ a.author
 {
   font-size: var(--font-size-s);
   line-height: 1rem;
+  padding: var(--padm);
 }
 
 .mark_read
@@ -2343,11 +2428,12 @@ a.author
 
 .mark_read:hover
 {
-  background-color: rgba(var(--color-b),1);
+  background-color: rgba(var(--color-f),1);
   color: rgb(var(--color-d));
   text-align: left;
 }
 
+.replies:not(.expanded) > summary .mark_read:hover::after,
 .mark_read:hover::after
 {
   content: " mark read";
@@ -2389,7 +2475,7 @@ a.author
 
 .note > .actions 
 {
-  align-self: start;
+  /*align-self: start;*/
   /*background: rgba(var(--color-b),.5);*/
   display: grid;
   font-size: var(--font-size-s);
@@ -2441,15 +2527,14 @@ a.author
 
 .note.in_view > .actions
 {
-  /*align-self: stretch;*/
+  align-self: stretch;
   border-bottom: 1px dashed rgb(var(--color-d));
   /*bottom: unset;*/
   color: rgb(var(--color-d));
   /*grid-area: actions;*/
-  
   /*position: relative;*/
   position: sticky;
-  top: 2rem;
+  top: 0;
 }
 
 .view_e .note.in_path:not(.in_view) > .actions
@@ -3095,7 +3180,7 @@ a.author
   grid-template-areas: 
   "pub actions";
   grid-template-columns: 1fr auto;
-  padding-bottom: 1px;
+  padding: 1px;
   grid-template-rows: auto 1fr auto;
   /*position: relative;*/
   z-index: 0;
@@ -3563,7 +3648,7 @@ p[data-meta="about"]::before
   padding: 0;
   
   display: grid;
-  /*font-size: var(--font-size-s);*/
+  font-size: var(--font-size-s);
   grid-auto-flow: column;
   grid-gap: var(--padm);
   grid-gap: 0;
@@ -3598,9 +3683,10 @@ p[data-meta="about"]::before
   z-index: 3;
 }
 
-.profile.in_view > .actions .butt
+.profile > .actions .butt
 {
-  
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 /* @end */
