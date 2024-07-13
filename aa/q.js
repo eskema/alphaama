@@ -79,12 +79,12 @@ aa.q.save =()=>{ aa.mod_save(aa.q).then(aa.mk.mod) };
 aa.q.stuff =()=>
 {
   aa.log(localStorage.ns+' '+aa.q.sn+' stuff:');
-  aa.q.add('a {"authors":["u_x"],"kinds":[0,3,10002]}');
-  aa.q.add('b {"authors":["b_f"],"kinds":[0,3,10002]}');
-  aa.q.add('d {"#p":["u_x"],"kinds":[4],"since":"n_2"}');
-  aa.q.add('f {"authors":["u_x","b_f"],"kinds":[1,6,7,16,30023,30818],"since":"n_1"}');
-  aa.q.add('n {"#p":["u_x"],"kinds":[1,4,6,7,16],"since":"n_3"}');
-  aa.q.add('u {"authors":["u_x"],"since":"n_5"}');
+  aa.q.add('a {"authors":["u"],"kinds":[0,3,10002]}');
+  aa.q.add('b {"authors":["k3"],"kinds":[0,3,10002]}');
+  aa.q.add('d {"#p":["u"],"kinds":[4],"since":"n_2"}');
+  aa.q.add('f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,10002,30023,30818],"since":"n_1"}');
+  aa.q.add('n {"#p":["u"],"kinds":[1,4,6,7,16],"since":"n_3"}');
+  aa.q.add('u {"authors":["u"],"since":"n_5"}');
 };
 
 
@@ -213,8 +213,7 @@ aa.q.replace_filter_vars =s=>
 {
   const o = aa.parse.j(s);
   let options = {};  
-  const u = aa.db.p[aa.u.o.ls.xpub];
-  if (!u) aa.log('vars: no u');
+  if (!aa.u.p) aa.log('vars: no u');
 
   if (o) for (const k in o) 
   {
@@ -237,14 +236,16 @@ aa.q.replace_filter_vars =s=>
           { 
             switch (val) 
             {
+              case 'u':
               case 'u_x':
                 o[k] = o[k].filter(dis=>dis!==val);
-                if (u) o[k].push(u.xpub); 
+                if (aa.u.p) o[k].push(aa.u.p.xpub); 
                 break;
               case 'b_f':
               case 'bff':
+              case 'k3':
                 o[k] = o[k].filter(dis=>dis!==val);
-                if (u) o[k].push(...u.extradata.bff);                    
+                if (aa.u.p) o[k].push(...aa.u.p.extradata.bff);                    
                 break;
             }
           }

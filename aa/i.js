@@ -351,4 +351,19 @@ aa.i.dex.tags =(tags)=>
   }
 };
 
+aa.i.upd_item_pubkey =(p)=>
+{
+  let item = document.getElementById('i_item_'+p.xpub);
+  if (item) 
+  {
+    let p_name = a[0]?.querySelector('.name');
+    let key = item.querySelector('.key');
+    if (key && p_name)
+    {
+      key.textContent = '';
+      key.append(p_name.cloneNode(true));
+    }
+  }
+};
+
 window.addEventListener('load',aa.i.load);

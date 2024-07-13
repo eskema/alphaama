@@ -36,7 +36,7 @@ aa.e.append_to_rep =(note,rep)=>
   note.classList.remove('root');
   rep.parentNode.classList.add('haz_reply'); 
   if (note.classList.contains('is_new')) rep.parentNode.classList.add('haz_new_reply');
-  aa.e.upd_note_path(rep,note.dataset.stamp,aa.u.is_u(note.dataset.pubkey));
+  aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
 };
 
 
@@ -116,40 +116,13 @@ aa.e.clone =note=>
 };
 
 
-// draft event
-aa.e.draft =event=>
-{
-  if (!event.id) event.id = aa.fx.hash(event);
-  aa.db.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
-  aa.e.print(aa.db.e[event.id]);
-};
 
-
-// finalize event creation
-aa.e.finalize_event =async event=>
-{
-  event.id = aa.fx.hash(event);
-  const signed = await aa.fx.sign(event);
-  if (signed)
-  {
-    aa.db.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
-    aa.db.upd_e(dat);
-    aa.e.print(dat);
-    aa.r.broadcast(signed);
-  }
-};
 
 
 // on load
 aa.e.load =()=>
 {
   aa.actions.push(
-    {
-      action:['e','mk'],
-      required:['JSON'],
-      description:'mk event from JSON',
-      exe:aa.e.mk
-    },
     {
       action:['e','clear'],
       description:'clear e section',
@@ -195,21 +168,7 @@ aa.e.section_mutated =a=>
 aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
 
 
-// make event from JSON string, autocompletes missing fields
-aa.e.mk =s=>
-{
-  let event = aa.parse.j(s);
-  if (event)
-  {
-    aa.cli.fuck_off();
-    if (!event.pubkey) event.pubkey = aa.u.o.ls.xpub;
-    if (!event.kind) event.kind = 1;
-    if (!event.created_at) event.created_at = aa.t.now;
-    if (!event.tags) event.tags = [];
-    if (!event.content) event.content = '';
-    aa.e.draft(event);
-  }
-};
+
 
 
 // add to missing event list
@@ -417,26 +376,7 @@ aa.e.note =dat=>
 
 // note actions
 aa.e.note_actions =clas=>
-{
-  // mk action butt function
-  const butt =sa=> 
-  {
-    let con,cla,clk;
-    if (Array.isArray(sa))
-    {
-      con = sa[0];
-      if (sa[1]) 
-      {
-        cla = sa[1];
-        if (sa[2]) clk = sa[2];
-        else clk = cla;
-      }
-      else clk = cla = con;      
-    }
-    else clk = cla = con = sa;
-    return aa.mk.l('button',{con:con,cla:'butt '+cla,clk:aa.clk[clk]});
-  };
-  
+{ 
   const l = aa.mk.l('p',{cla:'actions'});
   
   let a = [];
@@ -445,7 +385,7 @@ aa.e.note_actions =clas=>
   else if (clas.includes('not_sent')) a.push('post','cancel');
   else if (clas.includes('blank')) a.push('fetch',['x','tiny']);
   else a.push(['<3','react'],'req','parse',['x','tiny']);
-  if (a.length) for (const s of a) l.append(butt(s),' ');
+  if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
 };
 
@@ -777,10 +717,10 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
 // view event
 aa.e.view =l=>
 {
-  if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
-  l.classList.add('in_view');   
-  aa.fx.path(l);
   aa.l.classList.add('viewing','view_e');
+  l.classList.add('in_view');
+  aa.fx.path(l);
+  if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
   aa.fx.scroll(l);
 };
 
@@ -863,6 +803,7 @@ aa.views.note1 =async nid=>
   {
     let x = aa.fx.decode(nid);
     let dat = await aa.db.get_e(x);
+    let p = await aa.db.get_p(dat.event.pubkey);
     if (dat) aa.e.print(dat);
     else 
     {
@@ -953,9 +894,9 @@ aa.get.tags_for_reply =event=>
   }
   else tags.push(['e',event.id,seen,'root']);
 
-  const p_tags = event.tags.filter(t=>aa.is.tag.p(t) && t[1] !== aa.u.o.ls.xpub);
+  const p_tags = event.tags.filter(t=>aa.is.tag.p(t) && t[1] !== aa.u.p.xpub);
   let dis_p_tags = [...new Set(p_tags)];
-  if (event.pubkey !== aa.u.o.ls.xpub 
+  if (event.pubkey !== aa.u.p.xpub 
   && !dis_p_tags.some(t=>t[1] === event.pubkey)) dis_p_tags.push(['p',event.pubkey]);
   // needs to do more here...
   tags.push(...dis_p_tags);
@@ -1094,27 +1035,7 @@ aa.db.some =async s=>
 
   const events = await aa.db.get('idb',o);
   for (const dat of events) aa.e.print(dat);
-  // const db = aa.db.idb.new;
-  // const exe =async e=>
-  // {
-  //   for (const dat of e.data) aa.e.print(dat);
-  // };
-  // db.onmessage=e=>
-  // {
-  //   // exe(e);
-  //   for (const dat of e.data) aa.e.print(dat);
-  //   aa.to(()=>{db.terminate()},2000,'aa_db_some');
-  //   // setTimeout(()=>{db.terminate()},200);
-  // }
-  // db.postMessage(o);
 };
-
-// aa.db.view =s=>
-// {
-//   console.log(s);
-//   aa.cli.fuck_off();
-//   aa.state.view(s.trim());
-// };
 
 
 window.addEventListener('load',aa.e.load);

@@ -111,6 +111,26 @@ aa.mk.av =(src,poster=false)=>
 };
 
 
+// make button
+aa.mk.butt =sa=> 
+{
+  let con,cla,clk;
+  if (Array.isArray(sa))
+  {
+    con = sa[0];
+    if (sa[1]) 
+    {
+      cla = sa[1];
+      if (sa[2]) clk = sa[2];
+      else clk = cla;
+    }
+    else clk = cla = con;      
+  }
+  else clk = cla = con = sa;
+  return aa.mk.l('button',{con:con,cla:'butt '+cla,clk:aa.clk[clk]});
+};
+
+
 // a button that will populate the input with a command text
 aa.mk.butt_action =(s,con=false,cla=false)=>
 {

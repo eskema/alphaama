@@ -36,7 +36,7 @@ aa.cli.dat_mk =async(s,dis)=>
   {
     event:
     {
-      pubkey:aa.u.o.ls.xpub,
+      pubkey:aa.u.p.xpub,
       kind:1,
       created_at:aa.t.now,
       content:s,
@@ -401,13 +401,13 @@ aa.cli.run =async s=>
         }
       }
       
-      aa.e.draft(aa.cli.dat.event);
+      aa.u.event_draft(aa.cli.dat.event);
       delete aa.cli.dat;
     }
     else 
     {
       aa.log('unable to create note:');
-      if (!aa.u.o.ls.xpub)
+      if (!aa.u.p.xpub)
       {
         aa.log('you need to login first');
         aa.log(localStorage.ns+' u login');
@@ -438,7 +438,7 @@ aa.cli.upd =e=>
     const last_word = a[a.length - 1].toLowerCase();
     // if is a mention attempt
     if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
-    if (aa.u.o.ls.xpub) aa.cli.dat_upd()
+    if (aa.u.p) aa.cli.dat_upd()
   }
 
   // update textarea height

@@ -244,25 +244,6 @@ aa.fx.scrolled =()=>
 };
 
 
-// sign event
-aa.fx.sign =async event=>
-{
-  return new Promise(resolve=>
-  {
-    if (window.nostr) 
-    {
-      window.nostr.signEvent(event)
-      .then(signed=> resolve(signed));
-    } 
-    else 
-    {
-      aa.log('you need a signer');
-      resolve(false)
-    }
-  });
-};
-
-
 // sorts array by order, defaults to ascending
 aa.fx.sort_by =(a,by)=>
 {
@@ -289,9 +270,6 @@ aa.fx.sorts =
 {
   asc(a,b){return a[1] - b[1] ? 1 : -1},
   desc(a,b){return b[1] - a[1] ? 1 : -1},
-  rand(){return ()=> 0.5 - Math.random()},
-  text_asc(a,b){return a.textContent.toLowerCase() > b.textContent.toLowerCase() ? 1 : -1},
-  text_desc(a,b){return a.textContent.toLowerCase() < b.textContent.toLowerCase() ? 1 : -1},
   i_asc(a,b)
   {
     let a_val = parseInt(a.querySelector('.val').textContent);
@@ -302,6 +280,23 @@ aa.fx.sorts =
   {
     let a_val = parseInt(a.querySelector('.val').textContent);
     let b_val = parseInt(b.querySelector('.val').textContent);
+    return a_val < b_val ? 1 : -1
+  },
+  rand(){return ()=> 0.5 - Math.random()},
+  sets(a,b)
+  {
+    return a[1].sets.length < b[1].sets.length ? 1 : -1
+  },
+  text_asc(a,b)
+  {
+    let a_val = a.textContent.toLowerCase();
+    let b_val = b.textContent.toLowerCase();
+    return a_val > b_val ? 1 : -1
+  },
+  text_desc(a,b)
+  {
+    let a_val = a.textContent.toLowerCase();
+    let b_val = b.textContent.toLowerCase();
     return a_val < b_val ? 1 : -1
   },
 };

@@ -407,13 +407,13 @@ aa.r.list_mk =s=>
       {
         const event = 
         {
-          pubkey:aa.u.o.ls.xpub,
+          pubkey:aa.u.p.xpub,
           kind:10002,
           created_at:aa.t.now,
           content:'',
           tags:relays
         };
-        aa.e.finalize_event(event);
+        aa.u.event_finalize(event);
       }},
     });
   }
@@ -563,7 +563,7 @@ aa.r.message_type.ok =message=>
 aa.r.mk =(k,v) =>
 {
   // k = url, v = {sets:[]}
-  const l = aa.r.mk_item(k,v);
+  const l = aa.mk.relay(k,v);
   if (l)
   {
     l.id = aa.r.def.id+'_'+aa.fx.an(k);
@@ -579,7 +579,7 @@ aa.r.mk =(k,v) =>
 
 // make relay item
 
-aa.r.mk_item =(k,v)=>
+aa.mk.relay =(k,v)=>
 {
   k = aa.is.url(k);
   if (!k) return false;

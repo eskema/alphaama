@@ -5,6 +5,7 @@ aa.u =
   def:{id:'u',ls:{}},
   old_id:'aka',
   sn:'u',
+  get p(){return aa.db.p[aa.u.o.ls.xpub]},
 };
 
 
@@ -35,6 +36,52 @@ aa.u.check_signer =()=>
 };
 
 
+// make event from JSON string, autocompletes missing fields
+aa.u.event_mk =s=>
+{
+  let event = aa.parse.j(s);
+  if (event)
+  {
+    aa.cli.fuck_off();
+    aa.u.event_draft(aa.u.event_complete(event));
+  }
+};
+
+
+// event complete
+aa.u.event_complete =event=>
+{
+  if (!event.pubkey) event.pubkey = aa.u.p.xpub;
+  if (!event.kind) event.kind = 1;
+  if (!event.created_at) event.created_at = aa.t.now;
+  if (!event.tags) event.tags = [];
+  if (!event.content) event.content = '';
+  return event
+}
+
+// draft event
+aa.u.event_draft =event=>
+{
+  if (!event.id) event.id = aa.fx.hash(event);
+  aa.db.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
+  aa.e.print(aa.db.e[event.id]);
+};
+
+
+// finalize event creation
+aa.u.event_finalize =async event=>
+{
+  event.id = aa.fx.hash(event);
+  const signed = await aa.u.sign(event);
+  if (signed)
+  {
+    aa.db.e[event.id] = dat = {event:signed,seen:[],subs:[],clas:[]};
+    aa.db.upd_e(dat);
+    aa.e.print(dat);
+    aa.r.broadcast(signed);
+  }
+};
+
 // decrypt kind-4 from id
 
 aa.u.decrypt =async s=>
@@ -55,9 +102,8 @@ aa.u.decrypt =async s=>
       aa.log('event not found');
       return false;
     }
-    let u_x = aa.u.o.ls.xpub;
     let p_x = aa.get.tags(dat.event,'p')[0][1];
-    if (u_x !== p_x)
+    if (aa.u.p.xpub !== p_x)
     {
       aa.log('content not for you');
       return false;
@@ -93,10 +139,9 @@ aa.u.decrypt =async s=>
 
 aa.u.is_following =xpub=>
 {
-  let p = aa.db.p[aa.u.o.ls.xpub];
-  if (p && p.extradata.bff.length)
+  if (aa.u.p && aa.u.p.extradata.bff.length)
   {
-    if (p.extradata.bff.includes(xpub)) return true;
+    if (aa.u.p.extradata.bff.includes(xpub)) return true;
     else return false;
   }
   // else aa.log('no bff found to check');
@@ -107,11 +152,9 @@ aa.u.is_following =xpub=>
 
 aa.u.is_following_load_profiles =async p=>
 {
-  // console.log('loaaa.dbff');
-  
   if (p.extradata.bff.length)
   {
-    let bffs = await aa.db.idb.ops({get_a:{store:'authors',a:p.extradata.bff}});
+    let bffs = await aa.db.get('idb',{get_a:{store:'authors',a:p.extradata.bff}});
     for (const bff of bffs) aa.db.p[bff.xpub] = bff;
     for (const x of p.extradata.bff)
     {
@@ -124,7 +167,7 @@ aa.u.is_following_load_profiles =async p=>
 
 // if hex key is your pubkey
 
-aa.u.is_u =(x)=> aa.u?.o.ls.xpub === x;
+aa.is.u =(x)=> aa.u?.o.ls.xpub === x;
 
 
 // make p tag array from array
@@ -163,7 +206,7 @@ aa.mk.tag_p =a=>
 aa.u.follow =async s=>
 {
   // console.log(s);
-  if (!aa.u.o.ls.xpub) 
+  if (!aa.u.p) 
   {
     aa.log('no u found, set one first')
     return false;
@@ -173,36 +216,12 @@ aa.u.follow =async s=>
   const a = s.trim().split(',');
   let p_tag = aa.mk.tag_p(a);
   if (!p_tag) return false;
-
-  // let p_tag = ['p'],k,relay,petname;
-  
-  // if (a.length) k = a.shift().trim();
-  // if (!k) return false;
-  // if (k.startsWith('npub')) k = aa.fx.decode(k);
-  // if (!aa.is.key(k)) {aa.log('invalid key to follow '+k);return false}
-  // if (aa.u.is_following(k)) {aa.log('already following '+k);return false}
-  // p_tag.push(k);
-
-  // if (a.length) 
-  // {
-  //   relay = a.shift().trim();
-  //   let url = aa.is.url(relay);
-  //   if (url) p_tag.push(url.href);
-  //   else p_tag.push('')
-  // }
-
-  // if (a.length) 
-  // {
-  //   petname = a.shift().trim();
-  //   p_tag.push(aa.fx.an(petname));
-  // }
-  
-  let dat_k3 = await aa.p.get_k3();
+  let dat_k3 = await aa.p.get_last_of(aa.u.p,'k3');
   if (dat_k3)
   {
     const new_k3 =
     {
-      pubkey:aa.u.o.ls.xpub,
+      pubkey:aa.u.p.xpub,
       kind:3,
       created_at:aa.t.now,
       content:dat_k3.event.content,
@@ -211,21 +230,18 @@ aa.u.follow =async s=>
     // const new_follows = [...dat_k3.event.tags,p_tag];
     aa.dialog(
     {
-      title: 'new follow list',
+      title:'new follow list',
       l:aa.mk.tag_list(new_k3.tags),
       scroll:true,
       no:{exe:()=>{}},
-      yes:{exe:()=>{
-        // const event = 
-        // {
-        //   pubkey:aa.u.o.ls.xpub,
-        //   kind:3,
-        //   created_at:aa.t.now,
-        //   content:dat_k3.event.content,
-        //   tags:new_follows
-        // };
-        aa.e.finalize_event(new_k3).then(e=>{console.log('sent')});
-      } },
+      yes:
+      {
+        exe:()=>
+        { 
+          aa.u.event_finalize(new_k3)
+          .then(e=>{console.log('sent')})
+        }
+      },
     });
   }
   else aa.log('no k3 found, create one first')
@@ -265,6 +281,12 @@ aa.u.load =()=>
       required:['id','reaction'], 
       description:'react to a note',
       exe:aa.u.react
+    },
+    {
+      action:['e','mk'],
+      required:['JSON'],
+      description:'mk event from JSON',
+      exe:aa.u.event_mk
     },
     {
       action:['p','follow'],
@@ -328,7 +350,7 @@ aa.u.login =async s=>
 
 aa.u.metadata_load =()=>
 {
-  const md = aa.db.p[aa.u.o.ls.xpub].metadata;
+  const md = aa.u.p.metadata;
   if (md) aa.cli.v(localStorage.ns+' '+aa.u.sn+' smd '+JSON.stringify(md));
 };
 
@@ -350,24 +372,22 @@ aa.u.metadata_set =async s=>
     {
       const event = 
       {
-        pubkey:aa.u.o.ls.xpub,
+        pubkey:aa.u.p.xpub,
         kind:0,
         created_at:aa.t.now,
         content:JSON.stringify(md),
         tags:[]
       };
-      aa.e.finalize_event(event).then(e=>{console.log(e)});
+      aa.u.event_finalize(event).then(e=>{console.log(e)});
     }},
   });
 };
 
 
 // process all p tags from kind-3
-// should be in kin / aa.e
-
 aa.u.process_k3_tags =async(tags,x)=>
 {
-  const is_u = aa.u.is_u(x);
+  const is_u = aa.is.u(x);
   const to_upd = [];
   if (is_u) aa.u.follows = tags;
   for (const tag of tags)
@@ -404,15 +424,19 @@ aa.u.process_k3_tags =async(tags,x)=>
       }
 
       if (aa.fx.a_add(p.extradata.followers,[x])) updd = true;
-      if (is_u && p.trust === 0) { p.trust = 5; updd = true; }
+      if (is_u && p.trust === 0) { p.trust = 5; updd = true }
+      if (is_u && aa.fx.a_add(p.sets,['k3'])) updd = true;
       
       if (updd) to_upd.push(p);
-      if (aa.viewing === p.npub) aa.p.update(aa.p.profile(p),p,true);
+      // if (aa.viewing === p.npub) aa.p.upd(aa.p.profile(p),p,true);
     }
     else console.log('invalid hex key in k3 of '+x,xpub)
   }
-
-  if (to_upd.length) aa.db.idb.worker.postMessage({put:{store:'authors',a:to_upd}});
+  if (to_upd.length)
+  {
+    for (const p of to_upd) aa.p.save(p)
+  }
+  // if (to_upd.length) aa.db.idb.worker.postMessage({put:{store:'authors',a:to_upd}});
 };
 
 // new reaction event (kind-7)
@@ -427,7 +451,7 @@ aa.u.react =async s=>
     
     const event = 
     {
-      pubkey:aa.u.o.ls.xpub,
+      pubkey:aa.u.p.xpub,
       kind:7,
       created_at:aa.t.now,
       content:reaction,
@@ -441,7 +465,7 @@ aa.u.react =async s=>
       const reply_e = aa.db.e[xid].event;
       event.tags.push(...aa.get.tags_for_reply(reply_e));
     } 
-    aa.e.finalize_event(event).then(e=>{console.log(e)});
+    aa.u.event_finalize(event).then(e=>{console.log(e)});
   }
   else aa.log('invalid data to score')
 };
@@ -484,6 +508,25 @@ aa.u.set_u_p =s=>
     aa.mod_save(aa.u);
     aa.u.start(aa.u);
   } 
+};
+
+
+// sign event
+aa.u.sign =async event=>
+{
+  return new Promise(resolve=>
+  {
+    if (window.nostr) 
+    {
+      window.nostr.signEvent(event)
+      .then(signed=> resolve(signed));
+    } 
+    else 
+    {
+      aa.log('you need a signer');
+      resolve(false)
+    }
+  });
 };
 
 
@@ -537,7 +580,7 @@ aa.u.start =async mod=>
         changed = true;
       }
       if (aa.fx.a_add(p.sets,['u'])) changed = true;
-      if (butt_u) aa.p.pic(butt_u,p.metadata.picture);
+      if (butt_u) aa.p.p_link_pic(butt_u,p.metadata.picture);
       if (!p.pastdata.k0.length) aa.log('u !metadata');
       if (!p.pastdata.k3.length) aa.log('u !bffs');
       else aa.u.is_following_load_profiles(p);
@@ -545,12 +588,7 @@ aa.u.start =async mod=>
       if (changed) aa.p.save(p);
     } 
   }
-  else 
-  {
-    let login_butt = aa.mk.butt_action('u login ');
-    login_butt.id = 'login_butt';
-    aa.log(login_butt);
-  }
+  else aa.log(aa.mk.butt_action('u login '));
 };
 
 
@@ -559,13 +597,13 @@ aa.u.start =async mod=>
 aa.u.unfollow =async s=>
 {
   console.log('unfollows',s)
-  if (!aa.u.o.ls.xpub) 
+  if (!aa.u.p) 
   {
     aa.log('no u found, set one first')
     return false;
   }
   
-  let dat_k3 = await aa.p.get_k3();
+  let dat_k3 = await aa.p.get_last_of(aa.u.p,'k3');
   if (!dat_k3) return false;
   
   aa.cli.fuck_off();
@@ -600,13 +638,13 @@ aa.u.unfollow =async s=>
       {
         const event = 
         {
-          pubkey:aa.u.o.ls.xpub,
+          pubkey:aa.u.p.xpub,
           kind:3,
           created_at:aa.t.now,
           content:dat_k3.event.content,
           tags:new_follows
         };
-        aa.e.finalize_event(event).then(e=>{console.log('sent')});
+        aa.u.event_finalize(event).then(e=>{console.log('sent')});
       }},
     });
   }

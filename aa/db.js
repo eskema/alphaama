@@ -29,18 +29,6 @@ aa.db.cash = { get new(){ return new Worker('/cash.js')} };
 aa.db.cash.worker = aa.db.cash.new;
 // perform cache operations and return results
 aa.db.cash.ops =async o=> await aa.db.get('cash',o);
-// {
-  // return new Promise(resolve=>
-  // {
-  //   const cash = aa.db.cash.new;
-  //   cash.onmessage =e=> 
-  //   {
-  //     setTimeout(()=>{cash.terminate()},200);
-  //     resolve(e.data);
-  //   }
-  //   cash.postMessage(o);
-  // });
-// };
 
 
 // indexeddb stuff
@@ -49,15 +37,3 @@ aa.db.idb = { get new(){ return new Worker('/aa/db_idb.js')} };
 aa.db.idb.worker = aa.db.idb.new;
 // perform indexeddb operations and return results
 aa.db.idb.ops =async o=> await aa.db.get('idb',o);
-// {
-//   return new Promise(resolve=>
-//   {
-//     const idb = aa.db.idb.new;
-//     idb.onmessage=e=>
-//     {
-//       setTimeout(()=>{idb.terminate()},200);
-//       resolve(e.data);
-//     }
-//     idb.postMessage(o);
-//   });
-// };

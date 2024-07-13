@@ -241,7 +241,7 @@ indexed_db.ok =(db,o)=>
   for (const k in o)
   {
     try { indexed_db.ops[k](db,o[k]).then(()=>{done++}) }
-    catch (err) {console.log(err);done++}
+    catch (err) {console.error(err);done++}
     if (done === total) setTimeout(db.close,200)
   }
 }

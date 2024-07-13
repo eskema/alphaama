@@ -157,7 +157,7 @@ aa.clk.sign =e=>
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
   if (dat)
   {
-    aa.fx.sign(dat.event).then(signed=>
+    aa.u.sign(dat.event).then(signed=>
     {
       if (signed)
       {
@@ -178,6 +178,11 @@ aa.clk.tiny =e=>
 {
   const note = e.target.closest('.note');
   note.classList.toggle('tiny');
+  aa.fx.scroll(note,
+  {
+    behavior:'smooth',
+    block:note.classList.contains('tiny') ? 'start':'center'
+  });
 };
 
 
@@ -187,7 +192,7 @@ aa.clk.yolo =e=>
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
   if (dat)
   {
-    aa.fx.sign(dat.event).then(signed=>
+    aa.u.sign(dat.event).then(signed=>
     {
       if (signed)
       {

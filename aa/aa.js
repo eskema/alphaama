@@ -19,7 +19,8 @@ const aa =
   dependencies:
   [
     '/dep/nostr_tools_2.js?v=20000',
-    '/dep/blurhash.js?v=10000',
+    '/dep/asciidoctor.min.js?v=3.0.4',
+    // '/dep/blurhash.js?v=10000',
   ],
   extensions:
   {
@@ -231,6 +232,7 @@ aa.run =(o={})=>
 
   aa.log('running '+location.origin);  
   aa.u.check_signer();
+  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
 };
 
 
