@@ -4,7 +4,7 @@ that:
 - is a research in UI/UX on how a command line interface (cli) can merge with a graphical user interface (gui)
 - tries to be fun and weird.
 - let's you interact with nostr exposing the protocol instead of abstracting it.
-- tries to be very minimalistic but extremely flexible and powerful.
+- tries to be minimalistic, flexible and powerful.
 - doesn't do it all yet, soon™.
 - is not for everyone.
 - keeps changing in breaking ways.

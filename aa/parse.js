@@ -12,9 +12,10 @@ aa.parse.content =(s,trusted)=>
 {
   const df = new DocumentFragment();
   let l = aa.mk.l('p',{cla:'paragraph'});
-  const another_l =(last_l)=>
+  const another_l =last_l=>
   {
-    if (!aa.is.empty(last_l)) 
+    if (aa.is.empty(last_l)) last_l.remove();
+    else 
     {
       last_l.normalize();
       df.append(last_l);
@@ -53,6 +54,12 @@ aa.parse.content =(s,trusted)=>
       }
     }
     another_l(l);
+  }
+  let last_child = df.lastChild;
+  if (last_child && aa.is.empty(last_child))
+  {
+    let last_text = (last_child.textContent+'').trim();
+    if (!last_text.length) last_child.remove();
   } 
   return df
 };

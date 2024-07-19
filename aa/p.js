@@ -315,7 +315,7 @@ aa.mk.metadata_nip05 =(k,v,p)=>
 
 aa.mk.metadata_picture =(k,v,p)=>
 {
-  if (aa.is.trusted(p.trust)) return aa.mk.l('img',{src:v});
+  if (aa.is.trusted(p.trust) && v) return aa.mk.l('img',{src:v});
   else return aa.mk.l('p',{cla:k,con:v});
 };
 
@@ -390,7 +390,7 @@ aa.mk.p_link =(x,p=false)=>
   const l = aa.mk.l('a',
   {
     cla:'a author',
-    tit:p.npub+' \n '+x,
+    tit:p.npub+', '+x,
     ref:'#'+p.npub,
     clk:aa.clk.a,
     app:aa.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
@@ -501,7 +501,7 @@ aa.p.p_links_upd =async p=>
   const a = document.querySelectorAll('.author[href="#'+p.npub+'"]');
   for (const l of a) aa.p.p_link_data_upd(l,options);  
   // update aa.i item element
-  aa.i.upd_item_pubkey(p);
+  aa.i.upd_item_pubkey(a[0],p);
 };
 
 

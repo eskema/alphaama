@@ -116,9 +116,6 @@ aa.e.clone =note=>
 };
 
 
-
-
-
 // on load
 aa.e.load =()=>
 {
@@ -166,9 +163,6 @@ aa.e.section_mutated =a=>
   }
 };
 aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
-
-
-
 
 
 // add to missing event list
@@ -234,7 +228,7 @@ aa.get.missing =async type=>
         for (const id of ids)
         {
           let notes = document.querySelectorAll('[data-id="'+id+'"]');
-          for (const note of notes) note.dataset.nope = aa.miss.e[id].nope;
+          for (const note of notes) note.dataset.nope = aa.miss.e[id].nope.join(' ');
         }
         filter = {ids:ids};
       }
@@ -303,7 +297,7 @@ aa.e.note =dat=>
     {
       cla:'a nid',
       ref:'#'+nid,
-      con:aa.fx.trunk(dat.event.id),
+      con:nid,
       clk:aa.clk.a
     });
     const h1_xid = aa.mk.l('span',{cla:'xid',con:dat.event.id});
@@ -341,9 +335,9 @@ aa.e.note =dat=>
   if ('tags' in dat.event && dat.event.tags.length)
   {
     let tags = aa.mk.tag_list(dat.event.tags);
-    let tags_details = aa.mk.details('#['+dat.event.tags.length+']',tags);
-    tags_details.classList.add('details');
-    note.append(tags_details);      
+    let tags_wall = aa.mk.details('#['+dat.event.tags.length+']',tags);
+    tags_wall.classList.add('tags_wall');
+    note.append(tags_wall);      
   }
 
   if ('content' in dat.event)
@@ -390,25 +384,7 @@ aa.e.note_actions =clas=>
 };
 
 
-// process note kind if available, otherwise default
-
-// aa.e.note_types = 
-// {
-//   user_metadata:
-//   {
-//     kinds:(k)=>k===0,
-//     exe:aa.kinds[0],
-//   },
-//   basic_note,
-//   long_form,
-//   highlight,
-//   follow_list,
-//   encrypted_dm,
-//   repost,
-//   reaction,
-//   relay_list
-// };
-
+// process note by kind if available, otherwise default
 aa.e.note_by_kind =dat=>
 {
   let k = dat.event.kind;
@@ -700,8 +676,7 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
       }
       let haz_new = l.querySelector('.note.is_new');
       if (haz_new) l.classList.add('haz_new');
-      let time = l.querySelector('.by time');
-      time.title = aa.t.elapsed(aa.t.to_date(time.dataset.timestamp))
+      aa.clk.time({target:l.querySelector('.by time')});
       const replies = l.querySelector('.replies');
       const some = replies.childNodes.length - 1;
       const all = l.querySelectorAll('.note').length;
@@ -1018,6 +993,7 @@ aa.db.upd_e =async dat=>
   },2000,id);
 };
 
+
 // get n events from database
 // default direction: newest
 // other direction: oldest
@@ -1031,7 +1007,7 @@ aa.db.some =async s=>
   db_op.n = n ? parseInt(n) : 1;
   db_op.direction = direction && direction === 'oldest' ? 'next' : 'prev';
   let o = {some:db_op};
-  aa.log(localStorage.ns+' '+aa.db.sn+' some '+db_op.n);
+  aa.log(localStorage.ns+' '+aa.db.def.id+' some '+db_op.n);
 
   const events = await aa.db.get('idb',o);
   for (const dat of events) aa.e.print(dat);

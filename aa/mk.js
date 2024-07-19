@@ -66,8 +66,9 @@ aa.mk.av =(src,poster=false)=>
   av.classList.add('av');
 
   const l = document.createElement('video');
-  l.classList.add('mf','content-video');
-  l.setAttribute('loop','');
+  l.classList.add('mf','content-video','muted');
+  l.muted = true;
+  l.loop = true;
   l.setAttribute('playsinline','');
   l.setAttribute('preload','metadata');  
   l.setAttribute('src',src);
@@ -364,16 +365,16 @@ aa.mk.tag_list =tags=>
 aa.mk.time =timestamp=>
 {
   const d = aa.t.to_date(timestamp);
+  const title = aa.t.display(timestamp);
   const l = aa.mk.l('time',
   {
     cla:'created_at',
-    tit:aa.t.elapsed(d),
-    con:aa.t.display(timestamp)+' '+timestamp,
-    clk:e=> e.target.title = aa.t.elapsed(aa.t.to_date(e.target.dataset.timestamp))
-  });   
-  
-  l.dataset.timestamp = timestamp;
+    con:timestamp,
+    clk:aa.clk.time
+  });
   l.setAttribute('datetime', d.toISOString());
+  l.title = title;
+  l.dataset.elapsed = aa.t.elapsed(d);
   return l
 };
 

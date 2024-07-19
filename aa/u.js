@@ -4,7 +4,6 @@ aa.u =
 {
   def:{id:'u',ls:{}},
   old_id:'aka',
-  sn:'u',
   get p(){return aa.db.p[aa.u.o.ls.xpub]},
 };
 
@@ -351,7 +350,7 @@ aa.u.login =async s=>
 aa.u.metadata_load =()=>
 {
   const md = aa.u.p.metadata;
-  if (md) aa.cli.v(localStorage.ns+' '+aa.u.sn+' smd '+JSON.stringify(md));
+  if (md) aa.cli.v(localStorage.ns+' '+aa.u.def.id+' smd '+JSON.stringify(md));
 };
 
 
@@ -424,7 +423,7 @@ aa.u.process_k3_tags =async(tags,x)=>
       }
 
       if (aa.fx.a_add(p.extradata.followers,[x])) updd = true;
-      if (is_u && p.trust === 0) { p.trust = 5; updd = true }
+      if (is_u && p.trust < 5) { p.trust = 5; updd = true }
       if (is_u && aa.fx.a_add(p.sets,['k3'])) updd = true;
       
       if (updd) to_upd.push(p);

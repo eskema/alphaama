@@ -16,7 +16,7 @@ aa.is.empty =l=>
   if (!l) return true;
   const len = l.childNodes.length;
   if (!len) return true;
-  const s = l.childNodes[0].textContent;
+  const s = (l.childNodes[0].textContent+'').trim();
   if (len === 1 && (s === ' ' || s === '')) return true;
   return false;
 };

@@ -2,6 +2,7 @@
 
 aa.i =
 {
+  def:{id:'i',ls:{}},
   clk:{},
   dex:{},
   head:
@@ -29,7 +30,7 @@ aa.i.load =()=>
   aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
   const app_u = ()=>
   {
-    console.log('app_u', document.getElementById('u_u'))
+    // console.log('app_u', document.getElementById('u_u'))
     let u = document.getElementById('u_u');
     if (u) u.append(aa.i.l);
     else setTimeout(()=>{app_u()}, 100);
@@ -351,12 +352,12 @@ aa.i.dex.tags =(tags)=>
   }
 };
 
-aa.i.upd_item_pubkey =(p)=>
+aa.i.upd_item_pubkey =(l,p)=>
 {
   let item = document.getElementById('i_item_'+p.xpub);
   if (item) 
   {
-    let p_name = a[0]?.querySelector('.name');
+    let p_name = l?.querySelector('.name');
     let key = item.querySelector('.key');
     if (key && p_name)
     {

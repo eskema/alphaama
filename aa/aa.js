@@ -88,7 +88,7 @@ aa.mk.l =(tag_name,o=false)=>
       case 'ref': l.href = v; break;
       case 'rel': l.rel = v; break;
       case 'src': l.src = v; break;
-      case 'tit': l.title = v; break;
+      case 'tit': l.setAttribute('title',v); break;
       case 'app': l.append(v); break;
       case 'clk': l.addEventListener('click',v); break;
       case 'nam': l.name = v; break;
@@ -239,7 +239,7 @@ aa.run =(o={})=>
 // load mod
 aa.mod_load =async mod=>
 {
-  console.log(mod);
+  // console.log(mod);
   let mod_o = mod.o;
 
   if (!mod_o) 

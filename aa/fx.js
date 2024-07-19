@@ -226,7 +226,10 @@ aa.fx.path_rm =s=>
 
 
 // scroll with delay
-aa.fx.scroll =(l,options={})=> setTimeout(()=>{l.scrollIntoView(options)},50);
+aa.fx.scroll =async(l,options={})=>
+{
+  setTimeout(()=>{ if (l) l.scrollIntoView(options) },50);
+}; 
 
 
 // scroll stuff

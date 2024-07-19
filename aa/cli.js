@@ -13,7 +13,7 @@ aa.cli =
 
 
 // clear input
-aa.cli.clear =()=>
+aa.cli.clear =async()=>
 {
   aa.cli.t.value = '';
   aa.cli.dat_upd();
@@ -218,10 +218,10 @@ aa.cli.mention =w=>
   {
     if (p.hasOwnProperty('metadata'))
     {
-      if (p.metadata.hasOwnProperty('name')
+      if (p.metadata.hasOwnProperty('name') && p.metadata.name.length
       && p.metadata.name.toLowerCase().includes(s)) 
         return true;
-      if (p.metadata.hasOwnProperty('nip05')
+      if (p.metadata.hasOwnProperty('nip05') && p.metadata.nip05.length
       && p.metadata.nip05.toLowerCase().includes(s)) 
         return true;
     }

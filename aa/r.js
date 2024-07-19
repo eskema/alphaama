@@ -1,4 +1,10 @@
-// relay stuff
+/*
+
+alphaama
+relay stuff
+
+*/
+
 
 aa.r = 
 {
@@ -6,14 +12,12 @@ aa.r =
   active:{},
   message_type:{},
   old_id:'rel',
-  sn:'r'
 };
 
-// add relays
 
+// add relays
 aa.r.add =s=>
 { 
-  // aa.cli.fuck_off();
   aa.cli.clear();
   
   const work =a=>
@@ -32,40 +36,7 @@ aa.r.add =s=>
 };
 
 
-// hint notice
-
-aa.r.hint_notice =(url,opts)=> // if (!aa.r.o.ls[url])
-{
-  //    needs to display info from what npub
-  let act_yes = url+' hint';
-  let notice = {title:'r add '+act_yes+'?'};
-  notice.yes =
-  {
-    title:'yes',
-    exe:e=>
-    {
-      console.log(url,opts);
-      aa.r.add(act_yes);
-      aa.r.c_on(url,opts);
-      e.target.parentElement.textContent = act_yes;
-    }
-  };
-  let act_no = url+' off';
-  notice.no =
-  {
-    title:'no',
-    exe:e=>
-    {
-      aa.r.add(act_no);
-      e.target.parentElement.textContent = act_no;
-    }
-  };
-  aa.notice(notice);
-}
-
-
 // add relays from object
-
 aa.r.add_from_o =(relays)=>
 {
   let a = [];
@@ -119,17 +90,17 @@ aa.r.broadcast =(event,relays=false)=>
 aa.r.butts =(l,o)=>
 {
   let url = l.querySelector('.url').innerText;
-  l.append(aa.mk.butt_action(aa.r.sn+' rm '+url,'rm','rm'));
+  l.append(aa.mk.butt_action(aa.r.def.id+' rm '+url,'rm','rm'));
   
   let sets = aa.mk.l('span',{cla:'sets'});
   if (o.sets && o.sets.length)
   {    
     for (const set of o.sets)
     {
-      sets.append(aa.mk.butt_action(aa.r.sn+' setrm '+set+' '+url,set))
+      sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+set+' '+url,set))
     }
   }
-  sets.append(aa.mk.butt_action(aa.r.sn+' sets off '+url,'+'));
+  sets.append(aa.mk.butt_action(aa.r.def.id+' sets off '+url,'+'));
   l.append(sets);
 };
 
@@ -334,6 +305,37 @@ aa.r.from_tags =(tags,sets=[])=>
 }
 
 
+// relay hint notice
+aa.r.hint_notice =(url,opts)=> // if (!aa.r.o.ls[url])
+{
+  // needs to display info from what npub
+  let act_yes = url+' hint';
+  let notice = {title:'r add '+act_yes+'?'};
+  notice.yes =
+  {
+    title:'yes',
+    exe:e=>
+    {
+      console.log(url,opts);
+      aa.r.add(act_yes);
+      aa.r.c_on(url,opts);
+      e.target.parentElement.textContent = act_yes;
+    }
+  };
+  let act_no = url+' off';
+  notice.no =
+  {
+    title:'no',
+    exe:e=>
+    {
+      aa.r.add(act_no);
+      e.target.parentElement.textContent = act_no;
+    }
+  };
+  aa.notice(notice);
+}
+
+
 // returns relays in a given set
 
 aa.r.in_set =(relset,filter=true)=>
@@ -356,7 +358,7 @@ aa.r.in_set =(relset,filter=true)=>
 
 aa.r.list =s=>
 {
-  const err = ()=> {aa.log(aa.r.sn+' ls: no relays found')};
+  const err = ()=> {aa.log(aa.r.def.id+' ls: no relays found')};
   a = s.trim().split(' ');
   if (!a.length || a[0] === '') a[0]= 'k10002';
   let relays = [];
@@ -377,7 +379,7 @@ aa.r.list =s=>
       rels.push(tag.join(' '))
     }
   }
-  if (rels.length) aa.cli.v(localStorage.ns+' '+aa.r.sn+' mkls '+rels.join(', '));
+  if (rels.length) aa.cli.v(localStorage.ns+' '+aa.r.def.id+' mkls '+rels.join(', '));
   else err();
 };
 
@@ -427,44 +429,44 @@ aa.r.load =()=>
   // relay actions
   aa.actions.push(
     {
-      action:[aa.r.sn,'add'],
+      action:[aa.r.def.id,'add'],
       required:['url'], 
       optional:['set'], 
       description:'add or replace relays',
       exe:aa.r.add
     },
     {
-      action:[aa.r.sn,'rm'],
+      action:[aa.r.def.id,'rm'],
       required:['url'], 
       description:'remove relay',
       exe:aa.r.rm
     },
     {
-      action:[aa.r.sn,'sets'],
+      action:[aa.r.def.id,'sets'],
       required:['set','url'],
       description:'create sets of relays',
       exe:aa.r.sets
     },
     {
-      action:[aa.r.sn,'setrm'],
+      action:[aa.r.def.id,'setrm'],
       required:['set'],
       optional:['url'],
       description:'remove set from relays',
       exe:aa.r.set_rm
     },
     {
-      action:[aa.r.sn,'ext'],
+      action:[aa.r.def.id,'ext'],
       description:'get relays from extension',
       exe:aa.r.ext
     },
     {
-      action:[aa.r.sn,'ls'],
+      action:[aa.r.def.id,'ls'],
       required:['set'],
       description:'loads relay list from sets',
       exe:aa.r.list
     },
     {
-      action:[aa.r.sn,'mkls'],
+      action:[aa.r.def.id,'mkls'],
       description:'create a relay list (kind-10002)',
       exe:aa.r.list_mk
     },
@@ -558,11 +560,13 @@ aa.r.message_type.ok =message=>
   else aa.log(message.origin+' not ok: '+reason+' '+id);
 };
 
-// make mod item
 
+// make r mod item
 aa.r.mk =(k,v) =>
 {
-  // k = url, v = {sets:[]}
+  // k = url
+  // v = {sets:[]}
+
   const l = aa.mk.relay(k,v);
   if (l)
   {
@@ -570,7 +574,6 @@ aa.r.mk =(k,v) =>
     l.dataset.state = 0;
     aa.r.butts(l,v);
     aa.r.upd_state(k);
-    // setTimeout(()=>{aa.r.upd_state(k)},200);
     return l
   }
   else return false
@@ -578,7 +581,6 @@ aa.r.mk =(k,v) =>
 
 
 // make relay item
-
 aa.mk.relay =(k,v)=>
 {
   k = aa.is.url(k);
@@ -599,7 +601,6 @@ aa.mk.relay =(k,v)=>
 
 
 // returns a list of relays given either a relay set or single url
-
 aa.r.rel =s=>
 {
   const a = [];
@@ -611,7 +612,6 @@ aa.r.rel =s=>
 
 
 // remove relay
-
 aa.r.rm =s=>
 {
   aa.cli.clear();
@@ -640,21 +640,14 @@ aa.r.rm =s=>
 
 
 // resume subscriptions
-
 aa.r.resume =()=>{ for (const url in aa.r.active) { aa.r.c_on(url) } };
 
 
-// save
-
-aa.r.save =()=>
-{ 
-  aa.mod_save(aa.r)
-  .then(aa.mk.mod) 
-};
+// save r
+aa.r.save =()=>{ aa.mod_save(aa.r).then(aa.mk.mod) };
 
 
 // add set to relays
-
 aa.r.sets =s=>
 {
   const work =a=>
@@ -710,8 +703,8 @@ aa.r.set_rm =s=>
   aa.cli.clear();
 };
 
-// try to send and retry if fails
 
+// try to send and retry if fails
 aa.r.try =(relay,dis)=>
 {
   if (relay.ws.readyState === 1) relay.ws.send(dis);
@@ -726,7 +719,6 @@ aa.r.try =(relay,dis)=>
 
 
 // update relay state in ui
-
 aa.r.upd_state =url=>
 {
   const relay = aa.r.active[url];
@@ -739,7 +731,6 @@ aa.r.upd_state =url=>
       {
         l.dataset.state = relay?.ws?.readyState ||  '';
         l.dataset.q = Object.keys(relay.q);
-        // console.log('aa.r.upd_state '+url,l.dataset.state,l.dataset.q);
       },100);
     }
     else console.log('aa.r.upd_state '+url,'no relay found')

@@ -173,6 +173,13 @@ aa.clk.sign =e=>
 };
 
 
+aa.clk.time =e=> 
+{
+  // let timestamp = parseInt(e.target.textContent);
+  // let date = aa.t.to_date(timestamp);
+  e.target.dataset.elapsed = aa.t.elapsed(aa.t.to_date(parseInt(e.target.textContent)));
+};
+
 // make note tiny
 aa.clk.tiny =e=>
 {
