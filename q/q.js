@@ -1,14 +1,15 @@
 /*
 
 alphaama
-query / request
+mod    q
+filter queries
 
 */
 
 
 aa.q =
 { 
-  def:{id:'q',ls:{},sets:[]},
+  def:{id:'q',ls:{}},
   old_id:'q_e',
 };
 
@@ -16,6 +17,7 @@ aa.q =
 // add filter
 aa.q.add =s=>
 {
+  aa.cli.clear();
   let a = s.trim().split(' ');
   let k = aa.fx.an(a.shift());
   a = a.join('').replace(' ','');
@@ -37,7 +39,7 @@ aa.q.add =s=>
     }
     else 
     {
-      aa.q.o.ls[k] = {v:a,sets:[]};
+      aa.q.o.ls[k] = {v:a};
       log += aa.q.o.ls[k].v;
       changed = true;
     }
@@ -45,11 +47,8 @@ aa.q.add =s=>
     {
       aa.mod_save(aa.q)
       .then(mod=>{aa.mod_ui(mod,k,aa.q.o.ls[k])});
-      // aa.q.save();
-      // aa.mod_ui(aa.q,k,filter);
     }
     aa.log(log);
-    aa.cli.clear();
   }
   else aa.log('invalid filter');
 };
@@ -85,20 +84,20 @@ aa.q.load =()=>
       description:'remove one or more filters',
       exe:aa.q.rm_filter
     },
-    {
-      action:[aa.q.def.id,'sets'],
-      required:['set'],
-      optional:['fid'],
-      description:'create sets of filters',
-      exe:aa.q.sets
-    },
-    {
-      action:[aa.q.def.id,'setrm'],
-      required:['set'],
-      optional:['fid'],
-      description:'remove set from filter',
-      exe:aa.q.set_rm
-    },
+    // {
+    //   action:[aa.q.def.id,'sets'],
+    //   required:['set'],
+    //   optional:['fid'],
+    //   description:'create sets of filters',
+    //   exe:aa.q.sets
+    // },
+    // {
+    //   action:[aa.q.def.id,'setrm'],
+    //   required:['set'],
+    //   optional:['fid'],
+    //   description:'remove set from filter',
+    //   exe:aa.q.set_rm
+    // },
     {
       action:[aa.q.def.id,'run'],
       required:['fid'],
@@ -139,18 +138,18 @@ aa.q.mk =(k,v) =>
     aa.mk.l('span',{cla:'val',con:v.v}),
     aa.mk.butt_action(aa.q.def.id+' rm ' + k,'rm','rm'),
   );
-  let sets = aa.mk.l('span',{cla:'sets'});
-  if (v.sets && v.sets.length)
-  {
-    l.dataset.sets = v.sets; 
-    for (const set of v.sets)
-    {
-      sets.append(aa.mk.butt_action(aa.q.def.id+' setrm '+set+' '+k,set))
-    }
-  }
-  sets.append(aa.mk.butt_action(aa.q.def.id+' sets _ '+k,'+'));
+  // let sets = aa.mk.l('span',{cla:'sets'});
+  // if (v.sets && v.sets.length)
+  // {
+  //   l.dataset.sets = v.sets; 
+  //   for (const set of v.sets)
+  //   {
+  //     sets.append(aa.mk.butt_action(aa.q.def.id+' setrm '+set+' '+k,set))
+  //   }
+  // }
+  // sets.append(aa.mk.butt_action(aa.q.def.id+' sets _ '+k,'+'));
   
-  l.append(sets);
+  // l.append(sets);
   return l
 };
 
@@ -158,16 +157,15 @@ aa.q.mk =(k,v) =>
 // remove filter
 aa.q.rm_filter =s=>
 {
+  aa.cli.clear();
   let k = s.trim();
   if (aa.q.o.ls.hasOwnProperty(k)) 
   {
     delete aa.q.o.ls[k];
     document.getElementById(aa.q.def.id+'_'+aa.fx.an(k)).remove();
-    // aa.q.save();
-    aa.cli.clear();
-    aa.log('filter removed: '+k);
+    aa.log(aa.q.def.id+' filter removed: '+k);
   }
-  else aa.log(localStorage.ns+' '+aa.q.def.id+' '+k+' not found')
+  else aa.log(aa.q.def.id+' '+k+' not found')
 };
 
 
@@ -210,7 +208,7 @@ aa.q.replace_filter_vars =s=>
               case 'bff':
               case 'k3':
                 o[k] = o[k].filter(dis=>dis!==val);
-                if (aa.u.p) o[k].push(...aa.u.p.extradata.bff);                    
+                if (aa.u.p) o[k].push(...aa.u.p.follows);                    
                 break;
             }
           }
@@ -225,7 +223,6 @@ aa.q.replace_filter_vars =s=>
 // raw req
 aa.q.req =s=>
 {
-  // aa.cli.fuck_off();
   aa.cli.clear();
   let a = s.trim().split(' ');
   let rels = a.shift();
@@ -279,63 +276,59 @@ aa.q.run =async s=>
 
 
 // add set to filter
-aa.q.sets =s=>
-{
-  const work =a=>
-  { 
-    const set_id = a.shift();
-    if (aa.is.an(set_id)) 
-    { 
-      for (const k of a)
-      {
-        let r = aa.q.o.ls[k];
-        if (r) 
-        {
-          if (!r.sets) r.sets = [];
-          aa.fx.a_add(aa.q.o.ls[k].sets,[set_id]);
-          it.mod_ui(aa.q,k,aa.q.o.ls[k]);
-        }
-      }
-    }
-  };
-  aa.fx.loop(work,s);
-  aa.mod_save(aa.q);
-  // aa.q.save()
-};
+// aa.q.sets =s=>
+// {
+//   const work =a=>
+//   { 
+//     const set_id = a.shift();
+//     if (!aa.is.an(set_id)) return;
+//     for (const k of a)
+//     {
+//       let r = aa.q.o.ls[k];
+//       if (r) 
+//       {
+//         if (!r.sets) r.sets = [];
+//         aa.fx.a_add(aa.q.o.ls[k].sets,[set_id]);
+//         it.mod_ui(aa.q,k,aa.q.o.ls[k]);
+//       }
+//     }
+//   };
+//   aa.fx.loop(work,s);
+//   aa.mod_save(aa.q);
+// };
 
 
 // remove set from filter
-aa.q.set_rm =s=>
-{
-  const work =a=>
-  { 
-    const set_id = a.shift();
-    if (!aa.is.an(set_id)) return false;
-    if (a.length)
-    {
-      for (const k of a)
-      {
-        let r = aa.q.o.ls[k];
-        if (r && r.sets) 
-        {
-          r.sets = aa.fx.a_rm(r.sets,[set_id]);
-          aa.mod_ui(aa.q,k,aa.q.o.ls[k]);
-        }
-      }
-    }
-    else
-    {
-      for (const k in aa.q.o.ls)
-      {
-        aa.q.o.ls[k].sets = aa.fx.a_rm(aa.q.o.ls[k].sets,[set_id]);
-        aa.mod_ui(aa.q,k,aa.q.o.ls[k]);
-      }
-    }
-  };
-  // aa.fx.loop(work,s,()=>{aa.q.save()})
-  aa.fx.loop(work,s)
-  aa.mod_save(aa.q);
-};
+// aa.q.set_rm =s=>
+// {
+//   const work =a=>
+//   { 
+//     const set_id = a.shift();
+//     if (!aa.is.an(set_id)) return;
+//     if (a.length)
+//     {
+//       for (const k of a)
+//       {
+//         let r = aa.q.o.ls[k];
+//         if (r && r.sets) 
+//         {
+//           r.sets = aa.fx.a_rm(r.sets,[set_id]);
+//           aa.mod_ui(aa.q,k,aa.q.o.ls[k]);
+//         }
+//       }
+//     }
+//     else
+//     {
+//       for (const k in aa.q.o.ls)
+//       {
+//         aa.q.o.ls[k].sets = aa.fx.a_rm(aa.q.o.ls[k].sets,[set_id]);
+//         aa.mod_ui(aa.q,k,aa.q.o.ls[k]);
+//       }
+//     }
+//   };
+//   aa.fx.loop(work,s)
+//   aa.mod_save(aa.q);
+// };
 
 
 // add useful queries

@@ -1,10 +1,12 @@
 /*
 
 alphaama
+mod    p
 author pubkey profile
 
 */
 
+document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/p/p.css'}));
 
 aa.p = 
 {
@@ -25,21 +27,21 @@ aa.p =
       sets:[],
       follows:[],
       followers:[],
-      rels:{}, // will be deprecated in favor of relays
-      extradata: // will be deprecated
-      {
-        bff:[],
-        relays:[],
-        followers:[],
-        petnames:[],
-        lists:[],
-      },
-      pastdata: // will be deprecated in favor of events
-      { 
-        k0:[],
-        k3:[],
-        k10002:[],
-      },
+      // rels:{}, // will be deprecated in favor of relays
+      // extradata: // will be deprecated
+      // {
+      //   bff:[],
+      //   relays:[],
+      //   followers:[],
+      //   petnames:[],
+      //   lists:[],
+      // },
+      // pastdata: // will be deprecated in favor of events
+      // { 
+      //   k0:[],
+      //   k3:[],
+      //   k10002:[],
+      // },
       events:{}, // n:[[id,created_at],...]
     }
   }
@@ -54,27 +56,42 @@ aa.p.migrate_p_fields =p=>
     p.petnames = [];
     upd = 1;
   }
-  if (!p.petnames.length && p.extradata.petnames.length)
+  if (p.extradata && (p.extradata.petnames.length !== !p.petnames.length))
   {
     p.petnames = p.extradata.petnames;
     upd = 1;
   }
 
-  if (!p.follows || (!p.follows.length && p.extradata.bff.length))
+  if (p.extradata && (!p.follows || (p.follows.length !== p.extradata.bff.length)))
   {
     p.follows = p.extradata.bff;
     upd = 1;
   }
 
-  if (!p.followers || (!p.followers.length && p.extradata.followers.length))
+  if (p.extradata && (!p.followers || (p.followers.length !== p.extradata.followers.length)))
   {
     p.followers = p.extradata.followers;
     upd = 1;
   }
 
-  if (!p.relays || (!Object.keys(p.relays).length && Object.keys(p.rels).length))
+  if (p.rels && (!p.relays || (Object.keys(p.relays).length !== Object.keys(p.rels).length)))
   {
     p.relays = p.rels;
+    delete p.rels;
+    upd = 1;
+  }
+
+  if (p.hasOwnProperty('extradata'))
+  {
+    delete p.extradata;
+    upd = 1;
+  }
+
+  if (p.pastdata)
+  {
+    if (!p.events) p.events = {};
+    for (const dis in p.pastdata) p.events[dis] = p.pastdata[dis];
+    delete p.pastdata;
     upd = 1;
   }
 
@@ -154,12 +171,9 @@ aa.mk.extradata =p=>
 // return last replaceable event from p of kind n
 aa.p.get_last_of =async(p,kn)=>
 {
-  if (p.events[kn]?.length || p.pastdata[kn]?.length)
+  if (p.events[kn]?.length)
   {
-    let id;
-    if (p.events[kn]?.length) id = p.events[kn][0][0];
-    else id = p.pastdata[kn][0][0];
-    return await aa.db.get_e(id);
+    return await aa.db.get_e(p.events[kn][0][0]);
   }
   return false
 };
@@ -255,8 +269,8 @@ aa.mk.metadata =p=>
   
   if (p && p.metadata && Object.keys(p.metadata).length)
   {
-    const ts = p.pastdata.k0[0][1];
-    butt.dataset.last = aa.t.display_ext(ts);
+    let k0 = p.events.k0;
+    if (k0?.length) butt.dataset.last = aa.t.display_ext(k0[0][1]);
     for (const k in p.metadata)
     {
       let l, v = p.metadata[k];
@@ -342,7 +356,7 @@ aa.clk.p_follow =async e=>
     new_follow.push(aa.p.get_relay(p));
     let petname;
     if (p.metadata?.name) petname = p.metadata.name;
-    else if (p.extradata.petnames.length) petname = p.extradata.petnames[0];
+    else if (p.petnames.length) petname = p.petnames[0];
     if (petname.length) new_follow.push(aa.fx.an(petname));
     aa.cli.v(localStorage.ns+' p follow '+new_follow.join(', '));
   }
@@ -366,8 +380,8 @@ aa.mk.p_follows =(a,p)=>
   let follows_details = aa.mk.details('follows ('+a.length+')',butt_follows);
   follows_details.append(ul);
   aa.p.author_list(a,ul);
-  if (p.pastdata?.k3.length) 
-    butt_follows.dataset.last = aa.t.display(p.pastdata.k3[0][1]);
+  if (p.events.k3.length) 
+    butt_follows.dataset.last = aa.t.display(p.events.k3[0][1]);
   return follows_details;
 };
 
@@ -410,7 +424,7 @@ aa.p.p_link_data =p=>
   o.name = name.trim();
   
   let petname = p.petname.length ? p.petname 
-  : p.extradata.petnames.length ? p.extradata.petnames[0] 
+  : p.petnames.length ? p.petnames[0] 
   : false;
   if (petname) o.petname = petname;
   if (p.metadata?.nip05) o.nip05 = p.metadata.nip05;
@@ -429,7 +443,7 @@ aa.p.p_link_data =p=>
   }
   
   let common = 0;
-  for (const k of p.extradata.followers) { if (aa.u.is_following(k)) common++ }
+  for (const k of p.followers) { if (aa.u.is_following(k)) common++ }
   o.followers = common;
   if (p.metadata?.picture && aa.is.trusted(p.trust))
   {
@@ -539,8 +553,8 @@ aa.mk.p_relays =(a,p)=>
   const butt_relays = aa.mk.butt(['refresh relays','p_relays']);
   let relays_details = aa.mk.details('relays ('+ul.childNodes.length+')',butt_relays);
   relays_details.append(ul);
-  if (p.pastdata.k10002.length) 
-    butt_relays.dataset.last = aa.t.display(p.pastdata.k10002[0][1]);
+  if (p.events.k10002.length) 
+    butt_relays.dataset.last = aa.t.display(p.events.k10002[0][1]);
   return relays_details
 };
 
@@ -600,7 +614,7 @@ aa.get.pubs =async tags=>
   {
     let x = tag[1];
     let r = tag[2];
-    if (!aa.db.p[x] || !aa.db.p[x].pastdata.k0.length)
+    if (!aa.db.p[x] || !aa.db.p[x].events.k0?.length)
     {
       if (!aa.temp.pubs[x]) aa.temp.pubs[x] = [];
       let url = aa.is.url(r);
@@ -616,7 +630,7 @@ aa.get.pubs =async tags=>
       {
         for (const p of dat) 
         {
-          if (p.pastdata.k0.length)
+          if (p.events.k0?.length)
           {
             aa.db.p[p.xpub] = p;
             delete aa.temp.pubs[p.xpub];
@@ -636,12 +650,26 @@ aa.get.pubs =async tags=>
 };
 
 
+// add relays to profile
+aa.p.relays_add =(relays,p)=>
+{
+  if (!p.rels) p.rels = {};
+  for (const relay in relays)
+  {
+    if (!p.rels[relay]) p.rels[relay] = relays[relay]
+    else aa.fx.a_add(p.rels[relay].sets,relays[relay].sets);
+  }
+};
+
+
 // save p
-aa.p.save =p=>
+aa.p.save = async p=>
 {
   const q_id = 'author_save';
   if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
   aa.db.p[p.xpub] = p;
+  // let profile = document.getElementById(p.npub) || aa.p.profile(p);
+  setTimeout(()=>{aa.p.p_links_upd(p)},100);
   if (aa.viewing === p.npub) aa.p.upd(aa.p.profile(p),p,1);
   aa.temp[q_id].push(p);
   aa.to(()=>
@@ -724,64 +752,77 @@ aa.p.verify_nip05 =async(s,p)=>
 // event template for user metadata 
 aa.kinds[0] =dat=>
 {
-  let metadata = aa.parse.j(dat.event.content);
-  if (metadata)
-  {
-    if (aa.miss.p[dat.event.pubkey]) delete aa.miss.p[dat.event.pubkey];
-    aa.db.get_p(dat.event.pubkey).then(p=>
-    {
-      if (!p) p = aa.p.p(dat.event.pubkey);
-      const c_at = dat.event.created_at;
-      if (!p.pastdata.k0.length || p.pastdata.k0[0][1] < c_at) 
-      {
-        p.pastdata.k0.unshift([dat.event.id,c_at]);
-        if (c_at > p.updated) p.updated = c_at;
-        p.metadata = metadata;
-        aa.p.save(p);
-        let profile = document.getElementById(p.npub) || aa.p.profile(p);
-        if (aa.viewing === p.npub) 
-        {
-          aa.p.upd(profile,p,true);
-        }
-        setTimeout(()=>{aa.p.p_links_upd(p)},100);
-      }      
-    });
-  }
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
-  let content = note.querySelector('.content');
-  content.textContent = '';
-  content.append(metadata ? aa.mk.ls({ls:metadata}) : 'invalid kind:0 metadata');
+  (async()=>
+  {
+    let p = await aa.db.get_p(dat.event.pubkey);
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (aa.p.events(dat,p))
+    {
+      if (aa.miss.p[dat.event.pubkey]) delete aa.miss.p[dat.event.pubkey];
+      
+      let metadata = aa.parse.j(dat.event.content);
+      if (metadata)
+      {
+        p.metadata = metadata;
+        aa.p.save(p);
+        
+      }
+      let content = note.querySelector('.content');
+      content.textContent = '';
+      content.append(metadata ? aa.mk.ls({ls:metadata}) : 'invalid kind:0 metadata');
+    }
+    
+    
+  })();
+  
     
   return note
+};
+
+aa.p.events =(dat,p)=>
+{
+  let upd;
+  let kn = p.events['k'+dat.event.kind];
+  if (!kn) kn = p.events['k'+dat.event.kind] = [];
+  
+  const c_at = dat.event.created_at;
+  if (!kn.length || kn[0][1] < c_at) 
+  {
+    kn.unshift([dat.event.id,c_at]);
+    if (c_at > p.updated) p.updated = c_at;
+    upd = true
+  }
+  return upd
 };
 
 
 // event template for follow list / contacts with legacy relay object
 aa.kinds[3] =dat=>
 {
-  const d3_post =async(dat,note)=>
+  const note = aa.e.note_regular(dat);
+  note.classList.add('root','tiny');
+  
+  (async()=>
   {
     let p = await aa.db.get_p(dat.event.pubkey);
-    if (!p) p = aa.p.p(dat.event.pubkey);   
-    const c_at = dat.event.created_at;
-    if (!p.pastdata.k3.length || p.pastdata.k3[0][1] < c_at) 
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (aa.p.events(dat,p))
     {
-      p.pastdata.k3.unshift([dat.event.id,c_at]);
-      if (c_at > p.updated) p.updated = c_at;
-
-      const old_bff = [...p.extradata.bff];
-      p.extradata.bff = aa.p.authors_from_tags(dat.event.tags);
-      aa.p.authors(p.extradata.bff);
+      const old_bff = [...p.follows];
+      p.follows = aa.p.authors_from_tags(dat.event.tags);
+      aa.p.authors(p.follows);
       aa.u.process_k3_tags(dat.event.tags,dat.event.pubkey);
 
       // for (const k of old_bff)
       // {
-      //   if (!p.extradata.bff.includes(k))
+      //   if (!p.follows.includes(k))
       //   {
       //     // handle unfollowed k
       //   }
       // }
+
       let s = dat.event.content+''.trim();
       if (s.startsWith('{') && s.endsWith('}'))
       {
@@ -789,7 +830,7 @@ aa.kinds[3] =dat=>
         if (con)
         {
           let relays = aa.r.from_o(con,['k3']);
-          aa.r.add_to_p(relays,p);
+          aa.p.relays_add(relays,p);
           if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
           let content = note.querySelector('.content');
           content.textContent = '';
@@ -797,15 +838,51 @@ aa.kinds[3] =dat=>
         }
       }
       aa.p.save(p);
-      // let profile = document.getElementById(p.npub);
-      // if (!profile) profile = aa.p.profile(p);
-      // if (aa.viewing === p.npub) aa.p.upd(profile,p,1);
-      if (aa.u?.is_u(dat.event.pubkey)) aa.u.is_following_load_profiles(p);
+      if (aa.is.u(dat.event.pubkey)) aa.u.is_following_load_profiles(p);
     }
-  };
-  const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
-  d3_post(dat,note);
+    // const c_at = dat.event.created_at;
+    // if (!p.events.k3?.length || p.events.k3[0][1] < c_at) 
+    // {
+    //   if (!p.events.k3) p.events.k3 = [];
+    //   p.events.k3.unshift([dat.event.id,c_at]);
+    //   if (c_at > p.updated) p.updated = c_at;
+
+    //   const old_bff = [...p.follows];
+    //   p.follows = aa.p.authors_from_tags(dat.event.tags);
+    //   aa.p.authors(p.follows);
+    //   aa.u.process_k3_tags(dat.event.tags,dat.event.pubkey);
+
+    //   // for (const k of old_bff)
+    //   // {
+    //   //   if (!p.extradata.bff.includes(k))
+    //   //   {
+    //   //     // handle unfollowed k
+    //   //   }
+    //   // }
+
+    //   let s = dat.event.content+''.trim();
+    //   if (s.startsWith('{') && s.endsWith('}'))
+    //   {
+    //     let con = aa.parse.j(dat.event.content);
+    //     if (con)
+    //     {
+    //       let relays = aa.r.from_o(con,['k3']);
+    //       aa.p.relays_add(relays,p);
+    //       if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
+    //       let content = note.querySelector('.content');
+    //       content.textContent = '';
+    //       content.append(aa.mk.ls({ls:con}))
+    //     }
+    //   }
+    //   aa.p.save(p);
+    //   // let profile = document.getElementById(p.npub);
+    //   // if (!profile) profile = aa.p.profile(p);
+    //   // if (aa.viewing === p.npub) aa.p.upd(profile,p,1);
+    //   if (aa.is.u(dat.event.pubkey)) aa.u.is_following_load_profiles(p);
+    // }
+  })();
+  
+  // d3_post(dat,note);
   return note
 };
 
@@ -813,32 +890,25 @@ aa.kinds[3] =dat=>
 // event template for relay list
 aa.kinds[10002] =dat=>
 {
-  const tags = dat.event.tags;
-  if (tags.length) 
-  {    
-    aa.db.get_p(dat.event.pubkey).then(p=>
-    {
-      if (!p) p = aa.p.p(dat.event.pubkey);
-      const c_at = dat.event.created_at;
-      if (!p.pastdata.k10002.length || p.pastdata.k10002[0][1] < c_at) 
-      {
-        p.pastdata.k10002.unshift([dat.event.id,c_at]);
-        if (c_at > p.updated) p.updated = c_at;
-        
-        let relays = aa.r.from_tags(tags,['k10002']);
-        aa.r.add_to_p(relays,p);
-        if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-        aa.p.save(p);
-      }
-
-      let profile = document.getElementById(p.npub);
-      if (!profile) profile = aa.p.profile(p);
-      // if (aa.viewing === p.npub) aa.p.upd(profile,p,1);
-      
-    });
-  }
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
+  
+  (async()=>
+  {
+    let p = await aa.db.get_p(dat.event.pubkey);
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (aa.p.events(dat,p))
+    {
+      const tags = dat.event.tags;
+      let relays = aa.r.from_tags(tags,['k10002']);
+      aa.p.relays_add(relays,p);
+      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      aa.p.save(p);
+    }
+    let profile = document.getElementById(p.npub);
+    if (!profile) profile = aa.p.profile(p);
+  })();
+  
   return note
 };
 

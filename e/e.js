@@ -5,6 +5,7 @@ event
 
 */
 
+document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/e/e.css'}));
 
 aa.e = {};
 
@@ -371,14 +372,15 @@ aa.e.note =dat=>
 // note actions
 aa.e.note_actions =clas=>
 { 
-  const l = aa.mk.l('p',{cla:'actions'});
-  
+  // const l = aa.mk.l('p',{cla:'actions'});
+  const l = aa.mk.details('<3');
+  l.classList.add('actions');
   let a = [];
   if (!clas) clas = [];
   if (clas.includes('draft')) a.push('yolo','sign','edit','cancel');
   else if (clas.includes('not_sent')) a.push('post','cancel');
-  else if (clas.includes('blank')) a.push('fetch',['x','tiny']);
-  else a.push(['<3','react'],'req','parse',['x','tiny']);
+  else if (clas.includes('blank')) a.push('fetch','tiny');
+  else a.push('react','req','parse','tiny');
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
 };
@@ -1007,7 +1009,7 @@ aa.db.some =async s=>
   db_op.n = n ? parseInt(n) : 1;
   db_op.direction = direction && direction === 'oldest' ? 'next' : 'prev';
   let o = {some:db_op};
-  aa.log(localStorage.ns+' '+aa.db.def.id+' some '+db_op.n);
+  aa.log(localStorage.ns+' db some '+db_op.n);
 
   const events = await aa.db.get('idb',o);
   for (const dat of events) aa.e.print(dat);

@@ -5,6 +5,7 @@ make elements and stuff
 
 */
 
+document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/aa/av.css'}));
 
 // video element
 aa.mk.av =(src,poster=false)=>
@@ -196,6 +197,24 @@ aa.mk.details =(s,l=false,open=false)=>
 };
 
 
+// get the dialog element or create it if not found
+aa.mk.dialog =()=>
+{
+  let dialog = document.getElementById('dialog');
+  if (!dialog) 
+  {
+    dialog = aa.mk.l('dialog',{id:'dialog'});
+    document.body.insertBefore(dialog,document.body.lastChild);
+    dialog.addEventListener('close',e=>
+    {
+      dialog.removeAttribute('title');
+      dialog.textContent = '';
+    });
+  }
+  return dialog
+};
+
+
 // make generic image
 aa.mk.img =(src)=>
 {
@@ -295,13 +314,21 @@ aa.mk.mod =mod=>
 // make a nostr link
 aa.mk.nostr_link =(dis,con=false)=>
 {
-  return aa.mk.l('a',
+  const a = aa.mk.l('a',
   {
     cla:'nostr_link',
     con:con||dis.slice(0,12),
     ref:'#'+dis,
     clk:aa.clk.a
   });
+
+  if (!dis) 
+  {
+    a.removeAttribute('href');
+    a.classList.add('empty');
+  }
+  
+  return a
 };
 
 

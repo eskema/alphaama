@@ -1,0 +1,128 @@
+@keyframes u_u {
+  89%
+  {
+    content: "a_a";
+  }
+  90%
+  {
+    content: "u_u";
+  }
+  100%
+  {
+    content: "a_a";
+  }
+}
+
+#u_u 
+{
+  align-items: center;
+  bottom: 0;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-areas: "i u_u";
+  min-width: var(--size);
+  position: fixed;
+  right: 0;
+  z-index: 12;
+}
+
+
+
+ 
+
+#butt_u_u
+{
+  align-items: center;
+  background-color: rgb(var(--c));
+  border: none;
+  border-radius: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  color: rgb(var(--color-b));
+  display: grid;
+  font-size: 0;
+  grid-area: u_u;
+  height: var(--size);
+  padding: 0;
+  position: relative;
+  right: 0;
+  text-align: center;
+  width: var(--size);
+  z-index: 1;
+}
+
+#butt_u_u[data-luma="dark"]
+{
+  color: rgb(var(--color-f));
+}
+
+
+
+
+
+#butt_u_u img 
+{
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 61.8%;
+  overflow: hidden;
+  pointer-events: none;
+  transform: scale(.82);
+  transition: var(--trans-quart);
+  width: 100%;
+  z-index: -1;
+}
+
+
+
+#butt_u_u img:not([src])
+{
+  opacity: 0;
+}
+
+.cli_expanded #u_u
+{
+  align-items: start;
+  bottom: unset;
+  top: 0;
+  z-index: 8;
+}
+
+.cli_expanded #butt_u_u
+{
+  bottom: unset;
+  top: 0;
+}
+
+#u_u.expanded
+{
+  height: 100vh;
+  overflow: hidden;
+}
+
+#u_u.expanded:not([style]) #butt_u_u:not(.has-picture)::before
+{
+  content: "a_a";
+}
+
+#u_u.expanded #butt_u_u.has-picture img
+{
+  transform: scale(.618);
+}
+
+#u_u:not(.expanded) > *:not(#butt_u_u)
+{
+  display: none;
+}
+
+#u_u:not([style]) #butt_u_u:not(.has-picture)::before
+{
+  align-content: center;
+  animation: u_u 3s ease-in-out 0s infinite;
+  content: "a_a";
+  display: grid;
+  font-size: var(--font-size);
+  height: 100%;
+  position: absolute;
+  width: 100%;
+}

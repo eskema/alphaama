@@ -1,0 +1,191 @@
+#oto
+{
+  display: none;
+  grid-area: oto;
+  overflow: hidden;
+  overflow-y: scroll;
+  max-height: 50vh;
+  padding-left: var(--line);
+  padding-bottom: 1px;
+}
+
+#oto::before 
+{
+  border-bottom: 1px dotted rgb(var(--color-c));
+  color: rgb(var(--color-f));
+  content: attr(data-s);
+  left: var(--line);
+  pointer-events: none;
+  position: absolute;
+  white-space: pre;
+  z-index: 1;
+}
+
+#oto .item 
+{
+  cursor: pointer;
+  grid-gap: var(--pad);
+  grid-template-columns: auto auto auto auto 1fr;
+  grid-template-areas: 
+  "bef val required optional description";
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  transition: var(--trans-quart);
+  word-break: keep-all;
+  white-space: pre;
+  overflow-x: scroll;
+}
+
+#oto .item:focus
+{
+  background-color: rgba(var(--color-main),.4);
+  color: rgb(var(--color-c));
+  outline: none;
+}
+
+#oto .item::before
+{
+  border-bottom: 1px solid rgba(var(--color-c),0);
+}
+
+#oto .item > *
+{
+  pointer-events: none;
+  border-bottom: 1px solid rgba(var(--color-c),0);
+}
+
+#oto .item:not(.mention):not(:first-child)::before 
+{
+  color: rgb(var(--color-d));
+  opacity: 0;
+}
+
+#oto .item::after 
+{
+  content: none;
+}
+
+#oto .item .val 
+{
+  color: rgb(var(--color-e));
+  grid-area: val;
+  padding: 0;
+}
+
+#oto .item.mention
+{
+  background: rgb(var(--color-b));
+  position: relative;
+  z-index: 2;
+}
+
+#oto .item.mention:focus
+{
+  /*background: rgb(var(--color-a));*/
+}
+
+#oto .item.mention:focus::before,
+#oto .item.mention:focus *
+{
+  /*color: rgb(var(--color-f));*/
+}
+
+#oto .item.mention .val
+{
+  align-self: center;
+  margin: 0 var(--pad);
+}
+
+#oto .item .required 
+{
+  border-bottom: 1px solid rgb(var(--color-d));
+  color: rgb(var(--color-d));
+  grid-area: required;
+}
+
+#oto .item .optional 
+{
+  border-bottom: 1px dashed rgb(var(--color-d));
+  color: rgb(var(--color-d));
+  grid-area: required;
+}
+
+#oto .item .required + .optional 
+{
+  grid-area: optional;
+}
+
+#oto .item .description 
+{
+  align-self: center;
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-s);
+  grid-area: description;
+  justify-self: end;
+  padding-right: var(--pad);
+}
+
+#oto .item.pinned 
+{
+  background-color: rgb(var(--color-main));
+  cursor: text;
+  position: relative;
+  z-index: 2;
+}
+
+#oto .item.pinned > *,
+#oto .item.pinned::before
+{
+  color: rgb(var(--color-b));
+}
+
+#oto .item.pinned > .description
+{
+  color: rgb(var(--color-b));
+}
+
+#oto .item.pinned > .required
+{
+  border-bottom: 1px solid rgb(var(--color-b));
+}
+
+#oto .item.pinned > .optional
+{
+  border-bottom: 1px dashed rgb(var(--color-b));
+  color: rgb(var(--color-b));
+}
+
+#oto .item .acts
+{
+  border-bottom: 1px solid rgba(var(--color-c),0);
+  pointer-events: auto;
+}
+
+#oto .item .acts .butt
+{
+  background: unset;
+  color: rgb(var(--color-d));
+  margin-right: var(--pad);
+}
+
+.cli_expanded #cli #oto
+{
+  display: block;
+  margin-top: 1rem;
+}
+
+@media screen and (min-width: 1025px) 
+{
+  #oto .item .acts .butt:hover
+  {
+    color: rgb(var(--color-f));
+  }
+  
+  #oto .item:hover,
+  #oto .item.mention:hover
+  {
+    background-color: rgba(var(--color-c),.3);
+    z-index: 2;
+  }
+}

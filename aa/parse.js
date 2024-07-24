@@ -14,7 +14,7 @@ aa.parse.content =(s,trusted)=>
   let l = aa.mk.l('p',{cla:'paragraph'});
   const another_l =last_l=>
   {
-    if (aa.is.empty(last_l)) last_l.remove();
+    if (aa.is.empty(last_l) || last_l.textContent === '/n') last_l.remove();
     else 
     {
       last_l.normalize();

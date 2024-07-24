@@ -6,6 +6,17 @@ boolish stuff
 */
 
 
+// returns false or true if the string is an action
+aa.is.act =s=>
+{
+  const ns = localStorage.ns;
+  if (ns 
+  && (ns.startsWith(s) || s.startsWith(ns+' ') || s === ns)
+  ) return true;
+  return false
+};
+
+
 // is alphanumeric and underscore
 aa.is.an =s=> aa.regx.an.test(s);
 
@@ -16,8 +27,8 @@ aa.is.empty =l=>
   if (!l) return true;
   const len = l.childNodes.length;
   if (!len) return true;
-  const s = (l.childNodes[0].textContent+'').trim();
-  if (len === 1 && (s === ' ' || s === '')) return true;
+  const s = (l.textContent+'').trim();
+  if (!s || s === ' ') return true;
   return false;
 };
 
@@ -36,6 +47,9 @@ aa.is.one =s=>
   if (seg.length === 1) return true;
   else return false
 };
+
+// checks if browser is connected
+aa.is.online =()=> navigator.onLine;
 
 
 // checks if page is loading from iframe

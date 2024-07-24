@@ -1,0 +1,166 @@
+#l
+{
+  grid-area: l;
+  max-height: 60vh;
+  overflow-y: scroll;
+  position: relative;
+}
+
+#l > header
+{
+  display: none;
+}
+
+#l > header .butt
+{
+  font-size: 0;
+  padding: var(--pad);
+  text-align: center;
+}
+
+#l > header .butt::before
+{
+  color: rgb(var(--color-f));
+  content: "//";
+  font-size: var(--font-size-s);
+}
+
+#logs
+{
+  position: relative;
+}
+
+.l
+{
+  font-size: var(--font-size-s);
+  grid-gap: var(--pad);
+  grid-template-areas: "bef k";
+  grid-template-columns: auto 1fr;
+}
+
+.l a
+{
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.l .list
+{
+  position: relative;
+}
+
+.l .list .item
+{
+  box-sizing: border-box;
+  overflow-y: scroll;
+  white-space: pre;
+  width: calc(100vw - calc(var(--pad-l)*2));
+  word-break: keep-all;
+}
+
+.l::before
+{
+  content: "//";
+  opacity: .5;
+  padding-left: var(--pad);
+}
+
+.l.is_new
+{
+  background-color: rgb(var(--color-a));
+  box-shadow: var(--pad) 0px var(--pad) rgb(var(--color-b));
+}
+
+.l > p 
+{
+  margin: 0;
+  line-height: 1.5;
+}
+
+.l > .butt,
+.l > p > .butt
+{
+  color: rgb(var(--color-d));
+  /*border-bottom: 1px dashed rgb(var(--color-d));*/
+  /*font-size: var(--font-size-xs);*/
+  padding: 0;
+  text-decoration: underline;
+}
+
+.l .butt.clkd::after
+{
+  content: " …nope";
+}
+
+.l ul::before,
+.l dl::before 
+{
+  display: block;
+  grid-column: span 2;
+  margin-right: var(--pad);
+  white-space: pre;
+}
+
+#l .relay::before
+{
+  content: "(" attr(data-state) ") " attr(data-q);
+  margin-right: var(--pad);
+}
+
+#l .relay[data-state="1"]::before
+{
+  color: rgb(var(--color-yes));
+  opacity: .7;
+}
+
+#l .relay[data-state="3"]::before
+{
+  color: rgb(var(--color-no));
+  opacity: .7;
+}
+
+.cli_expanded #l > header
+{
+  display: grid;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+#l.expanded > header .butt::before
+{
+  color: rgb(var(--color-f));
+  content: "/* logs */";
+  font-size: var(--font-size-s);
+}
+
+html:not(.cli_expanded) .l.is_new
+{
+  position: absolute;
+  transform: translateY(calc(var(--line)*-1));
+}
+
+html:not(.cli_expanded) .l:not(.is_new),
+#l:not(.expanded) .l:not(.is_new)
+{
+  display: none;
+}
+
+@media screen and (min-width: 1025px) 
+{
+  .l .item:hover
+  {
+    background: rgb(var(--color-c));
+  }
+  
+  .l .item:hover .butt
+  {
+    /*color: rgb(var(--color-c));*/
+  }
+  
+  .l .item .butt:hover
+  {
+    color: rgb(var(--color-a));
+  }
+
+}

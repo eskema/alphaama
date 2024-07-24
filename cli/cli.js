@@ -5,6 +5,8 @@ command line interface
 
 */
 
+document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/cli/cli.css'}));
+document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/cli/oto.css'}));
 
 aa.cli = 
 {
@@ -26,8 +28,8 @@ aa.cli.collapse =e=>
 {
   aa.l.classList.remove('cli_expanded');
   aa.cli.t.blur()
+  aa.logs_read();
 };
-
 
 // creates new dat object (event)
 aa.cli.dat_mk =async(s,dis)=>
@@ -89,6 +91,7 @@ aa.cli.expand =e=>
   aa.l.classList.add('cli_expanded');
   aa.cli.foc();
   aa.cli.upd();
+  aa.logs_read();
 };
 
 
@@ -234,7 +237,7 @@ aa.cli.mention =w=>
   for (const p of a)
   {
     const l = aa.mk.l('li',{cla:'item mention',bef:p.metadata.name??''});
-    let after = (p.petname?p.petname:p.extradata.petnames[0])+' '+(p.metadata.nip05??'');
+    let after = (p.petname?p.petname:p.petnames[0])+' '+(p.metadata.nip05??'');
     l.append(aa.mk.l('span',{cla:'description',con:after,}),aa.mk.l('span',{cla:'val',con:p.npub}));
     l.tabIndex = '1';
     
@@ -344,43 +347,8 @@ aa.cli.oto_act_item =(o,s)=>
 // when input is triggered
 aa.cli.run =async s=>
 {
-  // returns false or true if the string is an action
-  const is_act =s=>
-  {
-    const ns = localStorage.ns;
-    if (ns && (ns.startsWith(s) 
-    || s.startsWith(ns+' ') 
-    || s === ns)) return true;
-    return false
-  };
-
-  // parses string as action and executes it
-  const exe_act =s=>
-  {
-    let a = s.split(' ');
-    a.shift();
-    if (a.length) 
-    {
-      let actions = aa.actions.filter(o=>o.action[0] === a[0]);
-      if (a[1]) 
-      {
-        actions = actions.filter(o=>o.action[1] === a[1]);
-        a.splice(0,2);
-      }
-      else 
-      {
-        actions = actions.filter(o=>!o.action[1]);
-        a.splice(0,1);
-      }
-      let act = actions[0];
-      let cut = a.join(' ');
-      if (act && 'exe' in act) act.exe(cut);
-    }
-    else aa.log('invalid action: '+s)
-  };
-
   aa.cli.history_upd(s);
-  if (is_act(s)) exe_act(s);
+  if (aa.is.act(s)) aa.exe(s);
   else 
   {
     if (aa.cli.dat) 
@@ -429,6 +397,7 @@ aa.cli.upd =e=>
   const is_action = a[0] === ns;
 
   aa.cli.oto.textContent = '';
+  aa.cli.oto.dataset.s = s;
   
   if (maybe_action) aa.cli.oto.append(aa.cli.oto_act_item({action:[]}));
   else if (is_action) aa.cli.oto_act(s,a); 
@@ -461,7 +430,7 @@ aa.cli.upd_from_oto =(s,w=false)=>
 
 
 // changes input value and expands cli
-aa.cli.v =s=>
+aa.cli.v =async s=>
 {
   aa.cli.t.value = s;
   aa.cli.expand();

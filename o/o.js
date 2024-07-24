@@ -1,7 +1,8 @@
 /*
 
 alphaama
-basic key/value options using localStorage
+mod    o
+options using localStorage key:value
 
 */
 

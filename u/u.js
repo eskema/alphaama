@@ -1,15 +1,23 @@
-// u stuff
+/*
+
+alphaama
+mod    u
+logged user
+
+*/
+
+document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/u/u.css'}));
 
 aa.u = 
 {
   def:{id:'u',ls:{}},
   old_id:'aka',
-  get p(){return aa.db.p[aa.u.o.ls.xpub]},
+  get p(){ return aa.db.p[aa.u.o.ls.xpub] },
 };
 
 
 // check for nip7 extension (window.nostr) availability
-
+// and log the result
 aa.u.check_signer =()=>
 {
   let s = 'window.nostr ok';
@@ -58,6 +66,7 @@ aa.u.event_complete =event=>
   return event
 }
 
+
 // draft event
 aa.u.event_draft =event=>
 {
@@ -81,81 +90,79 @@ aa.u.event_finalize =async event=>
   }
 };
 
-// decrypt kind-4 from id
 
+// decrypt kind-4 from id
 aa.u.decrypt =async s=>
 {
   aa.cli.fuck_off();
-  if (window.nostr)
+  
+  if (!window.nostr) 
   {
-    let x = s.trim();
-    if (!aa.is.x(x))
-    {
-      aa.log('invalid id');
-      return false;
-    }
-    
-    let dat = await aa.db.get_e(x);
-    if (!dat) 
-    {
-      aa.log('event not found');
-      return false;
-    }
-    let p_x = aa.get.tags(dat.event,'p')[0][1];
-    if (aa.u.p.xpub !== p_x)
-    {
-      aa.log('content not for you');
-      return false;
-    }
-    let decrypted = await window.nostr.nip04.decrypt(dat.event.pubkey,dat.event.content);
-    if (!decrypted)
-    {
-      aa.log('not possible to decrypt');
-      return false;
-    }
-    let l = document.getElementById(aa.fx.encode('nid',x));
-    if (!l) 
-    {
-      aa.log('decrypted cyphertext:');
-      aa.log(decrypted);
-    }
-    else
-    {
-      let content = l.querySelector('.content');
-      content.classList.add('decrypted');
-      content.classList.remove('encrypted');
-      content.querySelector('.butt.decrypt').remove();
-      l.querySelector('.content').append(aa.parse.content(decrypted));
-    }
-
-    console.log(decrypted);
+    aa.log('no extension found');
+    return
   }
-  else aa.log('no extension found')  
+
+  let x = s.trim();
+  if (!aa.is.x(x))
+  {
+    aa.log('invalid id');
+    return
+  }
+  
+  let dat = await aa.db.get_e(x);
+  if (!dat) 
+  {
+    aa.log('event not found');
+    return false;
+  }
+
+  let p_x = aa.get.tags(dat.event,'p')[0][1];
+  if (aa.u.p.xpub !== p_x)
+  {
+    aa.log('content not for you');
+    return
+  }
+
+  let decrypted = await window.nostr.nip04.decrypt(dat.event.pubkey,dat.event.content);
+  if (!decrypted)
+  {
+    aa.log('decrypt failed');
+    return
+  }
+
+  let l = document.getElementById(aa.fx.encode('nid',x));
+  if (!l) 
+  {
+    aa.log('decrypted cyphertext:');
+    aa.log(decrypted);
+  }
+  else
+  {
+    let content = l.querySelector('.content');
+    content.classList.remove('encrypted');
+    content.classList.add('decrypted');
+    content.querySelector('.butt.decrypt').remove();
+    l.querySelector('.content').append(aa.parse.content(decrypted));
+  }  
 };
 
 
 // true if you follow pubkey
-
 aa.u.is_following =xpub=>
 {
-  if (aa.u.p && aa.u.p.extradata.bff.length)
-  {
-    if (aa.u.p.extradata.bff.includes(xpub)) return true;
-    else return false;
-  }
-  // else aa.log('no bff found to check');
+  if (aa.u.p.follows.includes(xpub)) return true;
+  return false
 };
 
 
 // load profiles of your follows
-
 aa.u.is_following_load_profiles =async p=>
 {
-  if (p.extradata.bff.length)
+  if (p.follows.length)
   {
-    let bffs = await aa.db.get('idb',{get_a:{store:'authors',a:p.extradata.bff}});
-    for (const bff of bffs) aa.db.p[bff.xpub] = bff;
-    for (const x of p.extradata.bff)
+    let follows = await aa.db.get('idb',{get_a:{store:'authors',a:p.follows}});
+    for (const dis of follows) aa.db.p[dis.xpub] = dis;
+    for (const x of p.follows)
     {
       if (!aa.db.p[x]) aa.db.p[x] = aa.p.p(x);
       aa.p.profile(aa.db.p[x])
@@ -165,12 +172,10 @@ aa.u.is_following_load_profiles =async p=>
 
 
 // if hex key is your pubkey
-
 aa.is.u =(x)=> aa.u?.o.ls.xpub === x;
 
 
 // make p tag array from array
-
 aa.mk.tag_p =a=>
 {
   let p_tag = ['p'];
@@ -179,8 +184,16 @@ aa.mk.tag_p =a=>
   if (a.length) k = a.shift().trim();
   if (!k) return false;
   if (k.startsWith('npub')) k = aa.fx.decode(k);
-  if (!aa.is.key(k)) {aa.log('invalid key to follow '+k);return false}
-  if (aa.u.is_following(k)) {aa.log('already following '+k);return false}
+  if (!aa.is.key(k)) 
+  {
+    aa.log('invalid key to follow '+k);
+    return false
+  }
+  if (aa.u.is_following(k)) 
+  {
+    aa.log('already following '+k);
+    return false
+  }
   p_tag.push(k);
 
   if (a.length) 
@@ -201,54 +214,51 @@ aa.mk.tag_p =a=>
 
 
 // u add to follows
-
 aa.u.follow =async s=>
 {
-  // console.log(s);
   if (!aa.u.p) 
   {
     aa.log('no u found, set one first')
-    return false;
+    return
   }
+
   aa.cli.fuck_off();
   
-  const a = s.trim().split(',');
-  let p_tag = aa.mk.tag_p(a);
-  if (!p_tag) return false;
+  let p_tag = aa.mk.tag_p(s.trim().split(','));
+  if (!p_tag) return;
   let dat_k3 = await aa.p.get_last_of(aa.u.p,'k3');
-  if (dat_k3)
+  if (!dat_k3)
   {
-    const new_k3 =
-    {
-      pubkey:aa.u.p.xpub,
-      kind:3,
-      created_at:aa.t.now,
-      content:dat_k3.event.content,
-      tags:[...dat_k3.event.tags,p_tag]
-    };
-    // const new_follows = [...dat_k3.event.tags,p_tag];
-    aa.dialog(
-    {
-      title:'new follow list',
-      l:aa.mk.tag_list(new_k3.tags),
-      scroll:true,
-      no:{exe:()=>{}},
-      yes:
-      {
-        exe:()=>
-        { 
-          aa.u.event_finalize(new_k3)
-          .then(e=>{console.log('sent')})
-        }
-      },
-    });
+    aa.log('no k3 found, create one first');
+    return
   }
-  else aa.log('no k3 found, create one first')
+  const new_k3 =
+  {
+    pubkey:aa.u.p.xpub,
+    kind:3,
+    created_at:aa.t.now,
+    content:dat_k3.event.content,
+    tags:[...dat_k3.event.tags,p_tag]
+  };
+
+  aa.dialog(
+  {
+    title:'new follow list',
+    l:aa.mk.tag_list(new_k3.tags),
+    scroll:true,
+    no:{exe:()=>{}},
+    yes:
+    {
+      exe:()=>
+      { 
+        aa.u.event_finalize(new_k3).then(e=>{console.log('sent')})
+      }
+    }
+  });
 };
 
 
 // on load
-
 aa.u.load =()=>
 { 
   aa.actions.push(
@@ -301,7 +311,6 @@ aa.u.load =()=>
       description:'unfollow account (hex or npub)',
       exe:aa.u.unfollow
     },
-    
   );
   const id = 'u_u';
   const u = aa.mk.l('aside',{id:id});
@@ -313,10 +322,8 @@ aa.u.load =()=>
 
 
 // u login
-
 aa.u.login =async s=>  
 {
-  // aa.cli.fuck_off();
   aa.cli.clear();
   aa.u.set_mode(s.trim());
 
@@ -345,8 +352,8 @@ aa.u.login =async s=>
   });
 };
 
-// load your metadata into input prefixed with set metadata command
 
+// load your metadata into input prefixed with set metadata command
 aa.u.metadata_load =()=>
 {
   const md = aa.u.p.metadata;
@@ -355,10 +362,8 @@ aa.u.metadata_load =()=>
 
 
 // set your metadata (kind-0)
-
 aa.u.metadata_set =async s=>
 {
-  // aa.cli.fuck_off();
   aa.cli.clear();
   let md = aa.parse.j(s);
   if (!md) return;
@@ -391,87 +396,87 @@ aa.u.process_k3_tags =async(tags,x)=>
   if (is_u) aa.u.follows = tags;
   for (const tag of tags)
   {
-    if (!aa.is.tag.p(tag)) continue;
     
-    let updd;
+    if (!aa.is.tag.p(tag)) continue;
+  
     const [type,xpub,relay,petname] = tag;
-    if (aa.is.x(xpub))
+    if (!aa.is.x(xpub)) 
     {
-      let p = aa.db.p[xpub];
-      if (!p) 
-      {
-        p = aa.db.p[xpub] = aa.p.p(xpub);
-        updd = true;
-      }  
-
-      if (relay)
-      {
-        let url = aa.is.url(relay)?.href;
-        if (url)
-        {
-          if (!p.rels) p.rels = {};
-          if (!p.rels[url]) p.rels[url] = {sets:[]};
-          if (aa.fx.a_add(p.rels[url].sets,['hint'])) updd = true;
-        }
-        if (is_u && p.relay !== relay) { p.relay = relay; updd = true; }
-      }
-
-      if (petname)
-      {
-        if (aa.fx.a_add(p.extradata.petnames,[petname])) updd = true;
-        if (is_u && p.petname !== petname) { p.petname = petname; updd = true; }
-      }
-
-      if (aa.fx.a_add(p.extradata.followers,[x])) updd = true;
-      if (is_u && p.trust < 5) { p.trust = 5; updd = true }
-      if (is_u && aa.fx.a_add(p.sets,['k3'])) updd = true;
-      
-      if (updd) to_upd.push(p);
-      // if (aa.viewing === p.npub) aa.p.upd(aa.p.profile(p),p,true);
+      console.log('invalid hex key in k3 of '+x,xpub);
+      continue;
     }
-    else console.log('invalid hex key in k3 of '+x,xpub)
+
+    let updd;
+    let p = aa.db.p[xpub];
+    if (!p) 
+    {
+      p = aa.db.p[xpub] = aa.p.p(xpub);
+      updd = true;
+    }  
+
+    if (relay)
+    {
+      let url = aa.is.url(relay)?.href;
+      if (url)
+      {
+        if (!p.rels) p.rels = {};
+        if (!p.rels[url]) p.rels[url] = {sets:[]};
+        if (aa.fx.a_add(p.rels[url].sets,['hint'])) updd = true;
+      }
+      if (is_u && p.relay !== relay) { p.relay = relay; updd = true; }
+    }
+
+    if (petname)
+    {
+      if (aa.fx.a_add(p.petnames,[petname])) updd = true;
+      if (is_u && p.petname !== petname) { p.petname = petname; updd = true; }
+    }
+
+    if (aa.fx.a_add(p.followers,[x])) updd = true;
+    if (is_u && p.trust < 5) { p.trust = 5; updd = true }
+    if (is_u && aa.fx.a_add(p.sets,['k3'])) updd = true;
+    
+    if (updd) to_upd.push(p);
+
   }
-  if (to_upd.length)
-  {
-    for (const p of to_upd) aa.p.save(p)
-  }
-  // if (to_upd.length) aa.db.idb.worker.postMessage({put:{store:'authors',a:to_upd}});
+  if (to_upd.length) for (const p of to_upd) aa.p.save(p)
 };
+
 
 // new reaction event (kind-7)
 // should go to aa.e
-
 aa.u.react =async s=>
 {
   let [xid,reaction] = s.trim().split(' ');
-  if (aa.is.x(xid) && aa.is.one(reaction))
+  if (!aa.is.x(xid) || !aa.is.one(reaction))
   {
-    aa.cli.fuck_off();
-    
-    const event = 
-    {
-      pubkey:aa.u.p.xpub,
-      kind:7,
-      created_at:aa.t.now,
-      content:reaction,
-      tags:[]
-    };
-
-    let reply_dat = aa.db.e[xid];
-    if (!reply_dat) reply_dat = await aa.db.get_e(xid);
-    if (reply_dat)
-    {
-      const reply_e = aa.db.e[xid].event;
-      event.tags.push(...aa.get.tags_for_reply(reply_e));
-    } 
-    aa.u.event_finalize(event).then(e=>{console.log(e)});
+    aa.log('reaction failed');
+    return
   }
-  else aa.log('invalid data to score')
+  
+  aa.cli.fuck_off();
+    
+  const event = 
+  {
+    pubkey:aa.u.p.xpub,
+    kind:7,
+    created_at:aa.t.now,
+    content:reaction,
+    tags:[]
+  };
+
+  let reply_dat = aa.db.e[xid];
+  if (!reply_dat) reply_dat = await aa.db.get_e(xid);
+  if (reply_dat)
+  {
+    const reply_e = aa.db.e[xid].event;
+    event.tags.push(...aa.get.tags_for_reply(reply_e));
+  } 
+  aa.u.event_finalize(event).then(e=>{console.log(e)});
 };
 
 
 // u set mode
-
 aa.u.set_mode =async s=>
 {
   switch (s)
@@ -494,7 +499,6 @@ aa.u.set_mode =async s=>
 
 
 // u set pubkey
-
 aa.u.set_u_p =s=>
 {   
   let pub = s.trim();
@@ -504,8 +508,7 @@ aa.u.set_u_p =s=>
     if (!aa.is.x(pub) && pub.startsWith('npub')) o = {xpub:aa.fx.decode(pub),npub:pub};
     else if (aa.is.x(pub)) o = {xpub:pub,npub:aa.fx.encode('npub',pub)};
     aa.u.o.ls = o;
-    aa.mod_save(aa.u);
-    aa.u.start(aa.u);
+    aa.mod_save(aa.u).then(aa.u.start);
   } 
 };
 
@@ -515,22 +518,17 @@ aa.u.sign =async event=>
 {
   return new Promise(resolve=>
   {
-    if (window.nostr) 
-    {
-      window.nostr.signEvent(event)
-      .then(signed=> resolve(signed));
-    } 
-    else 
+    if (!window.nostr) 
     {
       aa.log('you need a signer');
       resolve(false)
     }
+    window.nostr.signEvent(event).then(e=>resolve(e));
   });
 };
 
 
-// 
-
+// make u mod item
 aa.u.mk =(k,v)=>
 {
   let l;
@@ -542,8 +540,8 @@ aa.u.mk =(k,v)=>
       link.classList.add('key');
       link.title = 'view u';
       l.append(
-        link,' ',
-        // aa.mk.l('span',{cla:'key',app:link}),
+        link,
+        ' ',
         aa.mk.l('span',{cla:'val',con:v})
       );
       break;
@@ -555,57 +553,53 @@ aa.u.mk =(k,v)=>
 
 
 // start mod
-
 aa.u.start =async mod=>
 {
-  let ls = mod.o.ls;
-  if (ls.xpub)
+  let ls = mod?.o?.ls;
+  if (!ls.xpub){ aa.log(aa.mk.butt_action('u login ')); return }
+
+  aa.mk.mod(mod);
+  aa.fx.color(ls.xpub,document.getElementById('u_u'));
+
+  let p = await aa.db.get_p(ls.xpub);
+  if (!p) p = aa.p.p(ls.xpub);
+
+  let upd;
+  if (p.trust < 9) 
   {
-    aa.mk.mod(mod);
-    aa.fx.color(ls.xpub,document.getElementById('u_u'));
-
-    let butt_u = document.getElementById('butt_u_u');
-    if (butt_u) butt_u.textContent = ls.xpub.slice(0,3);
-
-    let p = await aa.db.get_p(ls.xpub);
-    if (!p) p = aa.p.p(ls.xpub);
-    if (p)
-    {
-      let changed;
-      // console.log(p);
-      if (p.trust < 9) 
-      {
-        p.trust = 9;
-        changed = true;
-      }
-      if (aa.fx.a_add(p.sets,['u'])) changed = true;
-      if (butt_u) aa.p.p_link_pic(butt_u,p.metadata.picture);
-      if (!p.pastdata.k0.length) aa.log('u !metadata');
-      if (!p.pastdata.k3.length) aa.log('u !bffs');
-      else aa.u.is_following_load_profiles(p);
-      aa.p.profile(p);
-      if (changed) aa.p.save(p);
-    } 
+    p.trust = 9;
+    upd = true;
   }
-  else aa.log(aa.mk.butt_action('u login '));
+  if (aa.fx.a_add(p.sets,['u'])) upd = true;
+  
+  let butt_u = document.getElementById('butt_u_u');
+  if (butt_u) 
+  {
+    butt_u.textContent = ls.xpub.slice(0,3);
+    aa.p.p_link_pic(butt_u,p.metadata.picture);
+  }
+  if (!p.events.k0?.length) aa.log('u haz no data');
+  if (!p.events.k3?.length) aa.log('no follow list found');
+  else aa.u.is_following_load_profiles(p);
+  aa.p.profile(p);
+  if (upd) aa.p.save(p);
 };
 
 
 // remove keys from follow list
-  
 aa.u.unfollow =async s=>
 {
-  console.log('unfollows',s)
   if (!aa.u.p) 
   {
-    aa.log('no u found, set one first')
-    return false;
+    aa.log('no u found, set one first');
+    return false
   }
   
   let dat_k3 = await aa.p.get_last_of(aa.u.p,'k3');
   if (!dat_k3) return false;
   
   aa.cli.fuck_off();
+
   let keys_to_unfollow = s.trim().split(' ');
   let new_follows = [...dat_k3.event.tags];
   const old_len = new_follows.length;
@@ -617,7 +611,7 @@ aa.u.unfollow =async s=>
     {
       ul.append(aa.mk.l('li',{con:k,cla:'disabled'}));
       new_follows = new_follows.filter(p=>p[1]!==k);
-      aa.p.score(k+' 0');
+      aa.p.score(k+' 4');
     }
     else aa.log('invalid pubkey to unfollow')
   }
@@ -626,7 +620,6 @@ aa.u.unfollow =async s=>
   {
     const l = aa.mk.l('div',{cla:'wrap'});
     l.append(aa.mk.tag_list(new_follows),ul);
-    // console.log(new_follows);
     aa.dialog(
     {
       title:'new follow list:'+old_len+'->'+new_follows.length,
@@ -651,20 +644,19 @@ aa.u.unfollow =async s=>
 
 
 // web of trust 
-
 aa.u.wot =async()=>
 {
   let ff = {};
   let to_get = [];
-  let bff = aa.u?.extradata.bff;
-  if (!bff?.length) return false;  
-  for (const x of bff)
+  let follows = aa.u.p.follows;
+  if (!follows?.length) return false;  
+  for (const x of follows)
   {
     let p = aa.db.p[x];
-    let p_bff = p?.extradata.bff;
-    if (p_bff?.length)
+    let p_follows = p?.follows;
+    if (p_follows?.length)
     {      
-      for (const xid of p_bff)
+      for (const xid of p_follows)
       {
         if (!aa.u.is_following(xid))
         {
@@ -678,9 +670,7 @@ aa.u.wot =async()=>
 
   if (to_get.length)
   {
-    // let found = 0;
     let dat = await aa.db.idb.ops({get_a:{store:'authors',a:to_get}});
-    // console.log('dat',dat);
     if (dat) for (const p of dat) aa.db.p[p.xpub] = p;
   }
   
@@ -691,7 +681,7 @@ aa.u.wot =async()=>
   {
     let x = f[0];
     let n = f[1].length;
-    let id = aa.db.p[x]?.extradata.petnames[0] || aa.db.p[x]?.metadata?.name || x;
+    let id = aa.db.p[x]?.petnames[0] || aa.db.p[x]?.metadata?.name || x;
     wot[id] = n;
   }
 
@@ -700,7 +690,6 @@ aa.u.wot =async()=>
 
 
 // encrypted direct message
-
 aa.kinds[4] =dat=>
 {
   let note = aa.e.note_regular(dat);

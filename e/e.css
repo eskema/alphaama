@@ -1,0 +1,1338 @@
+#e
+{
+  grid-area: e;
+}
+
+.note
+{
+  --who: attr(data-who);
+  align-self: stretch;
+  border-left: 1px dotted rgba(var(--color-c),1);
+  border-top: 1px dotted rgba(var(--color-c),1);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-areas: 
+  "by       by"
+  "content  content"
+  "opentags opentags"
+  "tags     actions"
+  "after    after"
+  "replies  replies"
+  ;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr auto;
+  margin: var(--pad) 0;
+  position: relative;
+  z-index: 1;
+}
+
+.note.root.solo,
+.note.root:not(.in_path),
+.note.in_view > .replies > .note,
+.haz_solo .note.root.in_path:not(.in_view),
+#notes > .note:not(.root):not(.in_path)
+{
+  grid-template-columns: auto 1fr 61.8vw;
+  grid-template-areas: 
+  "by       by       by"
+  "content  content  replies"
+  "opentags opentags replies"
+  "tags     actions  replies"
+  "sig      sig      sig"
+  "after    after    after"
+  ;
+}
+
+.note.in_path.in_view
+{
+  border-color: rgb(var(--color-e));
+  grid-template-areas: 
+  "by by"
+  "content content"
+  "tags tags"
+  "opentags opentags"
+  "sig sig"
+  "after after"
+  "actions actions"
+  "replies replies"
+  ;
+  margin: 0;
+}
+
+.note.root:not(.in_path),
+.haz_solo .note.root,
+.note.in_view > .replies > .note,
+#notes > .note:not(.root):not(.in_path)
+{
+  margin: var(--line) 0;
+}
+
+.note.root:not(.in_path):first-child,
+.note.reply:nth-child(2),
+.note.in_path.haz_new_reply,
+.replies:not(.expanded) .note:not(.is_new).haz_new_reply
+{
+  margin-top: 0;
+}
+
+.note.reply:last-child
+{
+  margin-bottom: 0;
+}
+
+.haz_solo .note:not(.in_path),
+.note.root:not(.in_path).out,
+.note.out 
+{
+  border: none!important;
+  margin: 0;
+}
+
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
+{
+  border-left: 1px dotted rgba(var(--c),1);
+  border-top: 1px dotted rgba(var(--c),1);
+  margin: 0;
+}
+
+.note::before
+{
+  background: rgb(var(--color-b));
+  content: "kind-" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
+  font-size: var(--font-size-xs);
+  grid-area: after;
+  padding: 1rem var(--padm);
+  padding-bottom: 0;
+  z-index: 3;
+}
+
+.note.in_path.in_view::before
+{
+  display: block;
+  padding: var(--padm);
+  text-align: center;
+}
+
+.root.not_yet > .replies > .note,
+
+.note.out::after,
+.note.out::before,
+.note.out > *:not(.replies),
+
+.note:not(.in_view) > .sig,
+.note.in_path:not(.in_view)::before,
+.note.in_path:not(.in_view) > .actions,
+.note.in_path:not(.in_view) > .tags_wall,
+
+.haz_solo .note:not(.in_path)::after,
+.haz_solo .note:not(.in_path)::before,
+.haz_solo .note:not(.in_path) > *:not(.replies),
+
+.view_e .note:not(.in_path),
+.view_e .note:not(.in_path),
+.view_p .note:not(.in_path),
+.view_e #notes > .note:not(.in_path),
+
+#e:not(.expanded) .note:not(.in_path)
+{
+  display: none;
+}
+
+.view_e .note.in_view.in_path .note,
+#e:not(.expanded) .note.in_view .note
+{
+  display: grid;
+}
+
+.note:not(:nth-child(-n+100))
+{
+  /*display: none;*/
+}
+
+
+
+
+
+/* @group by */
+
+.by
+{
+  align-self: center;
+  align-content: center;
+  background: rgb(var(--color-b));
+  color: rgb(var(--c));
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-area: by;
+  grid-template-areas: "author id created_at clas";
+  grid-template-columns: auto 1fr auto;
+  line-height: 1rem;
+  z-index: 5;
+}
+
+.in_view > .by
+{
+  grid-template-areas:
+  "author id created_at clas"
+  "author id created_at clas";
+}
+
+.note.draft .by::after,
+.note.not_sent .by::after
+{
+  color: rgb(var(--color-main));
+  grid-area: clas;
+  padding: 0 var(--padm);
+}
+
+.note.draft .by::after
+{
+  content: 'draft';
+}
+
+.note.not_sent .by::after
+{
+  content: 'not_sent';
+}
+
+.in_view > .by,
+.haz_solo .root.in_path:not(.in_view) > .by,
+.root:not(.in_view):not(.in_path) > .by
+{
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.replies > .note:not(.in_path) > .by
+{
+  position: sticky;
+  top: calc(var(--line) + var(--padm) + 1px);
+}
+
+.in_view .replies .note .by
+{
+  position: sticky;
+  top: calc(var(--line) + var(--line) + var(--pad) - 1px);
+}
+
+.in_view > .replies > .note > .by
+{
+  position: sticky;
+  top: calc(var(--line) + var(--line) - var(--padm) - 1px);
+  z-index: 3;
+}
+
+/* @end */
+
+
+/* @group a.author */
+
+a.author 
+{
+  color: rgb(var(--color-d));
+  grid-template-areas: "img name nip5 flw";
+  overflow-x: scroll;
+  text-decoration: none;
+  user-select: none;
+}
+
+.a.author.has-picture img,
+.author:not(.has-picture)::before
+{
+  background: rgb(var(--c));
+  content: "";
+  display: block;
+  grid-area: img;
+  height: 1rem; 
+  object-fit: cover;
+  padding: 0;
+  width: 1rem; 
+}
+
+.by .author::after,
+.pubkey .author::after,
+.note_quote_by .author::after
+{
+  align-content: center;
+  align-self: stretch;
+  color: rgb(var(--color-d));
+  content: attr(data-followers);
+  display: block;
+  grid-area: flw;
+  padding: 0 var(--padm);
+  word-break: keep-all;
+  white-space: pre;
+}
+
+.by .author.is_mf::after
+.pubkey .author.is_mf::after,
+.note_quote_by .author.is_mf::after
+{
+  color: rgb(var(--color-no));
+}
+
+.by .author.is_u::after,
+.pubkey .author.is_u::after,
+.note_quote_by .author.is_u::after
+{
+  color: rgb(var(--color-yes));
+}
+
+.author .name 
+{
+  background-color: rgb(var(--color-b));
+  padding: 0 var(--padm);
+  grid-area: name;
+}
+
+.author .name.empty::before
+{
+  content: attr(title)!important;
+}
+
+.author .name[data-petname]::after 
+{
+  align-self: center;
+  color: rgb(var(--color-c));
+  content: "(" attr(data-petname) ")";
+  font-size: var(--font-size-s);
+  margin-left: var(--pad);
+}
+
+.by .author
+{
+  grid-area: author;
+}
+
+.paragraph > a.author
+{
+  border-bottom: 1px solid rgb(var(--c));
+  border-top: 1px solid transparent;
+}
+
+.paragraph > a.author .name
+{
+  padding: 0;
+  margin: 0;
+}
+
+.paragraph > a.author .picture,
+.paragraph > a.author:not(.has-picture)::before,
+.paragraph > a.author .name:not(.empty)::after
+{
+  display: none;
+}
+
+.in_view > .by .author:not(.has-picture)::before
+{
+  height: 2rem;
+  width: 2rem;
+  grid-area: img;
+}
+
+.in_view > .by .author::after
+{
+  align-self: stretch;
+  align-content: center;
+  font-size: var(--font-size-m);
+  grid-area: flw;
+  padding: 0 var(--pad);
+}
+
+.in_view > .by .author
+{
+  color: rgb(var(--color-d));
+  grid-template-areas: "img name flw" "img nip5 flw"
+}
+
+.in_view > .by .author .picture
+{
+  height: var(--size-s);
+  width: var(--size-s);
+}
+
+.in_view > .by .author .name
+{
+  align-self: start;
+  display: grid;
+  grid-template-areas: "name petname" "nip5 nip5";
+}
+
+.in_view > .by .author .name[data-nip05]::before
+{
+  color: rgb(var(--color-d));
+  content: attr(data-nip05);
+  grid-area: nip5;
+}
+
+.in_view > .by .author .name::after
+{
+  display: block;
+  grid-area: petname;
+}
+
+
+
+
+
+/* @end */
+
+
+/* @group id */
+
+.id 
+{
+  background-color: rgba(var(--c),1);
+  box-sizing: border-box;
+  display: grid;
+  grid-area: id;
+  grid-template-areas: "nid xid";
+  grid-template-columns: 2fr 1fr;
+  line-height: 1rem;
+  margin: 0;
+  opacity: .21;
+  overflow-x: scroll;
+  word-break: keep-all;
+}
+
+.nid
+{
+  align-items: center;
+  grid-area: nid;
+  line-height: 1;
+  padding: 0 var(--padm);
+  text-decoration: none;
+  user-select: none;
+  white-space: pre;
+  word-break: keep-all;
+}
+
+.nid::before
+{
+  content: "-> ";
+  font-size: var(--font-size-s);
+}
+
+[data-luma="light"] > .by .id *
+{
+  color: rgb(var(--color-dark));
+}
+
+[data-luma="dark"] > .by .id *
+{
+  color: rgb(var(--color-light));
+}
+
+.xid
+{
+  align-self: center;
+  background: 
+  rgba(var(--color-b),1),
+  rgba(var(--color-c),1)
+  ;
+  grid-area: xid;
+  padding: 0 var(--padm);
+}
+
+.in_view > .by .id
+{
+  opacity: 1;
+  padding: 0 var(--padm);
+}
+
+.in_view > .by .nid
+{
+  font-size: 0;
+  opacity: 1;
+}
+
+.in_view > .by .nid::before
+{
+  color: inherit;
+  content: "<- ";
+}
+
+.in_view > .by .xid
+{
+  display: block;
+}
+
+/* @end */
+
+/* @group created_at */
+
+.by .created_at 
+{
+  color: rgb(var(--color-d));
+  cursor: pointer;
+  display: grid;
+  font-size: 0;
+  grid-area: created_at;
+  grid-template-areas: "elapsed";
+  justify-items: end;
+  justify-self: end;
+  line-height: 1.5;
+  padding: 0 var(--padm);
+  white-space: pre;
+  word-break: keep-all;
+}
+
+.by .created_at::after 
+{
+  content: "~" attr(data-elapsed);
+  font-size: var(--font-size-s);
+  grid-area: elapsed;
+}
+
+.in_view > .by .created_at
+{
+  font-size: var(--font-size-s);
+  grid-template-areas: 
+  "timestamp elapsed" 
+  "title title"
+  ;
+}
+
+.in_view > .by .created_at::before
+{
+  content: attr(title);
+  grid-area: title;
+}
+
+/* @end */
+
+/* @group content */
+
+.content 
+{
+  align-self: start;
+  box-sizing: border-box;
+  color: rgb(var(--color-e));
+  grid-area: content;
+  margin-bottom: var(--pad);
+  max-height: calc(100vh - 8rem);  
+  overflow: hidden;
+  position: relative;
+}
+
+.in_view > .replies > .note > .content,
+.root:not(.in_view):not(.in_path) > .content
+{
+  margin-bottom: 2rem;
+  position: sticky;
+  top: 1rem;
+  z-index: 2;
+}
+
+.in_view > .replies > .note > .content
+{
+  top: calc(var(--line) + var(--line) + var(--padm));
+}
+
+.in_view > .content
+{
+  display: grid;
+  justify-content: center;
+  max-height: unset;
+  padding-top: var(--line);
+  padding-bottom: var(--line);
+}
+
+.draft > .content
+{
+  max-height: unset;
+}
+
+/* @end */
+
+/* @group paragraph */
+
+.paragraph
+{ 
+  hyphens: auto;
+  margin-bottom: 0;
+  padding: 0 var(--pad);
+  padding-top: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.parsed > .paragraph,
+.decrypted > .paragraph
+{
+  padding: var(--pad);
+}
+
+.paragraph.cypher
+{
+  color: rgb(var(--color-c));
+  font-size: var(--font-size-xs);
+}
+
+.in_view > .content > .paragraph
+{
+  color: rgb(var(--color-e));
+  font-size: var(--font-size-m);
+  justify-self: stretch;
+  line-height: calc(var(--font-size-m)*1.5);
+  max-width: 80vw;
+}
+
+.view_e .in_path:not(.in_view) > .content .paragraph,
+replies:not(.expanded) .note:not(.is_new).haz_new_reply > .content .paragraph
+{
+  font-size: var(--font-size-s);
+  line-height: 1rem;
+  padding: var(--padm);
+}
+
+/* @end */
+
+/* @group links */
+
+.content .content_link
+{
+  color: rgba(var(--color-sad),.6);
+  margin-right: var(--padm);
+}
+
+.content .nostr_link
+{
+  color: rgba(var(--color-alt),.6);
+}
+
+.content .nostr_link::before
+{
+  color: rgb(var(--color-c));
+  content: "#";
+}
+
+.content .nostr_link::after
+{
+  color: rgb(var(--color-c));
+  content: "…";
+}
+
+/* @end */
+
+/* @group img / video */
+
+.content-img,
+.content-video
+{
+  display: block;
+  height: auto;
+  max-height: var(--media-height);
+  max-width: 100%;
+  padding: var(--pad) 0;
+}
+
+.in_view > .content .content-img
+{
+  margin: var(--line) auto;
+  max-height: var(--media-max-height);
+  justify-self: center;
+}
+
+.in_view > .content .content-video
+{
+  max-height: var(--media-max-height);
+}
+
+.in_view > .content .note_quote .content-img
+{
+  margin: 0 auto;
+}
+
+.view_e .note.in_path:not(.in_view) > .content .content-img,
+.view_e .note.in_path:not(.in_view) > .content .content-video
+{
+  max-height: var(--size);
+}
+
+/* @end */
+
+
+/* @group replies */
+
+.replies
+{
+  grid-area: replies;
+  padding-left: var(--padm);
+}
+
+.view_e .in_path:not(.in_view) > .replies,
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies
+{
+  padding-left: 0;
+}
+
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
+.note.out > .replies::after,
+.haz_solo .note:not(.in_path) > .replies::after
+{
+  display: none;
+}
+
+/* @end */
+
+/* @group replies summary */
+
+.replies > summary
+{
+  background-color: rgb(var(--color-b));
+  color: rgb(var(--color-d));
+  display: none;
+  grid-template-columns: 1fr auto;
+  line-height: 1.5rem;
+  z-index: 5; 
+}
+
+.haz_reply > .replies > summary,
+.haz_new > .replies > summary
+{
+  display: grid;
+}
+
+.in_view > .replies > summary
+{
+  border-bottom: 1px dashed rgb(var(--color-d));
+  position: sticky;
+  top: var(--line);
+}
+
+.root:not(.in_view) > .replies > summary
+{
+  position: sticky;
+  top: 1rem;
+}
+
+.replies > summary::after
+{
+  content: "+";
+  margin: 0 var(--pad);
+}
+
+.replies[open] > summary::after
+{
+  content: "-";
+}
+
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
+.view_e .in_path:not(.in_view) > .replies[open] > summary,
+.note.out > .replies > summary,
+.haz_solo .haz_reply:not(.in_path) > .replies[open] > summary,
+.haz_solo .root:not(.in_view):not(.in_path) > .replies > summary
+{
+  display: none;
+}
+
+/* @end */
+
+/* @group mark-read */
+
+.mark_read
+{
+  color: rgb(var(--color-c));
+  padding: 0;
+}
+
+.replies.expanded > summary .mark_read::before
+{
+  content: "// ";  
+}
+
+.replies:not(.expanded) > summary .mark_read
+{
+  color: rgb(var(--color-no));
+  text-align: left
+}
+
+.replies:not(.expanded) > summary .mark_read::before
+{
+  content: "/* ";  
+}
+
+.replies:not(.expanded) > summary .mark_read::after
+{
+  content: " read */";  
+}
+
+.in_view > .replies > summary .mark_read
+{
+  color: rgb(var(--color-d));
+}
+
+.in_view > .replies > summary .mark_read
+{
+  text-align: left;
+}
+
+/* @end */
+
+
+/* @group note actions */
+
+.note > .actions 
+{
+  bottom: 4rem;
+  background: rgba(var(--color-b),1);
+  font-size: var(--font-size-s);
+  grid-area: actions;
+  position: sticky;
+  text-align: right;
+  z-index: 3;
+}
+
+.note > .actions > summary
+{
+  line-height: 1rem;
+  padding: 0 var(--padm);
+  text-align: right;
+}
+
+.note > .actions[open] > summary
+{
+  display: inline;
+  text-align: right;
+}
+
+.note > .actions .butt
+{
+  padding: 0 var(--padm);
+}
+
+.in_view > .actions
+{
+  align-self: center;
+  justify-self: center;
+  line-height: 1.5rem;
+  position: sticky;
+  top: var(--line);
+  width: auto;
+  z-index: 5;
+}
+
+.in_view > .actions > summary
+{
+  line-height: 1.5rem;
+}
+
+.in_view > .actions .butt
+{
+  color: rgb(var(--color-d));
+}
+
+.in_view > .replies > .note > .actions,
+.root:not(.in_path) > .actions
+{
+  position: sticky;
+  top: 1rem;
+}
+
+.view_e .in_path:not(.in_view) > .actions
+{
+  display: none;
+}
+
+/* @end */
+
+
+/* @group tags */
+
+.tags_wall
+{
+  background: rgba(var(--color-b),1);
+  bottom: 4rem;
+  grid-area: tags;
+  position: sticky;
+  z-index: 3;
+}
+
+.tags_wall[open]
+{
+  grid-area: opentags;
+}
+
+.tags_wall summary
+{
+  color: rgb(var(--color-d));
+  line-height: 1rem;
+  padding: 0 var(--padm);
+}
+
+.tags_wall[open] summary
+{
+  text-align: left;
+}
+
+.tags_wall:not(.empty) summary::after
+{
+  content: "";
+}
+
+.tags_wall[open]:not(.empty) summary::before
+{
+  content: "tags: ";
+}
+
+.in_view > .tags_wall
+{
+  bottom: 0;
+  position: relative;
+}
+
+.in_view > .tags_wall > summary,
+.in_view > .tags_wall[open] > summary
+{
+  text-align: center;
+}
+
+.in_view > .tags_wall .tags
+{
+  justify-content: center;
+}
+
+.view_e .in_path:not(.in_view) > .tags_wall
+{
+  display: none;
+}
+
+.tags 
+{
+  display: grid;
+  font-size: var(--font-size-s);
+  list-style: none;
+  margin: 0;
+  padding: var(--pad);
+}
+
+.tag
+{
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: var(--pad);
+  grid-template-columns: 3.15em 1fr auto;
+  overflow-x: scroll;
+  white-space: pre;
+}
+
+.tag button
+{
+  color: rgb(var(--color-c));
+  justify-self:end;
+  padding: 0;
+}
+
+.tag button::before
+{
+  content: "[";
+}
+
+.tag button::after
+{
+  content: "]";
+}
+
+/* @end */
+
+
+/* @group blank */
+
+.note.blank
+{
+  --c: var(--color-c);
+}
+
+.note.blank::after
+{
+  content: "nope: " attr(data-nope);
+  font-size: var(--font-size-s);
+  line-height: 1.5;
+  padding: var(--pad);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.note.blank > .by::before
+{
+  content: "??";
+  font-size: var(--font-size-s);
+  grid-area: author;
+  padding-left: var(--padm);
+}
+
+.blank > .by .created_at
+{
+  display: none;
+}
+
+.blank > .content
+{
+  font-size: var(--font-size-s);
+}
+
+/*.blank > .content .paragraph
+{
+  line-height: 1.5;
+  margin: 0;
+}*/
+
+/* @end */
+
+/* @group quote */
+
+.note_quote
+{
+  background: rgba(var(--color-c),.2);
+  background-color: rgb(var(--color-b));
+  border: 1px dashed rgba(var(--color-c),1);
+  
+  display: grid;
+  margin: var(--pad);
+  margin-bottom: var(--line);
+  /*margin: 0;*/
+  max-height: var(--media-height);
+  max-width: 960px;
+  overflow: hidden;
+  /*padding: var(--pad);*/
+  position: relative;
+}
+
+.note_quote:last-child
+{
+  margin-bottom: var(--padm);
+}
+
+/*.note_quote:hover
+{
+  /*border: 1px dashed rgba(var(--color-d),1);*!/
+  /*box-shadow: 0px .2rem var(--padm) rgba(var(--c),1);*!/
+}*/
+
+.note.in_view > .content .note_quote
+{
+  margin: var(--line);
+  max-height: unset;
+}
+
+.note_quote_by
+{
+  background: rgb(var(--color-b));
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-area: unset;
+  grid-template-areas: "author . id";
+  grid-template-columns: auto 1fr auto;
+  line-height: 1rem;
+}
+
+.note_quote_by .author .name
+{
+  background: none;
+}
+
+.note_quote_by .nostr_link
+{
+  justify-self: end;
+  margin: 0;
+}
+
+.note_quote > .paragraph
+{
+  font-size: var(--font-size-s);
+  line-height: 1.5;
+  padding: 0 var(--padm);
+  padding: var(--padm);
+}
+
+.note_quote > .paragraph > .content-img
+{
+  max-height: var(--size-l);
+}
+
+/* @end */
+
+/* @group kind-1 */
+
+.note[data-kind="1"]:not(.tiny):not(.in_view)::before
+{
+  display: none;
+}
+
+.note[data-kind="1"].root:not(.in_view):not(.in_path) > .content::after
+{
+  /*padding-bottom: var(--line);*/
+}
+
+/*.note[data-kind="1"] > .content*/
+
+
+/* @end */
+
+/* @group tiny */
+
+.note.tiny
+{
+  /*background: rgba(var(--color-b));*/
+  margin: 0;
+}
+
+.note.tiny[data-kind="7"]
+{
+  border: none;
+}
+
+.note.in_view > .replies > .note.tiny,
+.note.tiny:not(.in_view)
+{
+  grid-template-areas: "before content after by";
+  grid-template-columns: auto auto auto 1fr;
+}
+
+.note.tiny:not(.in_view) > .by .author span
+{
+  margin-left: 0;
+}
+
+.note.tiny:not(.in_view)::before
+{
+  content: attr(data-kind);
+  font-size: var(--font-size-s);
+  padding: 0 var(--padm);
+  align-self: center;
+  grid-area: before;
+}
+
+.note.tiny[data-kind="7"]:not(.in_view)::before,
+.note.tiny[data-kind="6"]:not(.in_view)::before,
+.note.tiny[data-kind="16"]:not(.in_view)::before,
+.note.tiny[data-kind="7"]:not(.in_view)::after,
+.note.tiny[data-kind="6"]:not(.in_view)::after,
+.note.tiny[data-kind="16"]:not(.in_view)::after
+{
+  display: none;
+}
+
+.note.in_view > .replies > .note.tiny > .content,
+.note.tiny:not(.in_view) > .content
+{
+  align-self: center;
+  border-top: none;
+  border-bottom: none;
+  font-size: var(--font-size-s);
+  padding-bottom: var(--padm);
+  padding-left: 5px;
+  padding-top: var(--padm);
+  
+  padding-top: 0;
+  padding-bottom: 0;
+  /*line-height: 1.5;*/
+  
+  margin: 0!important;
+  min-width: calc(1rem + 1px);
+}
+
+.note.tiny:not(.in_view) .paragraph
+{
+  line-height: 1;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.note.tiny:not(.in_view) > .content > *,
+.note.tiny:not(.in_view) > .actions,
+.note.tiny:not(.in_view) > .tags_wall,
+.note.tiny:not(.in_view) > .replies,
+.note.tiny:not(.in_view) > .by .author .picture,
+.note.tiny:not(.in_view) > .by .author::before
+{
+  display: none;
+}
+
+.note.root.tiny:not(.in_view) > .tags_wall
+{
+  display: none!important;
+}
+
+.note.tiny[data-kind="7"]:not(.in_view) > .content
+{
+  padding-left: 0;
+}
+
+.note.tiny[data-kind="7"]:not(.in_view) > .content > *
+{
+  display: block;
+}
+
+.note.tiny[data-kind="6"]:not(.in_view) > .content::before,
+.note.tiny[data-kind="16"]:not(.in_view) > .content::before
+{
+  color: rgb(var(--color-d));
+  content: "reposted by ";
+}
+
+.note.root:not(.in_path).tiny 
+{
+  border-bottom: none;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+
+.note.tiny > .actions > .butt.hide
+{
+  color: rgb(var(--color-no));
+}
+
+.note.tiny::after
+{
+  align-self: center;
+  background: rgb(var(--color-b));
+  content: attr(data-seen) " - " attr(data-subs);
+  font-size: var(--font-size-xs);
+  grid-area: after;
+  padding: 0 var(--padm);
+  text-align: center;
+}
+
+/* @end */
+
+
+
+
+.sig 
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-c));
+  font-size: var(--font-size-xs);
+  grid-area: sig;
+  margin-bottom: 0;
+  overflow-x: hidden;
+  overflow-x: scroll;
+  padding: var(--pad) var(--pad) 0 var(--pad);
+  text-align: center;
+}
+
+@media screen and (min-width: 1025px) 
+{
+  html:not(.view_e) #notes
+  {
+    padding-left: var(--pad-l);
+  }
+  
+/*  .note:hover
+  {
+    background: rgba(var(--c),.06);
+  }
+  
+  .note:hover::before
+  {
+    color: rgba(var(--color-f));
+  }*/
+  
+/*  .by .id:hover
+  {
+    background-color: rgb(var(--c));
+  }*/
+  
+  .created_at:hover::after,
+  .created_at:hover 
+  {
+    color: rgb(var(--color-e));
+  }
+  
+  .author:hover .name[data-petname]::after 
+  {
+    color: rgb(var(--color-d));
+  }
+  
+  .content .nostr_link:hover
+  {
+    color: rgba(var(--color-alt),1);
+  }
+  
+  .pubkey .author::after
+  {
+    background: rgb(var(--color-a));
+    padding: var(--padm);
+  }
+  
+  
+  .mark_read:hover
+  {
+    background-color: rgba(var(--color-a),1);
+    /*color: rgb(var(--color-e));*/
+    text-align: left;
+  }
+  
+  .replies:not(.expanded) > summary .mark_read:hover::after,
+  .mark_read:hover::after
+  {
+    content: " mark read";
+  }
+  
+  .replies:not(.expanded) > summary .mark_read:hover
+  {
+    /*color: rgb(var(--color-b));*/
+  }
+
+}
+
+@media screen and (max-width: 768px) 
+{
+  :root {
+    /*--font-size: 14px;*/
+  }
+  
+  .note
+  {
+/*    background: rgba(var(--c),.1);
+    box-sizing: border-box;
+    border-left: 1px dotted rgba(var(--color-c),.5);
+    border-top: 1px dotted rgba(var(--color-c),.5);
+    cursor: auto;
+    display: grid;*/
+    grid-template-areas: 
+    "by by"
+    "content content"
+    "opentags opentags"
+    "tags actions"
+    "replies replies"
+    "sig sig"
+    "after after"
+    ;
+    grid-template-columns: 1fr auto;
+    /*grid-template-rows: auto 1fr auto;*/
+/*    position: relative;
+    --who: attr(data-who);
+    z-index: 1;*/
+  }
+  
+  .note.root:not(.in_path),
+  .note.in_view > .replies > .note,
+  #notes > .note:not(.root):not(.in_path)
+  {
+    grid-template-areas: 
+    "by by"
+    "content content"
+    "opentags opentags"
+    "tags actions"
+    "replies replies"
+    "sig sig"
+    "after after"
+    ;
+    grid-template-columns: 1fr auto;
+  }
+  
+  .root:not(.in_view):not(.in_path) > .content
+  {
+    margin-bottom: var(--pad);
+    position: relative;
+    top: 0;
+    z-index: 0;
+  }
+  
+}
