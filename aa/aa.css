@@ -832,5 +832,6 @@ li.item > .val
 {
   :root {
     /*--font-size: 14px;*/
+    --pad: .68rem;
   }
 }

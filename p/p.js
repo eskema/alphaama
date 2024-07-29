@@ -144,9 +144,9 @@ aa.p.author_list =(a,l,sort='text_asc')=>
   if (!a.length) return;
   aa.p.authors(a).then(e=>
   {
-    l.classList.add('author_list');
+    l.classList.add('list','list_grid','author_list');
     for (const x of a) 
-      l.append(aa.mk.l('li',{cla:'author_list_item',app:aa.mk.p_link(x)}));
+      l.append(aa.mk.l('li',{cla:'item author_list_item',app:aa.mk.p_link(x)}));
     setTimeout(()=>{aa.fx.sort_l(l,sort)},500);
   });
 };
@@ -156,7 +156,7 @@ aa.p.author_list =(a,l,sort='text_asc')=>
 aa.mk.extradata =p=>
 {
   const extradata = aa.mk.l('section',{cla:'extradata'});
-  const a = ['p_relays','p_follows','p_followers','p_petnames'];
+  const a = ['p_petnames','p_relays','p_follows','p_followers'];
   for (const k of a)
   {
     let id = k.slice(2);
@@ -329,7 +329,12 @@ aa.mk.metadata_nip05 =(k,v,p)=>
 
 aa.mk.metadata_picture =(k,v,p)=>
 {
-  if (aa.is.trusted(p.trust) && v) return aa.mk.l('img',{src:v});
+  if (aa.is.trusted(p.trust) && v) 
+  {
+    let img = aa.mk.l('img',{src:v});
+    img.addEventListener('click',e=>{e.target.classList.toggle('expanded')});
+    return img;
+  }
   else return aa.mk.l('p',{cla:k,con:v});
 };
 
@@ -527,6 +532,7 @@ aa.clk.p_metadata =e=>
   aa.r.demand(request,aa.r.in_set(aa.r.o.r),{eose:'close'});
 };
 
+
 // refresh all profile data (metadata,relays,follows)
 aa.clk.p_refresh =e=>
 {
@@ -548,12 +554,12 @@ aa.clk.p_relays =e=>
 // make relays
 aa.mk.p_relays =(a,p)=>
 {
-  let ul = aa.mk.l('ul',{cla:'relays'});
+  let ul = aa.mk.l('ul',{cla:'relays list'});
   if (a) for (const relay in a) ul.append(aa.mk.relay(relay,a[relay]));
   const butt_relays = aa.mk.butt(['refresh relays','p_relays']);
   let relays_details = aa.mk.details('relays ('+ul.childNodes.length+')',butt_relays);
   relays_details.append(ul);
-  if (p.events.k10002.length) 
+  if (p.events.k10002?.length) 
     butt_relays.dataset.last = aa.t.display(p.events.k10002[0][1]);
   return relays_details
 };
@@ -935,6 +941,13 @@ aa.views.npub1 =async npub=>
 
   let notes_by = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
   let notes_ref = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
+
+  // setTimeout(()=>
+  // {
+  //   let index = document.getElementById('i_item_'+xpub);
+  //   if (index) index.querySelector('.key').click();
+  // },200);
+  
 };
 
 // view for nprofile

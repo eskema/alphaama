@@ -68,6 +68,7 @@ aa.i.dex.at =(v,id)=>
   {
     l.textContent = s+aa.t.display(v);
     l.href = '#'+aa.fx.encode('nid',id);
+    l.classList.remove('empty');
   } 
 };
 
@@ -221,7 +222,8 @@ aa.mk.i_item =(k,v,id)=>
 aa.mk.i_pubkey =(k,v,id)=>
 {
   let li = aa.mk.i_item(k,v,id);
-  let p_name = aa.mk.p_link(k).querySelector('.name');
+  let p_name = aa.mk.p_link(k);
+  // p_name.tagName =
   let key = li.querySelector('.key');
   key.textContent = '';
   key.append(p_name||aa.fx.encode('npub',k).slice(0,12));

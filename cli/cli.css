@@ -101,3 +101,11 @@
     background: rgb(var(--color-no));
   }
 }
+
+@media screen and (max-width: 769px)
+{
+  .cli_expanded #cli_t
+  {
+    padding: var(--pad-l);
+  }
+}

@@ -407,7 +407,7 @@ aa.regx =
 
 
 // timeout with delay if called again before for some time
-aa.to =(f,t,s)=>
+aa.to =async(f,t,s)=>
 {
   if (!aa.todo) aa.todo = {};
   if (aa.todo.hasOwnProperty(s)) clearTimeout(aa.todo[s]);

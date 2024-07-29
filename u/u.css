@@ -1,4 +1,5 @@
-@keyframes u_u {
+@keyframes u_u 
+{
   89%
   {
     content: "a_a";
@@ -24,11 +25,7 @@
   position: fixed;
   right: 0;
   z-index: 12;
-}
-
-
-
- 
+} 
 
 #butt_u_u
 {
@@ -56,10 +53,6 @@
   color: rgb(var(--color-f));
 }
 
-
-
-
-
 #butt_u_u img 
 {
   height: 100%;
@@ -73,25 +66,9 @@
   z-index: -1;
 }
 
-
-
 #butt_u_u img:not([src])
 {
   opacity: 0;
-}
-
-.cli_expanded #u_u
-{
-  align-items: start;
-  bottom: unset;
-  top: 0;
-  z-index: 8;
-}
-
-.cli_expanded #butt_u_u
-{
-  bottom: unset;
-  top: 0;
 }
 
 #u_u.expanded
@@ -125,4 +102,18 @@
   height: 100%;
   position: absolute;
   width: 100%;
+}
+
+.cli_expanded #u_u
+{
+  align-items: start;
+  bottom: unset;
+  top: 0;
+  z-index: 8;
+}
+
+.cli_expanded #butt_u_u
+{
+  bottom: unset;
+  top: 0;
 }

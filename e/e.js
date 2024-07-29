@@ -23,6 +23,20 @@ aa.e.append_to_notes =(note)=>
     aa.e.note_observer.observe(note);
   }
   notes.insertBefore(note,last);
+
+  aa.to(()=>
+  {
+    let butt = document.querySelector('.pagination .butt');
+    if (!butt) document.getElementById('e').append(aa.mk.pagination());
+    else 
+    {
+      let n = aa.l.dataset.pagination;
+      if (n 
+      && butt.classList.contains('done') 
+      && document.getElementById('notes').childNodes.length > n
+      ) butt.textContent = 'moar dan '+n;
+    }
+  },300,'pagination');
 };
 
 
@@ -153,17 +167,7 @@ aa.e.load =()=>
 };
 
 
-// mutation observer for notes section
-aa.e.section_mutated =a=> 
-{
-  for (const mutation of a) 
-  {
-    const section = mutation.target.closest('section');
-    let butt = section.querySelector('section > header > .butt');
-    aa.fx.data_count(butt,'.note');
-  }
-};
-aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
+
 
 
 // add to missing event list
@@ -239,6 +243,63 @@ aa.get.missing =async type=>
 };
 
 
+// restrict amount of root events displayed at once
+aa.mk.pagination =()=>  
+{
+  let style = document.getElementById('e_pagination');
+  if (!style) 
+  {
+    style = aa.mk.l('style',{id:'e_pagination'});
+    document.head.append(style);
+  }
+  let pagination = aa.mk.l('p',{cla:'pagination'});
+  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:aa.e.pagination_upd});
+  pagination.append(butt_more);
+  butt_more.click();
+  return pagination;
+};
+
+// update pagination 
+aa.e.pagination_upd =async e=>
+{
+  let style = document.getElementById('e_pagination');
+  let total = document.getElementById('notes').childNodes.length;
+  if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination
+  let n = aa.l.dataset.pagination;
+  if (n < total)
+  {
+    if (!aa.l.dataset.pagination) aa.l.dataset.pagination = n;
+    else aa.l.dataset.pagination = n * 2;
+    if (e.target) e.target.textContent = 'moar '+n;
+    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;';
+    setTimeout(()=>
+    {
+      let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
+      if (last) aa.fx.scroll(last)
+    },200);
+  }
+  else 
+  {
+    if (n > total && e.target.classList.contains('done'))
+    {
+      n = localStorage.pagination;
+      if (e.target)
+      {
+        let n = aa.l.dataset.pagination;
+        e.target.textContent = 'moar '+n;
+        e.target.classList.remove('done');
+      } 
+    } 
+    else if (e.target)
+    {
+      e.target.textContent = 'no moar :)';
+      e.target.classList.add('done');
+    }
+    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;';
+  }
+};
+
+
 // parse nip19 to render as mention or quote
 aa.parse.nip19 =s=>
 {
@@ -267,10 +328,40 @@ aa.parse.nip19 =s=>
 aa.parse.nostr =(match)=>
 {
   let df = new DocumentFragment();
+  
   let s = match[0].slice(6);
   let decoded = aa.fx.decode(s);
-  let dis = decoded ? aa.parse.nip19(s) : s;
-  df.append(dis,' ');
+  if (!decoded)
+  {
+    let matches = (match.input).split('nostr:').join(' ').trim().split(' ');
+    for (const m of matches)
+    {
+      // let s = match[0].slice(6);
+      let decoded = aa.fx.decode(m);
+      let dis = decoded ? aa.parse.nip19(m) : m;
+      df.append(dis,' ');
+    }
+  }
+  else
+  {
+    df.append(aa.parse.nip19(s),' ');
+  }
+
+  
+
+  // let match = (match[0]).trim();
+  // if (match.length > 69)
+  // {
+  //   let dis = match.slice(0,69);
+  // }
+  // else 
+  // {
+  //   let s = match[0].slice(6);
+  //   let decoded = aa.fx.decode(s);
+  //   let dis = decoded ? aa.parse.nip19(s) : s;
+  //   df.append(dis,' ');
+  // }
+  
   // if (!decoded) df.append(s,' ');
   // else df.append(aa.parse.nip19(s),' ')
   return df
@@ -429,7 +520,7 @@ aa.e.note_blank =(tag,dat,seconds)=>
     else console.log('malformed tag on',dat);
   }
   const note = aa.e.note({event:blank_event,seen:seen,subs:dat.subs,clas:['blank']});
-  note.classList.add('blank');
+  note.classList.add('blank','tiny');
   if (!sessionStorage[id]) note.classList.add('is_new');
   if (r) note.dataset.r = r;
   return note
@@ -460,7 +551,7 @@ aa.e.note_replace =(l,dat)=>
   let is_reply = b.classList.contains('reply');
   b.className = l.className;
   l.remove();
-  b.classList.remove('blank','draft','not_sent');
+  b.classList.remove('blank','tiny','draft','not_sent');
   if (dat.clas) b.classList.add(...dat.clas);
   if (!is_root && b.parentElement.closest('.note')) 
   {
@@ -661,6 +752,19 @@ aa.get.quotes =async id=>
 };
 
 
+// mutation observer for notes section
+aa.e.section_mutated =a=> 
+{
+  for (const mutation of a) 
+  {
+    const section = mutation.target.closest('section');
+    let butt = section.querySelector('section > header > .butt');
+    aa.fx.data_count(butt,'.note');
+  }
+};
+aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
+
+
 // update note path when appending
 aa.e.upd_note_path =(l,stamp,is_u=false)=> 
 {
@@ -755,8 +859,30 @@ aa.kinds[7] =dat=>
   if (reply_tag && reply_tag.length) aa.e.append_to_replies(dat,note,reply_tag);
   else aa.e.append_to_notes(note);
   aa.get.pubs(dat.event.tags);
-  
   note.classList.add('tiny');
+  let content = note.querySelector('.content');
+  let con_t = content.textContent;
+  if (!aa.is.one(con_t) && con_t.startsWith(':') && con_t.endsWith(':'))
+  {
+    con_t = con_t.slice(1,-1);
+    aa.db.get_p(dat.event.pubkey).then(p=>
+    {
+      if (p && aa.is.trust_x(dat.event.pubkey))
+      {
+        let emojis = dat.event.tags.filter(t=>t[0]==='emoji' && t[1]===con_t);
+        if (emojis.length) 
+        {
+          let emoji = aa.is.url(emojis[0][2]).href;
+          if (emoji) 
+          {
+            content.textContent = '';
+            content.append(aa.mk.img(emoji));
+          }
+        }
+      }
+    });
+  }  
+  
   return note
 };
 
@@ -780,7 +906,6 @@ aa.views.note1 =async nid=>
   {
     let x = aa.fx.decode(nid);
     let dat = await aa.db.get_e(x);
-    let p = await aa.db.get_p(dat.event.pubkey);
     if (dat) aa.e.print(dat);
     else 
     {

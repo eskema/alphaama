@@ -1,6 +1,7 @@
 #oto
 {
   display: none;
+  font-size: 16px;
   grid-area: oto;
   overflow: hidden;
   overflow-y: scroll;
@@ -187,5 +188,18 @@
   {
     background-color: rgba(var(--color-c),.3);
     z-index: 2;
+  }
+}
+
+@media screen and (max-width: 769px)
+{
+  #oto
+  {
+    padding-left: var(--pad-l);
+  }
+  
+  #oto::before 
+  {
+    left: var(--pad-l);
   }
 }

@@ -14,11 +14,6 @@
   padding: 0 var(--padm);
 }
 
-#i details[open]
-{
-  margin: var(--line) 0;
-}
-
 #i details > summary
 {
   background: rgb(var(--color-a));
@@ -41,9 +36,11 @@
 #i details > summary[data-after="0"]
 {
   display: none;
-/*  opacity: .5;
-  text-decoration: line-through;
-  pointer-events: none;*/
+}
+
+#i details[open]
+{
+  margin: var(--line) 0;
 }
 
 #i details[open] > summary
@@ -73,7 +70,9 @@
 
 #i .key.solo
 {
-  text-decoration: underline;
+  background: rgb(var(--color-e));
+  color: rgb(var(--color-b));
+  /*text-decoration: underline;*/
 }
 
 #i .key::after
@@ -90,15 +89,19 @@
 
 #i .val.out
 {
-  text-decoration: line-through;
+  background: rgb(var(--color-no));
+  color: rgb(var(--color-light));
+  /*text-decoration: line-through;*/
 }
 
-#i_until a{
-  margin-top: var(--line);
+#i_until a
+{
+  margin-top: var(--pad);
 }
 
-#i_since a{
-  margin-bottom: var(--line);
+#i_since a
+{
+  margin-bottom: var(--pad);
 }
 
 #i_until,

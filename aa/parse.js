@@ -14,15 +14,16 @@ aa.parse.content =(s,trusted)=>
   let l = aa.mk.l('p',{cla:'paragraph'});
   const another_l =last_l=>
   {
-    if (aa.is.empty(last_l) || last_l.textContent === '/n') last_l.remove();
+    last_l.normalize();
+    if (aa.is.empty(last_l)) last_l.remove();
     else 
     {
-      last_l.normalize();
       df.append(last_l);
       l = aa.mk.l('p',{cla:'paragraph'});
     }
   };
-  const paragraphs = s.split(/\n\s*\n/);
+  // const paragraphs = s.split(/\n\s*\n/);
+  const paragraphs = s.split(/\n/);
   for (const paragraph of paragraphs)
   { 
     if (!paragraph.length) continue;    
@@ -55,12 +56,12 @@ aa.parse.content =(s,trusted)=>
     }
     another_l(l);
   }
-  let last_child = df.lastChild;
-  if (last_child && aa.is.empty(last_child))
-  {
-    let last_text = (last_child.textContent+'').trim();
-    if (!last_text.length) last_child.remove();
-  } 
+  // let last_child = df.lastChild;
+  // if (last_child && aa.is.empty(last_child))
+  // {
+  //   let last_text = (last_child.textContent+'').trim();
+  //   if (!last_text.length) last_child.remove();
+  // } 
   return df
 };
 
@@ -117,8 +118,11 @@ aa.parser =(parse_id,s,trust,regex_id)=>
   for (const match of matches) 
   {
     df.append(match.input.slice(index,match.index));
-    index = match.index + match[0].length;
-    df.append(aa.parse[parse_id](match,trust));
+    let parsed = aa.parse[parse_id](match,trust);
+    let childs = parsed.childNodes.length;
+    if (childs > 2) index = match.index + match.input.length;
+    else index = match.index + match[0].length;
+    df.append(parsed);
   }
   if (index < s.length) df.append(s.slice(index));
   return df

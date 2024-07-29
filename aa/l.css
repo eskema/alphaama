@@ -164,3 +164,21 @@ html:not(.cli_expanded) .l:not(.is_new),
   }
 
 }
+
+@media screen and (max-width: 769px) 
+{
+  .l 
+  {
+    padding: var(--pad) var(--padm);
+  }
+  
+  .l .list .item
+  {
+    padding: var(--pad) 0;
+  }
+  
+  .l::before
+  {
+    padding-left: 0;
+  }
+}

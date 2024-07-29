@@ -150,7 +150,7 @@ aa.u.decrypt =async s=>
 // true if you follow pubkey
 aa.u.is_following =xpub=>
 {
-  if (aa.u.p.follows.includes(xpub)) return true;
+  if (aa.u?.p?.follows?.includes(xpub)) return true;
   return false
 };
 
@@ -612,6 +612,7 @@ aa.u.unfollow =async s=>
       ul.append(aa.mk.l('li',{con:k,cla:'disabled'}));
       new_follows = new_follows.filter(p=>p[1]!==k);
       aa.p.score(k+' 4');
+      aa.p.p_links_upd(p);
     }
     else aa.log('invalid pubkey to unfollow')
   }

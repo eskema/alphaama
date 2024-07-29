@@ -15,9 +15,11 @@ aa.o =
     ls:
     {
       'ns':'.aa', // used as the prefix for actions
+      'pagination': '100', // number of root events displayed
       'reaction':'\uD83E\uDD18', // '🤘' default reaction emoji
       'team':'dark', // 'light'
       'trust':'11', // user score needed for loading media
+      
     },
 // todo
 //     'nav_keys':
@@ -78,6 +80,12 @@ aa.o.mk =(k,v)=>
   switch (k)
   {
     case 'team': if (aa.l.dataset.team !== v) aa.l.dataset.team = v; break;
+    // case 'pagination': 
+    //   let style = aa.mk.l('style',
+    //   {con:'.note:not(:nth-child(-n+'+k+')):not(.in_path){display:none;'});
+    //   document.head.append(style);
+    //   aa.l.dataset.pagination = localStorage.pagination;
+    //   break;
   }
   const id = aa.o.def.id;
   const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
@@ -158,9 +166,13 @@ aa.o.set =s=>
     let [k,v] = a;
     if (k && v)
     {
+      let old_v = localStorage[k];
       localStorage[k] = v;
       aa.mod_ui(aa.o,k,v);
-      aa.log(aa.mk.butt_action(aa.o.def.id+' set '+k+' '+v));
+      let log = aa.mk.l('p',{con:aa.o.def.id+' set '+k+' '+v});
+      let undo = aa.mk.butt_action(aa.o.def.id+' set '+k+' '+old_v,'undo');
+      log.append(' ',undo);
+      aa.log(log);
     }
   };
   aa.fx.loop(work,s)

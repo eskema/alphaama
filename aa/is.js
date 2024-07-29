@@ -27,8 +27,14 @@ aa.is.empty =l=>
   if (!l) return true;
   const len = l.childNodes.length;
   if (!len) return true;
-  const s = (l.textContent+'').trim();
-  if (!s || s === ' ') return true;
+  else
+  {
+    if (l.firstChild.nodeType === 3)
+    {
+      const s = (l.textContent+'').trim();
+      if (!s || s === ' ') return true;
+    }
+  }
   return false;
 };
 
