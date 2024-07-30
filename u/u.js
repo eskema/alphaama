@@ -172,7 +172,7 @@ aa.u.is_following_load_profiles =async p=>
 
 
 // if hex key is your pubkey
-aa.is.u =(x)=> aa.u?.o.ls.xpub === x;
+aa.is.u =(x)=> aa.u?.o?.ls?.xpub === x;
 
 
 // make p tag array from array

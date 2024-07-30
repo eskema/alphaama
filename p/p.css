@@ -343,6 +343,11 @@
   transition: var(--trans-quart);
 }
 
+[data-meta="picture"] 
+{
+  align-self: end;
+}
+
 img[data-meta="banner"]
 {
   background: none;
@@ -381,7 +386,7 @@ img[data-meta="picture"].expanded
 
 p[data-meta="banner"]
 {
-  margin-bottom: var(--line);
+  margin-bottom: 1.5rem;
 }
 
 [data-meta="about"]  
@@ -429,7 +434,7 @@ p[data-meta="banner"]
   grid-area: picture;
   justify-self: end;
   margin: var(--pad);
-  padding: var(--padm);
+  padding: var(--pad);
   z-index: 2;
 }
 

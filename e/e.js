@@ -872,7 +872,7 @@ aa.kinds[7] =dat=>
         let emojis = dat.event.tags.filter(t=>t[0]==='emoji' && t[1]===con_t);
         if (emojis.length) 
         {
-          let emoji = aa.is.url(emojis[0][2]).href;
+          let emoji = aa.is.url(emojis[0][2])?.href;
           if (emoji) 
           {
             content.textContent = '';

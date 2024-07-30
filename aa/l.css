@@ -2,8 +2,10 @@
 {
   grid-area: l;
   max-height: 60vh;
+  overflow: hidden;
   overflow-y: scroll;
   position: relative;
+  scrollbar-width: none;
 }
 
 #l > header

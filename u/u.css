@@ -92,7 +92,7 @@
   display: none;
 }
 
-#u_u:not([style]) #butt_u_u:not(.has-picture)::before
+#u_u #butt_u_u:not(.has-picture)::before
 {
   align-content: center;
   animation: u_u 3s ease-in-out 0s infinite;

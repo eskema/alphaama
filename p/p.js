@@ -205,14 +205,14 @@ aa.p.get_relay =p=>
   {
     for (const r of relays)
     {
-      const ru = aa.is.url(r[0]).href;
+      const ru = aa.is.url(r[0])?.href;
       if (ru === url) return url
     }
   }
 
   for (const r of relays)
   {
-    const url = aa.is.url(r[0]).href;
+    const url = aa.is.url(r[0])?.href;
     if (url) return url
   }    
   return u_relays[0]
@@ -385,7 +385,7 @@ aa.mk.p_follows =(a,p)=>
   let follows_details = aa.mk.details('follows ('+a.length+')',butt_follows);
   follows_details.append(ul);
   aa.p.author_list(a,ul);
-  if (p.events.k3.length) 
+  if (p?.events.k3?.length) 
     butt_follows.dataset.last = aa.t.display(p.events.k3[0][1]);
   return follows_details;
 };
