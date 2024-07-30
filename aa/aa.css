@@ -95,6 +95,7 @@ html
   font-family: "Source Code Pro", monospace;
   font-size: var(--font-size);
   margin: 0;
+  scrollbar-width: none;
 }
 
 body 
