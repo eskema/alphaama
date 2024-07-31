@@ -96,6 +96,7 @@ html
   font-size: var(--font-size);
   margin: 0;
   scrollbar-width: none;
+  /*scroll-snap-type: y mandatory;*/
 }
 
 body 

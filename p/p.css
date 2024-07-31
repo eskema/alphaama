@@ -19,6 +19,7 @@
   grid-template-rows: auto 1fr auto;
   padding: 1px;
   z-index: 0;
+  /*scroll-snap-align: start;*/
 }
 
 .profile[data-luma="light"]
@@ -70,7 +71,9 @@
 
 .profile > * > details > .butt
 {
+  display: inline;
   font-size: var(--font-size-s);
+  line-height: 1.5rem;
 }
 
 .profile > * > details > .butt::before
@@ -107,13 +110,11 @@
   padding: var(--pad-l) 0;
 }
 
-/*.extradata > details[open],*/
 .metadata > details[open]
 {
   padding-bottom: 0;
 }
 
-/*.extradata > details[open] > summary,*/
 .metadata > details[open] > summary
 {
   margin-bottom: 0;
@@ -141,7 +142,6 @@
 
 .profile > .pubkey .author
 {
-  /*align-items: stretch;*/
   font-size: var(--font-size);
   grid-area: author;
   justify-self: stretch;
@@ -258,9 +258,6 @@
   padding: 0 var(--pad);
   white-space: nowrap;
 }
-
-
-
 
 .profile .metadata_list .empty 
 {
@@ -418,7 +415,8 @@ p[data-meta="banner"]
 [data-meta="lud16"]::before 
 {
   content: "\020BF" " " "⚡️ ";
-  font-family: "emoji", "Source Code Pro", monospace;
+  font-family: Apple Color Emoji,"Segoe UI Emoji","Source Code Pro", monospace;
+  font-variant-emoji: emoji;
 }
 
 [data-meta="lud16"] 

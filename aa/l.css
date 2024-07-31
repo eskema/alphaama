@@ -2,8 +2,8 @@
 {
   grid-area: l;
   max-height: 60vh;
-  overflow: hidden;
-  overflow-y: scroll;
+  /*overflow: hidden;*/
+  /*overflow-y: scroll;*/
   position: relative;
   scrollbar-width: none;
 }
@@ -119,6 +119,12 @@
 {
   color: rgb(var(--color-no));
   opacity: .7;
+}
+
+.cli_expanded #l
+{
+  overflow: hidden;
+  overflow-y: scroll;
 }
 
 .cli_expanded #l > header

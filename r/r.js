@@ -329,6 +329,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     {
       aa.r.add(act_yes);
       aa.r.c_on(url,opts);
+      // aa.logs_read(e.target);
       e.target.parentElement.textContent = act_yes;
     }
   };
@@ -339,6 +340,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     exe:e=>
     {
       aa.r.add(act_no);
+      // aa.logs_read(e.target);
       e.target.parentElement.textContent = act_no;
     }
   };

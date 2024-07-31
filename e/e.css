@@ -24,6 +24,7 @@
   grid-template-rows: auto 1fr auto;
   margin: var(--pad) 0;
   position: relative;
+  /*scroll-snap-align: start;*/
   z-index: 1;
 }
 
@@ -235,11 +236,15 @@ a.author
   user-select: none;
 }
 
+.author:not(.has-picture)::before
+{
+  content: "";
+}
+
 .a.author.has-picture img,
 .author:not(.has-picture)::before
 {
   background: rgb(var(--c));
-  content: "";
   display: block;
   grid-area: img;
   height: 1rem; 
@@ -1178,7 +1183,9 @@ a.author
 {
   padding-left: 0;
   padding: 1px;
-  font-family: "emoji";
+  font-family: Apple Color Emoji,"Segoe UI Emoji","Source Code Pro", monospace;
+  font-variant-emoji: emoji;
+  
 }
 
 .note.tiny[data-kind="7"]:not(.in_view) > .content > *

@@ -325,7 +325,7 @@ aa.u.load =()=>
 aa.u.login =async s=>  
 {
   aa.cli.clear();
-  aa.u.set_mode(s.trim());
+  await aa.u.set_mode(s.trim());
 
   return new Promise(resolve=>
   {
@@ -477,13 +477,13 @@ aa.u.react =async s=>
 
 
 // u set mode
-aa.u.set_mode =async s=>
+aa.u.set_mode =s=>
 {
   switch (s)
   {
     case 'easy':
-      let butt_u = document.getElementById('butt_u');
-      if (!butt_u.parentElement.classList.contains('.expanded')) butt_u.click();
+      // let butt_u = document.getElementById('butt_u');
+      // if (!butt_u.parentElement.classList.contains('.expanded')) butt_u.click();
       aa.o.set('mode easy');
       aa.q.stuff();
       break;

@@ -235,16 +235,24 @@ aa.log =async(s,l=false)=>
   if (typeof s === 'string') s = aa.mk.l('p',{con:s});
   log.append(s);
   if (!l) l = aa.logs || document.getElementById('logs');
-  if (l) l.append(log);
+  if (l) 
+  {
+    l.append(log);
+    log.addEventListener('click',aa.logs_read);
+    l.scrollTop = l.scrollHeight;
+  }
   else console.log('log:',s)
 };
+
+
 // logs container element
 aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
 
-aa.logs_read =async()=>
+aa.logs_read =async(l)=>
 {
-  const log_new = document.querySelectorAll('.l.is_new');
-  if (log_new.length) for (const l of log_new) 
+  if (l) l = l.target.closest('.l.is_new');
+  let logs_new = l?[l]:document.querySelectorAll('.l.is_new');
+  if (logs_new.length) for (const l of logs_new) 
   {
     l.classList.remove('is_new');
     l.classList.add('just_added');
@@ -357,8 +365,14 @@ aa.mod_ui =(mod,k,v)=>
 {
   let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));
   let l = mod.hasOwnProperty('mk') ? mod.mk(k,v) : aa.mk.item(k,v);
-  if (!cur) document.getElementById(mod.def.id).append(l);
+  let mod_l = document.getElementById(mod.def.id);
+  if (!cur) mod_l.append(l);
   else cur.replaceWith(l);
+  if (mod_l.classList.contains('empty'))
+  {
+    mod_l.classList.remove('empty');
+    mod_l.parentElement.classList.remove('empty');
+  } 
 };
 
 
