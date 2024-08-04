@@ -428,6 +428,7 @@ aa.u.process_k3_tags =async(tags,x)=>
 
     if (petname)
     {
+      if (!p.petnames) p.petnames = [];
       if (aa.fx.a_add(p.petnames,[petname])) updd = true;
       if (is_u && p.petname !== petname) { p.petname = petname; updd = true; }
     }

@@ -222,16 +222,13 @@ aa.mk.i_item =(k,v,id)=>
 aa.mk.i_pubkey =(k,v,id)=>
 {
   let li = aa.mk.i_item(k,v,id);
-  let p_name = aa.mk.p_link(k);
-  // p_name.tagName =
+  let p_link = aa.mk.p_link(k);
+  p_name = p_link?.querySelector('.name');
   let key = li.querySelector('.key');
   key.textContent = '';
   key.append(p_name||aa.fx.encode('npub',k).slice(0,12));
   return li
 };
-// aa.mk.i_seen = aa.mk.i_item;
-// aa.mk.i_tag_subject = aa.mk.i_item;
-// aa.mk.i_tag_subject =(k,v,id)=> aa.mk.i_seen(k,v,id);
 
 
 // on load

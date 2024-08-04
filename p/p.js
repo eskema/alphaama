@@ -846,46 +846,6 @@ aa.kinds[3] =dat=>
       aa.p.save(p);
       if (aa.is.u(dat.event.pubkey)) aa.u.is_following_load_profiles(p);
     }
-    // const c_at = dat.event.created_at;
-    // if (!p.events.k3?.length || p.events.k3[0][1] < c_at) 
-    // {
-    //   if (!p.events.k3) p.events.k3 = [];
-    //   p.events.k3.unshift([dat.event.id,c_at]);
-    //   if (c_at > p.updated) p.updated = c_at;
-
-    //   const old_bff = [...p.follows];
-    //   p.follows = aa.p.authors_from_tags(dat.event.tags);
-    //   aa.p.authors(p.follows);
-    //   aa.u.process_k3_tags(dat.event.tags,dat.event.pubkey);
-
-    //   // for (const k of old_bff)
-    //   // {
-    //   //   if (!p.extradata.bff.includes(k))
-    //   //   {
-    //   //     // handle unfollowed k
-    //   //   }
-    //   // }
-
-    //   let s = dat.event.content+''.trim();
-    //   if (s.startsWith('{') && s.endsWith('}'))
-    //   {
-    //     let con = aa.parse.j(dat.event.content);
-    //     if (con)
-    //     {
-    //       let relays = aa.r.from_o(con,['k3']);
-    //       aa.p.relays_add(relays,p);
-    //       if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-    //       let content = note.querySelector('.content');
-    //       content.textContent = '';
-    //       content.append(aa.mk.ls({ls:con}))
-    //     }
-    //   }
-    //   aa.p.save(p);
-    //   // let profile = document.getElementById(p.npub);
-    //   // if (!profile) profile = aa.p.profile(p);
-    //   // if (aa.viewing === p.npub) aa.p.upd(profile,p,1);
-    //   if (aa.is.u(dat.event.pubkey)) aa.u.is_following_load_profiles(p);
-    // }
   })();
   
   // d3_post(dat,note);

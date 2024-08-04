@@ -45,8 +45,13 @@ aa.q.add =s=>
     }
     if (changed) 
     {
+      aa.q.close(k);
       aa.mod_save(aa.q)
-      .then(mod=>{aa.mod_ui(mod,k,aa.q.o.ls[k])});
+      .then(mod=>
+      {
+        aa.mod_ui(mod,k,aa.q.o.ls[k]);
+        aa.q.run(k);
+      });
     }
     aa.log(log);
   }

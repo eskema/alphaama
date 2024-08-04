@@ -72,12 +72,16 @@
 {
   background: rgb(var(--color-e));
   color: rgb(var(--color-b));
-  /*text-decoration: underline;*/
 }
 
 #i .key::after
 {
   content: none;
+}
+
+#i .key a
+{
+  pointer-events: none;
 }
 
 #i .val 
