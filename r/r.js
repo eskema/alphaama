@@ -88,7 +88,7 @@ aa.r.butts =(l,o)=>
   {    
     for (const set of o.sets)
     {
-      sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+set+' '+url,set))
+      sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+url+' '+set,set))
     }
   }
   sets.append(aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+'));
@@ -486,8 +486,25 @@ aa.r.load =()=>
 // ["AUTH", <challenge-string>]
 aa.r.message_type.auth =async message=> 
 {
-  console.log(message)
+  console.log(message);
+  let url = message.origin;
+  let challenge = message.data[1];
+  if (!url || !challenge) return;
+
+  let event = {kind:22242,tags:[]};
+  event.tags.push(['relay',url]);
+  event.tags.push(['challenge',challenge]);
+  aa.u.event_complete(event);
+  event.id = aa.fx.hash(event);
+  const signed = await aa.u.sign(event);
+  if (signed) 
+  {
+    let relay = aa.r.active[url];
+    relay.challenge = challenge;
+    aa.r.broadcast(signed,[url]);
+  }
 };
+
 
 // ["CLOSED",<sub_id>,<message>]
 aa.r.message_type.closed =async message=> 
