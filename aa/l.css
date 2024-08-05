@@ -38,6 +38,7 @@
   grid-gap: var(--pad);
   grid-template-areas: "bef k";
   grid-template-columns: auto 1fr;
+  padding-left: 0;
 }
 
 .l a

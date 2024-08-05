@@ -79,7 +79,7 @@ aa.u.event_draft =event=>
 // finalize event creation
 aa.u.event_finalize =async event=>
 {
-  event.id = aa.fx.hash(event);
+  if (!event.id) event.id = aa.fx.hash(event);
   const signed = await aa.u.sign(event);
   if (signed)
   {

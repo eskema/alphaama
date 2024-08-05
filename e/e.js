@@ -325,45 +325,52 @@ aa.parse.nip19 =s=>
 
 // parse nostr:stuff
 // use with aa.parser('nostr',s)
+// aa.parse.nostr =(match)=>
+// {
+//   let df = new DocumentFragment();
+  
+//   let s = match[0].slice(6);
+//   let decoded = aa.fx.decode(s);
+//   if (!decoded)
+//   {
+//     let matches = (match.input).split('nostr:').join(' ').trim().split(' ');
+//     for (const m of matches)
+//     {
+//       // let s = match[0].slice(6);
+//       let decoded = aa.fx.decode(m);
+//       let dis = decoded ? aa.parse.nip19(m) : m;
+//       df.append(dis,' ');
+//     }
+//   }
+//   else
+//   {
+//     df.append(aa.parse.nip19(s),' ');
+//   }
+
+//   return df
+// };
+
 aa.parse.nostr =(match)=>
 {
   let df = new DocumentFragment();
   
-  let s = match[0].slice(6);
-  let decoded = aa.fx.decode(s);
-  if (!decoded)
+  let matches = (match.input).split('nostr:').join(' ').trim().split(' ');
+  for (const m of matches)
   {
-    let matches = (match.input).split('nostr:').join(' ').trim().split(' ');
-    for (const m of matches)
+    let a = m.split('1');
+    let matchess = a[1].match(aa.regx.bech32);
+    if (matchess[0] && matchess.index === 0)
     {
-      // let s = match[0].slice(6);
-      let decoded = aa.fx.decode(m);
-      let dis = decoded ? aa.parse.nip19(m) : m;
-      df.append(dis,' ');
+      let s = a[0] + '1' + matchess[0];
+      let decoded = aa.fx.decode(s);
+      if (decoded)
+      {
+        df.append(aa.parse.nip19(s),' ',matchess.input.slice(matchess[0].length),' ');
+      }
+      else df.append(m,' ');
     }
   }
-  else
-  {
-    df.append(aa.parse.nip19(s),' ');
-  }
 
-  
-
-  // let match = (match[0]).trim();
-  // if (match.length > 69)
-  // {
-  //   let dis = match.slice(0,69);
-  // }
-  // else 
-  // {
-  //   let s = match[0].slice(6);
-  //   let decoded = aa.fx.decode(s);
-  //   let dis = decoded ? aa.parse.nip19(s) : s;
-  //   df.append(dis,' ');
-  // }
-  
-  // if (!decoded) df.append(s,' ');
-  // else df.append(aa.parse.nip19(s),' ')
   return df
 };
 
