@@ -141,6 +141,12 @@ aa.e.load =()=>
       exe:aa.e.clear
     },
     {
+      action:['e','s'],
+      required:['value'],
+      description:'search notes content for value',
+      exe:aa.e.search
+    },
+    {
       action:['e','view'],
       required:['hex_id'],
       description:'view event by hex_id',
@@ -165,9 +171,6 @@ aa.e.load =()=>
   section.append(notes);
   aa.e.section_observer.observe(notes,{attributes:false,childList:true});
 };
-
-
-
 
 
 // add to missing event list
@@ -365,7 +368,11 @@ aa.parse.nostr =(match)=>
       let decoded = aa.fx.decode(s);
       if (decoded)
       {
-        df.append(aa.parse.nip19(s),' ',matchess.input.slice(matchess[0].length),' ');
+        df.append(aa.parse.nip19(s),' ');
+        if (matchess[0].length < matchess.input.length)
+        {
+          df.append(matchess.input.slice(matchess[0].length),' ');
+        }
       }
       else df.append(m,' ');
     }
@@ -755,6 +762,20 @@ aa.get.quotes =async id=>
     if (!dat) dat = {event:{"id":id}};
     let quote = aa.e.quote(dat.event);
     setTimeout(()=>{ for(const q of quotes) q.replaceWith(quote)},100);
+  }
+};
+
+
+// search notes content for value
+aa.e.search =async s=>
+{
+  s = s.toLowerCase();
+  let contents = document.getElementsByClassName('content');
+  for (const con of contents)
+  {
+    let text = con.textContent.toLowerCase();
+    let has = text.search(s);
+    if (has !== -1) aa.log(aa.mk.nostr_link(con.parentElement.id))
   }
 };
 
