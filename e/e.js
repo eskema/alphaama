@@ -321,7 +321,7 @@ aa.parse.nip19 =s=>
       decoded.s = s;
       l = aa.e.quote(decoded);
     }
-    else l = aa.mk.l('span',{con:JSON.stringify(decoded)})
+    else l = aa.mk.l('span',{con:s+':'+JSON.stringify(decoded)})
   }
   else l = aa.mk.nostr_link(s);
   return l

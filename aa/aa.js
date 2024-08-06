@@ -16,6 +16,7 @@ const aa =
     p:{}, // memory profiles (pro)
     q:{},
   },
+  clear:[],
   clk:{},
   dependencies:
   [

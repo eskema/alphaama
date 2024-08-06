@@ -11,10 +11,6 @@ aa.state.clear =()=>
 {
   if (aa.viewing)
   {
-    if (aa.viewing.startsWith('npub'))
-    {
-      let xid = ''
-    }
     const in_view = aa.l.querySelector('.in_view');
     if (in_view) in_view.classList.remove('in_view');
     if (in_view.classList.contains('note'))
@@ -22,15 +18,16 @@ aa.state.clear =()=>
       const in_path = aa.l.querySelectorAll('.in_path');
       if (in_path) for (const l of in_path) l.classList.remove('in_path');
     }
-    else
-    {
-      let index = document.getElementById('i_item_'+in_view.dataset.xpub);
-      if (index?.classList.contains('solo')) index.querySelector('.key').click();
-    }
+    // else
+    // {
+    //   let index = document.getElementById('i_item_'+in_view.dataset.xpub);
+    //   if (index?.classList.contains('solo')) index.querySelector('.key').click();
+    // }
   }
   if (aa.state.l) aa.state.l.textContent = '';
   aa.l.classList.remove('viewing','view_e','view_p');
   aa.viewing = false;
+  for (const c of aa.clear) c();
 };
 
 

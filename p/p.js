@@ -152,6 +152,18 @@ aa.p.author_list =(a,l,sort='text_asc')=>
 };
 
 
+// clear profile filters
+aa.p.clear =e=>
+{
+  if (history?.state?.last?.startsWith('#npub'))
+  {
+    console.log(aa.p.viewing);
+    if (aa.p.viewing) aa.i.filter_solo_rm(aa.p.viewing[0],aa.p.viewing[1]);
+    delete aa.p.viewing;
+  }
+};
+
+
 // make all other profile sections after metadata
 aa.mk.extradata =p=>
 {
@@ -222,6 +234,7 @@ aa.p.get_relay =p=>
 // on load
 aa.p.load =()=>
 {
+  aa.clear.push(aa.p.clear);
   aa.actions.push(
     {
       action:['p','view'],
@@ -925,12 +938,4 @@ aa.views.nprofile1 =async nprofile=>
 
 
 window.addEventListener('load',aa.p.load);
-window.addEventListener('hashchange',e=>
-{
-  if (history?.state?.last?.startsWith('#npub'))
-  {
-    console.log(aa.p.viewing);
-    if (aa.p.viewing) aa.i.filter_solo_rm(aa.p.viewing[0],aa.p.viewing[1]);
-    delete aa.p.viewing;
-  }
-});
+window.addEventListener('hashchange',aa.p.clear);
