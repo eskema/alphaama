@@ -1,9 +1,11 @@
 /*
 
 alphaama
-event
+mod    e
+events notes
 
 */
+
 
 document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/e/e.css'}));
 
@@ -328,31 +330,6 @@ aa.parse.nip19 =s=>
 
 // parse nostr:stuff
 // use with aa.parser('nostr',s)
-// aa.parse.nostr =(match)=>
-// {
-//   let df = new DocumentFragment();
-  
-//   let s = match[0].slice(6);
-//   let decoded = aa.fx.decode(s);
-//   if (!decoded)
-//   {
-//     let matches = (match.input).split('nostr:').join(' ').trim().split(' ');
-//     for (const m of matches)
-//     {
-//       // let s = match[0].slice(6);
-//       let decoded = aa.fx.decode(m);
-//       let dis = decoded ? aa.parse.nip19(m) : m;
-//       df.append(dis,' ');
-//     }
-//   }
-//   else
-//   {
-//     df.append(aa.parse.nip19(s),' ');
-//   }
-
-//   return df
-// };
-
 aa.parse.nostr =(match)=>
 {
   let df = new DocumentFragment();
@@ -387,6 +364,7 @@ aa.parse.nostr =(match)=>
   }
   return df
 };
+
 
 // make generic note element
 aa.e.note =dat=>

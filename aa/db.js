@@ -6,9 +6,6 @@ database stuff
 */
 
 
-// web cache navigation for offline use
-// if ('serviceWorker' in navigator) navigator.serviceWorker.register('/cash.js');
-
 aa.db.get =async(s,o)=>
 {
   return new Promise(resolve=>

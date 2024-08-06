@@ -2,7 +2,7 @@
 
 alphaama
 A<3   aa   
-      v3
+v3
 
 */
 
@@ -31,7 +31,6 @@ const aa =
   fx:{},
   get:{},
   is:{},
-  l:document.documentElement,
   kinds:{},
   miss:{e:{},p:{}},
   mk:{},
@@ -69,6 +68,11 @@ const aa =
   viewing:false,
   views:[],
 };
+
+aa.l = document.documentElement;
+
+// web cache navigation for offline use
+// if ('serviceWorker' in navigator && ) navigator.serviceWorker.register('/cash.js');
 
 
 // parses string as action and executes it
@@ -260,21 +264,6 @@ aa.logs_read =async(l)=>
 };
 
 
-// logs mutation observer
-// aa.logs_mo = new MutationObserver(a=> 
-// {
-//   for (const mutation of a) 
-//   {
-//     const section = mutation.target.closest('section');
-//     if (section)
-//     {
-//       let butt = section.querySelector('section > header > .butt');
-//       aa.fx.data_count(butt,'.l');
-//     }
-//   }
-// });
-
-
 // tries to delete everything saved locally 
 // and then reload clean
 aa.reset =()=>
@@ -301,7 +290,6 @@ aa.actions.push(
 // if no options found, run with defaults
 aa.run =(o={})=>
 {
-  // aa.logs_mo.observe(aa.logs,{attributes:false,childList:true});
   const main = aa.mk.l('main',{id:'view'});
   document.body.prepend(main);
   
@@ -310,7 +298,6 @@ aa.run =(o={})=>
   aa.fx.scrolled();
 
   aa.log((aa.is.online() ? 'on' : 'off') + 'line at '+location.origin);
-  // aa.log('device is '+ aa.is.online() ? 'on' : 'off' + 'line')
   aa.u.check_signer();
   aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
 };
@@ -453,19 +440,3 @@ aa.wl.release =()=>
   if (aa.wl.wakelock) aa.wl.wakelock.release();
   aa.wl.wakelock = null;
 };
-
-
-// get and log src
-// aa.get.md =async src=>
-// {
-//   return new Promise(resolve=>
-//   {
-//     fetch(src).then(dis=>dis.text()).then(dis=>
-//     {
-//       let text = aa.parse.content(dis);
-//       let l = aa.mk.l('article',{cla:'content parsed',app:text});
-//       let title = dis.slice(0,dis.indexOf('\n'));
-//       resolve(aa.mk.details(title,l));
-//     })
-//   })
-// };

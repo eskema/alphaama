@@ -2,9 +2,10 @@
 
 alphaama
 mod    u
-logged user
+user you
 
 */
+
 
 document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/u/u.css'}));
 

@@ -1,7 +1,7 @@
 /*
 
 alphaama
-make elements and stuff
+make stuff
 
 */
 

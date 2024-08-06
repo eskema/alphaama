@@ -2,7 +2,7 @@
 
 alphaama
 mod    i
-filter index
+index filtering
 
 */
 

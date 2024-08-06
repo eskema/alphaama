@@ -1,7 +1,7 @@
 /*
 
 alphaama
-fx stuff
+fun stuff
 
 */
 

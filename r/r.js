@@ -2,7 +2,7 @@
 
 alphaama
 mod    r
-manage relays
+relays
 
 */
 

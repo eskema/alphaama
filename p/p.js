@@ -882,7 +882,6 @@ aa.kinds[10002] =dat=>
 // view for npub
 aa.views.npub1 =async npub=>
 {
-  console.log(npub);
   let xpub = aa.fx.decode(npub);
   let p = await aa.db.get_p(xpub);
   if (!p) p = aa.p.p(xpub);
@@ -902,6 +901,14 @@ aa.views.npub1 =async npub=>
   let notes_by = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
   let notes_ref = document.querySelectorAll('.note[data-pubkey="'+xpub+'"]');
 
+  const k = 'pubkey';
+  const v = xpub;
+  // let dis = e.target.classList.contains('.key') ? e.target : e.target.closest('.key');
+  let items = aa.get.index_items(k,v);
+  const k_v = k+'_'+aa.fx.an(v);
+  aa.p.viewing = [items,k_v];
+  aa.i.filter_solo_apply(items,k_v);
+
   // setTimeout(()=>
   // {
   //   let index = document.getElementById('i_item_'+xpub);
@@ -918,3 +925,12 @@ aa.views.nprofile1 =async nprofile=>
 
 
 window.addEventListener('load',aa.p.load);
+window.addEventListener('hashchange',e=>
+{
+  if (history?.state?.last?.startsWith('#npub'))
+  {
+    console.log(aa.p.viewing);
+    if (aa.p.viewing) aa.i.filter_solo_rm(aa.p.viewing[0],aa.p.viewing[1]);
+    delete aa.p.viewing;
+  }
+});

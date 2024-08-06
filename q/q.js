@@ -2,7 +2,7 @@
 
 alphaama
 mod    q
-filter queries
+queries
 
 */
 

@@ -1,6 +1,8 @@
 /*
 
-web cache service worker
+alphaama
+    cash
+cache service worker
 
 */
 
@@ -13,10 +15,8 @@ const cash =
     [
       '/',
       '/index.html',
-      '/index.js',
-      '/420.html',
-      // '/cash.js',
       '/site.webmanifest',
+      '/stuff/420.html',
       '/stuff/font.otf',
       '/stuff/font.otf.woff2',
       '/stuff/favicon-32x32.png',
@@ -24,7 +24,8 @@ const cash =
       '/stuff/safari-pinned-tab.svg',
       '/stuff/android-chrome-192x192.png',
       '/stuff/android-chrome-512x512.png',
-      '/stuff/apple-touch-icon.png'
+      '/stuff/apple-touch-icon.png',
+      '/aa/aa.js'
     ]
   }
 };
