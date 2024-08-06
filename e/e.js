@@ -356,28 +356,35 @@ aa.parse.nip19 =s=>
 aa.parse.nostr =(match)=>
 {
   let df = new DocumentFragment();
-  
-  let matches = (match.input).split('nostr:').join(' ').trim().split(' ');
+  df.append(match.input.slice(0,match.index)); 
+
+  let matches = (match[0]).split('nostr:').join(' ').trim().split(' ');
   for (const m of matches)
   {
     let a = m.split('1');
-    let matchess = a[1].match(aa.regx.bech32);
-    if (matchess[0] && matchess.index === 0)
+    if (a[1])
     {
-      let s = a[0] + '1' + matchess[0];
-      let decoded = aa.fx.decode(s);
-      if (decoded)
+      let mm = a[1].match(aa.regx.bech32);
+      if (mm[0] && mm.index === 0)
       {
-        df.append(aa.parse.nip19(s),' ');
-        if (matchess[0].length < matchess.input.length)
+        let s = a[0] + '1' + mm[0];
+        let decoded = aa.fx.decode(s);
+        if (decoded)
         {
-          df.append(matchess.input.slice(matchess[0].length),' ');
+          df.append(aa.parse.nip19(s),' ');
+          if (mm[0].length < mm.input.length)
+          {
+            df.append(mm.input.slice(mm[0].length),' ');
+          }
         }
+        else df.append(m,' ');
       }
-      else df.append(m,' ');
+    }
+    else
+    {
+      console.log(match)
     }
   }
-
   return df
 };
 
@@ -890,26 +897,23 @@ aa.kinds[7] =dat=>
   note.classList.add('tiny');
   let content = note.querySelector('.content');
   let con_t = content.textContent;
-  if (!aa.is.one(con_t) && con_t.startsWith(':') && con_t.endsWith(':'))
+
+  let emoji = dat.event.tags.filter(t=>t[0]==='emoji')[0];
+  if (emoji) 
   {
-    con_t = con_t.slice(1,-1);
-    aa.db.get_p(dat.event.pubkey).then(p=>
+    emoji = aa.is.url(emoji[2])?.href;
+    if (emoji) 
     {
-      if (p && aa.is.trust_x(dat.event.pubkey))
+      aa.db.get_p(dat.event.pubkey).then(p=>
       {
-        let emojis = dat.event.tags.filter(t=>t[0]==='emoji' && t[1]===con_t);
-        if (emojis.length) 
+        if (p && aa.is.trust_x(dat.event.pubkey))
         {
-          let emoji = aa.is.url(emojis[0][2])?.href;
-          if (emoji) 
-          {
-            content.textContent = '';
-            content.append(aa.mk.img(emoji));
-          }
+          content.textContent = '';
+          content.append(aa.mk.img(emoji));
         }
-      }
-    });
-  }  
+      });
+    }
+  } 
   
   return note
 };

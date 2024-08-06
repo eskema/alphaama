@@ -411,10 +411,10 @@ p[data-meta="banner"]
   grid-area: luds;
 }
 
-[data-meta="lud06"]::before, 
-[data-meta="lud16"]::before 
+[data-meta="lud06"]:not(.empty)::before, 
+[data-meta="lud16"]:not(.empty)::before 
 {
-  content: "\020BF" " " "⚡️ ";
+  content: "\020BF"  "⚡️ ";
   font-family: Apple Color Emoji,"Segoe UI Emoji","Source Code Pro", monospace;
   font-variant-emoji: emoji;
 }
