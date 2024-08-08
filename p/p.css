@@ -241,6 +241,7 @@
   "about"
   "nip05"
   "luds"
+  "website"
   ;
 }
 
@@ -261,6 +262,7 @@
 
 .profile .metadata_list .empty 
 {
+  background: rgb(var(--color-b));
   color: rgb(var(--color-d));
   font-size: var(--font-size-s);
   grid-row: 99;
@@ -456,6 +458,11 @@ p[data-meta="banner"]
 [data-luma="dark"] [data-meta="displayName"]
 {
   color: rgb(var(--color-light));
+}
+
+[data-meta="website"] 
+{
+  grid-area: website;
 }
 
 [data-meta="display_name"]::before,

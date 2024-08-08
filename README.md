@@ -15,7 +15,7 @@ that:
 - you can do whatever the fuck you want with it.
 
 source code:
-- https://github.com/eskema/alphaama/tree/v3 
+- https://github.com/eskema/alphaama
 
 nostr:
 - https://github.com/nostr-protocol/nostr
@@ -25,3 +25,6 @@ depends on:
 
 dev deployment:
 - https://wip.alphaama.com
+
+stable deployment:
+- https://alphaama.com
