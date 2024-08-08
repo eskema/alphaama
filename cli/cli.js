@@ -228,10 +228,10 @@ aa.cli.mention =w=>
   {
     if (p.hasOwnProperty('metadata'))
     {
-      if (p.metadata.hasOwnProperty('name') && p.metadata.name.length
+      if (p.metadata.hasOwnProperty('name') && p.metadata.name?.length
       && p.metadata.name.toLowerCase().includes(s)) 
         return true;
-      if (p.metadata.hasOwnProperty('nip05') && p.metadata.nip05.length
+      if (p.metadata.hasOwnProperty('nip05') && p.metadata.nip05?.length
       && p.metadata.nip05.toLowerCase().includes(s)) 
         return true;
     }
