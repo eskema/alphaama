@@ -190,4 +190,10 @@ html:not(.cli_expanded) .l:not(.is_new),
   {
     padding-left: 0;
   }
+  
+  html:not(.cli_expanded) .l.is_new
+  {
+    position: absolute;
+    transform: translateY(calc(calc(var(--line) + var(--padm))*-1));
+  }
 }

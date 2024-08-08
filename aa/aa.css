@@ -112,7 +112,7 @@ body
   line-height: 1;
   margin: 0;
   min-height: 100vh;
-  padding-bottom: calc(var(--size)*1.2);
+  padding-bottom: calc(var(--size) + var(--line));
   width: 100%;
   -webkit-text-size-adjust: 100%;
 }
