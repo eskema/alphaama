@@ -1,0 +1,151 @@
+.av 
+{
+  color: rgb(var(--c-a-e));
+  display: grid;
+  grid-template-rows: 1fr auto;
+  grid-template-areas: "av";
+  margin: 1rem 0;
+  padding-top: 1.5rem;
+  position: relative;
+}
+
+.av video 
+{
+  background: black;
+  cursor: pointer;
+  grid-area: av;
+  margin: 0;
+}
+
+.av video.playin 
+{
+  opacity: 1;
+  z-index: 1;
+}
+
+.av .controls 
+{
+  align-self: start;
+  cursor: pointer;
+  display: grid;
+  grid-area: av;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: 
+  "progress progress progress progress"
+  "before rewind mute sticky"
+  "url url url url";
+  line-height: 2;
+  text-align: right;
+  transform: translateY(-2rem);
+}
+
+.av .controls::before 
+{
+  content: "<video " attr(data-duration) "s";
+  grid-area: before;
+  white-space: pre;
+}
+
+.av .controls:hover 
+{
+  z-index: 2;
+}
+
+.av video:hover + .controls::before 
+{
+  content: "<play " attr(data-duration) "s";
+}
+
+.av .started + .controls::before 
+{
+  content: "<video " attr(data-remains) "s";
+}
+
+.av video.started.playin + .controls::before
+{
+  content: "<pause " attr(data-remains) "s";
+}
+
+.av .controls button
+{
+  margin-left: 1rem;
+  padding: 0;
+}
+
+.av .muted + .controls .mute::before
+{
+  content: "un";
+}
+
+.av .url 
+{
+  box-sizing: border-box;
+  cursor: text;
+  grid-area: url;
+  justify-self: start;
+  mix-blend-mode: color-dodge;
+  top: 0rem;
+  width: 100%;
+  word-break: break-all;
+}
+
+.av .controls progress 
+{
+  grid-area: progress;
+  pointer-events: none;
+  width: 100%;
+}
+
+.av .controls progress[value] 
+{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  height: 1px;
+  margin: 0;
+  width: 100%;
+}
+
+.av .controls progress[value]::-webkit-progress-bar 
+{
+  background-color: rgb(var(--color-a));
+}
+
+.av .controls progress[value]::-webkit-progress-value 
+{
+  background-color: rgb(var(--color-main));
+}
+
+.av .url,
+.av .controls 
+{
+  color: rgb(var(--color-d));
+}
+
+@media screen and (min-width: 1025px) 
+{
+  .av video 
+  {
+    opacity: .5;
+  }
+  
+  .av video:hover 
+  {
+    opacity: 1;
+  }
+  
+  .av video.started:hover + .controls::before 
+  {
+    content: "<play " attr(data-remains) "s";
+  }
+  
+  .av video.started.playin:hover + .controls::before 
+  {
+    content: "<pause " attr(data-remains) "s";
+  }
+  
+  .av .controls button:hover
+  {
+    color: rgb(var(--color-e));
+  }
+}

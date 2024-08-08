@@ -1,0 +1,582 @@
+#p
+{
+  grid-area: p;
+}
+
+#authors
+{
+  padding-left: var(--pad-l);
+}
+
+.profile 
+{
+  align-items: end;
+  background: linear-gradient(to left, rgb(var(--color-a)) 0%, rgb(var(--c)) 100%);
+  border-bottom: var(--pad) solid rgb(var(--color-b));
+  display: grid;
+  grid-template-areas: "pub actions";
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto 1fr auto;
+  padding: 1px;
+  z-index: 0;
+  /*scroll-snap-align: start;*/
+}
+
+.profile[data-luma="light"]
+{
+  color: rgb(var(--color-dark));
+}
+
+.profile[data-luma="dark"]
+{
+  color: rgb(var(--color-light));
+}
+
+.profile.in_view 
+{
+  grid-template-areas: 
+  "pub pub"
+  "metadata metadata"
+  "extradata extradata"
+  "actions actions"
+  ;
+  margin-bottom: calc(var(--line) + calc(var(--pad)*2));
+}
+
+.view_p #authors
+{
+  padding-left: 0;
+}
+
+.view_p .profile:not(.in_view),
+.view_e #authors,
+#p:not(.expanded) .profile:not(.in_view)
+{
+  display: none;
+}
+
+
+/* @group p section details */
+
+.profile > * > details 
+{
+  border-bottom: 1px dotted rgb(var(--color-b));
+}
+
+.profile > * > details > summary
+{
+  line-height: 1.5rem;
+  padding: 0 var(--padm);
+}
+
+.profile > * > details > .butt
+{
+  display: inline;
+  font-size: var(--font-size-s);
+  line-height: 1.5rem;
+}
+
+.profile > * > details > .butt::before
+{
+  content: "=> ";
+}
+
+.profile > * > details > .butt::after
+{
+  content: " (" attr(data-last)")";
+  opacity: .5;
+}
+
+.profile > * > details[open]
+{
+  padding-bottom: var(--pad);
+}
+
+.profile > * > details[open] > summary
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-e));
+  display: inline-block;
+}
+
+.profile details p,
+.profile details a
+{
+  overflow-x: scroll;
+}
+
+.profile > * > details > .list
+{
+  padding: var(--pad-l) 0;
+}
+
+.metadata > details[open]
+{
+  padding-bottom: 0;
+}
+
+.metadata > details[open] > summary
+{
+  margin-bottom: 0;
+}
+
+/* @end */
+
+
+/* @group p pubkey */
+
+.profile > .pubkey
+{
+  align-items: center;
+  color: rgb(var(--c));
+  display: grid;
+  grid-area: pub;
+  grid-template-areas: "author xpub created_at";
+  grid-template-columns: 1fr auto;
+  justify-items: end;
+  justify-self: stretch;
+  line-height: 1;
+  margin: 0;
+  position: relative;
+}
+
+.profile > .pubkey .author
+{
+  font-size: var(--font-size);
+  grid-area: author;
+  justify-self: stretch;
+  z-index: 1;
+}
+
+.profile > .pubkey .author::before
+{
+  height: var(--size-s);
+  width: var(--size-s);
+}
+
+.profile > .pubkey .author::after
+{
+  background: rgb(var(--color-a));
+  padding: var(--padm);
+}
+
+.profile > .pubkey .author span
+{
+  justify-self: start;
+  padding: var(--padm);
+}
+
+.profile > .pubkey .author.has-picture img
+{
+  height: var(--size-s);
+  width: var(--size-s);
+}
+
+.profile > .pubkey .xpub
+{
+  display: none;
+  grid-area: xpub;
+  justify-self: stretch;
+  max-width: calc(var(--size) - var(--pad));
+  overflow-x: scroll;
+  padding: 0 var(--pad);
+  text-align: right;
+}
+
+.profile > .pubkey .created_at
+{
+  color: rgb(var(--color-d));
+  font-size: 0;
+  grid-area: created_at;
+}
+
+.profile > .pubkey .created_at::after
+{
+  content: "~" attr(data-elapsed);
+  font-size: var(--font-size-s);
+  padding: 0 var(--pad);
+}
+
+.in_view > .pubkey
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-s);
+  grid-template-areas: "author xpub created_at";
+  grid-template-columns: auto 1fr auto;
+  padding: var(--padm);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+.in_view > .pubkey .xpub 
+{
+  display: unset;
+  max-width: 30vw;
+  max-width: unset;
+  margin-right: var(--pad);
+}
+
+/* @end */
+
+
+/* @group p metadata */
+
+.metadata
+{
+  grid-area: metadata; 
+  display: none;
+}
+
+.metadata_list
+{
+  align-items: start;
+  align-self: start;
+  display: grid;
+  grid-template-areas: 
+  "picture"
+  "name"
+  "about"
+  "nip05"
+  "luds"
+  ;
+}
+
+.metadata_list > *
+{
+  background: rgb(var(--color-b));
+  box-sizing: border-box;
+  color: rgb(var(--color-f));
+  display: none;
+  font-size: var(--font-size-s);
+  justify-self: start;
+  line-height: 1.5rem;
+  margin: 0;
+  max-width: 100vw;
+  padding: 0 var(--pad);
+  white-space: nowrap;
+}
+
+.profile .metadata_list .empty 
+{
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-s);
+  grid-row: 99;
+  grid-area: unset;
+  justify-self: start;
+  line-height: 1;
+  margin: 0;
+  margin-bottom: 1px;
+  padding-top: var(--padm);
+  padding-bottom: var(--padm);
+}
+
+[data-meta]::before, 
+.metadata_list .empty::before 
+{
+  content: attr(data-meta) ": ";
+}
+
+.metadata_list .empty::before 
+{
+  text-decoration: line-through;
+}
+
+.in_view > .metadata
+{
+  display: block;
+}
+
+.in_view .metadata_list > *
+{
+  display: block;
+}
+
+/* @end */
+
+/* @group p data-meta */
+
+.metadata_list a
+{
+  text-decoration: none;
+}
+
+[data-meta]:focus
+{
+  z-index: 2;
+}
+
+[data-meta="name"]
+{
+  font-size: var(--font-size);
+  grid-area: name;
+}
+
+[data-meta="nip05"]
+{
+  cursor: pointer;
+  font-size: var(--font-size-s);
+  grid-area: nip05;
+}
+
+[data-meta="nip05"]:not(.empty)::after 
+{
+  color: rgb(var(--color-c));
+  content: " never verified";
+}
+
+[data-meta="nip05"][data-verified]::after 
+{
+  color: rgb(var(--color-c));
+  content: " " attr(data-verified) " on " attr(data-verified_on);
+}
+
+[data-meta="picture"], 
+[data-meta="banner"]
+{
+  grid-area: picture;
+  transition: var(--trans-quart);
+}
+
+[data-meta="picture"] 
+{
+  align-self: end;
+}
+
+img[data-meta="banner"]
+{
+  background: none;
+  cursor: pointer;
+  height: var(--media-max-height);
+  margin: 0;
+  object-fit: cover;
+  object-position: 50% 50%;
+  padding: 0;
+  width: 100vw;
+}
+
+img[data-meta="picture"] 
+{
+  align-self: end;
+  background: transparent;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: block;
+  max-height: var(--media-height);
+  max-width: 30vw;
+  object-fit: contain;
+  object-position: 0% 0%;
+  padding: var(--pad);
+  z-index: 1;
+}
+
+img[data-meta="banner"].expanded,
+img[data-meta="picture"].expanded
+{
+  max-height: var(--media-max-height);
+  max-width: unset;
+  object-fit: contain;
+  z-index: 2;
+}
+
+p[data-meta="banner"]
+{
+  margin-bottom: 1.5rem;
+}
+
+[data-meta="about"]  
+{
+  color: rgb(var(--color-d));
+  font-size: var(--font-size);
+  grid-area: about;
+  hyphens: auto;
+  padding: var(--pad);
+  padding-top: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  justify-self: stretch;
+}
+
+[data-meta="about"]::before 
+{
+  content: "\\";
+  display: block;
+}
+
+[data-meta="lud06"], 
+[data-meta="lud16"] 
+{
+  grid-area: luds;
+}
+
+[data-meta="lud06"]:not(.empty)::before, 
+[data-meta="lud16"]:not(.empty)::before 
+{
+  content: "\020BF"  "⚡️ ";
+  font-family: Apple Color Emoji,"Segoe UI Emoji","Source Code Pro", monospace;
+  font-variant-emoji: emoji;
+}
+
+[data-meta="lud16"] 
+{
+  z-index: 1;
+}
+
+[data-meta="display_name"],
+[data-meta="displayName"]
+{
+  background: rgb(var(--c));
+  font-size: var(--font-size-l);
+  grid-area: picture;
+  justify-self: end;
+  margin: var(--pad);
+  padding: var(--pad);
+  z-index: 2;
+}
+
+[data-meta="display_name"]
+{
+  align-self: start;
+}
+
+[data-meta="displayName"]
+{
+  align-self: end;
+}
+
+[data-luma="light"] [data-meta="display_name"],
+[data-luma="light"] [data-meta="displayName"]
+{
+  color: rgb(var(--color-dark));
+}
+
+[data-luma="dark"] [data-meta="display_name"],
+[data-luma="dark"] [data-meta="displayName"]
+{
+  color: rgb(var(--color-light));
+}
+
+[data-meta="display_name"]::before,
+[data-meta="displayName"]::before,
+[data-meta="name"]:not(.empty)::before, 
+[data-meta="nip05"]:not(.empty)::before
+{
+  content: none;
+}
+
+/* @end */
+
+
+/* @group p extradata */
+
+.extradata
+{
+  display: none;
+  font-size: var(--font-size-s);
+  grid-area: extradata;
+}
+
+.extradata > .item 
+{
+  background: rgb(var(--color-b));
+  box-sizing: border-box;
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-s);
+  line-height: 1.5rem;
+  margin: 0;
+  padding: 0 var(--pad);
+  white-space: pre;
+}
+
+.list.list_grid.author_list
+{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(6rem,1fr));  
+}
+
+.item.author_list_item
+{
+  display: inline-grid;
+  grid-template-areas: unset;
+  grid-template-columns: unset;
+  margin: var(--pad);
+  overflow-x: scroll;
+  padding: 0;
+}
+
+.item.author_list_item a 
+{
+  justify-self: stretch;
+}
+
+.extradata .a
+{
+  color: rgb(var(--color-d));
+}
+
+.profile .relay::after
+{
+  color: rgb(var(--color-dark));
+}
+
+.in_view > .extradata
+{
+  display: unset;
+}
+
+/* @end */
+
+
+/* @group profile actions */
+
+.profile > .actions
+{
+  align-self: stretch;
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-d));
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-area: actions;
+  grid-auto-flow: column;
+  grid-gap: 0;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+.profile.in_view > .actions
+{
+  justify-self: center;
+}
+
+.profile > .actions .butt
+{
+  padding-bottom: 0;
+  padding-top: 0;
+}
+
+/* @end */
+
+
+@media screen and (min-width: 1025px) 
+{
+  .profile > * > details > summary:hover
+  {
+    background: rgb(var(--color-b));
+  } 
+}
+
+@media screen and (max-width: 768px) 
+{
+  .profile.in_view > .actions
+  {
+    line-height: 3rem;
+  }
+  
+  .profile.in_view > .actions .butt
+  {
+    padding: 0 var(--pad-l);
+  }
+}

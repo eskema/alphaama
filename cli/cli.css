@@ -1,0 +1,111 @@
+#cli
+{
+  background: rgb(var(--color-b));
+  bottom: 0;
+  box-shadow: 0px -1rem 2rem 0 rgb(var(--color-b));
+  display: grid;
+  grid-template-areas: 
+  "collapse"
+  "l"
+  "oto"
+  "cli_t";
+  left: 0;
+  max-height: 4rem;
+  position: fixed;
+  top: auto;
+  width: 100vw;
+  z-index: 9;
+}
+
+#cli_collapse
+{
+  align-self: stretch;
+  background: rgb(var(--color-f));
+  border-radius: 0;
+  border: none;
+  color: rgb(var(--color-a));
+  cursor: pointer;
+  display:  none;
+  font-family: inherit;
+  font-size: var(--font-size);
+  grid-area: collapse;
+  justify-self: stretch;
+  line-height: 1.5rem;
+  padding: 0;
+  text-align: center;
+  transition: var(--trans-quart);
+}
+
+.cli_expanded body
+{
+  padding-bottom: 80vh;
+}
+
+.cli_expanded #cli
+{
+  max-height: 100vh;
+  z-index: 11;
+}
+
+.cli_expanded #cli_collapse
+{
+  display: block;
+}
+
+#cli_t
+{
+  align-self: stretch;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-sizing: border-box;
+  display: block;
+  color: rgb(var(--color-c));
+  font-family: inherit;
+  font-size: 16px;
+  grid-area: cli_t;
+  -webkit-line-break: normal;
+  line-height: 1.5rem;
+  margin: 0;
+  max-height: 40vh;
+  overflow-y: scroll;
+  outline: none;
+  padding: var(--pad-l);
+  position: relative;
+  resize: none;
+  white-space: pre-wrap;
+}
+
+#cli_t:focus
+{
+  font-size: 16px;
+}
+
+.cli_expanded #cli_t
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-f));
+  padding: var(--line);
+}
+
+#cli_t::placeholder 
+{
+  color: rgb(var(--color-c));
+}
+
+
+@media screen and (min-width: 1025px) 
+{
+  #cli_collapse:hover 
+  {
+    background: rgb(var(--color-no));
+  }
+}
+
+@media screen and (max-width: 769px)
+{
+  .cli_expanded #cli_t
+  {
+    padding: var(--pad-l);
+  }
+}
