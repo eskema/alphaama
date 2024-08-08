@@ -29,7 +29,7 @@ aa.e.append_to_notes =(note)=>
   aa.to(()=>
   {
     let butt = document.querySelector('.pagination .butt');
-    if (!butt) document.getElementById('e').append(aa.mk.pagination());
+    if (!butt) setTimeout(()=>{document.getElementById('e').append(aa.mk.pagination())},0);
     else 
     {
       let n = aa.l.dataset.pagination;
@@ -48,12 +48,12 @@ aa.e.append_to_rep =(note,rep)=>
   const last = [...rep.children].filter(i=> 
     i.tagName === 'ARTICLE' 
     && i.dataset.created_at > note.dataset.created_at)[0];
-  rep.insertBefore(note,last?last:null);
-  note.classList.add('reply');
-  note.classList.remove('root');
-  rep.parentNode.classList.add('haz_reply'); 
-  if (note.classList.contains('is_new')) rep.parentNode.classList.add('haz_new_reply');
-  aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
+    rep.insertBefore(note,last?last:null);
+    note.classList.add('reply');
+    note.classList.remove('root');
+    rep.parentNode.classList.add('haz_reply'); 
+    if (note.classList.contains('is_new')) rep.parentNode.classList.add('haz_new_reply');
+    aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
 };
 
 
@@ -172,6 +172,64 @@ aa.e.load =()=>
   const notes = aa.mk.l('div',{id:'notes'});
   section.append(notes);
   aa.e.section_observer.observe(notes,{attributes:false,childList:true});
+};
+
+
+// mark replies as read
+aa.clk.mark_read =e=>
+{
+  e.stopPropagation();
+  const replies = e.target.closest('.replies');
+  const mom = e.target.closest('.note');
+  let classes = ['haz_new_reply','haz_new','is_new']
+  mom.classList.remove(...classes);
+  const new_stuff = replies.querySelectorAll('.'+classes.join(',.')); //'.haz_new_reply,.haz_new,.is_new'        
+  if (new_stuff.length)
+  {
+    e.preventDefault();
+    for (const l of new_stuff) 
+    {
+      sessionStorage[l.dataset.id] = 'is_read';
+      window.requestAnimationFrame(e=>
+      {
+        l.classList.remove(...classes);
+      });
+    }
+    if (replies.classList.contains('expanded')) 
+    {
+      sessionStorage[replies.id] = '';
+      window.requestAnimationFrame(e=>
+      {
+        replies.classList.remove('expanded');
+      });
+    }
+  }
+  else 
+  {
+    if (replies.classList.contains('expanded')) 
+    {
+      sessionStorage[replies.id] = '';
+      window.requestAnimationFrame(e=>
+      {
+        replies.classList.remove('expanded');
+      });
+
+    }
+    else 
+    {
+      sessionStorage[replies.id] = 'expanded';
+      window.requestAnimationFrame(e=>
+      {
+        replies.classList.add('expanded');
+      });
+    }
+  }
+
+  aa.fx.scroll(replies,
+  {
+    behavior:'smooth',
+    block:replies.classList.contains('expanded') ? 'start':'center'
+  });
 };
 
 
@@ -615,7 +673,7 @@ aa.e.note_observer = new IntersectionObserver(a=>
   }
 },{root:null,threshold:.9});
 // on observed note intersection
-aa.e.note_intersect =l=>
+aa.e.note_intersect =async l=>
 {
   aa.e.note_observer.unobserve(l);
   l.classList.remove('not_yet');

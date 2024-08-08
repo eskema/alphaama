@@ -27,9 +27,12 @@ aa.cli.clear =async()=>
 // on cli collapse
 aa.cli.collapse =e=>
 {
-  aa.l.classList.remove('cli_expanded');
-  aa.cli.t.blur()
-  aa.logs_read();
+  window.requestAnimationFrame(e=>
+  {
+    aa.l.classList.remove('cli_expanded');
+    aa.cli.t.blur()
+    aa.logs_read();
+  });
 };
 
 // creates new dat object (event)
@@ -89,10 +92,13 @@ aa.cli.dat_upd =async()=>
 // on cli expand
 aa.cli.expand =e=>
 {
-  aa.l.classList.add('cli_expanded');
-  aa.cli.foc();
-  aa.cli.upd();
-  aa.logs_read();
+  window.requestAnimationFrame(e=>
+  {
+    aa.l.classList.add('cli_expanded');
+    aa.cli.foc();
+    aa.cli.upd();
+    aa.logs_read();
+  });
 };
 
 

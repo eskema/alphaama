@@ -22,6 +22,7 @@ const aa =
   [
     '/dep/nostr_tools_2.js?v=20000',
     '/dep/asciidoctor.min.js?v=3.0.4',
+    // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
   ],
   extensions:
@@ -253,11 +254,19 @@ aa.log =async(s,l=false)=>
 // logs container element
 aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
 
-aa.logs_read =async(l)=>
+aa.logs_read =async e=>
 {
-  if (l) l = l.target.closest('.l.is_new');
-  let logs_new = l?[l]:document.querySelectorAll('.l.is_new');
-  if (logs_new.length) for (const l of logs_new) 
+  let ll;
+  if (e) 
+  {
+    e.stopPropagation();
+    if (e.target.classList.contains('l','is_new')) ll = [e.target];
+    else ll = [e.target.closest('.l.is_new')];
+  }
+  else ll = document.querySelectorAll('.l.is_new');
+  // if (e) l = e.target.closest('.l.is_new');
+  // let logs_new = l?[l]:document.querySelectorAll('.l.is_new');
+  if (ll.length) for (const l of ll) 
   {
     l.classList.remove('is_new');
     l.classList.add('just_added');
@@ -441,3 +450,24 @@ aa.wl.release =()=>
   if (aa.wl.wakelock) aa.wl.wakelock.release();
   aa.wl.wakelock = null;
 };
+
+// const scrollin =(pos,l)=>
+// {
+//   console.log(pos)
+// }
+
+// let last_known_scroll_position = 0;
+// let ticking = false;
+
+// window.addEventListener('scroll', function(e) {
+//   last_known_scroll_position = window.scrollY;
+
+//   if (!ticking) {
+//     window.requestAnimationFrame(e=>
+//     {
+//       scrollin(last_known_scroll_position,aa.l);
+//       ticking = false;
+//     });
+//     ticking = true;
+//   }
+// });

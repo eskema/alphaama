@@ -227,6 +227,7 @@ aa.u.follow =async s=>
   
   let p_tag = aa.mk.tag_p(s.trim().split(','));
   if (!p_tag) return;
+  while (p_tag[p_tag.length - 1].trim() === '') p_tag.pop();
   let dat_k3 = await aa.p.get_last_of(aa.u.p,'k3');
   if (!dat_k3)
   {

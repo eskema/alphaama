@@ -206,7 +206,7 @@ aa.db.get_p =async xpub=>
 aa.p.get_relay =p=>
 {
   let p_relays = Object.entries(p.relays);
-  if (!p_relays.length) p_relays = Object.entries(p.rels);
+  if (!p_relays.length) return ' ';
   const u_relays = aa.r.in_set(aa.r.o.r).sort();
 
   let relays = p_relays
@@ -351,6 +351,8 @@ aa.mk.metadata_picture =(k,v,p)=>
   else return aa.mk.l('p',{cla:k,con:v});
 };
 
+aa.mk.metadata_website =(k,v)=> aa.mk.link(v);
+
 
 // follow / unfollow
 aa.clk.p_follow =async e=>
@@ -375,7 +377,8 @@ aa.clk.p_follow =async e=>
     let petname;
     if (p.metadata?.name) petname = p.metadata.name;
     else if (p.petnames.length) petname = p.petnames[0];
-    if (petname.length) new_follow.push(aa.fx.an(petname));
+    if (petname?.length) new_follow.push(aa.fx.an(petname));
+    else new_follow.push('')
     aa.cli.v(localStorage.ns+' p follow '+new_follow.join(', '));
   }
 };

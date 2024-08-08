@@ -183,7 +183,7 @@
     color: rgb(var(--color-f));
   }
   
-  #oto .item:hover,
+  #oto .item:not(.pinned):hover,
   #oto .item.mention:hover
   {
     background-color: rgba(var(--color-c),.3);

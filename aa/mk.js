@@ -71,10 +71,18 @@ aa.mk.av =(src,poster=false)=>
   l.muted = true;
   l.loop = true;
   l.setAttribute('playsinline','');
-  l.setAttribute('preload','metadata');  
-  l.setAttribute('src',src);
+  // l.setAttribute('preload','metadata');
+  // l.setAttribute('src',src)
   if (poster) l.setAttribute('poster',poster);
   l.onclick = vip;
+
+  // if (Hls.isSupported()) 
+  // {
+  //   const hls = new Hls();
+  //   hls.loadSource(src);
+  //   hls.attachMedia(l);
+  // }
+  // else if (l.canPlayType('application/vnd.apple.mpegurl')) l.setAttribute('src',src);
 
   const trols = document.createElement('p');
   trols.classList.add('controls');
@@ -162,19 +170,22 @@ aa.mk.butt_expand =id=>
       if (!l) return;
       
       let block;
-      if (l.classList.contains('expanded'))
+      window.requestAnimationFrame(e=>
       {
-        l.classList.remove('expanded');
-        sessionStorage[l.id] = '';
-        block = 'center';
-      }
-      else
-      {
-        l.classList.add('expanded');
-        sessionStorage[l.id] = 'expanded';
-        block = 'start';
-      }
-      aa.fx.scroll(l,{behavior:'smooth',block:block});
+        if (l.classList.contains('expanded'))
+        {
+          l.classList.remove('expanded');
+          sessionStorage[l.id] = '';
+          block = 'center';
+        }
+        else
+        {
+          l.classList.add('expanded');
+          sessionStorage[l.id] = 'expanded';
+          block = 'start';
+        }
+        aa.fx.scroll(l,{behavior:'smooth',block:block});
+      });
     }
   });
   butt.dataset.controls = id
@@ -246,11 +257,21 @@ aa.mk.item =(k,v,tag_name='li')=>
 // make a regular link
 aa.mk.link =(url,text=false,title=false)=>
 {
+  let l;
   if (!text) text = url;
-  let l = aa.mk.l('a',{cla:'content_link',ref:url,con:text});
+  if (aa.is.url(url))
+  {
+    l = aa.mk.l('a',{cla:'content_link',ref:url,con:text});
+    l.rel = 'noreferrer noopener';
+    l.target = '_blank';
+  }
+  else
+  {
+    l = aa.mk.l('span',{cla:'content_link',con:text});
+  }
+  
   if (title) l.title = title;
-  l.rel = 'noreferrer noopener';
-  l.target = '_blank';
+  
   return l
 };
 
