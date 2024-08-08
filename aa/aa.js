@@ -20,7 +20,7 @@ const aa =
   clk:{},
   dependencies:
   [
-    '/dep/nostr_tools_2.js?v=20000',
+    '/dep/nostr_tools_2.js?v=2.7.2',
     '/dep/asciidoctor.min.js?v=3.0.4',
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
