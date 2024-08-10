@@ -26,32 +26,35 @@ aa.q.add =s=>
   {
     let log = localStorage.ns+' q add '+k+' ';
     let filter = aa.q.o.ls[k];
+    let is_new;
     let changed;
-    if (filter?.v === a)
+
+    if (filter)
     {
-      log += '=== is the same';
-    }
-    else if (filter)
-    {
-      log += filter.v+' > '+a;
-      filter.v = a;
-      changed = true;
+      if (filter.v === a) log += '=== is the same';
+      else
+      {
+        log += filter.v+' > '+a;
+        filter.v = a;
+        changed = true;
+      }
     }
     else 
     {
       aa.q.o.ls[k] = {v:a};
       log += aa.q.o.ls[k].v;
       changed = true;
+      is_new = true;
     }
     if (changed) 
     {
-      aa.q.close(k);
+      if (!is_new) aa.q.close(k);
       aa.mod_save(aa.q)
       .then(mod=>
       {
         aa.mod_ui(mod,k,aa.q.o.ls[k]);
-        aa.q.run(k);
-      });
+        // if (!is_new) aa.q.run(k);
+      });      
     }
     aa.log(log);
   }
@@ -345,6 +348,7 @@ aa.q.stuff =()=>
   aa.q.add('d {"#p":["u"],"kinds":[4],"since":"n_7"}');
   aa.q.add('f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,10002,30023,30818],"since":"n_1"}');
   aa.q.add('n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}');
+  aa.q.add('r {"authors":["u","k3"],"kinds":[6,7,16],"since":"n_1"}');
   aa.q.add('u {"authors":["u"],"since":"n_5"}');
   aa.q.add('z {"#p":["u"],"kinds":[9735],"since":"n_21"}');
 };

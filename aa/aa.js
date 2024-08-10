@@ -256,17 +256,16 @@ aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
 
 aa.logs_read =async e=>
 {
-  let ll;
+  let ls = [];
   if (e) 
   {
     e.stopPropagation();
-    if (e.target.classList.contains('l','is_new')) ll = [e.target];
-    else ll = [e.target.closest('.l.is_new')];
+    let dis = e.target.classList.contains('is_new') ? e.target 
+    : e.target.closest('.l.is_new');
+    if (dis) ls.push(dis)
   }
-  else ll = document.querySelectorAll('.l.is_new');
-  // if (e) l = e.target.closest('.l.is_new');
-  // let logs_new = l?[l]:document.querySelectorAll('.l.is_new');
-  if (ll.length) for (const l of ll) 
+  else ls = document.querySelectorAll('.l.is_new');
+  if (ls.length) for (const l of ls) 
   {
     l.classList.remove('is_new');
     l.classList.add('just_added');
@@ -285,7 +284,7 @@ aa.reset =()=>
   {
     localStorage.clear();
     sessionStorage.clear();
-    setTimeout(()=>{location.reload()},1000)
+    setTimeout(()=>{location.href = location.origin},1000)
   });
 };
 // reset action
@@ -310,6 +309,7 @@ aa.run =(o={})=>
   aa.log((aa.is.online() ? 'on' : 'off') + 'line at '+location.origin);
   aa.u.check_signer();
   aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  setTimeout(aa.logs_read,100);
 };
 
 

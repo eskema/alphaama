@@ -9,6 +9,7 @@
   "l"
   "oto"
   "cli_t";
+  grid-template-rows: repeat(3, auto) 1fr;
   left: 0;
   max-height: 4rem;
   position: fixed;

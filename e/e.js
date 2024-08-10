@@ -334,7 +334,7 @@ aa.e.pagination_upd =async e=>
     if (!aa.l.dataset.pagination) aa.l.dataset.pagination = n;
     else aa.l.dataset.pagination = n * 2;
     if (e.target) e.target.textContent = 'moar '+n;
-    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;';
+    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
     setTimeout(()=>
     {
       let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
@@ -358,7 +358,7 @@ aa.e.pagination_upd =async e=>
       e.target.textContent = 'no moar :)';
       e.target.classList.add('done');
     }
-    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;';
+    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
   }
 };
 

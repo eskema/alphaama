@@ -157,7 +157,7 @@ aa.u.is_following =xpub=>
 
 
 // load profiles of your follows
-aa.u.is_following_load_profiles =async p=>
+aa.u.load_follows =async p=>
 {
   if (p.follows.length)
   {
@@ -327,12 +327,13 @@ aa.u.load =()=>
 aa.u.login =async s=>  
 {
   aa.cli.clear();
-  await aa.u.set_mode(s.trim());
+  
 
-  return new Promise(resolve=>
-  {
+  // return new Promise(resolve=>
+  // {
     if (window.nostr && aa.u)
     {
+      await aa.u.set_mode(s.trim());
       window.nostr.getPublicKey().then(x=>
       {
         aa.u.set_u_p(x);
@@ -340,18 +341,18 @@ aa.u.login =async s=>
         {
           aa.r.ext().then(()=>
           {
-            resolve('login with relays')
+            // resolve('login with relays')
           });
         }
-        else resolve('login without relays')
+        // else resolve('login without relays')
       });
     }
     else 
     {
       aa.log('enable extension first and try again');
-      resolve('no login');
+      // resolve('no login');
     }
-  });
+  // });
 };
 
 
@@ -559,7 +560,12 @@ aa.u.mk =(k,v)=>
 aa.u.start =async mod=>
 {
   let ls = mod?.o?.ls;
-  if (!ls.xpub){ aa.log(aa.mk.butt_action('u login ')); return }
+  if (!ls.xpub)
+  { 
+    aa.log(aa.mk.butt_action('u login ',0,'u_login')); 
+    return 
+  }
+  else document.querySelector('.u_login')?.parentElement.remove();
 
   aa.mk.mod(mod);
   aa.fx.color(ls.xpub,document.getElementById('u_u'));
@@ -581,9 +587,10 @@ aa.u.start =async mod=>
     butt_u.textContent = ls.xpub.slice(0,3);
     aa.p.p_link_pic(butt_u,p.metadata.picture);
   }
-  if (!p.events.k0?.length) aa.log('u haz no data');
-  if (!p.events.k3?.length) aa.log('no follow list found');
-  else aa.u.is_following_load_profiles(p);
+  // if (!p.events.k0?.length) aa.log('u haz no data');
+  // if (!p.events.k3?.length) aa.log('no follow list found');
+  // else aa.u.load_follows(p);
+  if (p.events.k3?.length) aa.u.load_follows(p);
   aa.p.profile(p);
   if (upd) aa.p.save(p);
 };

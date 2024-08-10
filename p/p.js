@@ -305,8 +305,8 @@ aa.mk.metadata =p=>
       ul.append(l);
     }
   }
-  
-  const details = aa.mk.details('metadata ('+ul.childNodes.length+')',butt,1);
+  let len = ul.childNodes.length;
+  const details = aa.mk.details('metadata ('+len+')',butt,len?1:0);
   details.append(ul);
   metadata.append(details);
   return metadata
@@ -860,7 +860,7 @@ aa.kinds[3] =dat=>
         }
       }
       aa.p.save(p);
-      if (aa.is.u(dat.event.pubkey)) aa.u.is_following_load_profiles(p);
+      if (aa.is.u(dat.event.pubkey)) aa.u.load_follows(p);
     }
   })();
   

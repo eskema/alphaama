@@ -154,7 +154,7 @@
 #oto .item.pinned > .optional
 {
   border-bottom: 1px dashed rgb(var(--color-b));
-  color: rgb(var(--color-b));
+  color: rgb(var(--color-c));
 }
 
 #oto .item .acts
