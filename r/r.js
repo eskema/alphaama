@@ -174,34 +174,6 @@ aa.r.demand =(request,relays,options)=>
   let opts = {req:request};
   for (const opt in options) opts[opt] = options[opt];
 
-  // for (const k of relays)
-  // {
-  //   const rel_active = aa.r.active[k];
-  //   if (!rel_active)
-  //   {
-  //     if (!aa.r.o.ls[k]) aa.r.hint_notice(k,opts)
-  //     else 
-  //     {
-  //       if (!aa.r.o.ls[k].sets.includes('off')) aa.r.c_on(k,opts);
-  //       else aa.log('aa.r.demand: '+k+' is off');
-  //     } 
-  //   }
-  //   else
-  //   {
-  //     let no_active_connection = !rel_active.ws || !rel_active.ws?.readyState === 3;
-  //     if (no_active_connection) aa.r.c_on(k,opts);
-  //     else 
-  //     {
-  //       if (opts)
-  //       {
-  //         if (opts.req?.length) rel_active.q[opts.req[1]] = opts;
-  //         if (opts.send?.length) rel_active.send = opts.send;
-  //       }
-  //       aa.r.try(rel_active,JSON.stringify(request));
-  //     }
-  //   }
-  // }
-
   for (const k of relays)
   {
     let url = aa.is.url(k)?.href;
@@ -321,7 +293,10 @@ aa.r.hint_notice =(url,opts,set='hint')=>
 {
   // needs to display info from what npub, where does the notice come from?
   let act_yes = url+' '+set;
+  let id = 'notice_'+aa.fx.an(url);
+  if (document.getElementById(id)) return;
   let notice = {title:'r add '+act_yes+'?'};
+  notice.id = id;
   notice.yes =
   {
     title:'yes',
@@ -329,8 +304,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     {
       aa.r.add(act_yes);
       aa.r.c_on(url,opts);
-      // aa.logs_read(e.target);
-      e.target.parentElement.textContent = act_yes;
+      setTimeout(()=>{e.target.parentElement.textContent = act_yes},50);
     }
   };
   let act_no = url+' off';
@@ -340,8 +314,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     exe:e=>
     {
       aa.r.add(act_no);
-      // aa.logs_read(e.target);
-      e.target.parentElement.textContent = act_no;
+      setTimeout(()=>{e.target.parentElement.textContent = act_no},50);
     }
   };
   aa.notice(notice);

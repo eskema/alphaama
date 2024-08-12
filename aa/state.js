@@ -102,7 +102,6 @@ aa.state.resolve =(s,search)=>
       break;
     }
   }
-
   if (!has_view) aa.log('no view for '+s);
 };
 

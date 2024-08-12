@@ -1002,16 +1002,6 @@ a.author
   z-index: -1;*/
 }
 
-.blank[data-nope]::before
-{
-  content: "trying: " attr(data-nope);
-  font-size: var(--font-size-s);
-  line-height: 1.5;
-  padding: var(--pad);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
 .blank > .by::before
 {
   content: "unknown";
@@ -1028,6 +1018,16 @@ a.author
 .blank > .content
 {
   font-size: var(--font-size-s);
+}
+
+.blank:not(.tiny)[data-nope]::before
+{
+  content: "trying: " attr(data-nope);
+  font-size: var(--font-size-s);
+  line-height: 1.5;
+  padding: var(--pad);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* @end */
@@ -1263,7 +1263,7 @@ a.author
     padding-left: var(--pad-l);
   }
   
-  .created_at:hover::after,
+/*  .created_at:hover::after,
   .created_at:hover 
   {
     color: rgb(var(--color-e));
@@ -1272,7 +1272,7 @@ a.author
   .author:hover .name[data-petname]::after 
   {
     color: rgb(var(--color-d));
-  }
+  }*/
   
   .note:not(.tiny):not(.in_path) > .content::after
   {
@@ -1284,10 +1284,10 @@ a.author
     margin-left: var(--pad);
   }
   
-  .content .nostr_link:hover
+/*  .content .nostr_link:hover
   {
     color: rgba(var(--color-alt),1);
-  }
+  }*/
   
   .mark_read:hover
   {

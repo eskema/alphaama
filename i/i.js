@@ -135,16 +135,16 @@ aa.i.filter_out_rm =(items,k_v)=>
 // remove class 'solo' from items
 aa.i.filter_solo_rm =(items,k_v)=>
 {
+  let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k_v]) : [];
+  if (a.length) aa.l.dataset.solo = a.join(' ');
+  else
+  {
+    aa.l.dataset.solo = '';
+    aa.l.classList.remove('haz_solo');
+  }
   for (const l of items)
   {
-    let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k_v]) : [];
-    if (a.length) aa.l.dataset.solo = a.join(' ');
-    else
-    {
-      aa.l.dataset.solo = '';
-      aa.l.classList.remove('haz_solo');
-    }
-    l.classList.remove('solo')
+    l.classList.remove('solo');
     aa.fx.path_rm(k_v);
   }
 };

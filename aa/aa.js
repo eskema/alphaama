@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-
+const v = 31;
 
 const aa = 
 {
@@ -38,34 +38,34 @@ const aa =
   mk:{},
   mods:
   [
-    '/cli/cli.js',
-    '/o/o.js',
-    '/e/e.js',
-    '/p/p.js',
-    '/q/q.js',
-    '/r/r.js',
-    '/u/u.js',
-    '/i/i.js',
+    '/cli/cli.js?v='+v,
+    '/o/o.js?v='+v,
+    '/e/e.js?v='+v,
+    '/p/p.js?v='+v,
+    '/q/q.js?v='+v,
+    '/r/r.js?v='+v,
+    '/u/u.js?v='+v,
+    '/i/i.js?v='+v,
   ],
   parse:{},
   state:{},
   styles:
   [
-    '/aa/aa.css',
-    '/aa/l.css'
+    '/aa/aa.css?v='+v,
+    '/aa/l.css?v='+v,
   ],
   t:{ get now(){ return Math.floor(Date.now()/1000) }},
   temp:{},
   tools:
   [
-    '/aa/is.js',
-    '/aa/t.js',
-    '/aa/fx.js',
-    '/aa/mk.js',
-    '/aa/clk.js',
-    '/aa/parse.js',
-    '/aa/db.js',
-    '/aa/state.js',
+    '/aa/is.js?v='+v,
+    '/aa/t.js?v='+v,
+    '/aa/fx.js?v='+v,
+    '/aa/mk.js?v='+v,
+    '/aa/clk.js?v='+v,
+    '/aa/parse.js?v='+v,
+    '/aa/db.js?v='+v,
+    '/aa/state.js?v='+v,
   ],
   viewing:false,
   views:[],
@@ -259,10 +259,11 @@ aa.logs_read =async e=>
   let ls = [];
   if (e) 
   {
-    e.stopPropagation();
-    let dis = e.target.classList.contains('is_new') ? e.target 
+    
+    let dis = e.target?.classList.contains('is_new') ? e.target 
     : e.target.closest('.l.is_new');
-    if (dis) ls.push(dis)
+    if (dis) ls.push(dis);
+    e.stopPropagation();
   }
   else ls = document.querySelectorAll('.l.is_new');
   if (ls.length) for (const l of ls) 
@@ -270,6 +271,7 @@ aa.logs_read =async e=>
     l.classList.remove('is_new');
     l.classList.add('just_added');
   }
+  
 };
 
 

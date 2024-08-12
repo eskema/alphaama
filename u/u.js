@@ -476,7 +476,7 @@ aa.u.react =async s=>
     const reply_e = aa.db.e[xid].event;
     event.tags.push(...aa.get.tags_for_reply(reply_e));
   } 
-  aa.u.event_finalize(event).then(e=>{console.log(e)});
+  aa.u.event_finalize(event);
 };
 
 

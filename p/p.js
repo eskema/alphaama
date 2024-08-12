@@ -152,14 +152,32 @@ aa.p.author_list =(a,l,sort='text_asc')=>
 };
 
 
-// clear profile filters
+// clear profile filter
 aa.p.clear =e=>
 {
-  if (history?.state?.last?.startsWith('#npub'))
+  console.log('p clear',aa.p.viewing);
+  if (aa.l.dataset.solo?.length)
   {
-    console.log(aa.p.viewing);
-    if (aa.p.viewing) aa.i.filter_solo_rm(aa.p.viewing[0],aa.p.viewing[1]);
-    delete aa.p.viewing;
+    if (aa.p.viewing) 
+    {
+      items = aa.p.viewing[0];
+      k_v = aa.p.viewing[1];
+      delete aa.p.viewing;
+      aa.i.filter_solo_rm(items,k_v);
+    }
+    else 
+    {
+      // let last_npub = history.state.last.slice(1);
+      // let last_pub = aa.fx.decode(last_npub);
+      let solos = aa.l.dataset.solo.split(' ');
+      for (const solo of solos)
+      {
+        let pub = solo.split('_')[1];
+        items = aa.get.index_items('pubkey',pub);
+        k_v = 'pubkey_'+pub;
+        aa.i.filter_solo_rm(items,k_v);
+      }      
+    }   
   }
 };
 

@@ -327,7 +327,7 @@ aa.e.pagination_upd =async e=>
 {
   let style = document.getElementById('e_pagination');
   let total = document.getElementById('notes').childNodes.length;
-  if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination
+  if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination;
   let n = aa.l.dataset.pagination;
   if (n < total)
   {
@@ -335,11 +335,14 @@ aa.e.pagination_upd =async e=>
     else aa.l.dataset.pagination = n * 2;
     if (e.target) e.target.textContent = 'moar '+n;
     style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
-    setTimeout(()=>
+    if (n > localStorage.pagination)
     {
-      let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
-      if (last) aa.fx.scroll(last)
-    },200);
+      setTimeout(()=>
+      {
+        let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
+        if (last) aa.fx.scroll(last)
+      },200);
+    }
   }
   else 
   {
