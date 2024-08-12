@@ -311,7 +311,7 @@ aa.run =(o={})=>
   aa.log((aa.is.online() ? 'on' : 'off') + 'line at '+location.origin);
   aa.u.check_signer();
   aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
-  setTimeout(aa.logs_read,100);
+  setTimeout(aa.logs_read,200);
 };
 
 
@@ -349,7 +349,7 @@ aa.mod_save = async mod=>
 {
   return new Promise(resolve=>
   {
-    console.log(mod);
+    // console.log(mod);
     if (mod && mod.o && mod.o.id)
     {
       aa.db.idb.worker.postMessage({put:{store:'stuff',a:[mod.o]}});

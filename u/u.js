@@ -317,7 +317,7 @@ aa.u.load =()=>
   const id = 'u_u';
   const u = aa.mk.l('aside',{id:id});
   document.body.insertBefore(u,document.body.lastChild);
-  u.append(aa.mk.butt_expand(id))
+  u.append(aa.mk.butt_expand(id,'a_a'));
   
   aa.mod_load(aa.u).then(aa.u.start);
 };
@@ -584,7 +584,7 @@ aa.u.start =async mod=>
   let butt_u = document.getElementById('butt_u_u');
   if (butt_u) 
   {
-    butt_u.textContent = ls.xpub.slice(0,3);
+    butt_u.textContent = ls.xpub.slice(0,1)+'_'+ls.xpub.slice(-1);
     aa.p.p_link_pic(butt_u,p.metadata.picture);
   }
   // if (!p.events.k0?.length) aa.log('u haz no data');

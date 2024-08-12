@@ -156,11 +156,11 @@ aa.mk.butt_action =(s,con=false,cla=false)=>
 
 
 // button that toggles the class 'expanded'
-aa.mk.butt_expand =id=>
+aa.mk.butt_expand =(id,con=false)=>
 {
   const butt = aa.mk.l('button',
   {
-    con:id,
+    con:con||id,
     cla:'butt',
     id:'butt_'+id,
     clk:e=>

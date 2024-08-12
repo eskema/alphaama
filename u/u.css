@@ -1,16 +1,39 @@
 @keyframes u_u 
 {
-  89%
+  69%
   {
-    content: "a_a";
+    background-color: rgba(var(--c),0);
+    content: "";
+  }
+  70%
+  {
+    background-color: rgba(var(--c),1);
+    content: "u_u";
+  }
+  78%
+  {
+    background-color: rgba(var(--c),1);
+    content: "u_u";
+  }
+  79%
+  {
+    background-color: rgba(var(--c),0);
+    content: "";
   }
   90%
   {
+    background-color: rgba(var(--c),1);
+    content: "u_u";
+  }
+  98%
+  {
+    background-color: rgba(var(--c),1);
     content: "u_u";
   }
   100%
   {
-    content: "a_a";
+    background-color: rgba(var(--c),0);
+    content: "";
   }
 }
 
@@ -37,7 +60,6 @@
   box-sizing: border-box;
   color: rgb(var(--color-b));
   display: grid;
-  font-size: 0;
   grid-area: u_u;
   height: var(--size);
   padding: 0;
@@ -53,6 +75,11 @@
   color: rgb(var(--color-f));
 }
 
+#butt_u_u.has-picture
+{
+  font-size: 0;
+}
+
 #butt_u_u img 
 {
   height: 100%;
@@ -63,7 +90,6 @@
   transform: scale(.82);
   transition: var(--trans-quart);
   width: 100%;
-  z-index: -1;
 }
 
 #butt_u_u img:not([src])
@@ -77,14 +103,16 @@
   overflow: hidden;
 }
 
-#u_u.expanded:not([style]) #butt_u_u:not(.has-picture)::before
+#u_u.expanded:not([style]) #butt_u_u:not(.has-picture)::after
 {
-  content: "a_a";
+  content: "u_u";
 }
 
 #u_u.expanded #butt_u_u.has-picture img
 {
+  position: relative;
   transform: scale(.618);
+  z-index: 1;
 }
 
 #u_u:not(.expanded) > *:not(#butt_u_u)
@@ -92,11 +120,11 @@
   display: none;
 }
 
-#u_u #butt_u_u:not(.has-picture)::before
+#u_u #butt_u_u:not(.has-picture)::after
 {
   align-content: center;
-  animation: u_u 3s ease-in-out 0s infinite;
-  content: "a_a";
+  animation: u_u 4s ease-in-out 0s infinite;
+  content: "";
   display: grid;
   font-size: var(--font-size);
   height: 100%;
