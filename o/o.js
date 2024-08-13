@@ -91,6 +91,7 @@ aa.o.mk =(k,v)=>
   const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
   l.append(
     aa.mk.butt_action(id+' set '+k+' '+v,k,'key'),
+    ' ',
     aa.mk.l('span',{cla:'val',con:v})
   );
   return l

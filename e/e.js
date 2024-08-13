@@ -26,19 +26,19 @@ aa.e.append_to_notes =(note)=>
   }
   notes.insertBefore(note,last);
 
-  aa.to(()=>
+  let butt = document.querySelector('.pagination .butt');
+  if (!butt) document.getElementById('e').append(aa.mk.pagination());
+  else 
   {
-    let butt = document.querySelector('.pagination .butt');
-    if (!butt) setTimeout(()=>{document.getElementById('e').append(aa.mk.pagination())},0);
-    else 
+    aa.to(()=>
     {
       let n = aa.l.dataset.pagination;
       if (n 
       && butt.classList.contains('done') 
       && document.getElementById('notes').childNodes.length > n
       ) butt.textContent = 'moar dan '+n;
-    }
-  },300,'pagination');
+    },300,'pagination');
+  }
 };
 
 
@@ -306,66 +306,6 @@ aa.get.missing =async type=>
 };
 
 
-// restrict amount of root events displayed at once
-aa.mk.pagination =()=>  
-{
-  let style = document.getElementById('e_pagination');
-  if (!style) 
-  {
-    style = aa.mk.l('style',{id:'e_pagination'});
-    document.head.append(style);
-  }
-  let pagination = aa.mk.l('p',{cla:'pagination'});
-  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:aa.e.pagination_upd});
-  pagination.append(butt_more);
-  butt_more.click();
-  return pagination;
-};
-
-// update pagination 
-aa.e.pagination_upd =async e=>
-{
-  let style = document.getElementById('e_pagination');
-  let total = document.getElementById('notes').childNodes.length;
-  if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination;
-  let n = aa.l.dataset.pagination;
-  if (n < total)
-  {
-    if (!aa.l.dataset.pagination) aa.l.dataset.pagination = n;
-    else aa.l.dataset.pagination = n * 2;
-    if (e.target) e.target.textContent = 'moar '+n;
-    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
-    if (n > localStorage.pagination)
-    {
-      setTimeout(()=>
-      {
-        let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
-        if (last) aa.fx.scroll(last)
-      },200);
-    }
-  }
-  else 
-  {
-    if (n > total && e.target.classList.contains('done'))
-    {
-      n = localStorage.pagination;
-      if (e.target)
-      {
-        let n = aa.l.dataset.pagination;
-        e.target.textContent = 'moar '+n;
-        e.target.classList.remove('done');
-      } 
-    } 
-    else if (e.target)
-    {
-      e.target.textContent = 'no moar :)';
-      e.target.classList.add('done');
-    }
-    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
-  }
-};
-
-
 // parse nip19 to render as mention or quote
 aa.parse.nip19 =s=>
 {
@@ -629,6 +569,66 @@ aa.e.note_replace =(l,dat)=>
 };
 
 
+// restrict amount of root events displayed at once
+aa.mk.pagination =()=>  
+{
+  let style = document.getElementById('e_pagination');
+  if (!style) 
+  {
+    style = aa.mk.l('style',{id:'e_pagination'});
+    document.head.append(style);
+  }
+  let pagination = aa.mk.l('p',{cla:'pagination'});
+  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:aa.e.pagination_upd});
+  pagination.append(butt_more);
+  aa.e.pagination_upd({target:butt_more});
+  // butt_more.click();
+  return pagination;
+};
+
+// update pagination 
+aa.e.pagination_upd =async e=>
+{
+  let style = document.getElementById('e_pagination');
+  let total = document.getElementById('notes').childNodes.length;
+  if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination;
+  let n = aa.l.dataset.pagination;
+  if (n < total)
+  {
+    if (!aa.l.dataset.pagination) aa.l.dataset.pagination = n;
+    else aa.l.dataset.pagination = n * 2;
+    if (e.target) e.target.textContent = 'moar '+n;
+    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
+    if (n > localStorage.pagination)
+    {
+      setTimeout(()=>
+      {
+        let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
+        if (last) aa.fx.scroll(last)
+      },200);
+    }
+  }
+  else 
+  {
+    if (n > total && e.target.classList.contains('done'))
+    {
+      n = aa.l.dataset.pagination;
+      // let n = aa.l.dataset.pagination;
+      e.target.textContent = 'moar '+n;
+      e.target.classList.remove('done');
+    }
+    else if (e.target)
+    {
+      if (n > total) e.target.textContent = 'loading moar';
+      else 
+      e.target.textContent = 'no moar :)';
+      e.target.classList.add('done');
+    }
+    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
+  }
+};
+
+
 // print event
 aa.e.print =async dat=>
 {
@@ -663,7 +663,7 @@ aa.e.print =async dat=>
   aa.get.missing('e');
   aa.get.missing('p');
   aa.i.d(dat);
-  if (l && history.state.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
+  if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
 };
 
 

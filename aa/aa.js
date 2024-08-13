@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const v = 31;
+const v = 32;
 
 const aa = 
 {
@@ -245,7 +245,7 @@ aa.log =async(s,l=false)=>
   {
     l.append(log);
     log.addEventListener('click',aa.logs_read);
-    l.scrollTop = l.scrollHeight;
+    log.scrollIntoView();
   }
   else console.log('log:',s)
 };
@@ -311,7 +311,7 @@ aa.run =(o={})=>
   aa.log((aa.is.online() ? 'on' : 'off') + 'line at '+location.origin);
   aa.u.check_signer();
   aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
-  setTimeout(aa.logs_read,200);
+  setTimeout(aa.logs_read,420);
 };
 
 

@@ -143,7 +143,9 @@ aa.q.mk =(k,v) =>
   const l = aa.mk.l('li',{id:aa.q.def.id+'_'+k,cla:'item filter'});
   l.append(
     aa.mk.butt_action(aa.q.def.id+' run '+k,k,'key'),
+    ' ',
     aa.mk.l('span',{cla:'val',con:v.v}),
+    ' ',
     aa.mk.butt_action(aa.q.def.id+' rm ' + k,'rm','rm'),
   );
   // let sets = aa.mk.l('span',{cla:'sets'});

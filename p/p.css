@@ -523,7 +523,11 @@ p[data-meta="banner"]
   color: rgb(var(--color-d));
 }
 
-.profile .relay::after
+[data-team="dark"] .profile .relay::after
+{
+  color: rgb(var(--color-light));
+}
+[data-team="light"] .profile .relay::after
 {
   color: rgb(var(--color-dark));
 }

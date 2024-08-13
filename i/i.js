@@ -40,7 +40,7 @@ aa.i.d =dat=>
   if (dat.seen) for (const seen of dat.seen) aa.i.dex.e('seen',seen);
   if (dat.clas) for (const clas of dat.clas) aa.i.dex.e('clas',clas);
   if (dat.event.pubkey) aa.i.dex.e('pubkey',dat.event.pubkey);
-  if (dat.event.kind) aa.i.dex.e('kind',dat.event.kind);
+  if (dat.event.hasOwnProperty('kind')) aa.i.dex.e('kind',dat.event.kind);
   if (dat.event.created_at) aa.i.dex.at(dat.event.created_at,dat.event.id);
   if (dat.event.tags?.length) aa.i.dex.tags(dat.event.tags);
 };

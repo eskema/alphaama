@@ -43,10 +43,11 @@ aa.mk.av =(src,poster=false)=>
   { 
     const l = e.target;
     const trols = l.closest('.av').querySelector('.controls');
-    const percentage = Math.floor((100 / l.duration) * l.currentTime);
+    const duration = Math.floor(l.duration||0);
+    const percentage = Math.floor((100 / duration) * l.currentTime);
     trols.dataset.elapsed = Math.ceil(l.currentTime);
-    trols.dataset.remains = Math.round(l.duration - l.currentTime);
-    trols.dataset.duration = Math.floor(l.duration);
+    trols.dataset.remains = Math.round(duration - l.currentTime);
+    trols.dataset.duration = duration;
     trols.querySelector('progress').value = percentage;
   };
   // rewind video
@@ -72,7 +73,7 @@ aa.mk.av =(src,poster=false)=>
   l.loop = true;
   l.setAttribute('playsinline','');
   // l.setAttribute('preload','metadata');
-  // l.setAttribute('src',src)
+  l.setAttribute('src',src)
   if (poster) l.setAttribute('poster',poster);
   l.onclick = vip;
 
@@ -241,6 +242,7 @@ aa.mk.item =(k,v,tag_name='li')=>
   let l = aa.mk.l(tag_name,{cla:'item item_'+k});
   if (Array.isArray(v)) l.append(
     aa.mk.l('span',{cla:'key',con:k}),
+    ' ',
     aa.mk.l('span',{cla:'val',con:v.join(', ')})
   );
   else if (typeof v==='object') l.append(
@@ -248,6 +250,7 @@ aa.mk.item =(k,v,tag_name='li')=>
   );
   else l.append(
     aa.mk.l('span',{cla:'key',con:k}),
+    ' ',
     aa.mk.l('span',{cla:'val',con:v})
   );
   return l

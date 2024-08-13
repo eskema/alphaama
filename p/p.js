@@ -155,7 +155,7 @@ aa.p.author_list =(a,l,sort='text_asc')=>
 // clear profile filter
 aa.p.clear =e=>
 {
-  console.log('p clear',aa.p.viewing);
+  // console.log('p clear',aa.p.viewing);
   if (aa.l.dataset.solo?.length)
   {
     if (aa.p.viewing) 
@@ -167,8 +167,6 @@ aa.p.clear =e=>
     }
     else 
     {
-      // let last_npub = history.state.last.slice(1);
-      // let last_pub = aa.fx.decode(last_npub);
       let solos = aa.l.dataset.solo.split(' ');
       for (const solo of solos)
       {
@@ -486,8 +484,8 @@ aa.p.p_link_data =p=>
   o.followers = common;
   if (p.metadata?.picture && aa.is.trusted(p.trust))
   {
-    let url = aa.is.url(p.metadata.picture.trim());
-    if (url) o.src = url.href;
+    let url = aa.is.url(p.metadata.picture.trim())?.href;
+    if (url) o.src = url;
   } 
   return o
 };
@@ -638,8 +636,8 @@ aa.mk.pubkey =p=>
 {
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
   pubkey.append(aa.mk.p_link(p.xpub,p));
-  pubkey.append(aa.mk.l('span',{cla:'xpub',con:p.xpub}));
-  pubkey.append(aa.mk.time(p.updated));
+  pubkey.append(' ',aa.mk.l('span',{cla:'xpub',con:p.xpub}));
+  pubkey.append(' ',aa.mk.time(p.updated));
   return pubkey
 };
 
@@ -708,15 +706,16 @@ aa.p.save = async p=>
   const q_id = 'author_save';
   if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
   aa.db.p[p.xpub] = p;
-  // let profile = document.getElementById(p.npub) || aa.p.profile(p);
-  setTimeout(()=>{aa.p.p_links_upd(p)},100);
+  // setTimeout(()=>{aa.p.p_links_upd(p)},100);
+  aa.p.p_links_upd(p);
   if (aa.viewing === p.npub) aa.p.upd(aa.p.profile(p),p,1);
   aa.temp[q_id].push(p);
   aa.to(()=>
   {
     let q = [...aa.temp[q_id]];
     aa.temp[q_id] = [];
-    aa.db.idb.worker.postMessage({put:{store:'authors',a:q}})
+    console.log(q.length);
+    aa.db.idb.worker.postMessage({put:{store:'authors',a:q}});
   },1000,q_id);
 };
 
@@ -732,7 +731,6 @@ aa.p.score =async s=>
     const p = await aa.db.get_p(xpub);
     if (!p) p = aa.p.p(xpub);
     p.trust = score;    
-    // aa.p.upd(aa.p.profile(p),p,true);
     aa.p.save(p);
   }
   else aa.log('invalid data to score')

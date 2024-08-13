@@ -81,18 +81,18 @@ aa.r.broadcast =(event,relays=false)=>
 aa.r.butts =(l,o)=>
 {
   let url = l.querySelector('.url').innerText;
-  l.append(aa.mk.butt_action(aa.r.def.id+' rm '+url,'rm','rm'));
+  l.append(' ',aa.mk.butt_action(aa.r.def.id+' rm '+url,'rm','rm'));
   
   let sets = aa.mk.l('span',{cla:'sets'});
   if (o.sets && o.sets.length)
   {    
     for (const set of o.sets)
     {
-      sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+url+' '+set,set))
+      sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+url+' '+set,set),' ')
     }
   }
   sets.append(aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+'));
-  l.append(sets);
+  l.append(' ',sets);
 };
 
 

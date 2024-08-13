@@ -42,7 +42,7 @@ aa.cli.dat_mk =async(s,dis)=>
   {
     event:
     {
-      pubkey:aa.u.p.xpub,
+      pubkey:aa.u?.p?.xpub,
       kind:1,
       created_at:aa.t.now,
       content:s,
@@ -378,18 +378,19 @@ aa.cli.run =async s=>
       
       aa.u.event_draft(aa.cli.dat.event);
       delete aa.cli.dat;
+      aa.cli.fuck_off();
     }
     else 
     {
-      aa.log('unable to create note:');
-      if (!aa.u.p.xpub)
-      {
-        aa.log('you need to login first');
-        aa.log(localStorage.ns+' u login');
-      }
       aa.log(s);
+      let log_text = 'unable to create note';
+      if (!aa.u?.p?.xpub)
+      {
+        log_text += ', login first using the command: ';
+        log_text += localStorage.ns+' u login';
+      }
+      aa.log(log_text);      
     }
-    aa.cli.fuck_off();
   }
 };
 

@@ -585,7 +585,7 @@ aa.u.start =async mod=>
   if (butt_u) 
   {
     butt_u.textContent = ls.xpub.slice(0,1)+'_'+ls.xpub.slice(-1);
-    aa.p.p_link_pic(butt_u,p.metadata.picture);
+    if (aa.is.trusted(p.trust)) aa.p.p_link_pic(butt_u,p.metadata.picture);
   }
   // if (!p.events.k0?.length) aa.log('u haz no data');
   // if (!p.events.k3?.length) aa.log('no follow list found');
