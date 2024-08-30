@@ -89,13 +89,11 @@ https://v.nostr.build/OXw18vj2M8h1Mei0.mp4
 to receive events from relays, you send them requests containing filters
 - relays will start sending events one by one that match the request filters
 - relays will keep relaying new events as they receive them until the request is closed.
-- some requests will take some time to process due to current implementation limitations. 
-- running the query `b` for example, might make your browser ui become unresponsive until it finishes processing metadata, relay list and follow list of all your follows. 
-- processing a large amount of follow lists (kind:3) requires heavier processing as it builds a Web-of-Trust (WoT) score. 
+- processing a large amount of follow lists can take some time as it builds a Web-of-Trust (WoT) score (if logged in)
 
 the WoT score system used here is very primitive and consists of 2 integer values: 
-- a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc)
-- a generated value from the number of followers the pubkey has that you also follow. this is only used as a visual hint
+1. a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc). this value relates to the `trust` option
+2. a generated value from the number of followers a pubkey has that you also follow. this is only used as a visual hint
 
 to send a request , type: `.aa q req <relset> <JSON_filter>`
 - `relset` is either a single relay URL or a relay set id
