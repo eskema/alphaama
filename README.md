@@ -36,9 +36,9 @@ stable deployment:
 - alphaama doesn't do much on it's own, it takes commands given by the user and executes them
 - it has a single input field for interaction like a Command Line Interface (CLI) wrapped in a Graphical User Interface (GUI) that can be interacted with
 - commands are given by prefixing the input with a value (default is ".aa")
-- if no command prefix is found at the start of the input it is interpreted as a kind:1 draft (if logged in)
-- displays all event kinds using a threaded generic event view
-- can be used to create any event type (raw JSON) and autofills the missing required fields
+- if no command prefix is found at the start of the input a kind:1 draft is created (if logged in)
+- can display all event kinds using a threaded generic event view
+- can be used to create any event type and autofills the missing required fields (raw JSON)
 
 
 — OPTIONS
@@ -103,11 +103,11 @@ to send a request , type: `.aa q req <relset> <JSON_filter>`
 - you can add an extra value in the filter to close the request after all stored events have been sent: `"eose":"close"`
 
 the following variables can be used in filters:
-- "n_<int>": converts to a timestamp from `int` days ago. ex: "n_1" converts to 1 day ago
-- "d_<date_string>": converts to a timestamp of `date_string`. ex: "d_2024-08-21"
-- "now": converts to the timestamp of now.
-- "u": converts to your pubkey (if logged in)
-- "k3": converts to a list of pubkeys you follow (if logged in)
+- `"n_number"`: converts to a timestamp from `number` of days ago. ex: "n_1" converts to 1 day ago
+- `"d_date_string"`: converts to a timestamp of `date_string`. ex: "d_2024-08-21"
+- `"now"`: converts to the timestamp of now.
+- `"u"`: converts to your pubkey (if logged in)
+- `"k3"`: converts to a list of pubkeys you follow (if logged in)
 
 you can store requests so it's easier to run them.
 to store a request, type: `.aa q add <fid> <JSON_filter>`
