@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const v = 32;
+const aa_version = 33;
 
 const aa = 
 {
@@ -38,34 +38,34 @@ const aa =
   mk:{},
   mods:
   [
-    '/cli/cli.js?v='+v,
-    '/o/o.js?v='+v,
-    '/e/e.js?v='+v,
-    '/p/p.js?v='+v,
-    '/q/q.js?v='+v,
-    '/r/r.js?v='+v,
-    '/u/u.js?v='+v,
-    '/i/i.js?v='+v,
+    '/cli/cli.js?v='+aa_version,
+    '/o/o.js?v='+aa_version,
+    '/e/e.js?v='+aa_version,
+    '/p/p.js?v='+aa_version,
+    '/q/q.js?v='+aa_version,
+    '/r/r.js?v='+aa_version,
+    '/u/u.js?v='+aa_version,
+    '/i/i.js?v='+aa_version,
   ],
   parse:{},
   state:{},
   styles:
   [
-    '/aa/aa.css?v='+v,
-    '/aa/l.css?v='+v,
+    '/aa/aa.css?v='+aa_version,
+    '/aa/l.css?v='+aa_version,
   ],
   t:{ get now(){ return Math.floor(Date.now()/1000) }},
   temp:{},
   tools:
   [
-    '/aa/is.js?v='+v,
-    '/aa/t.js?v='+v,
-    '/aa/fx.js?v='+v,
-    '/aa/mk.js?v='+v,
-    '/aa/clk.js?v='+v,
-    '/aa/parse.js?v='+v,
-    '/aa/db.js?v='+v,
-    '/aa/state.js?v='+v,
+    '/aa/is.js?v='+aa_version,
+    '/aa/t.js?v='+aa_version,
+    '/aa/fx.js?v='+aa_version,
+    '/aa/mk.js?v='+aa_version,
+    '/aa/clk.js?v='+aa_version,
+    '/aa/parse.js?v='+aa_version,
+    '/aa/db.js?v='+aa_version,
+    '/aa/state.js?v='+aa_version,
   ],
   viewing:false,
   views:[],
