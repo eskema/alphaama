@@ -22,8 +22,8 @@ aa.parse.content =(s,trusted)=>
       l = aa.mk.l('p',{cla:'paragraph'});
     }
   };
-  // const paragraphs = s.split(/\n\s*\n/);
-  const paragraphs = s.split(/\n/);
+  let paragraphs = s.split(/\n\s*\n/);
+  if (paragraphs.length === 1) paragraphs = s.split(/\n/);
   for (const paragraph of paragraphs)
   { 
     if (!paragraph.length) continue;    

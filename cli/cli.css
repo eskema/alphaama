@@ -44,7 +44,7 @@
 
 .cli_expanded #cli
 {
-  max-height: 100vh;
+  max-height: calc(100vh - var(--size));
   z-index: 11;
 }
 
@@ -68,7 +68,7 @@
   -webkit-line-break: normal;
   line-height: 1.5rem;
   margin: 0;
-  max-height: 40vh;
+  max-height: 60vh;
   overflow-y: scroll;
   outline: none;
   padding: var(--pad-l);

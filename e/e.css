@@ -1222,6 +1222,11 @@ a.author
   display: none;
 }
 
+.haz_solo .note:not(.in_path).tiny:last-child
+{
+  margin-bottom: 0;
+}
+
 /* @end */
 
 

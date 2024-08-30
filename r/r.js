@@ -190,7 +190,7 @@ aa.r.demand =(request,relays,options)=>
       else 
       {
         if (!aa.r.o.ls[url].sets.includes('off')) aa.r.c_on(url,opts);
-        else aa.log('aa.r.demand: '+url+' is off');
+        else console.log('relay '+url+' is off');
       } 
     }
     else 
@@ -355,9 +355,12 @@ aa.r.list =s=>
       const tag = [k];
       if (aa.r.o.ls[k].sets.includes('read')) read = true;
       if (aa.r.o.ls[k].sets.includes('write')) write = true;
-      if (read && !write) tag.push('read');
-      if (!read && write) tag.push('write');
-      rels.push(tag.join(' '))
+      if (read || write)
+      {
+        if (read && !write) tag.push('read');
+        if (!read && write) tag.push('write');
+        rels.push(tag.join(' '))
+      }
     }
   }
   if (rels.length) aa.cli.v(localStorage.ns+' '+aa.r.def.id+' mkls '+rels.join(', '));
@@ -373,7 +376,7 @@ aa.r.list_mk =s=>
   const relays = [];
   for (const r of a) 
   {
-    let relay = r.split(' ');
+    let relay = r.trim().split(' ');
     relay.unshift('r');
     relays.push(relay);
   }
