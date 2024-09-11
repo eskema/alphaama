@@ -309,7 +309,7 @@ aa.run =(o={})=>
 
   aa.log((aa.is.online() ? 'on' : 'off') + 'line at '+location.origin);
   aa.u.check_signer();
-  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   setTimeout(aa.logs_read,420);
 };
 
