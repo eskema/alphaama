@@ -38,6 +38,16 @@ aa.fx.an =s=>
 };
 
 
+// splits array into chunks of n items
+// returns array of chunks
+aa.fx.chunks =(a,n)=>
+{
+  const chunks = [];
+  for (let i = 0; i < a.length; i += n) chunks.push(a.slice(i,i+n));
+  return chunks;
+}
+
+
 // adds css color in rgb to element from hex string
 // and also sets luma
 aa.fx.color =async(x,l)=> 
@@ -53,7 +63,7 @@ aa.fx.data_count =async(l,s)=>
 {
   const n = document.querySelectorAll(s).length;
   if (!n) l.removeAttribute('data-count');
-  else l.dataset.count = n;
+  else l.dataset.count = n
 };
 
 

@@ -14,6 +14,7 @@
   --trans-fast: all .2s ease-out 0s;
   --trans-quart: all .4s var(--cb) 0s;
   --trans-quart-io: all .3s var(--cb-io) 0s;
+  --font-main: "Source Code Pro", monospace;
   --font-size: 16px;
   --font-size-s: .69420rem;
   --font-size-xs: .5236rem;
@@ -92,7 +93,7 @@ html
 {
   background-color: rgb(var(--color-b));
   color: rgb(var(--color-d));
-  font-family: "Source Code Pro", monospace;
+  font-family: var(--font-main);
   font-size: var(--font-size);
   margin: 0;
   scrollbar-width: none;

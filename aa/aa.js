@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const aa_version = 33;
+const aa_version = 36;
 
 const aa = 
 {
@@ -14,14 +14,13 @@ const aa =
   {
     e:{}, // memory events (dat)
     p:{}, // memory profiles (pro)
-    q:{},
   },
   clear:[],
   clk:{},
   dependencies:
   [
-    '/dep/nostr_tools_2.js?v=2.7.2',
-    '/dep/asciidoctor.min.js?v=3.0.4',
+    '/dep/nostr-tools.js?v=2.7.2',
+    // '/dep/asciidoctor.min.js?v=3.0.4',
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
   ],

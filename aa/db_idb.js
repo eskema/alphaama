@@ -21,10 +21,25 @@ indexed_db.ops.clear =async(db,o)=>
   }
 };
 
+
+// splits array into chunks of n items
+// returns array of chunks
+indexed_db.chunks =(a,n)=>
+{
+  const chunks = [];
+  for (let i = 0; i < a.length; i += n) chunks.push(a.slice(i,i+n));
+  return chunks;
+};
+
+
 indexed_db.ops.put =async(db,o)=>
 { // o = {store:'',a:[]}
-  const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  for (const item of o.a) odb.put(item)
+  const chunks = indexed_db.chunks(o.a,444);
+  for (const chunk of chunks)
+  {
+    const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
+    for (const item of chunk) odb.put(item)
+  }
 };
 
 indexed_db.ops.get =async(db,o)=>
@@ -166,18 +181,17 @@ const merge =(dis,dat)=>
 indexed_db.ops.upd_e =async(db,o)=>
 {
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  for (const item of o.a)
+  for (const dat of o.a)
   {
-    odb.openCursor(item.event.id).onsuccess=e=>
+    odb.openCursor(dat.event.id).onsuccess=e=>
     {
       const cursor = e.target.result; 
       if (cursor) 
       { 
-        // console.log('db cursor');
-        const merged = merge(cursor.value,item);
+        const merged = merge(cursor.value,dat);
         if (merged) cursor.update(merged);
       }
-      else odb.put(item)
+      else odb.put(dat)
     }
   }
 };

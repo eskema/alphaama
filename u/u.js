@@ -156,22 +156,6 @@ aa.u.is_following =xpub=>
 };
 
 
-// load profiles of your follows
-aa.u.load_follows =async p=>
-{
-  if (p.follows.length)
-  {
-    let follows = await aa.db.get('idb',{get_a:{store:'authors',a:p.follows}});
-    for (const dis of follows) aa.db.p[dis.xpub] = dis;
-    for (const x of p.follows)
-    {
-      if (!aa.db.p[x]) aa.db.p[x] = aa.p.p(x);
-      aa.p.profile(aa.db.p[x])
-    } 
-  }
-};
-
-
 // if hex key is your pubkey
 aa.is.u =(x)=> aa.u?.o?.ls?.xpub === x;
 
@@ -391,62 +375,6 @@ aa.u.metadata_set =async s=>
 };
 
 
-// process all p tags from kind-3
-aa.u.process_k3_tags =async(tags,x)=>
-{
-  const is_u = aa.is.u(x);
-  const to_upd = [];
-  if (is_u) aa.u.follows = tags;
-  for (const tag of tags)
-  {
-    
-    if (!aa.is.tag.p(tag)) continue;
-  
-    const [type,xpub,relay,petname] = tag;
-    if (!aa.is.x(xpub)) 
-    {
-      console.log('invalid hex key in k3 of '+x,xpub);
-      continue;
-    }
-
-    let updd;
-    let p = aa.db.p[xpub];
-    if (!p) 
-    {
-      p = aa.db.p[xpub] = aa.p.p(xpub);
-      updd = true;
-    }  
-
-    if (relay)
-    {
-      let url = aa.is.url(relay)?.href;
-      if (url)
-      {
-        if (!p.rels) p.rels = {};
-        if (!p.rels[url]) p.rels[url] = {sets:[]};
-        if (aa.fx.a_add(p.rels[url].sets,['hint'])) updd = true;
-      }
-      if (is_u && p.relay !== relay) { p.relay = relay; updd = true; }
-    }
-
-    if (petname)
-    {
-      if (!p.petnames) p.petnames = [];
-      if (aa.fx.a_add(p.petnames,[petname])) updd = true;
-      if (is_u && p.petname !== petname) { p.petname = petname; updd = true; }
-    }
-
-    if (aa.fx.a_add(p.followers,[x])) updd = true;
-    if (is_u && p.trust < 5) { p.trust = 5; updd = true }
-    if (is_u && aa.fx.a_add(p.sets,['k3'])) updd = true;
-    
-    if (updd) to_upd.push(p);
-
-  }
-  if (to_upd.length) for (const p of to_upd) aa.p.save(p)
-};
-
-
 // new reaction event (kind-7)
 // should go to aa.e
 aa.u.react =async s=>
@@ -587,11 +515,8 @@ aa.u.start =async mod=>
     butt_u.textContent = ls.xpub.slice(0,1)+'_'+ls.xpub.slice(-1);
     if (aa.is.trusted(p.trust)) aa.p.p_link_pic(butt_u,p.metadata.picture);
   }
-  // if (!p.events.k0?.length) aa.log('u haz no data');
-  // if (!p.events.k3?.length) aa.log('no follow list found');
-  // else aa.u.load_follows(p);
-  if (p.events.k3?.length) aa.u.load_follows(p);
   aa.p.profile(p);
+  if (p.events.k3?.length) aa.p.load_profiles(p.follows);
   if (upd) aa.p.save(p);
 };
 

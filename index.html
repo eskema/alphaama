@@ -18,7 +18,7 @@ window.addEventListener('load',e=>
   // run with defaults
   aa.run();
   // fetch and append readme
-  fetch('/README.md?v=1').then(dis=>dis?.text()).then(text=>
+  fetch('/README.md?v=2').then(dis=>dis?.text()).then(text=>
   {
     if (!text) return;
     let content = aa.parse.content(text);

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en-US" data-team="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>make note</title>
+  <script src="/dep/nostr_tools.js"></script>
+  <script src="/wip/mk_note.js"></script>
+  <link rel="stylesheet" href="/aa/aa.css">
+  <link rel="stylesheet" href="/wip/mk_note.css">
+</head>
+<body>
+  <header>
+    <h1>make a (nostr) note</h1>
+    <!-- <button>connect signer</button> -->
+  </header>
+  <main id="form">
+    <section id="reply_to_wrapper">
+      <label for="reply">reply_to:</label>
+      <input id="reply" type="text" value="" placeholder="nevent1…">
+    </section>
+    <section id="pubkey_wrapper">
+      <label for="pubkey">pubkey:</label>
+      <input id="pubkey" type="text" value="">
+    </section>
+    <section id="kind_wrapper">
+      <label for="kind">kind:</label>
+      <input id="kind" type="number" value="1" placeholder="number">
+    </section>
+    <section id="created_at_wrapper">
+      <label for="created_at">created_at:</label>
+      <input id="created_at" type="number" value="" placeholder="leave empty for auto">
+    </section>
+    <section id="content_wrapper">
+      <label for="content">content:</label> 
+      <textarea id="content" placeholder="yo"></textarea>
+    </section>
+    <section id="tags_wrapper">
+      tags: 
+      <ol id="tags" start="0"></ol> 
+      <button onclick="new_tag();">+</button>
+    </section>
+    <button id="make_button" onclick="make_event();">make</button>
+  </main>
+  <footer id="output"></footer>
+  
+<script>
+
+const make_event =()=>
+{
+  const event = {};
+  event.pubkey = document.getElementById('pubkey').value;
+  
+  let timestamp = parseInt(document.getElementById('created_at').value);
+  if (!timestamp) timestamp = Math.floor(Date.now()/1000)
+  event.created_at = timestamp;
+  event.kind = parseInt(document.getElementById('kind').value);
+  event.content = document.getElementById('content').value;
+  event.tags = [];
+  let tags = document.getElementById('tags');
+  for (const tag of tags.childNodes)
+  {
+    let value = tag.firstChild.value.trim();
+    if (value) 
+    {
+      let dis_tag = [];
+      let a = value.split(',');
+      for (const v of a) 
+      {
+        dis_tag.push(v.trim())
+      }
+      event.tags.push(dis_tag);
+    }
+  }
+  event.id = NostrTools.getEventHash(event);
+  document.getElementById('output').textContent = JSON.stringify(event); 
+};
+
+const tag_button =()=>
+{
+  let button = document.createElement('button');
+  button.textContent = 'x';
+  button.onclick =e=>
+  {
+    let item = e.target.closest('li');
+    let list = item.parentElement;
+    list.style.counterReset = 'none';
+    item.remove();
+    setTimeout(()=>{list.style.counterReset = '';},0)
+    // list.style.counterReset = '';
+  }
+  return button
+};
+
+const new_tag =()=>
+{
+  let new_tag = document.createElement('li');
+  let new_tag_input = document.createElement('input');
+  new_tag_input.type = 'text';
+  new_tag.append(new_tag_input);
+  new_tag.append(tag_button());
+  document.getElementById('tags').append(new_tag);
+};
+
+const is_hex =s=> /^[A-F0-9]+$/i.test(s); 
+
+const pubkey_change =e=>
+{
+  const er = 'invalid key';
+  let valid_pubkey;
+  let v = e.target.value.toLowerCase().trim();
+  if (is_hex(v) && v.length === 64)
+  {
+    try 
+    {
+      e.target.parentElement.dataset.alt = NostrTools.nip19.npubEncode(v);
+      valid_pubkey = v;
+    }
+    catch (error) {alert(er)}
+  }
+  else if (v.startsWith('npub'))
+  {
+    e.target.parentElement.dataset.alt = v;
+    try 
+    {
+      valid_pubkey = NostrTools.nip19.decode(v).data.trim();
+      e.target.value = valid_pubkey;
+    }
+    catch (error) {alert(er)}
+  }
+  else e.target.parentElement.dataset.alt = er;
+  if (valid_pubkey) sessionStorage.pubkey = valid_pubkey;
+};
+
+const created_at_change =e=>
+{
+  let timestamp = parseInt(e.target.value.trim());
+  if (!timestamp) timestamp = Date.now()/1000;
+  let d = new Date(timestamp*1000);
+  let display_date = d.getFullYear()
+    +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
+    +'/'+ (d.getDate()  + '').padStart(2,'0') 
+    +' '+ (d.getHours() + '').padStart(2,'0') 
+    +':'+ (d.getMinutes()+'').padStart(2,'0') 
+    +':'+ (d.getSeconds()+'').padStart(2,'0');
+  e.target.parentElement.dataset.alt = display_date
+};
+
+window.addEventListener('load',e=>
+{
+  let pubkey = document.getElementById('pubkey');
+  pubkey.addEventListener('change',pubkey_change);
+  let saved_pubkey = sessionStorage.pubkey;
+  if (saved_pubkey) pubkey.value = saved_pubkey;
+  pubkey_change({target:pubkey});
+
+  let created_at = document.getElementById('created_at');
+  created_at.addEventListener('change',created_at_change);
+  created_at_change({target:created_at});
+
+});
+
+</script>
+</body></html>

@@ -1,0 +1,171 @@
+body
+{
+  box-sizing: border-box;
+  padding: 1rem;
+  align-items: start;
+  min-height: unset;
+  width: 100%;
+}
+
+h1 {
+  font-size: var(--font-size-l);
+}
+
+button,
+button:focus
+{
+  color: rgb(var(--color-d));
+}
+
+button:hover
+{
+  color: rgb(var(--color-f));
+}
+
+::placeholder
+{
+  color:  rgb(var(--color-c));
+  font-family: var(--font-main);
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button 
+{
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] 
+{
+  -moz-appearance: textfield;
+}
+
+input,
+textarea
+{
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgb(var(--color-b));
+  border: none;
+  border-radius: 2px;
+  color:  rgb(var(--color-e));
+  font-family: var(--font-main);
+  font-size: var(--font-size);
+  margin: .5rem 0;
+}
+
+input:focus,
+textarea:focus
+{
+  background: rgb(var(--color-c));
+}
+
+[data-alt]::after
+{
+  content: "(" attr(data-alt) ")";
+  color: rgb(var(--color-c));
+  font-size: var(--font-size-s);
+}
+
+#form
+{
+  align-items:  start;
+  display: grid;
+  grid-gap: 1rem;
+  grid-template-areas:
+  "reply_to reply_to"
+  "pubkey pubkey"
+  "created_at kind"
+  "content content"
+  "tags tags"
+  "make make";
+  position: relative;
+}
+
+#form section
+{
+  border-top: 1px dotted rgb(var(--color-c));
+  display: grid;
+  padding-top: .5rem;
+}
+
+#reply_to_wrapper
+{
+  grid-area: reply_to;
+}
+
+#pubkey_wrapper
+{
+  grid-area: pubkey;
+}
+
+#kind_wrapper
+{
+  grid-area: kind;
+}
+
+#created_at_wrapper
+{
+  grid-area: created_at
+}
+
+#content_wrapper
+{
+  grid-area: content;
+}
+
+#content
+{
+  box-sizing: border-box;
+  min-height: 3rem;
+  width: 100%;
+  resize: vertical;
+}
+
+#tags_wrapper
+{
+  grid-area: tags;
+}
+
+#tags
+{
+  list-style-position: inside;
+  counter-reset: tags -1;
+}
+
+#tags li::before
+{
+  counter-increment: tags;
+  content: counter(tags);
+  margin-right: .5rem;
+}
+
+#tags li
+{
+  align-items: center;
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-template-columns: auto 1fr auto;
+  margin: .5rem 0;
+}
+
+#tags li input
+{
+  font-size: var(--font-size-s);
+}
+
+#make_button
+{
+  color: rgb(var());
+  font-size: var(--font-size-m);
+  grid-area: make;
+  justify-self: center;
+}
+
+#output
+{
+  line-height: 2;
+  padding: 2rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

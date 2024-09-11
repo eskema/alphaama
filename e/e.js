@@ -233,7 +233,7 @@ aa.clk.mark_read =e=>
 };
 
 
-// add to missing event list
+// add event id to missing event list
 aa.e.miss_e =(xid,relays)=>
 {
   if (!aa.miss.e[xid]) aa.miss.e[xid] = {nope:[],relays:[]};
@@ -247,7 +247,7 @@ aa.e.miss_e =(xid,relays)=>
 
 // get event from tag and prints it,
 // otherwise add to missing list
-aa.e.miss_print =(tag)=>
+aa.e.miss_print =tag=>
 {
   const xid = tag[1];
   const relay = tag[2];
@@ -258,6 +258,17 @@ aa.e.miss_print =(tag)=>
   });
 };
 
+const nope =(xid,a,b,miss)=>
+{
+  for (const url of a) 
+  {
+    if (!b.includes(url))
+    {
+      if (!miss[url]) miss[url] = [];
+      aa.fx.a_add(miss[url],[xid]);
+    }
+  }
+};
 
 // get missing e or p from def relays
 aa.get.missing =async type=>
@@ -265,23 +276,13 @@ aa.get.missing =async type=>
   aa.to(()=>
   {
     let miss = {};
-    const nope =(xid,a,b)=>
-    {
-      for (const url of a) 
-      {
-        if (!b.includes(url))
-        {
-          if (!miss[url]) miss[url] = [];
-          aa.fx.a_add(miss[url],[xid]);
-        }
-      }
-    };
+    
     let def_relays = aa.r.in_set(aa.r.o.r);
     for (const xid in aa.miss[type])
     {
       let v = aa.miss[type][xid];
-      nope(xid,def_relays,v.nope);
-      nope(xid,v.relays,v.nope);
+      nope(xid,def_relays,v.nope,miss);
+      nope(xid,v.relays,v.nope,miss);
     }
 
     if (Object.keys(miss).length)
@@ -300,7 +301,7 @@ aa.get.missing =async type=>
         }
         filter = {ids:ids};
       }
-      aa.r.demand(['REQ',type,filter],[url],{});
+      setTimeout(()=>{aa.r.demand(['REQ',type,filter],[url],{});},0)
     }
   },1000,'miss_'+type);
 };
@@ -403,6 +404,11 @@ aa.e.note =dat=>
     const x = dat.event.pubkey;
     note.dataset.pubkey = x;
     aa.fx.color(x,note);
+    // aa.p.get_p(x).then(p=>
+    // {
+    //   note.dataset.trust = p.trust;
+    //   by.append(aa.mk.p_link(x));
+    // });   
     aa.db.get_p(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
@@ -659,10 +665,14 @@ aa.e.print =async dat=>
     }
   }
 
-  aa.get.quotes(xid);
-  aa.get.missing('e');
-  aa.get.missing('p');
-  aa.i.d(dat);
+  setTimeout(()=>
+  {
+    aa.get.quotes(xid);
+    aa.get.missing('e');
+    aa.get.missing('p');
+    aa.i.d(dat);
+  },0);
+  
   if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
 };
 
@@ -877,6 +887,19 @@ aa.e.view =l=>
   aa.fx.path(l);
   if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
   aa.fx.scroll(l);
+};
+
+
+aa.e.wrap_dat =(event)=>
+{
+  const dat = 
+    {
+      event:event,
+      seen:[message.origin],
+      subs:[sub_id],
+      clas:[],
+      refs:[]
+    };
 };
 
 
@@ -1178,17 +1201,17 @@ aa.db.merge_e =dat=>
 // update event on database
 aa.db.upd_e =async dat=>
 {
-  const id = 'upd_e';
-  if (!aa.db.q[id]) aa.db.q[id] = {};
+  const q_id = 'upd_e';
+  if (!aa.temp[q_id]) aa.temp[q_id] = {};
   let merged = aa.db.merge_e(dat);
-  if (merged) aa.db.q[id][dat.event.id] = merged;
+  if (merged) aa.temp[q_id][dat.event.id] = merged;
 
   aa.to(()=>
   {
-    const q = Object.values(aa.db.q[id]);
-    aa.db.q[id] = {};
+    const q = Object.values(aa.temp[q_id]);
+    aa.temp[q_id] = {};
     if (q.length) aa.db.idb.worker.postMessage({upd_e:{store:'events',a:q}});
-  },2000,id);
+  },2000,q_id);
 };
 
 

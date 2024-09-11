@@ -31,7 +31,7 @@
 .note.root.solo,
 .note.root:not(.in_path),
 .note.in_view > .replies > .note,
-.haz_solo .note.root.in_path:not(.in_view),
+.haz_solo .note.root.in_path:not(.in_view):not(.tiny),
 #notes > .note:not(.root):not(.in_path)
 {
   grid-template-columns: auto 1fr 61.8vw;

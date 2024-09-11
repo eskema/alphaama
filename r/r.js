@@ -513,14 +513,19 @@ aa.r.message_type.event =async message=>
       refs:[]
     };
     if (aa.miss.e[event.id]) delete aa.miss.e[event.id];
-    aa.db.upd_e(dat);
+    
+    
     if (dat.subs?.length && dat.seen?.length)
     {
       let sub = aa.r.active[dat.seen[0]]?.q[dat.subs[0]];
       if (sub && !sub?.stamp || sub?.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
     }
-    
-    aa.e.print(dat);
+    setTimeout(()=>
+    {
+      aa.db.upd_e(dat);
+      aa.e.print(dat);
+    },0);
+
   }
   else console.log('invalid event',message);
 };
@@ -814,7 +819,8 @@ aa.r.ws_message =async e=>
     let type = a[0].toLowerCase();
     if (aa.r.message_type.hasOwnProperty(type))
     {
-      setTimeout(()=>{aa.r.message_type[type]({data:a,origin:e.target.url})},0);
+      aa.r.message_type[type]({data:a,origin:e.target.url})
+      // setTimeout(()=>{aa.r.message_type[type]({data:a,origin:e.target.url})},0);
     } 
     else err(e);
   }
