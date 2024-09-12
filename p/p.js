@@ -778,11 +778,11 @@ aa.get.pubs =async tags=>
 // add relays to profile
 aa.p.relays_add =(relays,p)=>
 {
-  if (!p.rels) p.rels = {};
+  if (!p.relays) p.relays = {};
   for (const relay in relays)
   {
-    if (!p.rels[relay]) p.rels[relay] = relays[relay]
-    else aa.fx.a_add(p.rels[relay].sets,relays[relay].sets);
+    if (!p.relays[relay]) p.relays[relay] = relays[relay]
+    else aa.fx.a_add(p.relays[relay].sets,relays[relay].sets);
   }
 };
 
@@ -875,9 +875,8 @@ aa.p.process_k3_tags =async(event)=>
       let url = aa.is.url(relay)?.href;
       if (url)
       {
-        if (!p.rels) p.rels = {};
-        if (!p.rels[url]) p.rels[url] = {sets:[]};
-        if (aa.fx.a_add(p.rels[url].sets,['hint'])) upd = true;
+        if (!p.relays[url]) p.relays[url] = {sets:[]};
+        if (aa.fx.a_add(p.relays[url].sets,['hint'])) upd = true;
       }
       if (is_u && p.relay !== relay) { p.relay = relay; upd = true; }
     }

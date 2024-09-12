@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en-US" data-team="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>make a (nostr) request filter</title>
+  <script src="/dep/nostr-tools.js"></script>
+  <link rel="stylesheet" href="/aa/aa.css">
+  <link rel="stylesheet" href="/wip/ma_filter.css">
+</head>
+<body>
+  <header>
+    <h1>make a (nostr) request filter</h1>
+  </header>
+
+  <main id="form">
+    <section id="since_wrapper">
+      <label for="since">since:</label>
+      <input id="since" type="number" value="" placeholder="unix timestamp">
+    </section>
+
+    <section id="until_wrapper">
+      <label for="until">until:</label>
+      <input id="until" type="number" value="" placeholder="unix timestamp">
+    </section>
+    
+    <section id="limit_wrapper">
+      <label for="limit">limit:</label>
+      <input id="limit" type="number" value="" placeholder="number">
+    </section>
+
+    <section id="authors_wrapper">
+      <label for="authors">authors:</label>
+      <input id="authors" type="text" value="" placeholder="comma separated hex values">
+    </section>
+
+    <section id="ids_wrapper">
+      <label for="ids">ids:</label>
+      <input id="ids" type="text" value="" placeholder="comma separated hex values">
+    </section>
+
+    <section id="kinds_wrapper">
+      <label for="kinds">kinds:</label>
+      <input id="kinds" type="text" value="" placeholder="comma separated numbers">
+    </section>
+    
+    <section id="tags_wrapper">
+      tags: 
+      <ul id="tags"></ul> 
+      <button onclick="new_tag();">+</button>
+    </section>
+
+    <button id="req_button" onclick="req();">make filter</button>
+  </main>
+  
+  <footer id="output"></footer>
+  
+<script>
+
+const is_hex =s=> /^[A-F0-9]+$/i.test(s); 
+
+const tr =(s,int=false)=>
+{
+  let values = [];
+  let a = s.split(',');
+  for (const v of a) 
+  {
+    let val = v.trim();
+    if (int) val = parseInt(val);
+    if (val || val === 0) values.push(val);
+  }
+  if (!values.length) return false;
+  return values
+};
+
+const req =()=>
+{
+  const filter = {};
+  let authors = tr(document.getElementById('authors').value);
+  if (authors) filter.authors = authors;
+
+  let ids = tr(document.getElementById('ids').value);
+  if (ids) filter.ids = ids;
+
+  let kinds = tr(document.getElementById('kinds').value,1);
+  if (kinds) filter.kinds = kinds;
+
+  let since = document.getElementById('since').value.trim();
+  if (since) filter.since = parseInt(since);
+
+  let until = document.getElementById('until').value.trim();
+  if (until) filter.until = parseInt(until);
+
+  let limit = document.getElementById('limit').value.trim();
+  if (limit) filter.limit = parseInt(limit);
+
+  let tags = document.getElementById('tags');
+  for (const tag of tags.childNodes)
+  {
+    let key = tag.firstChild.firstChild.value.trim();
+    let value = tag.firstChild.lastChild.value.trim();
+    if (key && value) filter['#'+key] = tr(value)
+  }
+  document.getElementById('output').textContent = JSON.stringify(filter); 
+};
+
+const tag_button =()=>
+{
+  let button = document.createElement('button');
+  button.textContent = 'x';
+  button.onclick =e=> { e.target.closest('li').remove() }
+  return button
+};
+
+const new_tag =()=>
+{
+  let new_tag = document.createElement('li');
+  let inputs = document.createElement('span');
+  
+  let new_tag_key = document.createElement('input');
+  new_tag_key.type = 'text';
+  new_tag_key.placeholder = '#';
+  
+  let new_tag_value = document.createElement('input');
+  new_tag_value.type = 'text';
+  new_tag_value.placeholder = 'comma separated values';
+  inputs.append(new_tag_key,' ',new_tag_value);
+  new_tag.append(inputs,' ',tag_button());
+  document.getElementById('tags').append(new_tag);
+};
+
+</script>
+</body></html>

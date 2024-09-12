@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>make note</title>
-  <script src="/dep/nostr_tools.js"></script>
-  <script src="/wip/mk_note.js"></script>
+  <title>make a (nostr) note</title>
+  <script src="/dep/nostr-tools.js"></script>
   <link rel="stylesheet" href="/aa/aa.css">
-  <link rel="stylesheet" href="/wip/mk_note.css">
+  <link rel="stylesheet" href="/wip/ma_note.css">
 </head>
 <body>
   <header>
@@ -23,13 +22,13 @@
       <label for="pubkey">pubkey:</label>
       <input id="pubkey" type="text" value="">
     </section>
-    <section id="kind_wrapper">
-      <label for="kind">kind:</label>
-      <input id="kind" type="number" value="1" placeholder="number">
-    </section>
     <section id="created_at_wrapper">
       <label for="created_at">created_at:</label>
       <input id="created_at" type="number" value="" placeholder="leave empty for auto">
+    </section>
+    <section id="kind_wrapper">
+      <label for="kind">kind:</label>
+      <input id="kind" type="number" value="1" placeholder="number">
     </section>
     <section id="content_wrapper">
       <label for="content">content:</label> 
@@ -40,7 +39,7 @@
       <ol id="tags" start="0"></ol> 
       <button onclick="new_tag();">+</button>
     </section>
-    <button id="make_button" onclick="make_event();">make</button>
+    <button id="make_button" onclick="make_event();">make note</button>
   </main>
   <footer id="output"></footer>
   
@@ -48,7 +47,7 @@
 
 const make_event =()=>
 {
-  const event = {};
+  let event = {};
   event.pubkey = document.getElementById('pubkey').value;
   
   let timestamp = parseInt(document.getElementById('created_at').value);
@@ -72,8 +71,14 @@ const make_event =()=>
       event.tags.push(dis_tag);
     }
   }
-  event.id = NostrTools.getEventHash(event);
-  document.getElementById('output').textContent = JSON.stringify(event); 
+  try 
+  {
+    event.id = NostrTools.getEventHash(event);
+    event = JSON.stringify(event);
+  }
+  catch (er) {event = 'error: make sure your data is correct'}
+  
+  document.getElementById('output').textContent = event; 
 };
 
 const tag_button =()=>
