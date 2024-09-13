@@ -252,13 +252,12 @@ aa.log =async(s,l=false)=>
 
 // logs container element
 aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
-
+// mark logs as read
 aa.logs_read =async e=>
 {
   let ls = [];
   if (e) 
   {
-    
     let dis = e.target?.classList.contains('is_new') ? e.target 
     : e.target.closest('.l.is_new');
     if (dis) ls.push(dis);
@@ -270,7 +269,6 @@ aa.logs_read =async e=>
     l.classList.remove('is_new');
     l.classList.add('just_added');
   }
-  
 };
 
 
@@ -406,8 +404,6 @@ aa.notice =async o=>
 };
 
 
-
-
 // reusable regex
 aa.regx = 
 {
@@ -451,24 +447,3 @@ aa.wl.release =()=>
   if (aa.wl.wakelock) aa.wl.wakelock.release();
   aa.wl.wakelock = null;
 };
-
-// const scrollin =(pos,l)=>
-// {
-//   console.log(pos)
-// }
-
-// let last_known_scroll_position = 0;
-// let ticking = false;
-
-// window.addEventListener('scroll', function(e) {
-//   last_known_scroll_position = window.scrollY;
-
-//   if (!ticking) {
-//     window.requestAnimationFrame(e=>
-//     {
-//       scrollin(last_known_scroll_position,aa.l);
-//       ticking = false;
-//     });
-//     ticking = true;
-//   }
-// });
