@@ -250,7 +250,8 @@ a.author
   height: 1rem; 
   object-fit: cover;
   padding: 0;
-  width: 1rem; 
+  pointer-events: none;
+  width: 1rem;
 }
 
 .by .author::after,

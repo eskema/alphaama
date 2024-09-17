@@ -170,8 +170,8 @@
 .profile > .pubkey .author.has-picture img
 {
   height: var(--size-s);
-  width: var(--size-s);
   pointer-events: none;
+  width: var(--size-s);
 }
 
 .profile > .pubkey .xpub
