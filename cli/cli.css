@@ -89,11 +89,6 @@
   padding: var(--line);
 }
 
-#cli_t::placeholder 
-{
-  color: rgb(var(--color-c));
-}
-
 
 @media screen and (min-width: 1025px) 
 {

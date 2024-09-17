@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en-US" data-team="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>make a (nostr) note</title>
+  <link rel="stylesheet" href="/aa/aa.css">
+  <style>
+    header
+    {
+      padding: var(--pad);
+    }
+
+    main
+    {
+      align-self: start;
+      align-items:  start;
+      box-sizing: border-box;
+      display: grid;
+      grid-gap: var(--pad);
+      grid-template-columns: 1fr;
+      overflow: hidden;
+      padding: var(--pad);
+      position: relative;
+      width: 100vw;
+    }
+
+    section
+    {
+      border-top: 1px dotted rgb(var(--color-c));
+      display: grid;
+      padding-top: var(--pad);
+    }
+
+    #note
+    {
+      box-sizing: border-box;
+      min-height: var(--size);
+      resize: vertical;
+    }
+
+    #butt
+    {
+      font-size: var(--font-size-m);
+      justify-self: center;
+    }
+
+    #output
+    {
+      line-height: 2;
+      padding: var(--pad-l);
+      text-align: center;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>mine a (nostr) note</h1>
+  </header>
+  <main>
+    
+    <section id="note_wrapper">
+      <label for="note">note:</label> 
+      <textarea id="note" placeholder="{nostr note in JSON}"></textarea>
+    </section>
+
+    <section id="difficulty_wrapper" data-alt="4 bits = 1 zero">
+      <label for="difficulty">difficulty bits:</label>
+      <input id="difficulty" type="number" value="1" placeholder="number">
+    </section>
+
+    <button id="butt">mine note</button>
+  </main>
+  <footer id="output"></footer>
+  
+<script>
+const f_s = parseFloat(getComputedStyle(document.documentElement).fontSize);
+let start = 1;
+let note = document.getElementById('note');
+let output = document.getElementById('output');
+
+let worker = new Worker('/ma/miner/pow_worker.js');
+worker.onmessage =message=>
+{
+  let [event,c] = message.data;
+  let end = Date.now();
+  let t = end - start;
+  output.append(` -> done in ${t} ms with ${c} bits\n`);
+  output.append(JSON.stringify(event));
+};
+
+const mine_note =e=>
+{
+  let event,target;
+  try
+  {
+    event = JSON.parse(note.value.trim());
+    target = parseInt(difficulty.value.trim());
+  }
+  catch (er) { output.textContent = `error: can't parse event`};
+  start = Date.now();
+  let start_date = new Date(start);
+  let r = 'r'.repeat(target);
+  output.textContent = `started ${start_date}\nb${r}`;
+  worker.postMessage({event:event,difficulty:target});
+};
+
+const resize_textarea =e=>
+{
+  note.style.height = 'unset';
+  note.style.height = note.scrollHeight+'px';
+};
+
+window.addEventListener('resize',resize_textarea);
+
+window.addEventListener('load',e=>
+{ 
+  if (sessionStorage.note) note.value = sessionStorage.note;
+  resize_textarea();
+  note.addEventListener('keyup', resize_textarea);
+  note.addEventListener('change',e=> 
+  { 
+    sessionStorage.note = e.target.value;
+    resize_textarea();
+  });
+  
+  let difficulty = document.getElementById('difficulty');
+  if (sessionStorage.difficulty) difficulty.value = sessionStorage.difficulty;
+  difficulty.addEventListener('change',e=> { sessionStorage.difficulty = e.target.value });
+
+  let butt = document.getElementById('butt');
+  butt.addEventListener('click',mine_note);
+
+});
+
+</script>
+</body></html>

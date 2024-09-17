@@ -474,7 +474,11 @@ aa.e.note_actions =clas=>
   l.classList.add('actions');
   let a = [];
   if (!clas) clas = [];
-  if (clas.includes('draft')) a.push('yolo','sign','edit','cancel');
+  if (clas.includes('draft')) 
+  {
+    a.push('yolo','sign','edit','cancel');
+    l.setAttribute('open','')
+  }
   else if (clas.includes('not_sent')) a.push('post','cancel');
   else if (clas.includes('blank')) a.push('fetch','tiny');
   else a.push('react','req','parse','tiny');
@@ -667,10 +671,10 @@ aa.e.print =async dat=>
 
   setTimeout(()=>
   {
+    aa.i.d(dat);
     aa.get.quotes(xid);
     aa.get.missing('e');
     aa.get.missing('p');
-    aa.i.d(dat);
   },0);
   
   if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
@@ -714,7 +718,7 @@ aa.e.quote =o=>
     pubkey = aa.mk.p_link(pubkey);
     by.prepend(pubkey);
   }
-  aa.e.quote_upd(quote,o);
+  setTimeout(()=>{aa.e.quote_upd(quote,o);},200);
   return quote
 };
 
@@ -773,16 +777,16 @@ aa.e.quote_upd =async(quote,o)=>
   let content;
   if (dat) 
   {
-    aa.db.get_p(dat.event.pubkey).then(pp=>
+    aa.db.get_p(dat.event.pubkey).then(p=>
     {
-      if (!pp) pp = aa.p.p(dat.event.pubkey);
+      if (!p) p = aa.p.p(dat.event.pubkey);
       if (!has_pub) 
       {
-        by.prepend(aa.mk.p_link(pp.xpub));
-        aa.fx.color(pp.xpub,quote);
+        by.prepend(aa.mk.p_link(p.xpub));
+        aa.fx.color(p.xpub,quote);
       }
       aa.get.pubs([['p',dat.event.pubkey]]);
-      content = aa.parse.content(dat.event.content,aa.is.trusted(pp.trust));
+      content = aa.parse.content(dat.event.content,aa.is.trusted(p.trust));
       quote.append(content);
       quote.classList.add('parsed');
     })
@@ -911,8 +915,13 @@ aa.kinds[1] =dat=>
   let reply_tag = aa.get.reply_tag(dat.event.tags);
   if (reply_tag && reply_tag.length) aa.e.append_to_replies(dat,note,reply_tag);
   else aa.e.append_to_notes(note);
-  aa.get.pubs(dat.event.tags);
-  aa.parse.context(note,dat.event,aa.is.trust_x(dat.event.pubkey));
+  
+  setTimeout(()=>
+  {
+    aa.parse.context(note,dat.event,aa.is.trust_x(dat.event.pubkey));
+    aa.get.pubs(dat.event.tags);
+  },0);
+  
   return note
 };
 
@@ -986,6 +995,9 @@ aa.kinds[16] = aa.kinds[6];
 
 // zap template
 aa.kinds[9735] = aa.kinds[1];
+
+// highlight template
+aa.kinds[9802] = aa.kinds[1];
 
 // long-form template
 aa.kinds[30023] = aa.kinds[1];

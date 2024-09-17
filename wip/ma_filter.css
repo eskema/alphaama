@@ -1,136 +1,35 @@
-body
+header
 {
+  padding: var(--pad);
+}
+
+main
+{
+  align-self: start;
+  align-items:  start;
   box-sizing: border-box;
-  padding: 1rem;
-  align-items: start;
-  min-height: unset;
-  width: 100%;
-}
-
-h1 {
-  font-size: var(--font-size-m);
-}
-
-button,
-button:focus
-{
-  color: rgb(var(--color-d));
-}
-
-button:hover
-{
-  color: rgb(var(--color-f));
-}
-
-::placeholder
-{
-  color:  rgb(var(--color-c));
-  font-family: var(--font-main);
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button 
-{
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type=number] 
-{
-  -moz-appearance: textfield;
-}
-
-input,
-textarea
-{
-  appearance: none;
-  -webkit-appearance: none;
-  background: rgb(var(--color-b));
-  border: none;
-  border-radius: 2px;
-  color:  rgb(var(--color-e));
-  font-family: var(--font-main);
-  font-size: var(--font-size);
-  margin: .5rem 0;
-}
-
-input:focus,
-textarea:focus
-{
-  background: rgb(var(--color-c));
-}
-
-[data-alt]::after
-{
-  content: "(" attr(data-alt) ")";
-  color: rgb(var(--color-c));
-  font-size: var(--font-size-s);
+  display: grid;
+  grid-gap: var(--pad);
+  grid-template-columns: repeat(3,1fr);
+  overflow: hidden;
+  padding: var(--pad);
+  position: relative;
+  width: 100vw;
 }
 
 section
 {
   border-top: 1px dotted rgb(var(--color-c));
   display: grid;
-  padding-top: .5rem;
+  padding-top: var(--pad);
 }
 
-#output
-{
-  line-height: 2;
-  padding: 2rem;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-
-#form
-{
-  align-items:  start;
-  display: grid;
-  grid-gap: 1rem;
-  grid-template-areas:
-  "since until limit"
-  "authors authors authors"
-  "ids ids ids"
-  "kinds kinds kinds"
-  "tags tags tags"
-  "butt butt butt";
-  position: relative;
-}
-
-#authors_wrapper
-{
-  grid-area: authors;
-}
-
-#ids_wrapper
-{
-  grid-area: ids;
-}
-
-#kinds_wrapper
-{
-  grid-area: kinds;
-}
-
-#since_wrapper
-{
-  grid-area: since
-}
-
-#until_wrapper
-{
-  grid-area: until;
-}
-
+#authors_wrapper,
+#ids_wrapper,
+#kinds_wrapper,
 #tags_wrapper
 {
-  grid-area: tags;
-}
-
-#tags
-{
-  /*grid-area: tags;*/
+  grid-column: 1 / -1;
 }
 
 #tags li
@@ -139,21 +38,26 @@ section
   display: grid;
   font-size: var(--font-size-s);
   grid-template-columns: 1fr auto;
-  margin: .5rem 0;
+  margin: var(--pad) 0;
 }
 
 #tags li span
 {
   display: grid;
-  grid-gap: 1rem;
-  grid-template-columns: 3rem 1fr;
+  grid-gap: var(--pad);
+  grid-template-columns: 3em 1fr;
 }
 
-#req_button
+#butt
 {
-  color: rgb(var());
   font-size: var(--font-size-m);
-  grid-area: butt;
+  grid-column: 1 / -1;
   justify-self: center;
 }
 
+#output
+{
+  line-height: 2;
+  padding: var(--pad-l);
+  text-align: center;
+}

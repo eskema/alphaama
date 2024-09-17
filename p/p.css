@@ -164,12 +164,14 @@
 {
   justify-self: start;
   padding: var(--padm);
+  
 }
 
 .profile > .pubkey .author.has-picture img
 {
   height: var(--size-s);
   width: var(--size-s);
+  pointer-events: none;
 }
 
 .profile > .pubkey .xpub

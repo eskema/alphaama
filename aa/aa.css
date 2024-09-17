@@ -89,6 +89,12 @@ html[data-team="light"]
   color: rgba(var(--color-a), .99);
 }
 
+::placeholder
+{
+  color:  rgb(var(--color-c));
+  font-family: inherit;
+}
+
 html
 {
   background-color: rgb(var(--color-b));
@@ -251,9 +257,56 @@ button
 
 button:focus
 {
+  outline: none;
   color: rgb(var(--color-f));
+}
+
+button:hover
+{
+  color: rgb(var(--color-f));
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button 
+{
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] 
+{
+  -moz-appearance: textfield;
+}
+
+input,
+textarea
+{
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  border-radius: 2px;
+  color:  rgb(var(--color-e));
+  font-family: inherit;
+  font-size: var(--font-size);
+  margin: var(--pad) 0;
+  min-width: 2rem;
+}
+
+input:focus,
+textarea:focus
+{
+  background: rgb(var(--color-c));
   outline: none;
 }
+
+[data-alt]::after
+{
+  content: "(" attr(data-alt) ")";
+  color: rgb(var(--color-c));
+  font-size: var(--font-size-s);
+}
+
 
 /* @end */
 

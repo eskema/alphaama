@@ -15,7 +15,10 @@ aa.parse.content =(s,trusted)=>
   const another_l =last_l=>
   {
     last_l.normalize();
-    if (aa.is.empty(last_l)) last_l.remove();
+    if (aa.is.empty(last_l)) 
+    {
+      last_l.remove();
+    }
     else 
     {
       df.append(last_l);
@@ -27,25 +30,43 @@ aa.parse.content =(s,trusted)=>
   for (const paragraph of paragraphs)
   { 
     if (!paragraph.length) continue;    
+    
     const lines = paragraph.trim().split(/\n/);
     for (let li=0;li<lines.length;li++)
     {
-      if (li!==0) l.append(aa.mk.l('br'));
+      if (l.childNodes.length > 1) l.append(aa.mk.l('br'));
+
       const words = lines[li].trim().split(' ');
       for (let i=0;i<words.length;i++)
       {
         let word = words[i].trim();
         if (!word.length) continue;
-        if (aa.regx.url.test(word)) l.append(aa.parser('url',word,trusted),' ');
+
+        if (aa.regx.url.test(word)) 
+        {
+          let dis_node = aa.parser('url',word,trusted);
+          l.append(dis_node,' ');
+        }
         else if (aa.regx.nostr.test(word)) 
         {
           let parsed = aa.parser('nostr',word);
-          while (parsed.childNodes.length)
+          let quote = parsed.querySelector('blockquote');
+          if (quote)
           {
-            let node = parsed.firstChild;
-            if (node.tagName !== 'BLOCKQUOTE') l.append(node);
-            else { another_l(l); df.append(node)}
-          }        
+            another_l(l); 
+            df.append(quote)
+          }
+          else l.append(parsed);
+          // while (parsed.childNodes.length)
+          // {
+          //   let node = parsed.firstChild;
+          //   if (node.tagName !== 'BLOCKQUOTE') l.append(node);
+          //   else 
+          //   { 
+          //     another_l(l); 
+          //     df.append(node)
+          //   }
+          // }        
         }
         else 
         {
@@ -56,12 +77,6 @@ aa.parse.content =(s,trusted)=>
     }
     another_l(l);
   }
-  // let last_child = df.lastChild;
-  // if (last_child && aa.is.empty(last_child))
-  // {
-  //   let last_text = (last_child.textContent+'').trim();
-  //   if (!last_text.length) last_child.remove();
-  // } 
   return df
 };
 

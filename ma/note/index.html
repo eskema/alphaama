@@ -6,14 +6,92 @@
   <title>make a (nostr) note</title>
   <script src="/dep/nostr-tools.js"></script>
   <link rel="stylesheet" href="/aa/aa.css">
-  <link rel="stylesheet" href="/wip/ma_note.css">
+  <style>
+    header
+    {
+      padding: var(--pad);
+    }
+
+    main
+    {
+      align-self: start;
+      align-items:  start;
+      box-sizing: border-box;
+      display: grid;
+      grid-gap: var(--pad);
+      grid-template-columns: repeat(2,1fr);
+      overflow: hidden;
+      padding: var(--pad);
+      position: relative;
+      width: 100vw;
+    }
+
+    section
+    {
+      border-top: 1px dotted rgb(var(--color-c));
+      display: grid;
+      padding-top: var(--pad);
+    }
+
+    #reply_to_wrapper,
+    #pubkey_wrapper,
+    #content_wrapper,
+    #tags_wrapper
+    {
+      grid-column: 1/-1;
+    }
+
+    #content
+    {
+      box-sizing: border-box;
+      min-height: var(--size);
+      width: 100%;
+      resize: none;
+    }
+
+    #tags
+    {
+      list-style-position: inside;
+      counter-reset: tags -1;
+    }
+
+    #tags li::before
+    {
+      counter-increment: tags;
+      content: counter(tags);
+      margin-right: var(--pad);
+    }
+
+    #tags li
+    {
+      align-items: center;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      margin: var(--pad) 0;
+    }
+
+    #butt
+    {
+      font-size: var(--font-size-m);
+      grid-column: 1/-1;
+      justify-self: center;
+    }
+
+    #output
+    {
+      line-height: 2;
+      padding: var(--pad-l);
+      text-align: center;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>make a (nostr) note</h1>
-    <!-- <button>connect signer</button> -->
   </header>
-  <main id="form">
+  <main>
     <section id="reply_to_wrapper">
       <label for="reply">reply_to:</label>
       <input id="reply" type="text" value="" placeholder="nevent1…">
@@ -37,16 +115,19 @@
     <section id="tags_wrapper">
       tags: 
       <ol id="tags" start="0"></ol> 
-      <button onclick="new_tag();">+</button>
+      <button id="new_tag_butt">+</button>
     </section>
-    <button id="make_button" onclick="make_event();">make note</button>
+    <button id="butt">make note</button>
   </main>
   <footer id="output"></footer>
   
 <script>
+const f_s = parseFloat(getComputedStyle(document.documentElement).fontSize);
+let note = document.getElementById('content');
 
-const make_event =()=>
+const make_event =e=>
 {
+  e.target.blur();
   let event = {};
   event.pubkey = document.getElementById('pubkey').value;
   
@@ -64,10 +145,7 @@ const make_event =()=>
     {
       let dis_tag = [];
       let a = value.split(',');
-      for (const v of a) 
-      {
-        dis_tag.push(v.trim())
-      }
+      for (const v of a) dis_tag.push(v.trim())
       event.tags.push(dis_tag);
     }
   }
@@ -81,30 +159,31 @@ const make_event =()=>
   document.getElementById('output').textContent = event; 
 };
 
-const tag_button =()=>
+const rm_tag =e=>
+{
+  let item = e.target.closest('li');
+  let list = item.parentElement;
+  list.style.counterReset = 'none';
+  item.remove();
+  setTimeout(()=>{list.style.counterReset = '';},0)
+};
+
+const rm_tag_butt =()=>
 {
   let button = document.createElement('button');
   button.textContent = 'x';
-  button.onclick =e=>
-  {
-    let item = e.target.closest('li');
-    let list = item.parentElement;
-    list.style.counterReset = 'none';
-    item.remove();
-    setTimeout(()=>{list.style.counterReset = '';},0)
-    // list.style.counterReset = '';
-  }
+  button.addEventListener('click',rm_tag);
   return button
 };
 
-const new_tag =()=>
+const new_tag =e=>
 {
-  let new_tag = document.createElement('li');
-  let new_tag_input = document.createElement('input');
-  new_tag_input.type = 'text';
-  new_tag.append(new_tag_input);
-  new_tag.append(tag_button());
-  document.getElementById('tags').append(new_tag);
+  let tag = document.createElement('li');
+  let tag_input = document.createElement('input');
+  tag_input.type = 'text';
+  tag.append(tag_input);
+  tag.append(rm_tag_butt());
+  document.getElementById('tags').append(tag);
 };
 
 const is_hex =s=> /^[A-F0-9]+$/i.test(s); 
@@ -151,6 +230,14 @@ const created_at_change =e=>
   e.target.parentElement.dataset.alt = display_date
 };
 
+const resize_textarea =e=>
+{
+  note.style.height = 'unset';
+  note.style.height = note.scrollHeight+'px';
+};
+
+window.addEventListener('resize',resize_textarea);
+
 window.addEventListener('load',e=>
 {
   let pubkey = document.getElementById('pubkey');
@@ -163,7 +250,24 @@ window.addEventListener('load',e=>
   created_at.addEventListener('change',created_at_change);
   created_at_change({target:created_at});
 
+  if (sessionStorage.note) note.value = sessionStorage.note;
+  resize_textarea();
+  note.addEventListener('change',e=> 
+  { 
+    sessionStorage.note = e.target.value;
+    resize_textarea();
+  });
+  note.addEventListener('keyup', resize_textarea);
+
+  const new_tag_butt = document.getElementById('new_tag_butt');
+  new_tag_butt.addEventListener('click',new_tag);
+
+  const butt = document.getElementById('butt');
+  butt.addEventListener('click',make_event);
+
 });
+
+
 
 </script>
 </body></html>

@@ -1,130 +1,43 @@
-body
+header
 {
-  box-sizing: border-box;
-  padding: 1rem;
-  align-items: start;
-  min-height: unset;
-  width: 100%;
+  padding: var(--pad);
 }
 
-h1 {
-  font-size: var(--font-size-m);
-}
-
-button,
-button:focus
+main
 {
-  color: rgb(var(--color-d));
-}
-
-button:hover
-{
-  color: rgb(var(--color-f));
-}
-
-::placeholder
-{
-  color:  rgb(var(--color-c));
-  font-family: var(--font-main);
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button 
-{
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type=number] 
-{
-  -moz-appearance: textfield;
-}
-
-input,
-textarea
-{
-  appearance: none;
-  -webkit-appearance: none;
-  background: rgb(var(--color-b));
-  border: none;
-  border-radius: 2px;
-  color:  rgb(var(--color-e));
-  font-family: var(--font-main);
-  font-size: var(--font-size);
-  margin: .5rem 0;
-}
-
-input:focus,
-textarea:focus
-{
-  background: rgb(var(--color-c));
-}
-
-[data-alt]::after
-{
-  content: "(" attr(data-alt) ")";
-  color: rgb(var(--color-c));
-  font-size: var(--font-size-s);
-}
-
-#form
-{
+  align-self: start;
   align-items:  start;
+  box-sizing: border-box;
   display: grid;
-  grid-gap: 1rem;
-  grid-template-areas:
-  "reply_to reply_to"
-  "pubkey pubkey"
-  "created_at kind"
-  "content content"
-  "tags tags"
-  "make make";
+  grid-gap: var(--pad);
+  grid-template-columns: repeat(2,1fr);
+  overflow: hidden;
+  padding: var(--pad);
   position: relative;
+  width: 100vw;
 }
 
-#form section
+section
 {
   border-top: 1px dotted rgb(var(--color-c));
   display: grid;
-  padding-top: .5rem;
+  padding-top: var(--pad);
 }
 
-#reply_to_wrapper
+#reply_to_wrapper,
+#pubkey_wrapper,
+#content_wrapper,
+#tags_wrapper
 {
-  grid-area: reply_to;
-}
-
-#pubkey_wrapper
-{
-  grid-area: pubkey;
-}
-
-#kind_wrapper
-{
-  grid-area: kind;
-}
-
-#created_at_wrapper
-{
-  grid-area: created_at
-}
-
-#content_wrapper
-{
-  grid-area: content;
+  grid-column: 1/-1;
 }
 
 #content
 {
   box-sizing: border-box;
-  min-height: 3rem;
+  min-height: var(--size);
   width: 100%;
   resize: vertical;
-}
-
-#tags_wrapper
-{
-  grid-area: tags;
 }
 
 #tags
@@ -137,35 +50,29 @@ textarea:focus
 {
   counter-increment: tags;
   content: counter(tags);
-  margin-right: .5rem;
+  margin-right: var(--pad);
 }
 
 #tags li
 {
   align-items: center;
   display: grid;
-  font-size: var(--font-size-s);
   grid-template-columns: auto 1fr auto;
-  margin: .5rem 0;
+  margin: var(--pad) 0;
 }
 
-#tags li input
+#butt
 {
-  font-size: var(--font-size-s);
-}
-
-#make_button
-{
-  color: rgb(var());
   font-size: var(--font-size-m);
-  grid-area: make;
+  grid-column: 1/-1;
   justify-self: center;
 }
 
 #output
 {
   line-height: 2;
-  padding: 2rem;
+  padding: var(--pad-l);
+  text-align: center;
   white-space: pre-wrap;
-  word-break: break-all;
+  word-break: break-word;
 }

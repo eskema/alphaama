@@ -6,22 +6,86 @@
   <title>make a (nostr) request filter</title>
   <script src="/dep/nostr-tools.js"></script>
   <link rel="stylesheet" href="/aa/aa.css">
-  <link rel="stylesheet" href="/wip/ma_filter.css">
+  <style>
+    header
+    {
+      padding: var(--pad);
+    }
+
+    main
+    {
+      align-self: start;
+      align-items:  start;
+      box-sizing: border-box;
+      display: grid;
+      grid-gap: var(--pad);
+      grid-template-columns: repeat(3,1fr);
+      overflow: hidden;
+      padding: var(--pad);
+      position: relative;
+      width: 100vw;
+    }
+
+    section
+    {
+      border-top: 1px dotted rgb(var(--color-c));
+      display: grid;
+      padding-top: var(--pad);
+    }
+
+    #authors_wrapper,
+    #ids_wrapper,
+    #kinds_wrapper,
+    #tags_wrapper
+    {
+      grid-column: 1 / -1;
+    }
+
+    #tags li
+    {
+      align-items: center;
+      display: grid;
+      font-size: var(--font-size-s);
+      grid-template-columns: 1fr auto;
+      margin: var(--pad) 0;
+    }
+
+    #tags li span
+    {
+      display: grid;
+      grid-gap: var(--pad);
+      grid-template-columns: 3em 1fr;
+    }
+
+    #butt
+    {
+      font-size: var(--font-size-m);
+      grid-column: 1 / -1;
+      justify-self: center;
+    }
+
+    #output
+    {
+      line-height: 2;
+      padding: var(--pad-l);
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>make a (nostr) request filter</h1>
   </header>
 
-  <main id="form">
+  <main>
     <section id="since_wrapper">
       <label for="since">since:</label>
-      <input id="since" type="number" value="" placeholder="unix timestamp">
+      <input id="since" type="text" value="" placeholder="unix timestamp or variable">
     </section>
 
     <section id="until_wrapper">
       <label for="until">until:</label>
-      <input id="until" type="number" value="" placeholder="unix timestamp">
+      <input id="until" type="text" value="" placeholder="unix timestamp or variable">
     </section>
     
     <section id="limit_wrapper">
@@ -47,10 +111,10 @@
     <section id="tags_wrapper">
       tags: 
       <ul id="tags"></ul> 
-      <button onclick="new_tag();">+</button>
+      <button id="new_tag_butt">+</button>
     </section>
 
-    <button id="req_button" onclick="req();">make filter</button>
+    <button id="butt">make filter</button>
   </main>
   
   <footer id="output"></footer>
@@ -58,6 +122,31 @@
 <script>
 
 const is_hex =s=> /^[A-F0-9]+$/i.test(s); 
+
+// timestamp from string variable
+const convert_to_date =s=>
+{
+  let t = s.slice(2);
+  if (s === 'now') return Math.floor(Date.now() / 1000); 
+  if (s.startsWith('n_')) 
+  {
+    const d = new Date();
+    d.setDate(d.getDate() - t);
+    return Math.floor(d.getTime()/1000)
+  }
+  if (s.startsWith('h_')) 
+  {
+    const d = new Date();
+    d.setHours(d.getHours() - t);
+    return Math.floor(d.getTime()/1000)
+  }
+  if (s.startsWith('d_')) 
+  {
+    try { return Math.floor(Date.parse(t) / 1000) } 
+    catch (er) { return false }    
+  }
+  return parseInt(s)
+};
 
 const tr =(s,int=false)=>
 {
@@ -73,8 +162,9 @@ const tr =(s,int=false)=>
   return values
 };
 
-const req =()=>
+const make_filter =e=>
 {
+  e.target.blur();
   const filter = {};
   let authors = tr(document.getElementById('authors').value);
   if (authors) filter.authors = authors;
@@ -86,10 +176,10 @@ const req =()=>
   if (kinds) filter.kinds = kinds;
 
   let since = document.getElementById('since').value.trim();
-  if (since) filter.since = parseInt(since);
+  if (since) filter.since = convert_to_date(since);
 
   let until = document.getElementById('until').value.trim();
-  if (until) filter.until = parseInt(until);
+  if (until) filter.until = convert_to_date(until);
 
   let limit = document.getElementById('limit').value.trim();
   if (limit) filter.limit = parseInt(limit);
@@ -104,7 +194,7 @@ const req =()=>
   document.getElementById('output').textContent = JSON.stringify(filter); 
 };
 
-const tag_button =()=>
+const rm_tag_button =()=>
 {
   let button = document.createElement('button');
   button.textContent = 'x';
@@ -114,20 +204,26 @@ const tag_button =()=>
 
 const new_tag =()=>
 {
-  let new_tag = document.createElement('li');
+  let tag = document.createElement('li');
   let inputs = document.createElement('span');
   
-  let new_tag_key = document.createElement('input');
-  new_tag_key.type = 'text';
-  new_tag_key.placeholder = '#';
+  let tag_key = document.createElement('input');
+  tag_key.type = 'text';
+  tag_key.placeholder = '#';
   
-  let new_tag_value = document.createElement('input');
-  new_tag_value.type = 'text';
-  new_tag_value.placeholder = 'comma separated values';
-  inputs.append(new_tag_key,' ',new_tag_value);
-  new_tag.append(inputs,' ',tag_button());
-  document.getElementById('tags').append(new_tag);
+  let tag_value = document.createElement('input');
+  tag_value.type = 'text';
+  tag_value.placeholder = 'comma separated values';
+  inputs.append(tag_key,' ',tag_value);
+  tag.append(inputs,' ',rm_tag_button());
+  document.getElementById('tags').append(tag);
 };
+
+let new_tag_butt = document.getElementById('new_tag_butt');
+new_tag_butt.addEventListener('click',new_tag);
+
+let butt = document.getElementById('butt');
+butt.addEventListener('click',make_filter);
 
 </script>
 </body></html>

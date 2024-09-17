@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const aa_version = 36;
+const aa_version = 37;
 
 const aa = 
 {
@@ -407,12 +407,12 @@ aa.notice =async o=>
 // reusable regex
 aa.regx = 
 {
-  get an() {return /^[A-Z_0-9]+$/i},
+  get an(){ return /^[A-Z_0-9]+$/i},
   get hashtag(){ return /(\B[#])\w+/g},
   get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi},
   get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi},
-  get nostr() { return /((nostr:)[A-Z0-9]{12,})\b/gi}, 
-  get bech32() { return /^[AC-HJ-NP-Z02-9]*/i}, //acdefghjklmnqprstuvwxyz987654320
+  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi}, 
+  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i}, //acdefghjklmnqprstuvwxyz987654320
   get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu}, 
 };
 
