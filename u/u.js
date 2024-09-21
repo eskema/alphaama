@@ -71,6 +71,7 @@ aa.u.event_complete =event=>
 // draft event
 aa.u.event_draft =event=>
 {
+  event.tags = [...new Set(event.tags)];
   if (!event.id) event.id = aa.fx.hash(event);
   aa.db.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
   aa.e.print(aa.db.e[event.id]);
@@ -80,6 +81,7 @@ aa.u.event_draft =event=>
 // finalize event creation
 aa.u.event_finalize =async event=>
 {
+  event.tags = [...new Set(event.tags)];
   if (!event.id) event.id = aa.fx.hash(event);
   const signed = await aa.u.sign(event);
   if (signed)

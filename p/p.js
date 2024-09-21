@@ -791,7 +791,7 @@ aa.p.save = async p=>
   
   aa.to(()=>
   {
-    let pubs = new Set(aa.temp[q_id]);
+    let pubs = [...new Set(aa.temp[q_id])];
     aa.temp[q_id] = [];
     let a = [];
     for (const pub of pubs) a.push(aa.db.p[pub]);
