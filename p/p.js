@@ -22,7 +22,7 @@ aa.p =
       score:0,
       updated:0,
       metadata:{},
-      trust:0, // will be deprecated in favor of score
+      // trust:0, // will be deprecated in favor of score
       verified:[], // [result,date]
       sets:[],
       follows:[],
@@ -36,6 +36,14 @@ aa.p =
 aa.p.migrate_p_fields =p=>
 {
   let upd;
+
+  if (p.trust && p.score < p.trust)
+  {
+    p.score = p.trust;
+    delete p.trust;
+    upd = 1;
+  }
+
   if (!p.petnames || (p.petnames && !Array.isArray(p.petnames)))
   {
     p.petnames = [];
@@ -88,7 +96,7 @@ aa.p.migrate_p_fields =p=>
 aa.p.actions =p=>
 {
   const l = aa.mk.l('p',{cla:'actions'});
-  let a = [[p.trust+'','p_score']];
+  let a = [[p.score+'','p_score']];
   if (!aa.is.u(p.xpub))
   {
     let follow_con = aa.u.is_following(p.xpub)?'unfollow':'follow';
@@ -186,6 +194,28 @@ aa.p.new_replaceable =(p,event)=>
   let upd;
   let kn = p.events['k'+event.kind];
   if (!kn) kn = p.events['k'+event.kind] = [];
+  
+  const c_at = event.created_at;
+  if (!kn.length || kn[0][1] < c_at) 
+  {
+    kn.unshift([event.id,c_at]);
+    if (c_at > p.updated) p.updated = c_at;
+    upd = true
+  }
+  return upd
+};
+
+// check if replaceable parameterized event is newer
+// wip
+aa.p.new_replaceable_param =(p,event)=>
+{
+  let upd;
+  let kn = p.events['k'+event.kind];
+  if (!kn) kn = p.events['k'+event.kind] = {};
+
+  let d_tag = event.tags.filter(t=> !t[0] === 'd')[0];
+  if (!d_tag) return false;
+  let d_s = d_tag[1];
   
   const c_at = event.created_at;
   if (!kn.length || kn[0][1] < c_at) 
@@ -431,7 +461,7 @@ aa.mk.metadata_nip05 =(k,v,p)=>
 
 aa.mk.metadata_picture =(k,v,p)=>
 {
-  if (aa.is.trusted(p.trust) && v) 
+  if (aa.is.trusted(p.score) && v) 
   {
     let img = aa.mk.l('img',{src:v});
     img.addEventListener('click',e=>{e.target.classList.toggle('expanded')});
@@ -560,7 +590,7 @@ aa.p.p_link_data =p=>
   let common = 0;
   for (const k of p.followers) { if (aa.u.is_following(k)) common++ }
   o.followers = common;
-  if (p.metadata?.picture && aa.is.trusted(p.trust))
+  if (p.metadata?.picture && aa.is.trusted(p.score))
   {
     let url = aa.is.url(p.metadata.picture.trim())?.href;
     if (url) o.src = url;
@@ -683,7 +713,7 @@ aa.clk.p_score =async e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
   const p = await aa.db.get_p(xpub);
-  if (p) aa.cli.v(localStorage.ns+' p score '+xpub+' '+p.trust);
+  if (p) aa.cli.v(localStorage.ns+' p score '+xpub+' '+p.score);
 };
 
 
@@ -696,7 +726,7 @@ aa.p.profile =p=>
   if (!profile) 
   {
     profile = aa.mk.l('article',{cla:'profile',id:p.npub});
-    profile.dataset.trust = p.trust;
+    profile.dataset.trust = p.score;
     profile.dataset.xpub = p.xpub;
     profile.dataset.updated = p.updated ?? 0;
     aa.fx.color(p.xpub,profile);
@@ -811,29 +841,17 @@ aa.p.score =async s=>
     aa.cli.fuck_off();
     const p = await aa.db.get_p(xpub);
     if (!p) p = aa.p.p(xpub);
-    p.trust = score;    
+    p.score = score;    
     setTimeout(()=>{aa.p.save(p)},200)
   }
   else aa.log('invalid data to score')
 };
 
 
-// process all p tags from kind-3 event
-aa.p.process_k3_tags =async(event)=>
+aa.p.follows_to_upd =event=>
 {
-  const x = event.pubkey;
-  const is_u = aa.is.u(x);
-  let ep = await aa.db.get_p(x);
-  const old_bff = [...ep.follows];
-  // let new_follows = [];
-      
-  ep.follows = aa.p.authors_from_tags(event.tags);
-
+  const is_u = aa.is.u(event.pubkey);
   const to_upd = [];
-
-  await aa.p.authors(ep.follows);
-  
-  
   for (const tag of event.tags)
   {
     if (!aa.is.tag.p(tag)) continue;
@@ -868,22 +886,89 @@ aa.p.process_k3_tags =async(event)=>
       if (is_u && p.petname !== petname) { p.petname = petname; upd = true; }
     }
 
-    if (aa.fx.a_add(p.followers,[x])) upd = true;
+    if (aa.fx.a_add(p.followers,[event.pubkey])) upd = true;
     
     if (is_u)
     {
-      if (p.trust < 5) 
+      if (p.score < 5) 
       { 
-        p.trust = 5; 
+        p.score = 5; 
         upd = true 
       }
       if (aa.fx.a_add(p.sets,['k3'])) upd = true;
-      aa.u.follows = event.tags;
     }    
     if (upd) to_upd.push(p);
   }
+  return to_upd
+};
+
+
+// process all p tags from kind-3 event
+aa.p.process_k3_tags =async(event)=>
+{
+  const x = event.pubkey;
+  const is_u = aa.is.u(x);
+  let ep = await aa.db.get_p(x);
+  const old_bff = [...ep.follows];
+  // let new_follows = [];
+      
+  ep.follows = aa.p.authors_from_tags(event.tags);
+  await aa.p.authors(ep.follows);
+
+  // const to_upd = [];
+  let to_upd = aa.p.follows_to_upd(event);
+  to_upd.push(ep);
+
+  // for (const tag of event.tags)
+  // {
+  //   if (!aa.is.tag.p(tag)) continue;
+
+  //   const xpub = tag[1];
+  //   const relay = tag[2];
+  //   const petname = tag[3];
+
+  //   let upd;
+  //   let p = aa.db.p[xpub];
+  //   if (!p) 
+  //   {
+  //     p = aa.db.p[xpub] = aa.p.p(xpub);
+  //     upd = true;
+  //   }  
+
+  //   if (relay)
+  //   {
+  //     let url = aa.is.url(relay)?.href;
+  //     if (url)
+  //     {
+  //       if (!p.relays[url]) p.relays[url] = {sets:[]};
+  //       if (aa.fx.a_add(p.relays[url].sets,['hint'])) upd = true;
+  //     }
+  //     if (is_u && p.relay !== relay) { p.relay = relay; upd = true; }
+  //   }
+
+  //   if (petname)
+  //   {
+  //     if (!p.petnames) p.petnames = [];
+  //     if (aa.fx.a_add(p.petnames,[petname])) upd = true;
+  //     if (is_u && p.petname !== petname) { p.petname = petname; upd = true; }
+  //   }
+
+  //   if (aa.fx.a_add(p.followers,[x])) upd = true;
+    
+  //   if (is_u)
+  //   {
+  //     if (p.score < 5) 
+  //     { 
+  //       p.score = 5; 
+  //       upd = true 
+  //     }
+  //     if (aa.fx.a_add(p.sets,['k3'])) upd = true;
+  //     aa.u.follows = event.tags;
+  //   }    
+  //   if (upd) to_upd.push(p);
+  // }
+  setTimeout(()=>{for (const p of to_upd) aa.p.save(p)},200);
   if (is_u) aa.p.load_profiles(ep.follows);
-  setTimeout(()=>{for (const p of to_upd) aa.p.save(p)},200)
 };
 
 
@@ -905,7 +990,7 @@ aa.p.profile_upd =async(p)=>
   const extradata = profile.querySelector('.extradata');
   extradata.replaceWith(aa.mk.extradata(p));
   
-  profile.dataset.trust = p.trust;
+  profile.dataset.trust = p.score;
   profile.dataset.updated = p.updated ?? 0;
 
   aa.p.p_links_upd(p)
@@ -990,21 +1075,21 @@ aa.kinds[3] =dat=>
       //   }
       // }
 
-      let s = dat.event.content+''.trim();
-      if (s.startsWith('{') && s.endsWith('}'))
-      {
-        let con = aa.parse.j(dat.event.content);
-        if (con)
-        {
-          let relays = aa.r.from_o(con,['k3']);
-          aa.p.relays_add(relays,p);
-          if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-          let content = note.querySelector('.content');
-          content.textContent = '';
-          content.append(aa.mk.ls({ls:con}))
-        }
-      }
-      aa.p.save(p)
+      // let s = dat.event.content+''.trim();
+      // if (s.startsWith('{') && s.endsWith('}'))
+      // {
+      //   let con = aa.parse.j(dat.event.content);
+      //   if (con)
+      //   {
+      //     let relays = aa.r.from_o(con,['k3']);
+      //     aa.p.relays_add(relays,p);
+      //     if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      //     let content = note.querySelector('.content');
+      //     content.textContent = '';
+      //     content.append(aa.mk.ls({ls:con}))
+      //   }
+      // }
+      // aa.p.save(p)
     }
   });
   return note

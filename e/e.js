@@ -16,7 +16,6 @@ aa.e = {};
 aa.e.append_to_notes =(note)=>
 { 
   let notes = document.getElementById('notes');
-  const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
   if (!note.classList.contains('rendered')) 
   {
     note.classList.add('root');
@@ -24,21 +23,26 @@ aa.e.append_to_notes =(note)=>
     note.classList.add('not_yet');
     aa.e.note_observer.observe(note);
   }
-  notes.insertBefore(note,last);
-
-  let butt = document.querySelector('.pagination .butt');
-  if (!butt) document.getElementById('e').append(aa.mk.pagination());
+  if (note.classList.contains('blank')) notes.append(note)
   else 
   {
-    aa.to(()=>
-    {
-      let n = aa.l.dataset.pagination;
-      if (n 
-      && butt.classList.contains('done') 
-      && document.getElementById('notes').childNodes.length > n
-      ) butt.textContent = 'moar dan '+n;
-    },300,'pagination');
+    const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
+    notes.insertBefore(note,last);
   }
+
+  // let butt = document.querySelector('.pagination .butt');
+  // if (!butt) document.getElementById('e').append(aa.mk.pagination());
+  // else 
+  // {
+  //   aa.to(()=>
+  //   {
+  //     let n = aa.l.dataset.pagination;
+  //     if (n 
+  //     && butt.classList.contains('done') 
+  //     && document.getElementById('notes').childNodes.length > n
+  //     ) butt.textContent = 'moar dan '+n;
+  //   },300,'pagination');
+  // }
 };
 
 
@@ -95,6 +99,7 @@ aa.e.append_to_replies =(dat,note,reply_tag)=>
   {
     if (reply.classList.contains('blank'))
     {
+      reply.querySelector('.replies').setAttribute('open','');
       aa.fx.merge_datasets(['seen','subs'],note,reply);
       if (reply_tag[2])
       {
@@ -107,7 +112,7 @@ aa.e.append_to_replies =(dat,note,reply_tag)=>
         }
       }
     }
-    aa.e.append_to_rep(note,reply.querySelector('.replies'))
+    aa.e.append_to_rep(note,reply.querySelector('.replies'));
   }
 };
 
@@ -403,17 +408,12 @@ aa.e.note =dat=>
   {
     const x = dat.event.pubkey;
     note.dataset.pubkey = x;
-    aa.fx.color(x,note);
-    // aa.p.get_p(x).then(p=>
-    // {
-    //   note.dataset.trust = p.trust;
-    //   by.append(aa.mk.p_link(x));
-    // });   
+    aa.fx.color(x,note);  
     aa.db.get_p(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
       if (!p) p = aa.p.p(x);
-      note.dataset.trust = p.trust;
+      note.dataset.trust = p.score;
       by.append(aa.mk.p_link(x));
     });    
   }
@@ -476,7 +476,7 @@ aa.e.note_actions =clas=>
   if (!clas) clas = [];
   if (clas.includes('draft')) 
   {
-    a.push('yolo','sign','edit','cancel');
+    a.push('yolo','sign','pow','edit','cancel');
     l.setAttribute('open','')
   }
   else if (clas.includes('not_sent')) a.push('post','cancel');
@@ -579,7 +579,17 @@ aa.e.note_replace =(l,dat)=>
 };
 
 
-// restrict amount of root events displayed at once
+// remove note
+aa.e.note_rm =note=>
+{
+  if (aa.viewing === note.id) aa.state.clear()
+  delete aa.db.e[note.dataset.id];
+  note.remove();
+  aa.fx.data_count(document.getElementById('butt_e'),'.note')
+};
+
+
+// restrict amount of root events displayed at once, 
 aa.mk.pagination =()=>  
 {
   let style = document.getElementById('e_pagination');
@@ -592,7 +602,6 @@ aa.mk.pagination =()=>
   let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:aa.e.pagination_upd});
   pagination.append(butt_more);
   aa.e.pagination_upd({target:butt_more});
-  // butt_more.click();
   return pagination;
 };
 
@@ -623,15 +632,23 @@ aa.e.pagination_upd =async e=>
     if (n > total && e.target.classList.contains('done'))
     {
       n = aa.l.dataset.pagination;
-      // let n = aa.l.dataset.pagination;
       e.target.textContent = 'moar '+n;
       e.target.classList.remove('done');
+      e.target.parentElement.classList.remove('hidden');
     }
     else if (e.target)
     {
-      if (n > total) e.target.textContent = 'loading moar';
-      else 
-      e.target.textContent = 'no moar :)';
+      if (n > total) 
+      {
+        // e.target.textContent = 'loading more';
+        e.target.parentElement.classList.add('hidden');
+      }
+      else
+      {
+        
+        e.target.textContent = 'no moar :)';
+      }
+      
       e.target.classList.add('done');
     }
     style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
@@ -786,7 +803,7 @@ aa.e.quote_upd =async(quote,o)=>
         aa.fx.color(p.xpub,quote);
       }
       aa.get.pubs([['p',dat.event.pubkey]]);
-      content = aa.parse.content(dat.event.content,aa.is.trusted(p.trust));
+      content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
       quote.append(content);
       quote.classList.add('parsed');
     })

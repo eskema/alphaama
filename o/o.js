@@ -19,6 +19,7 @@ aa.o =
       'reaction':'\uD83E\uDD18', // '🤘' default reaction emoji
       'team':'dark', // 'light'
       'trust':'11', // user score needed for loading media
+      'pow':'0', // proof of work difficulty
       
     },
 // todo

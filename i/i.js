@@ -21,13 +21,14 @@ aa.i =
     'tag_t':{},
     'tag_d':{},
     'tag_subject':{},
+    'tag_nonce':{},
     'subs':{},
     'seen':{},
     'clas':{},
     'since':0,
     'until':0,
   },
-  ls:['pubkey','kind','tag_t','tag_d','tag_subject','subs','seen','clas'],
+  ls:['pubkey','kind','tag_t','tag_d','tag_subject','tag_nonce','subs','seen','clas'],
 };
 
 
@@ -86,7 +87,10 @@ aa.i.dex.e =(k,v)=>
   requestAnimationFrame(()=>
   {
     let list = document.getElementById('i_list_'+k);
-
+    if (!list)
+    {
+      console.log(k);
+    }
     if (!h[k][v])
     {
       h[k][v] = 1;
@@ -112,11 +116,12 @@ aa.i.dex.tags =tags=>
 {
   for (const tag of tags)
   {
-    const [k,v] = tag;
+    const [k,v,b] = tag;
     switch (k)
     {
       case 't': aa.i.dex.e('tag_'+k,v); break;
       case 'd': aa.i.dex.e('tag_'+k,v); break;
+      case 'nonce': aa.i.dex.e('tag_'+k,b); break;
       case 'subject': aa.i.dex.e('tag_'+k,v); break;
     }
   }

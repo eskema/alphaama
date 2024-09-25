@@ -164,30 +164,7 @@ aa.mk.butt_expand =(id,con=false)=>
     con:con||id,
     cla:'butt',
     id:'butt_'+id,
-    clk:e=>
-    {
-      e.stopPropagation();
-      let l = document.getElementById(e.target.dataset.controls) || e.target;
-      if (!l) return;
-      
-      let block;
-      window.requestAnimationFrame(e=>
-      {
-        if (l.classList.contains('expanded'))
-        {
-          l.classList.remove('expanded');
-          sessionStorage[l.id] = '';
-          block = 'center';
-        }
-        else
-        {
-          l.classList.add('expanded');
-          sessionStorage[l.id] = 'expanded';
-          block = 'start';
-        }
-        aa.fx.scroll(l,{behavior:'smooth',block:block});
-      });
-    }
+    clk:aa.clk.expand
   });
   butt.dataset.controls = id
   return butt

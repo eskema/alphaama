@@ -55,6 +55,11 @@
   display: none;
 }
 
+#p.expanded .profile:last-child
+{
+  margin-bottom: var(--line);
+}
+
 
 /* @group p section details */
 

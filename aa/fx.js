@@ -58,6 +58,24 @@ aa.fx.color =async(x,l)=>
 };
 
 
+// count leading zeroes
+aa.fx.clz =x=>
+{
+  let c = 0;
+  for (let i = 0; i < x.length; i++) 
+  {
+    const n = parseInt(x[i],16);
+    if (n === 0) c += 4;
+    else 
+    {
+      c += Math.clz32(n) - 28;
+      break
+    }
+  }
+  return c
+};
+
+
 // counts items from selector and sets result on element dataset
 aa.fx.data_count =async(l,s)=>
 {
@@ -232,6 +250,46 @@ aa.fx.path_rm =s=>
     }
     else aa.fx.path_remove(l);
   }
+};
+
+// proof of work
+aa.fx.pow =async(event,dif)=>
+{
+  return new Promise(resolve=>
+  {
+    let miner = new Worker('/pow.js');
+    
+    let start = Date.now(),ended;
+    let start_date = new Date(start);
+    let started = `mining pow (${dif}) started ${start_date}`;
+    const log = aa.mk.l('p',{id:'pow_log_'+start,con:started});
+    const kill =()=>
+    {
+      miner.terminate()
+      if (ended)
+      {
+        let t = ended - start;
+        log.textContent = `${started} -> done in ${t} ms`
+      }
+      else 
+      {
+        log.textContent = 'pow aborted';
+        let note = document.querySelector('.note[data-id="'+event.id+'"]');
+        if (note) note.classList.remove('mining');
+      }
+    };
+    let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk:kill});
+    log.append(butt_cancel);
+    aa.log(log);
+
+    miner.onmessage =message=>
+    {
+      ended = Date.now();
+      setTimeout(kill,200);
+      resolve(message.data);
+    };
+    miner.postMessage({event:event,difficulty:dif});
+  });
 };
 
 

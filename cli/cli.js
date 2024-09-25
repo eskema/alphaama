@@ -210,8 +210,8 @@ aa.cli.load =e=>
       clk:aa.cli.collapse,
       tab:2
     }),
-    aa.mk.section('l',1,aa.logs),
     aa.cli.t,
+    aa.mk.section('l',1,aa.logs),
     aa.cli.oto
   );
   document.body.insertBefore(aa.cli.l,document.body.lastChild);

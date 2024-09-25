@@ -75,6 +75,22 @@ html[data-team="light"]
 
 /* @end */
 
+/* @group animations */
+
+@keyframes loading 
+{
+  0%
+  {
+    opacity: 1;
+  }
+  100%
+  {
+    opacity: 0;
+  }
+}
+
+/* @end */
+
 /* @group default */
 
 ::-webkit-scrollbar 
@@ -266,8 +282,8 @@ button:hover
   color: rgb(var(--color-f));
 }
 
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button 
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button 
 {
   -webkit-appearance: none;
   margin: 0;
@@ -278,7 +294,7 @@ input[type=number]
   -moz-appearance: textfield;
 }
 
-input,
+input[type=text],
 textarea
 {
   appearance: none;
@@ -293,7 +309,8 @@ textarea
   min-width: 2rem;
 }
 
-input:focus,
+input[type=text]:focus,
+input[type=number]:focus,
 textarea:focus
 {
   background: rgb(var(--color-c));
@@ -307,6 +324,11 @@ textarea:focus
   font-size: var(--font-size-s);
 }
 
+.hidden
+{
+  display: none;
+}
+
 
 /* @end */
 
@@ -317,38 +339,19 @@ textarea:focus
   color: rgb(var(--color-main));
 }
 
-.butt.yolo:focus
-{
-  background-color: rgb(var(--color-main));
-}
-
-
-.butt:not(:focus).sign,
-.butt:not(:focus).post,
-.butt:not(:focus).confirm,
-.butt:not(:focus).yes
+.butt.decrypt,
+.butt.sign,
+.butt.post,
+.butt.confirm,
+.butt.yes
 {
   color: rgb(var(--color-yes));
 }
 
-.butt:not(:focus).sign:focus,
-.butt:not(:focus).post:focus,
-.butt:not(:focus).confirm:focus,
-.butt:not(:focus).yes:focus
-{
-  background-color: rgb(var(--color-yes));
-}
-
-.butt:not(:focus).cancel,
-.butt:not(:focus).no 
+.butt.cancel,
+.butt.no 
 {
   color: rgb(var(--color-no));
-}
-
-.butt.cancel:focus,
-.butt.no:focus
-{
-  background-color: rgb(var(--color-no));
 }
 
 .butt.edit 
@@ -356,14 +359,9 @@ textarea:focus
   color: rgb(var(--color-maybe));
 }
 
-.butt.edit:focus
+.butt:focus
 {
-  background-color: rgb(var(--color-maybe));
-}
-
-.butt.decrypt
-{
-  color: rgb(var(--color-yes));
+  color: rgb(var(--color-f));
 }
 
 
@@ -610,7 +608,7 @@ li.item > .val
 
 #view > section.expanded
 {
-  padding-bottom: var(--line);
+  /*padding-bottom: var(--line);*/
 }
 
 #view > section.expanded > header

@@ -617,29 +617,6 @@ aa.r.rel =s=>
 // remove relay(s)
 aa.r.rm =s=>
 {
-  // aa.cli.clear();
-  // const work =a=>
-  // {
-  //   for (let url of a)
-  //   {
-  //     url = aa.is.url(url)?.href;
-  //     if (url)
-  //     {
-  //       if (aa.r.o.ls[url])
-  //       {
-  //         if (aa.r.active[url])
-  //         {
-  //           aa.r.force_close([url]);
-  //           delete aa.r.active[url];
-  //         }
-  //         delete aa.r.o.ls[url];
-  //         document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
-  //       }
-  //     }
-  //   }
-  // };
-  // aa.fx.loop(work,s,aa.r.save);
-
   aa.cli.clear();
   
   const work =a=>
@@ -654,7 +631,6 @@ aa.r.rm =s=>
       }
       delete aa.r.o.ls[url];
       document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
-      // aa.mod_ui(aa.r,url,aa.r.o.ls[url]);
     }
   };
   aa.fx.loop(work,s);

@@ -73,8 +73,11 @@ aa.u.event_draft =event=>
 {
   event.tags = [...new Set(event.tags)];
   if (!event.id) event.id = aa.fx.hash(event);
-  aa.db.e[event.id] = {event:event,clas:['draft'],seen:[],subs:[]};
-  aa.e.print(aa.db.e[event.id]);
+  let dat = {event:event,clas:['draft'],seen:[],subs:[]};
+  aa.db.e[event.id] = dat;
+  aa.e.print(dat);
+  let sect = document.getElementById('e');
+  if (sect && !sect.classList.contains('expanded')) aa.clk.expand({target:sect});
 };
 
 
@@ -286,6 +289,12 @@ aa.u.load =()=>
       exe:aa.u.event_mk
     },
     {
+      action:['e','pow'],
+      required:['hex_id','difficulty'],
+      description:'add proof-of-work to note',
+      exe:aa.u.pow
+    },
+    {
       action:['p','follow'],
       required:['id'], 
       optional:['relay','petname'], 
@@ -373,6 +382,56 @@ aa.u.metadata_set =async s=>
       };
       aa.u.event_finalize(event).then(e=>{console.log(e)});
     }},
+  });
+};
+
+
+// add proof-of-work (pow) to note
+aa.u.pow =async s=>
+{
+  let [xid,difficulty] = s.trim().split(' ');
+  difficulty = parseInt(difficulty);
+  if (!aa.is.x(xid) || !difficulty) { aa.log('pow failed'); return }
+
+  let note = document.querySelector(`.note[data-id="${xid}"]`);
+  if (!note) { aa.log(`pow failed: note not found`); return }
+
+  aa.cli.clear();
+
+  aa.u.mine_note(xid,difficulty);
+};
+
+aa.u.mine_note =async(xid,difficulty = 0)=>
+{
+  return new Promise(async resolve=>
+  {
+    let event = aa.db.e[xid].event;
+    let note = document.querySelector(`.note[data-id="${xid}"]`);
+    let pow = difficulty;
+    if (!pow)
+    {
+      let nonce = event.tags.filter(t=>t[0] === 'nonce');
+      if (!nonce.length) pow = parseInt(localStorage.pow);
+    }
+    if (pow && aa.fx.clz(xid) < pow) 
+    {
+      if (note) note.classList.add('mining');
+      let mined = await aa.fx.pow(event,pow);
+      let [pow_e,r] = mined;
+      if (pow_e)
+      {
+        if (note) aa.e.note_rm(note)
+        // {
+        //   if (aa.viewing === note.id) aa.state.clear();
+        //   note.remove();
+        // }
+        // delete aa.db.e[xid];
+        event = pow_e;
+        aa.u.event_draft(event);
+      }
+      else aa.log('pow failed')
+    }
+    resolve(event.id)
   });
 };
 
@@ -504,9 +563,9 @@ aa.u.start =async mod=>
   if (!p) p = aa.p.p(ls.xpub);
 
   let upd;
-  if (p.trust < 9) 
+  if (p.score < 9) 
   {
-    p.trust = 9;
+    p.score = 9;
     upd = true;
   }
   if (aa.fx.a_add(p.sets,['u'])) upd = true;
@@ -515,7 +574,7 @@ aa.u.start =async mod=>
   if (butt_u) 
   {
     butt_u.textContent = ls.xpub.slice(0,1)+'_'+ls.xpub.slice(-1);
-    if (aa.is.trusted(p.trust)) aa.p.p_link_pic(butt_u,p.metadata.picture);
+    if (aa.is.trusted(p.score)) aa.p.p_link_pic(butt_u,p.metadata.picture);
   }
   aa.p.profile(p);
   if (p.events.k3?.length) aa.p.load_profiles(p.follows);

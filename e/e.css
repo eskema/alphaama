@@ -150,6 +150,18 @@
   display: grid;
 }
 
+.note.mining > .content::after
+{
+  color: red!important;
+  content: "mining in progress..."!important;
+  animation: loading 1s ease-in-out 0s infinite alternate;
+}
+
+#e.expanded .note:last-child
+{
+  margin-bottom: var(--line);
+}
+
 
 /* @group by */
 
@@ -809,7 +821,7 @@ a.author
 
 .note > .actions .butt
 {
-  padding: 0 var(--padm);
+  padding: 1px var(--padm);
 }
 
 .in_view > .actions
@@ -851,12 +863,13 @@ a.author
 }
 
 .view_e .in_path:not(.in_view) > .replies,
+.replies .replies .replies .replies .replies .replies .replies .replies .replies .replies,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies
 {
   padding-left: 0;
 }
 
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
 .note.out > .replies::after,

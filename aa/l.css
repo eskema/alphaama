@@ -1,11 +1,17 @@
 #l
 {
   grid-area: l;
-  max-height: 40vh;
-  /*overflow: hidden;*/
-  /*overflow-y: scroll;*/
+  max-height: 90vh;
   position: relative;
   scrollbar-width: none;
+  transition: max-height 1s cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+:focus + #l
+{
+  max-height: 20vh;
+  overflow: hidden;
+  overflow-y: scroll;
 }
 
 #l > header
@@ -147,6 +153,11 @@ html:not(.cli_expanded) .l.is_new
 {
   position: absolute;
   transform: translateY(calc(var(--line)*-1));
+}
+
+html:not(.cli_expanded) .l.is_new:hover
+{
+  z-index: 9;
 }
 
 html:not(.cli_expanded) .l:not(.is_new),
