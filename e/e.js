@@ -13,7 +13,7 @@ aa.e = {};
 
 
 // append note to notes section
-aa.e.append_to_notes =(note)=>
+aa.e.append_to_notes =note=>
 { 
   let notes = document.getElementById('notes');
   if (!note.classList.contains('rendered')) 
@@ -49,15 +49,14 @@ aa.e.append_to_notes =(note)=>
 // append to another note as reply
 aa.e.append_to_rep =(note,rep)=>
 {
-  const last = [...rep.children].filter(i=> 
-    i.tagName === 'ARTICLE' 
-    && i.dataset.created_at > note.dataset.created_at)[0];
-    rep.insertBefore(note,last?last:null);
-    note.classList.add('reply');
-    note.classList.remove('root');
-    rep.parentNode.classList.add('haz_reply'); 
-    if (note.classList.contains('is_new')) rep.parentNode.classList.add('haz_new_reply');
-    aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
+  const last = [...rep.children].filter(i=> i.tagName === 'ARTICLE' 
+  && i.dataset.created_at > note.dataset.created_at)[0];
+  rep.insertBefore(note,last?last:null);
+  note.classList.add('reply');
+  note.classList.remove('root');
+  rep.parentNode.classList.add('haz_reply'); 
+  if (note.classList.contains('is_new')) rep.parentNode.classList.add('haz_new_reply');
+  aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
 };
 
 
@@ -121,19 +120,19 @@ aa.e.append_to_replies =(dat,note,reply_tag)=>
 aa.e.clear =s=>
 {
   document.getElementById('notes').textContent = '';
-  it.butt_count('e','.note');
+  aa.fx.data_count(document.getElementById('butt_e'),'.note');
   aa.log('events cleared')
 };
 
 
 // clone note
-aa.e.clone =note=>
+aa.e.clone =(note,class_name='')=>
 {
   let clone = note.cloneNode(true);
   clone.removeAttribute('id');
   let rm = clone.querySelectorAll('.details,.sig,.replies,.actions');
   for (const l of rm) l.remove();
-  clone.className = 'note quoted';
+  if (class_name) clone.className = class_name;
   return clone
 };
 
@@ -749,14 +748,14 @@ aa.e.quote_new =o=>
   
   let nid = aa.fx.encode('nid',o.id);
   let note = document.getElementById(nid);
-  if (note) quote.append(aa.e.clone(note));
+  if (note) quote.append(aa.e.clone(note,'note quoted'));
   else aa.db.get_e(o.id).then(dat=>
   {
     if (dat) 
     {
       aa.e.print(dat);
       note = document.getElementById(nid);
-      if (note) quote.append(aa.e.clone(note));
+      if (note) quote.append(aa.e.clone(note,'note quoted'));
     }
     else
     {
@@ -873,11 +872,13 @@ aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
 // update note path when appending
 aa.e.upd_note_path =(l,stamp,is_u=false)=> 
 {
-  let root,updated;
+  let root,updated,og,levels = 0;
   for (;l && l !== document; l = l.parentNode ) 
   {
     if (l.classList.contains('note')) 
     {
+      if (!levels) og = l;
+      levels++;
       updated = false;
       root = l;
       if (l.dataset.stamp < stamp && !is_u)
@@ -896,7 +897,8 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
       if (summary && some > 0) sum_butt.textContent = some + (all > some ? '.' + all : '')
     }
 	}
-  if (root && updated) aa.e.append_to_notes(root)
+  if (root && updated) aa.e.append_to_notes(root);
+  og.dataset.level = levels;
 }
 
 
@@ -1172,7 +1174,7 @@ aa.get.hashtag =s=>
 // gets all nostr:stuff from string 
 // and returns array of tags
 // to use when creating a new note
-aa.get.mentions =s=>
+aa.get.mentions =async s=>
 {
   const mentions = [];
   const matches = [...s.matchAll(aa.regx.nostr)];
@@ -1188,7 +1190,12 @@ aa.get.mentions =s=>
     else if (dis.startsWith('note'))
     {
       const e_x = aa.fx.decode(dis);
-      if (e_x) mentions.push(aa.fx.tag.q(e_x));
+      if (e_x) 
+      {
+        mentions.push(aa.fx.tag.q(e_x));
+        let dat = await aa.db.get_e(e_x);
+        if (dat) mentions.push(aa.fx.tag.p(dat.event.pubkey));
+      }
     }
   }
   return mentions

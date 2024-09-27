@@ -547,17 +547,20 @@ aa.r.message_type.ok =async message=>
     if (id in r.send) delete r.send[id];
     aa.fx.a_add(r.sent,[id]);
     let dat = aa.db.e[id];
-    dat.clas = aa.fx.a_rm(dat.clas,['not_sent','draft']);
-    aa.fx.a_add(dat.seen,[message.origin]);
-    aa.db.upd_e(dat);
-
-    const l = document.getElementById(aa.fx.encode('nid',id));
-    if (l) 
+    if (dat)
     {
-      l.classList.remove('not_sent','draft');
-      aa.fx.dataset_add(l,'seen',[message.origin]);
-      let actions = l.querySelector('.actions');
-      actions.replaceWith(aa.e.note_actions(dat.clas))
+      dat.clas = aa.fx.a_rm(dat.clas,['not_sent','draft']);
+      aa.fx.a_add(dat.seen,[message.origin]);
+      aa.db.upd_e(dat);
+
+      const l = document.getElementById(aa.fx.encode('nid',id));
+      if (l) 
+      {
+        l.classList.remove('not_sent','draft');
+        aa.fx.dataset_add(l,'seen',[message.origin]);
+        let actions = l.querySelector('.actions');
+        actions.replaceWith(aa.e.note_actions(dat.clas))
+      }
     }
   }
   else aa.log(message.origin+' not ok: '+reason+' '+id);
@@ -640,7 +643,11 @@ aa.r.rm =s=>
 
 
 // resume subscriptions
-aa.r.resume =()=>{ for (const url in aa.r.active) { aa.r.c_on(url) } };
+aa.r.resume =()=>
+{
+  aa.cli.clear(); 
+  for (const url in aa.r.active) { aa.r.c_on(url) } 
+};
 
 
 // save r

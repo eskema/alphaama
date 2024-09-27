@@ -364,7 +364,7 @@ aa.cli.run =async s=>
       if (aa.cli.dat.event.kind === 1)
       {
         aa.cli.dat.event.tags.push(...aa.get.hashtag(s));
-        const mentions = aa.get.mentions(s);
+        const mentions = await aa.get.mentions(s);
         for (const mention of mentions)
         {
           let add = true;
