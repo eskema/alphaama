@@ -235,6 +235,7 @@ indexed_db.upg =(e) =>
   if (!st.indexNames.contains('kind')) st.createIndex('kind','event.kind',{unique:false});
   if (!st.indexNames.contains('created_at')) st.createIndex('created_at','event.created_at',{unique:false});
   if (!st.indexNames.contains('refs')) st.createIndex('refs','refs',{unique:false,multiEntry:true});
+  // if (!st.indexNames.contains('tags')) st.createIndex('tags','event.tags',{unique:false,multiEntry:true});
 
   if (!db.objectStoreNames.contains('authors'))
   {

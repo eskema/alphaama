@@ -485,7 +485,7 @@ aa.r.message_type.auth =async message=>
 // ["CLOSED",<sub_id>,<message>]
 aa.r.message_type.closed =async message=> 
 {
-  console.log(message)
+  console.log('aa.r.message_type.closed',message)
 };
 
 // ["EOSE",<sub_id>]
@@ -493,7 +493,12 @@ aa.r.message_type.eose =async message=>
 {
   const sub_id = message.data[1];
   let sub = aa.r.active[message.origin].q[sub_id];
-  if (sub?.eose === 'close') aa.r.close(message.origin,sub_id);
+  if (!sub) return;
+  if (sub.eose)
+  {
+    if(sub.eose === 'close') aa.r.close(message.origin,sub_id);
+  } 
+  else sub.eose = 'done';
 };
 
 // ["EVENT",<sub_id>,<event_data>]
@@ -815,24 +820,34 @@ aa.r.ws_message =async e=>
 aa.r.ws_open =async e=>
 {
   let relay = aa.r.active[e.target.url];
+  let delay = 0;
   for (const sub_id in relay.q)
   {
     let sub = relay.q[sub_id];
-    if (sub?.eose !== 'done')
-    {
-      if (sub.stamp)
-      {
-        let filters_i = 2;
-        while (filters_i < sub.req.length)
-        {
-          sub.req[filters_i].since = sub.stamp + 1;
-          filters_i++;
-        }
-      }
-      aa.r.try(relay,JSON.stringify(sub.req))
-    }
+    // if (sub?.eose !== 'done')
+    // if (sub?.eose && sub?.eose !== 'done')
+    // {
+      // if (sub.stamp)
+      // {
+      //   let filters_i = 2;
+      //   while (filters_i < sub.req.length)
+      //   {
+      //     sub.req[filters_i].since = sub.stamp + 1;
+      //     filters_i++;
+      //   }
+      // }
+      aa.r.try(relay,JSON.stringify(sub.req));
+      // setTimeout(()=>{aa.r.try(relay,JSON.stringify(sub.req))},delay);
+    // }
+    // delay = 100 + delay;
   }
-  for (const ev in relay.send) aa.r.try(relay,relay.send[ev]);
+  // delay = 0;
+  for (const ev in relay.send) 
+  {
+    aa.r.try(relay,relay.send[ev])
+    // setTimeout(()=>{aa.r.try(relay,relay.send[ev])},delay);
+    // delay = 100 + delay;
+  }
   aa.r.upd_state(e.target.url);
 };
 

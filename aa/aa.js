@@ -149,6 +149,7 @@ aa.mk.l =(tag_name,o=false)=>
       case 'cla': l.className = v; break;
       case 'bef': l.dataset.before = v; break;
       case 'aft': l.dataset.after = v; break;
+      case 'lab': l.dataset.label = v; break;
       case 'ref': l.href = v; break;
       case 'rel': l.rel = v; break;
       case 'src': l.src = v; break;
@@ -252,6 +253,12 @@ aa.log =async(s,l=false)=>
 
 // logs container element
 aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
+// mark log as read
+aa.log_read =async l=>
+{
+  l.classList.remove('is_new');
+  l.classList.add('just_added');
+};
 // mark logs as read
 aa.logs_read =async e=>
 {
@@ -264,11 +271,7 @@ aa.logs_read =async e=>
     e.stopPropagation();
   }
   else ls = document.querySelectorAll('.l.is_new');
-  if (ls.length) for (const l of ls) 
-  {
-    l.classList.remove('is_new');
-    l.classList.add('just_added');
-  }
+  if (ls.length) for (const l of ls) aa.log_read(l);
 };
 
 

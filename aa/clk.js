@@ -189,14 +189,6 @@ aa.clk.tiny =e=>
 // sign and broadcast event
 aa.clk.yolo =async e=>
 {
-  // let xid = e.target.closest('.note').dataset.id;
-  // let dat = aa.db.e[xid];
-  // if (!dat)
-  // {
-  //   aa.log('nothing to sign');
-  //   return
-  // }
-
   let xid = await aa.u.mine_note(e.target.closest('.note').dataset.id);
   if (!xid)
   {

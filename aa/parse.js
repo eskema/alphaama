@@ -68,6 +68,11 @@ aa.parse.content =(s,trusted)=>
           //   }
           // }        
         }
+        else if (aa.regx.hashtag.test(word)) 
+        {
+          let dis_node = aa.parser('hashtag',word);
+          l.append(dis_node,' ');
+        }
         else 
         {
           if (i === words.length-1) l.append(word);
@@ -88,7 +93,21 @@ aa.parse.context =(note,event,trust)=>
   content.textContent = '';
   content.classList.toggle('parsed');
   if (content.classList.contains('parsed'))
+  {
+    // let parsed_content = aa.parse.content(event.content,trust).outerHTML();
+    // let hashtags = event.tags.filter(t=>t[0]==='t'&&t[1]?.length);
+    // if (hashtags.length)
+    // {
+
+    // }
+    // for (const t of hashtags)
+    // {
+    //   parsed_content.replaceAll(`#${t}`,`<span class"hashtag">#${t}</span>`);
+    //   // let matches = parsed_content.matchAll(`#${t}`);
+    //   // for (const match of matches) 
+    // }
     content.append(aa.parse.content(event.content,trust));
+  }
   else content.append(aa.mk.l('p',{cla:'paragraph',con:event.content}));
 };
 
@@ -120,6 +139,18 @@ aa.parse.url =(match,tru)=>
   else if (tru && type[0] === 'av') link = aa.mk.av(type[1].href);
   else if (type) link = aa.mk.link(type[1].href);
   return link
+};
+
+
+// parse hashtag
+aa.parse.hashtag =(match)=>
+{
+  return aa.mk.l('span',
+  {
+    cla:'hashtag',
+    con:match[0],
+    lab:match[0].slice(1).toLowerCase()
+  })
 }
 
 

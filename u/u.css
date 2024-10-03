@@ -136,7 +136,7 @@
 {
   align-items: start;
   bottom: unset;
-  top: 0;
+  top: calc(var(--line) + 2px);
   z-index: 8;
 }
 

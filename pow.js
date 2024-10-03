@@ -33,8 +33,6 @@ const mine_note =async(event,difficulty)=>
 
 onmessage =e=>
 {
-  console.log(e.data);
   let {event,difficulty} = e.data;
-  console.log(event,difficulty);
-  setTimeout(()=>{ console.log(event,difficulty);mine_note(event,difficulty) },0)
+  setTimeout(()=>{ mine_note(event,difficulty) },0)
 };

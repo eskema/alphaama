@@ -81,7 +81,8 @@ aa.fx.data_count =async(l,s)=>
 {
   const n = document.querySelectorAll(s).length;
   if (!n) l.removeAttribute('data-count');
-  else l.dataset.count = n
+  else l.dataset.count = n;
+  return n
 };
 
 
@@ -269,7 +270,7 @@ aa.fx.pow =async(event,dif)=>
       if (ended)
       {
         let t = ended - start;
-        log.textContent = `${started} -> done in ${t} ms`
+        log.textContent = `${started} -> done in ${t} ms`;
       }
       else 
       {
@@ -277,6 +278,7 @@ aa.fx.pow =async(event,dif)=>
         let note = document.querySelector('.note[data-id="'+event.id+'"]');
         if (note) note.classList.remove('mining');
       }
+      setTimeout(()=>{aa.log_read(log.parentElement)},500);
     };
     let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk:kill});
     log.append(butt_cancel);

@@ -106,7 +106,7 @@
   grid-area: after;
   padding: 1rem var(--padm);
   padding-bottom: 0;
-  z-index: 36;
+  /*z-index: 36;*/
 }
 
 .note.in_path.in_view::after
@@ -126,7 +126,7 @@
 .note:not(.in_view) > .sig,
 /*.note.in_path:not(.in_view)::after,
 .note.in_path:not(.in_view) > .actions,
-.note.in_path:not(.in_view) > .tags_wall,*/
+.note.in_path:not(.in_view) > .tags_wrapper,*/
 
 .note[data-kind="1"]:not(.tiny):not(.in_view)::after,
 
@@ -157,7 +157,7 @@
   animation: loading 1s ease-in-out 0s infinite alternate;
 }
 
-#e.expanded .note:last-child
+#e.expanded #notes > .note:last-child
 {
   margin-bottom: var(--line);
 }
@@ -681,26 +681,56 @@ a.author
 
 /* @end */
 
+/* @group hashtags */
+
+.hashtag
+{
+  color: rgb(var(--color-main));
+  /*display: inline-block;*/
+  /*font-size: 0;*/
+}
+
+/*.hashtag::before
+{
+  content: "#";
+  font-size: var(--font-size);
+}
+
+.hashtag::after
+{
+  content: attr(data-label);
+  font-size: var(--font-size);
+}
+
+.note_quote .hashtag::before,
+.note_quote .hashtag::after
+{
+  font-size: var(--font-size-s);
+}*/
+
+/* @end */
 
 /* @group tags */
 
-.tags_wall
+.tags_wrapper
 {
   background: rgba(var(--color-b),1);
   bottom: 4rem;
   grid-area: tags;
+  overflow: hidden;
   position: sticky;
   z-index: 3;
   /*justify-self: end;*/
 }
 
-.tags_wall[open]
+.tags_wrapper[open]
 {
   grid-area: opentags;
+  max-height: 50vh;
   padding-bottom: var(--line);
 }
 
-.tags_wall summary
+.tags_wrapper summary
 {
   color: rgb(var(--color-d));
   /*display: inline;*/
@@ -709,40 +739,41 @@ a.author
   text-align: right;
 }
 
-.tags_wall[open] summary
+.tags_wrapper[open] summary
 {
   text-align: center;
 }
 
-.tags_wall:not(.empty) summary::after
+.tags_wrapper:not(.empty) summary::after
 {
   content: "";
 }
 
-.tags_wall[open]:not(.empty) summary::before
+.tags_wrapper[open]:not(.empty) summary::before
 {
   content: "tags: ";
 }
 
-.in_view > .tags_wall
+.in_view > .tags_wrapper
 {
   bottom: 0;
   position: relative;
+  max-height: unset;
 }
 
-.in_view > .tags_wall > summary,
-.in_view > .tags_wall[open] > summary
+.in_view > .tags_wrapper > summary,
+.in_view > .tags_wrapper[open] > summary
 {
   text-align: center;
 }
 
-.in_view > .tags_wall .tags
+.in_view > .tags_wrapper .tags
 {
   justify-content: center;
 }
 
-.view_e .in_path:not(.in_view) > .tags_wall,
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply > .tags_wall
+.view_e .in_path:not(.in_view) > .tags_wrapper,
+.replies:not(.expanded) .note:not(.is_new).haz_new_reply > .tags_wrapper
 {
   display: none;
 }
@@ -863,7 +894,7 @@ a.author
 }
 
 .view_e .in_path:not(.in_view) > .replies,
-.replies .replies .replies .replies .replies .replies .replies .replies .replies .replies,
+.replies:not(.expanded) [data-level="11"]:not(.is_new):not(.haz_new_reply) .replies,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies
 {
   padding-left: 0;
@@ -1173,7 +1204,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .note.tiny:not(.in_view) > .content > *,
 .note.tiny:not(.in_view) > .actions,
-.note.tiny:not(.in_view) > .tags_wall,
+.note.tiny:not(.in_view) > .tags_wrapper,
 .note.tiny:not(.in_view) > .replies,
 .note.tiny:not(.in_view) > .by .author .picture,
 .note.tiny:not(.in_view) > .by .author::before
@@ -1231,7 +1262,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   display: none;
 }
 
-.note.root.tiny:not(.in_view) > .tags_wall
+.note.root.tiny:not(.in_view) > .tags_wrapper
 {
   display: none;
 }
@@ -1254,7 +1285,8 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 }
 
 #e:not(.expanded) .pagination,
-.viewing .pagination
+.viewing .pagination,
+html:not(.pagin) .pagination
 {
   display: none;
 }
@@ -1392,7 +1424,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
     line-height: 3rem;
   }
   
-  .note:not(.in_view) .tags_wall
+  .note:not(.in_view) .tags_wrapper
   {
     display: none;
   }
