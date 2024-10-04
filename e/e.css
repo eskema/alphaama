@@ -727,6 +727,7 @@ a.author
 {
   grid-area: opentags;
   max-height: 50vh;
+  overflow-y:  scroll;
   padding-bottom: var(--line);
 }
 

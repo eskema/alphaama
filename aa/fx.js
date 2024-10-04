@@ -104,6 +104,10 @@ aa.fx.decode =s=>
 };
 
 
+// delay function
+aa.fx.delay =(f,t)=>{ return ()=> { setTimeout(f,t) } };
+
+
 // encodes to bech32 (nip19)
 aa.fx.encode =(s,x)=>
 {
@@ -303,17 +307,20 @@ aa.fx.scroll =async(l,options={})=>
 
 
 // scroll stuff
-aa.fx.scrolled =()=>
+aa.fx.scrolled =async()=>
 {
-  let last_top = 0;
-  window.addEventListener('scroll',()=>
-  {
+  // aa.ui.last_top = 0;
+  // window.addEventListener('scroll',()=>
+  // {
     // save scroll direction (vertical)
+  // requestAnimationFrame(()=>
+  // {
     const new_top = aa.l.scrollTop;
-    if (new_top > last_top) aa.fx.scroll_direction = 'down';
-    else if (new_top < last_top) aa.fx.scroll_direction = 'up';
-    last_top = new_top <= 0 ? 0 : new_top;
-  });
+    if (new_top > aa.ui.last_top) aa.ui.scroll_direction = 'down';
+    else if (new_top < aa.ui.last_top) aa.ui.scroll_direction = 'up';
+    aa.ui.last_top = new_top <= 0 ? 0 : new_top;
+  // });
+  // })
 };
 
 

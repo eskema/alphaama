@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const aa_version = 37;
+const aa_version = 38;
 
 const aa = 
 {
@@ -66,6 +66,10 @@ const aa =
     '/aa/db.js?v='+aa_version,
     '/aa/state.js?v='+aa_version,
   ],
+  ui:
+  {
+    last_top: 0,
+  },
   viewing:false,
   views:[],
 };
@@ -303,15 +307,13 @@ aa.run =(o={})=>
 {
   const main = aa.mk.l('main',{id:'view'});
   document.body.prepend(main);
-  
   if (aa.is.rigged()) aa.l.classList.add('rigged');
   aa.wl.lock();
-  aa.fx.scrolled();
-
   aa.log((aa.is.online() ? 'on' : 'off') + 'line at '+location.origin);
   aa.u.check_signer();
   // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   setTimeout(aa.logs_read,420);
+  // window.addEventListener('scroll',aa.fx.scrolled);
 };
 
 

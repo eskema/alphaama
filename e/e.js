@@ -556,7 +556,7 @@ aa.e.note_actions =clas=>
   }
   else if (clas.includes('not_sent')) a.push('post','cancel');
   else if (clas.includes('blank')) a.push('fetch','tiny');
-  else a.push('react','req','post','parse','tiny');
+  else a.push('react','req',['bro','post'],'parse','tiny');
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
 };
@@ -1402,6 +1402,25 @@ aa.db.merge_e =dat=>
 
 
 // update event on database
+aa.db.upd_e_to =()=>
+{
+  const q_id = 'upd_e';
+  const q = Object.values(aa.temp[q_id]);
+  aa.temp[q_id] = {};
+  if (q.length) 
+  {
+    let chunks = aa.fx.chunks(q,444);
+    let times = 0;
+    for (const chunk of chunks)
+    {
+      setTimeout(()=>
+      {
+        aa.db.idb.worker.postMessage({put:{store:'events',a:chunk}});
+      },times * 200);
+      times++;
+    }
+  }
+};
 aa.db.upd_e =async dat=>
 {
   const q_id = 'upd_e';
@@ -1409,12 +1428,14 @@ aa.db.upd_e =async dat=>
   let merged = aa.db.merge_e(dat);
   if (merged) aa.temp[q_id][dat.event.id] = merged;
 
-  aa.to(()=>
-  {
-    const q = Object.values(aa.temp[q_id]);
-    aa.temp[q_id] = {};
-    if (q.length) aa.db.idb.worker.postMessage({upd_e:{store:'events',a:q}});
-  },2000,q_id);
+  aa.to(aa.db.upd_e_to,2000,q_id);
+
+  // aa.to(()=>
+  // {
+  //   const q = Object.values(aa.temp[q_id]);
+  //   aa.temp[q_id] = {};
+  //   if (q.length) aa.db.idb.worker.postMessage({put:{store:'events',a:q}});
+  // },2000,q_id);
 };
 
 

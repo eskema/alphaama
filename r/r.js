@@ -56,21 +56,27 @@ aa.r.broadcast =(event,relays=false)=>
     aa.log('aa.r.broadcast: no relays');
     return false
   }
+
+  const opts = {send:{}};
   const dis = JSON.stringify(['EVENT',event]);
+  opts.send[event.id] = dis;
+
   for (const k of relays)
   {
     const relay = aa.r.active[k];
     if (!relay) 
     {
-
       if (!aa.r.o.ls[k]) aa.r.hint_notice(k,opts,aa.r.o.w);
-      const opts = {send:{}};
-      opts.send[event.id] = dis;
-      aa.r.c_on(k,opts);
+      else aa.r.c_on(k,opts);
     }
     else
     {
-      if (relay.sent.includes(event.id)) continue;
+      if (relay.sent.includes(event.id))
+      {
+        aa.log(`event already sent to ${k}`);
+        // if (relay.send[event.id]) delete relay.send[event.id]
+        continue;
+      } 
       else aa.r.try(relay,dis)
     }
   }
@@ -527,8 +533,8 @@ aa.r.message_type.event =async message=>
     }
     setTimeout(()=>
     {
-      aa.db.upd_e(dat);
-      aa.e.print(dat);
+      aa.db.upd_e(dat).then(()=>{aa.e.print(dat)});
+      // aa.e.print(dat);
     },0);
 
   }

@@ -180,20 +180,37 @@ const merge =(dis,dat)=>
 
 indexed_db.ops.upd_e =async(db,o)=>
 {
-  const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  for (const dat of o.a)
+  const chunks = indexed_db.chunks(o.a,444);
+  for (const chunk of chunks)
   {
-    odb.openCursor(dat.event.id).onsuccess=e=>
+    const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
+    for (const item of chunk) // odb.put(item)
     {
-      const cursor = e.target.result; 
-      if (cursor) 
-      { 
-        const merged = merge(cursor.value,dat);
-        if (merged) cursor.update(merged);
+      odb.openCursor(item.event.id).onsuccess=e=>
+      {
+        const cursor = e.target.result; 
+        if (cursor) 
+        { 
+          const merged = merge(cursor.value,item);
+          if (merged) cursor.update(merged);
+        }
+        else odb.put(item)
       }
-      else odb.put(dat)
     }
   }
+  // for (const item of o.a)
+  // {
+  //   odb.openCursor(item.event.id).onsuccess=e=>
+  //   {
+  //     const cursor = e.target.result; 
+  //     if (cursor) 
+  //     { 
+  //       const merged = merge(cursor.value,item);
+  //       if (merged) cursor.update(merged);
+  //     }
+  //     else odb.put(item)
+  //   }
+  // }
 };
 
 indexed_db.ops.upd_p =async(db,o)=>

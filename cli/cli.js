@@ -92,12 +92,13 @@ aa.cli.dat_upd =async()=>
 // on cli expand
 aa.cli.expand =e=>
 {
-  window.requestAnimationFrame(e=>
+  aa.cli.foc();
+  aa.cli.upd();
+  aa.logs_read();
+  
+  requestAnimationFrame(e=>
   {
     aa.l.classList.add('cli_expanded');
-    aa.cli.foc();
-    aa.cli.upd();
-    aa.logs_read();
   });
 };
 
