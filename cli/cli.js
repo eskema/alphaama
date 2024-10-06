@@ -95,11 +95,7 @@ aa.cli.expand =e=>
   aa.cli.foc();
   aa.cli.upd();
   aa.logs_read();
-  
-  requestAnimationFrame(e=>
-  {
-    aa.l.classList.add('cli_expanded');
-  });
+  aa.l.classList.add('cli_expanded');
 };
 
 
@@ -418,8 +414,12 @@ aa.cli.upd =e=>
     if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
     if (aa.u.p) aa.cli.dat_upd()
   }
+  setTimeout(aa.cli.h,300);
+};
 
-  // update textarea height
+// update textarea height
+aa.cli.h =()=>
+{
   aa.cli.t.style.height = 'unset';
   aa.cli.t.style.height = aa.cli.t.scrollHeight+'px';
   if (aa.cli.t.selectionStart === aa.cli.t.value.length) 

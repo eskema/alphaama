@@ -111,18 +111,19 @@ aa.p.actions =p=>
 // load author list from db into memory
 aa.p.authors =async a=>
 {
+  // return await aa.db.get_pa(a)
   const p_to_get = [];
   for (const xpub of a) if (!aa.db.p[xpub]) p_to_get.push(xpub);
   if (p_to_get.length)
   {
-    let p_stored = [];
-    let chunks = aa.fx.chunks(p_to_get,444);
-    for (const chunk of chunks)
-    {
-      let ap = await aa.db.get('idb',{get_a:{store:'authors',a:chunk}});
-      p_stored.push(...ap)
-    }
-    
+    // let p_stored = [];
+    // let chunks = aa.fx.chunks(p_to_get,4444);
+    // for (const chunk of chunks)
+    // {
+    //   let ap = await aa.db.get('idb',{get_a:{store:'authors',a:chunk}});
+    //   p_stored.push(...ap)
+    // }
+    let p_stored = await aa.db.get('idb',{get_a:{store:'authors',a:p_to_get}});
     for (const p of p_stored) aa.db.p[p.xpub] = p;
     // .then(a=>{ for (const p of ap) aa.db.p[p.xpub] = p });
   } 
@@ -137,14 +138,6 @@ aa.p.authors_from_tags =tags=>
   return authors
 };
 
-// returns array of hex pubkeys from p tags
-aa.p.p_from_tags =tags=>
-{
-  const a = [];  
-  for (const tag of tags) if (aa.is.tag.p(tag)) a.push(tag);  
-  return a
-};
-
 
 // populate list element with authors
 aa.p.author_list =(a,l,sort='text_asc')=>
@@ -152,10 +145,21 @@ aa.p.author_list =(a,l,sort='text_asc')=>
   if (!a.length) return;
   aa.p.authors(a).then(e=>
   {
-    l.classList.add('list','list_grid','author_list');
-    for (const x of a) 
-      l.append(aa.mk.l('li',{cla:'item author_list_item',app:aa.mk.p_link(x)}));
-    setTimeout(()=>{aa.fx.sort_l(l,sort)},500);
+    let items = [];
+    for (const x of a)
+    {
+      items.push(aa.mk.l('li',
+      {
+        cla:'item author_list_item',
+        app:aa.mk.p_link(x)
+      }))
+    }
+    l.append(...items);
+    setTimeout(()=>
+    {
+      l.classList.add('list','list_grid','author_list');
+      aa.fx.sort_l(l,sort);
+    },500);
   });
 };
 
@@ -256,6 +260,56 @@ aa.p.get_last_of =async(p,kn)=>
 
 
 // returns profile if already loaded or get it from database
+// aa.db.get_p =async xpub=>
+// {
+
+//   if (aa.db.p[xpub]) return aa.db.p[xpub];
+//   let p = await aa.db.idb.ops({get:[xpub]});
+//   // console.log('get_p',p);
+//   if (p.length) aa.db.p[xpub] = p[0];
+//   return p[0]
+// };
+// aa.db.get_pa =async a=>
+// {
+//   let results = []
+//   // let to_get = [];
+//   // for (const pub of a)
+//   // {
+//   //   if (!aa.db.p[pub]) to_get.push(pub+'.json');
+//   //   else results.push(aa.db.p[pub])
+//   // }
+//   let stored = await aa.db.cash.ops({get:a});
+//   for (const dis of stored) aa.db.p[dis.xpub] = dis;
+//   for (const x of a)
+//   {
+//     if (!aa.db.p[x]) 
+//     {
+//       if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
+//       aa.db.p[x] = aa.p.p(x);
+//     }
+//     results.push(aa.db.p[x])
+//   } 
+//   // console.log('get_p',p);
+//   // if (p.length) aa.db.p[xpub] = p[0];
+//   // for (const p of stored) 
+//   // {
+//   //   aa.db.p[p.xpub] = p;
+//   //   results.push(aa.db.p[p.xpub]);
+//   // }
+//   return results
+
+
+//   // for (const dis of stored) aa.db.p[dis.xpub] = dis;
+//   // for (const x of a)
+//   // {
+//   //   if (!aa.db.p[x]) 
+//   //   {
+//   //     if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
+//   //     aa.db.p[x] = aa.p.p(x);
+//   //   }
+//   //   aa.p.profile(aa.db.p[x])
+//   // } 
+// };
 aa.db.get_p =async xpub=>
 {
   if (aa.db.p[xpub]) return aa.db.p[xpub];
@@ -352,7 +406,10 @@ aa.p.load_profiles =async a=>
   if (!a?.length) return;
 
   let stored = await aa.db.get('idb',{get_a:{store:'authors',a:a}});
-  for (const dis of stored) aa.db.p[dis.xpub] = dis;
+  // let stored = await aa.db.get_pa(a);
+  // let stored = await aa.db.cash.ops({get:a})
+  for (const dis of stored) aa.p.profile(dis);
+  for (const dis of stored)aa.db.p[dis.xpub] = dis;
   for (const x of a)
   {
     if (!aa.db.p[x]) 
@@ -807,8 +864,70 @@ aa.p.relays_add =(relays,p)=>
   }
 };
 
-
 // save p
+aa.p.save_to_n =()=>
+{
+  const q_id = 'author_save';
+  let pubs = [...new Set(aa.temp[q_id])];
+  aa.temp[q_id] = [];
+  let a = {};
+  for (const pub of pubs) 
+  {
+    a[`${pub}.json`] = JSON.stringify(aa.db.p[pub]);
+    // aa.p.p_links_upd(aa.db.p[pub])
+  }
+  // aa.db.cash.worker.postMessage({put_a:a});
+  let chunks = aa.fx.chunks(a,666);
+  let times = 0;
+  for (const chunk of chunks)
+  {
+    console.log('saving p',chunk.length);
+    aa.db.cash.worker.postMessage({put_a:chunk});
+  }
+  //   aa.db.cash.worker.postMessage({put:{store:'authors',a:chunk}})
+  //   aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}})
+  //   // setTimeout(()=>
+  //   // { aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}}) },
+  //   // times * 0);
+  //   // times++;
+  //   // requestAnimationFrame(()=>
+  //   // {
+  //     // for (const p of chunk) aa.p.p_links_upd(p);
+  //   // });
+  //   for (const p of chunk) requestAnimationFrame(()=>{aa.p.p_links_upd(p);});
+  // }
+  // requestAnimationFrame(()=>
+  // { 
+  //   console.log('starting to update pubs', pubs.length);
+  //   for (const pub of pubs) aa.p.p_links_upd(aa.db.p[pub]);
+  //   console.log('ended update pubs', pubs.length);
+  // });
+};
+aa.p.save_to =()=>
+{
+  const q_id = 'author_save';
+  let pubs = [...new Set(aa.temp[q_id])];
+  aa.temp[q_id] = [];
+  let a = [];
+  for (const pub of pubs) a.push(aa.db.p[pub]);
+  let chunks = aa.fx.chunks(a,4444);
+  // let times = 0;
+  for (const chunk of chunks)
+  {
+    // aa.db.cash.worker.postMessage({put:{store:'authors',a:chunk}})
+    aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}})
+    // setTimeout(()=>
+    // { aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}}) },
+    // times * 0);
+    // times++;
+    // requestAnimationFrame(()=>
+    // {
+      // for (const p of chunk) aa.p.p_links_upd(p);
+    // });
+    // for (const p of chunk) requestAnimationFrame(()=>{aa.p.p_links_upd(p);});
+  }
+  // for (const p of a) requestAnimationFrame(()=>{aa.p.p_links_upd(p);});
+};
 aa.p.save = async p=>
 {
   const q_id = 'author_save';
@@ -816,18 +935,10 @@ aa.p.save = async p=>
 
   aa.db.p[p.xpub] = p;
   if (aa.viewing === p.npub) aa.p.profile_upd(p);
-
+  
   aa.temp[q_id].push(p.xpub);
   
-  aa.to(()=>
-  {
-    let pubs = [...new Set(aa.temp[q_id])];
-    aa.temp[q_id] = [];
-    let a = [];
-    for (const pub of pubs) a.push(aa.db.p[pub]);
-    aa.db.idb.worker.postMessage({put:{store:'authors',a:a}});
-    for (const p of a) aa.p.p_links_upd(p);
-  },1000,q_id);
+  aa.to(aa.p.save_to,3000,q_id);
 
 };
 
@@ -919,54 +1030,6 @@ aa.p.process_k3_tags =async(event)=>
   let to_upd = aa.p.follows_to_upd(event);
   to_upd.push(ep);
 
-  // for (const tag of event.tags)
-  // {
-  //   if (!aa.is.tag.p(tag)) continue;
-
-  //   const xpub = tag[1];
-  //   const relay = tag[2];
-  //   const petname = tag[3];
-
-  //   let upd;
-  //   let p = aa.db.p[xpub];
-  //   if (!p) 
-  //   {
-  //     p = aa.db.p[xpub] = aa.p.p(xpub);
-  //     upd = true;
-  //   }  
-
-  //   if (relay)
-  //   {
-  //     let url = aa.is.url(relay)?.href;
-  //     if (url)
-  //     {
-  //       if (!p.relays[url]) p.relays[url] = {sets:[]};
-  //       if (aa.fx.a_add(p.relays[url].sets,['hint'])) upd = true;
-  //     }
-  //     if (is_u && p.relay !== relay) { p.relay = relay; upd = true; }
-  //   }
-
-  //   if (petname)
-  //   {
-  //     if (!p.petnames) p.petnames = [];
-  //     if (aa.fx.a_add(p.petnames,[petname])) upd = true;
-  //     if (is_u && p.petname !== petname) { p.petname = petname; upd = true; }
-  //   }
-
-  //   if (aa.fx.a_add(p.followers,[x])) upd = true;
-    
-  //   if (is_u)
-  //   {
-  //     if (p.score < 5) 
-  //     { 
-  //       p.score = 5; 
-  //       upd = true 
-  //     }
-  //     if (aa.fx.a_add(p.sets,['k3'])) upd = true;
-  //     aa.u.follows = event.tags;
-  //   }    
-  //   if (upd) to_upd.push(p);
-  // }
   setTimeout(()=>{for (const p of to_upd) aa.p.save(p)},200);
   if (is_u) aa.p.load_profiles(ep.follows);
 };
@@ -1035,7 +1098,8 @@ aa.kinds[0] =dat=>
       if (metadata)
       {
         p.metadata = metadata;
-        aa.p.save(p)
+        aa.p.p_links_upd(p);
+        aa.p.save(p);
       }
       let content = note.querySelector('.content');
       content.textContent = '';

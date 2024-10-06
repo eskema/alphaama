@@ -18,9 +18,8 @@ aa.e.append_to_notes =note=>
   let notes = document.getElementById('notes');
   if (!note.classList.contains('rendered')) 
   {
-    note.classList.add('root');
     note.querySelector('.replies').removeAttribute('open');
-    note.classList.add('not_yet');
+    note.classList.add('root','not_yet');
     aa.e.note_observer.observe(note);
   }
   if (note.classList.contains('blank')) notes.append(note)
@@ -30,11 +29,11 @@ aa.e.append_to_notes =note=>
     notes.insertBefore(note,last);
   }
   
-  let butt = document.querySelector('.pagination .butt');
-  if (!butt && notes.childNodes.length > aa.l.dataset.pagination && !butt)
-  {
-    document.getElementById('e').append(aa.mk.pagination())
-  }
+  // let butt = document.querySelector('.pagination .butt');
+  // if (!butt && notes.childNodes.length > aa.l.dataset.pagination && !butt)
+  // {
+  //   document.getElementById('e').append(aa.mk.pagination())
+  // }
 
   // let butt = document.querySelector('.pagination .butt');
   // if (!butt) document.getElementById('e').append(aa.mk.pagination());
@@ -198,39 +197,8 @@ aa.e.load =()=>
   );
   const section = aa.mk.section('e');
   const notes = aa.mk.l('div',{id:'notes'});
-  section.append(notes);
+  section.append(notes,aa.mk.pagination());
   aa.e.section_observer.observe(notes,{attributes:false,childList:true});
-
-  let n = localStorage.pagination;
-  if (n && parseInt(n))
-  {
-    aa.l.classList.add('constrained');
-    const style = aa.mk.l('style',
-    {
-      id:'e_pagination',
-      con:`.constrained #notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
-    });
-
-    document.head.append(style);
-
-    let pagination = aa.mk.l('p',{cla:'pagination'});
-    let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:e=>
-    {
-      if (aa.l.classList.contains('constrained'))
-      {
-        aa.l.classList.remove('constrained');
-        e.target.textContent = 'less';
-      }
-      else 
-      {
-        aa.l.classList.add('constrained');
-        e.target.textContent = 'moar';
-      }
-    }});
-    pagination.append(butt_more);
-    section.append(pagination);
-  }
-
 };
 
 
@@ -466,14 +434,14 @@ aa.e.note =dat=>
   {
     const x = dat.event.pubkey;
     note.dataset.pubkey = x;
-    aa.fx.color(x,note);  
+    by.append(aa.mk.p_link(dat.event.pubkey));
     aa.db.get_p(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
       if (!p) p = aa.p.p(x);
+      aa.fx.color(x,note);
       note.dataset.trust = p.score;
-      by.append(aa.mk.p_link(x));
-    });    
+    });
   }
   
   if ('kind' in dat.event) 
@@ -747,17 +715,46 @@ aa.e.note_rm =note=>
 // restrict amount of root events displayed at once, 
 aa.mk.pagination =()=>  
 {
-  let style = document.getElementById('e_pagination');
-  if (!style) 
+  let n = localStorage.pagination;
+  // if (n && parseInt(n))
+  // {
+  aa.l.classList.add('pagin');
+  const style = aa.mk.l('style',
   {
-    style = aa.mk.l('style',{id:'e_pagination'});
-    document.head.append(style);
-  }
+    id:'e_pagination',
+    con:`.pagin #notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
+  });
+
+  document.head.append(style);
+
   let pagination = aa.mk.l('p',{cla:'pagination'});
-  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:aa.e.pagination_upd});
+  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:e=>
+  {
+    if (aa.l.classList.contains('pagin'))
+    {
+      aa.l.classList.remove('pagin');
+      e.target.textContent = 'less';
+    }
+    else 
+    {
+      aa.l.classList.add('pagin');
+      e.target.textContent = 'moar';
+    }
+  }});
   pagination.append(butt_more);
-  aa.e.pagination_upd({target:butt_more});
-  return pagination;
+  return pagination
+  // }
+  // let style = document.getElementById('e_pagination');
+  // if (!style) 
+  // {
+  //   style = aa.mk.l('style',{id:'e_pagination'});
+  //   document.head.append(style);
+  // }
+  // let pagination = aa.mk.l('p',{cla:'pagination'});
+  // let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:aa.e.pagination_upd});
+  // pagination.append(butt_more);
+  // aa.e.pagination_upd({target:butt_more});
+  // return pagination;
 };
 
 // update pagination 
@@ -829,11 +826,11 @@ aa.e.print =async dat=>
       // else l.classList.remove('is_new');
       
       if (l.classList.contains('draft')) aa.fx.scroll(l,{behavior:'smooth',block:'center'});
-      aa.fx.data_count(document.getElementById('butt_e'),'.note').then(count=>
-      {
-        if (count > parseInt(localStorage.pagination)) aa.l.classList.add('pagin')
-        else aa.l.classList.remove('pagin')
-      });
+      // aa.fx.data_count(document.getElementById('butt_e'),'.note').then(count=>
+      // {
+      //   if (count > parseInt(localStorage.pagination)) aa.l.classList.add('pagin')
+      //   else aa.l.classList.remove('pagin')
+      // });
     }
   }
   else
@@ -851,15 +848,33 @@ aa.e.print =async dat=>
     }
   }
 
-  setTimeout(()=>
-  {
-    aa.get.quotes(xid);
+  if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
+
+
+
+  // setTimeout(()=>
+  // {
+    
+    if (dat.clas.includes('miss')) 
+    {
+      aa.get.quotes(xid);
+    }
     aa.get.missing('e');
     aa.get.missing('p');
     aa.i.d(dat);
-  },0);
+    
+    // aa.to(()=>
+    // {
+    //   aa.fx.data_count(document.getElementById('butt_e'),'.note').then(count=>
+    //   {
+    //     if (count > parseInt(localStorage.pagination)) aa.l.classList.add('pagin')
+    //     else aa.l.classList.remove('pagin')
+    //   });
+    // },500,'e_count');
+  // },0);
   
-  if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
+  
+
 };
 
 
@@ -905,51 +920,6 @@ aa.e.quote =o=>
 };
 
 
-// new quote event, still wip
-aa.e.quote_new =o=>
-{
-  if (!o.id) return false;
-  const quote = aa.mk.l('blockquote',{cla:'note_quote'});
-  quote.dataset.id = o.id;
-  
-  let nid = aa.fx.encode('nid',o.id);
-  let note = document.getElementById(nid);
-  if (note) quote.append(aa.e.clone(note,'note quoted'));
-  else aa.db.get_e(o.id).then(dat=>
-  {
-    if (dat) 
-    {
-      aa.e.print(dat);
-      note = document.getElementById(nid);
-      if (note) quote.append(aa.e.clone(note,'note quoted'));
-    }
-    else
-    {
-      quote.classList.add('blank_quote');
-      let by = aa.mk.l('p',{cla:'note_quote_by'});
-      let pubkey = o.author ?? o.pubkey;
-      if (pubkey) by.append(pubkey);
-      else by.append(aa.mk.l('span',{con:'?'}));
-      by.append(aa.mk.nostr_link(nid));
-      content = aa.mk.l('p',{cla:'paragraph'});
-      
-      let req = {ids:[o.id]};
-      let relays = [];
-      if (o.relays?.length) 
-      {
-        req.relays = o.relays;
-        let relay_content = aa.mk.l('p',{con:'relays: '+o.relays});
-        content.append(relay_content);
-        for (const r of o.relays) relays.push(r);
-      }
-      aa.e.miss_e(o.id,relays);
-      quote.append(content)
-    }
-  }); 
-  return quote
-};
-
-
 // update blank quotes
 aa.e.quote_upd =async(quote,o)=>
 {
@@ -957,55 +927,85 @@ aa.e.quote_upd =async(quote,o)=>
   let by = quote.querySelector('.note_quote_by');
   let has_pub = by.querySelector('a.author') ? true : false;
   let content;
+  let quote_classes = [];
   if (dat) 
   {
-    aa.db.get_p(dat.event.pubkey).then(p=>
+    let p = await aa.db.get_p(dat.event.pubkey);
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (!has_pub) 
     {
-      if (!p) p = aa.p.p(dat.event.pubkey);
-      if (!has_pub) 
-      {
-        by.prepend(aa.mk.p_link(p.xpub));
-        aa.fx.color(p.xpub,quote);
-      }
-      aa.get.pubs([['p',dat.event.pubkey]]);
-      content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
-      quote.append(content);
-      quote.classList.add('parsed');
-    })
+      by.prepend(aa.mk.p_link(p.xpub));
+      aa.fx.color(p.xpub,quote);
+    }
+    content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
+    quote_classes.push('parsed');
+    aa.get.pubs([['p',dat.event.pubkey]]);
   }
   else
   {
-    quote.classList.add('blank_quote');
+    quote_classes.push('blank_quote');
+    // quote.classList.add('blank_quote');
     if (!has_pub) by.prepend(aa.mk.l('span',{con:'?'}));
     content = aa.mk.l('p',{cla:'paragraph'});
     
-    let req = {ids:[o.id]};
+
+    // let req = {ids:[o.id]};
     let relays = [];
     if (o.relays?.length) 
     {
-      req.relays = o.relays;
-      let relay_content = aa.mk.l('p',{con:'relays: '+o.relays});
-      content.append(relay_content);
-      for (const r of o.relays) relays.push(r);
+      content.append(`\nrelays: ${o.relays}`);
+      relays = o.relays
     }
-    quote.append(content)
     aa.e.miss_e(o.id,relays);
-  }  
+  }
+  quote.append(content)
+  quote.classList.add(...quote_classes);
 };
 
 
 // gets all blank quotes and replaces with actual data
-aa.get.quotes =async id=>
+aa.e.quotes_to =async q_id=>
 {
-  let quotes = document.querySelectorAll('.blank_quote[data-id="'+id+'"]');
-  if (quotes.length)
-  {
-    let dat = await aa.db.get_e(id);
-    if (!dat) dat = {event:{"id":id}};
-    let quote = aa.e.quote(dat.event);
-    setTimeout(()=>{ for(const q of quotes) q.replaceWith(quote)},100);
+  let ids = [...new Set(aa.temp[q_id])];
+  aa.temp[q_id] = [];
+  for (const id of ids)
+  { 
+    let quotes = document.querySelector('.blank_quote[data-id="'+id+'"]');
+    if (quotes) quotes = document.querySelectorAll('.blank_quote[data-id="'+id+'"]');
+    if (quotes?.length)
+    {
+      let dat = await aa.db.get_e(id);
+      if (!dat) dat = {event:{"id":id}};
+      let quote = aa.e.quote(dat.event);
+      setTimeout(()=>{ for(const q of quotes) q.replaceWith(quote)},100);
+    }
   }
 };
+aa.get.quotes =async id=>
+{
+  const q_id = 'get_quotes';
+  if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
+  aa.temp[q_id].push(id);
+  aa.to(aa.e.quotes_to,3000,q_id);
+};
+
+
+// // request event from relays
+// aa.e.req =async o=>
+// {
+//   if (!o || !o.id) return;
+
+//   let relays = [];
+//   if (o.relays?.length) 
+//   {
+//     req.relays = o.relays;
+//     // let relay_content = aa.mk.l('p',{con:'relays: '+o.relays});
+//     // content.append(relay_content);
+//     for (const r of o.relays) relays.push(r);
+//   }
+  
+//   aa.e.miss_e(o.id,o.relays);
+// };
 
 
 // search notes content for value
@@ -1071,11 +1071,14 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
 // view event
 aa.e.view =l=>
 {
-  aa.l.classList.add('viewing','view_e');
-  l.classList.add('in_view');
-  aa.fx.path(l);
-  if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
-  aa.fx.scroll(l);
+  requestAnimationFrame(()=>
+  {
+    aa.fx.path(l);
+    if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
+    aa.l.classList.add('viewing','view_e');
+    l.classList.add('in_view');
+    aa.fx.scroll(l);
+  })
 };
 
 
@@ -1428,7 +1431,7 @@ aa.db.upd_e =async dat=>
   let merged = aa.db.merge_e(dat);
   if (merged) aa.temp[q_id][dat.event.id] = merged;
 
-  aa.to(aa.db.upd_e_to,2000,q_id);
+  aa.to(aa.db.upd_e_to,500,q_id);
 
   // aa.to(()=>
   // {

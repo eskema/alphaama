@@ -1,4 +1,4 @@
-const indexed_db = {ops:{}};
+const indexed_db = {ops:{},chunks:4444};
 
 indexed_db.ops.stores =async(db,o)=>
 {
@@ -24,7 +24,7 @@ indexed_db.ops.clear =async(db,o)=>
 
 // splits array into chunks of n items
 // returns array of chunks
-indexed_db.chunks =(a,n)=>
+const chunker =(a,n)=>
 {
   const chunks = [];
   for (let i = 0; i < a.length; i += n) chunks.push(a.slice(i,i+n));
@@ -34,10 +34,10 @@ indexed_db.chunks =(a,n)=>
 
 indexed_db.ops.put =async(db,o)=>
 { // o = {store:'',a:[]}
-  const chunks = indexed_db.chunks(o.a,444);
+  const chunks = chunker(o.a,indexed_db.chunks);
+  const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
   for (const chunk of chunks)
   {
-    const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
     for (const item of chunk) odb.put(item)
   }
 };
@@ -180,10 +180,10 @@ const merge =(dis,dat)=>
 
 indexed_db.ops.upd_e =async(db,o)=>
 {
-  const chunks = indexed_db.chunks(o.a,444);
+  const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
+  const chunks = chunker(o.a,indexed_db.chunks);
   for (const chunk of chunks)
   {
-    const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
     for (const item of chunk) // odb.put(item)
     {
       odb.openCursor(item.event.id).onsuccess=e=>
@@ -216,20 +216,37 @@ indexed_db.ops.upd_e =async(db,o)=>
 indexed_db.ops.upd_p =async(db,o)=>
 {
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  for (const item of o.a)
+  const chunks = chunker(o.a,indexed_db.chunks);
+  for (const chunk of chunks)
   {
-    odb.openCursor(item.xpub).onsuccess=e=>
+    for (const item of chunk) // odb.put(item)
     {
-      const cursor = e.target.result; 
-      if (cursor) 
-      { 
-        // console.log('db cursor');
-        const merged = merge(cursor.value,item);
-        if (merged) cursor.update(merged);
+      odb.openCursor(item.xpub).onsuccess=e=>
+      {
+        const cursor = e.target.result; 
+        if (cursor) 
+        { 
+          const merged = merge(cursor.value,item);
+          if (merged) cursor.update(merged);
+        }
+        else odb.put(item)
       }
-      else odb.put(item)
     }
   }
+  // for (const item of o.a)
+  // {
+  //   odb.openCursor(item.xpub).onsuccess=e=>
+  //   {
+  //     const cursor = e.target.result; 
+  //     if (cursor) 
+  //     { 
+  //       // console.log('db cursor');
+  //       const merged = merge(cursor.value,item);
+  //       if (merged) cursor.update(merged);
+  //     }
+  //     else odb.put(item)
+  //   }
+  // }
 };
 
 indexed_db.upg =(e) => 

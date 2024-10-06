@@ -106,15 +106,16 @@
   grid-area: after;
   padding: 1rem var(--padm);
   padding-bottom: 0;
-  /*z-index: 36;*/
+  z-index: 2;
 }
 
-.note.in_path.in_view::after
+.note.in_view::after
 {
   display: block;
   font-size: var(--font-size-s);
   padding: var(--padm);
   text-align: center;
+  z-index: unset;
 }
 
 .root.not_yet > .replies > .note,
@@ -177,7 +178,7 @@
   grid-template-areas: "author id created_at clas";
   grid-template-columns: auto 1fr auto;
   line-height: 1rem;
-  z-index: 5;
+  z-index: 1;
 }
 
 .in_view > .by
@@ -719,7 +720,7 @@ a.author
   grid-area: tags;
   overflow: hidden;
   position: sticky;
-  z-index: 3;
+  
   /*justify-self: end;*/
 }
 
@@ -729,6 +730,7 @@ a.author
   max-height: 50vh;
   overflow-y:  scroll;
   padding-bottom: var(--line);
+  padding-top: var(--line);
 }
 
 .tags_wrapper summary
@@ -777,6 +779,11 @@ a.author
 .replies:not(.expanded) .note:not(.is_new).haz_new_reply > .tags_wrapper
 {
   display: none;
+}
+
+#notes > .note > .tags_wrapper
+{
+  z-index: 3;
 }
 
 
@@ -836,7 +843,13 @@ a.author
   position: relative;
   white-space: pre;
   width: auto;
-  z-index: 3;
+  
+}
+
+#notes > .note > .actions,
+.in_view > .replies > .note > .actions 
+{
+  z-index: 1;
 }
 
 .note > .actions > summary

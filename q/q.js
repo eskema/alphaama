@@ -222,6 +222,7 @@ aa.q.replace_filter_vars =s=>
                 break;
             }
           }
+          if (!o[k].length) return false
         }
     }
   }

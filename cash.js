@@ -66,8 +66,17 @@ addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});
 
 cash.get =async a=> 
 {
+  const results = [];
   const cache = await caches.open(cash.def.id);
-  const results = await cache.matchAll(a);
+  if (!Array.isArray(a)) a = [a];
+  for (const s of a)
+  {
+    let result;
+    const res = await cache.match(s);
+    if (res) result = await res.json();
+    if (result) results.push(result);
+  }
+  
   postMessage(results);
 };
 
@@ -84,6 +93,17 @@ cash.put =async(k,res)=>
   await cache.put(k,res);
 };
 
+cash.put_a =async(o)=>
+{
+  console.log('cash_put_a',);
+  const cache = await caches.open(cash.def.id);
+  for (const k in o) 
+  {
+    await cache.put(k,new Response(o[k],{headers:{'Content-Type':'application/json'}}));
+    // cash.put(k,new Response(o[k],{headers:{'Content-Type':'application/json'}}));
+  }
+};
+
 cash.rm =async key=>
 {
   const cache = await caches.open(cash.def.id);
@@ -93,7 +113,7 @@ cash.rm =async key=>
 cash.clear =async()=>
 {
   const cache = await caches.open(cash.def.id);
-  const results = await cache.matchAll([]);
+  const results = await cache.matchAll();
   for (const res of results) cash.rm(res);
 };
 

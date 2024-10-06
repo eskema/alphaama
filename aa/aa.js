@@ -293,7 +293,7 @@ aa.reset =()=>
     setTimeout(()=>{location.href = location.origin},1000)
   });
 };
-// reset action
+
 aa.actions.push(
 {
   action:['zzz'],
@@ -427,7 +427,7 @@ aa.to =async(f,t,s)=>
 {
   if (!aa.todo) aa.todo = {};
   if (aa.todo.hasOwnProperty(s)) clearTimeout(aa.todo[s]);
-  aa.todo[s] = setTimeout(f,t);
+  aa.todo[s] = setTimeout(()=>{f(s)},t);
 };
 
 

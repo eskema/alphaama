@@ -149,18 +149,19 @@
   font-size: var(--font-size-s);
 }
 
-html:not(.cli_expanded) .l.is_new
+html:not(.cli_expanded) .l.is_new,
+html:not(.cli_expanded) .l:hover
 {
   position: absolute;
   transform: translateY(calc(var(--line)*-1));
 }
 
-html:not(.cli_expanded) .l.is_new:hover
+html:not(.cli_expanded) .l:hover
 {
   z-index: 9;
 }
 
-html:not(.cli_expanded) .l:not(.is_new),
+html:not(.cli_expanded) .l:not(.is_new):not(:hover),
 #l:not(.expanded) .l:not(.is_new)
 {
   display: none;

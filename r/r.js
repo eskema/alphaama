@@ -523,7 +523,7 @@ aa.r.message_type.event =async message=>
       clas:[],
       refs:[]
     };
-    if (aa.miss.e[event.id]) delete aa.miss.e[event.id];
+    
     
     
     if (dat.subs?.length && dat.seen?.length)
@@ -531,11 +531,19 @@ aa.r.message_type.event =async message=>
       let sub = aa.r.active[dat.seen[0]]?.q[dat.subs[0]];
       if (sub && !sub?.stamp || sub?.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
     }
-    setTimeout(()=>
+    if (aa.miss.e[event.id]) 
     {
-      aa.db.upd_e(dat).then(()=>{aa.e.print(dat)});
-      // aa.e.print(dat);
-    },0);
+      delete aa.miss.e[event.id];
+      dat.clas.push('miss');
+    }
+    aa.db.upd_e(dat);
+    aa.e.print(dat);
+    // aa.db.upd_e(dat).then(()=>{aa.e.print(dat)});
+    // setTimeout(()=>
+    // {
+    //   aa.db.upd_e(dat).then(()=>{aa.e.print(dat)});
+    //   // aa.e.print(dat);
+    // },0);
 
   }
   else console.log('invalid event',message);

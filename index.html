@@ -21,13 +21,17 @@ window.addEventListener('load',e=>
   fetch('/README.md?v=2').then(dis=>dis?.text()).then(text=>
   {
     if (!text) return;
-    let content = aa.parse.content(text);
+    let l = aa.mk.l('article',
+    {
+      cla:'content parsed',
+      app:aa.parse.content(text)
+    });
     let title = text.slice(0,text.indexOf('\n'));
     if (title.startsWith('#')) title = title.slice(1).trim();
-    let l = aa.mk.l('article',{cla:'content parsed',app:content});
+    
     let details = aa.mk.details(title,l);
     details.id = 'aa_read_me';
-    document.getElementById('view').prepend(details);
+    document.getElementById('view')?.prepend(details);
   });
 });
 </script>
