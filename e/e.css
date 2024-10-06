@@ -1300,7 +1300,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 #e:not(.expanded) .pagination,
 .viewing .pagination,
-html:not(.pagin) .pagination
+html:not(.needs_pagin) .pagination
 {
   display: none;
 }

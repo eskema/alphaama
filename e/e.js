@@ -9,7 +9,7 @@ events notes
 
 document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/e/e.css'}));
 
-aa.e = {};
+aa.e = {root_count:0};
 
 
 // append note to notes section
@@ -28,6 +28,8 @@ aa.e.append_to_notes =note=>
     const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
     notes.insertBefore(note,last);
   }
+
+  // aa.e.root_count = notes.childNodes.length;
   
   // let butt = document.querySelector('.pagination .butt');
   // if (!butt && notes.childNodes.length > aa.l.dataset.pagination && !butt)
@@ -715,10 +717,8 @@ aa.e.note_rm =note=>
 // restrict amount of root events displayed at once, 
 aa.mk.pagination =()=>  
 {
-  let n = localStorage.pagination;
-  // if (n && parseInt(n))
-  // {
-  aa.l.classList.add('pagin');
+  let n = parseInt(localStorage.pagination??'0');
+  
   const style = aa.mk.l('style',
   {
     id:'e_pagination',
@@ -728,7 +728,8 @@ aa.mk.pagination =()=>
   document.head.append(style);
 
   let pagination = aa.mk.l('p',{cla:'pagination'});
-  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:e=>
+  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',
+  clk:e=>
   {
     if (aa.l.classList.contains('pagin'))
     {
@@ -742,70 +743,59 @@ aa.mk.pagination =()=>
     }
   }});
   pagination.append(butt_more);
+  aa.l.classList.add('pagin');
   return pagination
-  // }
-  // let style = document.getElementById('e_pagination');
-  // if (!style) 
-  // {
-  //   style = aa.mk.l('style',{id:'e_pagination'});
-  //   document.head.append(style);
-  // }
-  // let pagination = aa.mk.l('p',{cla:'pagination'});
-  // let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',clk:aa.e.pagination_upd});
-  // pagination.append(butt_more);
-  // aa.e.pagination_upd({target:butt_more});
-  // return pagination;
 };
 
 // update pagination 
-aa.e.pagination_upd =async e=>
-{
-  let style = document.getElementById('e_pagination');
-  let total = document.getElementById('notes').childNodes.length;
-  if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination;
-  let n = aa.l.dataset.pagination;
-  if (n < total)
-  {
-    if (!aa.l.dataset.pagination) aa.l.dataset.pagination = n;
-    else aa.l.dataset.pagination = n * 2;
-    if (e.target) e.target.textContent = 'moar '+n;
-    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
-    if (n > localStorage.pagination)
-    {
-      setTimeout(()=>
-      {
-        let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
-        if (last) aa.fx.scroll(last)
-      },200);
-    }
-  }
-  else 
-  {
-    if (n > total && e.target.classList.contains('done'))
-    {
-      n = aa.l.dataset.pagination;
-      e.target.textContent = 'moar '+n;
-      e.target.classList.remove('done');
-      e.target.parentElement.classList.remove('hidden');
-    }
-    else if (e.target)
-    {
-      if (n > total) 
-      {
-        // e.target.textContent = 'loading more';
-        e.target.parentElement.classList.add('hidden');
-      }
-      else
-      {
+// aa.e.pagination_upd =async e=>
+// {
+//   let style = document.getElementById('e_pagination');
+//   let total = document.getElementById('notes').childNodes.length;
+//   if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination;
+//   let n = aa.l.dataset.pagination;
+//   if (n < total)
+//   {
+//     if (!aa.l.dataset.pagination) aa.l.dataset.pagination = n;
+//     else aa.l.dataset.pagination = n * 2;
+//     if (e.target) e.target.textContent = 'moar '+n;
+//     style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
+//     if (n > localStorage.pagination)
+//     {
+//       setTimeout(()=>
+//       {
+//         let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
+//         if (last) aa.fx.scroll(last)
+//       },200);
+//     }
+//   }
+//   else 
+//   {
+//     if (n > total && e.target.classList.contains('done'))
+//     {
+//       n = aa.l.dataset.pagination;
+//       e.target.textContent = 'moar '+n;
+//       e.target.classList.remove('done');
+//       e.target.parentElement.classList.remove('hidden');
+//     }
+//     else if (e.target)
+//     {
+//       if (n > total) 
+//       {
+//         // e.target.textContent = 'loading more';
+//         e.target.parentElement.classList.add('hidden');
+//       }
+//       else
+//       {
         
-        e.target.textContent = 'no moar :)';
-      }
+//         e.target.textContent = 'no moar :)';
+//       }
       
-      e.target.classList.add('done');
-    }
-    style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
-  }
-};
+//       e.target.classList.add('done');
+//     }
+//     style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
+//   }
+// };
 
 
 // print event
@@ -1030,6 +1020,18 @@ aa.e.section_mutated =a=>
     const section = mutation.target.closest('section');
     let butt = section.querySelector('section > header > .butt');
     aa.fx.data_count(butt,'.note');
+    aa.e.root_count = mutation.target.childNodes.length;
+    const needs = aa.e.root_count > parseInt(localStorage.pagination||0);
+    if (needs
+    && !aa.l.classList.contains('needs_pagin')) 
+    {
+      aa.l.classList.add('needs_pagin')
+    }
+    else if (!needs 
+    && aa.l.classList.contains('needs_pagin')) 
+    {
+      aa.l.classList.remove('needs_pagin')
+    }
   }
 };
 aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
