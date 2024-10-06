@@ -94,18 +94,6 @@ aa.parse.context =(note,event,trust)=>
   content.classList.toggle('parsed');
   if (content.classList.contains('parsed'))
   {
-    // let parsed_content = aa.parse.content(event.content,trust).outerHTML();
-    // let hashtags = event.tags.filter(t=>t[0]==='t'&&t[1]?.length);
-    // if (hashtags.length)
-    // {
-
-    // }
-    // for (const t of hashtags)
-    // {
-    //   parsed_content.replaceAll(`#${t}`,`<span class"hashtag">#${t}</span>`);
-    //   // let matches = parsed_content.matchAll(`#${t}`);
-    //   // for (const match of matches) 
-    // }
     content.append(aa.parse.content(event.content,trust));
   }
   else content.append(aa.mk.l('p',{cla:'paragraph',con:event.content}));
@@ -151,7 +139,7 @@ aa.parse.hashtag =(match)=>
     con:match[0],
     lab:match[0].slice(1).toLowerCase()
   })
-}
+};
 
 
 // wrapper for aa.parse functions

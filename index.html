@@ -24,7 +24,7 @@ window.addEventListener('load',e=>
     let l = aa.mk.l('article',
     {
       cla:'content parsed',
-      app:aa.parse.content(text)
+      app:aa.parse.content(text,aa.is.trusted(4))
     });
     let title = text.slice(0,text.indexOf('\n'));
     if (title.startsWith('#')) title = title.slice(1).trim();

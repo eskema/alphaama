@@ -1103,15 +1103,14 @@ aa.kinds[1] =dat=>
   let note = aa.e.note(dat);
   
   let reply_tag = aa.get.reply_tag(dat.event.tags);
+  aa.db.get_p(dat.event.pubkey).then(p=>
+  {
+    let score = p ? p.score : 0;
+    aa.parse.context(note,dat.event,aa.is.trusted(score));
+  });
   if (reply_tag && reply_tag.length) aa.e.append_to_replies(dat,note,reply_tag);
   else aa.e.append_to_notes(note);
-  
-  setTimeout(()=>
-  {
-    aa.parse.context(note,dat.event,aa.is.trust_x(dat.event.pubkey));
-    aa.get.pubs(dat.event.tags);
-  },0);
-  
+  aa.get.pubs(dat.event.tags);
   return note
 };
 

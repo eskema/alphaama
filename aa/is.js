@@ -94,7 +94,12 @@ aa.is.trusted =trust=>
 
 
 // returns user trust
-aa.is.trust_x =x=> aa.is.trusted(aa.db.p[x]?.score ?? 0);
+aa.is.trust_x =x=> 
+{
+  let p = aa.db.p[x];
+  if (!p) return false;
+  return aa.is.trusted(p.score);
+}
 
 
 // is hexadecimal
