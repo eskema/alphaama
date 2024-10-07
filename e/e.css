@@ -846,12 +846,6 @@ a.author
   
 }
 
-.note.root > .actions,
-.in_view > .replies > .note > .actions 
-{
-  z-index: 3;
-}
-
 .note > .actions > summary
 {
   line-height: 1.5rem;
@@ -888,6 +882,12 @@ a.author
 .in_view > .actions .butt
 {
   color: rgb(var(--color-d));
+}
+
+.note.root > .actions,
+.in_view > .replies > .note > .actions 
+{
+  z-index: 3;
 }
 
 .view_e .in_path:not(.in_view) > .actions,
