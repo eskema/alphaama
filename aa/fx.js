@@ -257,41 +257,80 @@ aa.fx.path_rm =s=>
   }
 };
 
+aa.fx.pow_a =(id)=>
+{
+  let m = aa.temp.mining[id]
+  if (!m) return;
+
+  m.ww.terminate();
+
+  let log = document.getElementById('pow_log_'+id);
+
+  let note = document.querySelector('.note[data-id="'+id+'"]');
+  if (note) note.classList.remove('mining');
+
+  if (m.ended)
+  {
+    let t = m.ended - m.start;
+    log.textContent = `${m.started} -> done in ${t} ms`;
+  }
+  else 
+  {
+    log.textContent = 'pow aborted';
+  }
+  aa.log_read(log.parentElement);
+};
+
 // proof of work
 aa.fx.pow =async(event,dif)=>
 {
   return new Promise(resolve=>
   {
-    let miner = new Worker('/pow.js');
-    
+    if (!aa.temp.mining) aa.temp.mining = {};
     let start = Date.now(),ended;
-    let start_date = new Date(start);
-    let started = `mining pow (${dif}) started ${start_date}`;
-    const log = aa.mk.l('p',{id:'pow_log_'+start,con:started});
+    
+    const m = aa.temp.mining[event.id] = 
+    {
+      ended:false,
+      dif:dif,
+      start:Date.now(),
+      started:false,
+      ww:new Worker('/pow.js'),
+    };
+
+    m.start_date = new Date(m.start);
+    m.started = `mining pow (${dif}) started ${m.start_date}`;
+    
+    const log = aa.mk.l('p',{id:'pow_log_'+event.id,con:m.started});
+    
     const kill =()=>
     {
-      miner.terminate()
-      if (ended)
-      {
-        let t = ended - start;
-        log.textContent = `${started} -> done in ${t} ms`;
-      }
-      else 
-      {
-        log.textContent = 'pow aborted';
-        let note = document.querySelector('.note[data-id="'+event.id+'"]');
-        if (note) note.classList.remove('mining');
-      }
-      setTimeout(()=>{aa.log_read(log.parentElement)},500);
+      setTimeout(()=>{aa.fx.pow_a(event.id)},200);
     };
+    // const kill =()=>
+    // {
+    //   miner.terminate()
+    //   if (ended)
+    //   {
+    //     let t = ended - start;
+    //     log.textContent = `${started} -> done in ${t} ms`;
+    //   }
+    //   else 
+    //   {
+    //     log.textContent = 'pow aborted';
+    //     let note = document.querySelector('.note[data-id="'+event.id+'"]');
+    //     if (note) note.classList.remove('mining');
+    //   }
+    //   setTimeout(()=>{aa.log_read(log.parentElement)},500);
+    // };
     let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk:kill});
     log.append(butt_cancel);
     aa.log(log);
 
     miner.onmessage =message=>
     {
-      ended = Date.now();
-      setTimeout(kill,200);
+      aa.temp.mining[event.id].ended = Date.now();
+      kill();
       resolve(message.data);
     };
     miner.postMessage({event:event,difficulty:dif});

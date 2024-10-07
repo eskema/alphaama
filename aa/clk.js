@@ -19,13 +19,10 @@ aa.clk.a =e=>
 // cancel event draft
 aa.clk.cancel =e=>
 {
-  // const note = e.target.closest('.note');
-  aa.e.note_rm(e.target.closest('.note'));
-  // const xid = note.dataset.id;
-  // delete aa.db.e[xid];
-  // if (aa.viewing === note.id) aa.state.clear()
-  // note.remove();
-  // aa.fx.data_count(document.getElementById('butt_e'),'.note');
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  if (aa.temp.mining[xid]) aa.fx.pow_a(xid);
+  aa.e.note_rm(note);
 };
 
 
