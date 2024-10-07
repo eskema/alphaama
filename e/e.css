@@ -846,10 +846,10 @@ a.author
   
 }
 
-#notes > .note > .actions,
+.note.root > .actions,
 .in_view > .replies > .note > .actions 
 {
-  z-index: 1;
+  z-index: 3;
 }
 
 .note > .actions > summary

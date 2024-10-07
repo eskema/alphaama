@@ -34,7 +34,7 @@ aa.parse.content =(s,trusted)=>
     const lines = paragraph.trim().split(/\n/);
     for (let li=0;li<lines.length;li++)
     {
-      if (l.childNodes.length > 1) l.append(aa.mk.l('br'));
+      if (l.childNodes.length) l.append(aa.mk.l('br'));
 
       const words = lines[li].trim().split(' ');
       for (let i=0;i<words.length;i++)
