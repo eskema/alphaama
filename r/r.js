@@ -489,10 +489,11 @@ aa.r.message_type.auth =async message=>
 
 
 // ["CLOSED",<sub_id>,<message>]
-aa.r.message_type.closed =async message=> 
+aa.r.message_type.closed =async dis=> 
 {
-  console.log('aa.r.message_type.closed',message)
+  console.log('aa.r.message_type.closed',dis)
 };
+
 
 // ["EOSE",<sub_id>]
 aa.r.message_type.eose =async message=>
@@ -500,12 +501,13 @@ aa.r.message_type.eose =async message=>
   const sub_id = message.data[1];
   let sub = aa.r.active[message.origin].q[sub_id];
   if (!sub) return;
-  if (sub.eose)
+  if (sub.eose && sub.eose === 'close')
   {
-    if(sub.eose === 'close') aa.r.close(message.origin,sub_id);
-  } 
-  else sub.eose = 'done';
+    aa.r.close(message.origin,sub_id);
+  }
+  sub.eose = 'done';
 };
+
 
 // ["EVENT",<sub_id>,<event_data>]
 aa.r.message_type.event =async message=>
@@ -513,9 +515,14 @@ aa.r.message_type.event =async message=>
   const sub_id = message.data[1];
   const event = message.data[2];
 
-  if (aa.fx.verify_event(event)) 
+  let dat = aa.db.e[event.id],is_new;
+  if (dat)
   {
-    const dat = 
+    is_new = aa.fx.a_add(dat.seen,[message.origin]);
+  }
+  else if (aa.fx.verify_event(event)) 
+  {
+    dat = aa.db.e[event.id] = 
     {
       event:event,
       seen:[message.origin],
@@ -523,21 +530,26 @@ aa.r.message_type.event =async message=>
       clas:[],
       refs:[]
     };
-    
-    
-    
-    if (dat.subs?.length && dat.seen?.length)
-    {
-      let sub = aa.r.active[dat.seen[0]]?.q[dat.subs[0]];
-      if (sub && !sub?.stamp || sub?.stamp < dat.event.created_at) sub.stamp = dat.event.created_at;
-    }
+
     if (aa.miss.e[event.id]) 
     {
       delete aa.miss.e[event.id];
       dat.clas.push('miss');
     }
-    aa.db.upd_e(dat);
-    aa.e.print(dat);
+  }
+  else console.log('invalid event',message);
+
+  if (dat)
+  { 
+    let sub = aa.r.active[message.origin]?.q[sub_id];
+    if (sub && (!sub?.stamp 
+    || sub?.stamp < dat.event.created_at)) 
+    sub.stamp = dat.event.created_at;
+
+
+    if (is_new) aa.db.upd_e(dat);
+    aa.e.to_printer(dat);
+
     // aa.db.upd_e(dat).then(()=>{aa.e.print(dat)});
     // setTimeout(()=>
     // {
@@ -546,7 +558,6 @@ aa.r.message_type.event =async message=>
     // },0);
 
   }
-  else console.log('invalid event',message);
 };
 
 // ["NOTICE",,<message>]
@@ -822,7 +833,6 @@ aa.r.ws_message =async e=>
     if (aa.r.message_type.hasOwnProperty(type))
     {
       aa.r.message_type[type]({data:a,origin:e.target.url})
-      // setTimeout(()=>{aa.r.message_type[type]({data:a,origin:e.target.url})},0);
     } 
     else err(e);
   }

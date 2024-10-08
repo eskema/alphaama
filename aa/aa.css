@@ -330,6 +330,11 @@ textarea:focus
   display: none;
 }
 
+.loading
+{
+  animation: loading 1s ease-in-out 0s infinite alternate;
+}
+
 
 /* @end */
 
@@ -587,7 +592,7 @@ li.item > .val
 #view > section > header > .butt 
 {
   color: rgb(var(--color-alt));
-  display: block;
+  /*display: block;*/
   font-size: var(--font-size-s);
   line-height: 1rem;
   padding-bottom: var(--padm);

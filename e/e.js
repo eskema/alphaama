@@ -287,14 +287,14 @@ aa.e.miss_print =tag=>
   });
 };
 
-const nope =(xid,a,b,miss)=>
+const nope =(id,a,b,miss)=>
 {
   for (const url of a) 
   {
     if (!b.includes(url))
     {
       if (!miss[url]) miss[url] = [];
-      aa.fx.a_add(miss[url],[xid]);
+      aa.fx.a_add(miss[url],[id]);
     }
   }
 };
@@ -747,55 +747,31 @@ aa.mk.pagination =()=>
   return pagination
 };
 
-// update pagination 
-// aa.e.pagination_upd =async e=>
-// {
-//   let style = document.getElementById('e_pagination');
-//   let total = document.getElementById('notes').childNodes.length;
-//   if (!aa.l.dataset.pagination) aa.l.dataset.pagination = localStorage.pagination;
-//   let n = aa.l.dataset.pagination;
-//   if (n < total)
-//   {
-//     if (!aa.l.dataset.pagination) aa.l.dataset.pagination = n;
-//     else aa.l.dataset.pagination = n * 2;
-//     if (e.target) e.target.textContent = 'moar '+n;
-//     style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
-//     if (n > localStorage.pagination)
-//     {
-//       setTimeout(()=>
-//       {
-//         let last = document.querySelector('#notes > .note:nth-child('+Math.floor(n/2)+')');
-//         if (last) aa.fx.scroll(last)
-//       },200);
-//     }
-//   }
-//   else 
-//   {
-//     if (n > total && e.target.classList.contains('done'))
-//     {
-//       n = aa.l.dataset.pagination;
-//       e.target.textContent = 'moar '+n;
-//       e.target.classList.remove('done');
-//       e.target.parentElement.classList.remove('hidden');
-//     }
-//     else if (e.target)
-//     {
-//       if (n > total) 
-//       {
-//         // e.target.textContent = 'loading more';
-//         e.target.parentElement.classList.add('hidden');
-//       }
-//       else
-//       {
-        
-//         e.target.textContent = 'no moar :)';
-//       }
-      
-//       e.target.classList.add('done');
-//     }
-//     style.textContent = '#notes > .note:not(:nth-child(-n+'+n+')):not(.in_path){display:none;}';
-//   }
-// };
+
+aa.e.to_printer =dat=>
+{
+  aa.temp.print[dat.event.id] = dat;
+  if (aa.e.root_count === 0) 
+  {
+    aa.log('... incoming events');
+    aa.e.root_count = 1;
+  }
+  aa.to(aa.e.printer,618,'printer');
+};
+
+aa.e.printer =()=>
+{
+  let to_print = Object.values(aa.temp.print);
+  aa.temp.print = {};
+  to_print.sort(aa.fx.sorts.ca_asc);
+  if (aa.e.root_count === 1)
+  {
+    aa.log(to_print.length+' received events')
+  }
+  for (const dat of to_print) setTimeout(()=>{aa.e.print(dat)},0);
+  aa.get.missing('e');
+  aa.get.missing('p');
+};
 
 
 // print event
@@ -812,15 +788,8 @@ aa.e.print =async dat=>
     if (!l) console.log(dat);
     else 
     {
-      // if (!sessionStorage[xid]) l.classList.add('is_new');
-      // else l.classList.remove('is_new');
-      
-      if (l.classList.contains('draft')) aa.fx.scroll(l,{behavior:'smooth',block:'center'});
-      // aa.fx.data_count(document.getElementById('butt_e'),'.note').then(count=>
-      // {
-      //   if (count > parseInt(localStorage.pagination)) aa.l.classList.add('pagin')
-      //   else aa.l.classList.remove('pagin')
-      // });
+      if (l.classList.contains('draft')) 
+      aa.fx.scroll(l,{behavior:'smooth',block:'center'});
     }
   }
   else
@@ -838,33 +807,16 @@ aa.e.print =async dat=>
     }
   }
 
-  if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},200);
+  if (l && history.state?.view === '#'+nid)
+  {
+    setTimeout(()=>{aa.e.view(l)},200);
+  }
 
-
-
-  // setTimeout(()=>
-  // {
-    
-    if (dat.clas.includes('miss')) 
-    {
-      aa.get.quotes(xid);
-    }
-    aa.get.missing('e');
-    aa.get.missing('p');
-    aa.i.d(dat);
-    
-    // aa.to(()=>
-    // {
-    //   aa.fx.data_count(document.getElementById('butt_e'),'.note').then(count=>
-    //   {
-    //     if (count > parseInt(localStorage.pagination)) aa.l.classList.add('pagin')
-    //     else aa.l.classList.remove('pagin')
-    //   });
-    // },500,'e_count');
-  // },0);
-  
-  
-
+  if (dat.clas.includes('miss')) 
+  {
+    aa.get.quotes(xid);
+  }
+  setTimeout(()=>{aa.i.d(dat)},300);
 };
 
 

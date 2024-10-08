@@ -3,6 +3,11 @@
   grid-area: e;
 }
 
+/*.incoming #e > header > [data-count="0"]::after
+{
+  content: "...cactus";
+}*/
+
 .note
 {
   --who: attr(data-who);

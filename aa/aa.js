@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const aa_version = 40;
+const aa_version = 41;
 
 const aa = 
 {
@@ -54,7 +54,7 @@ const aa =
     '/aa/l.css?v='+aa_version,
   ],
   t:{ get now(){ return Math.floor(Date.now()/1000) }},
-  temp:{},
+  temp:{print:{}},
   tools:
   [
     '/aa/is.js?v='+aa_version,

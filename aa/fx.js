@@ -341,25 +341,17 @@ aa.fx.pow =async(event,dif)=>
 // scroll with delay
 aa.fx.scroll =async(l,options={})=>
 {
-  setTimeout(()=>{ if (l) l.scrollIntoView(options) },50);
+  if (l) requestAnimationFrame(()=>{ l.scrollIntoView(options) });
 }; 
 
 
 // scroll stuff
 aa.fx.scrolled =async()=>
 {
-  // aa.ui.last_top = 0;
-  // window.addEventListener('scroll',()=>
-  // {
-    // save scroll direction (vertical)
-  // requestAnimationFrame(()=>
-  // {
-    const new_top = aa.l.scrollTop;
-    if (new_top > aa.ui.last_top) aa.ui.scroll_direction = 'down';
-    else if (new_top < aa.ui.last_top) aa.ui.scroll_direction = 'up';
-    aa.ui.last_top = new_top <= 0 ? 0 : new_top;
-  // });
-  // })
+  const new_top = aa.l.scrollTop;
+  if (new_top > aa.ui.last_top) aa.ui.scroll_direction = 'down';
+  else if (new_top < aa.ui.last_top) aa.ui.scroll_direction = 'up';
+  aa.ui.last_top = new_top <= 0 ? 0 : new_top;
 };
 
 
@@ -416,6 +408,18 @@ aa.fx.sorts =
   {
     let a_val = a.textContent.toLowerCase();
     let b_val = b.textContent.toLowerCase();
+    return a_val < b_val ? 1 : -1
+  },
+  ca_asc(a,b)
+  {
+    let a_val = a.event.created_at;
+    let b_val = b.event.created_at;
+    return a_val > b_val ? 1 : -1
+  },
+  ca_desc(a,b)
+  {
+    let a_val = a.event.created_at;
+    let b_val = b.event.created_at;
     return a_val < b_val ? 1 : -1
   },
 };
