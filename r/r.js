@@ -166,7 +166,7 @@ aa.r.demand =(request,relays,options)=>
   let filters = request.slice(2);
   if (!aa.fx.verify_req_filters(filters))
   {
-    aa.log('aa.r.demand: invalid filter '+JSON.stringify(f));
+    aa.log('aa.r.demand: invalid filter '+JSON.stringify(filters));
     return false
   }
 

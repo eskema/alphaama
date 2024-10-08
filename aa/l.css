@@ -2,6 +2,8 @@
 {
   grid-area: l;
   max-height: 90vh;
+  overflow: hidden;
+  overflow-y: scroll;
   position: relative;
   scrollbar-width: none;
   transition: max-height 1s cubic-bezier(0.87, 0, 0.13, 1);
@@ -10,8 +12,6 @@
 :focus + #l
 {
   max-height: 20vh;
-  overflow: hidden;
-  overflow-y: scroll;
 }
 
 #l > header
