@@ -130,9 +130,6 @@
 .note.out > *:not(.replies),
 
 .note:not(.in_view) > .sig,
-/*.note.in_path:not(.in_view)::after,
-.note.in_path:not(.in_view) > .actions,
-.note.in_path:not(.in_view) > .tags_wrapper,*/
 
 .note[data-kind="1"]:not(.tiny):not(.in_view)::after,
 

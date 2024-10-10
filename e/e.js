@@ -790,7 +790,7 @@ aa.e.print =async dat=>
     {
       if (l.classList.contains('draft'))
       {
-        l.classList.add('in_path');
+        // if (aa.viewing?.startsWith('npub')) l.classList.add('in_path');
         aa.fx.scroll(l,{behavior:'smooth',block:'center'});
       }
       
