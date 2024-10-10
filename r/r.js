@@ -589,7 +589,7 @@ aa.r.message_type.ok =async message=>
         l.classList.remove('not_sent','draft');
         aa.fx.dataset_add(l,'seen',[message.origin]);
         let actions = l.querySelector('.actions');
-        actions.replaceWith(aa.e.note_actions(dat.clas))
+        actions.replaceWith(aa.e.note_actions(dat))
       }
     }
   }

@@ -51,7 +51,8 @@ aa.u.event_mk =s=>
   if (event)
   {
     aa.cli.fuck_off();
-    aa.u.event_draft(aa.u.event_complete(event));
+    let dis = aa.u.event_complete(event);
+    aa.u.event_draft({event:dis,clas:['draft'],seen:[],subs:[]});
   }
 };
 
@@ -69,15 +70,17 @@ aa.u.event_complete =event=>
 
 
 // draft event
-aa.u.event_draft =event=>
+aa.u.event_draft =async dat=>
 {
-  event.tags = [...new Set(event.tags)];
-  if (!event.id) event.id = aa.fx.hash(event);
-  let dat = {event:event,clas:['draft'],seen:[],subs:[]};
-  aa.db.e[event.id] = dat;
+
+  dat.event.tags = [...new Set(dat.event.tags)];
+  if (!dat.event.id) dat.event.id = aa.fx.hash(dat.event);
+  aa.db.e[dat.event.id] = dat;
   aa.e.print(dat);
+  
   let sect = document.getElementById('e');
-  if (sect && !sect.classList.contains('expanded')) aa.clk.expand({target:sect});
+  if (sect && !sect.classList.contains('expanded')) 
+  aa.clk.expand({target:sect});
 };
 
 
@@ -427,7 +430,7 @@ aa.u.mine_note =async(xid,difficulty = 0)=>
         // }
         // delete aa.db.e[xid];
         event = pow_e;
-        aa.u.event_draft(event);
+        aa.u.event_draft({event:event,clas:['draft'],seen:[],subs:[]});
       }
       else aa.log('pow failed')
     }
@@ -703,7 +706,7 @@ aa.kinds[4] =dat=>
   if (u_x === p_x)
   {
     note.classList.add('for_u');
-    content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt'));
+    content.append(aa.mk.butt_action('u decrypt '+dat.event.id,'decrypt','decrypt'));
   }
   return note
 };

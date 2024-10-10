@@ -21,7 +21,7 @@ aa.clk.cancel =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
-  if (aa.temp.mining[xid]) aa.fx.pow_a(xid);
+  if (aa.temp.mining && aa.temp.mining[xid]) aa.fx.pow_a(xid);
   aa.e.note_rm(note);
 };
 
@@ -47,6 +47,23 @@ aa.clk.edit =e=>
   // delete aa.db.e[xid];
 };
 
+// encrypt note
+aa.clk.encrypt =async e=>
+{
+  const note = e.target.closest('.note');
+  const id = note.dataset.id;
+  let dat = aa.db.e[id];
+  let peer = dat.event.tags.find(t=>t[0]==='p')[1];
+  let encrypted = await window.nostr.nip04.encrypt(peer,dat.event.content);
+  let dis = Object.assign({},dat.event);
+  dis.content = encrypted;
+  delete dis.id;
+  if ('sig' in dis) delete dis.sig;
+  note.remove();
+  delete aa.db.e[id];
+  console.log(dis);
+  aa.u.event_draft({event:dis,clas:['draft','encrypted'],seen:[],subs:[]});
+};
 
 // expand 
 aa.clk.expand =e=>
@@ -118,7 +135,8 @@ aa.clk.post =e=>
 // pow event
 aa.clk.pow =e=>
 {
-  aa.cli.v(localStorage.ns+' e pow '+e.target.closest('.note').dataset.id+' '+localStorage.pow);
+  let id = e.target.closest('.note').dataset.id;
+  aa.cli.v(`${localStorage.ns} e pow ${id} ${localStorage.pow}`);
 };
 
 

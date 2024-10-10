@@ -479,18 +479,7 @@ aa.e.note =dat=>
   {
     note.append(aa.mk.l('p',{cla:'sig',con:dat.event.sig}));
   }
-
-  // let replies = aa.mk.details('',false,true);
-  // replies.classList.add('replies');
-  // if (replies_id)
-  // {
-  //   replies.id = replies_id;
-  //   aa.fx.expanded(replies_id,1,replies);
-  // }
-  // let summary = replies.querySelector('summary');
-  // summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
-  note.append(aa.mk.det('replies',replies_id),aa.e.note_actions(dat.clas));  
-  // note.append(replies,aa.e.note_actions(dat.clas));  
+  note.append(aa.mk.det('replies',replies_id),aa.e.note_actions(dat));  
   return note
 };
 
@@ -512,20 +501,31 @@ aa.mk.det =(cla,id=false)=>
 
 
 // note actions
-aa.e.note_actions =clas=>
+aa.e.note_actions =dat=>
 { 
   // const l = aa.mk.l('p',{cla:'actions'});
   const l = aa.mk.details('<3');
   l.classList.add('actions');
   let a = [];
-  if (!clas) clas = [];
-  if (clas.includes('draft')) 
+
+  if (dat.clas.includes('draft')) 
   {
-    a.push('yolo','sign','pow','edit','cancel');
+    switch (dat.event.kind)
+    {
+      case 4: 
+        if (!dat.clas.includes('encrypted'))
+        {
+          a.push('encrypt','edit','cancel');
+          break;
+        }
+        
+      default: 
+        a.push('yolo','sign','pow','edit','cancel');
+    }
     l.setAttribute('open','')
   }
-  else if (clas.includes('not_sent')) a.push('post','cancel');
-  else if (clas.includes('blank')) a.push('fetch','tiny');
+  else if (dat.clas.includes('not_sent')) a.push('post','cancel');
+  else if (dat.clas.includes('blank')) a.push('fetch','tiny');
   else a.push('react','req',['bro','post'],'parse','tiny');
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
@@ -788,8 +788,12 @@ aa.e.print =async dat=>
     if (!l) console.log(dat);
     else 
     {
-      if (l.classList.contains('draft')) 
-      aa.fx.scroll(l,{behavior:'smooth',block:'center'});
+      if (l.classList.contains('draft'))
+      {
+        l.classList.add('in_path');
+        aa.fx.scroll(l,{behavior:'smooth',block:'center'});
+      }
+      
     }
   }
   else

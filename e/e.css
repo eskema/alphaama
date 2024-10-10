@@ -104,7 +104,7 @@
 
 .note::after
 {
-  color: rgb(var(--color-c));;
+  color: rgb(var(--color-d));;
   background: rgb(var(--color-b));
   content: "kind-" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
   font-size: var(--font-size-xs);
@@ -577,8 +577,9 @@ a.author
 .paragraph
 { 
   margin-bottom: 0;
-  padding: 0 var(--pad);
-  padding-top: 0;
+  /*padding: 0 var(--pad);*/
+  /*padding-top: 0;*/
+  padding: var(--pad);
   white-space: pre-wrap;
   word-break: break-all;
 }
@@ -691,9 +692,10 @@ a.author
 
 .hashtag
 {
-  color: rgb(var(--color-main));
+  /*color: rgb(var(--color-main));*/
   /*display: inline-block;*/
   /*font-size: 0;*/
+  font-weight: bold;
 }
 
 /*.hashtag::before
@@ -919,7 +921,7 @@ a.author
   padding-left: 0;
 }
 
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
 .note.out > .replies::after,

@@ -47,7 +47,11 @@ aa.cli.dat_mk =async(s,dis)=>
       created_at:aa.t.now,
       content:s,
       tags:[]
-    }
+    },
+    clas:['draft'],
+    seen:[],
+    subs:[],
+    refs:[],
   };
   
   if (dis)
@@ -68,7 +72,7 @@ aa.cli.dat_mk =async(s,dis)=>
     else if (dis.startsWith('npub'))
     {
       aa.cli.dat.event.kind = 4;
-      aa.cli.dat.event.tags.push(['p',x])
+      aa.cli.dat.event.tags = [['p',x]];
     }
   }
 };
@@ -373,7 +377,7 @@ aa.cli.run =async s=>
         }
       }
       
-      aa.u.event_draft(aa.cli.dat.event);
+      aa.u.event_draft(aa.cli.dat);
       delete aa.cli.dat;
       aa.cli.fuck_off();
     }
