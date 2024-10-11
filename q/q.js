@@ -92,26 +92,18 @@ aa.q.load =()=>
       description:'remove one or more filters',
       exe:aa.q.rm_filter
     },
-    // {
-    //   action:[aa.q.def.id,'sets'],
-    //   required:['set'],
-    //   optional:['fid'],
-    //   description:'create sets of filters',
-    //   exe:aa.q.sets
-    // },
-    // {
-    //   action:[aa.q.def.id,'setrm'],
-    //   required:['set'],
-    //   optional:['fid'],
-    //   description:'remove set from filter',
-    //   exe:aa.q.set_rm
-    // },
     {
       action:[aa.q.def.id,'run'],
       required:['fid'],
       optional:['relset'],
       description:'run filter on relay set (relset), if no relset given default will be used',
       exe:aa.q.run
+    },
+    {
+      action:[aa.q.def.id,'out'],
+      required:['fid'],
+      description:'run filter with outbox',
+      exe:aa.q.out
     },
     {
       action:[aa.q.def.id,'req'],
@@ -162,6 +154,40 @@ aa.q.mk =(k,v) =>
   // l.append(sets);
   return l
 };
+
+
+// run filter with outbox
+aa.q.out =async s=>
+{
+  aa.cli.clear();
+  const tasks = s.split(',');
+  for (const task of tasks)
+  {
+    const a = task.trim().split(' ');
+    let fid,request;
+    if (a.length) fid = a.shift();
+    if (fid && aa.q.o.ls.hasOwnProperty(fid)) 
+    { 
+      let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
+      
+      // wip 
+      
+      console.log(filtered);
+
+      // needs to split up filter into pubkey groups
+      
+      // if (filtered) request = ['REQ',fid,filtered];
+      
+      // if (a.length) rels = a.shift();
+      // let relays = aa.r.rel(rels);
+      // if (!relays.length) relays = aa.r.in_set(aa.r.o.r);
+      // aa.r.demand(request,relays,options);
+      // aa.log(aa.mk.butt_action(aa.q.def.id+' close '+request[1]));
+    } 
+    else aa.log(aa.q.def.id+' run: filter not found');
+  }
+};
+
 
 
 // remove filter

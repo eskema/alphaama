@@ -7,7 +7,8 @@ events notes
 */
 
 
-document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/e/e.css'}));
+document.head.append(aa.mk.l('link',
+{rel:'stylesheet',ref:'/e/e.css'}));
 
 aa.e = {root_count:0};
 
@@ -22,43 +23,25 @@ aa.e.append_to_notes =note=>
     note.classList.add('root','not_yet');
     aa.e.note_observer.observe(note);
   }
-  if (note.classList.contains('blank')) notes.append(note)
+  if (note.classList.contains('blank')) 
+  {
+    notes.append(note)
+  }
   else 
   {
-    const last = [...notes.children].filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
-    notes.insertBefore(note,last);
+    const last = [...notes.children]
+    .filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
+    notes.insertBefore(note,last)
   }
-
-  // aa.e.root_count = notes.childNodes.length;
-  
-  // let butt = document.querySelector('.pagination .butt');
-  // if (!butt && notes.childNodes.length > aa.l.dataset.pagination && !butt)
-  // {
-  //   document.getElementById('e').append(aa.mk.pagination())
-  // }
-
-  // let butt = document.querySelector('.pagination .butt');
-  // if (!butt) document.getElementById('e').append(aa.mk.pagination());
-  // else 
-  // {
-  //   aa.to(()=>
-  //   {
-  //     let n = aa.l.dataset.pagination;
-  //     if (n 
-  //     && butt.classList.contains('done') 
-  //     && document.getElementById('notes').childNodes.length > n
-  //     ) butt.textContent = 'moar dan '+n;
-  //   },300,'pagination');
-  // }
 };
 
 
 // append to another note as reply
 aa.e.append_to_rep =(note,rep)=>
 {
-  const last = [...rep.children].filter(i=> i.tagName === 'ARTICLE' 
+  const last = [...rep.children]
+  .filter(i=> i.tagName === 'ARTICLE' 
   && i.dataset.created_at > note.dataset.created_at)[0];
-  rep.insertBefore(note,last?last:null);
   note.classList.add('reply');
   note.classList.remove('root');
   rep.parentNode.classList.add('haz_reply'); 
@@ -67,6 +50,10 @@ aa.e.append_to_rep =(note,rep)=>
     note.classList.add('is_new');
     rep.parentNode.classList.add('haz_new_reply');
   }
+  // requestAnimationFrame(()=>{
+    rep.insertBefore(note,last?last:null)
+  // });
+
   aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
 };
 
@@ -552,11 +539,11 @@ aa.e.note_by_kind =dat=>
       // return aa.e.note_regular(dat);
       type = 'ephemeral'; break;
     case k >= 30000 && k <= 39999: // replaceable_parameterized
-      // return aa.e.note_replaceable_parameterized(dat);
+      // return aa.e.note_pre(dat);
       type = 'parameterized'; break;
     // default: return aa.e.note_regular(dat);
   }
-  if (type === 'parameterized') return aa.e.note_replaceable_parameterized(dat);
+  if (type === 'parameterized') return aa.e.note_pre(dat);
   else return aa.e.note_regular(dat);
 };
 
@@ -635,7 +622,7 @@ aa.e.note_regular =dat=>
 };
 
 // replaceable parameterized note
-aa.e.note_replaceable_parameterized =dat=>
+aa.e.note_pre =dat=>
 {
   console.log('pre',dat);
   let note = aa.e.note(dat);
@@ -790,15 +777,14 @@ aa.e.print =async dat=>
     {
       if (l.classList.contains('draft'))
       {
-        // if (aa.viewing?.startsWith('npub')) l.classList.add('in_path');
         aa.fx.scroll(l,{behavior:'smooth',block:'center'});
       }
-      
     }
   }
   else
   {
-    if (l.classList.contains('blank') || l.classList.contains('draft')) 
+    if (l.classList.contains('blank') 
+    || l.classList.contains('draft')) 
     {
       aa.e.note_replace(l,dat);
     }
@@ -997,7 +983,7 @@ aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
 aa.e.upd_note_path =(l,stamp,is_u=false)=> 
 {
   let root,updated,og,levels = 0;
-  for (;l && l !== document; l = l.parentNode ) 
+  for (; l && l !== document; l = l.parentNode ) 
   {
     if (l.classList.contains('note')) 
     {
@@ -1022,7 +1008,7 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
     }
 	}
   if (root && updated) aa.e.append_to_notes(root);
-  og.dataset.level = levels;
+  if (og) og.dataset.level = levels;
 }
 
 
@@ -1064,9 +1050,10 @@ aa.kinds[1] =dat=>
     let score = p ? p.score : 0;
     aa.parse.context(note,dat.event,aa.is.trusted(score));
   });
+  aa.get.pubs(dat.event.tags);
   if (reply_tag && reply_tag.length) aa.e.append_to_replies(dat,note,reply_tag);
   else aa.e.append_to_notes(note);
-  aa.get.pubs(dat.event.tags);
+
   return note
 };
 
@@ -1145,7 +1132,20 @@ aa.kinds[9735] = aa.kinds[1];
 aa.kinds[9802] = aa.kinds[1];
 
 // long-form template
-// aa.kinds[30023] = aa.kinds[1];
+aa.kinds[30023] =dat=> // = aa.kinds[1];
+{
+  let note = aa.e.note_pre(dat);
+  
+  aa.db.get_p(dat.event.pubkey).then(p=>
+  {
+    let score = p ? p.score : 0;
+    aa.parse.context(note,dat.event,aa.is.trusted(score));
+  });
+  aa.get.pubs(dat.event.tags);
+
+  return note
+};
+
 
 
 aa.views.note1 =async nid=>
@@ -1260,9 +1260,9 @@ aa.get.tags_for_reply =event=>
 // gets e tag marked 'reply' or the last not marked 'mention'
 aa.get.reply_tag =tags=>
 {
-  let tag = tags.filter(t=>t[0]==='a')[0];
-  if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]==='reply')[0];
+  let tag = tags.filter(t=>t[0]==='e'&&t[3]==='reply')[0];
   if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop();
+  if (!tag) tag = tags.filter(t=>t[0]==='a')[0];
   if (tag) return tag;
   return false
 };
@@ -1385,17 +1385,8 @@ aa.db.upd_e =async dat=>
 {
   const q_id = 'upd_e';
   if (!aa.temp[q_id]) aa.temp[q_id] = {};
-  let merged = aa.db.merge_e(dat);
-  if (merged) aa.temp[q_id][dat.event.id] = merged;
-
+  aa.temp[q_id][dat.event.id] = dat;
   aa.to(aa.db.upd_e_to,500,q_id);
-
-  // aa.to(()=>
-  // {
-  //   const q = Object.values(aa.temp[q_id]);
-  //   aa.temp[q_id] = {};
-  //   if (q.length) aa.db.idb.worker.postMessage({put:{store:'events',a:q}});
-  // },2000,q_id);
 };
 
 

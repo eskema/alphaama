@@ -677,6 +677,7 @@ aa.u.wot =async()=>
   aa.ff = ff;
   let wot = {};
   let sorted = Object.entries(aa.ff).sort((a,b)=>b[1].length - a[1].length);
+  return sorted
   for (const f of sorted)
   {
     let x = f[0];
@@ -686,6 +687,40 @@ aa.u.wot =async()=>
   }
 
   return wot
+};
+
+aa.u.outbox =()=>
+{
+  let relays = {};
+  let outbox = {}
+  for (const x of aa.u.p.follows)
+  {
+    for (const r in aa.db.p[x].relays)
+    {
+      if (!relays[r]) relays[r] = {read:[],write:[],hint:[]};
+      
+      if (aa.db.p[x].relays[r].sets.includes('read')) aa.fx.a_add(relays[r].read,[x]);
+      if (aa.db.p[x].relays[r].sets.includes('write')) aa.fx.a_add(relays[r].write,[x]);
+      if (!aa.db.p[x].relays[r].sets.includes('write')
+      && !aa.db.p[x].relays[r].sets.includes('read')) aa.fx.a_add(relays[r].hint,[x]);
+    }
+  }
+  
+  let r_w = Object.entries(relays).sort((b,a)=>{return a[1].write.length - b[1].write.length});
+  for (const x of aa.u.p.follows)
+  {
+    for (const r of r_w)
+    {
+      if (r[1].write.includes(x)) 
+      {
+        if (!outbox[r[0]]) outbox[r[0]] = [];
+        aa.fx.a_add(outbox[r[0]],[x]);
+        break;
+      }
+    }
+  }
+
+  return Object.entries(outbox).sort((b,a)=>{return a[1].length - b[1].length});
 };
 
 

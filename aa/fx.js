@@ -327,13 +327,13 @@ aa.fx.pow =async(event,dif)=>
     log.append(butt_cancel);
     aa.log(log);
 
-    miner.onmessage =message=>
+    m.ww.onmessage =message=>
     {
       aa.temp.mining[event.id].ended = Date.now();
       kill();
       resolve(message.data);
     };
-    miner.postMessage({event:event,difficulty:dif});
+    m.ww.postMessage({event:event,difficulty:dif});
   });
 };
 
