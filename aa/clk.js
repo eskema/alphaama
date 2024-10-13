@@ -111,9 +111,6 @@ aa.clk.fetch =e=>
 };
 
 
-
-
-
 // toggle parsed content
 aa.clk.parse =e=>
 {
@@ -128,7 +125,14 @@ aa.clk.parse =e=>
 aa.clk.post =e=>
 {
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
-  if (dat) aa.r.broadcast(dat.event);
+  if (dat) 
+  {
+    const r_r = aa.r.in_set(aa.r.o.r);
+    for (const r of r_r)
+    {
+      if (!dat.seen.includes(r)) aa.r.broadcast(dat.event);
+    }
+  }
 };
 
 
@@ -181,23 +185,24 @@ aa.clk.sign =e=>
 };
 
 
+// update elapsed time
 aa.clk.time =e=> 
 {
-  // let timestamp = parseInt(e.target.textContent);
-  // let date = aa.t.to_date(timestamp);
-  e.target.dataset.elapsed = aa.t.elapsed(aa.t.to_date(parseInt(e.target.textContent)));
+  const timestamp = parseInt(e.target.textContent);
+  const date = aa.t.to_date(timestamp);
+  e.target.dataset.elapsed = aa.t.elapsed(date);
 };
+
 
 // make note tiny
 aa.clk.tiny =e=>
 {
   const note = e.target.closest('.note');
   note.classList.toggle('tiny');
-  aa.fx.scroll(note,
-  {
-    behavior:'smooth',
-    block:note.classList.contains('tiny') ? 'start':'center'
-  });
+  const is_tiny = note.classList.contains('tiny');
+  if (is_tiny) sessionStorage[note.dataset.id] = 'tiny';
+  else sessionStorage[note.dataset.id] = '';
+  aa.fx.scroll(note,{behavior:'smooth',block:is_tiny?'start':'center'});
 };
 
 

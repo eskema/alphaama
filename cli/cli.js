@@ -27,10 +27,10 @@ aa.cli.clear =async()=>
 // on cli collapse
 aa.cli.collapse =e=>
 {
-  window.requestAnimationFrame(e=>
+  requestAnimationFrame(e=>
   {
     aa.l.classList.remove('cli_expanded');
-    aa.cli.t.blur()
+    aa.cli.t.blur();
     aa.logs_read();
   });
 };
@@ -96,10 +96,13 @@ aa.cli.dat_upd =async()=>
 // on cli expand
 aa.cli.expand =e=>
 {
-  aa.cli.foc();
-  aa.cli.upd();
-  aa.logs_read();
-  aa.l.classList.add('cli_expanded');
+  requestAnimationFrame(()=>
+  {
+    aa.l.classList.add('cli_expanded');
+    aa.cli.foc();
+    aa.cli.upd();
+    aa.logs_read();
+  })
 };
 
 

@@ -164,15 +164,35 @@ aa.q.out =async s=>
   for (const task of tasks)
   {
     const a = task.trim().split(' ');
-    let fid,request;
-    if (a.length) fid = a.shift();
+    let fid = a.shift();
     if (fid && aa.q.o.ls.hasOwnProperty(fid)) 
     { 
       let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
       
       // wip 
+      let outbox,authors;
+      if (filtered.authors?.length)
+      {
+        outbox = aa.u.outbox(filtered.authors);
+        authors = filtered.authors;
+        delete filtered.authors;
+      }
+
+      if (outbox?.length)
+      {
+        for (const r of outbox)
+        {
+          let filter = {...filtered};
+          filter.authors = r[1];
+          let req = ['REQ',fid,filter];
+          console.log(r[0],req);
+          aa.r.demand(req,[r[0]],options);
+        }
+        aa.log(aa.mk.butt_action(aa.q.def.id+' close '+fid));
+      }
       
-      console.log(filtered);
+      // console.log(filtered,outbox);
+
 
       // needs to split up filter into pubkey groups
       
@@ -182,7 +202,7 @@ aa.q.out =async s=>
       // let relays = aa.r.rel(rels);
       // if (!relays.length) relays = aa.r.in_set(aa.r.o.r);
       // aa.r.demand(request,relays,options);
-      // aa.log(aa.mk.butt_action(aa.q.def.id+' close '+request[1]));
+      
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
   }

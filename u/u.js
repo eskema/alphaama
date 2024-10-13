@@ -689,25 +689,68 @@ aa.u.wot =async()=>
   return wot
 };
 
-aa.u.outbox =()=>
+aa.u.outbox =(a=[])=>
 {
+  if (!a?.length) return [];
   let relays = {};
-  let outbox = {}
-  for (const x of aa.u.p.follows)
+  let outbox = {};
+  let offed = aa.r.in_set('off');
+
+  for (const x of a)
   {
-    for (const r in aa.db.p[x].relays)
+    let p_relays = aa.db.p[x]?.relays;
+    let has_relays = Object.keys(p_relays);
+    let has_write;
+    if (has_relays.length)
     {
-      if (!relays[r]) relays[r] = {read:[],write:[],hint:[]};
-      
-      if (aa.db.p[x].relays[r].sets.includes('read')) aa.fx.a_add(relays[r].read,[x]);
-      if (aa.db.p[x].relays[r].sets.includes('write')) aa.fx.a_add(relays[r].write,[x]);
-      if (!aa.db.p[x].relays[r].sets.includes('write')
-      && !aa.db.p[x].relays[r].sets.includes('read')) aa.fx.a_add(relays[r].hint,[x]);
+      for (const r in p_relays)
+      {
+        if (offed.includes(r)) continue;
+        if (!relays[r]) relays[r] = {read:[],write:[],hint:[]};
+        let rel = p_relays[r];
+        
+        // if (rel.sets.includes('read')) aa.fx.a_add(relays[r].read,[x]);
+        if (rel.sets.includes('write')) 
+        {
+          aa.fx.a_add(relays[r].write,[x]);
+          has_write = true;
+        }
+        else 
+        {
+          if (!rel.sets.includes('read')) aa.fx.a_add(relays[r].write,[x]);
+        }
+        // if (!rel.sets.includes('write') 
+        // && !rel.sets.includes('read')) aa.fx.a_add(relays[r].hint,[x]);
+      }
     }
+
+
+    if (!has_write)
+    {
+      for (const r of aa.r.in_set(aa.r.o.r))
+      {
+        if (!relays[r]) relays[r] = {read:[],write:[],hint:[]};
+        aa.fx.a_add(relays[r].write,[x]);
+      }
+    }
+
+    // for (const r in aa.db.p[x].relays)
+    // {
+    //   if (!relays[r]) relays[r] = {read:[],write:[],hint:[]};
+      
+    //   if (aa.db.p[x].relays[r].sets.includes('read')) 
+    //     aa.fx.a_add(relays[r].read,[x]);
+    //   if (aa.db.p[x].relays[r].sets.includes('write')) 
+    //     aa.fx.a_add(relays[r].write,[x]);
+    //   if (!aa.db.p[x].relays[r].sets.includes('write')
+    //   && !aa.db.p[x].relays[r].sets.includes('read')) 
+    //     aa.fx.a_add(relays[r].hint,[x]);
+    // }
   }
   
-  let r_w = Object.entries(relays).sort((b,a)=>{return a[1].write.length - b[1].write.length});
-  for (const x of aa.u.p.follows)
+  let r_w = Object.entries(relays)
+  .sort((b,a)=>{return a[1].write.length - b[1].write.length});
+  for (const x of a)
   {
     for (const r of r_w)
     {
@@ -719,8 +762,10 @@ aa.u.outbox =()=>
       }
     }
   }
-
-  return Object.entries(outbox).sort((b,a)=>{return a[1].length - b[1].length});
+  let sorted_outbox = Object.entries(outbox)
+  .sort((b,a)=>{return a[1].length - b[1].length});
+  console.log(sorted_outbox);
+  return sorted_outbox;
 };
 
 

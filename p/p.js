@@ -367,7 +367,7 @@ aa.p.load =()=>
       action:['p','view'],
       required:['hex_pub'],
       description:'view profile by hex pubkey',
-      exe:(s)=>{ aa.state.view(aa.fx.encode('npub',s)) }
+      exe:(s)=>{ aa.state.view('#'+aa.fx.encode('npub',s)) }
     },
     {
       action:['p','score'],
@@ -659,34 +659,32 @@ aa.p.p_link_data =p=>
 // update link
 aa.p.p_link_data_upd =async(l,o)=>
 {
-  
-    // name
-    
-    let name = l.querySelector('.name');
-    if (!name) console.log(l);
-    if (name.textContent !== o.name) name.textContent = o.name;
-    if (!name.childNodes.length) name.classList.add('empty');
-    else name.classList.remove('empty');
-    // petname
-    if (o.petname) name.dataset.petname = o.petname;
-    // picture
-    aa.p.p_link_pic(l,o.src);
-    // nip05
-    if (o.nip05) 
+  // name
+  let name = l.querySelector('.name');
+  if (!name) console.log(l);
+  if (name.textContent !== o.name) name.textContent = o.name;
+  if (!name.childNodes.length) name.classList.add('empty');
+  else name.classList.remove('empty');
+  // petname
+  if (o.petname) name.dataset.petname = o.petname;
+  // picture
+  aa.p.p_link_pic(l,o.src);
+  // nip05
+  if (o.nip05) 
+  {
+    l.dataset.nip05 = o.nip05;
+    name.dataset.nip05 = o.nip05;
+    if (o.verified) 
     {
-      l.dataset.nip05 = o.nip05;
-      name.dataset.nip05 = o.nip05;
-      if (o.verified) 
-      {
-        l.dataset.verified = o.verified[0];
-        l.dataset.verified_on = o.verified[1];
-        name.dataset.verified = o.verified[0];
-        name.dataset.verified_on = o.verified[1];
-      }
+      l.dataset.verified = o.verified[0];
+      l.dataset.verified_on = o.verified[1];
+      name.dataset.verified = o.verified[0];
+      name.dataset.verified_on = o.verified[1];
     }
-    l.classList.add(...o.class_add);
-    l.classList.remove(...o.class_rm);
-    l.dataset.followers = o.followers;
+  }
+  l.classList.add(...o.class_add);
+  l.classList.remove(...o.class_rm);
+  l.dataset.followers = o.followers;
 };
 
 

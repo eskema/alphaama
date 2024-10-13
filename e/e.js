@@ -168,7 +168,7 @@ aa.e.load =()=>
       action:['e','view'],
       required:['hex_id'],
       description:'view event by hex_id',
-      exe:(s)=>{ aa.state.view(aa.fx.encode('nid',s)) }
+      exe:(s)=>{ aa.state.view('#'+aa.fx.encode('nid',s)) }
     },
     {
       action:['db','some'],
@@ -206,7 +206,7 @@ aa.clk.mark_read =e=>
     for (const l of new_stuff) 
     {
       sessionStorage[l.dataset.id] = 'is_read';
-      window.requestAnimationFrame(e=>
+      requestAnimationFrame(e=>
       {
         l.classList.remove(...classes);
       });
@@ -214,7 +214,7 @@ aa.clk.mark_read =e=>
     if (replies.classList.contains('expanded')) 
     {
       sessionStorage[replies.id] = '';
-      window.requestAnimationFrame(e=>
+      requestAnimationFrame(e=>
       {
         replies.classList.remove('expanded');
       });
@@ -225,7 +225,7 @@ aa.clk.mark_read =e=>
     if (replies.classList.contains('expanded')) 
     {
       sessionStorage[replies.id] = '';
-      window.requestAnimationFrame(e=>
+      requestAnimationFrame(e=>
       {
         replies.classList.remove('expanded');
       });
@@ -234,7 +234,7 @@ aa.clk.mark_read =e=>
     else 
     {
       sessionStorage[replies.id] = 'expanded';
-      window.requestAnimationFrame(e=>
+      requestAnimationFrame(e=>
       {
         replies.classList.add('expanded');
       });
@@ -391,7 +391,7 @@ aa.parse.nostr =(match)=>
 // make generic note element
 aa.e.note =dat=>
 {
-  const note = aa.mk.l('article',{cla:'note'}); 
+  const note = aa.mk.l('article',{cla:'note'});
   const by = aa.mk.l('header',{cla:'by'});
   
   note.append(by);
@@ -417,6 +417,9 @@ aa.e.note =dat=>
     h1.append(h1_nid,h1_xid);
     by.prepend(h1);
     replies_id = dat.event.id+'_replies';
+    
+    let stored = sessionStorage[dat.event.id];
+    if (stored && stored === 'tiny') note.classList.add('tiny');
   }
 
   if ('pubkey' in dat.event)
@@ -440,9 +443,11 @@ aa.e.note =dat=>
 
   if ('created_at' in dat.event)
   {
-    note.dataset.created_at = dat.event.created_at;
-    note.dataset.stamp = dat.event.created_at;
-    by.append(aa.mk.time(dat.event.created_at));
+    let ca = dat.event.created_at;
+    let stamp = aa.t.now < ca ? aa.t.now : ca
+    note.dataset.created_at = ca;
+    note.dataset.stamp = stamp;
+    by.append(aa.mk.time(ca));
   }
 
   if ('tags' in dat.event && dat.event.tags.length)
@@ -1021,6 +1026,7 @@ aa.e.view =l=>
     if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
     aa.l.classList.add('viewing','view_e');
     l.classList.add('in_view');
+    aa.clk.time({target:l.querySelector('.by .created_at')});
     aa.fx.scroll(l);
   })
 };

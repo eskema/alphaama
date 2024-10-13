@@ -22,6 +22,7 @@
   "content  content"
   "opentags opentags"
   "tags     actions"
+  "versions versions"
   "after    after"
   "replies  replies"
   ;
@@ -36,6 +37,7 @@
 .note.root.solo,
 .note.root:not(.in_path),
 .note.in_view > .replies > .note,
+.versions > .note,
 .haz_solo .note.root.in_path:not(.in_view):not(.tiny),
 #notes > .note:not(.root):not(.in_path)
 {
@@ -45,6 +47,7 @@
   "content  content  replies"
   "opentags opentags replies"
   "tags     actions  replies"
+  "versions versions versions"
   "sig      sig      sig"
   "after    after    after"
   ;
@@ -1311,6 +1314,15 @@ html:not(.needs_pagin) .pagination
 
 /* @end */
 
+/* @group versions */
+
+.note > .versions
+{
+  grid-area: versions;
+  overflow: hidden;
+}
+
+/* @end */
 
 .sig 
 {

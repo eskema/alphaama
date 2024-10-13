@@ -112,6 +112,7 @@ aa.state.view =(s,search='')=>
   if (s?.length) s.trim();
   if (search?.length) search = s.length?'?'+search:search;
   let ss = s+search;
+  // if (ss !== '/' && !ss.startsWith('#')) ss = '#'+ss;
   if (!history.state || history.state.view !== ss)
   {
     const last = history.state&&history.state.view?history.state.view:'';
