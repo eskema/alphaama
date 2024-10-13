@@ -715,10 +715,10 @@ aa.u.outbox =(a=[])=>
           aa.fx.a_add(relays[r].write,[x]);
           has_write = true;
         }
-        else 
-        {
-          if (!rel.sets.includes('read')) aa.fx.a_add(relays[r].write,[x]);
-        }
+        // else 
+        // {
+        //   if (!rel.sets.includes('read')) aa.fx.a_add(relays[r].write,[x]);
+        // }
         // if (!rel.sets.includes('write') 
         // && !rel.sets.includes('read')) aa.fx.a_add(relays[r].hint,[x]);
       }
