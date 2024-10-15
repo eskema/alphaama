@@ -546,7 +546,7 @@ aa.r.message_type.event =async message=>
     || sub?.stamp < dat.event.created_at)) 
     sub.stamp = dat.event.created_at;
 
-    if (is_new) aa.db.upd_e(dat);
+    aa.db.upd_e(dat);
     aa.e.to_printer(dat);
   }
 };

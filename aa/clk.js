@@ -127,11 +127,13 @@ aa.clk.post =e=>
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
   if (dat) 
   {
-    const r_r = aa.r.in_set(aa.r.o.r);
-    for (const r of r_r)
-    {
-      if (!dat.seen.includes(r)) aa.r.broadcast(dat.event);
-    }
+    let relays = aa.r.in_set(aa.r.o.r).filter(r=>!dat.seen.includes(r));
+    aa.r.broadcast(dat.event,relays)
+    // r_r = aa.r.in_set(aa.r.o.r);
+    // for (const r of r_r)
+    // {
+    //   if (!dat.seen.includes(r)) aa.r.broadcast(dat.event,[]);
+    // }
   }
 };
 
@@ -167,7 +169,7 @@ aa.clk.req =e=>
 aa.clk.sign =e=>
 {
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
-  if (dat)
+  if (dat && !dat.event.sig)
   {
     aa.u.sign(dat.event).then(signed=>
     {
@@ -225,8 +227,15 @@ aa.clk.yolo =async e=>
       dat.event = signed;
       dat.clas = aa.fx.a_rm(dat.clas,['draft']);
       aa.fx.a_add(dat.clas,['not_sent']);
-      aa.r.broadcast(dat.event);
-    }      
+      let pubs = aa.p.authors_from_tags(dat.event.tags);
+      let relays = aa.r.in_set(aa.r.o.w);
+      relays.push(...aa.u.outbox(pubs,1))
+      relays = new Set(relays);
+      // let relays = aa.u.outbox(pubs,1);
+      console.log(dat.event,relays);
+
+      // aa.r.broadcast(dat.event,relays);
+    }
   })
 };
 

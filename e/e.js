@@ -44,6 +44,7 @@ aa.e.append_to_rep =(note,rep)=>
   && i.dataset.created_at > note.dataset.created_at)[0];
   note.classList.add('reply');
   note.classList.remove('root');
+  if (note.classList.contains('in_path')) rep.parentNode.classList.add('in_path')
   rep.parentNode.classList.add('haz_reply'); 
   if (!sessionStorage[note.dataset.id]) 
   {
@@ -250,7 +251,7 @@ aa.clk.mark_read =e=>
 
 
 // add event id to missing event list
-aa.e.miss_e =(xid,relays)=>
+aa.e.miss_e =(xid,relays=[])=>
 {
   if (!aa.miss.e[xid]) aa.miss.e[xid] = {nope:[],relays:[]};
   for (const rel of relays)
@@ -266,11 +267,12 @@ aa.e.miss_e =(xid,relays)=>
 aa.e.miss_print =tag=>
 {
   const xid = tag[1];
-  const relay = tag[2];
+  const relays = [];
+  if (tag[2]) relays.push(tag[2]);
   aa.db.get_e(xid).then(dat=>
   {
     if (dat) aa.e.print(dat);
-    else aa.e.miss_e(xid,[relay]);
+    else aa.e.miss_e(xid,relays);
   });
 };
 
@@ -426,13 +428,13 @@ aa.e.note =dat=>
   {
     const x = dat.event.pubkey;
     note.dataset.pubkey = x;
-    by.append(aa.mk.p_link(dat.event.pubkey));
     aa.db.get_p(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
       if (!p) p = aa.p.p(x);
       aa.fx.color(x,note);
       note.dataset.trust = p.score;
+      by.append(aa.mk.p_link(dat.event.pubkey));
     });
   }
   
@@ -668,15 +670,24 @@ aa.e.note_replace =(l,dat)=>
   let b = aa.e.note_by_kind(dat);
   let b_rep = b.querySelector('.replies');
   let childs = l.querySelector('.replies').childNodes;
+  let in_path;
   if (childs.length)
   {
-    for (const c of childs) if (c.tagName === 'ARTICLE') aa.e.append_to_rep(c,b_rep);
+    for (const c of childs) 
+    {
+      if (c.tagName === 'ARTICLE') 
+      {
+        aa.e.append_to_rep(c,b_rep);
+        if (c.classList.contains('in_path')) in_path = true;
+      }
+    }
   }
   let is_root = b.classList.contains('root');
   let is_reply = b.classList.contains('reply');
   b.className = l.className;
   l.remove();
   b.classList.remove('blank','tiny','draft','not_sent');
+  if (in_path) b.classList.add('in_path');
   if (!sessionStorage.getItem(dat.event.id)) b.classList.add('is_new');
   else b.classList.remove('is_new');
   if (dat.clas) b.classList.add(...dat.clas);
@@ -809,6 +820,7 @@ aa.e.print =async dat=>
 
   if (dat.clas.includes('miss')) 
   {
+    dat.clas = aa.fx.a_rm(dat.clas,['miss']);
     aa.get.quotes(xid);
   }
   setTimeout(()=>{aa.i.d(dat)},300);
@@ -1020,15 +1032,16 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
 // view event
 aa.e.view =l=>
 {
-  requestAnimationFrame(()=>
-  {
+  // requestAnimationFrame(()=>
+  // {
     aa.fx.path(l);
     if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
     aa.l.classList.add('viewing','view_e');
     l.classList.add('in_view');
-    aa.clk.time({target:l.querySelector('.by .created_at')});
+    let t = l.querySelector('.by .created_at');
+    if (t) aa.clk.time({target:t});
     aa.fx.scroll(l);
-  })
+  // })
 };
 
 
@@ -1168,7 +1181,9 @@ aa.views.note1 =async nid=>
     {
       let blank = aa.e.note({event:{id:x},clas:['blank','root']});
       aa.e.append_to_notes(blank);
-      aa.e.view(blank);
+      aa.e.miss_e(x);
+      aa.get.missing('e');
+      setTimeout(()=>{aa.e.view(blank)},500);
     }
   }
 };
