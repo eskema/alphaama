@@ -271,7 +271,7 @@ aa.e.miss_print =tag=>
   if (tag[2]) relays.push(tag[2]);
   aa.db.get_e(xid).then(dat=>
   {
-    if (dat) aa.e.print(dat);
+    if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
     else aa.e.miss_e(xid,relays);
   });
 };
@@ -1095,7 +1095,7 @@ aa.kinds[6] =dat=>
           let repost = aa.parse.j(dat.event.content);
           if (repost) aa.r.message_type.event({data:['EVENT','k6',repost],origin:dat.seen[0]});
         }
-        else aa.e.print(dat_e);
+        else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
       });
       
     }
@@ -1176,7 +1176,7 @@ aa.views.note1 =async nid=>
   {
     let x = aa.fx.decode(nid);
     let dat = await aa.db.get_e(x);
-    if (dat) aa.e.print(dat);
+    if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
     else 
     {
       let blank = aa.e.note({event:{id:x},clas:['blank','root']});
@@ -1204,7 +1204,7 @@ aa.views.nevent1 =async nevent=>
     if (!l)
     {
       let dat = await aa.db.get_e(data.id);
-      if (dat) aa.e.print(dat);
+      if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
       else 
       {
         dat = 
@@ -1427,7 +1427,7 @@ aa.db.some =async s=>
   aa.log(localStorage.ns+' db some '+db_op.n);
 
   const events = await aa.db.get('idb',o);
-  for (const dat of events) aa.e.print(dat);
+  for (const dat of events) aa.e.to_printer(dat); //aa.e.print(dat);
 };
 
 

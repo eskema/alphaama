@@ -692,18 +692,20 @@ aa.u.wot =async()=>
 aa.u.outbox =(a=[],b)=>
 {
   let set1 = b?'read':'write';
+  console.log(set1);
   let set2 = b?'write':'read';
   if (!a?.length) return [];
   let relays = {};
   let outbox = {};
-  let offed = aa.r.in_set('off');
+  let offed = aa.r.in_set('off',0);
 
   for (const x of a)
   {
-    let p_relays = aa.db.p[x]?.relays;
-    let has_relays = Object.keys(p_relays);
+    const p_relays = aa.db.p[x]?.relays;
+    const has_relays = Object.keys(p_relays).length;
+    console.log(has_relays);
     let has_set;
-    if (has_relays.length)
+    if (has_relays)
     {
       for (const r in p_relays)
       {
@@ -729,9 +731,12 @@ aa.u.outbox =(a=[],b)=>
       }
     }
   }
+
+  console.log(relays);
   
   let r_w = Object.entries(relays)
   .sort((b,a)=>{return a[1].length - b[1].length});
+  console.log(r_w);
   for (const x of a)
   {
     for (const r of r_w)
@@ -746,7 +751,7 @@ aa.u.outbox =(a=[],b)=>
   }
   let sorted_outbox = Object.entries(outbox)
   .sort((b,a)=>{return a[1].length - b[1].length});
-  console.log(sorted_outbox);
+  // console.log(sorted_outbox);
   return sorted_outbox;
 };
 

@@ -102,7 +102,7 @@ aa.p.actions =p=>
     let follow_con = aa.u.is_following(p.xpub)?'unfollow':'follow';
     a.push([follow_con,'p_follow']);
   }
-  a.push(['refresh','p_refresh']);
+  a.push(['get_notes','p_req'],['refresh','p_refresh']);
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
 };
@@ -912,17 +912,7 @@ aa.p.save_to =()=>
   // let times = 0;
   for (const chunk of chunks)
   {
-    // aa.db.cash.worker.postMessage({put:{store:'authors',a:chunk}})
     aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}})
-    // setTimeout(()=>
-    // { aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}}) },
-    // times * 0);
-    // times++;
-    // requestAnimationFrame(()=>
-    // {
-      // for (const p of chunk) aa.p.p_links_upd(p);
-    // });
-    // for (const p of chunk) requestAnimationFrame(()=>{aa.p.p_links_upd(p);});
   }
   // for (const p of a) requestAnimationFrame(()=>{aa.p.p_links_upd(p);});
 };
@@ -1085,12 +1075,13 @@ aa.kinds[0] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
-  aa.db.get_p(dat.event.pubkey).then(p=>
+  let x = dat.event.pubkey;
+  aa.db.get_p(x).then(p=>
   {
-    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (!p) p = aa.p.p(x);
     if (aa.p.new_replaceable(p,dat.event))
     {
-      if (aa.miss.p[dat.event.pubkey]) delete aa.miss.p[dat.event.pubkey];
+      if (aa.miss.p[x]) delete aa.miss.p[x];
       
       let metadata = aa.parse.j(dat.event.content);
       if (metadata)
@@ -1151,7 +1142,7 @@ aa.kinds[3] =dat=>
       //     content.append(aa.mk.ls({ls:con}))
       //   }
       // }
-      // aa.p.save(p)
+      aa.p.save(p)
     }
   });
   return note
@@ -1172,7 +1163,7 @@ aa.kinds[10002] =dat=>
       let relays = aa.r.from_tags(dat.event.tags,['k10002']);
       aa.p.relays_add(relays,p);
       if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-      aa.p.save(p)
+      aa.p.save(p);
     }
     // let profile = document.getElementById(p.npub);
     // if (!profile) profile = aa.p.profile(p);
@@ -1208,7 +1199,6 @@ aa.views.npub1 =async npub=>
   const k_v = k+'_'+aa.fx.an(v);
   aa.p.viewing = [items,k_v];
   aa.i.filter_solo_apply(items,k_v);
-  
 };
 
 // view for nprofile

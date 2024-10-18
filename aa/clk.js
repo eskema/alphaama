@@ -111,6 +111,21 @@ aa.clk.fetch =e=>
 };
 
 
+// request notes from profile
+aa.clk.p_req =e=>
+{
+  const profile = e.target.closest('.profile');
+  const xid = profile?.dataset.xpub;
+  const p = aa.db.p[xid];
+  const filter = `{"authors":["${p.xpub}"],"kinds":[1],"limit":100}`;
+  let relay = p.relay;
+  if (!relay && p.relays.length) 
+  relay = p.relays.filter(r=>r.sets.includes('write'))[0];
+  if (!relay) relay = 'read';
+  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req ${relay} ${filter}`);
+};
+
+
 // toggle parsed content
 aa.clk.parse =e=>
 {
