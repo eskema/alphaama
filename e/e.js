@@ -197,6 +197,7 @@ aa.e.load =()=>
 aa.clk.mark_read =e=>
 {
   e.stopPropagation();
+  
   const replies = e.target.closest('.replies');
   const mom = e.target.closest('.note');
   let classes = ['haz_new_reply','haz_new','is_new']
@@ -242,6 +243,8 @@ aa.clk.mark_read =e=>
       });
     }
   }
+  let top = mom.offsetTop + (3 * parseFloat(getComputedStyle(document.documentElement).fontSize));
+  if (top < aa.l.scrollTop) aa.l.scrollTo(0,top);
 };
 
 
