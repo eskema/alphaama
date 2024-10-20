@@ -110,22 +110,32 @@
   white-space: pre;
 }
 
-#l .relay::before
+#l .relay::after
 {
   content: "(" attr(data-state) ") " attr(data-q);
   margin-right: var(--pad);
 }
 
-#l .relay[data-state="1"]::before
+#l .relay[data-state="1"]::after
 {
   color: rgb(var(--color-yes));
   opacity: .7;
 }
 
-#l .relay[data-state="3"]::before
+#l .relay[data-state="3"]::after
 {
   color: rgb(var(--color-no));
   opacity: .7;
+}
+
+#l .relay .add
+{
+  grid-area: bef;
+}
+
+#l .relay .rm
+{
+  grid-area: aft;
 }
 
 .cli_expanded #l

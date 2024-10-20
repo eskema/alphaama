@@ -242,12 +242,6 @@ aa.clk.mark_read =e=>
       });
     }
   }
-
-  aa.fx.scroll(replies,
-  {
-    behavior:'smooth',
-    block:replies.classList.contains('expanded') ? 'start':'center'
-  });
 };
 
 
@@ -658,7 +652,9 @@ aa.e.note_pre =dat=>
     }
     else 
     {
-      note.append(aa.mk.det('versions'))
+      let details = aa.mk.details('versions',false,true);
+      details.classList.add('versions');
+      note.append(details);
       aa.e.append_to_notes(note);
     }
   }

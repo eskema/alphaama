@@ -97,8 +97,8 @@ aa.r.butts =(l,o)=>
       sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+url+' '+set,set),' ')
     }
   }
-  sets.append(aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+'));
-  l.append(' ',sets);
+  // sets.append(aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+'));
+  l.append(' ',sets,' ',aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+','add'));
 };
 
 

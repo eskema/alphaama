@@ -1320,6 +1320,14 @@ html:not(.needs_pagin) .pagination
 {
   grid-area: versions;
   overflow: hidden;
+  background: red;
+  position: relative;
+  z-index: 4;
+}
+
+.versions > summary
+{
+  font-size: 0!important;
 }
 
 /* @end */

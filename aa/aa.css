@@ -321,6 +321,7 @@ textarea
   min-width: 2rem;
 }
 
+select:focus,
 input[type=text]:focus,
 input[type=number]:focus,
 textarea:focus
@@ -410,7 +411,7 @@ textarea:focus
 .item 
 {
   display: grid;
-  grid-template-areas: "bef k v aft";
+  grid-template-areas: "bef k v s aft";
   grid-template-columns: auto auto 1fr auto;
   justify-items: start;
   padding: 0 var(--pad);
@@ -442,7 +443,7 @@ li.item > .val
 
 .item .sets
 {
-  grid-area: aft;
+  grid-area: s;
 }
 
 .item .sets .butt
@@ -452,7 +453,8 @@ li.item > .val
 
 .item .rm 
 {
-  grid-area: bef;
+  color: rgb(var(--color-no));
+  /*grid-area: bef;*/
 }
 
 .relay .url 
@@ -468,24 +470,30 @@ li.item > .val
   opacity: .6;
 }
 
-.relay[data-sets]::after 
+.relay[data-sets]::before 
 {
   content: attr(data-sets);
   grid-area: aft;
   margin-right: var(--pad);
 }
 
-#r .relay[data-sets]::after 
+#r .relay[data-sets]::before
 {
   display: none;
 }
 
 .item > details[open] > summary
 {
+  color: rgb(var(--color-main));
   /*font-size: var(--font-size);*/
 }
 
 .item > details:not([open]) > summary::before
+{
+  content: "[";
+}
+
+.item > details > summary::before
 {
   content: "[";
 }
@@ -495,21 +503,27 @@ li.item > .val
   content: "]";
 }
 
-.item > details[open]::after,
+/*.item > details[open]::after,
 .item > details.empty > summary::before,
 .item > details[open] > summary::before
 {
-  content: "";
-}
+  /*content: "";*!/
+}*/
 
-.item > details[open] > summary::after 
+/*.item > details[open] > summary::after 
 {
-  content: ":";
-}
+  content: "]:";
+}*/
 
 .item > details.empty > summary::after 
 {
   content: " empty";
+}
+
+#q .item 
+{
+  grid-template-areas: "bef s k v aft";
+  grid-template-columns: auto auto auto 1fr auto;
 }
 
 /* @end */

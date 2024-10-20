@@ -132,26 +132,16 @@ aa.q.load =()=>
 aa.q.mk =(k,v) =>
 {
   k = aa.fx.an(k);  
-  const l = aa.mk.l('li',{id:aa.q.def.id+'_'+k,cla:'item filter'});
-  l.append(
-    aa.mk.butt_action(aa.q.def.id+' run '+k,k,'key'),
-    ' ',
-    aa.mk.l('span',{cla:'val',con:v.v}),
-    ' ',
-    aa.mk.butt_action(aa.q.def.id+' rm ' + k,'rm','rm'),
-  );
-  // let sets = aa.mk.l('span',{cla:'sets'});
-  // if (v.sets && v.sets.length)
-  // {
-  //   l.dataset.sets = v.sets; 
-  //   for (const set of v.sets)
-  //   {
-  //     sets.append(aa.mk.butt_action(aa.q.def.id+' setrm '+set+' '+k,set))
-  //   }
-  // }
-  // sets.append(aa.mk.butt_action(aa.q.def.id+' sets _ '+k,'+'));
+  const l = aa.mk.l('li',{id:`${aa.q.def.id}_${k}`,cla:'item filter'});
+  let out = aa.mk.butt_action(`${aa.q.def.id} out ${k}`,'out','out');
+  let run = aa.mk.butt_action(`${aa.q.def.id} run ${k}`,'run','run');
+  let add = aa.mk.butt_action(`${aa.q.def.id} add ${k} ${v.v}`,k,'add');
+  let val = aa.mk.l('span',{cla:'val',con:v.v});
+  let rm = aa.mk.butt_action(`${aa.q.def.id} rm ${k}`,'rm','rm');
   
-  // l.append(sets);
+  l.append(
+    out,' ',run,' ',add,' ',val,' ',rm
+  );
   return l
 };
 
