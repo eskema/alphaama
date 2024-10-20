@@ -77,10 +77,16 @@
       justify-self: center;
     }
 
+    #new_tag_butt
+    {
+      margin-bottom: 1rem;
+    }
+
     #output
     {
       line-height: 2;
       padding: var(--pad-l);
+      resize: none;
       text-align: center;
       white-space: pre-wrap;
       word-break: break-word;
@@ -107,19 +113,20 @@
     <section id="kind_wrapper">
       <label for="kind">kind:</label>
       <input id="kind" type="number" value="1" placeholder="number">
+      <select name="kinds" id="kinds"></select>
     </section>
     <section id="content_wrapper">
       <label for="content">content:</label> 
       <textarea id="content" placeholder="yo"></textarea>
     </section>
-    <section id="tags_wrapper">
+    <section id="tags_wrapper" data-alt="key,value,etc…">
       tags: 
       <ol id="tags" start="0"></ol> 
       <button id="new_tag_butt">+</button>
     </section>
     <button id="butt">make note</button>
   </main>
-  <footer id="output"></footer>
+  <textarea id="output">{}</textarea>
   
 <script>
 const f_s = parseFloat(getComputedStyle(document.documentElement).fontSize);
@@ -156,7 +163,7 @@ const make_event =e=>
   }
   catch (er) {event = 'error: make sure your data is correct'}
   
-  document.getElementById('output').textContent = event; 
+  document.getElementById('output').value = event; 
 };
 
 const rm_tag =e=>
@@ -181,9 +188,11 @@ const new_tag =e=>
   let tag = document.createElement('li');
   let tag_input = document.createElement('input');
   tag_input.type = 'text';
+  tag_input.placeholder = 'ex: t,asknostr'
   tag.append(tag_input);
   tag.append(rm_tag_butt());
   document.getElementById('tags').append(tag);
+  tag_input.focus();
 };
 
 const is_hex =s=> /^[A-F0-9]+$/i.test(s); 
@@ -232,8 +241,9 @@ const created_at_change =e=>
 
 const resize_textarea =e=>
 {
-  note.style.height = 'unset';
-  note.style.height = note.scrollHeight+'px';
+  e.target.style.width = 'unset';
+  e.target.style.height = 'unset';
+  e.target.style.height = e.target.scrollHeight+'px';
 };
 
 window.addEventListener('resize',resize_textarea);
@@ -250,12 +260,32 @@ window.addEventListener('load',e=>
   created_at.addEventListener('change',created_at_change);
   created_at_change({target:created_at});
 
+  let kind = document.getElementById('kind');
+  let kinds = document.getElementById('kinds');
+  fetch('/stuff/nostr_kinds.json')
+  .then(dis=>dis.json()).then(nk=>
+  {
+    for (const k in nk) 
+    {
+      let option = document.createElement('option');
+      option.value = k;
+      option.textContent = k+' - '+nk[k];
+      if (k === '1') option.setAttribute('selected',true)
+      kinds.append(option);
+    }
+  });
+  kinds.addEventListener('change',e=>
+  { 
+    e.target.blur();
+    kind.value = kinds.value 
+  });
+
   if (sessionStorage.note) note.value = sessionStorage.note;
-  resize_textarea();
+  resize_textarea({target:note});
   note.addEventListener('change',e=> 
   { 
     sessionStorage.note = e.target.value;
-    resize_textarea();
+    resize_textarea(e);
   });
   note.addEventListener('keyup', resize_textarea);
 
@@ -265,6 +295,9 @@ window.addEventListener('load',e=>
   const butt = document.getElementById('butt');
   butt.addEventListener('click',make_event);
 
+  const output = document.getElementById('output');
+  output.addEventListener('change',e=>
+  {})
 });
 
 

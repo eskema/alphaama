@@ -294,6 +294,17 @@ input[type=number]
   -moz-appearance: textfield;
 }
 
+select
+{
+  appearance: none;
+  -webkit-appearance: none;
+  background: none;
+  border: none;
+  color:  rgb(var(--color-d));
+  font-family: inherit;
+  font-size: var(--font-size-s);
+}
+
 input[type=text],
 input[type=number],
 textarea

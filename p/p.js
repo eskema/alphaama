@@ -926,7 +926,7 @@ aa.p.save = async p=>
   
   aa.temp[q_id].push(p.xpub);
   
-  aa.to(aa.p.save_to,3000,q_id);
+  aa.to(aa.p.save_to,1000,q_id);
 
 };
 

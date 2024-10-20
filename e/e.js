@@ -133,8 +133,9 @@ aa.e.append_to_replies =(dat,note,reply_tag)=>
 aa.e.clear =s=>
 {
   document.getElementById('notes').textContent = '';
-  aa.fx.data_count(document.getElementById('butt_e'),'.note');
-  aa.log('events cleared')
+  // aa.fx.data_count(document.getElementById('butt_e'),'.note');
+  aa.log('events cleared');
+  aa.cli.fuck_off();
 };
 
 
@@ -428,13 +429,15 @@ aa.e.note =dat=>
   {
     const x = dat.event.pubkey;
     note.dataset.pubkey = x;
+    let p_link = aa.mk.p_link(dat.event.pubkey);
+    by.append(p_link);
     aa.db.get_p(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
       if (!p) p = aa.p.p(x);
       aa.fx.color(x,note);
       note.dataset.trust = p.score;
-      by.append(aa.mk.p_link(dat.event.pubkey));
+      aa.p.p_link_data_upd(p_link,aa.p.p_link_data(p));  
     });
   }
   
@@ -795,6 +798,12 @@ aa.e.print =async dat=>
       {
         aa.fx.scroll(l,{behavior:'smooth',block:'center'});
       }
+      let k_v = 'pubkey_'+dat.event.pubkey;
+      if (aa.p.viewing && aa.p.viewing[1] === k_v) 
+      {
+        aa.p.viewing[0].push(l);
+        aa.i.solo(l,k_v);
+      }
     }
   }
   else
@@ -1042,19 +1051,6 @@ aa.e.view =l=>
     if (t) aa.clk.time({target:t});
     aa.fx.scroll(l);
   // })
-};
-
-
-aa.e.wrap_dat =(event)=>
-{
-  const dat = 
-    {
-      event:event,
-      seen:[message.origin],
-      subs:[sub_id],
-      clas:[],
-      refs:[]
-    };
 };
 
 

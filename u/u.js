@@ -775,6 +775,13 @@ aa.kinds[4] =dat=>
     note.classList.add('for_u');
     content.append(aa.mk.butt_action('u decrypt '+dat.event.id,'decrypt','decrypt'));
   }
+  let k_v = 'pubkey_'+p_x;
+  if (aa.p.viewing && aa.p.viewing[1] === k_v) 
+  {
+    aa.p.viewing[0].push(note);
+    aa.i.solo(note,k_v);
+  }
+
   return note
 };
 

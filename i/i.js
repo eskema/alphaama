@@ -159,14 +159,8 @@ aa.i.filter_solo_rm =(items,k_v)=>
 // apply class 'out' to items
 aa.i.filter_out_apply =(items,k_v)=>
 {
-  for (const l of items)
-  {
-    let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
-    aa.fx.a_add(a,[k_v]);
-    l.dataset.out = a.join(' ');
-    l.classList.add('out');
-  }
-};
+  for (const l of items) aa.i.out(l,k_v);
+}; 
 
 
 // apply class 'solo' to items
@@ -181,11 +175,7 @@ aa.i.filter_solo_apply =(items,k_v)=>
     aa.l.dataset.solo = a.join(' ')
   }
 
-  for (const l of items) 
-  { 
-    l.classList.add('solo'); 
-    aa.fx.path(l,k_v)
-  }
+  for (const l of items) aa.i.solo(l,k_v);
 };
 
 
@@ -268,6 +258,14 @@ aa.i.run =()=>
 }; 
 
 
+// solo item
+aa.i.solo =(l,k_v)=>
+{
+  l.classList.add('solo'); 
+  aa.fx.path(l,k_v);
+};
+
+
 // returns all the notes that have a tag with value
 aa.get.notes_with_tag =(k,v)=>
 {
@@ -299,9 +297,9 @@ aa.get.index_items =(k,v)=>
       let items = document.querySelectorAll('.note[data-'+k+']');
       return Array.from(items).filter(i=>i.dataset[k].includes(v));
     case 'pubkey': 
-      return document.querySelectorAll('.note[data-pubkey="'+v+'"]');
+      return Array.from(document.querySelectorAll('.note[data-pubkey="'+v+'"]'));
     case 'kind': 
-      return document.querySelectorAll('.note[data-kind="'+v+'"]');
+      return Array.from(document.querySelectorAll('.note[data-kind="'+v+'"]'));
     case 'tag_t':
     case 'tag_subject': 
     case 'tag_d': 
