@@ -244,10 +244,10 @@ aa.clk.yolo =async e=>
       aa.fx.a_add(dat.clas,['not_sent']);
       let pubs = aa.p.authors_from_tags(dat.event.tags);
       let relays = aa.r.in_set(aa.r.o.w);
-      // relays.push(...aa.u.outbox(pubs,1))
-      // relays = new Set(relays);
+      let outbox = aa.u.outbox(pubs,'read');
+      for (const r of outbox) relays.push(r[0]);
+      relays = new Set(relays);
       // console.log(dat.event,relays);
-
       aa.r.broadcast(dat.event,relays);
     }
   })

@@ -330,14 +330,14 @@ aa.p.get_authors =async a=>
 
 // gets a relay url or empty string 
 // for follow list relay hints
-aa.p.get_relay =p=>
+aa.p.get_relay =(p,set='write')=>
 {
   let p_relays = Object.entries(p.relays);
   if (!p_relays.length) return ' ';
   const u_relays = aa.r.in_set(aa.r.o.r).sort();
 
   let relays = p_relays
-  .filter(r=>r[1].sets.includes('write'))
+  .filter(r=>r[1].sets.includes(set))
   .sort(aa.fx.sorts.sets);
 
   for (const url of u_relays)

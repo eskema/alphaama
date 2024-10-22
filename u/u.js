@@ -50,7 +50,7 @@ aa.u.event_mk =s=>
   let event = aa.parse.j(s);
   if (event)
   {
-    let dis = aa.u.event_complete(event);
+    let dis = aa.u.event_normalise(event);
     aa.u.event_draft({event:dis,clas:['draft'],seen:[],subs:[]});
     aa.cli.fuck_off();
   }
@@ -58,7 +58,7 @@ aa.u.event_mk =s=>
 
 
 // event complete
-aa.u.event_complete =event=>
+aa.u.event_normalise =event=>
 {
   if (!event.pubkey) event.pubkey = aa.u.p.xpub;
   if (!event.kind) event.kind = 1;
@@ -689,11 +689,9 @@ aa.u.wot =async()=>
   return wot
 };
 
-aa.u.outbox =(a=[],b)=>
+aa.u.outbox =(a=[],set='')=>
 {
-  let set1 = b?'read':'write';
-  console.log(set1);
-  let set2 = b?'write':'read';
+  if (!set) set = aa.r.o.w;
   if (!a?.length) return [];
   let relays = {};
   let outbox = {};
@@ -703,7 +701,7 @@ aa.u.outbox =(a=[],b)=>
   {
     const p_relays = aa.db.p[x]?.relays;
     const has_relays = Object.keys(p_relays).length;
-    console.log(has_relays);
+    // console.log(has_relays);
     let has_set;
     if (has_relays)
     {
@@ -713,14 +711,14 @@ aa.u.outbox =(a=[],b)=>
         if (!relays[r]) relays[r] = [];
         let rel = p_relays[r];
         
-        if (rel.sets.includes(set1)) 
+        if (rel.sets.includes(set) && !relays[r].includes(x)) 
         {
-          aa.fx.a_add(relays[r],[x]);
+          relays[r].push(x)
+          // aa.fx.a_add(relays[r],[x]);
           has_set = true;
         }
       }
     }
-
 
     if (!has_set) 
     {
@@ -732,11 +730,11 @@ aa.u.outbox =(a=[],b)=>
     }
   }
 
-  console.log(relays);
+  // console.log(relays);
   
   let r_w = Object.entries(relays)
   .sort((b,a)=>{return a[1].length - b[1].length});
-  console.log(r_w);
+  // console.log(r_w);
   for (const x of a)
   {
     for (const r of r_w)

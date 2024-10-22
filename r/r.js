@@ -476,7 +476,7 @@ aa.r.message_type.auth =async message=>
   let event = {kind:22242,tags:[]};
   event.tags.push(['relay',url]);
   event.tags.push(['challenge',challenge]);
-  aa.u.event_complete(event);
+  aa.u.event_normalise(event);
   event.id = aa.fx.hash(event);
   const signed = await aa.u.sign(event);
   if (signed) 
