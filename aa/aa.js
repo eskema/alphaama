@@ -45,6 +45,8 @@ const aa =
     '/r/r.js?v='+aa_version,
     '/u/u.js?v='+aa_version,
     '/i/i.js?v='+aa_version,
+    '/m/m.js?v='+aa_version,
+    '/w/w.js?v='+aa_version,
   ],
   parse:{},
   state:{},
@@ -317,6 +319,76 @@ aa.run =(o={})=>
 };
 
 
+// add server item with sets to mod
+aa.mod_servers_add =(mod,s)=>
+{   
+  const work =a=>
+  {
+    let url_string = a.shift().trim();
+    const url = aa.is.url(url_string)?.href;
+    if (url)
+    {
+      if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
+      aa.fx.a_add(mod.o.ls[url].sets,a);
+      aa.mod_ui(mod,url,mod.o.ls[url]);
+    }
+  };
+  aa.fx.loop(work,s);
+  aa.mod_save(mod);
+};
+
+
+// append buttons to server item
+aa.mod_servers_butts =(mod,l,o)=>
+{
+  let url = l.querySelector('.url').innerText;
+  l.append(' ',aa.mk.butt_action(mod.def.id+' rm '+url,'rm','rm'));
+  
+  let sets = aa.mk.l('span',{cla:'sets'});
+  if (o.sets && o.sets.length)
+  {    
+    for (const set of o.sets)
+    {
+      sets.append(aa.mk.butt_action(mod.def.id+' setrm '+url+' '+set,set),' ')
+    }
+  }
+  l.append(' ',sets,' ',aa.mk.butt_action(mod.def.id+' add '+url+' off','+','add'));
+};
+
+
+// remove set from server
+aa.mod_setrm =(mod,s)=>
+{
+  aa.cli.clear();
+  const work =a=>
+  {
+    let url_string = a.shift().trim();
+    const url = aa.is.url(url_string)?.href;
+    const server = mod.o.ls[url];
+    if (!server) return;
+    server.sets = aa.fx.a_rm(server.sets,a);
+    aa.mod_ui(mod,url,server);
+  };
+  aa.fx.loop(work,s);
+  aa.mod_save(mod)
+};
+
+// returns relays in a given set
+aa.fx.in_set =(ls,set,filter=true)=>
+{
+  let in_set = [];
+  for (const k in ls)
+  { 
+    if (ls[k].sets.includes(set))
+    {
+      if (!filter) in_set.push(k);
+      else if (!ls[k].sets.includes('off')) in_set.push(k);
+    } 
+  }
+  return in_set
+};
+
+
 // load mod
 aa.mod_load =async mod=>
 {
@@ -374,38 +446,6 @@ aa.mod_ui =(mod,k,v)=>
     mod_l.classList.remove('empty');
     mod_l.parentElement.classList.remove('empty');
   } 
-};
-
-
-// log a notice
-aa.notice =async o=>
-{
-  // o =
-  // {
-  //   title:'',
-  //   description:'',
-  //   no:{title:'',exe:()=>{}},
-  //   yes:{title:'',exe:()=>{}},
-  // }
-
-  let l = aa.mk.l('div',{cla:'notice'});
-  if (o.hasOwnProperty('title')) 
-  {
-    l.append(aa.mk.l('p',{cla:'title',con:o.title}));
-  }
-  if (o.hasOwnProperty('description')) 
-  {
-    l.append(aa.mk.l('p',{cla:'description',con:o.description}));
-  }
-  if (o.hasOwnProperty('no'))
-  {
-    l.append(aa.mk.l('button',{con:o.no.title,cla:'butt no',clk:o.no.exe}));
-  } 
-  if (o.hasOwnProperty('yes'))
-  {
-    l.append(aa.mk.l('button',{con:o.yes.title,cla:'butt yes',clk:o.yes.exe}));
-  }
-  aa.log(l);
 };
 
 

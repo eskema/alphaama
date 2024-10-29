@@ -530,11 +530,11 @@ p[data-meta="banner"]
   color: rgb(var(--color-d));
 }
 
-[data-team="dark"] .profile .relay::after
+[data-team="dark"] .profile .server::after
 {
   color: rgb(var(--color-light));
 }
-[data-team="light"] .profile .relay::after
+[data-team="light"] .profile .server::after
 {
   color: rgb(var(--color-dark));
 }

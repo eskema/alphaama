@@ -200,6 +200,7 @@ aa.clk.mark_read =e=>
   
   const replies = e.target.closest('.replies');
   const mom = e.target.closest('.note');
+  const root = e.target.closest('.root');
   let classes = ['haz_new_reply','haz_new','is_new']
   mom.classList.remove(...classes);
   const new_stuff = replies.querySelectorAll('.'+classes.join(',.')); //'.haz_new_reply,.haz_new,.is_new'        
@@ -243,8 +244,9 @@ aa.clk.mark_read =e=>
       });
     }
   }
-  let top = mom.offsetTop + (3 * parseFloat(getComputedStyle(document.documentElement).fontSize));
+  let top = root.offsetTop + (3 * parseFloat(getComputedStyle(document.documentElement).fontSize));
   if (top < aa.l.scrollTop) aa.l.scrollTo(0,top);
+  // else root.scrollIntoView();
 };
 
 
@@ -293,7 +295,7 @@ aa.get.missing =async type=>
   {
     let miss = {};
     
-    let def_relays = aa.r.in_set(aa.r.o.r);
+    let def_relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
     for (const xid in aa.miss[type])
     {
       let v = aa.miss[type][xid];
@@ -530,28 +532,19 @@ aa.e.note_actions =dat=>
 aa.e.note_by_kind =dat=>
 {
   let k = dat.event.kind;
-  let type;
-  
+  // k>=1000  && k<=9999 : regular
+  // k>=10000 && k<=19999 || k===0 || k===3: replaceable
+  // k>=20000 && k<=29999 : ephemeral
+  // k>=30000 && k<=39999 : replaceable_parameterized
+  let type = NostrTools.kinds.classifyKind(dat.event.kind); 
   if (aa.kinds.hasOwnProperty(k)) return aa.kinds[k](dat);
-  // need to work on all these types, only regular for now...
-  switch (true)
+  switch (type)
   {
-    case k >= 1000  && k <= 9999: // regular
-      // return aa.e.note_regular(dat);
-      type = 'regular'; break;
-    case k >= 10000 && k <= 19999 || k === 0 || k === 3: // replaceable
-      // return aa.e.note_regular(dat);
-      type = 'replaceable'; break;
-    case k >= 20000 && k <= 29999: // ephemeral
-      // return aa.e.note_regular(dat);
-      type = 'ephemeral'; break;
-    case k >= 30000 && k <= 39999: // replaceable_parameterized
-      // return aa.e.note_pre(dat);
-      type = 'parameterized'; break;
-    // default: return aa.e.note_regular(dat);
+    case 'parameterized': return aa.e.note_pre(dat);break;
+    default: return aa.e.note_regular(dat);
   }
-  if (type === 'parameterized') return aa.e.note_pre(dat);
-  else return aa.e.note_regular(dat);
+  // if (type === 'parameterized') return aa.e.note_pre(dat);
+  // else return aa.e.note_regular(dat);
 };
 
 
@@ -566,7 +559,7 @@ aa.e.note_blank =(tag,dat,seconds)=>
     tags:[tag],
     content:id+'\n'+aa.fx.encode('nid',id)
   }
-  const seen = aa.r.in_set('read');
+  const seen = aa.fx.in_set(aa.r.o.ls,'read');
   let r;
   if (tag[2])
   {
@@ -599,7 +592,7 @@ aa.e.note_blank_pre =(tag,dat,seconds)=>
     tags:[tag],
     content:id
   }
-  const seen = aa.r.in_set('read');
+  const seen = aa.fx.in_set(aa.r.o.ls,'read');
   let r;
   if (tag[2])
   {
@@ -1023,7 +1016,7 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
       }
       let haz_new = l.querySelector('.note.is_new');
       if (haz_new) l.classList.add('haz_new');
-      aa.clk.time({target:l.querySelector('.by time')});
+      aa.clk.time({target:l.querySelector('.by .created_at')});
       const replies = l.querySelector('.replies');
       const some = replies.childNodes.length - 1;
       const all = l.querySelectorAll('.note').length;
@@ -1040,16 +1033,12 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
 // view event
 aa.e.view =l=>
 {
-  // requestAnimationFrame(()=>
-  // {
-    aa.fx.path(l);
-    if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
-    aa.l.classList.add('viewing','view_e');
-    l.classList.add('in_view');
-    let t = l.querySelector('.by .created_at');
-    if (t) aa.clk.time({target:t});
-    aa.fx.scroll(l);
-  // })
+  aa.fx.path(l);
+  if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
+  aa.l.classList.add('viewing','view_e');
+  l.classList.add('in_view');
+  aa.clk.time({target:l.querySelector('.by .created_at')});
+  aa.fx.scroll(l);
 };
 
 
@@ -1205,7 +1194,7 @@ aa.views.nevent1 =async nevent=>
         dat = 
         {
           event:{id:data.id,created_at:aa.t.now - 10},
-          seen:[aa.r.in_set(aa.r.o.r)],subs:[],clas:[]
+          seen:[aa.fx.in_set(aa.r.o.ls,aa.r.o.r)],subs:[],clas:[]
         };
 
         if (data.author) dat.event.pubkey = data.author;

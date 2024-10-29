@@ -180,7 +180,9 @@ aa.mk.details =(s,l=false,open=false)=>
   details.append(summary);
   if (!l) return details;
   details.append(l);
-  if (l.classList.contains('empty')) details.classList.add('empty');
+  // let is_empty = l.classList.contains('empty'); 
+  // if (is_empty) details.classList.add('empty');
+  if (open) details.open = true;
   else if (l.classList.contains('list')) summary.dataset.after = l.childNodes.length;
   return details;
 };
@@ -209,27 +211,73 @@ aa.mk.img =(src)=>
 {
   const l = aa.mk.l('img',{cla:'content-img',src:src});
   l.loading = 'lazy';
+  l.addEventListener('click',e=>{aa.mk.img_modal(src)});
   return l
 };
+
+
+// show image in modal on click
+aa.mk.img_modal =src=>
+{
+  const dialog = aa.mk.dialog();
+  let img = aa.mk.l('img',{cla:'modal-img',src:src});
+  img.addEventListener('click',e=>{dialog.close()});
+  dialog.title = img.src;
+  dialog.append(img);
+  dialog.showModal();
+};
+
 
 
 // make generic list item from key / value
 aa.mk.item =(k,v,tag_name='li')=>
 {
   let l = aa.mk.l(tag_name,{cla:'item item_'+k});
-  if (Array.isArray(v)) l.append(
-    aa.mk.l('span',{cla:'key',con:k}),
-    ' ',
-    aa.mk.l('span',{cla:'val',con:v.join(', ')})
-  );
-  else if (typeof v==='object') l.append(
-    aa.mk.details(k,aa.mk.ls({ls:v}))
-  );
-  else l.append(
-    aa.mk.l('span',{cla:'key',con:k}),
-    ' ',
-    aa.mk.l('span',{cla:'val',con:v})
-  );
+  if (Array.isArray(v))  
+  {
+    if (typeof v[0]==='object') 
+    {
+      // l.append(aa.mk.item_v(k,v));
+      let list = aa.mk.ls({});
+      list.classList.remove('empty');
+      for (const vv of v) list.append(aa.mk.ls({ls:vv}))
+      l.append(aa.mk.details(k,list,1))
+    }
+    else
+    {
+      l.append(aa.mk.l('span',{cla:'key',con:k}),' ',
+        aa.mk.l('span',{cla:'val',con:v.join(', ')})
+      );
+    }
+  }
+  else if (typeof v==='object') 
+  {
+    l.append(aa.mk.details(k,aa.mk.ls({ls:v}),1))
+  }
+  else 
+  {
+    l.append(aa.mk.l('span',{cla:'key',con:k}),
+    ' ',aa.mk.l('span',{cla:'val',con:v}));
+  }
+  return l
+};
+
+
+aa.mk.item_v =(k,v)=>
+{
+  let l = aa.mk.details(k,0,1);
+  for (const vv of v) 
+  {
+    l.append()
+    if (Array.isArray(vv))
+    {
+      
+    }
+    else if (typeof vv==='object') 
+      df.append(' ',aa.mk.ls({ls:v}));
+    else 
+      df.append(' ', aa.mk.l('span',{cla:'val',con:v}));
+  }
   return l
 };
 
@@ -309,6 +357,38 @@ aa.mk.mod =mod=>
     mod.l = mod_l;
     aa.log(mod_l)
   }
+};
+
+
+// log a notice
+aa.mk.notice =o=>
+{
+// o =
+// {
+//   title:'',
+//   description:'',
+//   butts:
+//   {
+//    no:{title:'',exe:()=>{}},
+//    yes:{title:'',exe:()=>{}},
+//   }
+// }
+
+  let l = aa.mk.l('div',{cla:'notice'});
+  if (o.hasOwnProperty('title')) 
+  {
+    l.append(aa.mk.l('p',{cla:'title',con:o.title}));
+  }
+  if (o.hasOwnProperty('description')) 
+  {
+    l.append(aa.mk.l('p',{cla:'description',con:o.description}));
+  }
+  for (const b in o.butts)
+  {
+    let bt = o.butts[b];
+    l.append(aa.mk.l('button',{con:bt.title,cla:'butt '+b,clk:bt.exe}));
+  }
+  return l
 };
 
 
@@ -406,3 +486,22 @@ aa.mk.time =timestamp=>
   return l
 };
 
+
+// make server item
+aa.mk.server =(k,v)=>
+{
+  k = aa.is.url(k);
+  if (!k) return false;
+
+  const l = aa.mk.l('li',{cla:'item server'});
+  const url_l = aa.mk.l('p',{cla:'url'});
+  url_l.append(
+    aa.mk.l('span',{cla:'protocol',con:k.protocol+'//'}),
+    aa.mk.l('span',{cla:'host',con:k.host}),
+    aa.mk.l('span',{cla:'pathname',con:k.pathname}),
+    aa.mk.l('span',{cla:'hashsearch',con:k.hash+k.search})
+  ); 
+  l.append(url_l); 
+  if (v.sets && v.sets.length) l.dataset.sets = v.sets;   
+  return l
+};

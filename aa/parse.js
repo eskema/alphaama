@@ -86,6 +86,20 @@ aa.parse.content =(s,trusted)=>
 };
 
 
+//parse content as object
+aa.parse.content_o =async(dat,note)=>
+{
+  let data = aa.parse.j(dat.event.content);
+  if (data)
+  {
+    let content = note.querySelector('.content');
+    content.textContent = '';
+    content.append(aa.mk.ls({ls:data}));
+  }
+  return data
+};
+
+
 // toggle parsed content on note
 aa.parse.context =(note,event,trust)=>
 {

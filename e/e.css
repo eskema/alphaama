@@ -3,6 +3,12 @@
   grid-area: e;
 }
 
+#notes
+{
+  background: rgb(var(--color-b));
+  z-index: 0;
+}
+
 /*.incoming #e > header > [data-count="0"]::after
 {
   content: "...cactus";
@@ -567,6 +573,27 @@ a.author
 .draft > .content
 {
   max-height: unset;
+}
+
+.content .item > details > summary
+{
+  font-size: var(--font-size);
+}
+
+.content .item > details[open] > summary::before
+{
+  content: "";
+}
+
+.content .item > details[open] > summary::after
+{
+  content: ":";
+}
+
+.content .list .item .key
+{
+  color: rgb(var(--color-d));
+  margin-right: var(--pad);
 }
 
 /* @end */
@@ -1349,7 +1376,7 @@ html:not(.needs_pagin) .pagination
 {
   html:not(.view_e) #notes
   {
-    padding-left: var(--pad-l);
+    margin-left: var(--pad-l);
   }
   
 /*  .created_at:hover::after,
@@ -1388,6 +1415,12 @@ html:not(.needs_pagin) .pagination
   .mark_read:hover::after
   {
     content: " mark read";
+  }
+  
+  /*.note:hover > .content,*/
+  .by:hover
+  {
+    z-index: 99;
   }
   
   .note > .actions

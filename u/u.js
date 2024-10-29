@@ -311,6 +311,16 @@ aa.u.load =()=>
       description:'unfollow account (hex or npub)',
       exe:aa.u.unfollow
     },
+    // {
+    //   action:['sec','yo'],
+    //   // required:[''],
+    //   // optional:[''],
+    //   description:'my custom action',
+    //   exe:s=>
+    //   {
+    //     aa.log('my custom action: '+s)
+    //   }
+    // },
   );
   const id = 'u_u';
   const u = aa.mk.l('aside',{id:id});
@@ -695,7 +705,7 @@ aa.u.outbox =(a=[],set='')=>
   if (!a?.length) return [];
   let relays = {};
   let outbox = {};
-  let offed = aa.r.in_set('off',0);
+  let offed = aa.fx.in_set(aa.r.o.ls,'off',0);
 
   for (const x of a)
   {
@@ -722,7 +732,7 @@ aa.u.outbox =(a=[],set='')=>
 
     if (!has_set) 
     {
-      for (const r of aa.r.in_set(aa.r.o.r))
+      for (const r of aa.fx.in_set(aa.r.o.ls,aa.r.o.r))
       {
         if (!relays[r]) relays[r] = [];
         aa.fx.a_add(relays[r],[x]);

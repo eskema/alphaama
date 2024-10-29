@@ -190,7 +190,7 @@ aa.q.out =async s=>
       
       // if (a.length) rels = a.shift();
       // let relays = aa.r.rel(rels);
-      // if (!relays.length) relays = aa.r.in_set(aa.r.o.r);
+      // if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
       // aa.r.demand(request,relays,options);
       
     } 
@@ -309,7 +309,7 @@ aa.q.run =async s=>
       
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
-      if (!relays.length) relays = aa.r.in_set(aa.r.o.r);
+      if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
       aa.r.demand(request,relays,options);
       aa.log(aa.mk.butt_action(aa.q.def.id+' close '+request[1]));
     } 

@@ -18,22 +18,23 @@ aa.r =
 
 // add relays
 aa.r.add =s=>
-{ 
+{
   aa.cli.clear();
   
-  const work =a=>
-  {
-    let url_string = a.shift().trim();
-    const url = aa.is.url(url_string)?.href;
-    if (url)
-    {
-      if (!aa.r.o.ls[url]) aa.r.o.ls[url] = {sets:[]};
-      aa.fx.a_add(aa.r.o.ls[url].sets,a);
-      aa.mod_ui(aa.r,url,aa.r.o.ls[url]);
-    }
-  };
-  aa.fx.loop(work,s);
-  aa.mod_save(aa.r);
+  aa.mod_servers_add(aa.r,s);
+  // const work =a=>
+  // {
+  //   let url_string = a.shift().trim();
+  //   const url = aa.is.url(url_string)?.href;
+  //   if (url)
+  //   {
+  //     if (!aa.r.o.ls[url]) aa.r.o.ls[url] = {sets:[]};
+  //     aa.fx.a_add(aa.r.o.ls[url].sets,a);
+  //     aa.mod_ui(aa.r,url,aa.r.o.ls[url]);
+  //   }
+  // };
+  // aa.fx.loop(work,s);
+  // aa.mod_save(aa.r);
 };
 
 
@@ -50,7 +51,7 @@ aa.r.add_from_o =(relays)=>
 // post event to relays
 aa.r.broadcast =(event,relays=false)=>
 {
-  if (!relays || !relays.length) relays = aa.r.in_set(aa.r.o.w);
+  if (!relays || !relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
   if (!relays.length) 
   {
     aa.log('aa.r.broadcast: no relays');
@@ -84,22 +85,23 @@ aa.r.broadcast =(event,relays=false)=>
 
 
 // append relay buttons to item
-aa.r.butts =(l,o)=>
-{
-  let url = l.querySelector('.url').innerText;
-  l.append(' ',aa.mk.butt_action(aa.r.def.id+' rm '+url,'rm','rm'));
+// aa.r.butts =(l,o)=>
+// {
+//   aa.mod_butts_server(mod,l,o);
+//   // let url = l.querySelector('.url').innerText;
+//   // l.append(' ',aa.mk.butt_action(aa.r.def.id+' rm '+url,'rm','rm'));
   
-  let sets = aa.mk.l('span',{cla:'sets'});
-  if (o.sets && o.sets.length)
-  {    
-    for (const set of o.sets)
-    {
-      sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+url+' '+set,set),' ')
-    }
-  }
-  // sets.append(aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+'));
-  l.append(' ',sets,' ',aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+','add'));
-};
+//   // let sets = aa.mk.l('span',{cla:'sets'});
+//   // if (o.sets && o.sets.length)
+//   // {    
+//   //   for (const set of o.sets)
+//   //   {
+//   //     sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+url+' '+set,set),' ')
+//   //   }
+//   // }
+//   // // sets.append(aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+'));
+//   // l.append(' ',sets,' ',aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+','add'));
+// };
 
 
 // make relay connection
@@ -170,7 +172,7 @@ aa.r.demand =(request,relays,options)=>
     return false
   }
 
-  if (!relays?.length) relays = aa.r.in_set(aa.r.o.r);
+  if (!relays?.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
   if (!relays.length) 
   {
     aa.log('aa.r.demand: no relays');
@@ -273,8 +275,8 @@ aa.r.from_o =(o,sets=false)=>
   return relays
 }
 
-// returns relays object from tags array (kind-10002,etc..)
 
+// returns relays object from tags array (kind-10002,etc..)
 aa.r.from_tags =(tags,sets=[])=>
 {
   let relays = {};
@@ -298,49 +300,68 @@ aa.r.from_tags =(tags,sets=[])=>
 aa.r.hint_notice =(url,opts,set='hint')=>
 {
   // needs to display info from what npub, where does the notice come from?
-  let act_yes = url+' '+set;
+  
   let id = 'notice_'+aa.fx.an(url);
   if (document.getElementById(id)) return;
-  let notice = {title:'r add '+act_yes+'?'};
+  
+  let text = `r add ${url} `;
+  let notice = {title:text};
   notice.id = id;
-  notice.yes =
+  notice.butts = {};
+
+  notice.butts.yes =
   {
-    title:'yes',
+    title:set,
     exe:e=>
     {
-      aa.r.add(act_yes);
+      aa.r.add(`${url} ${set}`);
       aa.r.c_on(url,opts);
-      setTimeout(()=>{e.target.parentElement.textContent = act_yes},50);
+      setTimeout(()=>
+      {e.target.parentElement.textContent = `${text} ${set}`},50);
     }
   };
-  let act_no = url+' off';
-  notice.no =
+  let set_off = 'off';
+  notice.butts.no =
   {
-    title:'no',
+    title:set_off,
     exe:e=>
     {
-      aa.r.add(act_no);
-      setTimeout(()=>{e.target.parentElement.textContent = act_no},50);
+      aa.r.add(`${url} ${set_off}`);
+      setTimeout(()=>
+      {e.target.parentElement.textContent = `${text} ${set_off}`},50);
     }
   };
-  aa.notice(notice);
+  let set_other = 'other'
+  notice.butts.maybe =
+  {
+    title:set_other,
+    exe:e=>
+    {
+      aa.r.add(url);
+      aa.r.c_on(url,opts);
+      aa.cli.v(localStorage.ns+' '+text);
+      setTimeout(()=>
+      {e.target.parentElement.textContent = `${text} ${set_other}`},50);
+    }
+  };
+  aa.log(aa.mk.notice(notice));
 }
 
 
 // returns relays in a given set
-aa.r.in_set =(relset,filter=true)=>
-{
-  let relays = [];
-  for (const k in aa.r.o.ls)
-  { 
-    if (aa.r.o.ls[k].sets.includes(relset))
-    {
-      if (!filter) relays.push(k);
-      else if (!aa.r.o.ls[k].sets.includes('off')) relays.push(k);
-    } 
-  }
-  return relays
-};
+// aa.r.in_set =(relset,filter=true)=>
+// {
+//   let relays = [];
+//   for (const k in aa.r.o.ls)
+//   { 
+//     if (aa.r.o.ls[k].sets.includes(relset))
+//     {
+//       if (!filter) relays.push(k);
+//       else if (!aa.r.o.ls[k].sets.includes('off')) relays.push(k);
+//     } 
+//   }
+//   return relays
+// };
 
 
 // list relays from set
@@ -350,7 +371,7 @@ aa.r.list =s=>
   a = s.trim().split(' ');
   if (!a.length || a[0] === '') a[0]= 'k10002';
   let relays = [];
-  for (const set of a) relays.push(...aa.r.in_set(set,false));
+  for (const set of a) relays.push(...aa.fx.in_set(aa.r.o.ls,set,false));
   relays = [...new Set(relays)];
   let rels = [];
   if (relays.length)
@@ -427,17 +448,11 @@ aa.r.load =()=>
       description:'remove relay',
       exe:aa.r.rm
     },
-    // {
-    //   action:[aa.r.def.id,'sets'],
-    //   required:['set','url'],
-    //   description:'create sets of relays',
-    //   exe:aa.r.sets
-    // },
     {
       action:[aa.r.def.id,'setrm'],
       required:['url','set'],
       description:'remove set from relays',
-      exe:aa.r.rm_set
+      exe:s=>aa.mod_setrm(aa.r,s)
     },
     {
       action:[aa.r.def.id,'ext'],
@@ -498,13 +513,11 @@ aa.r.message_type.closed =async dis=>
 // ["EOSE",<sub_id>]
 aa.r.message_type.eose =async message=>
 {
-  const sub_id = message.data[1];
-  let sub = aa.r.active[message.origin].q[sub_id];
+  const id = message.data[1];
+  let sub = aa.r.active[message.origin].q[id];
   if (!sub) return;
-  if (sub.eose && sub.eose === 'close')
-  {
-    aa.r.close(message.origin,sub_id);
-  }
+  if (sub.eose && sub.eose === 'close') 
+    aa.r.close(message.origin,id);
   sub.eose = 'done';
 };
 
@@ -551,11 +564,13 @@ aa.r.message_type.event =async message=>
   }
 };
 
+
 // ["NOTICE",,<message>]
 aa.r.message_type.notice =async message=> 
 {
-  console.log(message)
+  aa.log(message)
 };
+
 
 // ["OK",<event_id>,<true|false>,<message>]
 aa.r.message_type.ok =async message=>
@@ -594,36 +609,16 @@ aa.r.mk =(k,v) =>
   // k = url
   // v = {sets:[]}
 
-  const l = aa.mk.relay(k,v);
+  const l = aa.mk.server(k,v);
   if (l)
   {
     l.id = aa.r.def.id+'_'+aa.fx.an(k);
     l.dataset.state = 0;
-    aa.r.butts(l,v);
+    aa.mod_servers_butts(aa.r,l,v);
     aa.r.upd_state(k);
     return l
   }
   else return false
-};
-
-
-// make relay item
-aa.mk.relay =(k,v)=>
-{
-  k = aa.is.url(k);
-  if (!k) return false;
-
-  const l = aa.mk.l('li',{cla:'item relay'});
-  const url_l = aa.mk.l('p',{cla:'url'});
-  url_l.append(
-    aa.mk.l('span',{cla:'protocol',con:k.protocol+'//'}),
-    aa.mk.l('span',{cla:'host',con:k.host}),
-    aa.mk.l('span',{cla:'pathname',con:k.pathname}),
-    aa.mk.l('span',{cla:'hashsearch',con:k.hash+k.search})
-  ); 
-  l.append(url_l); 
-  if (v.sets && v.sets.length) l.dataset.sets = v.sets;   
-  return l
 };
 
 
@@ -633,7 +628,7 @@ aa.r.rel =s=>
   const a = [];
   let relay = aa.is.url(s)?.href;
   if (relay) a.push(relay);
-  else a.push(...aa.r.in_set(s));
+  else a.push(...aa.fx.in_set(aa.r.o.ls,s));
   return a
 };
 
@@ -659,7 +654,6 @@ aa.r.rm =s=>
   };
   aa.fx.loop(work,s);
   aa.mod_save(aa.r);
-
 };
 
 
@@ -670,84 +664,25 @@ aa.r.resume =()=>
   for (const url in aa.r.active) { aa.r.c_on(url) } 
 };
 
-
 // save r
-aa.r.save =()=>{ aa.mod_save(aa.r).then(aa.mk.mod) };
+// aa.r.save =()=>{ aa.mod_save(aa.r).then(aa.mk.mod) };
 
-
-// add set to relays
-// aa.r.sets =s=>
+// remove set from relays
+// aa.r.rm_set =s=>
 // {
+//   aa.cli.clear();
 //   const work =a=>
 //   {
-//     const set_id = a.shift();
-//     if (aa.is.an(set_id)) 
-//     {
-//       for (let url of a)
-//       {
-//         url = aa.is.url(url)?.href;
-//         if (url)
-//         {
-//           let r = aa.r.o.ls[url];
-//           if (!r.sets) r.sets = [];
-//           aa.fx.a_add(r.sets,[set_id]);
-//           aa.mod_ui(aa.r,url,r);
-//         }
-//       }
-//     }
+//     let url_string = a.shift().trim();
+//     const url = aa.is.url(url_string)?.href;
+//     const relay = aa.r.o.ls[url];
+//     if (!relay) return;
+//     relay.sets = aa.fx.a_rm(relay.sets,a);
+//     aa.mod_ui(aa.r,url,relay);
 //   };
 //   aa.fx.loop(work,s);
 //   aa.mod_save(aa.r)
-//   aa.cli.clear();
 // };
-
-
-// remove set from relays
-// deprecated in favor of aa.r.rm_set
-// aa.r.set_rm =s=>
-// {
-//   const work =a=>
-//   {
-//     const set_id = a.shift();
-//     if (aa.is.an(set_id)) 
-//     {
-//       for (let url of a)
-//       {
-//         url = aa.is.url(url)?.href;
-//         if (url)
-//         {
-//           let r = aa.r.o.ls[url];
-//           if (r && r.sets.includes(set_id))
-//           {
-//             r.sets = r.sets.filter(set=> set !== set_id);
-//             aa.mod_ui(aa.r,url,r);
-//           }
-          
-//         }
-//       }
-//     }
-//   };
-//   aa.fx.loop(work,s);
-//   aa.mod_save(aa.r)
-//   aa.cli.clear();
-// };
-
-// remove set from relays
-aa.r.rm_set =s=>
-{
-  aa.cli.clear();
-  const work =a=>
-  {
-    let url_string = a.shift().trim();
-    const url = aa.is.url(url_string)?.href;
-    const relay = aa.r.o.ls[url];
-    if (!relay) return;
-    relay.sets = aa.fx.a_rm(relay.sets,a);
-    aa.mod_ui(aa.r,url,relay);
-  };
-  aa.fx.loop(work,s);
-  aa.mod_save(aa.r)
-};
 
 
 // try to send and retry if fails
@@ -864,6 +799,15 @@ aa.r.ws_open =async e=>
     // delay = 100 + delay;
   }
   aa.r.upd_state(e.target.url);
+};
+
+// event template for relay data from monitor nip66
+aa.kinds[30166] =dat=>
+{
+  const note = aa.e.note_pre(dat);
+  note.classList.add('root');
+  aa.parse.content_o(dat,note);
+  return note
 };
 
 

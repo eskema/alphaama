@@ -18,17 +18,17 @@ aa.i =
     'id':{},
     'pubkey':{},
     'kind':{},
+    'subs':{},
+    'seen':{},
+    // 'clas':{},
     'tag_t':{},
     'tag_d':{},
     'tag_subject':{},
     'tag_nonce':{},
-    'subs':{},
-    'seen':{},
-    'clas':{},
     'since':0,
     'until':0,
   },
-  ls:['pubkey','kind','tag_t','tag_d','tag_subject','tag_nonce','subs','seen','clas'],
+  ls:['pubkey','kind','subs','seen','tag_t','tag_d','tag_subject','tag_nonce'],
 };
 
 
@@ -39,7 +39,7 @@ aa.i.d =dat=>
   aa.i.head.id[dat.event.id] = 1;
   if (dat.subs) for (const sub of dat.subs) aa.i.dex.e('subs',sub);
   if (dat.seen) for (const seen of dat.seen) aa.i.dex.e('seen',seen);
-  if (dat.clas) for (const clas of dat.clas) aa.i.dex.e('clas',clas);
+  // if (dat.clas) for (const clas of dat.clas) aa.i.dex.e('clas',clas);
   if (dat.event.pubkey) aa.i.dex.e('pubkey',dat.event.pubkey);
   if (dat.event.hasOwnProperty('kind')) aa.i.dex.e('kind',dat.event.kind);
   if (dat.event.created_at) aa.i.dex.at(dat.event.created_at,dat.event.id);
@@ -107,15 +107,15 @@ aa.i.dex.e =(k,v)=>
 // index tags
 aa.i.dex.tags =tags=>
 {
+  let dis = ['t','d','nonce','subject'];
   for (const tag of tags)
   {
     const [k,v,b] = tag;
+    if (!dis.includes(k)) continue;
     switch (k)
     {
-      case 't': aa.i.dex.e('tag_'+k,v); break;
-      case 'd': aa.i.dex.e('tag_'+k,v); break;
       case 'nonce': aa.i.dex.e('tag_'+k,b); break;
-      case 'subject': aa.i.dex.e('tag_'+k,v); break;
+      default: aa.i.dex.e('tag_'+k,v);
     }
   }
 };
@@ -233,9 +233,9 @@ aa.i.load =()=>
   aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
   const app_u = ()=>
   {
-    // console.log('app_u', document.getElementById('u_u'))
-    let u = document.getElementById('u_u');
-    if (u) u.append(aa.i.l);
+    // let u = document.getElementById('u_u');
+    let l = document.querySelector('#e > header');
+    if (l) l.append(aa.i.l);
     else setTimeout(()=>{app_u()}, 100);
   };
   app_u();
@@ -253,8 +253,8 @@ aa.i.run =()=>
     li.append(aa.mk.details(k,list));
     aa.i.l.append(li);
   }
-  aa.i.l.append(aa.mk.i_at('until',0));
   aa.i.l.append(aa.mk.i_at('since',0));
+  aa.i.l.append(aa.mk.i_at('until',0));
 }; 
 
 
@@ -283,15 +283,12 @@ aa.get.notes_with_tag =(k,v)=>
 };
 
 
-
-
-
 // get elements with key:value
 aa.get.index_items =(k,v)=>
 {
   switch (k)
   {
-    case 'clas':
+    // case 'clas':
     case 'seen':
     case 'subs': 
       let items = document.querySelectorAll('.note[data-'+k+']');

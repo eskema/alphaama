@@ -104,7 +104,7 @@ aa.clk.fetch =e=>
     let r = note.dataset.r?.split(' ');
     if (r.length) relays.push(...r);
   }
-  else relays.push(...aa.r.in_set(aa.r.o.r));
+  else relays.push(...aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
   aa.fx.dataset_add(note,'nope',relays);
   aa.r.demand(request,relays,{eose:'done'});
   setTimeout(()=>{aa.fx.scroll(document.getElementById(note.id))},200);
@@ -142,13 +142,8 @@ aa.clk.post =e=>
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
   if (dat) 
   {
-    let relays = aa.r.in_set(aa.r.o.r).filter(r=>!dat.seen.includes(r));
-    aa.r.broadcast(dat.event,relays)
-    // r_r = aa.r.in_set(aa.r.o.r);
-    // for (const r of r_r)
-    // {
-    //   if (!dat.seen.includes(r)) aa.r.broadcast(dat.event,[]);
-    // }
+    let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).filter(r=>!dat.seen.includes(r));
+    aa.r.broadcast(dat.event,relays);
   }
 };
 
@@ -205,6 +200,7 @@ aa.clk.sign =e=>
 // update elapsed time
 aa.clk.time =e=> 
 {
+  if (!e.target) return;
   const timestamp = parseInt(e.target.textContent);
   const date = aa.t.to_date(timestamp);
   e.target.dataset.elapsed = aa.t.elapsed(date);
@@ -242,10 +238,25 @@ aa.clk.yolo =async e=>
       dat.event = signed;
       dat.clas = aa.fx.a_rm(dat.clas,['draft']);
       aa.fx.a_add(dat.clas,['not_sent']);
+      let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
       let pubs = aa.p.authors_from_tags(dat.event.tags);
-      let relays = aa.r.in_set(aa.r.o.w);
-      let outbox = aa.u.outbox(pubs,'read');
-      for (const r of outbox) relays.push(r[0]);
+      for (const pub of pubs)
+      {
+        let p = aa.db.p[pub];
+        let i = 0;
+        for (const r in p.relays)
+        {
+          i++;
+          let rr = [];
+          if (p.relays[r].sets.includes('read')) rr.push(r);
+          aa.fx.a_add(relays,rr);
+          if (i>3) break;
+        }
+        // let read_from = Object.entries(p.relays)
+        // .filter(r=>r[1].sets.includes('read'));
+      }
+      // let outbox = aa.u.outbox(pubs,'read');
+      // for (const r of outbox) relays.push(r[0]);
       relays = new Set(relays);
       // console.log(dat.event,relays);
       aa.r.broadcast(dat.event,relays);

@@ -1,9 +1,6 @@
 #l
 {
   grid-area: l;
-  max-height: 90vh;
-  overflow: hidden;
-  overflow-y: scroll;
   position: relative;
   scrollbar-width: none;
   transition: max-height 1s cubic-bezier(0.87, 0, 0.13, 1);
@@ -11,7 +8,7 @@
 
 :focus + #l
 {
-  max-height: 20vh;
+  /*max-height: 40vh;*/
 }
 
 #l > header
@@ -21,6 +18,7 @@
 
 #l > header .butt
 {
+  background: rgba(var(--color-a));
   font-size: 0;
   padding: var(--pad);
   text-align: center;
@@ -110,30 +108,30 @@
   white-space: pre;
 }
 
-#l .relay::after
+#r .server::after
 {
   content: "(" attr(data-state) ") " attr(data-q);
   margin-right: var(--pad);
 }
 
-#l .relay[data-state="1"]::after
+#r .server[data-state="1"]::after
 {
   color: rgb(var(--color-yes));
   opacity: .7;
 }
 
-#l .relay[data-state="3"]::after
+#r .server[data-state="3"]::after
 {
   color: rgb(var(--color-no));
   opacity: .7;
 }
 
-#l .relay .add
+#l .server .add
 {
   grid-area: bef;
 }
 
-#l .relay .rm
+#l .server .rm
 {
   grid-area: aft;
 }
@@ -163,7 +161,7 @@ html:not(.cli_expanded) .l.is_new,
 html:not(.cli_expanded) .l:hover
 {
   position: absolute;
-  transform: translateY(calc(var(--line)*-1));
+  transform: translateY(calc(var(--pad)*-1));
 }
 
 html:not(.cli_expanded) .l:hover

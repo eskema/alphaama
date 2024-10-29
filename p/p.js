@@ -334,7 +334,7 @@ aa.p.get_relay =(p,set='write')=>
 {
   let p_relays = Object.entries(p.relays);
   if (!p_relays.length) return ' ';
-  const u_relays = aa.r.in_set(aa.r.o.r).sort();
+  const u_relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).sort();
 
   let relays = p_relays
   .filter(r=>r[1].sets.includes(set))
@@ -488,6 +488,8 @@ aa.mk.metadata =p=>
   return metadata
 };
 
+aa.mk.metadata_about =(k,v)=> aa.mk.l('p',{app:aa.parse.content(v)});
+
 aa.mk.metadata_banner =(k,v,p)=> aa.mk.metadata_picture(k,v,p);
 
 aa.mk.metadata_lud16 =(k,v)=> aa.mk.l('a',{ref:'lightning:'+v,con:v});
@@ -565,7 +567,7 @@ aa.clk.p_follows =e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
   const request = ['REQ','p_follows',{authors:[xpub],kinds:[3],limit:1}];
-  aa.r.demand(request,aa.r.in_set(aa.r.o.r),{eose:'close'});
+  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
 };
 
 
@@ -727,7 +729,7 @@ aa.clk.p_metadata =e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
   const request = ['REQ','p_metadata',{authors:[xpub],kinds:[0],limit:1}];
-  aa.r.demand(request,aa.r.in_set(aa.r.o.r),{eose:'close'});
+  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
 };
 
 
@@ -736,7 +738,7 @@ aa.clk.p_refresh =e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
   const request = ['REQ','p_refresh',{authors:[xpub],kinds:[0,3,10002]}];
-  aa.r.demand(request,aa.r.in_set(aa.r.o.r),{eose:'close'});
+  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
 };
 
 
@@ -745,7 +747,7 @@ aa.clk.p_relays =e=>
 {
   const xpub = e.target.closest('.profile').dataset.xpub;
   const request = ['REQ','p_relays',{authors:[xpub],kinds:[10002],limit:1}];
-  aa.r.demand(request,aa.r.in_set(aa.r.o.r),{eose:'close'});
+  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
 };
 
 
@@ -753,7 +755,7 @@ aa.clk.p_relays =e=>
 aa.mk.p_relays =(a,p)=>
 {
   let ul = aa.mk.l('ul',{cla:'relays list'});
-  if (a) for (const relay in a) ul.append(aa.mk.relay(relay,a[relay]));
+  if (a) for (const relay in a) ul.append(aa.mk.server(relay,a[relay]));
   const butt_relays = aa.mk.butt(['refresh relays','p_relays']);
   let relays_details = aa.mk.details('relays ('+ul.childNodes.length+')',butt_relays);
   relays_details.append(ul);
@@ -1082,20 +1084,29 @@ aa.kinds[0] =dat=>
     if (aa.p.new_replaceable(p,dat.event))
     {
       if (aa.miss.p[x]) delete aa.miss.p[x];
-      
       let metadata = aa.parse.j(dat.event.content);
       if (metadata)
       {
         p.metadata = metadata;
+
         aa.p.p_links_upd(p);
         aa.p.save(p);
       }
-      let content = note.querySelector('.content');
-      content.textContent = '';
-      content.append(metadata ? aa.mk.ls({ls:metadata}) : 'invalid kind:0 metadata');
-    } 
+      
+      // let metadata = aa.parse.j(dat.event.content);
+      // if (metadata)
+      // {
+      //   p.metadata = metadata;
+      //   let content = note.querySelector('.content');
+      //   content.textContent = '';
+      //   content.append(aa.mk.ls({ls:metadata}));
+      //   aa.p.p_links_upd(p);
+      //   aa.p.save(p);
+      // }
+
+    }
   });
-    
+  aa.parse.content_o(dat,note);
   return note
 };
 
@@ -1111,37 +1122,7 @@ aa.kinds[3] =dat=>
     if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.new_replaceable(p,dat.event))
     {
-      // const old_bff = [...p.follows];
-      
-      // p.follows = aa.p.authors_from_tags(dat.event.tags);
-      // aa.p.authors(p.follows);
       aa.p.process_k3_tags(dat.event);
-      // if (aa.is.u(dat.event.pubkey)) aa.p.load_profiles(p.follows);
-
-
-
-      // for (const k of old_bff)
-      // {
-      //   if (!p.follows.includes(k))
-      //   {
-      //     // handle unfollowed k
-      //   }
-      // }
-
-      // let s = dat.event.content+''.trim();
-      // if (s.startsWith('{') && s.endsWith('}'))
-      // {
-      //   let con = aa.parse.j(dat.event.content);
-      //   if (con)
-      //   {
-      //     let relays = aa.r.from_o(con,['k3']);
-      //     aa.p.relays_add(relays,p);
-      //     if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-      //     let content = note.querySelector('.content');
-      //     content.textContent = '';
-      //     content.append(aa.mk.ls({ls:con}))
-      //   }
-      // }
       aa.p.save(p)
     }
   });

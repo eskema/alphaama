@@ -9,7 +9,14 @@
   <style>
     header
     {
+      display: grid;
+      grid-template-columns: auto 1fr;
       padding: var(--pad);
+    }
+
+    #team
+    {
+      justify-self: end;
     }
 
     main
@@ -224,6 +231,33 @@ new_tag_butt.addEventListener('click',new_tag);
 
 let butt = document.getElementById('butt');
 butt.addEventListener('click',make_filter);
+
+const dis_team =team=>
+{
+  if (team === 'dark') return 'light';
+  else return 'dark'
+};
+
+const change_team =e=>
+{
+  let l = e.target;
+  let team = l.textContent;
+  sessionStorage.team = team;
+  document.documentElement.dataset.team = team;
+  l.textContent = dis_team(team);
+};
+
+window.addEventListener('load',e=>
+{
+  let header = document.querySelector('body > header');
+  if (!sessionStorage.team) sessionStorage.team = 'dark';
+  document.documentElement.dataset.team = sessionStorage.team;
+  let team = document.createElement('button');
+  team.id = 'team';
+  team.textContent = dis_team(sessionStorage.team);
+  team.addEventListener('click',change_team);
+  header.append(team);
+});
 
 </script>
 </body></html>
