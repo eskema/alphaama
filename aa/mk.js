@@ -222,7 +222,7 @@ aa.mk.img_modal =src=>
   const dialog = aa.mk.dialog();
   let img = aa.mk.l('img',{cla:'modal-img',src:src});
   img.addEventListener('click',e=>{dialog.close()});
-  dialog.title = img.src;
+  // dialog.title = img.src;
   dialog.append(img);
   dialog.showModal();
 };

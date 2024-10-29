@@ -330,7 +330,7 @@ aa.mod_servers_add =(mod,s)=>
     {
       if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
       aa.fx.a_add(mod.o.ls[url].sets,a);
-      aa.mod_ui(mod,url,mod.o.ls[url]);
+      aa.mod_ui(mod,url);
     }
   };
   aa.fx.loop(work,s);
@@ -367,7 +367,7 @@ aa.mod_setrm =(mod,s)=>
     const server = mod.o.ls[url];
     if (!server) return;
     server.sets = aa.fx.a_rm(server.sets,a);
-    aa.mod_ui(mod,url,server);
+    aa.mod_ui(mod,url);
   };
   aa.fx.loop(work,s);
   aa.mod_save(mod)
@@ -434,8 +434,9 @@ aa.mod_save = async mod=>
 
 
 // update mod item element
-aa.mod_ui =(mod,k,v)=>
+aa.mod_ui =(mod,k)=>
 {
+  let v = mod.o.ls[k];
   let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));
   let l = mod.hasOwnProperty('mk') ? mod.mk(k,v) : aa.mk.item(k,v);
   let mod_l = document.getElementById(mod.def.id);

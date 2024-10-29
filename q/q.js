@@ -52,7 +52,7 @@ aa.q.add =s=>
       aa.mod_save(aa.q)
       .then(mod=>
       {
-        aa.mod_ui(mod,k,aa.q.o.ls[k]);
+        aa.mod_ui(mod,k);
         // if (!is_new) aa.q.run(k);
       });      
     }

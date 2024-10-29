@@ -112,7 +112,7 @@ aa.o.reset =s=>
       if (aa.o.def.ls[v])
       {
         localStorage[v] = aa.o.def.ls[v];
-        aa.mod_ui(aa.o,k,v);
+        aa.mod_ui(aa.o,k);
       }
     }
     aa.fx.loop(work,s);
@@ -170,7 +170,7 @@ aa.o.set =s=>
     {
       let old_v = localStorage[k];
       localStorage[k] = v;
-      aa.mod_ui(aa.o,k,v);
+      aa.mod_ui(aa.o,k);
       let log = aa.mk.l('p',{con:aa.o.def.id+' set '+k+' '+v});
       let undo = aa.mk.butt_action(aa.o.def.id+' set '+k+' '+old_v,'undo');
       log.append(' ',undo);

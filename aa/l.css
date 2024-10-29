@@ -108,6 +108,14 @@
   white-space: pre;
 }
 
+.item[data-sets]::after
+{
+  color: rgb(var(--color-f));
+  content: attr(data-sets);
+  grid-area: aft;
+  margin-right: var(--pad);
+}
+
 #r .server::after
 {
   content: "(" attr(data-state) ") " attr(data-q);
