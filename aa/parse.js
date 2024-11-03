@@ -87,16 +87,14 @@ aa.parse.content =(s,trusted)=>
 
 
 //parse content as object
-aa.parse.content_o =async(dat,note)=>
+aa.parse.content_o =async(data,note)=>
 {
-  let data = aa.parse.j(dat.event.content);
-  if (data)
+  if (data && typeof data === 'object')
   {
     let content = note.querySelector('.content');
     content.textContent = '';
     content.append(aa.mk.ls({ls:data}));
   }
-  return data
 };
 
 

@@ -237,6 +237,25 @@ aa.load =(o={})=>
   aa.head_scripts(aa.dependencies_loaded);
   aa.head_scripts(aa.tools_loaded);
   aa.head_scripts(aa.mods_loaded);
+
+  aa.actions.push(
+    {
+      action:['zzz'],
+      description:'resets everything',
+      exe:aa.reset
+    },
+    {
+      action:['l','l'],
+      required:['text'],
+      description:'log text to logs',
+      exe:aa.log
+    },
+    {
+      action:['l','x'],
+      description:'clear logs',
+      exe:aa.logs_clear
+    },
+  );
 };
 
 
@@ -279,6 +298,13 @@ aa.logs_read =async e=>
   else ls = document.querySelectorAll('.l.is_new');
   if (ls.length) for (const l of ls) aa.log_read(l);
 };
+// mark logs as read
+aa.logs_clear =async s=>
+{
+  let ls = document.querySelectorAll('#l .l:not(.mod)');
+  for (const l of ls) l.remove();
+  aa.cli.clear();
+};
 
 
 // tries to delete everything saved locally 
@@ -296,12 +322,7 @@ aa.reset =()=>
   });
 };
 
-aa.actions.push(
-{
-  action:['zzz'],
-  description:'resets everything',
-  exe:aa.reset
-});
+
 
 
 // if no options found, run with defaults
@@ -399,22 +420,38 @@ aa.mod_load =async mod=>
   {
     mod_o = await aa.db.idb.ops({get:{store:'stuff',key:mod.def.id}});
     if (mod_o) mod.o = mod_o;
-    else if (!mod_o && mod.old_id)
-    {
-      // in case the db key path changes, import to new key id
-      // if old_id is found
-      mod_o = await aa.db.idb.ops({get:{store:'stuff',key:mod.old_id}});
-      if (mod_o)
-      {
-        mod_o.id = mod.def.id;
-        mod.o = mod_o;
-        aa.mod_save(mod);
-      }
-    }
+    else if (!mod_o && mod.old_id) mod_o = await aa.mod_load_old(mod);
     if (!mod_o && mod.def) mod.o = mod.def;
   }
   if (!mod.o.ls) mod.o.ls = {};
   return mod
+};
+
+
+// in case the db key path changes, import to new key id
+// if old_id is found
+aa.mod_load_old =async mod=>
+{
+  let mod_o = await aa.db.idb.ops({get:{store:'stuff',key:mod.old_id}});
+  if (mod_o)
+  {
+    mod_o.id = mod.def.id;
+    mod.o = mod_o;
+    aa.mod_save(mod);
+  }
+  return mod_o
+};
+
+
+// checks if required mod has loaded
+aa.mods_required =mod=>
+{
+  console.log(mod.requires);
+  for (const id of mod.requires)
+  {
+    if (!aa[id]?.o) return false
+  }
+  return true;
 };
 
 

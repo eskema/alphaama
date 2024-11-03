@@ -355,7 +355,11 @@ aa.mk.mod =mod=>
   else 
   {
     mod.l = mod_l;
-    aa.log(mod_l)
+    aa.log(mod_l).then(()=>
+    {
+      console.log(mod.l.parentElement);
+      mod.l.parentElement.classList.add('mod');
+    });
   }
 };
 

@@ -42,59 +42,83 @@ aa.o =
 // on load
 aa.o.load =()=>
 {
+  const mod = aa.o;
+  const id = mod.def.id;
   // ensure default options are set
-  for (const k in aa.o.def.ls)
+  for (const k in mod.def.ls)
   {
-    if (!localStorage[k]) localStorage[k] = aa.o.def.ls[k];
+    if (!localStorage[k]) localStorage[k] = mod.def.ls[k];
   }
 
   aa.actions.push(
     {
-      action:[aa.o.def.id,'set'],
+      action:[id,'set'],
       required:['key','value'],
       description:'set option value',
-      exe:aa.o.set
+      exe:mod.set
     },
     {
-      action:[aa.o.def.id,'reset'],
+      action:[id,'reset'],
       optional:['key'], 
       description:'reset all or just a single option',
-      exe:aa.o.reset
+      exe:mod.reset
     },
     {
-      action:[aa.o.def.id,'rm'],
+      action:[id,'rm'],
       optional:['key'], 
       description:'remove option',
-      exe:aa.o.rm
+      exe:mod.rm
     }
   );
-  aa.o.o = {id:aa.o.def.id,ls:localStorage};
-  aa.mod_load(aa.o).then(aa.mk.mod);
+  mod.o = {id:id,ls:localStorage};
+  aa.mod_load(mod).then(aa.mk.mod).then(e=>
+  {
+    let add_butt = aa.mk.butt_action(`${id} set `,'+','set');
+    mod.l.insertBefore(add_butt,document.getElementById(id));
+  });
+  // detect when changes happen on other tabs 
   window.addEventListener('storage',e=> { console.log('storage',e); });
+};
+
+
+aa.fx.team =team=>
+{
+  if (team === 'dark') return 'light';
+  else return 'dark'
 };
 
 
 // makes a mod option item, to use with aa.mk.mod()
 aa.o.mk =(k,v)=>
 {
+  const id = aa.o.def.id;
+  const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
   // update 
   switch (k)
   {
-    case 'team': if (aa.l.dataset.team !== v) aa.l.dataset.team = v; break;
+    case 'team': 
+      if (aa.l.dataset.team !== v) aa.l.dataset.team = v; 
+      l.append(
+        aa.mk.butt_action(id+' set '+k+' '+aa.fx.team(v),k,'key'),
+        ' ',
+        aa.mk.l('span',{cla:'val',con:v})
+      );
+      break;
     // case 'pagination': 
     //   let style = aa.mk.l('style',
     //   {con:'.note:not(:nth-child(-n+'+k+')):not(.in_path){display:none;'});
     //   document.head.append(style);
     //   aa.l.dataset.pagination = localStorage.pagination;
     //   break;
+    default:
+      l.append(
+        aa.mk.butt_action(id+' set '+k+' '+v,k,'key'),
+        ' ',
+        aa.mk.l('span',{cla:'val',con:v})
+      );
   }
-  const id = aa.o.def.id;
-  const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
-  l.append(
-    aa.mk.butt_action(id+' set '+k+' '+v,k,'key'),
-    ' ',
-    aa.mk.l('span',{cla:'val',con:v})
-  );
+  
+
   return l
 };
 

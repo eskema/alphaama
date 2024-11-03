@@ -785,7 +785,7 @@ li.item > .val
 
 #dialog .modal-img
 {
-  cursor: pointer;
+  cursor: zoom-out;
   justify-self: center;
   margin: 0;
   max-width: 100%;

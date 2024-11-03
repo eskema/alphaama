@@ -11,6 +11,7 @@ aa.q =
 { 
   def:{id:'q',ls:{}},
   old_id:'q_e',
+  active:{}
 };
 
 
@@ -48,7 +49,11 @@ aa.q.add =s=>
     }
     if (changed) 
     {
-      if (!is_new) aa.q.close(k);
+      if (!is_new) 
+      {
+        aa.q.close(k);
+        aa.log(log);
+      }
       aa.mod_save(aa.q)
       .then(mod=>
       {
@@ -56,7 +61,7 @@ aa.q.add =s=>
         // if (!is_new) aa.q.run(k);
       });      
     }
-    aa.log(log);
+    // aa.log(log);
   }
   else aa.log('invalid filter');
 };
@@ -67,64 +72,88 @@ aa.q.close =s=>
 {
   aa.cli.clear();
   let fids = s.trim().split(' ');
-  aa.log(localStorage.ns+' '+aa.q.def.id+' close');  
   for (const k in aa.r.active)
   {
     const a = fids.length ? fids : Object.keys(aa.r.active[k].q);
-    if (a.length) for (const fid of a) aa.r.close(k,fid);
+    if (a.length) 
+    {
+      // aa.q.active.out = aa.fx.a_rm(aa.q.active.out,a);
+      // sessionStorage.q_out = aa.q.active.out;
+      // aa.q.active.run = aa.fx.a_rm(aa.q.active.run,a);
+      // sessionStorage.q_run = aa.q.active.run;
+      for (const fid of a)  aa.r.close(k,fid);
+    }
   }
+  aa.log(localStorage.ns+' '+aa.q.def.id+' close');
 };
 
 
 // on load
 aa.q.load =()=>
 {
+  let mod = aa.q;
+  let id = mod.def.id;
   aa.actions.push(
     {
-      action:[aa.q.def.id,'add'],
+      action:[id,'add'],
       required:['fid','JSON_filter'],
       description:'add new filter',
-      exe:aa.q.add
+      exe:mod.add
     },
     {
-      action:[aa.q.def.id,'rm'],
+      action:[id,'rm'],
       required:['fid'],
       description:'remove one or more filters',
-      exe:aa.q.rm_filter
+      exe:mod.rm_filter
     },
     {
-      action:[aa.q.def.id,'run'],
+      action:[id,'run'],
       required:['fid'],
       optional:['relset'],
       description:'run filter on relay set (relset), if no relset given default will be used',
-      exe:aa.q.run
+      exe:mod.run
     },
     {
-      action:[aa.q.def.id,'out'],
+      action:[id,'out'],
       required:['fid'],
       description:'run filter with outbox',
-      exe:aa.q.out
+      exe:mod.out
     },
     {
-      action:[aa.q.def.id,'req'],
+      action:[id,'req'],
       required:['relset','json_filter'],
       description:'run raw filter on relay set',
-      exe:aa.q.req
+      exe:mod.req
     },
     {
-      action:[aa.q.def.id,'close'],
+      action:[id,'close'],
       optional:['fid'],
       description:'close one or all running queries',
-      exe:aa.q.close
+      exe:mod.close
     },
     {
-      action:[aa.q.def.id,'stuff'],
+      action:[id,'stuff'],
       description:'sets a bunch of queries to get you started',
-      exe:aa.q.stuff
+      exe:mod.stuff
     },
   );
 
-  aa.mod_load(aa.q).then(aa.mk.mod);
+  aa.mod_load(mod).then(aa.mk.mod).then(e=>
+  {
+    let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
+    mod.l.insertBefore(add_butt,document.getElementById(id));
+    // mod.l.append(aa.mk.butt_action(`${id} add `,'+','add'));
+  });
+  if (sessionStorage.q_out) 
+  {
+    let action = `${id} out ${sessionStorage.q_out}`;
+    setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
+  }
+  if (sessionStorage.q_run) 
+  {
+    let action = `${id} run ${sessionStorage.q_run}`;
+    setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
+  }
 };
 
 
@@ -157,6 +186,10 @@ aa.q.out =async s=>
     let fid = a.shift();
     if (fid && aa.q.o.ls.hasOwnProperty(fid)) 
     { 
+      if (!aa.q.active.out) aa.q.active.out = [];
+      if (!aa.q.active.out.includes(fid)) aa.q.active.out.push(fid);
+      sessionStorage.q_out = aa.q.active.out;
+
       let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
       
       // wip 
@@ -181,18 +214,6 @@ aa.q.out =async s=>
         aa.log(aa.mk.butt_action(aa.q.def.id+' close '+fid));
       }
       
-      // console.log(filtered,outbox);
-
-
-      // needs to split up filter into pubkey groups
-      
-      // if (filtered) request = ['REQ',fid,filtered];
-      
-      // if (a.length) rels = a.shift();
-      // let relays = aa.r.rel(rels);
-      // if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-      // aa.r.demand(request,relays,options);
-      
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
   }
@@ -207,9 +228,18 @@ aa.q.rm_filter =s=>
   let k = s.trim();
   if (aa.q.o.ls.hasOwnProperty(k)) 
   {
+    let old_v = aa.q.def.id+' add '+k+' '+aa.q.o.ls[k].v;
+    let undo = aa.mk.butt_action(old_v,'undo');
+    let log = aa.mk.l('p',
+    {
+      con:aa.q.def.id+' filter removed: '+k+' ',
+      app: undo
+    });
+    aa.log(log);
+
     delete aa.q.o.ls[k];
     document.getElementById(aa.q.def.id+'_'+aa.fx.an(k)).remove();
-    aa.log(aa.q.def.id+' filter removed: '+k);
+    aa.mod_save(aa.q);
   }
   else aa.log(aa.q.def.id+' '+k+' not found')
 };
@@ -304,6 +334,10 @@ aa.q.run =async s=>
     if (a.length) fid = a.shift();
     if (fid && aa.q.o.ls.hasOwnProperty(fid)) 
     { 
+      if (!aa.q.active.run) aa.q.active.run = [];
+      if (!aa.q.active.run.includes(fid)) aa.q.active.run.push(fid);
+      sessionStorage.q_run = aa.q.active.run;
+
       let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
       if (filtered) request = ['REQ',fid,filtered];
       

@@ -364,6 +364,58 @@ aa.u.login =async s=>
 };
 
 
+// relay hint notice
+aa.u.login_notice =()=>
+{
+  // needs to display info from what npub, where does the notice come from?
+  
+  let id = 'notice_'+aa.fx.an(url);
+  if (document.getElementById(id)) return;
+  
+  let text = `r add ${url} `;
+  let notice = {title:text};
+  notice.id = id;
+  notice.butts = {};
+
+  notice.butts.yes =
+  {
+    title:set,
+    exe:e=>
+    {
+      aa.r.add(`${url} ${set}`);
+      aa.r.c_on(url,opts);
+      setTimeout(()=>
+      {e.target.parentElement.textContent = `${text} ${set}`},50);
+    }
+  };
+  let set_off = 'off';
+  notice.butts.no =
+  {
+    title:set_off,
+    exe:e=>
+    {
+      aa.r.add(`${url} ${set_off}`);
+      setTimeout(()=>
+      {e.target.parentElement.textContent = `${text} ${set_off}`},50);
+    }
+  };
+  let set_other = 'other'
+  notice.butts.maybe =
+  {
+    title:set_other,
+    exe:e=>
+    {
+      aa.r.add(url);
+      aa.r.c_on(url,opts);
+      aa.cli.v(localStorage.ns+' '+text);
+      setTimeout(()=>
+      {e.target.parentElement.textContent = `${text} ${set_other}`},50);
+    }
+  };
+  aa.log(aa.mk.notice(notice));
+};
+
+
 // load your metadata into input prefixed with set metadata command
 aa.u.metadata_load =()=>
 {

@@ -236,7 +236,7 @@ aa.p.new_replaceable_param =(p,event)=>
 aa.mk.extradata =p=>
 {
   const extradata = aa.mk.l('section',{cla:'extradata'});
-  const a = ['p_petnames','p_relays','p_follows','p_followers'];
+  const a = ['p_petnames','p_relays','p_follows','p_followers'];//,'p_nutsack'
   for (const k of a)
   {
     let id = k.slice(2);
@@ -764,6 +764,18 @@ aa.mk.p_relays =(a,p)=>
   return relays_details
 };
 
+// make relays
+// aa.mk.p_nuts =(a,p)=>
+// {
+//   let ul = aa.mk.l('ul',{cla:'nutsack list'});
+//   if (a) for (const i in a) ul.append(aa.mk.server(i,a[i]));
+//   let nuts_details = aa.mk.details('nutsack ('+ul.childNodes.length+')');
+//   nuts_details.append(ul);
+//   if (p.events.k10019?.length) 
+//     butt_relays.dataset.last = aa.t.display(p.events.k10002[0][1]);
+//   return relays_details
+// };
+
 
 // score profile
 aa.clk.p_score =async e=>
@@ -1106,7 +1118,7 @@ aa.kinds[0] =dat=>
 
     }
   });
-  aa.parse.content_o(dat,note);
+  aa.parse.content_o(aa.parse.j(dat.event.content),note);
   return note
 };
 

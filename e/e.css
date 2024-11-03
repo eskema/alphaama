@@ -690,6 +690,11 @@ a.author
   padding: var(--pad) 0;
 }
 
+.content .content-img
+{
+  cursor: zoom-in;
+}
+
 .in_view > .content .content-img
 {
   margin: var(--line) auto;
@@ -1453,7 +1458,7 @@ html:not(.needs_pagin) .pagination
 @media screen and (max-width: 768px) 
 {
   :root {
-    --font-size: 14px;
+    /*--font-size: 14px;*/
   }
   
   html:not(.view_e) #notes

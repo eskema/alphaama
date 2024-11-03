@@ -345,23 +345,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     }
   };
   aa.log(aa.mk.notice(notice));
-}
-
-
-// returns relays in a given set
-// aa.r.in_set =(relset,filter=true)=>
-// {
-//   let relays = [];
-//   for (const k in aa.r.o.ls)
-//   { 
-//     if (aa.r.o.ls[k].sets.includes(relset))
-//     {
-//       if (!filter) relays.push(k);
-//       else if (!aa.r.o.ls[k].sets.includes('off')) relays.push(k);
-//     } 
-//   }
-//   return relays
-// };
+};
 
 
 // list relays from set
@@ -434,49 +418,55 @@ aa.r.list_mk =s=>
 // on load
 aa.r.load =()=>
 {
+  const mod = aa.r;
+  const id = mod.def.id;
   aa.actions.push(
     {
-      action:[aa.r.def.id,'add'],
+      action:[id,'add'],
       required:['url'], 
       optional:['set'], 
       description:'add or replace relays',
-      exe:aa.r.add
+      exe:mod.add
     },
     {
-      action:[aa.r.def.id,'rm'],
+      action:[id,'rm'],
       required:['url'], 
       description:'remove relay',
-      exe:aa.r.rm
+      exe:mod.rm
     },
     {
-      action:[aa.r.def.id,'setrm'],
+      action:[id,'setrm'],
       required:['url','set'],
       description:'remove set from relays',
-      exe:s=>aa.mod_setrm(aa.r,s)
+      exe:s=>aa.mod_setrm(mod,s)
     },
     {
-      action:[aa.r.def.id,'ext'],
+      action:[id,'ext'],
       description:'get relays from extension',
-      exe:aa.r.ext
+      exe:mod.ext
     },
     {
-      action:[aa.r.def.id,'ls'],
+      action:[id,'ls'],
       required:['set'],
       description:'loads relay list from sets',
-      exe:aa.r.list
+      exe:mod.list
     },
     {
-      action:[aa.r.def.id,'mkls'],
+      action:[id,'mkls'],
       description:'create a relay list (kind-10002)',
-      exe:aa.r.list_mk
+      exe:mod.list_mk
     },
     {
-      action:[aa.r.def.id,'resume'],
+      action:[id,'resume'],
       description:'resume open queries',
-      exe:aa.r.resume
+      exe:mod.resume
     },
   );
-  aa.mod_load(aa.r).then(aa.mk.mod);
+  aa.mod_load(mod).then(aa.mk.mod).then(e=>
+  {
+    let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
+    mod.l.insertBefore(add_butt,document.getElementById(id));
+  });
 }
 
 
@@ -806,7 +796,7 @@ aa.kinds[30166] =dat=>
 {
   const note = aa.e.note_pre(dat);
   note.classList.add('root');
-  aa.parse.content_o(dat,note);
+  aa.parse.content_o(aa.parse.j(dat.event.content),note);
   return note
 };
 

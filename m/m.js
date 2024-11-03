@@ -46,7 +46,8 @@ aa.m.load =()=>
   aa.mod_load(aa.m).then(mod=>
   {
     aa.mk.mod(mod);
-    mod.l.append(aa.mk.butt_action(`${mod.def.id} add `,'+','add'));
+    let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+','add');
+    mod.l.insertBefore(add_butt,document.getElementById(mod.def.id));
   });
 }
 

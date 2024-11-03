@@ -108,7 +108,7 @@
   white-space: pre;
 }
 
-.item[data-sets]::after
+.item:not(.server)[data-sets]::after
 {
   color: rgb(var(--color-f));
   content: attr(data-sets);
@@ -206,17 +206,17 @@ html:not(.cli_expanded) .l:not(.is_new):not(:hover),
 {
   .l 
   {
-    padding: var(--pad) var(--padm);
+    /*padding: var(--pad) var(--padm);*/
   }
   
   .l .list .item
   {
-    padding: var(--pad) 0;
+    /*padding: var(--pad) 0;*/
   }
   
   .l::before
   {
-    padding-left: 0;
+    /*padding-left: 0;*/
   }
   
   html:not(.cli_expanded) .l.is_new
