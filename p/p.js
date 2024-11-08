@@ -22,7 +22,6 @@ aa.p =
       score:0,
       updated:0,
       metadata:{},
-      // trust:0, // will be deprecated in favor of score
       verified:[], // [result,date]
       sets:[],
       follows:[],
@@ -116,16 +115,8 @@ aa.p.authors =async a=>
   for (const xpub of a) if (!aa.db.p[xpub]) p_to_get.push(xpub);
   if (p_to_get.length)
   {
-    // let p_stored = [];
-    // let chunks = aa.fx.chunks(p_to_get,4444);
-    // for (const chunk of chunks)
-    // {
-    //   let ap = await aa.db.get('idb',{get_a:{store:'authors',a:chunk}});
-    //   p_stored.push(...ap)
-    // }
     let p_stored = await aa.db.get('idb',{get_a:{store:'authors',a:p_to_get}});
     for (const p of p_stored) aa.db.p[p.xpub] = p;
-    // .then(a=>{ for (const p of ap) aa.db.p[p.xpub] = p });
   } 
 };
 
@@ -260,56 +251,6 @@ aa.p.get_last_of =async(p,kn)=>
 
 
 // returns profile if already loaded or get it from database
-// aa.db.get_p =async xpub=>
-// {
-
-//   if (aa.db.p[xpub]) return aa.db.p[xpub];
-//   let p = await aa.db.idb.ops({get:[xpub]});
-//   // console.log('get_p',p);
-//   if (p.length) aa.db.p[xpub] = p[0];
-//   return p[0]
-// };
-// aa.db.get_pa =async a=>
-// {
-//   let results = []
-//   // let to_get = [];
-//   // for (const pub of a)
-//   // {
-//   //   if (!aa.db.p[pub]) to_get.push(pub+'.json');
-//   //   else results.push(aa.db.p[pub])
-//   // }
-//   let stored = await aa.db.cash.ops({get:a});
-//   for (const dis of stored) aa.db.p[dis.xpub] = dis;
-//   for (const x of a)
-//   {
-//     if (!aa.db.p[x]) 
-//     {
-//       if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
-//       aa.db.p[x] = aa.p.p(x);
-//     }
-//     results.push(aa.db.p[x])
-//   } 
-//   // console.log('get_p',p);
-//   // if (p.length) aa.db.p[xpub] = p[0];
-//   // for (const p of stored) 
-//   // {
-//   //   aa.db.p[p.xpub] = p;
-//   //   results.push(aa.db.p[p.xpub]);
-//   // }
-//   return results
-
-
-//   // for (const dis of stored) aa.db.p[dis.xpub] = dis;
-//   // for (const x of a)
-//   // {
-//   //   if (!aa.db.p[x]) 
-//   //   {
-//   //     if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
-//   //     aa.db.p[x] = aa.p.p(x);
-//   //   }
-//   //   aa.p.profile(aa.db.p[x])
-//   // } 
-// };
 aa.db.get_p =async xpub=>
 {
   if (aa.db.p[xpub]) return aa.db.p[xpub];
@@ -333,7 +274,7 @@ aa.p.get_authors =async a=>
 aa.p.get_relay =(p,set='write')=>
 {
   let p_relays = Object.entries(p.relays);
-  if (!p_relays.length) return ' ';
+  if (!relays.length) return ' ';
   const u_relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).sort();
 
   let relays = p_relays
@@ -599,11 +540,7 @@ aa.mk.p_followers =(a,p)=>
 aa.mk.p_link =(x,p=false)=>
 {
   if (!p) p = aa.db.p[x];
-  if (!p) 
-  {
-    // if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
-    p = aa.p.p(x);
-  }
+  if (!p) p = aa.p.p(x);
 
   const l = aa.mk.l('a',
   {
@@ -763,18 +700,6 @@ aa.mk.p_relays =(a,p)=>
     butt_relays.dataset.last = aa.t.display(p.events.k10002[0][1]);
   return relays_details
 };
-
-// make relays
-// aa.mk.p_nuts =(a,p)=>
-// {
-//   let ul = aa.mk.l('ul',{cla:'nutsack list'});
-//   if (a) for (const i in a) ul.append(aa.mk.server(i,a[i]));
-//   let nuts_details = aa.mk.details('nutsack ('+ul.childNodes.length+')');
-//   nuts_details.append(ul);
-//   if (p.events.k10019?.length) 
-//     butt_relays.dataset.last = aa.t.display(p.events.k10002[0][1]);
-//   return relays_details
-// };
 
 
 // score profile
@@ -1138,30 +1063,6 @@ aa.kinds[3] =dat=>
       aa.p.save(p)
     }
   });
-  return note
-};
-
-
-// event template for relay list
-aa.kinds[10002] =dat=>
-{
-  const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
-  
-  aa.db.get_p(dat.event.pubkey).then(p=>
-  {
-    if (!p) p = aa.p.p(dat.event.pubkey);
-    if (aa.p.new_replaceable(p,dat.event))
-    {
-      let relays = aa.r.from_tags(dat.event.tags,['k10002']);
-      aa.p.relays_add(relays,p);
-      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-      aa.p.save(p);
-    }
-    // let profile = document.getElementById(p.npub);
-    // if (!profile) profile = aa.p.profile(p);
-  });
-  
   return note
 };
 

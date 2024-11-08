@@ -171,6 +171,26 @@ aa.mk.butt_expand =(id,con=false)=>
 };
 
 
+// make event wrapper object
+aa.mk.dat =o=>
+{
+  const dat =
+  {
+    event:{},
+    seen:[],
+    subs:[],
+    clas:[],
+    refs:[]
+  };
+  if (o.event) dat.event = o.event;
+  if (o.seen) dat.seen = o.seen;
+  if (o.subs) dat.subs = o.subs;
+  if (o.clas) dat.clas = o.clas;
+  if (o.refs) dat.refs = o.refs;
+  return dat
+};
+
+
 // make details element
 aa.mk.details =(s,l=false,open=false)=>
 { 
@@ -357,7 +377,7 @@ aa.mk.mod =mod=>
     mod.l = mod_l;
     aa.log(mod_l).then(()=>
     {
-      console.log(mod.l.parentElement);
+      // console.log(mod.l.parentElement);
       mod.l.parentElement.classList.add('mod');
     });
   }

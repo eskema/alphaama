@@ -150,6 +150,30 @@ aa.fx.expanded =(id,expanded,l)=>
 aa.fx.hash =o=> NostrTools.getEventHash(o);
 
 
+// returns items in a given set
+aa.fx.in_set =(ls,set,filter=true)=>
+{
+  let in_set = [];
+  for (const k in ls)
+  { 
+    if (ls[k].sets.includes(set))
+    {
+      if (!filter) in_set.push(k);
+      else if (!ls[k].sets.includes('off')) in_set.push(k);
+    } 
+  }
+  return in_set
+};
+
+
+// return items in sets
+aa.fx.in_sets =(ls,sets)=>
+{
+  let a = [];
+  for (const i of sets) a.push(...aa.fx.in_set(ls,i));
+  return [...new Set(a)]
+};
+
 // removes up to 5 leading zeroes from beginning of hexstring
 // to be used as a hex color from pubkeys 
 // but not too dark if pow/mined

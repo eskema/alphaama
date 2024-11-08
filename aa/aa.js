@@ -394,21 +394,6 @@ aa.mod_setrm =(mod,s)=>
   aa.mod_save(mod)
 };
 
-// returns relays in a given set
-aa.fx.in_set =(ls,set,filter=true)=>
-{
-  let in_set = [];
-  for (const k in ls)
-  { 
-    if (ls[k].sets.includes(set))
-    {
-      if (!filter) in_set.push(k);
-      else if (!ls[k].sets.includes('off')) in_set.push(k);
-    } 
-  }
-  return in_set
-};
-
 
 // load mod
 aa.mod_load =async mod=>
@@ -446,7 +431,7 @@ aa.mod_load_old =async mod=>
 // checks if required mod has loaded
 aa.mods_required =mod=>
 {
-  console.log(mod.requires);
+  // console.log(mod.requires);
   for (const id of mod.requires)
   {
     if (!aa[id]?.o) return false

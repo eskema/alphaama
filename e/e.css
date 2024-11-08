@@ -182,12 +182,12 @@
   align-self: center;
   align-content: center;
   background: rgb(var(--color-b));
-  color: rgb(var(--c));
+  /*color: rgb(var(--c));*/
   display: grid;
   font-size: var(--font-size-s);
   grid-area: by;
-  grid-template-areas: "author id created_at clas";
-  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "author x id created_at clas";
+  grid-template-columns: auto auto 1fr auto;
   line-height: 1rem;
   z-index: 1;
 }
@@ -195,8 +195,8 @@
 .in_view > .by
 {
   grid-template-areas:
-  "author id created_at clas"
-  "author id created_at clas";
+  "author x id created_at clas"
+  "author x id created_at clas";
 }
 
 .note.draft .by::after,
@@ -244,6 +244,13 @@
   position: sticky;
   top: calc(var(--line) + var(--line) - var(--padm) - 1px);
   z-index: 3;
+}
+
+.by > .tiny
+{
+  grid-area: x;
+  align-content: center;
+  line-height: 1;
 }
 
 /* @end */
@@ -361,7 +368,7 @@ a.author
 
 .in_view > .by .author::after
 {
-  align-self: stretch;
+  align-self: center;
   align-content: center;
   font-size: var(--font-size-m);
   grid-area: flw;
@@ -1265,14 +1272,9 @@ a.author
   display: none;
 }
 
-.note.tiny > .actions > .butt.tiny
+.note.tiny > .by > .butt.tiny
 {
   color: rgb(var(--color-no));
-}
-
-.note.tiny > .actions > .butt.tiny::before
-{
-  content: "un";
 }
 
 .note.tiny[data-kind="7"]
@@ -1399,7 +1401,7 @@ html:not(.needs_pagin) .pagination
   {
     display: block;
     color: rgb(var(--color-d));
-    content: "<!--";
+    content: "--";
     font-size: var(--font-size-xs);
     line-height: 1.5rem;
     margin-left: var(--pad);

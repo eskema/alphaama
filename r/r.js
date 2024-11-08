@@ -20,21 +20,7 @@ aa.r =
 aa.r.add =s=>
 {
   aa.cli.clear();
-  
   aa.mod_servers_add(aa.r,s);
-  // const work =a=>
-  // {
-  //   let url_string = a.shift().trim();
-  //   const url = aa.is.url(url_string)?.href;
-  //   if (url)
-  //   {
-  //     if (!aa.r.o.ls[url]) aa.r.o.ls[url] = {sets:[]};
-  //     aa.fx.a_add(aa.r.o.ls[url].sets,a);
-  //     aa.mod_ui(aa.r,url,aa.r.o.ls[url]);
-  //   }
-  // };
-  // aa.fx.loop(work,s);
-  // aa.mod_save(aa.r);
 };
 
 
@@ -82,26 +68,6 @@ aa.r.broadcast =(event,relays=false)=>
     }
   }
 };
-
-
-// append relay buttons to item
-// aa.r.butts =(l,o)=>
-// {
-//   aa.mod_butts_server(mod,l,o);
-//   // let url = l.querySelector('.url').innerText;
-//   // l.append(' ',aa.mk.butt_action(aa.r.def.id+' rm '+url,'rm','rm'));
-  
-//   // let sets = aa.mk.l('span',{cla:'sets'});
-//   // if (o.sets && o.sets.length)
-//   // {    
-//   //   for (const set of o.sets)
-//   //   {
-//   //     sets.append(aa.mk.butt_action(aa.r.def.id+' setrm '+url+' '+set,set),' ')
-//   //   }
-//   // }
-//   // // sets.append(aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+'));
-//   // l.append(' ',sets,' ',aa.mk.butt_action(aa.r.def.id+' add '+url+' off','+','add'));
-// };
 
 
 // make relay connection
@@ -352,11 +318,10 @@ aa.r.hint_notice =(url,opts,set='hint')=>
 aa.r.list =s=>
 {
   const err = ()=> {aa.log(aa.r.def.id+' ls: no relays found')};
-  a = s.trim().split(' ');
+  let a = s.trim().split(' ');
+  let ls = aa.r.o.ls;
   if (!a.length || a[0] === '') a[0]= 'k10002';
-  let relays = [];
-  for (const set of a) relays.push(...aa.fx.in_set(aa.r.o.ls,set,false));
-  relays = [...new Set(relays)];
+  let relays = aa.fx.in_sets(ls,a);
   let rels = [];
   if (relays.length)
   {
@@ -364,8 +329,8 @@ aa.r.list =s=>
     { 
       let read, write;
       const tag = [k];
-      if (aa.r.o.ls[k].sets.includes('read')) read = true;
-      if (aa.r.o.ls[k].sets.includes('write')) write = true;
+      if (ls[k].sets.includes('read')) read = true;
+      if (ls[k].sets.includes('write')) write = true;
       if (read || write)
       {
         if (read && !write) tag.push('read');
@@ -654,26 +619,6 @@ aa.r.resume =()=>
   for (const url in aa.r.active) { aa.r.c_on(url) } 
 };
 
-// save r
-// aa.r.save =()=>{ aa.mod_save(aa.r).then(aa.mk.mod) };
-
-// remove set from relays
-// aa.r.rm_set =s=>
-// {
-//   aa.cli.clear();
-//   const work =a=>
-//   {
-//     let url_string = a.shift().trim();
-//     const url = aa.is.url(url_string)?.href;
-//     const relay = aa.r.o.ls[url];
-//     if (!relay) return;
-//     relay.sets = aa.fx.a_rm(relay.sets,a);
-//     aa.mod_ui(aa.r,url,relay);
-//   };
-//   aa.fx.loop(work,s);
-//   aa.mod_save(aa.r)
-// };
-
 
 // try to send and retry if fails
 aa.r.try =(relay,dis)=>
@@ -760,36 +705,38 @@ aa.r.ws_message =async e=>
 aa.r.ws_open =async e=>
 {
   let relay = aa.r.active[e.target.url];
-  let delay = 0;
   for (const sub_id in relay.q)
   {
     let sub = relay.q[sub_id];
-    // if (sub?.eose !== 'done')
-    // if (sub?.eose && sub?.eose !== 'done')
-    // {
-      // if (sub.stamp)
-      // {
-      //   let filters_i = 2;
-      //   while (filters_i < sub.req.length)
-      //   {
-      //     sub.req[filters_i].since = sub.stamp + 1;
-      //     filters_i++;
-      //   }
-      // }
-      aa.r.try(relay,JSON.stringify(sub.req));
-      // setTimeout(()=>{aa.r.try(relay,JSON.stringify(sub.req))},delay);
-    // }
-    // delay = 100 + delay;
+    aa.r.try(relay,JSON.stringify(sub.req));
   }
-  // delay = 0;
-  for (const ev in relay.send) 
-  {
-    aa.r.try(relay,relay.send[ev])
-    // setTimeout(()=>{aa.r.try(relay,relay.send[ev])},delay);
-    // delay = 100 + delay;
-  }
+
+  for (const ev in relay.send) aa.r.try(relay,relay.send[ev]);
   aa.r.upd_state(e.target.url);
 };
+
+
+// event template for relay list
+aa.kinds[10002] =dat=>
+{
+  const note = aa.e.note_regular(dat);
+  note.classList.add('root','tiny');
+  
+  aa.db.get_p(dat.event.pubkey).then(p=>
+  {
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (aa.p.new_replaceable(p,dat.event))
+    {
+      let relays = aa.r.from_tags(dat.event.tags,['k10002']);
+      aa.p.relays_add(relays,p);
+      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      aa.p.save(p);
+    }
+  });
+  
+  return note
+};
+
 
 // event template for relay data from monitor nip66
 aa.kinds[30166] =dat=>

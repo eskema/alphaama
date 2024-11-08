@@ -28,13 +28,13 @@ aa.w.add =s=>
     aa.log('invalid wid: '+wid);
     return
   }
-  const w = aa.w.o.ls[wid] = 
-  {
-    balance:0,
-    unit:'sat',
-    mints:[],
-    relays:[],
-  }
+  const w = aa.w.o.ls[wid] = aa.w.w();
+  // {
+  //   balance:0,
+  //   unit:'sat',
+  //   mints:[],
+  //   relays:[],
+  // }
 
   if (a.length)
   {
@@ -51,30 +51,61 @@ aa.w.add =s=>
 };
 
 
+// 
+aa.mk.wallnut =(k,v)=>
+{
+  const id = aa.w.def.id;
+  const ul = aa.mk.l('ul',{cla:'list'});
+  for (const key in v)
+  {
+    if (key === 'unit') continue;
+    let val = v[key];
+    let li = aa.mk.l('li',{cla:'item item_'+key});
+    if (key === 'balance')
+    {
+      let unit = v.unit?v.unit:'sat';
+      li.append(
+        aa.mk.butt_action(`${id} unit ${k} ${unit}`,key,'key'),
+        ' ',
+        aa.mk.l('span',{cla:'val',con:val+' '+unit})
+      );
+    }
+    else 
+    {
+      li.append(
+        aa.mk.butt_action(`${id} ${key} ${k} ${val}`,key,'key'),
+        ' ',
+        aa.mk.l('span',{cla:'val',con:val})
+      );
+      if (key === 'relays') li.dataset.sets = aa.fx.in_sets(aa.r.o.ls,val);
+      if (key === 'mints') li.dataset.sets = aa.fx.in_sets(aa.m.o.ls,val);
+    }
+    ul.append(li);
+  }
+  return ul
+};
+
+
 // make w mod item
 aa.w.mk =(k,v)=>
 {
-  let l = aa.mk.item(k,v);
-  let id = aa.w.def.id;
-  l.id = id+'_'+k;
-  // const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
-  // l.append(
-  //   aa.mk.butt_action(id+' set '+k+' '+v,k,'key'),
-  //   ' ',
-  //   aa.mk.item_v(k,v)
-  // );
+  const id = aa.w.def.id;
 
-  let details = l.querySelector('details');
-  details.append(aa.mk.butt_action(`${id} rm ${k}`,'rm','rm'));
-  
-  let relays = [];
-  for (const r of v.relays) relays.push(...aa.fx.in_set(aa.r.o.ls,r));
-  l.querySelector('.item_relays').dataset.sets = relays;
-  
-  let mints = [];
-  for (const m of v.mints) mints.push(...aa.fx.in_set(aa.m.o.ls,m));
-  l.querySelector('.item_mints').dataset.sets = mints;
+  // wallnut mod item
+  const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
 
+  // wallnut list
+  const ul = aa.mk.wallnut(k,v);
+
+  // wallnut details
+  const details = aa.mk.details(k,ul,1);
+  
+  details.append(
+    aa.mk.butt_action(`${id} rm ${k}`,'rm','rm'),
+    ' ',
+    aa.mk.butt_action(`${id} upd ${k}`,'upd','upd')
+  );
+  l.append(details);
   return l
 };
 
@@ -210,22 +241,70 @@ aa.w.upd =s=>
   aa.cli.clear();
   let a = s.trim().split(' ');
   let wid = a.shift();
-  aa.log('w '+wid);
+  let wallnut = aa.w.o.ls[wid];
+  if (!wallnut) return;
+
+  let event = { kind:10019, tags:[]};
+  let mints = aa.fx.in_sets(aa.m.o.ls,wallnut.mints);
+  for (const i of mints) event.tags.push(['mint',i]);
+  let relays = aa.fx.in_sets(aa.r.o.ls,wallnut.relays);
+  for (const i of relays) event.tags.push(['relay',i]);
+
+  event = aa.u.event_normalise(event);
+  aa.u.event_draft(aa.mk.dat({event:event}));
+  
+  // aa.dialog(
+  // {
+  //   title:'new wallnut data',
+  //   l:aa.mk.tag_list(event.tags),
+  //   no:{exe:()=>{}},
+  //   yes:{exe:()=>
+  //   {
+  //     aa.draft(event);
+  //     console.log(event);
+  //     // .then(aa.u.event.finalize);
+  //   }},
+  // });
+
+
+
+  //   "kind": 10019,
+  //   "tags": [
+  //       [ "relay", "wss://relay1" ],
+  //       [ "relay", "wss://relay2" ],
+  //       [ "mint", "https://mint1", "usd", "sat" ],
+  //       [ "mint", "https://mint2", "sat" ],
+  //       [ "pubkey", "<p2pk-pubkey>" ]
+  //   ]
+  // }
+  // aa.log('w '+wid);
 };
 
 
-// event template for wallnut
+// wallnut object template
+aa.w.w =()=>
+{
+  return  {
+    balance:0,
+    unit:'sat',
+    mints:[],
+    relays:[],
+  }
+};
+
+
+// event template for wallnut discovery
 aa.kinds[10019] =dat=>
 {
   const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
+  note.classList.add('root');
+  if (!dat.clas.includes('draft')) note.classList.add('tiny');
   
   aa.db.get_p(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.new_replaceable(p,dat.event))
     {
-      
       // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
       // aa.p.relays_add(relays,p);
       // if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
@@ -243,7 +322,7 @@ aa.kinds[10019] =dat=>
   // o.pubkeys = dat.event.tags.filter(t=>t[0]==='p').slice(1).join();
   
   // aa.parse.content_o(o,note);
-  note.querySelector('.content').textContent = 'nutsack';
+  // note.querySelector('.content').textContent = 'nutsack';
   let tags = note.querySelector('.tags_wrapper');
   tags.setAttribute('open','');
   

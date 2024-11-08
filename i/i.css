@@ -1,15 +1,13 @@
 #i 
 {
-  /*background: rgb(var(--color-a));*/
   display: none;
   font-size: var(--font-size-s);
-  grid-area: i;
-  max-height: 100vh;
+  /*grid-area: i;*/
+    /*max-height: 100%;*/
+  /*max-height: calc(100vh - calc(var(--size) * 2));*/
   max-width: 100vw;
   opacity: .2;
   overflow: scroll;
-  margin-bottom: var(--pad);
-  /*margin: var(--pad) 0;*/
   user-select: none;
 }
 
@@ -18,7 +16,6 @@ header:hover > #i
 {
   opacity: 1;
 }
-
 
 html:not(.viewing) .expanded header > #i
 {
@@ -38,14 +35,15 @@ html:not(.viewing) .expanded header > #i
 
 #i details
 {
-  background: rgb(var(--color-a));
-  padding: var(--pad);
+  
+  /*background: rgba(var(--color-a),.8);*/
 }
 
 #i details > summary
 {
   background: rgb(var(--color-a));
   color: rgb(var(--color-e));
+  padding: var(--pad);
   position: sticky;
   top: 0;
 }
@@ -77,15 +75,24 @@ html:not(.viewing) .expanded header > #i
   color: rgb(var(--color-e));
 }
 
+#i .list
+{
+  background: rgb(var(--color-a));
+  margin: 0 var(--padm);
+  max-height: calc(100vh - calc(var(--size) * 2));
+  overflow: scroll;
+}
+
 #i .list > .item 
 {
-  border-bottom: 1px dotted #333;
+  border-top: 1px dotted #333;
   grid-gap: var(--pad);
   grid-template-areas: "k v";
   grid-template-columns: auto 1fr;
   justify-items: stretch;
-  margin: var(--padm) 0;
-  padding-bottom: var(--padm);
+  padding: var(--padm);
+/*  padding: 0;
+  padding-top: var(--padm);*/
 }
 
 #i .key 

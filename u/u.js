@@ -72,7 +72,7 @@ aa.u.event_normalise =event=>
 // draft event
 aa.u.event_draft =async dat=>
 {
-
+  aa.fx.a_add(dat.clas,['draft']);
   dat.event.tags = [...new Set(dat.event.tags)];
   if (!dat.event.id) dat.event.id = aa.fx.hash(dat.event);
   aa.db.e[dat.event.id] = dat;
@@ -492,7 +492,7 @@ aa.u.mine_note =async(xid,difficulty = 0)=>
         // }
         // delete aa.db.e[xid];
         event = pow_e;
-        aa.u.event_draft({event:event,clas:['draft'],seen:[],subs:[]});
+        aa.u.event_draft(aa.mk.dat({event:event,clas:['draft']}));
       }
       else aa.log('pow failed')
     }

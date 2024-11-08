@@ -27,7 +27,7 @@
 #l > header .butt::before
 {
   color: rgb(var(--color-f));
-  content: "//";
+  content: "/* logs */";
   font-size: var(--font-size-s);
 }
 
@@ -161,7 +161,7 @@
 #l.expanded > header .butt::before
 {
   color: rgb(var(--color-f));
-  content: "/* logs */";
+  content: "//";
   font-size: var(--font-size-s);
 }
 

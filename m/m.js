@@ -19,6 +19,15 @@ aa.m.add =s=>
 };
 
 
+// return mints from sets
+// aa.m.from_sets =a=>
+// {
+//   let dis = [];
+//   for (const i of a) dis.push(...aa.fx.in_set(aa.m.o.ls,i));
+//   return [...new Set(dis)]
+// };
+
+
 // on load
 aa.m.load =()=>
 {

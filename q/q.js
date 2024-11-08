@@ -63,7 +63,7 @@ aa.q.add =s=>
     }
     // aa.log(log);
   }
-  else aa.log('invalid filter');
+  else aa.log('invalid filter: '+a);
 };
 
 
@@ -144,14 +144,14 @@ aa.q.load =()=>
     mod.l.insertBefore(add_butt,document.getElementById(id));
     // mod.l.append(aa.mk.butt_action(`${id} add `,'+','add'));
   });
-  if (sessionStorage.q_out) 
-  {
-    let action = `${id} out ${sessionStorage.q_out}`;
-    setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
-  }
   if (sessionStorage.q_run) 
   {
     let action = `${id} run ${sessionStorage.q_run}`;
+    setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
+  }
+  if (sessionStorage.q_out) 
+  {
+    let action = `${id} out ${sessionStorage.q_out}`;
     setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
   }
 };
@@ -160,13 +160,14 @@ aa.q.load =()=>
 // make q mod item
 aa.q.mk =(k,v) =>
 {
-  k = aa.fx.an(k);  
-  const l = aa.mk.l('li',{id:`${aa.q.def.id}_${k}`,cla:'item filter'});
-  let out = aa.mk.butt_action(`${aa.q.def.id} out ${k}`,'out','out');
-  let run = aa.mk.butt_action(`${aa.q.def.id} run ${k}`,'run','run');
-  let add = aa.mk.butt_action(`${aa.q.def.id} add ${k} ${v.v}`,k,'add');
+  k = aa.fx.an(k);
+  const id = aa.q.def.id;
+  const l = aa.mk.l('li',{id:`${id}_${k}`,cla:'item filter'});
+  let out = aa.mk.butt_action(`${id} out ${k}`,'out','out');
+  let run = aa.mk.butt_action(`${id} run ${k}`,'run','run');
+  let add = aa.mk.butt_action(`${id} add ${k} ${v.v}`,k,'add');
   let val = aa.mk.l('span',{cla:'val',con:v.v});
-  let rm = aa.mk.butt_action(`${aa.q.def.id} rm ${k}`,'rm','rm');
+  let rm = aa.mk.butt_action(`${id} rm ${k}`,'rm','rm');
   
   l.append(
     out,' ',run,' ',add,' ',val,' ',rm
@@ -247,7 +248,6 @@ aa.q.rm_filter =s=>
 
 // takes a string and
 // returns an array with a request filter and options
-
 aa.q.replace_filter_vars =s=>
 {
   const o = aa.parse.j(s);
@@ -352,74 +352,14 @@ aa.q.run =async s=>
 };
 
 
-// q save 
-// aa.q.save =()=>{ aa.mod_save(aa.q).then(aa.mk.mod) };
-
-
-// add set to filter
-// aa.q.sets =s=>
-// {
-//   const work =a=>
-//   { 
-//     const set_id = a.shift();
-//     if (!aa.is.an(set_id)) return;
-//     for (const k of a)
-//     {
-//       let r = aa.q.o.ls[k];
-//       if (r) 
-//       {
-//         if (!r.sets) r.sets = [];
-//         aa.fx.a_add(aa.q.o.ls[k].sets,[set_id]);
-//         it.mod_ui(aa.q,k,aa.q.o.ls[k]);
-//       }
-//     }
-//   };
-//   aa.fx.loop(work,s);
-//   aa.mod_save(aa.q);
-// };
-
-
-// remove set from filter
-// aa.q.set_rm =s=>
-// {
-//   const work =a=>
-//   { 
-//     const set_id = a.shift();
-//     if (!aa.is.an(set_id)) return;
-//     if (a.length)
-//     {
-//       for (const k of a)
-//       {
-//         let r = aa.q.o.ls[k];
-//         if (r && r.sets) 
-//         {
-//           r.sets = aa.fx.a_rm(r.sets,[set_id]);
-//           aa.mod_ui(aa.q,k,aa.q.o.ls[k]);
-//         }
-//       }
-//     }
-//     else
-//     {
-//       for (const k in aa.q.o.ls)
-//       {
-//         aa.q.o.ls[k].sets = aa.fx.a_rm(aa.q.o.ls[k].sets,[set_id]);
-//         aa.mod_ui(aa.q,k,aa.q.o.ls[k]);
-//       }
-//     }
-//   };
-//   aa.fx.loop(work,s)
-//   aa.mod_save(aa.q);
-// };
-
-
 // add useful queries
 aa.q.stuff =()=>
 {
   aa.log(localStorage.ns+' '+aa.q.def.id+' stuff:');
-  aa.q.add('a {"authors":["u"],"kinds":[0,3,10002]}');
-  aa.q.add('b {"authors":["k3"],"kinds":[0,3,10002]}');
+  aa.q.add('a {"authors":["u"],"kinds":[0,3,10002,10019]}');
+  aa.q.add('b {"authors":["k3"],"kinds":[0,3,10002,10019]}');
   aa.q.add('d {"#p":["u"],"kinds":[4],"since":"n_7"}');
-  aa.q.add('f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,10002,30023,30818],"since":"n_1"}');
+  aa.q.add('f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,10002,10019,30023,30818],"since":"n_1"}');
   aa.q.add('n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}');
   aa.q.add('r {"authors":["u","k3"],"kinds":[6,7,16],"since":"n_1"}');
   aa.q.add('u {"authors":["u"],"since":"n_5"}');
