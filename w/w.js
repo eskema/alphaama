@@ -101,7 +101,7 @@ aa.w.mk =(k,v)=>
   const details = aa.mk.details(k,ul,1);
   
   details.append(
-    aa.mk.butt_action(`${id} rm ${k}`,'rm','rm'),
+    aa.mk.butt_action(`${id} del ${k}`,'del','del'),
     ' ',
     aa.mk.butt_action(`${id} upd ${k}`,'upd','upd')
   );

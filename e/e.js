@@ -1186,6 +1186,36 @@ aa.kinds[30023] =dat=> // = aa.kinds[1];
 };
 
 
+// video template
+aa.kinds[34235] =dat=> // = aa.kinds[1];
+{
+  let note = aa.e.note_pre(dat);
+
+  aa.get.pubs(dat.event.tags);
+  aa.db.get_p(dat.event.pubkey).then(p=>
+  {
+    let score = p ? p.score : 0;
+    let url = dat.event.tags.filter(t=>t[0] === 'url')[0];
+    let vid_url = aa.is.url(url[1])?.href;
+    let content = note.querySelector('.content');
+    if (vid_url)
+    {
+      let vid;
+      if (aa.is.trusted(score))
+      {
+        vid = aa.mk.av(vid_url);
+      }
+      else
+      {
+        vid = aa.mk.link(vid_url);
+      }
+      content.prepend(aa.mk.l('p',{cla:'paragraph',app:vid}));
+    }    
+  });
+  return note
+};
+
+
 
 aa.views.note1 =async nid=>
 {
