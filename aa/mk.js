@@ -172,21 +172,14 @@ aa.mk.butt_expand =(id,con=false)=>
 
 
 // make event wrapper object
-aa.mk.dat =o=>
+aa.mk.dat =(o={})=>
 {
-  const dat =
-  {
-    event:{},
-    seen:[],
-    subs:[],
-    clas:[],
-    refs:[]
-  };
-  if (o.event) dat.event = o.event;
-  if (o.seen) dat.seen = o.seen;
-  if (o.subs) dat.subs = o.subs;
-  if (o.clas) dat.clas = o.clas;
-  if (o.refs) dat.refs = o.refs;
+  const dat ={};
+  dat.event = o.event ?? {};
+  dat.seen = o.seen ?? [];
+  dat.subs = o.subs ?? [];
+  dat.clas = o.clas ?? [];
+  dat.refs = o.refs ?? [];
   return dat
 };
 
@@ -424,8 +417,11 @@ aa.mk.nostr_link =(dis,con=false)=>
     cla:'nostr_link',
     con:con||dis.slice(0,12),
     ref:'#'+dis,
-    clk:aa.clk.a
+    // clk:aa.clk.a
   });
+  setTimeout(()=>{
+  a.addEventListener('click',aa.clk.a)
+  },200);
 
   if (!dis) 
   {

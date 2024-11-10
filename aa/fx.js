@@ -543,6 +543,8 @@ aa.fx.to_rgb =x=>
 aa.fx.trunk =(s,len=3,sep='…')=> s.slice(0,len)+sep+s.slice(-len);
 
 
+aa.fx.kind_type =kind=> NostrTools.kinds.classifyKind(kind);
+
 // checks if string is valid url and then checks extension for media file types.
 // returns false if no media found or array with extension,URL
 aa.fx.url_type =s=>

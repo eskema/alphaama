@@ -33,7 +33,7 @@ const aa =
   get:{},
   is:{},
   kinds:{},
-  miss:{e:{},p:{}},
+  miss:{e:{},p:{},a:[]},
   mk:{},
   mods:
   [
@@ -269,6 +269,7 @@ aa.log =async(s,l=false)=>
   if (l) 
   {
     l.append(log);
+    // console.log(s);
     log.addEventListener('click',aa.logs_read);
     log.scrollIntoView();
   }

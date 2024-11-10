@@ -15,10 +15,7 @@ aa.parse.content =(s,trusted)=>
   const another_l =last_l=>
   {
     last_l.normalize();
-    if (aa.is.empty(last_l)) 
-    {
-      last_l.remove();
-    }
+    if (aa.is.empty(last_l)) last_l.remove();
     else 
     {
       df.append(last_l);
@@ -56,17 +53,7 @@ aa.parse.content =(s,trusted)=>
             another_l(l); 
             df.append(quote)
           }
-          else l.append(parsed);
-          // while (parsed.childNodes.length)
-          // {
-          //   let node = parsed.firstChild;
-          //   if (node.tagName !== 'BLOCKQUOTE') l.append(node);
-          //   else 
-          //   { 
-          //     another_l(l); 
-          //     df.append(node)
-          //   }
-          // }        
+          else l.append(parsed);       
         }
         else if (aa.regx.hashtag.test(word)) 
         {

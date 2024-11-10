@@ -504,6 +504,17 @@ aa.r.message_type.event =async message=>
       delete aa.miss.e[event.id];
       dat.clas.push('miss');
     }
+    else if (aa.fx.kind_type(event.kind) === 'parameterized')
+    {
+      let ds = event.tags.filter(t=>t[0]==='d')[0][1];
+      let id = `${event.kind}:${event.pubkey}:${ds}`;
+      dat.id_a = id;
+      if (aa.miss.a[id])       
+      {
+        delete aa.miss.a[id];
+        dat.clas.push('miss');
+      }
+    }
   }
   else console.log('invalid event',message);
 
@@ -523,7 +534,8 @@ aa.r.message_type.event =async message=>
 // ["NOTICE",,<message>]
 aa.r.message_type.notice =async message=> 
 {
-  aa.log(message)
+  let s = message.origin+': '+message.data
+  aa.log(s)
 };
 
 

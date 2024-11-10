@@ -65,19 +65,12 @@ aa.e.append_check =(dat,note,reply_tag)=>
   const reply_id = reply_tag[1];
   if (reply_tag[0] === 'a')
   {
-    let a_note = document.querySelector('[data-a_id="'+reply_tag[1]+'"]');
+    let a_note = document.querySelector('[data-id_a="'+reply_tag[1]+'"]');
     if (!a_note)
     {
       a_note = aa.e.note_blank_pre(reply_tag,dat,1);
       aa.e.append_to_notes(a_note);
     }
-    // if (a_note) aa.e.append_to_rep(note,a_note.querySelector('.replies'));
-    // else 
-    // {
-    //   a_note = aa.e.note_blank_pre(reply_tag,dat,1);
-    //   aa.e.append_to_notes(a_note);
-    //   aa.e.append_to_rep(note,a_note.querySelector('.replies'));
-    // }
     aa.e.append_to_rep(note,a_note.querySelector('.replies'));
     return;
   }
@@ -165,15 +158,15 @@ aa.e.clear =s=>
 
 
 // clone note
-aa.e.clone =(note,class_name='')=>
-{
-  let clone = note.cloneNode(true);
-  clone.removeAttribute('id');
-  let rm = clone.querySelectorAll('.details,.sig,.replies,.actions');
-  for (const l of rm) l.remove();
-  if (class_name) clone.className = class_name;
-  return clone
-};
+// aa.e.clone =(note,class_name='')=>
+// {
+//   let clone = note.cloneNode(true);
+//   clone.removeAttribute('id');
+//   let rm = clone.querySelectorAll('.details,.sig,.replies,.actions');
+//   for (const l of rm) l.remove();
+//   if (class_name) clone.className = class_name;
+//   return clone
+// };
 
 
 // on load
@@ -286,6 +279,17 @@ aa.e.miss_e =(xid,relays=[])=>
   }
 };
 
+// add event id to missing event list
+aa.e.miss_a =(id,relays=[])=>
+{
+  if (!aa.miss.a[id]) aa.miss.a[id] = {nope:[],relays:[]};
+  for (const rel of relays)
+  {
+    const r = aa.is.url(rel)?.href;
+    if (r && !aa.miss.a[id].relays.includes(r)) aa.miss.a[id].relays.push();
+  }
+};
+
 
 // get event from tag and prints it,
 // otherwise add to missing list
@@ -301,7 +305,7 @@ aa.e.miss_print =tag=>
   });
 };
 
-const nope =(id,a,b,miss)=>
+aa.e.nope =(id,a,b,miss)=>
 {
   for (const url of a) 
   {
@@ -324,27 +328,40 @@ aa.get.missing =async type=>
     for (const xid in aa.miss[type])
     {
       let v = aa.miss[type][xid];
-      nope(xid,def_relays,v.nope,miss);
-      nope(xid,v.relays,v.nope,miss);
+      aa.e.nope(xid,def_relays,v.nope,miss);
+      aa.e.nope(xid,v.relays,v.nope,miss);
     }
 
     if (Object.keys(miss).length)
     {
+      let filter;
       let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
       for (const id of ids) aa.fx.a_add(aa.miss[type][id].nope,[url]);
       
-      let filter;
-      if (type === 'p') filter = {authors:ids,kinds:[0]};
-      else if (type === 'e')
+      if (type === 'e' || type === 'p')
+      {
+        if (type === 'p') filter = {authors:ids,kinds:[0]};
+        else
+        {
+          for (const id of ids)
+          {
+            let notes = document.querySelectorAll('[data-id="'+id+'"]');
+            for (const note of notes) note.dataset.nope = aa.miss[type][id].nope.join(' ');
+          }
+          filter = {ids:ids};
+        }
+        setTimeout(()=>{aa.r.demand(['REQ',type,filter],[url],{});},0)
+      }
+      else if (type === 'a')
       {
         for (const id of ids)
         {
-          let notes = document.querySelectorAll('[data-id="'+id+'"]');
-          for (const note of notes) note.dataset.nope = aa.miss.e[id].nope.join(' ');
+          let notes = document.querySelectorAll('[data-id_a="'+id+'"]');
+          for (const note of notes) note.dataset.nope = aa.miss[type][id].nope.join(' ');
         }
         filter = {ids:ids};
       }
-      setTimeout(()=>{aa.r.demand(['REQ',type,filter],[url],{});},0)
+      
     }
   },1000,'miss_'+type);
 };
@@ -353,20 +370,31 @@ aa.get.missing =async type=>
 // parse nip19 to render as mention or quote
 aa.parse.nip19 =s=>
 {
-  let decoded = aa.fx.decode(s);
-  if (!decoded) return s;
+  let d = aa.fx.decode(s);
+  if (!d) return s;
   let l;
-  if (s.startsWith('npub1'))  l = aa.mk.p_link(decoded);
-  else if (s.startsWith('nprofile1')) l = aa.mk.p_link(decoded.pubkey);
-  else if (s.startsWith('note1')) l = aa.e.quote({"id":decoded});
-  else if (s.startsWith('nevent1') || s.startsWith('naddr1'))
+  if (s.startsWith('npub1'))  l = aa.mk.p_link(d);
+  else if (s.startsWith('nprofile1')) l = aa.mk.p_link(d.pubkey);
+  else if (s.startsWith('note1')) l = aa.e.quote({"id":d});
+  else if (s.startsWith('nevent1'))
   {
-    if (decoded.id) 
+    if (d.id) 
     {
-      decoded.s = s;
-      l = aa.e.quote(decoded);
+      d.s = s;
+      l = aa.e.quote(d);
     }
-    else l = aa.mk.l('span',{con:s+':'+JSON.stringify(decoded)})
+    else l = aa.mk.l('span',{con:s+': '+JSON.stringify(d)})
+  }
+  else if (s.startsWith('naddr1'))
+  {
+    if (d.kind && d.pubkey && d.identifier) 
+    {
+      d.s = s;
+      d.id_a = `${d.kind}:${d.pubkey}:${d.identifier}`;
+      l = aa.e.quote_a(d);
+    }
+    else l = aa.mk.l('span',{con:s+':'+JSON.stringify(d)})
+    // l = aa.mk.l('span',{con:s+':'+JSON.stringify(d)})
   }
   else l = aa.mk.nostr_link(s);
   return l
@@ -375,7 +403,7 @@ aa.parse.nip19 =s=>
 
 // parse nostr:stuff
 // use with aa.parser('nostr',s)
-aa.parse.nostr =(match)=>
+aa.parse.nostr =match=>
 {
   let df = new DocumentFragment();
   df.append(match.input.slice(0,match.index)); 
@@ -562,7 +590,7 @@ aa.e.note_by_kind =dat=>
   // k>=10000 && k<=19999 || k===0 || k===3: replaceable
   // k>=20000 && k<=29999 : ephemeral
   // k>=30000 && k<=39999 : replaceable_parameterized
-  let type = NostrTools.kinds.classifyKind(dat.event.kind); 
+  let type = aa.fx.kind_type(dat.event.kind); 
   if (aa.kinds.hasOwnProperty(k)) return aa.kinds[k](dat);
   switch (type)
   {
@@ -610,11 +638,12 @@ aa.e.note_blank_pre =(tag,dat,seconds)=>
 {
   const id = tag[1];
   const [kind,pubkey,ds] = id.split(':');
+  let timestamp = dat?.event?.created_at ?? aa.t.now - 1000;
   const blank_event = 
   {
     kind:kind,
     pubkey:pubkey,
-    created_at:dat.event.created_at - seconds,
+    created_at:timestamp - seconds,
     tags:[tag],
     content:id
   }
@@ -629,11 +658,12 @@ aa.e.note_blank_pre =(tag,dat,seconds)=>
       blank_event.content = blank_event.content+'\n'+url.href;
       r = url.href;
     }
-    else console.log('malformed tag on',dat);
+    else console.log('malformed tag on',tag);
   }
+  const subs = dat?.subs ?? [];
   const note = aa.e.note({event:blank_event,seen:seen,subs:dat.subs,clas:['blank']});
   note.classList.add('blank');
-  note.dataset.a_id = id;
+  note.dataset.id_a = id;
   if (r) note.dataset.r = r;
   return note
 };
@@ -657,10 +687,10 @@ aa.e.note_pre =dat=>
   if (d_tag?.length > 1) 
   {
     let ds = d_tag[1];
-    let a_id = `${dat.event.kind}:${dat.event.pubkey}:${ds}`;
+    let id_a = `${dat.event.kind}:${dat.event.pubkey}:${ds}`;
     note.dataset.d = ds;
-    note.dataset.a_id = a_id;
-    let og = document.querySelector(`[data-a_id="${a_id}"]`);
+    note.dataset.id_a = id_a;
+    let og = document.querySelector(`[data-id_a="${id_a}"]`);
     let versions = og?.querySelector('.versions');
     if (versions) 
     {
@@ -852,7 +882,9 @@ aa.e.print =dat=>
   if (dat.clas.includes('miss')) 
   {
     dat.clas = aa.fx.a_rm(dat.clas,['miss']);
-    aa.get.quotes(xid);
+    
+    if (dat.id_a) aa.get.quotes(dat.id_a);
+    else aa.get.quotes(xid);
   }
   setTimeout(()=>{aa.i.d(dat)},300);
 };
@@ -895,7 +927,16 @@ aa.e.quote =o=>
     pubkey = aa.mk.p_link(pubkey);
     by.prepend(pubkey);
   }
-  setTimeout(()=>{aa.e.quote_upd(quote,o);},200);
+  setTimeout(()=>{aa.e.quote_upd(quote,o)},200);
+  return quote
+};
+
+// quote event
+aa.e.quote_a =o=>
+{
+  const quote = aa.mk.l('blockquote',{cla:'note_quote'});
+  quote.dataset.id_a = o.id_a;
+  setTimeout(()=>{aa.e.quote_a_upd(quote,o)},200);
   return quote
 };
 
@@ -924,11 +965,9 @@ aa.e.quote_upd =async(quote,o)=>
   else
   {
     quote_classes.push('blank_quote');
-    // quote.classList.add('blank_quote');
     if (!has_pub) by.prepend(aa.mk.l('span',{con:'?'}));
     content = aa.mk.l('p',{cla:'paragraph'});
     
-
     // let req = {ids:[o.id]};
     let relays = [];
     if (o.relays?.length) 
@@ -943,30 +982,105 @@ aa.e.quote_upd =async(quote,o)=>
 };
 
 
+// update blank quotes
+aa.e.quote_a_upd =async(quote,o)=>
+{
+  let id = o.id_a;
+  let pub = o.pubkey;
+  let p = await aa.db.get_p(pub);
+  if (!p) p = aa.p.p(pub);
+
+  let by = aa.mk.l('p',{cla:'note_quote_by'});
+  quote.append(by);
+  by.append(aa.mk.p_link(pub));
+  aa.fx.color(pub,quote);
+
+  let a_note = document.querySelector('.note[data-id_a="'+id+'"]');
+  let content = new DocumentFragment();
+  let quote_classes = [];
+  if (a_note) 
+  {    
+    by.append(aa.mk.nostr_link(a_note.id)); 
+    let og_content = a_note.querySelector('.content');
+    if (og_content) 
+    {
+      let new_content = og_content.cloneNode(true);
+      for (const c of new_content.childNodes) content.append(c);
+      quote_classes.push('parsed');
+    }
+  }
+  else
+  {
+    quote_classes.push('blank_quote');
+    content = aa.mk.l('p',{cla:'paragraph'});
+    
+    // let req = {ids:[o.id]};
+    let relays = [];
+    if (o.relays?.length) 
+    {
+      content.append(`\nrelays: ${o.relays}`);
+      relays = o.relays
+    }
+    aa.e.miss_a(id,relays);
+    setTimeout(()=>
+    {
+      aa.r.demand(['REQ','a_'+Date.now(),
+      {
+        kinds:[o.kind],
+        authors:[o.pubkey],
+        '#d':[o.identifier]
+      }],relays,{eose:'close'})
+    },100)
+  }
+  quote.append(content)
+  quote.classList.add(...quote_classes);
+};
+
+
 // gets all blank quotes and replaces with actual data
 aa.e.quotes_to =async q_id=>
 {
   let ids = [...new Set(aa.temp[q_id])];
   aa.temp[q_id] = [];
+  
   for (const id of ids)
   { 
-    let quotes = document.querySelector('.blank_quote[data-id="'+id+'"]');
-    if (quotes) quotes = document.querySelectorAll('.blank_quote[data-id="'+id+'"]');
+
+    let selector = '.blank_quote[data-id="'+id+'"]';
+    let quotes = document.querySelector(selector);
+    if (quotes) quotes = document.querySelectorAll(selector);
     if (quotes?.length)
     {
       let dat = await aa.db.get_e(id);
       if (!dat) dat = {event:{"id":id}};
-      let quote = aa.e.quote(dat.event);
-      setTimeout(()=>{ for(const q of quotes) q.replaceWith(quote)},100);
+      // let quote = aa.e.quote(dat.event);
+      setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote(dat.event))},200);
+    }
+    else 
+    {
+      selector = '.blank_quote[data-id_a="'+id+'"]';
+      quotes = document.querySelector(selector);
+      if (quotes) quotes = document.querySelectorAll(selector);
+      if (quotes?.length)
+      {
+        // let dat = await aa.db.get_e(id);
+        // if (!dat) dat = {event:{"id":id}};
+        let a = id.split(':');
+        let dis = {kind:a[0],pubkey:a[1],identifier:a[2],id_a:id};
+        // let quote = aa.e.quote_a(dis);
+        setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote_a(dis))},200);
+      }
     }
   }
 };
+
+
 aa.get.quotes =async id=>
 {
   const q_id = 'get_quotes';
   if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
   aa.temp[q_id].push(id);
-  aa.to(aa.e.quotes_to,3000,q_id);
+  aa.to(aa.e.quotes_to,1000,q_id);
 };
 
 
@@ -1012,13 +1126,11 @@ aa.e.section_mutated =a=>
     aa.fx.data_count(butt,'.note');
     aa.e.root_count = mutation.target.childNodes.length;
     const needs = aa.e.root_count > parseInt(localStorage.pagination||0);
-    if (needs
-    && !aa.l.classList.contains('needs_pagin')) 
+    if (needs && !aa.l.classList.contains('needs_pagin')) 
     {
       aa.l.classList.add('needs_pagin')
     }
-    else if (!needs 
-    && aa.l.classList.contains('needs_pagin')) 
+    else if (!needs && aa.l.classList.contains('needs_pagin')) 
     {
       aa.l.classList.remove('needs_pagin')
     }
@@ -1173,7 +1285,7 @@ aa.kinds[9735] = aa.kinds[1];
 aa.kinds[9802] = aa.kinds[1];
 
 // long-form template
-aa.kinds[30023] =dat=> // = aa.kinds[1];
+aa.kinds[30023] =dat=>
 {
   let note = aa.e.note_pre(dat);
   aa.get.pubs(dat.event.tags);
@@ -1187,7 +1299,7 @@ aa.kinds[30023] =dat=> // = aa.kinds[1];
 
 
 // video template
-aa.kinds[34235] =dat=> // = aa.kinds[1];
+aa.kinds[34235] =dat=>
 {
   let note = aa.e.note_pre(dat);
 
@@ -1197,7 +1309,7 @@ aa.kinds[34235] =dat=> // = aa.kinds[1];
     let score = p ? p.score : 0;
     let url = dat.event.tags.filter(t=>t[0] === 'url')[0];
     let vid_url = aa.is.url(url[1])?.href;
-    let content = note.querySelector('.content');
+    
     if (vid_url)
     {
       let vid;
@@ -1209,7 +1321,8 @@ aa.kinds[34235] =dat=> // = aa.kinds[1];
       {
         vid = aa.mk.link(vid_url);
       }
-      content.prepend(aa.mk.l('p',{cla:'paragraph',app:vid}));
+      note.querySelector('.content')
+      .prepend(aa.mk.l('p',{cla:'paragraph',app:vid}));
     }    
   });
   return note
@@ -1366,7 +1479,6 @@ aa.get.hashtag =s=>
   if (hashtags) for (const h of hashtags) tags.push(['t',h.slice(1).toLowerCase()])
   return tags
 };
-
 
 
 // gets all nostr:stuff from string 

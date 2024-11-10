@@ -75,16 +75,9 @@ aa.q.close =s=>
   for (const k in aa.r.active)
   {
     const a = fids.length ? fids : Object.keys(aa.r.active[k].q);
-    if (a.length) 
-    {
-      // aa.q.active.out = aa.fx.a_rm(aa.q.active.out,a);
-      // sessionStorage.q_out = aa.q.active.out;
-      // aa.q.active.run = aa.fx.a_rm(aa.q.active.run,a);
-      // sessionStorage.q_run = aa.q.active.run;
-      for (const fid of a)  aa.r.close(k,fid);
-    }
+    if (a.length) for (const fid of a)  aa.r.close(k,fid);
   }
-  aa.log(localStorage.ns+' '+aa.q.def.id+' close');
+  aa.log(aa.q.def.id+' closed: '+fids);
 };
 
 

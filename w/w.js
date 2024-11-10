@@ -6,6 +6,8 @@ wallnuts
 wallnut
 wall_ut
 wallut
+...
+nutsack
 
 */
 
@@ -16,7 +18,7 @@ aa.w =
 };
 
 
-// add wallut
+// add nutsack
 aa.w.add =s=>
 {
   aa.cli.clear();
@@ -29,12 +31,6 @@ aa.w.add =s=>
     return
   }
   const w = aa.w.o.ls[wid] = aa.w.w();
-  // {
-  //   balance:0,
-  //   unit:'sat',
-  //   mints:[],
-  //   relays:[],
-  // }
 
   if (a.length)
   {
@@ -52,7 +48,7 @@ aa.w.add =s=>
 
 
 // 
-aa.mk.wallnut =(k,v)=>
+aa.mk.nutsack =(k,v)=>
 {
   const id = aa.w.def.id;
   const ul = aa.mk.l('ul',{cla:'list'});
@@ -91,13 +87,13 @@ aa.w.mk =(k,v)=>
 {
   const id = aa.w.def.id;
 
-  // wallnut mod item
+  // nutsack mod item
   const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
 
-  // wallnut list
-  const ul = aa.mk.wallnut(k,v);
+  // nutsack list
+  const ul = aa.mk.nutsack(k,v);
 
-  // wallnut details
+  // nutsack details
   const details = aa.mk.details(k,ul,1);
   
   details.append(
@@ -120,39 +116,39 @@ aa.w.load =()=>
       action:[id,'add'],
       required:['wid'],
       optional:['pubkey','unit','mintset','relset'],
-      description:'add wallnut',
+      description:'add nutsack',
       exe:mod.add
     },
     {
       action:[id,'del'],
       required:['wid'],
-      description:'delete wallnut',
+      description:'delete nutsack',
       exe:mod.del
     },
     {
       action:[id,'pubkey'],
       required:['wid','hex_pubkey'],
-      description:'set pubkey to wallnut',
+      description:'set pubkey to nutsack',
       exe:mod.pubkey
     },
     {
       action:[id,'unit'],
       required:['wid','unit'],
-      description:'set unit to wallnut',
+      description:'set unit to nutsack',
       exe:mod.unit
     },
     {
       action:[id,'relays'],
       required:['wid','relset'],
       optional:['relset'],
-      description:'set relay sets to wallnut',
+      description:'set relay sets to nutsack',
       exe:mod.relays
     },
     {
       action:[id,'mints'],
       required:['wid','mintset'],
       optional:['mintset'],
-      description:'set mint sets to wallnut',
+      description:'set mint sets to nutsack',
       exe:mod.mints
     },
     {
@@ -177,7 +173,7 @@ aa.w.start =mod=>
 };
 
 
-// remove wallut(s)
+// remove nutsack(s)
 aa.w.del =s=>
 {
   aa.cli.clear();
@@ -190,7 +186,7 @@ aa.w.del =s=>
       delete aa.w.o.ls[k];
 
       document.getElementById(aa.w.def.id+'_'+aa.fx.an(k)).remove();
-      aa.log(aa.w.def.id+' wallut deleted: '+k);
+      aa.log(aa.w.def.id+' nutsack deleted: '+k);
     }
     else aa.log(aa.w.def.id+' '+k+' not found')
   };
@@ -199,7 +195,7 @@ aa.w.del =s=>
 };
 
 
-// define mint sets to wallnut
+// define mint sets to nutsack
 aa.w.mints =s=>
 {
   aa.cli.clear();
@@ -211,7 +207,7 @@ aa.w.mints =s=>
 };
 
 
-// define relay sets to wallnut
+// define relay sets to nutsack
 aa.w.relays =s=>
 {
   aa.cli.clear();
@@ -223,7 +219,7 @@ aa.w.relays =s=>
 };
 
 
-// define unit of wallnut
+// define unit of nutsack
 aa.w.unit =s=>
 {
   aa.cli.clear();
@@ -241,13 +237,13 @@ aa.w.upd =s=>
   aa.cli.clear();
   let a = s.trim().split(' ');
   let wid = a.shift();
-  let wallnut = aa.w.o.ls[wid];
-  if (!wallnut) return;
+  let nutsack = aa.w.o.ls[wid];
+  if (!nutsack) return;
 
   let event = { kind:10019, tags:[]};
-  let mints = aa.fx.in_sets(aa.m.o.ls,wallnut.mints);
+  let mints = aa.fx.in_sets(aa.m.o.ls,nutsack.mints);
   for (const i of mints) event.tags.push(['mint',i]);
-  let relays = aa.fx.in_sets(aa.r.o.ls,wallnut.relays);
+  let relays = aa.fx.in_sets(aa.r.o.ls,nutsack.relays);
   for (const i of relays) event.tags.push(['relay',i]);
 
   event = aa.u.event_normalise(event);
@@ -255,7 +251,7 @@ aa.w.upd =s=>
   
   // aa.dialog(
   // {
-  //   title:'new wallnut data',
+  //   title:'new nutsack data',
   //   l:aa.mk.tag_list(event.tags),
   //   no:{exe:()=>{}},
   //   yes:{exe:()=>
@@ -281,7 +277,7 @@ aa.w.upd =s=>
 };
 
 
-// wallnut object template
+// nutsack object template
 aa.w.w =()=>
 {
   return  {
@@ -293,7 +289,7 @@ aa.w.w =()=>
 };
 
 
-// event template for wallnut discovery
+// event template for nutsack discovery
 aa.kinds[10019] =dat=>
 {
   const note = aa.e.note_regular(dat);

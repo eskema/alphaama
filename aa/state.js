@@ -111,17 +111,24 @@ aa.state.view =(s,search='')=>
 {
   if (s?.length) s.trim();
   if (search?.length) search = s.length?'?'+search:search;
-  let ss = s+search;
-  // if (ss !== '/' && !ss.startsWith('#')) ss = '#'+ss;
-  if (!history.state || history.state.view !== ss)
+  let view = s+search;
+  let state,last;
+  if (!history.state || history.state.view !== view)
   {
-    const last = history.state&&history.state.view?history.state.view:'';
-    const dis = {view:ss,last:last};
-    const path = location.origin+location.pathname+dis.view;
-    history.pushState(dis,'',path);
-    aa.state.pop()
+    last = history.state?.view ?? '';
+    state = {view:view,last:last};
+
   }
-  else history.back();
+  else 
+  {
+    last = history.state.last;
+    state = {view:last,last:view};
+    // history.pushState(dis,'',path);
+    // aa.state.pop()
+  }
+  history.pushState(state,'',location.origin+location.pathname+state.view);
+  aa.state.pop();
+  // history.back();
 };
 
 window.addEventListener('popstate',aa.state.pop);
