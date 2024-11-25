@@ -1,5 +1,7 @@
 #oto
 {
+  /*align-self: end;*/
+  background: rgb(var(--color-b));
   display: none;
   font-size: 16px;
   grid-area: oto;
@@ -7,7 +9,9 @@
   overflow-y: scroll;
   max-height: 50vh;
   padding-left: var(--line);
+  padding-top: var(--line);
   padding-bottom: 1px;
+  /*position: absolute;*/
 }
 
 #oto::before 
@@ -173,7 +177,7 @@
 .cli_expanded #cli #oto
 {
   display: block;
-  margin-top: 1rem;
+  /*margin-top: 1rem;*/
 }
 
 @media screen and (min-width: 1025px) 

@@ -35,6 +35,7 @@
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
   margin: var(--pad) 0;
+  /*margin-bottom: var(--line);*/
   position: relative;
   /*scroll-snap-align: start;*/
   z-index: 1;
@@ -52,7 +53,7 @@
   "by       by       by"
   "content  content  replies"
   "opentags opentags replies"
-  "tags     actions  replies"
+  "tags     .  replies"
   "versions versions versions"
   "sig      sig      sig"
   "after    after    after"
@@ -64,14 +65,15 @@
   border-color: rgb(var(--color-e));
   grid-template-areas: 
   "by by"
+  "after after"
   "content content"
   "tags tags"
   "opentags opentags"
   "sig sig"
-  "after after"
   "actions actions"
   "replies replies"
   ;
+  grid-template-columns: 1fr 61.8vw;
   margin: 0;
 }
 
@@ -80,7 +82,7 @@
 .note.in_view > .replies > .note,
 #notes > .note:not(.root):not(.in_path)
 {
-  margin: var(--line) 0;
+  /*margin: var(--line) 0;*/
 }
 
 .note.root:not(.in_path):first-child,
@@ -113,14 +115,15 @@
 
 .note::after
 {
-  color: rgb(var(--color-d));;
+  color: rgb(var(--color-d));
   background: rgb(var(--color-b));
-  content: "kind-" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
+  content: "k" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
   font-size: var(--font-size-xs);
   grid-area: after;
   padding: 1rem var(--padm);
-  padding-bottom: 0;
-  z-index: 2;
+  padding-bottom: var(--padm);
+  position: relative;
+  z-index: 99;
 }
 
 .note.in_view::after
@@ -140,7 +143,8 @@
 
 .note:not(.in_view) > .sig,
 
-.note[data-kind="1"]:not(.tiny):not(.in_view)::after,
+/*.note[data-kind="1"]:not(.tiny):not(.in_view)::after,*/
+.viewing .note.in_path:not(.in_view)::after,
 
 .haz_solo .note:not(.in_path)::after,
 .haz_solo .note:not(.in_path)::before,
@@ -186,17 +190,16 @@
   display: grid;
   font-size: var(--font-size-s);
   grid-area: by;
-  grid-template-areas: "author x id created_at clas";
+  grid-template-areas: "author actions id created_at clas ";
   grid-template-columns: auto auto 1fr auto;
   line-height: 1rem;
   z-index: 1;
+  /*display: none;*/
 }
 
 .in_view > .by
 {
-  grid-template-areas:
-  "author x id created_at clas"
-  "author x id created_at clas";
+
 }
 
 .note.draft .by::after,
@@ -235,14 +238,14 @@
 .in_view .replies .note .by
 {
   position: sticky;
-  top: calc(var(--line) + var(--line) + var(--pad) - 1px);
+  top: calc(var(--line)  + var(--pad) - 2px);
   /*top: calc(3.6rem - 1px);*/
 }
 
 .in_view > .replies > .note > .by
 {
   position: sticky;
-  top: calc(var(--line) + var(--line) - var(--padm) - 1px);
+  top: calc(var(--line) + var(--line) - var(--padm) - 2px);
   z-index: 3;
 }
 
@@ -265,15 +268,21 @@ a.author
   overflow-x: scroll;
   text-decoration: none;
   user-select: none;
+  /*transform: translate(-1px,-1px);*/
 }
 
-.author:not(.has-picture)::before
+/*.tiny a.author
+{
+  transform: translate(0);
+}*/
+
+.author::before
 {
   content: "";
 }
 
 .a.author.has-picture img,
-.author:not(.has-picture)::before
+.author::before
 {
   background: rgb(var(--c));
   display: block;
@@ -283,6 +292,7 @@ a.author
   padding: 0;
   pointer-events: none;
   width: 1rem;
+  
 }
 
 .by .author::after,
@@ -353,26 +363,17 @@ a.author
 }
 
 .paragraph > a.author .picture,
-.paragraph > a.author:not(.has-picture)::before,
+.paragraph > a.author::before,
 .paragraph > a.author .name:not(.empty)::after
 {
   display: none;
 }
 
-.in_view > .by .author:not(.has-picture)::before
+.in_view > .by .author::before
 {
   height: 2rem;
   width: 2rem;
   grid-area: img;
-}
-
-.in_view > .by .author::after
-{
-  align-self: center;
-  align-content: center;
-  font-size: var(--font-size-m);
-  grid-area: flw;
-  padding: 0 var(--pad);
 }
 
 .in_view > .by .author
@@ -383,8 +384,10 @@ a.author
 
 .in_view > .by .author .picture
 {
-  height: var(--size-s);
-  width: var(--size-s);
+  height: var(--line);
+  width: var(--line);
+  /*transform: scale(.82);*/
+  /*background-color: rgb(var(--c));*/
 }
 
 .in_view > .by .author .name
@@ -519,11 +522,11 @@ a.author
 
 .in_view > .by .created_at
 {
+  align-content: center;
   font-size: var(--font-size-s);
+  grid-gap: 0 var(--pad);
   grid-template-areas: 
-  "timestamp elapsed" 
-  "title title"
-  ;
+  "timestamp title elapsed";
 }
 
 .in_view > .by .created_at::before
@@ -549,12 +552,14 @@ a.author
   position: relative;
 }
 
+.viewing .root:not(.in_view) > .content,
 .root:not(.in_view):not(.in_path) > .content
 {
   overflow-y:  scroll;
 }
 
 .in_view > .replies > .note > .content,
+.viewing .root:not(.in_path) > .content,
 .root:not(.in_view):not(.in_path) > .content
 {
   /*margin-bottom: 2rem;*/
@@ -634,6 +639,8 @@ a.author
 .paragraph.cypher
 {
   color: rgb(var(--color-c));
+  font-size: var(--font-size-xs)!important;
+  line-height: 1!important;
   word-break: break-all;
 }
 
@@ -761,12 +768,13 @@ a.author
 
 .tags_wrapper
 {
-  background: rgba(var(--color-b),1);
+  background: rgba(var(--color-b),.9);
   bottom: 4rem;
   grid-area: tags;
   overflow: hidden;
   position: sticky;
   
+  /*z-index: 1;*/
   /*justify-self: end;*/
 }
 
@@ -776,7 +784,6 @@ a.author
   max-height: 50vh;
   overflow-y:  scroll;
   padding-bottom: var(--line);
-  padding-top: var(--line);
 }
 
 .tags_wrapper summary
@@ -786,11 +793,15 @@ a.author
   line-height: 1.5rem;
   padding: 0 var(--padm);
   text-align: right;
+  transition: none;
 }
 
 .tags_wrapper[open] summary
 {
-  text-align: center;
+  padding-bottom: var(--line);
+  text-align: left;
+  position: sticky;
+  top: var(--font-size);
 }
 
 .tags_wrapper:not(.empty) summary::after
@@ -852,6 +863,15 @@ a.author
   white-space: pre;
 }
 
+.tag[data-i]::before
+{
+  align-self: end;
+  content: attr(data-i) " ";
+  line-height: 1rem;
+  
+}
+
+.tag[data-i]::before,
 .tag button
 {
   color: rgb(var(--color-d));
@@ -879,12 +899,13 @@ a.author
 
 /* @group note actions */
 
-.note > .actions 
+.note .actions 
 {
   align-self: center;
   background: rgba(var(--color-b),1);
   font-size: var(--font-size-s);
   grid-area: actions;
+  margin: 0 var(--pad);
   overflow-x:  scroll;
   position: relative;
   white-space: pre;
@@ -892,52 +913,54 @@ a.author
   
 }
 
-.note > .actions > summary
+.note .actions > summary
 {
   line-height: 1.5rem;
   padding: 0 var(--padm);
 }
 
-.note > .actions[open] > summary
+.note .actions[open] > summary
 {
   display: inline-block;
   text-align: right;
 }
 
-.note > .actions .butt
+.note .actions .butt
 {
-  padding: 1px var(--padm);
+  color: rgb(var(--color-f));
+  opacity: .4;
+  padding-left: calc(var(--padm)/2);
 }
 
-.in_view > .actions
+.in_view > .by .actions
 {
-  align-self: center;
+/*  align-self: center;
   justify-self: center;
   line-height: 1.5rem;
   position: sticky;
   top: var(--line);
   width: auto;
-  z-index: 5;
+  z-index: 5;*/
 }
 
-.in_view > .actions > summary
+.in_view > .by > .actions > summary
 {
   line-height: 1.5rem;
 }
 
-.in_view > .actions .butt
+.in_view > .by > .actions .butt
 {
-  color: rgb(var(--color-d));
+  /*color: rgb(var(--color-d));*/
 }
 
-.note.root > .actions,
-.in_view > .replies > .note > .actions 
+.note.root > .by .actions,
+.in_view > .replies > .note > .by .actions 
 {
   z-index: 3;
 }
 
-.view_e .in_path:not(.in_view) > .actions,
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply > .actions
+.view_e .in_path:not(.in_view) > .by .actions,
+.replies:not(.expanded) .note:not(.is_new).haz_new_reply > .by .actions
 {
   display: none;
 }
@@ -981,6 +1004,7 @@ a.author
   display: none;
   grid-template-columns: 1fr auto;
   line-height: 1.5rem;
+  /*margin-bottom: var(--line);*/
   z-index: 5; 
 }
 
@@ -992,7 +1016,7 @@ a.author
 
 .in_view > .replies > summary
 {
-  border-bottom: 1px dashed rgb(var(--color-d));
+  /*border-bottom: 1px dashed rgb(var(--color-d));*/
   position: sticky;
   top: var(--line);
 }
@@ -1166,6 +1190,9 @@ a.author
   grid-template-areas: "author . id";
   grid-template-columns: auto 1fr auto;
   line-height: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .note_quote_by .author .name
@@ -1176,7 +1203,7 @@ a.author
 .note_quote_by .nostr_link
 {
   justify-self: end;
-  margin: 0;
+  margin: 0 var(--pad);
 }
 
 .note_quote .paragraph
@@ -1196,6 +1223,11 @@ a.author
 {
   margin: var(--line);
   max-height: unset;
+}
+
+.root > .content .note_quote
+{
+  overflow-y:  scroll;
 }
 
 /* @end */
@@ -1364,6 +1396,11 @@ html:not(.needs_pagin) .pagination
   font-size: 0!important;
 }
 
+.versions > .note:not(.in_view) >*:not(.by)
+{
+  display: none;
+}
+
 /* @end */
 
 .sig 
@@ -1430,6 +1467,14 @@ html:not(.needs_pagin) .pagination
     z-index: 99;
   }
   
+  .note:not(.in_path) > .by:hover + .content
+  {
+    background: rgb(var(--color-a));
+    position: sticky;
+    top: calc( var(--size) - var(--pad));
+    z-index: 2;
+  }
+  
   .note > .actions
   {
     position: sticky;
@@ -1446,6 +1491,12 @@ html:not(.needs_pagin) .pagination
   .note > .actions:not([open]) > summary
   {
     text-align: right;
+  }
+  
+  .note .by .actions .butt:hover
+  {
+    color: rgb(var(--color-e));
+    opacity: 1;
   }
   
   .in_view > .replies > .note > .actions,

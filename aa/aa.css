@@ -13,6 +13,7 @@
   --trans: all .3s ease-in-out 0s;
   --trans-fast: all .2s ease-out 0s;
   --trans-quart: all .4s var(--cb) 0s;
+  --trans-slow: all .6s var(--cb) 0s;
   --trans-quart-io: all .3s var(--cb-io) 0s;
   --font-main: "Source Code Pro", monospace;
   --font-size: 16px;
@@ -187,7 +188,7 @@ summary
   cursor: pointer;
   display: block;
   font-size: var(--font-size-s);
-  transition: var(--trans-quart);
+  transition: var(--trans-slow);
   user-select: none;
   z-index: 1;
 }
@@ -347,6 +348,19 @@ textarea:focus
   animation: loading 1s ease-in-out 0s infinite alternate;
 }
 
+.qr
+{
+  background: white;
+  
+  margin: var(--padm) 0;
+  max-height: 256px;
+  padding: var(--font-size);
+}
+
+.qr::selection
+{
+  background: none;
+}
 
 /* @end */
 
@@ -359,7 +373,6 @@ textarea:focus
 
 .butt.decrypt,
 .butt.sign,
-.butt.post,
 .butt.confirm,
 .butt.yes
 {
@@ -415,6 +428,7 @@ textarea:focus
   grid-template-columns: auto auto 1fr auto;
   justify-items: start;
   padding: 0 var(--pad);
+  overflow-x:  scroll;
 }
 
 .item[data-before]::before 
@@ -515,7 +529,6 @@ li.item > .val
 {
   content: "]:";
 }*/
-
 .item > details.empty > summary::before
 {
   content: "";
@@ -534,6 +547,148 @@ li.item > .val
 
 /* @end */
 
+/* @group mods */
+
+#mods
+{
+  /*background: rgb(var(--color-b));*/
+  display: grid;
+  pointer-events: none!important;
+  /*grid-template-columns: auto auto;*/
+  /*grid-auto-flow: dense;*/
+/*  align-content: end;
+  align-items: end;*/
+}
+
+#mods > *
+{
+  pointer-events: auto;
+}
+
+.mod
+{
+  background: rgba(var(--color-b),.8);
+  /*display: block;*/
+  /*display: grid;*/
+  font-size: var(--font-size-s);
+  /*grid-column: 2;*/
+  max-height: 50vh;
+  max-width: 100vw;
+  overflow-y: scroll;
+  text-align: center;
+  /*padding: var(--padm);*/
+  justify-self: end;
+  width: auto;
+}
+
+.mod[open]
+{
+  background: rgb(var(--color-a));
+  border-bottom: 1px dashed rgb(var(--color-b));
+  border-top: 1px dashed rgb(var(--color-b));
+  /*grid-column: 1 / span 2;*/
+  padding-bottom: var(--line);
+  /*margin: var(--pad) 0;*/
+  /*grid-row: span 6;*/
+  
+  /*transform: translateX(calc(var(--size)* -1));*/
+}
+
+.mod > summary
+{
+  background: rgb(var(--color-a));
+  /*justify-content: center;*/
+  /*display: inline-grid;*/
+  font-size: var(--font-size-m);
+  /*grid-template-columns: auto 1fr auto;*/
+  /*justify-self: end;*/
+  padding: var(--pad);
+  /*text-align: right;*/
+}
+
+.mod[open] > summary
+{
+  /*background: rgb(var(--color-b));*/
+  color: rgb(var(--color-f));
+  display: grid;
+  justify-self: stretch;
+  margin-bottom: var(--pad);
+  position: sticky;
+  /*text-align: left;*/
+  top: 0;
+  /*font-size: var(--font-size);*/
+}
+
+/*.mod > summary::before
+{
+  color: rgb(var(--color-c));
+  content: "[";
+}
+
+.mod > summary::after
+{
+  color: rgb(var(--color-c));
+  content: "]";
+}
+
+.mod[open] > summary::before,
+.mod[open] > summary::after
+{
+  color: rgb(var(--color-b));
+}*/
+
+.mod[open] .list
+{
+  background-color: rgb(var(--color-a));
+  /*margin-right: var(--size);*/
+}
+
+/*.mod.empty > summary::before
+{
+  content: "";
+}
+
+.mod.empty > summary::after
+{
+  content: " empty";
+}*/
+
+.mod > .butt
+{
+  font-size: var(--font-size);
+  padding: var(--padm);
+}
+
+
+.mod .server::after
+{
+  content: "(" attr(data-state) ") " attr(data-q);
+  margin-right: var(--pad);
+}
+
+.mod .server[data-state="1"]::after
+{
+  color: rgb(var(--color-yes));
+  opacity: .7;
+}
+
+.mod .server[data-state="3"]::after
+{
+  color: rgb(var(--color-no));
+  opacity: .7;
+}
+
+.mod .server .add
+{
+  grid-area: bef;
+}
+
+.mod .server .rm
+{
+  grid-area: aft;
+}
+
+/* @end */
 
 /* @group header */
 
@@ -546,13 +701,14 @@ li.item > .val
   "caralho heading" 
   "description description";
   grid-template-columns: auto 1fr;
-  margin-bottom: var(--pad);
+  line-height: var(--line);
+  /*margin-bottom: var(--pad);*/
 }
 
 #caralho
 {
   grid-area: caralho;
-  padding: var(--pad);
+  padding: 0 var(--pad);
   text-decoration: none;
   user-select: none;
 }
@@ -565,10 +721,10 @@ li.item > .val
   grid-gap: var(--pad);
   grid-template-areas: "before title after";
   grid-template-columns: auto auto 1fr;
-  line-height: 1;
+  /*line-height: 1;*/
   margin: 0;
   overflow: scroll;
-  padding: var(--pad) 0;
+  /*padding: var(--pad) 0;*/
 }
 
 #state::before
@@ -607,6 +763,9 @@ li.item > .val
   grid-template-areas: "p" "e";
   position: relative;
   z-index: 1;
+/*  max-height: 80vh;
+  overflow-y: scroll;
+  padding-bottom: calc(var(--size)*2);*/
 }
 
 #view > section
@@ -792,6 +951,12 @@ li.item > .val
   padding: 0;
 }
 
+#dialog .modal-img.qr
+{
+  padding: var(--line);
+  max-height: 100vh;
+}
+
 /* @end */
 
 /* @group notice */
@@ -906,7 +1071,17 @@ li.item > .val
 
   details > summary:hover
   {
-    color:rgb(var(--color-main));
+    color:rgb(var(--color-f));
+  }
+  
+  .mod[open] > summary:hover
+  {
+    /*background: rgb(var(--color-a));*/
+  }
+  
+  .item:hover
+  {
+    background-color: rgba(var(--color-b),1);
   }
   
   .profile .item:hover

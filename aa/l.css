@@ -1,6 +1,7 @@
 #l
 {
   grid-area: l;
+  /*padding-bottom: var(--line);*/
   position: relative;
   scrollbar-width: none;
   transition: max-height 1s cubic-bezier(0.87, 0, 0.13, 1);
@@ -18,7 +19,7 @@
 
 #l > header .butt
 {
-  background: rgba(var(--color-a));
+  background: rgba(var(--color-b));
   font-size: 0;
   padding: var(--pad);
   text-align: center;
@@ -84,6 +85,11 @@
   line-height: 1.5;
 }
 
+.l > .list > li
+{
+  padding: 0;
+}
+
 .l > .butt,
 .l > p > .butt
 {
@@ -116,33 +122,7 @@
   margin-right: var(--pad);
 }
 
-#r .server::after
-{
-  content: "(" attr(data-state) ") " attr(data-q);
-  margin-right: var(--pad);
-}
 
-#r .server[data-state="1"]::after
-{
-  color: rgb(var(--color-yes));
-  opacity: .7;
-}
-
-#r .server[data-state="3"]::after
-{
-  color: rgb(var(--color-no));
-  opacity: .7;
-}
-
-#l .server .add
-{
-  grid-area: bef;
-}
-
-#l .server .rm
-{
-  grid-area: aft;
-}
 
 .cli_expanded #l
 {
@@ -165,17 +145,13 @@
   font-size: var(--font-size-s);
 }
 
-html:not(.cli_expanded) .l.is_new,
-html:not(.cli_expanded) .l:hover
+html:not(.cli_expanded) .l.is_new
 {
   position: absolute;
   transform: translateY(calc(var(--pad)*-1));
 }
 
-html:not(.cli_expanded) .l:hover
-{
-  z-index: 9;
-}
+
 
 html:not(.cli_expanded) .l:not(.is_new):not(:hover),
 #l:not(.expanded) .l:not(.is_new)
@@ -185,13 +161,24 @@ html:not(.cli_expanded) .l:not(.is_new):not(:hover),
 
 @media screen and (min-width: 1025px) 
 {
+  html:not(.cli_expanded) .l.is_new:hover
+  {
+    z-index: 9;
+  }
+  
+  #l > header .butt:hover
+  {
+    background: rgba(var(--color-a));
+  }
+
   .l .item:hover
   {
-    background: rgb(var(--color-c));
+    background-color: rgb(var(--color-b));
   }
   
   .l .item:hover .butt
   {
+    
     /*color: rgb(var(--color-c));*/
   }
   

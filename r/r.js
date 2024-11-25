@@ -30,7 +30,7 @@ aa.r.add_from_o =(relays)=>
   let a = [];
   for (const r in relays) a.push(r+' '+relays[r].sets.join(' '));
   if (a.length) aa.r.add(a.join(',')); 
-  aa.log(a.length+' relays added');
+  aa.log(a.length+' relays added to ['+aa.r.def.id+']');
 };
 
 
@@ -113,12 +113,15 @@ aa.r.close =(k,id)=>
   if (r && r.q[id])
   {
     if (r.ws?.readyState === 1) r.ws.send(JSON.stringify(['CLOSE',id]));
+    else console.log('close rs',r.ws?.readyState);
     setTimeout(()=>
     {
+      
       delete r.q[id];
       aa.r.upd_state(k);
     },500);
   }
+  else console.log('no close ',k,id);
 };
 
 
@@ -132,6 +135,7 @@ aa.r.demand =(request,relays,options)=>
   }
 
   let filters = request.slice(2);
+
   if (!aa.fx.verify_req_filters(filters))
   {
     aa.log('aa.r.demand: invalid filter '+JSON.stringify(filters));
@@ -282,8 +286,14 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     {
       aa.r.add(`${url} ${set}`);
       aa.r.c_on(url,opts);
-      setTimeout(()=>
-      {e.target.parentElement.textContent = `${text} ${set}`},50);
+      e.target.closest('.is_new')?.classList.remove('is_new');
+      e.target.remove();
+      // setTimeout(()=>
+      // {
+      //   let l = e.target.parentElement;
+      //   l.textContent = `${text} ${set}`;
+      //   l.append(aa.mk.l('button',{con:bt.title,cla:'butt '+b,clk:bt.exe}))
+      // },50);
     }
   };
   let set_off = 'off';
@@ -293,8 +303,11 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     exe:e=>
     {
       aa.r.add(`${url} ${set_off}`);
-      setTimeout(()=>
-      {e.target.parentElement.textContent = `${text} ${set_off}`},50);
+      e.target.closest('.is_new')?.classList.remove('is_new');
+      e.target.remove();
+      
+      // setTimeout(()=>
+      // {e.target.parentElement.textContent = `${text} ${set_off}`},50);
     }
   };
   let set_other = 'other'
@@ -306,8 +319,10 @@ aa.r.hint_notice =(url,opts,set='hint')=>
       aa.r.add(url);
       aa.r.c_on(url,opts);
       aa.cli.v(localStorage.ns+' '+text);
-      setTimeout(()=>
-      {e.target.parentElement.textContent = `${text} ${set_other}`},50);
+      e.target.closest('.is_new')?.classList.remove('is_new');
+      e.target.remove();
+      // setTimeout(()=>
+      // {e.target.parentElement.textContent = `${text} ${set_other}`},50);
     }
   };
   aa.log(aa.mk.notice(notice));
@@ -466,8 +481,9 @@ aa.r.message_type.closed =async dis=>
 
 
 // ["EOSE",<sub_id>]
-aa.r.message_type.eose =async message=>
+aa.r.message_type.eose =message=>
 {
+  // console.log(message);
   const id = message.data[1];
   let sub = aa.r.active[message.origin].q[id];
   if (!sub) return;
@@ -478,7 +494,7 @@ aa.r.message_type.eose =async message=>
 
 
 // ["EVENT",<sub_id>,<event_data>]
-aa.r.message_type.event =async message=>
+aa.r.message_type.event =message=>
 { 
   const sub_id = message.data[1];
   const event = message.data[2];
@@ -556,7 +572,7 @@ aa.r.message_type.ok =async message=>
       aa.fx.a_add(dat.seen,[message.origin]);
       aa.db.upd_e(dat);
 
-      const l = document.getElementById(aa.fx.encode('nid',id));
+      const l = document.getElementById(aa.fx.encode('note',id));
       if (l) 
       {
         l.classList.remove('not_sent','draft');

@@ -6,7 +6,7 @@ index filtering
 
 */
 
-document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/i/i.css'}));
+aa.styleshit('/i/i.css');
 
 aa.i =
 {
@@ -68,7 +68,7 @@ aa.i.dex.at =(v,id)=>
   if (l)
   {
     l.textContent = s+aa.t.display(v);
-    l.href = '#'+aa.fx.encode('nid',id);
+    l.href = '#'+aa.fx.encode('note',id);
     l.classList.remove('empty');
   }
 };
@@ -294,7 +294,7 @@ aa.get.notes_with_tag =(k,v)=>
 
 // get elements with key:value
 aa.get.index_items =(k,v)=>
-{
+{ 
   switch (k)
   {
     // case 'clas':

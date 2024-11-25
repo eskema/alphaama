@@ -24,6 +24,19 @@ aa.fx.a_rm =(a,items_to_rm)=>
 };
 
 
+// return object from splitting array
+aa.fx.a_o =a=>
+{
+  const o = {};
+  for (const i of a) 
+  {
+    const [k,v] = i.split(' ');
+    if (k && v) o[k] = v;
+  }
+  return o
+};
+
+
 // converts string to alphanumeric, 
 // replaces everything else with underscore
 // to be used as valid element ids
@@ -85,6 +98,15 @@ aa.fx.data_count =async(l,s)=>
   return n
 };
 
+// update counter
+aa.fx.count_upd =(l,pos = true)=>
+{
+  if (!l) return;
+  if (!l.dataset.count) l.dataset.count = 0;
+  if (pos) l.dataset.count++;
+  else l.dataset.count--;
+};
+
 
 // add items to a dataset
 aa.fx.dataset_add =async(l,s,items)=>
@@ -114,11 +136,13 @@ aa.fx.encode =(s,x)=>
   let encoded;
   try
   {
-    switch (s) 
-    {
-      case 'nid': encoded = NostrTools.nip19.noteEncode(x); break;
-      case 'npub': encoded = NostrTools.nip19.npubEncode(x); break;
-    }
+    encoded = NostrTools.nip19[s+'Encode'](x);
+    // switch (s) 
+    // {
+    //   case 'nid': encoded = NostrTools.nip19.noteEncode(x); break;
+    //   case 'npub': encoded = NostrTools.nip19.npubEncode(x); break;
+    //   case 'nev': encoded = NostrTools.nip19.neventEncode(x); break;
+    // }
   }
   catch (er) { console.error('aa.fx.encode',s,x,er) };
   return encoded
@@ -146,8 +170,17 @@ aa.fx.expanded =(id,expanded,l)=>
 };
 
 
+// generate keypair
+aa.fx.keypair =()=>
+{
+  let secret = NostrTools.generateSecretKey();
+  return [secret,NostrTools.getPublicKey(secret)]
+};
+
+
 // hash event
 aa.fx.hash =o=> NostrTools.getEventHash(o);
+
 
 
 // returns items in a given set
@@ -174,6 +207,30 @@ aa.fx.in_sets =(ls,sets)=>
   return [...new Set(a)]
 };
 
+
+// intersect
+aa.fx.intersect =(o={},a=[],n=2)=>
+{
+  if (typeof n !== 'number') n = 1;
+  let result = {};
+  let entries = Object.entries(o).sort(aa.fx.sorts.v);
+  for (const x of a)
+  {
+    let i=0;
+    for (const r of entries)
+    {
+      if (r[1].includes(x)) 
+      {
+        if (!result[r[0]]) result[r[0]] = [];
+        aa.fx.a_add(result[r[0]],[x]);
+        i++; if (i>=n) break;
+      }
+    }
+  }
+  return result
+};
+
+
 // removes up to 5 leading zeroes from beginning of hexstring
 // to be used as a hex color from pubkeys 
 // but not too dark if pow/mined
@@ -183,6 +240,19 @@ aa.fx.leading_zero_rm =x=>
   catch(er) { return x }  
 };
 
+
+// on load
+aa.fx.load =()=>
+{
+  aa.actions.push(
+    {
+      action:['fx','qr'],
+      required:['text'],
+      description:'create qr code',
+      exe:aa.fx.qr
+    },
+  )
+};
 
 // splits a string and then 
 // for each item, split and pass through function
@@ -361,6 +431,29 @@ aa.fx.pow =async(event,dif)=>
   });
 };
 
+// qr code
+aa.fx.qr =s=>
+{
+  let l = aa.mk.l('div',{cla:'qrcode'});
+  aa.temp.qr = new QRCode(l,
+  {
+    text:s.trim(),
+    width: 512,
+    height: 512,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+  let img = l.querySelector('img');
+  img.classList.add('qr');
+  img.addEventListener('click',e=>{aa.mk.img_modal(img.src,'qr')});
+  aa.cli.clear();
+  aa.log('fx qr:');
+  aa.log(s);
+  aa.log(img);
+  return img
+};
+
 
 // scroll with delay
 aa.fx.scroll =async(l,options={})=>
@@ -446,6 +539,8 @@ aa.fx.sorts =
     let b_val = b.event.created_at;
     return a_val < b_val ? 1 : -1
   },
+  v(a,b){return b[1].length - a[1].length ? 1 : -1},
+  v_desc(a,b){return b[1].length - a[1].length ? -1 : 1},
 };
 
 
@@ -492,41 +587,44 @@ aa.fx.tag.q =(x)=>
 };
 
 
+
+
+
 // creates a link from tag array
-aa.fx.tag_a =a=>
-{
-  const tail =(a,l,i=1)=>{if (a.length>i)l.dataset.tail=a.slice(i).join(', ')};
-  const type = a[0];
-  const value = a[1];
-  let relay;
-  const l = aa.mk.l('a',{cla:'tag_a_'+type,clk:aa.clk.a});
-  switch(type)
-  {
-    case 'e':
-      relay = a[2];
-      const nid = aa.fx.encode('nid',value);
-      l.textContent = nid;
-      l.href = '#'+nid;
-      if (relay) l.dataset.relay = relay;
-      tail(a,l,3);
-      break;
-    case 'p':
-      relay = a[2];
-      const petname = a[3];
-      const npub = aa.fx.encode('npub',value);
-      l.textContent = npub;
-      l.href = '#'+npub;
-      if (relay) l.dataset.relay = relay;
-      if (petname) l.dataset.petname = petname;
-      tail(a,l,4);
-      break;
-    default:
-      l.textContent = value;
-      l.href = '#'+aa.fx.an(value);
-      tail(a,l,2);
-  }
-  return l
-};
+// aa.fx.tag_a =a=>
+// {
+//   const tail =(a,l,i=1)=>{if (a.length>i)l.dataset.tail=a.slice(i).join(', ')};
+//   const type = a[0];
+//   const value = a[1];
+//   let relay;
+//   const l = aa.mk.l('a',{cla:'tag_a_'+type,clk:aa.clk.a});
+//   switch(type)
+//   {
+//     case 'e':
+//       relay = a[2];
+//       const nid = aa.fx.encode('note',value);
+//       l.textContent = nid;
+//       l.href = '#'+nid;
+//       if (relay) l.dataset.relay = relay;
+//       tail(a,l,3);
+//       break;
+//     case 'p':
+//       relay = a[2];
+//       const petname = a[3];
+//       const npub = aa.fx.encode('npub',value);
+//       l.textContent = npub;
+//       l.href = '#'+npub;
+//       if (relay) l.dataset.relay = relay;
+//       if (petname) l.dataset.petname = petname;
+//       tail(a,l,4);
+//       break;
+//     default:
+//       l.textContent = value;
+//       l.href = '#'+aa.fx.an(value);
+//       tail(a,l,2);
+//   }
+//   return l
+// };
 
 
 // converts hex to rgb
@@ -624,3 +722,5 @@ aa.fx.verify_req_filters =a=>
   }
   return true
 };
+
+window.addEventListener('load',aa.fx.load);

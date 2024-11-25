@@ -7,7 +7,7 @@ user you
 */
 
 
-document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/u/u.css'}));
+aa.styleshit('/u/u.css');
 
 aa.u = 
 {
@@ -79,8 +79,7 @@ aa.u.event_draft =async dat=>
   aa.e.print(dat);
   
   let sect = document.getElementById('e');
-  if (sect && !sect.classList.contains('expanded')) 
-  aa.clk.expand({target:sect});
+  if (sect && !sect.classList.contains('expanded')) aa.clk.expand({target:sect});
 };
 
 
@@ -139,7 +138,7 @@ aa.u.decrypt =async s=>
     return
   }
 
-  let l = document.getElementById(aa.fx.encode('nid',x));
+  let l = document.getElementById(aa.fx.encode('note',x));
   if (!l) 
   {
     aa.log('decrypted cyphertext:');
@@ -311,21 +310,13 @@ aa.u.load =()=>
       description:'unfollow account (hex or npub)',
       exe:aa.u.unfollow
     },
-    // {
-    //   action:['sec','yo'],
-    //   // required:[''],
-    //   // optional:[''],
-    //   description:'my custom action',
-    //   exe:s=>
-    //   {
-    //     aa.log('my custom action: '+s)
-    //   }
-    // },
+    {
+      action:['u','dm'],
+      required:['text','p_list'],
+      description:'send dm to pubkeys',
+      exe:aa.u.dm
+    },
   );
-  const id = 'u_u';
-  const u = aa.mk.l('aside',{id:id});
-  document.body.insertBefore(u,document.body.lastChild);
-  u.append(aa.mk.butt_expand(id,'a_a'));
   
   aa.mod_load(aa.u).then(aa.u.start);
 };
@@ -523,13 +514,8 @@ aa.u.react =async s=>
     tags:[]
   };
 
-  let reply_dat = aa.db.e[xid];
-  if (!reply_dat) reply_dat = await aa.db.get_e(xid);
-  if (reply_dat)
-  {
-    const reply_e = aa.db.e[xid].event;
-    event.tags.push(...aa.get.tags_for_reply(reply_e));
-  } 
+  let reply_dat = await aa.db.get_e(xid);
+  if (reply_dat) event.tags.push(...aa.get.tags_for_reply(reply_dat.event));
   aa.u.event_finalize(event);
 };
 
@@ -616,12 +602,16 @@ aa.u.start =async mod=>
   let ls = mod?.o?.ls;
   if (!ls.xpub)
   { 
-    aa.log(aa.mk.butt_action('u login ',0,'u_login')); 
+    let log = aa.mk.l('p',{cla:'u_login'});
+    log.append(aa.mk.butt_action('u login '));
+    log.append(' ',aa.mk.butt_action('u login easy','easy'));
+    log.append(' ',aa.mk.butt_action('u login hard','hard'));
+    aa.log(log); 
     return 
   }
   else document.querySelector('.u_login')?.parentElement.remove();
 
-  aa.mk.mod(mod);
+  
   aa.fx.color(ls.xpub,document.getElementById('u_u'));
 
   let p = await aa.db.get_p(ls.xpub);
@@ -644,6 +634,8 @@ aa.u.start =async mod=>
   aa.p.profile(p);
   if (p.events.k3?.length) aa.p.load_profiles(p.follows);
   if (upd) aa.p.save(p);
+  aa.mk.mod(mod);
+  // mod.l.append(aa.mk.ls({ls:p}));
 };
 
 
@@ -751,35 +743,38 @@ aa.u.wot =async()=>
   return wot
 };
 
-aa.u.outbox =(a=[],set='')=>
+aa.u.outbox =(a=[],sets=[aa.r.o.w,'k10002'])=>
 {
-  if (!set) set = aa.r.o.w;
+  // console.log(sets);
   if (!a?.length) return [];
+  let relays = aa.fx.common_relays(a,sets);
+  // console.log(relays);
+  let outbox = aa.fx.intersect(relays,a);
+  // console.log(outbox);
+  let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.v);
+  // console.log(sorted_outbox);
+  return sorted_outbox;
+};
+
+aa.fx.common_relays =(a=[],sets=[])=>
+{
+  // if (!sets.length) sets = [aa.r.o.w,'k10002'];
   let relays = {};
-  let outbox = {};
   let offed = aa.fx.in_set(aa.r.o.ls,'off',0);
 
   for (const x of a)
   {
-    const p_relays = aa.db.p[x]?.relays;
-    const has_relays = Object.keys(p_relays).length;
-    // console.log(has_relays);
     let has_set;
-    if (has_relays)
+    let p_relays = aa.db.p[x]?.relays;
+    if (p_relays) p_relays = aa.fx.in_sets(p_relays,sets);
+    if (p_relays.length) has_set = true;
+    // console.log(p_relays);
+
+    for (const r of p_relays)
     {
-      for (const r in p_relays)
-      {
-        if (offed.includes(r)) continue;
-        if (!relays[r]) relays[r] = [];
-        let rel = p_relays[r];
-        
-        if (rel.sets.includes(set) && !relays[r].includes(x)) 
-        {
-          relays[r].push(x)
-          // aa.fx.a_add(relays[r],[x]);
-          has_set = true;
-        }
-      }
+      if (offed.includes(r)) continue;
+      if (!relays[r]) relays[r] = [];      
+      if (!relays[r].includes(x)) relays[r].push(x)
     }
 
     if (!has_set) 
@@ -791,28 +786,7 @@ aa.u.outbox =(a=[],set='')=>
       }
     }
   }
-
-  // console.log(relays);
-  
-  let r_w = Object.entries(relays)
-  .sort((b,a)=>{return a[1].length - b[1].length});
-  // console.log(r_w);
-  for (const x of a)
-  {
-    for (const r of r_w)
-    {
-      if (r[1].includes(x)) 
-      {
-        if (!outbox[r[0]]) outbox[r[0]] = [];
-        aa.fx.a_add(outbox[r[0]],[x]);
-        break;
-      }
-    }
-  }
-  let sorted_outbox = Object.entries(outbox)
-  .sort((b,a)=>{return a[1].length - b[1].length});
-  // console.log(sorted_outbox);
-  return sorted_outbox;
+  return relays
 };
 
 
@@ -825,8 +799,8 @@ aa.kinds[4] =dat=>
   {
     content.classList.add('encrypted');
     content.querySelector('.paragraph').classList.add('cypher');
-    note.querySelector('.actions .butt.react').remove();
-    note.querySelector('.actions .butt.req').remove();
+    note.querySelector('.actions .butt.react')?.remove();
+    note.querySelector('.actions .butt.req')?.remove();
   }
   let u_x = aa.u.o.ls.xpub;
   let p_x = aa.get.tags(dat.event,'p')[0][1];
@@ -843,6 +817,35 @@ aa.kinds[4] =dat=>
   }
 
   return note
+};
+
+
+
+aa.u.dm =async s=>
+{
+  let text, cm = s?.match(aa.regex.str);
+  if (cm.length)
+  {
+    text = cm[1];
+
+    authors = s.slice(cm.index+cm[0].length)
+    .trim().split(',').filter(aa.is.key);
+    if (!authors.length) authors.push(aa.u.p.xpub);
+
+    let sec = NostrTools.generateSecretKey();
+    let pub = NostrTools.getPublicKey(sec);
+    
+    for (const p of authors)
+    {
+      let event = {pubkey:pub,kind:4,tags:[['p',p]]};
+      event.content = await NostrTools.nip04.encrypt(sec,p,text);
+      aa.u.event_draft(aa.mk.dat(
+      {
+        event:aa.u.event_normalise(event),
+        clas:['encrypted']
+      }));
+    }
+  }
 };
 
 window.addEventListener('load',aa.u.load);

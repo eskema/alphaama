@@ -39,12 +39,12 @@ aa.parse.content =(s,trusted)=>
         let word = words[i].trim();
         if (!word.length) continue;
 
-        if (aa.regx.url.test(word)) 
+        if (aa.regex.url.test(word)) 
         {
           let dis_node = aa.parser('url',word,trusted);
           l.append(dis_node,' ');
         }
-        else if (aa.regx.nostr.test(word)) 
+        else if (aa.regex.nostr.test(word)) 
         {
           let parsed = aa.parser('nostr',word);
           let quote = parsed.querySelector('blockquote');
@@ -55,7 +55,7 @@ aa.parse.content =(s,trusted)=>
           }
           else l.append(parsed);       
         }
-        else if (aa.regx.hashtag.test(word)) 
+        else if (aa.regex.hashtag.test(word)) 
         {
           let dis_node = aa.parser('hashtag',word);
           l.append(dis_node,' ');
@@ -120,12 +120,12 @@ aa.parse.j =son=>
 // parse url as link or media given trust
 aa.parse.url =(match,tru)=>
 {
-  let link;
+  let l;
   const type = aa.fx.url_type(match[0]);
-  if (tru && type[0] === 'img') link = aa.mk.img(type[1].href);
-  else if (tru && type[0] === 'av') link = aa.mk.av(type[1].href);
-  else if (type) link = aa.mk.link(type[1].href);
-  return link
+  if (tru && type[0] === 'img') l = aa.mk.img(type[1].href);
+  else if (tru && type[0] === 'av') l = aa.mk.av(type[1].href);
+  else if (type) l = aa.mk.link(type[1].href);
+  return l
 };
 
 
@@ -146,7 +146,7 @@ aa.parser =(parse_id,s,trust,regex_id)=>
 {
   const df = new DocumentFragment();
   if (!regex_id) regex_id = parse_id;
-  const matches = [...s.matchAll(aa.regx[regex_id])];
+  const matches = [...s.matchAll(aa.regex[regex_id])];
   let index = 0;
   for (const match of matches) 
   {

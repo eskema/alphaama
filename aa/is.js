@@ -10,15 +10,17 @@ boolish stuff
 aa.is.act =s=>
 {
   const ns = localStorage.ns;
-  if (ns 
-  && (ns.startsWith(s) || s.startsWith(ns+' ') || s === ns)
+  if (!ns) return false; 
+  if (ns.startsWith(s) 
+  || s.startsWith(ns+' ') 
+  || s === ns
   ) return true;
   return false
 };
 
 
 // is alphanumeric and underscore
-aa.is.an =s=> aa.regx.an.test(s);
+aa.is.an =s=> aa.regex.an.test(s);
 
 
 // checks if element has no children and is empty, ignores trailing spaces

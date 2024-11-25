@@ -96,18 +96,44 @@ aa.clk.expand =e=>
 aa.clk.fetch =e=>
 {
   const note = e.target.closest('.note');
-  const xid = note.dataset.id;
-  const request = ['REQ','ids',{ids:[xid]}];
-  let relays = [];
-  if (note.dataset.r?.length)
+  
+  let filter = '{';
+  const id = note.dataset.id;
+  if (id)
   {
-    let r = note.dataset.r?.split(' ');
-    if (r.length) relays.push(...r);
+    filter += `"ids":["${id}"],`;
+    // filter.ids = [id];
+  } 
+  else
+  {
+    const [kind,pubkey,ds] = note.dataset.id_a.split(':');
+    filter += `"authors":[${pubkey}],"kinds":[${kind}],"#d":[${ds}],`;
+    // filter.kinds = [kind];
+    // filter.authors = [pubkey];
+    // filter['#d'] = [ds];
   }
-  else relays.push(...aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
-  aa.fx.dataset_add(note,'nope',relays);
-  aa.r.demand(request,relays,{eose:'done'});
-  setTimeout(()=>{aa.fx.scroll(document.getElementById(note.id))},200);
+  filter += '"eose":"close"}';
+  // const request = ['REQ',aa.fx.an(id).slice(0,6)];
+
+  // request.push(filter)
+  
+  let relset = 'read ';
+  // let relays = [];
+  if (note.dataset.r)
+  {
+    let r = note.dataset.r.trim().split(' ');
+    if (r.length) 
+    {
+      let url = aa.is.url(r[0])?.href;
+      if (url) relset = url+' ';
+    }
+  }
+  // aa.fx.dataset_add(note,'nope',relays);
+  // aa.r.demand(request,relays,{eose:'done'});
+  // setTimeout(()=>{aa.fx.scroll(document.getElementById(note.id))},200);
+
+  // const filter = '{"#e":["'+note?.dataset.id+'"]';
+  aa.cli.v(localStorage.ns+' '+aa.q.def.id+' req '+relset+filter);
 };
 
 
@@ -201,9 +227,13 @@ aa.clk.sign =e=>
 aa.clk.time =e=> 
 {
   if (!e.target) return;
-  const timestamp = parseInt(e.target.textContent);
-  const date = aa.t.to_date(timestamp);
-  e.target.dataset.elapsed = aa.t.elapsed(date);
+  const all = e.target.closest('.root')?.querySelectorAll('time');
+  if (all) for (const t of all)
+  {
+    const timestamp = parseInt(t.textContent);
+    const date = aa.t.to_date(timestamp);
+    t.dataset.elapsed = aa.t.elapsed(date);
+  }
 };
 
 
@@ -252,13 +282,8 @@ aa.clk.yolo =async e=>
           aa.fx.a_add(relays,rr);
           if (i>3) break;
         }
-        // let read_from = Object.entries(p.relays)
-        // .filter(r=>r[1].sets.includes('read'));
       }
-      // let outbox = aa.u.outbox(pubs,'read');
-      // for (const r of outbox) relays.push(r[0]);
       relays = new Set(relays);
-      // console.log(dat.event,relays);
       aa.r.broadcast(dat.event,relays);
     }
   })

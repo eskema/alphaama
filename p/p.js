@@ -6,7 +6,7 @@ author pubkey profile
 
 */
 
-document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/p/p.css'}));
+aa.styleshit('/p/p.css');
 
 aa.p = 
 {
@@ -104,6 +104,24 @@ aa.p.actions =p=>
   a.push(['get_notes','p_req'],['refresh','p_refresh']);
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
+};
+
+
+// load author p
+aa.p.author =async x=>
+{
+  let p = await aa.db.get_p(x);
+  if (!p) p = aa.p.p(x);
+  return p
+
+  // return await aa.db.get_pa(a)
+  // const p_to_get = [];
+  // for (const xpub of a) if (!aa.db.p[xpub]) p_to_get.push(xpub);
+  // if (p_to_get.length)
+  // {
+  //   let p_stored = await aa.db.get('idb',{get_a:{store:'authors',a:p_to_get}});
+  //   for (const p of p_stored) aa.db.p[p.xpub] = p;
+  // } 
 };
 
 
@@ -205,12 +223,15 @@ aa.p.new_replaceable =(p,event)=>
 aa.p.new_replaceable_param =(p,event)=>
 {
   let upd;
-  let kn = p.events['k'+event.kind];
-  if (!kn) kn = p.events['k'+event.kind] = {};
+  let k = p.events['k'+event.kind];
+  if (!k) k = p.events['k'+event.kind] = {};
 
-  let d_tag = event.tags.filter(t=> !t[0] === 'd')[0];
-  if (!d_tag) return false;
-  let d_s = d_tag[1];
+  let tag = event.tags.filter(t=>!t[0]==='d')[0];
+  if (!tag) return false;
+  
+  let s = tag[1];
+  let kn = k[s];
+  if (!kn) kn = k[s] = [];
   
   const c_at = event.created_at;
   if (!kn.length || kn[0][1] < c_at) 
@@ -236,6 +257,21 @@ aa.mk.extradata =p=>
     else if (v.length) extradata.append(aa.mk.item(id,v,'p'));
   }
   return extradata
+};
+
+
+// return follows of pubkey
+aa.p.follows_of =async(s='')=>
+{
+  return new Promise(async resolve=>
+  {
+    s = s.trim();
+    let key = aa.is.key(s) ? s : aa.u.p.xpub;
+    let p = await aa.p.author(key);
+    aa.log(`${p.follows.length} follows of ${key}`);
+    aa.log(`${p.follows}`);
+    resolve(`${p.follows}`);
+  });
 };
 
 
@@ -271,7 +307,7 @@ aa.p.get_authors =async a=>
 
 // gets a relay url or empty string 
 // for follow list relay hints
-aa.p.get_relay =(p,set='write')=>
+aa.p.relay =(p,set='write')=>
 {
   let p_relays = Object.entries(p.relays);
   if (!relays.length) return ' ';
@@ -299,6 +335,14 @@ aa.p.get_relay =(p,set='write')=>
 };
 
 
+// // gets a relays of pubkey on a given set
+// aa.p.relays =(p,set='write')=>
+// {
+//   let relays = aa.fx.in_set(p.relays,'write');
+  
+//   return relays
+// };
+
 // on load
 aa.p.load =()=>
 {
@@ -321,6 +365,12 @@ aa.p.load =()=>
       required:['name@domain'], 
       description:'check nip5 validity',
       exe:aa.p.verify_nip05
+    },
+    {
+      action:['p','fof'],
+      required:['hex_pub'], 
+      description:'returns a list of pubkeys that hex_pub follows',
+      exe:aa.p.follows_of
     }
   );
   // create p section
@@ -328,16 +378,16 @@ aa.p.load =()=>
   aa.p.l = aa.mk.l('div',{id:'authors'});
   section.append(aa.p.l);
   // create section mutation observer
-  aa.p.section_observer = new MutationObserver(a=> 
-  {
-    for (const mutation of a) 
-    {
-      const section = mutation.target.closest('section');
-      let butt = section.querySelector('section > header > .butt');
-      aa.fx.data_count(butt,'.profile');
-    }
-  });
-  aa.p.section_observer.observe(aa.p.l,{attributes:false,childList:true});
+  // aa.p.section_observer = new MutationObserver(a=> 
+  // {
+  //   for (const mutation of a) 
+  //   {
+  //     const section = mutation.target.closest('section');
+  //     let butt = section.querySelector('section > header > .butt');
+  //     aa.fx.data_count(butt,'.profile');
+  //   }
+  // });
+  // aa.p.section_observer.observe(aa.p.l,{attributes:false,childList:true});
 };
 
 
@@ -492,7 +542,7 @@ aa.clk.p_follow =async e=>
     //follow
     let new_follow = [x];
     const p = await aa.db.get_p(x);
-    new_follow.push(aa.p.get_relay(p));
+    new_follow.push(aa.p.relay(p));
     let petname;
     if (p.metadata?.name) petname = p.metadata.name;
     else if (p.petnames.length) petname = p.petnames[0];
@@ -729,6 +779,7 @@ aa.p.profile =p=>
     profile.append(aa.mk.l('section',{cla:'metadata'}));
     profile.append(aa.mk.l('section',{cla:'extradata'}));
     aa.p.l.append(profile);
+    aa.fx.count_upd(document.getElementById('butt_p'));
   }
   return profile
 };
@@ -788,6 +839,8 @@ aa.get.pubs =async tags=>
     },1000,'get_pubs');
   }
 };
+
+
 
 
 // add relays to profile
@@ -853,6 +906,10 @@ aa.p.save_to =()=>
   {
     aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}})
   }
+  setTimeout(()=>
+  {
+    for (const p of a) aa.p.p_links_upd(p);
+  },200);
   // for (const p of a) requestAnimationFrame(()=>{aa.p.p_links_upd(p);});
 };
 aa.p.save = async p=>

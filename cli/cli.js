@@ -6,8 +6,8 @@ command line interface
 
 */
 
-document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/cli/cli.css'}));
-document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/cli/oto.css'}));
+aa.styleshit('/cli/cli.css');
+aa.styleshit('/cli/oto.css');
 
 aa.cli = 
 {
@@ -38,7 +38,7 @@ aa.cli.collapse =e=>
 // creates new dat object (event)
 aa.cli.dat_mk =async(s,dis)=>
 {
-  aa.cli.dat = 
+  aa.cli.dat = aa.mk.dat(
   {
     event:
     {
@@ -48,11 +48,22 @@ aa.cli.dat_mk =async(s,dis)=>
       content:s,
       tags:[]
     },
-    clas:['draft'],
-    seen:[],
-    subs:[],
-    refs:[],
-  };
+    clas:['draft']
+  });
+  // {
+  //   event:
+  //   {
+  //     pubkey:aa.u?.p?.xpub,
+  //     kind:1,
+  //     created_at:aa.t.now,
+  //     content:s,
+  //     tags:[]
+  //   },
+  //   clas:['draft'],
+  //   seen:[],
+  //   subs:[],
+  //   refs:[],
+  // };
   
   if (dis)
   {

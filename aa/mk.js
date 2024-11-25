@@ -5,7 +5,7 @@ make stuff
 
 */
 
-document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:'/aa/av.css'}));
+aa.styleshit('/aa/av.css');
 
 // video element
 aa.mk.av =(src,poster=false)=>
@@ -230,10 +230,11 @@ aa.mk.img =(src)=>
 
 
 // show image in modal on click
-aa.mk.img_modal =src=>
+aa.mk.img_modal =(src,cla=false)=>
 {
   const dialog = aa.mk.dialog();
   let img = aa.mk.l('img',{cla:'modal-img',src:src});
+  if (cla) img.classList.add(cla);
   img.addEventListener('click',e=>{dialog.close()});
   // dialog.title = img.src;
   dialog.append(img);
@@ -368,11 +369,16 @@ aa.mk.mod =mod=>
   else 
   {
     mod.l = mod_l;
-    aa.log(mod_l).then(()=>
+    mod.l.classList.add('mod');
+    if (aa.mod_l) 
     {
-      // console.log(mod.l.parentElement);
-      mod.l.parentElement.classList.add('mod');
-    });
+      const last = [...aa.mod_l.children]
+      .filter(i=> o.id < i.querySelector('summary').textContent)[0];
+      aa.mod_l.insertBefore(mod_l,last);
+
+      // aa.mod_l.append(mod_l);
+    }
+    else aa.log(mod_l).then(()=> { mod.l.classList.add('mod') });
   }
 };
 
@@ -392,6 +398,10 @@ aa.mk.notice =o=>
 // }
 
   let l = aa.mk.l('div',{cla:'notice'});
+  if (o.hasOwnProperty('id')) 
+  {
+    l.id = o.id;
+  }
   if (o.hasOwnProperty('title')) 
   {
     l.append(aa.mk.l('p',{cla:'title',con:o.title}));
@@ -451,31 +461,31 @@ aa.mk.section =(id,expanded=false,l=false)=>
 
 
 // make tag list item
-aa.mk.tag =(a,i,li=false)=>
-{
-  let l = li ? li : aa.mk.l('li',{cla:'tag tag_'+a[0]});
+// aa.mk.tag =(a,i,li=false)=>
+// {
+//   let l = li ? li : aa.mk.l('li',{cla:'tag tag_'+a[0]});
   
-  l.textContent = '';
-  l.append(aa.mk.l('button',
-  {
-    con:''+i,
-    clk:e=>
-    {
-      const mom = e.target.parentElement;
-      mom.classList.toggle('parsed');
-      aa.mk.tag(a,i,mom)
-    }
-  }));
+//   l.textContent = '';
+//   l.append(aa.mk.l('button',
+//   {
+//     con:''+i,
+//     clk:e=>
+//     {
+//       const mom = e.target.parentElement;
+//       mom.classList.toggle('parsed');
+//       aa.mk.tag(a,i,mom)
+//     }
+//   }));
 
-  if (l.classList.contains('parsed')) l.append(aa.fx.tag_a(a));
-  else l.append(a.join(', '));
-  if (!li) 
-  {
-    l.dataset.tag = a[1];
-    if (aa.is.x(a[1])) aa.fx.color(a[1],l);
-    return l
-  }
-};
+//   if (l.classList.contains('parsed')) l.append(aa.fx.tag_a(a));
+//   else l.append(a.join(', '));
+//   if (!li) 
+//   {
+//     l.dataset.tag = a[1];
+//     if (aa.is.x(a[1])) aa.fx.color(a[1],l);
+//     return l
+//   }
+// };
 
 
 // make tag list
@@ -484,7 +494,14 @@ aa.mk.tag_list =tags=>
   const times = tags.length;
   const l = aa.mk.l('ol',{cla:'tags'});
   l.start = 0;
-  for (let i=0;i<times;i++) l.append(aa.mk.tag(tags[i],i));
+  
+  for (let i=0;i<times;i++) 
+  {
+    let tent = tags[i].join(', ');
+    let li = aa.mk.l('li',{cla:'tag tag_'+tags[i][0],con:tent});
+    li.dataset.i = i;
+    l.append(li);//aa.mk.tag(tags[i],i));
+  }
   return l
 };
 

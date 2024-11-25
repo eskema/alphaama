@@ -81,6 +81,14 @@ aa.q.close =s=>
 };
 
 
+// request filter from id_a
+aa.fx.ida_rf =s=>
+{
+  let [k,p,d] = s.split(':');
+  return {kinds:[parseInt(k)],authors:[p],'#d':[d]}
+};
+
+
 // on load
 aa.q.load =()=>
 {
@@ -135,18 +143,18 @@ aa.q.load =()=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
     mod.l.insertBefore(add_butt,document.getElementById(id));
-    // mod.l.append(aa.mk.butt_action(`${id} add `,'+','add'));
+    
+    if (sessionStorage.q_run) 
+    {
+      let action = `${id} run ${sessionStorage.q_run}`;
+      setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
+    }
+    if (sessionStorage.q_out) 
+    {
+      let action = `${id} out ${sessionStorage.q_out}`;
+      setTimeout(()=>{aa.log(aa.mk.butt_action(action))},600);
+    }
   });
-  if (sessionStorage.q_run) 
-  {
-    let action = `${id} run ${sessionStorage.q_run}`;
-    setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
-  }
-  if (sessionStorage.q_out) 
-  {
-    let action = `${id} out ${sessionStorage.q_out}`;
-    setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
-  }
 };
 
 
@@ -173,6 +181,7 @@ aa.q.mk =(k,v) =>
 aa.q.out =async s=>
 {
   aa.cli.clear();
+
   const tasks = s.split(',');
   for (const task of tasks)
   {
@@ -187,9 +196,11 @@ aa.q.out =async s=>
       let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
       
       // wip 
-      let outbox,authors;
+      let outbox;
+      let authors;
       if (filtered.authors?.length)
       {
+        aa.log('outbox for '+filtered.authors.length+' authors');
         outbox = aa.u.outbox(filtered.authors);
         authors = filtered.authors;
         delete filtered.authors;
@@ -197,14 +208,19 @@ aa.q.out =async s=>
 
       if (outbox?.length)
       {
+        aa.log('using '+outbox.length+' relays:');
+        let relays = [];
         for (const r of outbox)
         {
+
           let filter = {...filtered};
           filter.authors = r[1];
           let req = ['REQ',fid,filter];
           console.log(r[0],req);
           aa.r.demand(req,[r[0]],options);
+          relays.push(r[0]);
         }
+        aa.log(relays);
         aa.log(aa.mk.butt_action(aa.q.def.id+' close '+fid));
       }
       
@@ -348,15 +364,19 @@ aa.q.run =async s=>
 // add useful queries
 aa.q.stuff =()=>
 {
-  aa.log(localStorage.ns+' '+aa.q.def.id+' stuff:');
-  aa.q.add('a {"authors":["u"],"kinds":[0,3,10002,10019]}');
-  aa.q.add('b {"authors":["k3"],"kinds":[0,3,10002,10019]}');
-  aa.q.add('d {"#p":["u"],"kinds":[4],"since":"n_7"}');
-  aa.q.add('f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,10002,10019,30023,30818],"since":"n_1"}');
-  aa.q.add('n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}');
-  aa.q.add('r {"authors":["u","k3"],"kinds":[6,7,16],"since":"n_1"}');
-  aa.q.add('u {"authors":["u"],"since":"n_5"}');
-  aa.q.add('z {"#p":["u"],"kinds":[9735],"since":"n_21"}');
+  let queries = 
+  [
+    'a {"authors":["u"],"kinds":[0,3,10002,10019,37375]}',
+    'b {"authors":["k3"],"kinds":[0,3,10002,10019]}',
+    'd {"#p":["u"],"kinds":[4],"since":"n_7"}',
+    'f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,10002,10019,30023,30818],"since":"n_1"}',
+    'n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}',
+    'r {"authors":["u","k3"],"kinds":[6,7,16],"since":"n_1"}',
+    'u {"authors":["u"],"since":"n_5"}',
+    'z {"#p":["u"],"kinds":[9735],"since":"n_21"}'
+  ];
+  for (const s of queries) aa.q.add(s);
+  aa.log(queries.length +' queries added to ['+aa.q.def.id+']');
 };
 
 

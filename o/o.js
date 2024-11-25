@@ -185,8 +185,6 @@ aa.o.save =()=>
 // set key as value
 aa.o.set =s=>
 {
-  // aa.cli.fuck_off();
-  aa.cli.clear();
   const work =a=>
   {
     let [k,v] = a;
@@ -201,7 +199,8 @@ aa.o.set =s=>
       aa.log(log);
     }
   };
-  aa.fx.loop(work,s)
+  aa.fx.loop(work,s);
+  aa.cli.clear();
 };
 
 
