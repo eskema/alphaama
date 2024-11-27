@@ -750,9 +750,9 @@ aa.u.outbox =(a=[],sets=[aa.r.o.w,'k10002'])=>
   let relays = aa.fx.common_relays(a,sets);
   // console.log(relays);
   let outbox = aa.fx.intersect(relays,a);
-  // console.log(outbox);
+  console.log(outbox);
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.v);
-  // console.log(sorted_outbox);
+  console.log(sorted_outbox);
   return sorted_outbox;
 };
 

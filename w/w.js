@@ -532,13 +532,21 @@ aa.w.melt =async s=>
 
 aa.w.mint =async s=>
 {
-  const mintQuoteChecked = await wallet.checkMintQuote(mintQuote.quote);
+  let a = s.trim().split(' ');
+  let quote = a.shift();
+  let wallet_id = a.length ? a.shift() : false;
+  let wallet = aa.w.get_active(wallet_id);
+  let proofs;
+  const quote_check = await wallet.checkMintQuote(quote);
+  if (quote_check.state === 'PAID')
+  {
+    proofs = await wallet.mintTokens(64,quote)
+  }
+
   if (mintQuoteChecked.state == MintQuoteState.PAID) {
     const { proofs } = await wallet.mintTokens(64, mintQuote.quote);
   }
 };
-
-
 
 
 window.addEventListener('load',aa.w.load);

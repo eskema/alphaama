@@ -953,7 +953,7 @@ aa.e.to_printer =dat=>
   //   aa.log('... incoming events');
   //   aa.e.root_count = 1;
   // }
-  aa.to(aa.e.printer,10,'printer');
+  aa.to(aa.e.printer,200,'printer');
 };
 
 aa.e.printer =()=>
@@ -1682,12 +1682,12 @@ aa.get.tags_for_reply =event=>
     tag[3] = 'root';
     tag.splice(4);
     tags.push(tag);
-    if (aa.db.e[tag[1]]) tags.push(['K',aa.db.e[tag[1]].event.kind]);
-    tags.push(['e',event.id,seen,'reply'],['k',event.kind]);
+    if (aa.db.e[tag[1]]) tags.push(['K',''+aa.db.e[tag[1]].event.kind]);
+    tags.push(['e',event.id,seen,'reply'],['k',''+event.kind]);
   }
   else 
   {
-    tags.push(['e',event.id,seen,'root'],['K',event.kind]);
+    tags.push(['e',event.id,seen,'root'],['K',''+event.kind]);
   }
 
   const p_tags = event.tags.filter(t=>aa.is.tag.p(t) && t[1] !== aa.u.p.xpub);

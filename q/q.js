@@ -212,18 +212,17 @@ aa.q.out =async s=>
         let relays = [];
         for (const r of outbox)
         {
-
           let filter = {...filtered};
+          let url = r[0];
           filter.authors = r[1];
           let req = ['REQ',fid,filter];
-          console.log(r[0],req);
-          aa.r.demand(req,[r[0]],options);
-          relays.push(r[0]);
+          // console.log(url,req);
+          relays.push(url+' '+filter.authors.length);
+          aa.r.demand(req,[url],options);
         }
-        aa.log(relays);
+        aa.log(relays.join(', '));
         aa.log(aa.mk.butt_action(aa.q.def.id+' close '+fid));
       }
-      
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
   }
