@@ -818,7 +818,7 @@ aa.e.note_regular =dat=>
 // replaceable parameterized note
 aa.e.note_pre =dat=>
 {
-  console.log('pre',dat);
+  // console.log('pre',dat);
   let note = aa.e.note(dat);
 
   let d_tag = dat.event.tags.filter(t=>t[0] === 'd')[0];

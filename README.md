@@ -120,8 +120,6 @@ https://v.nostr.build/hzQufBzjStD8L8j6.mp4
 TIP => you can run multiple requests at once, separating the values with a comma (you can do this on other commands as well)
 example: `.aa q run f, u, n`
 
-TIP => processing a large amount of follow lists can take some time as it builds a trust score (if logged in), for example, if you are in easy mode and enter `.aa q run b`, then go make a coffee and let it sit for a bit..
-
 
 ## (p) INTERACTING WITH PUBKEYS 
 

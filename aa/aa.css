@@ -188,6 +188,7 @@ summary
   cursor: pointer;
   display: block;
   font-size: var(--font-size-s);
+  line-height: 1.5;
   transition: var(--trans-slow);
   user-select: none;
   z-index: 1;
@@ -419,6 +420,7 @@ textarea:focus
   padding: 0;
   position: relative;
   transition: var(--trans-quart);
+  
 }
 
 .item 
@@ -446,13 +448,16 @@ textarea:focus
 li.item > .key,
 li.item > .val 
 {
+  margin: 0;
+  padding: 0;
   /*padding: 0 var(--pad);*/
 }
+
 
 .item > .key::after 
 {
   content: ": ";
-  /*white-space: pre;*/
+  white-space: pre;
 }
 
 .item .sets
@@ -497,9 +502,21 @@ li.item > .val
   display: none;
 }*/
 
+.item  details
+{
+  overflow: hidden;
+  /*margin-left: 0;*/
+}
+
+.item > details > summary
+{
+  /*margin-left: 0;*/
+}
+
 .item > details[open] > summary
 {
-  color: rgb(var(--color-main));
+  /*color: rgb(var(--color-main));*/
+  /*margin-left: var(--padm);*/
   /*font-size: var(--font-size);*/
 }
 
@@ -552,8 +569,10 @@ li.item > .val
 #mods
 {
   /*background: rgb(var(--color-b));*/
-  display: grid;
+  /*display: grid;*/
+  grid-template-columns: 1fr var(--line);
   pointer-events: none!important;
+  width: 100%;
   /*grid-template-columns: auto auto;*/
   /*grid-auto-flow: dense;*/
 /*  align-content: end;
@@ -586,7 +605,7 @@ li.item > .val
   background: rgb(var(--color-a));
   border-bottom: 1px dashed rgb(var(--color-b));
   border-top: 1px dashed rgb(var(--color-b));
-  /*grid-column: 1 / span 2;*/
+  /*grid-column: 1;*/
   padding-bottom: var(--line);
   /*margin: var(--pad) 0;*/
   /*grid-row: span 6;*/
@@ -617,6 +636,11 @@ li.item > .val
   /*text-align: left;*/
   top: 0;
   /*font-size: var(--font-size);*/
+}
+
+.mod details
+{
+  text-align: left;
 }
 
 /*.mod > summary::before
@@ -1081,7 +1105,7 @@ li.item > .val
   
   .item:hover
   {
-    background-color: rgba(var(--color-b),1);
+    background-color: rgba(var(--color-b),.6);
   }
   
   .profile .item:hover

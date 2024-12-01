@@ -36,6 +36,7 @@ indexed_db.ops.put =async(db,o)=>
 { // o = {store:'',a:[]}
   const chunks = chunker(o.a,indexed_db.chunks);
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
+  
   for (const chunk of chunks)
   {
     for (const item of chunk) odb.put(item)

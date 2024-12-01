@@ -244,56 +244,62 @@ aa.mk.img_modal =(src,cla=false)=>
 
 
 // make generic list item from key / value
-aa.mk.item =(k,v,tag_name='li')=>
+aa.mk.item =(k='',v,tag_name='li')=>
 {
+  if (!k) k = '';
+  if (k === 'expiry')
+  {
+    console.log(k,v)
+  }
   let l = aa.mk.l(tag_name,{cla:'item item_'+k});
   if (Array.isArray(v))  
   {
-    if (typeof v[0]==='object') 
+    if (typeof v[0]!=='object')
     {
-      // l.append(aa.mk.item_v(k,v));
-      let list = aa.mk.ls({});
-      list.classList.remove('empty');
-      for (const vv of v) list.append(aa.mk.ls({ls:vv}))
-      l.append(aa.mk.details(k,list,1))
+      if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
+      l.append(aa.mk.l('span',{cla:'val',con:v.join(', ')}));
     }
-    else
+    else 
     {
-      l.append(aa.mk.l('span',{cla:'key',con:k}),' ',
-        aa.mk.l('span',{cla:'val',con:v.join(', ')})
-      );
+      let list = aa.mk.ls({});
+      if (v.length) list.classList.remove('empty');
+      for (let i=0;i<v.length;i++) 
+      {
+        list.append(aa.mk.item(''+i,v[i]));
+      }
+      l.append(aa.mk.details(k,list));
+      // let list = aa.mk.ls({});
+      // list.classList.remove('empty');
+      // for (const vv of v) list.append(aa.mk.item_v(v[vv]));
+      // let de = aa.mk.details(k,aa.mk.item_v(v),1);
+      // l.append(de);
     }
   }
-  else if (typeof v==='object') 
+  else if (v && typeof v==='object') 
   {
-    l.append(aa.mk.details(k,aa.mk.ls({ls:v}),1))
+    l.append(aa.mk.details(k,aa.mk.ls({ls:v})))
   }
   else 
   {
-    l.append(aa.mk.l('span',{cla:'key',con:k}),
-    ' ',aa.mk.l('span',{cla:'val',con:v}));
+    if (v === null) v = 'null';
+    if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
+    l.append( aa.mk.l('span',{cla:'val',con:v}) );
   }
   return l
 };
 
 
-aa.mk.item_v =(k,v)=>
-{
-  let l = aa.mk.details(k,0,1);
-  for (const vv of v) 
-  {
-    l.append()
-    if (Array.isArray(vv))
-    {
-      
-    }
-    else if (typeof vv==='object') 
-      df.append(' ',aa.mk.ls({ls:v}));
-    else 
-      df.append(' ', aa.mk.l('span',{cla:'val',con:v}));
-  }
-  return l
-};
+// aa.mk.item_v =a=>
+// {
+//   // let list = aa.mk.details()
+//   let list = aa.mk.ls({});
+//   list.classList.remove('empty');
+//   for (let i=0;i<a.length;i++) 
+//   {
+//     list.append(aa.mk.item(''+i,a[i]));
+//   }
+//   return list
+// };
 
 
 // make a regular link
@@ -438,8 +444,27 @@ aa.mk.nostr_link =(dis,con=false)=>
     a.removeAttribute('href');
     a.classList.add('empty');
   }
-  
   return a
+};
+
+
+// qr code
+aa.mk.qr =s=>
+{
+  let l = aa.mk.l('div',{cla:'qrcode'});
+  aa.temp.qr = new QRCode(l,
+  {
+    text:s.trim(),
+    width: 512,
+    height: 512,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+  let img = l.querySelector('img');
+  img.classList.add('qr');
+  img.addEventListener('click',e=>{aa.mk.img_modal(img.src,'qr')});
+  return img
 };
 
 

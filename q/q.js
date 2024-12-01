@@ -16,54 +16,61 @@ aa.q =
 
 
 // add filter
-aa.q.add =s=>
+aa.q.add =str=>
 {
   aa.cli.clear();
-  let a = s.trim().split(' ');
-  let k = aa.fx.an(a.shift());
-  a = a.join('').replace(' ','');
-  let o = aa.parse.j(a);
-  if (o)
-  {
-    let log = localStorage.ns+' q add '+k+' ';
-    let filter = aa.q.o.ls[k];
-    let is_new;
-    let changed;
 
-    if (filter)
+  let [k,s] = str.split(aa.regex.fw);
+  k = aa.fx.an(k);
+
+  // let a = s.trim().split(' ');
+  // let k = aa.fx.an(a.shift());
+  // a = a.join('').replace(' ','');
+  
+  // let filters = s.match(/{(.*?)}/g);
+  
+  // s = '['+s+']';
+  
+  let o = aa.parse.j(s);
+  if (!o)
+  {
+    aa.log('invalid filter: '+s);
+    return ''
+  } 
+
+  let log = localStorage.ns+' q add '+k+' ';
+  let filter = aa.q.o.ls[k];
+  let is_new;
+  let changed;
+
+  if (filter)
+  {
+    if (filter.v === s) log += '=== is the same';
+    else
     {
-      if (filter.v === a) log += '=== is the same';
-      else
-      {
-        log += filter.v+' > '+a;
-        filter.v = a;
-        changed = true;
-      }
-    }
-    else 
-    {
-      aa.q.o.ls[k] = {v:a};
-      log += aa.q.o.ls[k].v;
+      log += filter.v+' > '+s;
+      filter.v = s;
       changed = true;
-      is_new = true;
     }
-    if (changed) 
-    {
-      if (!is_new) 
-      {
-        aa.q.close(k);
-        aa.log(log);
-      }
-      aa.mod_save(aa.q)
-      .then(mod=>
-      {
-        aa.mod_ui(mod,k);
-        // if (!is_new) aa.q.run(k);
-      });      
-    }
-    // aa.log(log);
   }
-  else aa.log('invalid filter: '+a);
+  else 
+  {
+    aa.q.o.ls[k] = {v:s};
+    log += aa.q.o.ls[k].v;
+    changed = true;
+    is_new = true;
+  }
+  if (changed) 
+  {
+    if (!is_new) 
+    {
+      aa.q.close(k);
+      aa.log(log);
+    }
+    aa.mod_save(aa.q).then(mod=>{aa.mod_ui(mod,k)});      
+  }
+  
+  return k
 };
 
 

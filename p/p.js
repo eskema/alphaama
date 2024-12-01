@@ -310,7 +310,7 @@ aa.p.get_authors =async a=>
 aa.p.relay =(p,set='write')=>
 {
   let p_relays = Object.entries(p.relays);
-  if (!relays.length) return ' ';
+  if (!p_relays.length) return ' ';
   const u_relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).sort();
 
   let relays = p_relays
@@ -400,7 +400,7 @@ aa.p.load_profiles =async a=>
   // let stored = await aa.db.get_pa(a);
   // let stored = await aa.db.cash.ops({get:a})
   for (const dis of stored) aa.p.profile(dis);
-  for (const dis of stored)aa.db.p[dis.xpub] = dis;
+  for (const dis of stored) aa.db.p[dis.xpub] = dis;
   for (const x of a)
   {
     if (!aa.db.p[x]) 
@@ -906,11 +906,7 @@ aa.p.save_to =()=>
   {
     aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}})
   }
-  setTimeout(()=>
-  {
-    for (const p of a) aa.p.p_links_upd(p);
-  },200);
-  // for (const p of a) requestAnimationFrame(()=>{aa.p.p_links_upd(p);});
+  for (const p of a) setTimeout(()=>{aa.p.p_links_upd(p)},0);
 };
 aa.p.save = async p=>
 {

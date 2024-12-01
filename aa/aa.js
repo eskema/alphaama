@@ -19,7 +19,8 @@ const aa =
   clk:{},
   dependencies:
   [
-    '/dep/cashu.js?v=1.2.1',
+    // '/dep/cashu.js?v=1.2.1',
+    '/dep/cashuts.js',
     '/dep/nostr-tools.js?v=2.10.3',
     '/dep/qrcode.js',
     // '/dep/nostr-tools.js?v=2.7.2',
@@ -48,7 +49,7 @@ const aa =
     '/r/r.js?v='+aa_version,
     '/u/u.js?v='+aa_version,
     '/i/i.js?v='+aa_version,
-    '/m/m.js?v='+aa_version,
+    // '/m/m.js?v='+aa_version,
     '/w/w.js?v='+aa_version,
   ],
   parse:{},
@@ -125,6 +126,7 @@ aa.exe =async s=>
       }
       if (act && 'exe' in act) 
       {
+        cut = cut.trim();
         if (output) 
         {
           // if (typeof output !== 'string') 
@@ -299,7 +301,12 @@ aa.head_styles =async styles=>
 aa.head_scripts =async scripts=>
 {
   for (const s of scripts) 
-  document.head.append(aa.mk.l('script',{src:s}));
+  {
+    let script = aa.mk.l('script',{src:s});
+    // script.setAttribute('cross-origin','');
+    document.head.append(script);
+  }
+  
 };
 
 
@@ -308,13 +315,12 @@ aa.load =(o={})=>
 {
   aa.head_meat();
   aa.styles_loaded = o.styles ? o.styles : aa.styles;
-  aa.dependencies_loaded = o.dependencies ? o.dependencies : aa.dependencies;
-  aa.tools_loaded = o.tools ? o.tools : aa.tools;
-  aa.mods_loaded = o.mods ? o.mods : aa.mods;
   aa.head_styles(aa.styles_loaded);
+  aa.dependencies_loaded = o.dependencies ? o.dependencies : aa.dependencies;
   aa.head_scripts(aa.dependencies_loaded);
+  aa.tools_loaded = o.tools ? o.tools : aa.tools;
   aa.head_scripts(aa.tools_loaded);
-  
+  aa.mods_loaded = o.mods ? o.mods : aa.mods;
   aa.head_scripts(aa.mods_loaded);
 
   aa.actions.push(
@@ -357,12 +363,16 @@ aa.log =async(s,l=false)=>
 
 // logs container element
 aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
+
+
 // mark log as read
 aa.log_read =async l=>
 {
   l.classList.remove('is_new');
   l.classList.add('just_added');
 };
+
+
 // mark logs as read
 aa.logs_read =async e=>
 {
@@ -377,6 +387,8 @@ aa.logs_read =async e=>
   else ls = aa.logs.querySelectorAll('.l.is_new');
   if (ls.length) for (const l of ls) aa.log_read(l);
 };
+
+
 // mark logs as read
 aa.logs_clear =async s=>
 {

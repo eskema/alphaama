@@ -21,6 +21,9 @@ aa.r.add =s=>
 {
   aa.cli.clear();
   aa.mod_servers_add(aa.r,s);
+  let a = s.split(' ');
+  let url = a.shift();
+  if (a.includes('off')) aa.r.force_close([url]);
 };
 
 

@@ -351,6 +351,8 @@ aa.fx.path_rm =s=>
   }
 };
 
+
+// proof of work abort
 aa.fx.pow_a =(id)=>
 {
   let m = aa.temp.mining[id]
@@ -374,6 +376,7 @@ aa.fx.pow_a =(id)=>
   }
   aa.log_read(log.parentElement);
 };
+
 
 // proof of work
 aa.fx.pow =async(event,dif)=>
@@ -401,22 +404,6 @@ aa.fx.pow =async(event,dif)=>
     {
       setTimeout(()=>{aa.fx.pow_a(event.id)},200);
     };
-    // const kill =()=>
-    // {
-    //   miner.terminate()
-    //   if (ended)
-    //   {
-    //     let t = ended - start;
-    //     log.textContent = `${started} -> done in ${t} ms`;
-    //   }
-    //   else 
-    //   {
-    //     log.textContent = 'pow aborted';
-    //     let note = document.querySelector('.note[data-id="'+event.id+'"]');
-    //     if (note) note.classList.remove('mining');
-    //   }
-    //   setTimeout(()=>{aa.log_read(log.parentElement)},500);
-    // };
     let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk:kill});
     log.append(butt_cancel);
     aa.log(log);
@@ -431,27 +418,15 @@ aa.fx.pow =async(event,dif)=>
   });
 };
 
+
 // qr code
 aa.fx.qr =s=>
 {
-  let l = aa.mk.l('div',{cla:'qrcode'});
-  aa.temp.qr = new QRCode(l,
-  {
-    text:s.trim(),
-    width: 512,
-    height: 512,
-    colorDark : "#000000",
-    colorLight : "#ffffff",
-    correctLevel : QRCode.CorrectLevel.H
-  });
-  let img = l.querySelector('img');
-  img.classList.add('qr');
-  img.addEventListener('click',e=>{aa.mk.img_modal(img.src,'qr')});
   aa.cli.clear();
-  aa.log('fx qr:');
+  let qr = aa.mk.qr(s.trim());
+  aa.log('fx qr: ');
   aa.log(s);
-  aa.log(img);
-  return img
+  aa.log(qr);
 };
 
 

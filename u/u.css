@@ -154,18 +154,13 @@
 
 #u_u #butt_u_u:not(.has-picture)::after
 {
-  /*--c: rgb(var(--color-f));*/
-  /*background: rgb(var(--c));*/
-  /*background: red;*/
   align-content: center;
   animation: u_u 4s ease-in-out 0s infinite;
   content: "";
   display: grid;
-  font-size: var(--font-size);
   height: 100%;
   position: absolute;
   width: 100%;
-  /*z-index: 3;*/
 }
 
 /*#u_u.expanded,*/

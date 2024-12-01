@@ -25,11 +25,13 @@
   display: grid;
   grid-template-areas: 
   "by       by"
+  
   "content  content"
-  "opentags opentags"
-  "tags     actions"
-  "versions versions"
   "after    after"
+  "opentags opentags"
+  "tags     tags"
+  "versions versions"
+  
   "replies  replies"
   ;
   grid-template-columns: auto 1fr;
@@ -51,12 +53,13 @@
   grid-template-columns: auto 1fr 61.8vw;
   grid-template-areas: 
   "by       by       by"
+  
   "content  content  replies"
-  "opentags opentags replies"
-  "tags     .  replies"
+  "after    after    replies"
+  "tags     tags  replies"
   "versions versions versions"
   "sig      sig      sig"
-  "after    after    after"
+  
   ;
 }
 
@@ -120,10 +123,10 @@
   content: "k" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
   font-size: var(--font-size-xs);
   grid-area: after;
-  padding: 1rem var(--padm);
-  padding-bottom: var(--padm);
+  padding: var(--padm);
+  /*padding-bottom: var(--padm);*/
   position: relative;
-  z-index: 99;
+  /*z-index: 99;*/
 }
 
 .note.in_view::after
@@ -780,7 +783,7 @@ a.author
 
 .tags_wrapper[open]
 {
-  grid-area: opentags;
+  /*grid-area: opentags;*/
   max-height: 50vh;
   overflow-y:  scroll;
   padding-bottom: var(--line);
@@ -792,7 +795,7 @@ a.author
   /*display: inline;*/
   line-height: 1.5rem;
   padding: 0 var(--padm);
-  text-align: right;
+  /*text-align: right;*/
   transition: none;
 }
 
@@ -866,7 +869,7 @@ a.author
 .tag[data-i]::before
 {
   align-self: end;
-  content: attr(data-i) " ";
+  content: "[" attr(data-i) "] ";
   line-height: 1rem;
   
 }
@@ -874,7 +877,7 @@ a.author
 .tag[data-i]::before,
 .tag button
 {
-  color: rgb(var(--color-d));
+  color: rgba(var(--color-d),.8);
   font-size: var(--font-size-xs);
   justify-self:end;
   padding: 0;
