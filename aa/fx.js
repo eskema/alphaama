@@ -422,11 +422,17 @@ aa.fx.pow =async(event,dif)=>
 // qr code
 aa.fx.qr =s=>
 {
-  aa.cli.clear();
   let qr = aa.mk.qr(s.trim());
   aa.log('fx qr: ');
   aa.log(s);
   aa.log(qr);
+};
+
+
+aa.fx.random_s =(length)=> 
+{
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array(length + 1).join('').split('').sort(() => Math.random() - 0.5).join('');
 };
 
 

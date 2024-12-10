@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const aa_version = 43;
+const aa_version = 44;
 
 const aa = 
 {
@@ -19,11 +19,11 @@ const aa =
   clk:{},
   dependencies:
   [
-    // '/dep/cashu.js?v=1.2.1',
-    '/dep/cashuts.js',
+    '/dep/cashuts.js?v=2.0.0',
     '/dep/nostr-tools.js?v=2.10.3',
     '/dep/qrcode.js',
-    // '/dep/nostr-tools.js?v=2.7.2',
+    '/dep/bolt11.js',
+    // '/dep/webtorrent.min.js',
     // '/dep/asciidoctor.min.js?v=3.0.4',
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
@@ -57,7 +57,6 @@ const aa =
   styles:
   [
     '/aa/aa.css?v='+aa_version,
-    '/aa/l.css?v='+aa_version,
   ],
   t:{ get now(){ return Math.floor(Date.now()/1000) }},
   temp:{print:{},refs:{},orphan:{}},
@@ -126,6 +125,7 @@ aa.exe =async s=>
       }
       if (act && 'exe' in act) 
       {
+        aa.cli.clear();
         cut = cut.trim();
         if (output) 
         {
@@ -261,8 +261,7 @@ aa.head_meat =async()=>
   fetch('/site.webmanifest')
   .then(dis=>dis.json()).then(manifest=>
   {
-    console.log(manifest);
-    
+    // console.log(manifest);
     for (const icon of manifest.icons)
     {
       let link = aa.mk.l('link');
@@ -344,7 +343,7 @@ aa.load =(o={})=>
 };
 
 
-// log stuff
+// log stuff to l
 aa.log =async(s,l=false)=>
 {
   const log = aa.mk.l('li',{cla:'l item is_new'});
@@ -394,7 +393,6 @@ aa.logs_clear =async s=>
 {
   let ls = document.querySelectorAll('#l .l:not(.mod)');
   for (const l of ls) l.remove();
-  aa.cli.clear();
 };
 
 
@@ -414,8 +412,6 @@ aa.reset =()=>
 };
 
 
-
-
 // if no options found, run with defaults
 aa.run =(o={})=>
 {
@@ -428,15 +424,9 @@ aa.run =(o={})=>
   aa.u.check_signer();
   let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
   u_u.append(aa.mod_l);
-  document.body.insertBefore(
-    u_u,
-    document.body.lastChild
-  );
-  
-  
+  document.body.insertBefore(u_u,document.body.lastChild);
   // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   setTimeout(aa.logs_read,420);
-  // window.addEventListener('scroll',aa.fx.scrolled);
 };
 
 
@@ -480,7 +470,6 @@ aa.mod_servers_butts =(mod,l,o)=>
 // remove set from server
 aa.mod_setrm =(mod,s)=>
 {
-  aa.cli.clear();
   const work =a=>
   {
     let url_string = a.shift().trim();
@@ -496,25 +485,21 @@ aa.mod_setrm =(mod,s)=>
 
 
 // load mod
-aa.mod_load =async mod=>
+aa.mod_load =async(mod)=>
 {
-  // console.log(mod);
-  let mod_o = mod.o;
-
-  if (!mod_o) 
+  if (!mod.o) 
   {
-    mod_o = await aa.db.idb.ops({get:{store:'stuff',key:mod.def.id}});
-    if (mod_o) mod.o = mod_o;
-    else if (!mod_o && mod.old_id) mod_o = await aa.mod_load_old(mod);
-    if (!mod_o && mod.def) mod.o = mod.def;
+    mod.o = await aa.db.idb.ops({get:{store:'stuff',key:mod.def.id}});
+    if (!mod.o && mod.old_id) mod.o = await aa.mod_load_old(mod);
+    if (!mod.o && mod.def) mod.o = mod.def;
   }
-  if (!mod.o.ls) mod.o.ls = {};
+  if (mod.o && !mod.o.ls) mod.o.ls = {};
   return mod
 };
 
 
-// in case the db key path changes, import to new key id
-// if old_id is found
+// in case the db key path changes
+// load mod from old_id
 aa.mod_load_old =async mod=>
 {
   let mod_o = await aa.db.idb.ops({get:{store:'stuff',key:mod.old_id}});

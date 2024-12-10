@@ -15,7 +15,7 @@ aa.e =
 };
 
 
-// append stashed oprphans from refs 
+// append stashed orphans from refs 
 aa.e.append_from_refs =()=>
 {
   for (const i in aa.temp.refs)
@@ -68,81 +68,11 @@ aa.e.append_to_rep =(note,rep)=>
     note.classList.add('is_new');
     rep.parentNode.classList.add('haz_new_reply');
   }
-  // requestAnimationFrame(()=>{
-    rep.insertBefore(note,last?last:null)
-  // });
-
+  rep.insertBefore(note,last?last:null)
   aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
-  
   aa.e.note_refs(note.dataset.id);
   if (note.dataset.id_a) aa.e.note_refs(note.dataset.id_a);
 };
-
-
-
-
-// decides where to append a reply
-// aa.e.append_checkK =(dat,note,reply_tag)=>
-// {
-//   const reply_id = reply_tag[1];
-//   if (reply_tag[0] === 'a')
-//   {
-//     let a_note = document.querySelector('.note[data-id_a="'+reply_tag[1]+'"]');
-//     if (!a_note)
-//     {
-//       a_note = aa.e.note_blank_pre(reply_tag,dat,1);
-//       aa.e.append_to_notes(a_note);
-//       aa.e.miss_print_a(reply_tag);
-//     }
-//     aa.e.append_to_rep(note,a_note.querySelector('.replies'));
-//     return;
-//   }
-  
-
-//   const reply_nid = aa.fx.encode('note',reply_id);
-//   let reply = document.getElementById(reply_nid);
-//   if (!reply)
-//   {
-//     let p = aa.db.p[dat.event.pubkey];
-//     let relays = aa.fx.in_set(p?.relays,'write');
-//     reply = aa.e.note_blank(reply_tag,dat,1);
-//     aa.e.append_to_rep(note,reply.querySelector('.replies'));
-
-//     let root_tag = aa.get.root_tag(dat.event.tags);
-//     if (root_tag && root_tag[1] !== reply_id)
-//     {
-//       reply.classList.add('reply');
-//       let root_id = root_tag[1];
-//       let root_nid = aa.fx.encode('note',root_id);
-//       let root = document.getElementById(root_nid);
-//       if (!root)
-//       { 
-//         root = aa.e.note_blank(root_tag,dat,10);
-//         root.classList.add('root');
-//         aa.e.append_to_notes(root);
-        
-//         aa.e.miss_print(root_tag,relays);
-//       }
-//       aa.e.append_to_rep(reply,root.querySelector('.replies'));
-//     }
-//     else
-//     {
-//       reply.classList.add('root');
-//       aa.e.append_to_notes(reply);
-//     }
-//     aa.e.miss_print(reply_tag,relays);
-//   }
-//   else
-//   {
-//     if (reply.classList.contains('blank'))
-//     {
-//       aa.e.reply_blank(note,reply,reply_tag);
-//     }
-//     aa.e.append_to_rep(note,reply.querySelector('.replies'));
-//   }
-// };
-
-
 
 
 // decides where to append a reply
@@ -157,60 +87,26 @@ aa.e.append_check =(dat,note,reply_tag)=>
     let a_note = document.querySelector('.note[data-id_a="'+reply_tag[1]+'"]');
     if (!a_note)
     {
-      // if (!aa.temp[reply_id]) aa.temp[reply_id] = [];
-      // aa.temp[reply_id]
-      // aa.fx.a_add(aa.temp[reply_id],[dat.event.id]);
-      // aa.temp.
       aa.e.refs(dat,note,reply_tag);
-      // a_note = aa.e.note_blank_pre(reply_tag,dat,1);
-      // aa.e.append_to_notes(a_note);
-
-
       aa.e.miss_print_a(reply_tag,relays);
     }
     else aa.e.append_to_rep(note,a_note.querySelector('.replies'));
     return;
   }
   
-
   const reply_nid = aa.fx.encode('note',reply_id);
   let reply = document.getElementById(reply_nid);
   if (!reply)
   {
     aa.e.refs(dat,note,reply_tag);
-    // if (!aa.temp[reply_id]) aa.temp[reply_id] = {};
-    // if (!aa.temp[reply_id][dat.event.id]) aa.temp[reply_id][dat.event.id] = [dat,note,reply_tag];
-
-
-    // let p = aa.db.p[dat.event.pubkey];
-    // let relays = aa.fx.in_set(p?.relays,'write');
-    // reply = aa.e.note_blank(reply_tag,dat,1);
-    // aa.e.append_to_rep(note,reply.querySelector('.replies'));
-
     let root_tag = aa.get.root_tag(dat.event.tags);
     if (root_tag && root_tag[1] !== reply_id)
     {
-      // reply.classList.add('reply');
       let root_id = root_tag[1];
       let root_nid = aa.fx.encode('note',root_id);
       let root = document.getElementById(root_nid);
-      if (!root)
-      { 
-        // if (!aa.temp[root_id]) aa.temp[root_id] = {};
-        // if (!aa.temp[root_id][dat.event.id]) aa.temp[root_id][dat.event.id] = dat;
-        // root = aa.e.note_blank(root_tag,dat,10);
-        // root.classList.add('root');
-        // aa.e.append_to_notes(root);
-        
-        aa.e.miss_print(root_tag);
-      }
-      // aa.e.append_to_rep(reply,root.querySelector('.replies'));
+      if (!root) aa.e.miss_print(root_tag);
     }
-    // else
-    // {
-    //   reply.classList.add('root');
-    //   aa.e.append_to_notes(reply);
-    // }
     aa.e.miss_print(reply_tag,relays);
   }
   else
@@ -224,24 +120,6 @@ aa.e.append_check =(dat,note,reply_tag)=>
 };
 
 
-// updates blank note
-aa.e.reply_blank =(note,reply,reply_tag)=>
-{
-  reply.querySelector('.replies').setAttribute('open','');
-  aa.fx.merge_datasets(['seen','subs'],note,reply);
-  if (reply_tag[2])
-  {
-    let relay = aa.is.url(reply_tag[2]);
-    if (relay)
-    {
-      let a = reply.dataset.r ? reply.dataset.r.trim().split(' ') : [];
-      aa.fx.a_add(a,[relay]);
-      reply.dataset.r = a.join(' ');
-    }
-  }
-};
-
-
 // clear notes from section
 aa.e.clear =s=>
 {
@@ -250,6 +128,22 @@ aa.e.clear =s=>
   // aa.fx.data_count(document.getElementById('butt_e'),'.note');
   aa.log('events cleared');
   aa.cli.fuck_off();
+};
+
+
+// make details section
+aa.mk.det =(cla='',id='')=>
+{
+  let l = aa.mk.details('',false,true);
+  if (cla) l.classList.add(cla);
+  if (id)
+  {
+    l.id = id;
+    aa.fx.expanded(id,1,l);
+  }
+  let summary = l.querySelector('summary');
+  summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
+  return l 
 };
 
 
@@ -299,13 +193,13 @@ aa.e.load =()=>
 aa.clk.mark_read =e=>
 {
   e.stopPropagation();
-  
+  const classes = ['haz_new_reply','haz_new','is_new'];
   const replies = e.target.closest('.replies');
-  const mom = e.target.closest('.note');
+  const note = e.target.closest('.note');
   const root = e.target.closest('.root');
-  let classes = ['haz_new_reply','haz_new','is_new']
-  mom.classList.remove(...classes);
-  const new_stuff = replies.querySelectorAll('.'+classes.join(',.')); //'.haz_new_reply,.haz_new,.is_new'        
+  const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
+  note.classList.remove(...classes);
+  
   if (new_stuff.length)
   {
     e.preventDefault();
@@ -348,7 +242,6 @@ aa.clk.mark_read =e=>
   }
   let top = root.offsetTop + (3 * parseFloat(getComputedStyle(document.documentElement).fontSize));
   if (top < aa.l.scrollTop) aa.l.scrollTo(0,top);
-  // else root.scrollIntoView();
 };
 
 
@@ -410,17 +303,6 @@ aa.e.miss_print_a =(tag,relays=[])=>
   });
 };
 
-aa.e.nope =(id,a,b,miss)=>
-{
-  for (const url of a) 
-  {
-    if (!b.includes(url))
-    {
-      if (!miss[url]) miss[url] = [];
-      aa.fx.a_add(miss[url],[id]);
-    }
-  }
-};
 
 // get missing e or p from def relays
 aa.get.missing =async type=>
@@ -459,25 +341,20 @@ aa.get.missing =async type=>
       }
       else if (type === 'a')
       {
-        let req = ['REQ','ida'];
-        // console.log('missing a:',ids);
-        for (const id of ids)
+        let chunks = aa.fx.chunks(ids,21);
+        for (const chunk of chunks)
         {
-          req.push(aa.fx.ida_rf(id));
-          // let notes = document.querySelectorAll('[data-id_a="'+id+'"]');
-          // for (const note of notes) note.dataset.nope = aa.miss[type][id].nope.join(' ');
+          let req = ['REQ','ida_'+aa.fx.random_s('12')];
+          // console.log('missing a:',ids);
+          
+          for (const id of chunk)
+          {
+            req.push(aa.fx.ida_rf(id));
+            // let notes = document.querySelectorAll('[data-id_a="'+id+'"]');
+            // for (const note of notes) note.dataset.nope = aa.miss[type][id].nope.join(' ');
+          }
+          setTimeout(()=>{aa.r.demand(req,[url],{'eose':'close'})},0);
         }
-        setTimeout(()=>{aa.r.demand(req,[url],{})},0);
-        // filter = {ids:ids};
-        // setTimeout(()=>
-        // {
-        //   aa.r.demand(['REQ','a_'+Date.now(),
-        //   {
-        //     kinds:[o.kind],
-        //     authors:[o.pubkey],
-        //     '#d':[o.identifier]
-        //   }],relays,{eose:'close'})
-        // },100)
       }
       
     }
@@ -512,10 +389,23 @@ aa.parse.nip19 =s=>
       l = aa.e.quote_a(d);
     }
     else l = aa.mk.l('span',{con:s+':'+JSON.stringify(d)})
-    // l = aa.mk.l('span',{con:s+':'+JSON.stringify(d)})
   }
   else l = aa.mk.nostr_link(s);
   return l
+};
+
+
+// update blank note not found on relays
+aa.e.nope =(id,a,b,miss)=>
+{
+  for (const url of a) 
+  {
+    if (!b.includes(url))
+    {
+      if (!miss[url]) miss[url] = [];
+      aa.fx.a_add(miss[url],[id]);
+    }
+  }
 };
 
 
@@ -548,10 +438,10 @@ aa.parse.nostr =match=>
         else df.append(m,' ');
       }
     }
-    else
-    {
-      console.log(match)
-    }
+    // else
+    // {
+    //   console.log(match)
+    // }
   }
   if (match[0].length < match.input.length)
   {
@@ -656,30 +546,11 @@ aa.e.note =dat=>
 };
 
 
-// make details section
-aa.mk.det =(cla,id=false)=>
-{
-  let l = aa.mk.details('',false,true);
-  l.classList.add(cla);
-  if (id)
-  {
-    l.id = id;
-    aa.fx.expanded(id,1,l);
-  }
-  let summary = l.querySelector('summary');
-  summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
-  return l 
-};
-
-
 // note actions
 aa.e.note_actions =dat=>
 { 
-  // const l = aa.mk.l('p',{cla:'actions'});
   const l = aa.mk.l('p',{cla:'actions'});
-  // l.classList.add('actions');
   let a = [];
-
   if (dat.clas.includes('draft')) 
   {
     switch (dat.event.kind)
@@ -690,7 +561,6 @@ aa.e.note_actions =dat=>
           a.push('encrypt','edit','cancel');
           break;
         }
-        
       default: 
         a.push('yolo','sign','pow','edit','cancel');
     }
@@ -849,6 +719,27 @@ aa.e.note_pre =dat=>
     }
   }
   return note
+};
+
+
+// get all note refs stashed and append them to note
+aa.e.note_refs =id=>
+{
+  if (!aa.temp.refs) return;
+  if (!aa.temp.refs.hasOwnProperty(id)) return;
+
+  if (aa.temp.orphan[id]) delete aa.temp.orphan[id];
+
+  for (const i in aa.temp.refs[id]) 
+  {
+    let dis = aa.temp.refs[id];
+    if (i && dis?.hasOwnProperty(i)) 
+    {
+      setTimeout(()=>{aa.e.append_check(...dis[i])},0);
+    }
+    else console.log(dis);
+  }
+  delete aa.temp.refs[id];
 };
 
 
@@ -1262,24 +1153,25 @@ aa.e.refs =(dat,note,tag)=>
 };
 
 
-aa.e.note_refs =id=>
+// updates blank note
+aa.e.reply_blank =(note,reply,reply_tag)=>
 {
-  if (!aa.temp.refs) return;
-  if (!aa.temp.refs.hasOwnProperty(id)) return;
-
-  if (aa.temp.orphan[id]) delete aa.temp.orphan[id];
-
-  for (const i in aa.temp.refs[id]) 
+  reply.querySelector('.replies').setAttribute('open','');
+  aa.fx.merge_datasets(['seen','subs'],note,reply);
+  if (reply_tag[2])
   {
-    let dis = aa.temp.refs[id];
-    if (i && dis?.hasOwnProperty(i)) 
+    let relay = aa.is.url(reply_tag[2]);
+    if (relay)
     {
-      setTimeout(()=>{aa.e.append_check(...dis[i])},0);
+      let a = reply.dataset.r ? reply.dataset.r.trim().split(' ') : [];
+      aa.fx.a_add(a,[relay]);
+      reply.dataset.r = a.join(' ');
     }
-    else console.log(dis);
   }
-  delete aa.temp.refs[id];
 };
+
+
+
 
 
 // // request event from relays
@@ -1396,17 +1288,13 @@ aa.kinds[1] =dat=>
   {
     let score = p ? p.score : 0;
     aa.parse.context(note,dat.event,aa.is.trusted(score));
-    // setTimeout(()=>
-    // {
-      let reply_tag = aa.get.reply_tag(dat.event.tags);
-      if (reply_tag && reply_tag.length) 
-      {
-        // setTimeout(()=>{ 
-          aa.e.append_check(dat,note,reply_tag) 
-        // },0);
-      }
-      else aa.e.append_to_notes(note);
-    // },0);
+
+    let reply_tag = aa.get.reply_tag(dat.event.tags);
+    if (reply_tag && reply_tag.length) 
+    {
+      aa.e.append_check(dat,note,reply_tag) 
+    }
+    else aa.e.append_to_notes(note);
   });
   return note
 };
@@ -1516,12 +1404,11 @@ aa.kinds[20] =dat=>
   .then(p=>
   {
     let score = p ? p.score : 0;
+    aa.parse.context(note,dat.event,aa.is.trusted(score));
     let url;
     let tag = dat.event.tags.filter(t=>t[0] === 'url')[0];
     if (!tag || tag.length < 2) 
     {
-      // imeta, blurhash gaKv8Rt+jYiwWCkCj[~XtRoIaKWqfkaeu4NGWVoKozWVRjJ.VYo2kCofayV[j]n4off+ayWCoL, m image/jpeg, url https://nostr.download/8ad7af803fb102c327d2a5980fea764a0844025cd7fb0cc702e797972d6aed32, x 8ad7af803fb102c327d2a5980fea764a0844025cd7fb0cc702e797972d6aed32
-
       tag = dat.event.tags.filter(t=>t[0] === 'imeta')[0];
       if (tag)
       {
@@ -1529,10 +1416,7 @@ aa.kinds[20] =dat=>
         url = aa.is.url(imeta.url)?.href;
       }
     }
-    else 
-    {
-      url = aa.is.url(tag[1])?.href;
-    }
+    else url = aa.is.url(tag[1])?.href;
 
     if (url)
     {
@@ -1548,10 +1432,39 @@ aa.kinds[20] =dat=>
   return note
 };
 
-aa.imeta = 
-
 
 // video template
+aa.kinds[1063] =dat=>
+{
+  let note = aa.e.note(dat);
+
+  aa.get.pubs(dat.event.tags);
+  aa.db.get_p(dat.event.pubkey).then(p=>
+  {
+    let score = p ? p.score : 0;
+    let url = dat.event.tags.filter(t=>t[0] === 'url')[0];
+    let vid_url = aa.is.url(url[1])?.href;
+    
+    if (vid_url)
+    {
+      let vid;
+      if (aa.is.trusted(score))
+      {
+        vid = aa.mk.av(vid_url);
+      }
+      else
+      {
+        vid = aa.mk.link(vid_url);
+      }
+      note.querySelector('.content')
+      .prepend(aa.mk.l('p',{cla:'paragraph',app:vid}));
+    }    
+  });
+  aa.e.append_to_notes(note);
+  return note
+};
+
+
 aa.kinds[34235] =dat=>
 {
   let note = aa.e.note_pre(dat);
@@ -1588,7 +1501,7 @@ aa.views.note1 =async nid=>
 {
   aa.viewing = nid;
   let l = document.getElementById(nid);
-  if (l) aa.e.view(l);
+  if (l && !l.classList.contains('blank')) aa.e.view(l);
   else
   {
     let x = aa.fx.decode(nid);

@@ -12,20 +12,7 @@ aa.m =
 
 
 // add mints
-aa.m.add =s=>
-{
-  aa.cli.clear();
-  aa.mod_servers_add(aa.m,s);
-};
-
-
-// return mints from sets
-// aa.m.from_sets =a=>
-// {
-//   let dis = [];
-//   for (const i of a) dis.push(...aa.fx.in_set(aa.m.o.ls,i));
-//   return [...new Set(dis)]
-// };
+aa.m.add =s=>{ aa.mod_servers_add(aa.m,s) };
 
 
 // on load
@@ -77,9 +64,7 @@ aa.m.mk =(k,v) =>
 
 // remove mint(s)
 aa.m.rm =s=>
-{
-  aa.cli.clear();
-  
+{  
   const work =a=>
   {
     const url = aa.is.url(a.shift().trim())?.href;

@@ -1,4 +1,4 @@
-# alphaama is just a nostr fucking client
+# alphaama is just aa nostr fucking client
 
 dat:
 - tries to be fun and weird.
@@ -19,10 +19,7 @@ source code:
 nostr:
 - https://github.com/nostr-protocol/nostr
 
-depends on:
-- https://github.com/nbd-wtf/nostr-tools
-
-dev deployment:
+work in progress dev deployment:
 - https://wip.alphaama.com
 
 stable deployment:
@@ -37,18 +34,20 @@ stable deployment:
 - alphaama doesn't do much on it's own, it takes commands given by the user and executes them
 - it has a single input field for interaction like a Command Line Interface (CLI) wrapped in a Graphical User Interface (GUI) that can be interacted with
 - commands are given by prefixing the input with a value (default is ".aa")
-- if no command prefix is found at the start of the input, a kind:1 draft is created (if logged in)
-- can display all event kinds using a single threaded generic event view
+- this value also acts as a delimiter for running multiple commands (similar to &&)
 - can be used to create any event type and autofills the missing required fields (raw JSON)
 - you can use multiple tabs with different requests
 - to reset everything, type: `.aa zzz`
+- some commands can be repeated using `,` as a separator (ex:`.aa o add trust 4, theme light, pagination 500, ns gm`)
+- some commands may be piped using ` | `
+
 
 ## (o) OPTIONS
 
-- to set an option, type: `.aa o set` followed by `key` and `value`
-- to reset options, type `.aa o reset` followed by a `key`, if left empty resets all to defaults
+- to add an option, type: `.aa o add` followed by `key` and `value`
+- to delete options, type `.aa o del` followed by `key`, if left empty deletes all and defaults are reset
 
-example of how to switch theme (team) from dark to light and then setting `trust` to `4` so it loads stuff from your fellas:
+example of how to switch theme from dark to light and then setting `trust` to `4` so it loads stuff from your fellas:
 
 https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4
 
@@ -61,16 +60,16 @@ https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4
 - default relay set for writing is "write"
 - default relay set for disabled is "off"
 - relay sets (relset) can be used in requests or to create a list (kind:10002)
-- depending from where relays were imported, sets are added automatically (ext, k3, k10002, hint)
+- depending from where relays were imported, some sets are added automatically (ext, k3, k10002, hint)
 
 to add a relay, type: `.aa r add <url> <set_1> <set_2>`
 - `url` is a valid full URL
 - `set` is a relay set (a-z_0-9) 
-- multiple sets can be added
 - example command for adding multiple relays: `.aa r add wss://relay1.com read write, wss://relay2.org read, wss://relay3.net write`
+- to remove a set from a relay, type: `.aa r setrm <url> <set>`
 
 
-## (u) LOGIN
+## (u) USER
 
 - you can use alphaama without logging in because you can read from Nostr without having to sign anything
 - to sign notes, you need a signer already configured with a key (NIP7 enabled browser extension)
@@ -95,7 +94,7 @@ to send a request, type: `.aa q req <relset> <JSON_filter>`
 - `JSON_filter` is a single Nostr request filter in raw JSON
 - you can add an extra value in the filter to close the request after all stored events have been sent: `"eose":"close"`
 
-the following variables can be used in filters:
+the following variables can be used in filters as values:
 - `"n_number"`: converts to a timestamp from `number` of days ago. ex: "n_1" converts to 1 day ago
 - `"d_date_string"`: converts to a timestamp of `date_string`. ex: "d_2024-08-21"
 - `"now"`: converts to the timestamp of now
@@ -107,7 +106,11 @@ to store a request, type: `.aa q add <fid> <JSON_filter>`
 - `fid` is a filter identifier with the following allowed characters:  `a-z_0-9`
 - `JSON_filter` is explained above
 
-to run a query, type: `.aa q run <fid> <relset>` 
+to run a request on specific relays, type: `.aa q run <fid> <relset>` 
+- `fid` is explained above
+- `relset` is a single relay url or relay set; by leaving it empty, it defaults to your `read` relay set
+
+to query outbox relays, type: `.aa q out <fid>` 
 - `fid` is explained above
 - `relset` is a single relay url or relay set; by leaving it empty, it defaults to your `read` relay set
 
@@ -117,7 +120,6 @@ to close a request, type: `.aa q close <fid>`
 example of running the request `a` 
 https://v.nostr.build/hzQufBzjStD8L8j6.mp4
 
-TIP => you can run multiple requests at once, separating the values with a comma (you can do this on other commands as well)
 example: `.aa q run f, u, n`
 
 
@@ -135,10 +137,28 @@ the WoT score system used here is very primitive and consists of 2 integer value
 soon™
 
 
+## (d) decentipedia 
+
+a decent centipededadedidodude
+soon™
+
+
 ## (db) STORED EVENTS 
 
 soon™
 
+
+## (w) walLNut 
+
+a walLNut is a nip60 enabled cashu wallet
+still work in progress, don't be dumb. help yourself
+
+
 ## (?) MAKE YOUR OWN AA MOD 
 
 soon™
+
+
+## (am) anon & mato 
+
+a game of re_quests. soon™

@@ -19,7 +19,6 @@ aa.r =
 // add relays
 aa.r.add =s=>
 {
-  aa.cli.clear();
   aa.mod_servers_add(aa.r,s);
   let a = s.split(' ');
   let url = a.shift();
@@ -365,7 +364,6 @@ aa.r.list =s=>
 // make relay list
 aa.r.list_mk =s=>
 {
-  aa.cli.clear();
   const a = s.trim().split(',');
   const relays = [];
   for (const r of a) 
@@ -550,10 +548,10 @@ aa.r.message_type.event =message=>
 };
 
 
-// ["NOTICE",,<message>]
+// ["NOTICE",<message>]
 aa.r.message_type.notice =async message=> 
 {
-  let s = message.origin+': '+message.data
+  let s = 'NOTICE from '+message.origin+': '+message.data;
   aa.log(s)
 };
 
@@ -621,9 +619,7 @@ aa.r.rel =s=>
 
 // remove relay(s)
 aa.r.rm =s=>
-{
-  aa.cli.clear();
-  
+{  
   const work =a=>
   {
     const url = aa.is.url(a.shift().trim())?.href;
@@ -646,7 +642,6 @@ aa.r.rm =s=>
 // resume subscriptions
 aa.r.resume =()=>
 {
-  aa.cli.clear(); 
   for (const url in aa.r.active) { aa.r.c_on(url) } 
 };
 

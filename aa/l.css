@@ -1,15 +1,9 @@
 #l
 {
   grid-area: l;
-  /*padding-bottom: var(--line);*/
   position: relative;
   scrollbar-width: none;
   transition: max-height 1s cubic-bezier(0.87, 0, 0.13, 1);
-}
-
-:focus + #l
-{
-  /*max-height: 40vh;*/
 }
 
 #l > header

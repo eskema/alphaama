@@ -9,11 +9,6 @@
   z-index: 0;
 }
 
-/*.incoming #e > header > [data-count="0"]::after
-{
-  content: "...cactus";
-}*/
-
 .note
 {
   --who: attr(data-who);
@@ -25,21 +20,17 @@
   display: grid;
   grid-template-areas: 
   "by       by"
-  
   "content  content"
   "after    after"
   "opentags opentags"
   "tags     tags"
   "versions versions"
-  
   "replies  replies"
   ;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
   margin: var(--pad) 0;
-  /*margin-bottom: var(--line);*/
   position: relative;
-  /*scroll-snap-align: start;*/
   z-index: 1;
 }
 
@@ -53,13 +44,11 @@
   grid-template-columns: auto 1fr 61.8vw;
   grid-template-areas: 
   "by       by       by"
-  
   "content  content  replies"
   "after    after    replies"
   "tags     tags  replies"
   "versions versions versions"
   "sig      sig      sig"
-  
   ;
 }
 
@@ -78,14 +67,6 @@
   ;
   grid-template-columns: 1fr 61.8vw;
   margin: 0;
-}
-
-.note.root:not(.in_path),
-.haz_solo .note.root,
-.note.in_view > .replies > .note,
-#notes > .note:not(.root):not(.in_path)
-{
-  /*margin: var(--line) 0;*/
 }
 
 .note.root:not(.in_path):first-child,
@@ -118,19 +99,18 @@
 
 .note::after
 {
-  color: rgb(var(--color-d));
   background: rgb(var(--color-b));
+  color: rgb(var(--color-c));
   content: "k" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
   font-size: var(--font-size-xs);
   grid-area: after;
   padding: var(--padm);
-  /*padding-bottom: var(--padm);*/
   position: relative;
-  /*z-index: 99;*/
 }
 
 .note.in_view::after
 {
+  color: rgb(var(--color-d));
   display: block;
   font-size: var(--font-size-s);
   padding: var(--padm);
@@ -139,21 +119,17 @@
 }
 
 .root.not_yet > .replies > .note,
-
 .note.out::after,
 .note.out::before,
 .note.out > *:not(.replies),
-
 .note:not(.in_view) > .sig,
 
-/*.note[data-kind="1"]:not(.tiny):not(.in_view)::after,*/
 .viewing .note.in_path:not(.in_view)::after,
 
 .haz_solo .note:not(.in_path)::after,
 .haz_solo .note:not(.in_path)::before,
 .haz_solo .note:not(.in_path) > *:not(.replies),
 
-.view_e .note:not(.in_path),
 .view_e .note:not(.in_path),
 .view_p .note:not(.in_path),
 .view_e #notes > .note:not(.in_path),
@@ -169,16 +145,22 @@
   display: grid;
 }
 
-.note.mining > .content::after
-{
-  color: red!important;
-  content: "mining in progress..."!important;
-  animation: loading 1s ease-in-out 0s infinite alternate;
-}
-
 #e.expanded #notes > .note:last-child
 {
   margin-bottom: var(--line);
+}
+
+.sig 
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-c));
+  font-size: var(--font-size-xs);
+  grid-area: sig;
+  margin-bottom: 0;
+  overflow-x: hidden;
+  overflow-x: scroll;
+  padding: var(--pad) var(--pad) 0 var(--pad);
+  text-align: center;
 }
 
 
@@ -189,7 +171,6 @@
   align-self: center;
   align-content: center;
   background: rgb(var(--color-b));
-  /*color: rgb(var(--c));*/
   display: grid;
   font-size: var(--font-size-s);
   grid-area: by;
@@ -197,12 +178,6 @@
   grid-template-columns: auto auto 1fr auto;
   line-height: 1rem;
   z-index: 1;
-  /*display: none;*/
-}
-
-.in_view > .by
-{
-
 }
 
 .note.draft .by::after,
@@ -242,7 +217,6 @@
 {
   position: sticky;
   top: calc(var(--line)  + var(--pad) - 2px);
-  /*top: calc(3.6rem - 1px);*/
 }
 
 .in_view > .replies > .note > .by
@@ -254,8 +228,8 @@
 
 .by > .tiny
 {
-  grid-area: x;
   align-content: center;
+  grid-area: x;
   line-height: 1;
 }
 
@@ -271,13 +245,7 @@ a.author
   overflow-x: scroll;
   text-decoration: none;
   user-select: none;
-  /*transform: translate(-1px,-1px);*/
 }
-
-/*.tiny a.author
-{
-  transform: translate(0);
-}*/
 
 .author::before
 {
@@ -295,7 +263,6 @@ a.author
   padding: 0;
   pointer-events: none;
   width: 1rem;
-  
 }
 
 .by .author::after,
@@ -329,9 +296,9 @@ a.author
 
 .author .name 
 {
-  background-color: rgb(var(--color-b));
-  padding: 0 var(--padm);
+  /*background-color: rgb(var(--color-b));*/
   grid-area: name;
+  padding: 0 var(--padm);
 }
 
 .author .name.empty::before
@@ -372,6 +339,12 @@ a.author
   display: none;
 }
 
+.in_view > .by .author
+{
+  color: rgb(var(--color-d));
+  grid-template-areas: "img name flw" "img nip5 flw"
+}
+
 .in_view > .by .author::before
 {
   height: 2rem;
@@ -379,18 +352,10 @@ a.author
   grid-area: img;
 }
 
-.in_view > .by .author
-{
-  color: rgb(var(--color-d));
-  grid-template-areas: "img name flw" "img nip5 flw"
-}
-
 .in_view > .by .author .picture
 {
   height: var(--line);
   width: var(--line);
-  /*transform: scale(.82);*/
-  /*background-color: rgb(var(--c));*/
 }
 
 .in_view > .by .author .name
@@ -443,6 +408,7 @@ a.author
   user-select: none;
   white-space: pre;
   word-break: keep-all;
+  font-size: 0;
 }
 
 .nid::before
@@ -466,8 +432,7 @@ a.author
   align-self: center;
   background: 
   rgba(var(--color-b),1),
-  rgba(var(--color-c),1)
-  ;
+  rgba(var(--color-c),1);
   grid-area: xid;
   padding: 0 var(--padm);
 }
@@ -528,8 +493,7 @@ a.author
   align-content: center;
   font-size: var(--font-size-s);
   grid-gap: 0 var(--pad);
-  grid-template-areas: 
-  "timestamp title elapsed";
+  grid-template-areas: "timestamp title elapsed";
 }
 
 .in_view > .by .created_at::before
@@ -547,9 +511,8 @@ a.author
 {
   align-self: start;
   box-sizing: border-box;
-  color: rgb(var(--color-e));
+  color: rgb(var(--color-d));
   grid-area: content;
-  /*margin-bottom: var(--pad);*/
   max-height: calc(100vh - 8rem);  
   overflow: hidden;
   position: relative;
@@ -565,7 +528,6 @@ a.author
 .viewing .root:not(.in_path) > .content,
 .root:not(.in_view):not(.in_path) > .content
 {
-  /*margin-bottom: 2rem;*/
   position: sticky;
   top: 1rem;
   z-index: 2;
@@ -611,6 +573,18 @@ a.author
   margin-right: var(--pad);
 }
 
+.note.mining > .content::after
+{
+  animation: loading 1s ease-in-out 0s infinite alternate;
+  color: red!important;
+  content: "mining in progress..."!important;
+}
+
+.hashtag
+{
+  font-weight: bold;
+}
+
 /* @end */
 
 
@@ -619,8 +593,6 @@ a.author
 .paragraph
 { 
   margin-bottom: 0;
-  /*padding: 0 var(--pad);*/
-  /*padding-top: 0;*/
   padding: var(--pad);
   white-space: pre-wrap;
   word-break: break-all;
@@ -649,7 +621,7 @@ a.author
 
 .in_view > .content > .paragraph
 {
-  color: rgb(var(--color-e));
+  color: rgb(var(--color-d));
   font-size: var(--font-size-m);
   justify-self: stretch;
   line-height: calc(var(--font-size-m)*1.5);
@@ -714,9 +686,9 @@ a.author
 
 .in_view > .content .content-img
 {
+  justify-self: center;
   margin: var(--line) auto;
   max-height: var(--media-max-height);
-  justify-self: center;
 }
 
 .in_view > .content .content-video
@@ -737,35 +709,6 @@ a.author
 
 /* @end */
 
-/* @group hashtags */
-
-.hashtag
-{
-  /*color: rgb(var(--color-main));*/
-  /*display: inline-block;*/
-  /*font-size: 0;*/
-  font-weight: bold;
-}
-
-/*.hashtag::before
-{
-  content: "#";
-  font-size: var(--font-size);
-}
-
-.hashtag::after
-{
-  content: attr(data-label);
-  font-size: var(--font-size);
-}
-
-.note_quote .hashtag::before,
-.note_quote .hashtag::after
-{
-  font-size: var(--font-size-s);
-}*/
-
-/* @end */
 
 /* @group tags */
 
@@ -776,14 +719,10 @@ a.author
   grid-area: tags;
   overflow: hidden;
   position: sticky;
-  
-  /*z-index: 1;*/
-  /*justify-self: end;*/
 }
 
 .tags_wrapper[open]
 {
-  /*grid-area: opentags;*/
   max-height: 50vh;
   overflow-y:  scroll;
   padding-bottom: var(--line);
@@ -792,18 +731,16 @@ a.author
 .tags_wrapper summary
 {
   color: rgb(var(--color-d));
-  /*display: inline;*/
   line-height: 1.5rem;
   padding: 0 var(--padm);
-  /*text-align: right;*/
   transition: none;
 }
 
 .tags_wrapper[open] summary
 {
   padding-bottom: var(--line);
-  text-align: left;
   position: sticky;
+  text-align: left;
   top: var(--font-size);
 }
 
@@ -820,8 +757,8 @@ a.author
 .in_view > .tags_wrapper
 {
   bottom: 0;
-  position: relative;
   max-height: unset;
+  position: relative;
 }
 
 .in_view > .tags_wrapper > summary,
@@ -845,7 +782,6 @@ a.author
 {
   z-index: 3;
 }
-
 
 .tags 
 {
@@ -871,7 +807,6 @@ a.author
   align-self: end;
   content: "[" attr(data-i) "] ";
   line-height: 1rem;
-  
 }
 
 .tag[data-i]::before,
@@ -913,7 +848,6 @@ a.author
   position: relative;
   white-space: pre;
   width: auto;
-  
 }
 
 .note .actions > summary
@@ -930,30 +864,14 @@ a.author
 
 .note .actions .butt
 {
-  color: rgb(var(--color-f));
-  opacity: .4;
+  /*color: rgb(var(--color-f));*/
+  /*opacity: .4;*/
   padding-left: calc(var(--padm)/2);
-}
-
-.in_view > .by .actions
-{
-/*  align-self: center;
-  justify-self: center;
-  line-height: 1.5rem;
-  position: sticky;
-  top: var(--line);
-  width: auto;
-  z-index: 5;*/
 }
 
 .in_view > .by > .actions > summary
 {
   line-height: 1.5rem;
-}
-
-.in_view > .by > .actions .butt
-{
-  /*color: rgb(var(--color-d));*/
 }
 
 .note.root > .by .actions,
@@ -995,11 +913,6 @@ a.author
   display: none;
 }
 
-/* @end */
-
-
-/* @group replies summary */
-
 .replies > summary
 {
   background-color: rgb(var(--color-b));
@@ -1007,7 +920,6 @@ a.author
   display: none;
   grid-template-columns: 1fr auto;
   line-height: 1.5rem;
-  /*margin-bottom: var(--line);*/
   z-index: 5; 
 }
 
@@ -1019,7 +931,6 @@ a.author
 
 .in_view > .replies > summary
 {
-  /*border-bottom: 1px dashed rgb(var(--color-d));*/
   position: sticky;
   top: var(--line);
 }
@@ -1049,11 +960,6 @@ a.author
 {
   display: none;
 }
-
-/* @end */
-
-
-/* @group mark-read */
 
 .mark_read
 {
@@ -1097,41 +1003,10 @@ a.author
 
 /* @group blank */
 
-@keyframes blank 
-{
-  99%
-  {
-    bottom: 0;
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-    z-index: -1;
-    margin: 0;
-    padding: 0;
-  }
-  100% 
-  {
-    bottom: unset;
-    opacity: 1;
-    pointer-events: auto;
-    position: relative!important;
-    z-index: 1;
-  }
-}
 
 .note.blank
 {
   --c: var(--color-c);
-}
-
-.note.blank:not(.in_view)
-{
-  /*animation: blank 10s linear 0s 1 forwards;*/
-/*  bottom: 0;
-  opacity: 0;
-  pointer-events: none;
-  position: absolute!important;
-  z-index: -1;*/
 }
 
 .blank > .by::before
@@ -1319,11 +1194,10 @@ a.author
 
 .note.tiny[data-kind="7"]:not(.in_view) > .content
 {
-  padding-left: 0;
-  padding: 1px;
   font-family: Apple Color Emoji,"Segoe UI Emoji","Source Code Pro", monospace;
   font-variant-emoji: emoji;
-  
+  padding-left: 0;
+  padding: 1px;  
 }
 
 .note.tiny[data-kind="7"]:not(.in_view) > .content > *
@@ -1343,10 +1217,10 @@ a.author
 }
 
 .note.tiny[data-kind="7"]:not(.in_view)::before,
-.note.tiny[data-kind="6"]:not(.in_view)::before,
-.note.tiny[data-kind="16"]:not(.in_view)::before,
 .note.tiny[data-kind="7"]:not(.in_view)::after,
+.note.tiny[data-kind="6"]:not(.in_view)::before,
 .note.tiny[data-kind="6"]:not(.in_view)::after,
+.note.tiny[data-kind="16"]:not(.in_view)::before,
 .note.tiny[data-kind="16"]:not(.in_view)::after
 {
   display: none;
@@ -1369,9 +1243,9 @@ a.author
 
 .pagination
 {
-  text-align: center;
   font-size: var(--font-size-l);
   margin: var(--line) 0;
+  text-align: center;
 }
 
 #e:not(.expanded) .pagination,
@@ -1406,18 +1280,6 @@ html:not(.needs_pagin) .pagination
 
 /* @end */
 
-.sig 
-{
-  background: rgb(var(--color-b));
-  color: rgb(var(--color-c));
-  font-size: var(--font-size-xs);
-  grid-area: sig;
-  margin-bottom: 0;
-  overflow-x: hidden;
-  overflow-x: scroll;
-  padding: var(--pad) var(--pad) 0 var(--pad);
-  text-align: center;
-}
 
 @media screen and (min-width: 1025px) 
 {
@@ -1426,31 +1288,26 @@ html:not(.needs_pagin) .pagination
     margin-left: var(--pad-l);
   }
   
-/*  .created_at:hover::after,
-  .created_at:hover 
-  {
-    color: rgb(var(--color-e));
-  }
-  
-  .author:hover .name[data-petname]::after 
-  {
-    color: rgb(var(--color-d));
-  }*/
-  
   .note:not(.tiny):not(.in_path) > .content::after
   {
-    display: block;
     color: rgb(var(--color-d));
     content: "--";
+    display: block;
     font-size: var(--font-size-xs);
     line-height: 1.5rem;
     margin-left: var(--pad);
+    
   }
   
-/*  .content .nostr_link:hover
+  .note.root:not(.tiny):not(.in_path)::after
   {
-    color: rgba(var(--color-alt),1);
-  }*/
+    z-index: 2;
+  }
+  
+  .note.root:not(.tiny):not(.in_path) > .content::after
+  {
+    margin-bottom: 3rem;
+  }
   
   .mark_read:hover
   {
@@ -1464,7 +1321,6 @@ html:not(.needs_pagin) .pagination
     content: " mark read";
   }
   
-  /*.note:hover > .content,*/
   .by:hover
   {
     z-index: 99;
@@ -1476,6 +1332,11 @@ html:not(.needs_pagin) .pagination
     position: sticky;
     top: calc( var(--size) - var(--pad));
     z-index: 2;
+  }
+  
+  .by .id:hover
+  {
+    opacity: 1;
   }
   
   .note > .actions
@@ -1515,12 +1376,6 @@ html:not(.needs_pagin) .pagination
 {
   :root {
     /*--font-size: 14px;*/
-  }
-  
-  html:not(.view_e) #notes
-  {
-    /*background: rgb(var(--color-e));*/
-    /*padding-left: var(--padm);*/
   }
   
   .note,
@@ -1570,5 +1425,4 @@ html:not(.needs_pagin) .pagination
   {
     text-align: right;
   }
-  
 }

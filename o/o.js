@@ -16,11 +16,10 @@ aa.o =
     {
       'ns':'.aa', // used as the prefix for actions
       'pagination': '100', // number of root events displayed
-      'reaction':'\uD83E\uDD18', // '🤘' default reaction emoji
-      'team':'dark', // 'light'
-      'trust':'11', // user score needed for loading media
       'pow':'0', // proof of work difficulty
-      
+      'reaction':'\uD83E\uDD18', // '🤘' default reaction emoji
+      'theme':'dark', // 'light'
+      'trust':'11', // user score needed for loading media
     },
 // todo
 //     'nav_keys':
@@ -52,10 +51,10 @@ aa.o.load =()=>
 
   aa.actions.push(
     {
-      action:[id,'set'],
+      action:[id,'add'],
       required:['key','value'],
-      description:'set option value',
-      exe:mod.set
+      description:'add key:value to options',
+      exe:mod.add
     },
     {
       action:[id,'reset'],
@@ -64,13 +63,20 @@ aa.o.load =()=>
       exe:mod.reset
     },
     {
-      action:[id,'rm'],
+      action:[id,'del'],
       optional:['key'], 
-      description:'remove option',
-      exe:mod.rm
+      description:'delete option',
+      exe:mod.del
     }
   );
   mod.o = {id:id,ls:localStorage};
+
+  if (mod.o.ls.team) 
+  {
+    mod.o.ls.theme = mod.o.ls.team;
+    aa.o.del('team');
+  }
+
   aa.mod_load(mod).then(aa.mk.mod).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} set `,'+','set');
@@ -81,9 +87,10 @@ aa.o.load =()=>
 };
 
 
-aa.fx.team =team=>
+// given a theme, returns the other one for quick input
+aa.fx.theme =s=>
 {
-  if (team === 'dark') return 'light';
+  if (s === 'dark') return 'light';
   else return 'dark'
 };
 
@@ -96,20 +103,14 @@ aa.o.mk =(k,v)=>
   // update 
   switch (k)
   {
-    case 'team': 
-      if (aa.l.dataset.team !== v) aa.l.dataset.team = v; 
+    case 'theme':    
+      if (aa.l.dataset.theme !== v) aa.l.dataset.theme = v; 
       l.append(
-        aa.mk.butt_action(id+' set '+k+' '+aa.fx.team(v),k,'key'),
+        aa.mk.butt_action(id+' add '+k+' '+aa.fx.theme(v),k,'key'),
         ' ',
         aa.mk.l('span',{cla:'val',con:v})
       );
       break;
-    // case 'pagination': 
-    //   let style = aa.mk.l('style',
-    //   {con:'.note:not(:nth-child(-n+'+k+')):not(.in_path){display:none;'});
-    //   document.head.append(style);
-    //   aa.l.dataset.pagination = localStorage.pagination;
-    //   break;
     default:
       l.append(
         aa.mk.butt_action(id+' set '+k+' '+v,k,'key'),
@@ -117,7 +118,6 @@ aa.o.mk =(k,v)=>
         aa.mk.l('span',{cla:'val',con:v})
       );
   }
-  
 
   return l
 };
@@ -126,7 +126,6 @@ aa.o.mk =(k,v)=>
 // reset one, multiple or all values
 aa.o.reset =s=>
 {
-  aa.cli.clear();
   s.trim();
   if (s)
   {
@@ -151,22 +150,23 @@ aa.o.reset =s=>
 
 
 // remove option (if not default)
-aa.o.rm =s=>
+aa.o.del =s=>
 {
-  aa.cli.clear();
   const work =a=>
   {
-    const dis = localStorage.ns+' '+aa.o.def.id+' rm ';
+    const id = aa.o.def.id;
+    const dis = localStorage.ns+' '+id+' rm ';
     const k = a.shift().trim();
     if (k && localStorage[k])
     {
       if (!aa.o.def.hasOwnProperty(k))
       {
         localStorage.removeItem(k);
-        document.getElementById(aa.o.def.id+'_'+k).remove();
+        let l = document.getElementById(id+'_'+k)
+        if (l) l.remove();
         aa.log(dis+k);
       }
-      else aa.log(dis+'key cannot be removed');
+      else aa.log(dis+'key cannot be deleted');
     }
     else aa.log(dis+'key not found');
   };
@@ -182,8 +182,8 @@ aa.o.save =()=>
 };
 
 
-// set key as value
-aa.o.set =s=>
+// add key as value
+aa.o.add =s=>
 {
   const work =a=>
   {
@@ -193,14 +193,13 @@ aa.o.set =s=>
       let old_v = localStorage[k];
       localStorage[k] = v;
       aa.mod_ui(aa.o,k);
-      let log = aa.mk.l('p',{con:aa.o.def.id+' set '+k+' '+v});
-      let undo = aa.mk.butt_action(aa.o.def.id+' set '+k+' '+old_v,'undo');
+      let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
+      let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
       log.append(' ',undo);
       aa.log(log);
     }
   };
   aa.fx.loop(work,s);
-  aa.cli.clear();
 };
 
 

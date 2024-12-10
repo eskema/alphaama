@@ -525,16 +525,24 @@ p[data-meta="banner"]
   justify-self: stretch;
 }
 
+.profile .server[data-sets]::before 
+{
+  color: rgb(var(--color-f));
+  content: attr(data-sets);
+  grid-area: aft;
+  margin-right: var(--pad);
+}
+
 .extradata .a
 {
   color: rgb(var(--color-d));
 }
 
-[data-team="dark"] .profile .server::after
+[data-theme="dark"] .profile .server::after
 {
   color: rgb(var(--color-light));
 }
-[data-team="light"] .profile .server::after
+[data-theme="light"] .profile .server::after
 {
   color: rgb(var(--color-dark));
 }

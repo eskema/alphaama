@@ -226,7 +226,7 @@ aa.p.new_replaceable_param =(p,event)=>
   let k = p.events['k'+event.kind];
   if (!k) k = p.events['k'+event.kind] = {};
 
-  let tag = event.tags.filter(t=>!t[0]==='d')[0];
+  let tag = event.tags.filter(t=>t[0]==='d')[0];
   if (!tag) return false;
   
   let s = tag[1];
@@ -981,7 +981,7 @@ aa.p.follows_to_upd =event=>
     
     if (is_u)
     {
-      if (p.score < 5) 
+      if (p.score === 0) 
       { 
         p.score = 5; 
         upd = true 

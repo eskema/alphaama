@@ -2,8 +2,8 @@
 
 alphaama
 mod    w
-wallnuts
-wallnut
+walLNuts
+walLNut
 wall_ut
 wallut
 ...
@@ -19,7 +19,7 @@ aa.w =
 };
 
 
-// add wallnut
+// add walLNut
 aa.w.add =s=>
 {
   // required:['wid','mint'],
@@ -62,7 +62,6 @@ aa.w.add =s=>
   if (a.length) w.unit = a.shift().trim();
 
   // if (a.length) w.mints.push(a.shift().trim());
-  aa.cli.clear();
   aa.mod_ui(aa.w,wid);
   aa.mod_save(aa.w);
 };
@@ -103,11 +102,10 @@ aa.w.check_quote =async s=>
 };
 
 
-// delete wallnut(s)
+// delete walLNut(s)
 aa.w.del =s=>
 {
-  aa.log('disabled until wallnuts are persisted to nostr to avoid loss of funds')
-  // aa.cli.clear();
+  aa.log('disabled until walLNuts are persisted to nostr to avoid loss of funds')
   
   // const work =a=>
   // {
@@ -164,7 +162,6 @@ aa.w.get_active =id=>
 // update kind-10019 
 aa.w.k10019 =s=>
 {
-  aa.cli.clear();
   let event = { kind:10019, tags:[]};
   let mints = [];
   let relays = [];
@@ -202,8 +199,6 @@ aa.w.k10019 =s=>
   //   }},
   // });
 
-
-
   //   "kind": 10019,
   //   "tags": [
   //       [ "relay", "wss://relay1" ],
@@ -211,6 +206,104 @@ aa.w.k10019 =s=>
   //       [ "mint", "https://mint1", "usd", "sat" ],
   //       [ "mint", "https://mint2", "sat" ],
   //       [ "pubkey", "<p2pk-pubkey>" ]
+  //   ]
+  // }
+};
+
+
+// update kind-37375 
+aa.w.k37375 =async(s='')=>
+{
+  let id = s.trim();
+  if (!id) id = Object.keys(aa.w.o.ls)[0];
+  const w = aa.w.o.ls[id];
+  if (!w) 
+  {
+    aa.log('unable to create event, walLNut not found');
+    return
+  }
+
+  let event = { kind:37375, tags:[['d',id]] };
+  let private = [];
+  private.push(['mint',w.mint],['unit','sat']);
+  let relays = aa.fx.in_sets(aa.r.o.ls,[w.relays]);
+  for (const r of relays) private.push(['relay',r]);
+  event.content = await window.nostr.nip44.encrypt(aa.u.p.xpub,JSON.stringify(private));
+  event = aa.u.event_normalise(event);
+  aa.u.event_draft(aa.mk.dat({event:event}));
+  
+  // aa.dialog(
+  // {
+  //   title:'new nutsack data',
+  //   l:aa.mk.tag_list(event.tags),
+  //   no:{exe:()=>{}},
+  //   yes:{exe:()=>
+  //   {
+  //     aa.draft(event);
+  //     console.log(event);
+  //     // .then(aa.u.event.finalize);
+  //   }},
+  // });
+
+
+
+// {
+//   "kind": 37375,
+//   "content": nip44_encrypt([
+//       [ "balance", "100", "sat" ],
+//       [ "privkey", "hexkey" ] // explained in NIP-61
+//   ]),
+//   "tags": [
+//     [ "d", "my-wallet" ],
+//     [ "mint", "https://mint1" ],
+//     [ "mint", "https://mint2" ],
+//     [ "mint", "https://mint3" ],
+//     [ "name", "my shitposting wallet" ],
+//     [ "unit", "sat" ],
+//     [ "description", "a wallet for my day-to-day shitposting" ],
+//     [ "relay", "wss://relay1" ],
+//     [ "relay", "wss://relay2" ],
+//   ]
+// }
+};
+
+aa.w.k7375 =async(s='')=>
+{
+  let id = s.trim();
+  if (!id) id = Object.keys(aa.w.o.ls)[0];
+  const w = aa.w.o.ls[id];
+  if (!w) 
+  {
+    aa.log('unable to create event, walLNut not found');
+    return
+  }
+  let pubkey = aa.u.p.xpub;
+
+  let event = { kind:7375, tags:[['a',`37375:${pubkey}:${id}`]] };
+  let private = {};
+  private.mint = w.mint;
+  private.proofs = w.proofs;
+  console.log(private);
+  event.content = await window.nostr.nip44.encrypt(pubkey,JSON.stringify(private));
+  event = aa.u.event_normalise(event);
+  console.log(event);
+  aa.u.event_draft(aa.mk.dat({event:event}));
+
+  // {
+  //   "kind": 7375,
+  //   "content": nip44_encrypt({
+  //     "mint": "https://stablenut.umint.cash",
+  //     "proofs": [
+  //       {
+  //         "id": "005c2502034d4f12",
+  //         "amount": 1,
+  //         "secret": "z+zyxAVLRqN9lEjxuNPSyRJzEstbl69Jc1vtimvtkPg=",
+  //         "C": "0241d98a8197ef238a192d47edf191a9de78b657308937b4f7dd0aa53beae72c46"
+  //       }
+  //     ]
+  //   }),
+  //   "tags": [
+  //     [ "a", "37375:<pubkey>:my-wallet" ]
   //   ]
   // }
 };
@@ -241,23 +334,41 @@ aa.kinds[10019] =dat=>
 };
 
 
-// event template for nutsack
+// event template for nutsack 
 aa.kinds[37375] =dat=>
 {
   const note = aa.e.note_pre(dat);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  
+  note.querySelector('.tags_wrapper').setAttribute('open','');
   aa.db.get_p(dat.event.pubkey).then(p=>
   {
-    if (!p) p = aa.p.p(dat.event.pubkey);
+    const x = dat.event.pubkey;
+    if (!p) p = aa.p.p(x);
     if (aa.p.new_replaceable_param(p,dat.event))
     {
       aa.p.save(p);
+
+      if (aa.is.u(x))
+      {
+        let wid = dat.event.tags.filter(t=>t[0]==='d')[0][1];
+        if (aa.w.o.ls[wid])
+        {
+          
+        }
+        else
+        {
+
+        }
+
+        aa.log('new nutsack '+wid);
+      }
     }
   });
 
-  let tags = note.querySelector('.tags_wrapper');
-  tags.setAttribute('open','');
+  // let tags = note.querySelector('.tags_wrapper');
+  // tags.setAttribute('open','');
+
+  
   
   return note
 };
@@ -274,55 +385,63 @@ aa.w.load =()=>
       action:[id,'add'],
       required:['wid','mint'],
       optional:['relset','pubkey','unit'],
-      description:'add wallnut',
+      description:'add walLNut',
       exe:mod.add
     },
     // {
     //   action:[id,'del'],
     //   required:['wid'],
-    //   description:'delete wallnut',
+    //   description:'delete walLNut',
     //   exe:mod.del
     // },
     {
       action:[id,'pubkey'],
       required:['wid','hex_pubkey'],
-      description:'set pubkey to wallnut',
+      description:'set pubkey to walLNut',
       exe:mod.pubkey
     },
     {
       action:[id,'unit'],
       required:['wid','unit'],
-      description:'set unit to wallnut',
+      description:'set unit to walLNut',
       exe:mod.unit
     },
     {
       action:[id,'relays'],
       required:['wid','relset'],
       optional:['relset'],
-      description:'set relay sets to wallnut',
+      description:'set relay sets to walLNut',
       exe:mod.relays
     },
     {
-      action:[id,'k10019'],
-      description:'create kind:10019 from wallnut(s)',
+      action:['k','10019'],
+      description:'create kind:10019 from walLNut(s)',
       exe:mod.k10019
     },
     {
-      action:[id,'quote_mint'],
+      action:['k','37375'],
+      optional:['wid'],
+      description:'create nutsack kind:37375 from walLNut',
+      exe:mod.k37375
+    },
+    {
+      action:[id,'quote'],
       required:['amount'],
-      optional:['mint_url'],
+      optional:['wid'],
       description:'mint quote',
       exe:mod.mint_quote
     },
     {
       action:[id,'check'],
       required:['quote'],
+      optional:['wid'],
       description:'check quote',
       exe:mod.check_quote
     },
     {
       action:[id,'mint'],
-      required:['quote_id','wid'],
+      required:['quote_id'],
+      optional:['wid'],
       description:'mint proofs from quote',
       exe:mod.mint
     },
@@ -348,7 +467,7 @@ aa.w.mint =async s=>
   let [wallet,w,wid] = aa.w.get_active(wallet_id);
   if (!wallet) 
   {
-    aa.log('no wallnut found')
+    aa.log('no walLNut found')
     return
   }
   let proofs;
@@ -404,11 +523,11 @@ aa.mk.mint_quote =o=>
 aa.w.mk =(k,v)=>
 {
   const id = aa.w.def.id;
-  // wallnut mod item
+  // walLNut mod item
   const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
-  // wallnut list
-  const ul = aa.mk.wallnut(k,v);
-  // wallnut details
+  // walLNut list
+  const ul = aa.mk.walLNut(k,v);
+  // walLNut details
   const details = aa.mk.details(k,ul,1);
   details.append(
     // aa.mk.butt_action(`${id} del ${k}`,'del','del'),
@@ -455,10 +574,9 @@ aa.w.quote =async s=>
 };
 
 
-// define relay sets to wallnut
+// define relay sets to walLNut
 aa.w.relays =s=>
 {
-  aa.cli.clear();
   let a = s.trim().split(' ');
   let wid = a.shift();
   aa.w.o.ls[wid].relays = a;
@@ -467,7 +585,7 @@ aa.w.relays =s=>
 };
 
 
-// start wallnuts
+// start walLNuts
 aa.w.start =mod=>
 {
   if (aa.mods_required(mod)) 
@@ -483,10 +601,9 @@ aa.w.start =mod=>
 };
 
 
-// define unit of wallnut
+// define unit of walLNut
 aa.w.unit =s=>
 {
-  aa.cli.clear();
   let a = s.trim().split(' ');
   let wid = a.shift();
   aa.w.o.ls[wid].unit = a.shift();
@@ -514,8 +631,8 @@ aa.w.w =()=>
 };
 
 
-// make wallnut element
-aa.mk.wallnut =(k,v)=>
+// make walLNut element
+aa.mk.walLNut =(k,v)=>
 {
   const id = aa.w.def.id;
   const ul = aa.mk.l('ul',{cla:'list'});
@@ -552,21 +669,9 @@ aa.mk.wallnut =(k,v)=>
 };
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 window.addEventListener('load',aa.w.load);
+
+aa.w.backup =()=>
+{
+
+};

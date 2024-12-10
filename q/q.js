@@ -18,18 +18,8 @@ aa.q =
 // add filter
 aa.q.add =str=>
 {
-  aa.cli.clear();
-
   let [k,s] = str.split(aa.regex.fw);
   k = aa.fx.an(k);
-
-  // let a = s.trim().split(' ');
-  // let k = aa.fx.an(a.shift());
-  // a = a.join('').replace(' ','');
-  
-  // let filters = s.match(/{(.*?)}/g);
-  
-  // s = '['+s+']';
   
   let o = aa.parse.j(s);
   if (!o)
@@ -69,7 +59,7 @@ aa.q.add =str=>
     }
     aa.mod_save(aa.q).then(mod=>{aa.mod_ui(mod,k)});      
   }
-  
+   
   return k
 };
 
@@ -77,7 +67,6 @@ aa.q.add =str=>
 // close one or all active queries
 aa.q.close =s=>
 {
-  aa.cli.clear();
   let fids = s.trim().split(' ');
   for (const k in aa.r.active)
   {
@@ -85,6 +74,29 @@ aa.q.close =s=>
     if (a.length) for (const fid of a)  aa.r.close(k,fid);
   }
   aa.log(aa.q.def.id+' closed: '+fids);
+};
+
+
+// remove filter
+aa.q.del =s=>
+{
+  let k = s.trim();
+  if (aa.q.o.ls.hasOwnProperty(k)) 
+  {
+    let old_v = aa.q.def.id+' add '+k+' '+aa.q.o.ls[k].v;
+    let undo = aa.mk.butt_action(old_v,'undo');
+    let log = aa.mk.l('p',
+    {
+      con:aa.q.def.id+' filter deleted: '+k+' ',
+      app: undo
+    });
+    aa.log(log);
+
+    delete aa.q.o.ls[k];
+    document.getElementById(aa.q.def.id+'_'+aa.fx.an(k)).remove();
+    aa.mod_save(aa.q);
+  }
+  else aa.log(aa.q.def.id+' '+k+' not found')
 };
 
 
@@ -109,10 +121,10 @@ aa.q.load =()=>
       exe:mod.add
     },
     {
-      action:[id,'rm'],
+      action:[id,'del'],
       required:['fid'],
       description:'remove one or more filters',
-      exe:mod.rm_filter
+      exe:mod.del
     },
     {
       action:[id,'run'],
@@ -146,6 +158,7 @@ aa.q.load =()=>
     },
   );
 
+  // add shortcut buttons with last queries executed
   aa.mod_load(mod).then(aa.mk.mod).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
@@ -153,13 +166,13 @@ aa.q.load =()=>
     
     if (sessionStorage.q_run) 
     {
-      let action = `${id} run ${sessionStorage.q_run}`;
-      setTimeout(()=>{aa.log(aa.mk.butt_action(action))},500);
+      let run = `${id} run ${sessionStorage.q_run}`;
+      setTimeout(()=>{aa.log(aa.mk.butt_action(run))},300);
     }
     if (sessionStorage.q_out) 
     {
-      let action = `${id} out ${sessionStorage.q_out}`;
-      setTimeout(()=>{aa.log(aa.mk.butt_action(action))},600);
+      let out = `${id} out ${sessionStorage.q_out}`;
+      setTimeout(()=>{aa.log(aa.mk.butt_action(out))},350);
     }
   });
 };
@@ -174,11 +187,12 @@ aa.q.mk =(k,v) =>
   let out = aa.mk.butt_action(`${id} out ${k}`,'out','out');
   let run = aa.mk.butt_action(`${id} run ${k}`,'run','run');
   let add = aa.mk.butt_action(`${id} add ${k} ${v.v}`,k,'add');
+  let del = aa.mk.butt_action(`${id} del ${k}`,'del');
   let val = aa.mk.l('span',{cla:'val',con:v.v});
-  let rm = aa.mk.butt_action(`${id} rm ${k}`,'rm','rm');
+  
   
   l.append(
-    out,' ',run,' ',add,' ',val,' ',rm
+    out,' ',run,' ',add,' ',val,' ',del
   );
   return l
 };
@@ -187,8 +201,6 @@ aa.q.mk =(k,v) =>
 // run filter with outbox
 aa.q.out =async s=>
 {
-  aa.cli.clear();
-
   const tasks = s.split(',');
   for (const task of tasks)
   {
@@ -233,31 +245,6 @@ aa.q.out =async s=>
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
   }
-};
-
-
-
-// remove filter
-aa.q.rm_filter =s=>
-{
-  aa.cli.clear();
-  let k = s.trim();
-  if (aa.q.o.ls.hasOwnProperty(k)) 
-  {
-    let old_v = aa.q.def.id+' add '+k+' '+aa.q.o.ls[k].v;
-    let undo = aa.mk.butt_action(old_v,'undo');
-    let log = aa.mk.l('p',
-    {
-      con:aa.q.def.id+' filter removed: '+k+' ',
-      app: undo
-    });
-    aa.log(log);
-
-    delete aa.q.o.ls[k];
-    document.getElementById(aa.q.def.id+'_'+aa.fx.an(k)).remove();
-    aa.mod_save(aa.q);
-  }
-  else aa.log(aa.q.def.id+' '+k+' not found')
 };
 
 
@@ -315,7 +302,6 @@ aa.q.replace_filter_vars =s=>
 // raw req
 aa.q.req =s=>
 {
-  aa.cli.clear();
   let a = s.trim().split(' ');
   let rels = a.shift();
   let relays = aa.r.rel(rels);
@@ -340,7 +326,6 @@ aa.q.req =s=>
 // run filter
 aa.q.run =async s=>
 {
-  aa.cli.clear();
   const tasks = s.split(',');
   for (const task of tasks)
   {
@@ -372,13 +357,14 @@ aa.q.stuff =()=>
 {
   let queries = 
   [
-    'a {"authors":["u"],"kinds":[0,3,10002,10019,37375]}',
+    'a {"authors":["u"],"kinds":[0,3,10002,37375]}',
     'b {"authors":["k3"],"kinds":[0,3,10002,10019]}',
     'd {"#p":["u"],"kinds":[4],"since":"n_7"}',
     'f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,10002,10019,30023,30818],"since":"n_1"}',
     'n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}',
     'r {"authors":["u","k3"],"kinds":[6,7,16],"since":"n_1"}',
     'u {"authors":["u"],"since":"n_5"}',
+    'w {"authors":["u"],"kinds":[7375,7376]}',
     'z {"#p":["u"],"kinds":[9735],"since":"n_21"}'
   ];
   for (const s of queries) aa.q.add(s);

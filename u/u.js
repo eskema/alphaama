@@ -164,7 +164,7 @@ aa.u.is_following =xpub=>
 
 
 // if hex key is your pubkey
-aa.is.u =(x)=> aa.u?.o?.ls?.xpub === x;
+aa.is.u =x=> aa.u?.o?.ls?.xpub === x;
 
 
 // make p tag array from array
@@ -324,9 +324,7 @@ aa.u.load =()=>
 
 // u login
 aa.u.login =async s=>  
-{
-  aa.cli.clear();
-  
+{  
 
   // return new Promise(resolve=>
   // {
@@ -418,7 +416,6 @@ aa.u.metadata_load =()=>
 // set your metadata (kind-0)
 aa.u.metadata_set =async s=>
 {
-  aa.cli.clear();
   let md = aa.parse.j(s);
   if (!md) return;
   aa.dialog(
@@ -451,9 +448,6 @@ aa.u.pow =async s=>
 
   let note = document.querySelector(`.note[data-id="${xid}"]`);
   if (!note) { aa.log(`pow failed: note not found`); return }
-
-  aa.cli.clear();
-
   aa.u.mine_note(xid,difficulty);
 };
 

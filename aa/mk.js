@@ -242,15 +242,9 @@ aa.mk.img_modal =(src,cla=false)=>
 };
 
 
-
-// make generic list item from key / value
+// make generic list item from key : value
 aa.mk.item =(k='',v,tag_name='li')=>
 {
-  if (!k) k = '';
-  if (k === 'expiry')
-  {
-    console.log(k,v)
-  }
   let l = aa.mk.l(tag_name,{cla:'item item_'+k});
   if (Array.isArray(v))  
   {
@@ -268,11 +262,6 @@ aa.mk.item =(k='',v,tag_name='li')=>
         list.append(aa.mk.item(''+i,v[i]));
       }
       l.append(aa.mk.details(k,list));
-      // let list = aa.mk.ls({});
-      // list.classList.remove('empty');
-      // for (const vv of v) list.append(aa.mk.item_v(v[vv]));
-      // let de = aa.mk.details(k,aa.mk.item_v(v),1);
-      // l.append(de);
     }
   }
   else if (v && typeof v==='object') 
@@ -283,23 +272,10 @@ aa.mk.item =(k='',v,tag_name='li')=>
   {
     if (v === null) v = 'null';
     if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
-    l.append( aa.mk.l('span',{cla:'val',con:v}) );
+    l.append(aa.mk.l('span',{cla:'val',con:v}));
   }
   return l
 };
-
-
-// aa.mk.item_v =a=>
-// {
-//   // let list = aa.mk.details()
-//   let list = aa.mk.ls({});
-//   list.classList.remove('empty');
-//   for (let i=0;i<a.length;i++) 
-//   {
-//     list.append(aa.mk.item(''+i,a[i]));
-//   }
-//   return list
-// };
 
 
 // make a regular link
@@ -313,11 +289,7 @@ aa.mk.link =(url,text=false,title=false)=>
     l.rel = 'noreferrer noopener';
     l.target = '_blank';
   }
-  else
-  {
-    l = aa.mk.l('span',{cla:'content_link',con:text});
-  }
-  
+  else l = aa.mk.l('span',{cla:'content_link',con:text});
   if (title) l.title = title;
   
   return l
