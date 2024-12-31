@@ -100,12 +100,44 @@ aa.q.del =s=>
 };
 
 
-// request filter from id_a
-aa.fx.ida_rf =s=>
+// fetch note
+aa.clk.fetch =e=>
 {
-  let [k,p,d] = s.split(':');
-  return {kinds:[parseInt(k)],authors:[p],'#d':[d]}
+  const note = e.target.closest('.note');
+  
+  let filter = '{';
+  const id = note.dataset.id;
+  if (id)
+  {
+    filter += `"ids":["${id}"],`;
+  } 
+  else
+  {
+    const [kind,pubkey,ds] = note.dataset.id_a.split(':');
+    filter += `"authors":[${pubkey}],"kinds":[${kind}],"#d":[${ds}],`;
+  }
+  filter += '"eose":"close"}';
+  
+  let relset = 'read ';
+  if (note.dataset.r)
+  {
+    let r = note.dataset.r.trim().split(' ');
+    if (r.length) 
+    {
+      let url = aa.is.url(r[0])?.href;
+      if (url) relset = url+' ';
+    }
+  }
+  aa.cli.v(localStorage.ns+' '+aa.q.def.id+' req '+relset+filter);
 };
+
+
+// request filter from id_a
+// aa.fx.ida_filter =s=>
+// {
+//   let [k,p,d] = s.split(':');
+//   return {kinds:[parseInt(k)],authors:[p],'#d':[d]}
+// };
 
 
 // on load
@@ -187,7 +219,7 @@ aa.q.mk =(k,v) =>
   let out = aa.mk.butt_action(`${id} out ${k}`,'out','out');
   let run = aa.mk.butt_action(`${id} run ${k}`,'run','run');
   let add = aa.mk.butt_action(`${id} add ${k} ${v.v}`,k,'add');
-  let del = aa.mk.butt_action(`${id} del ${k}`,'del');
+  let del = aa.mk.butt_action(`${id} del ${k}`,'del','del');
   let val = aa.mk.l('span',{cla:'val',con:v.v});
   
   
@@ -212,38 +244,43 @@ aa.q.out =async s=>
       if (!aa.q.active.out.includes(fid)) aa.q.active.out.push(fid);
       sessionStorage.q_out = aa.q.active.out;
 
-      let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
-      
-      // wip 
-      let outbox;
-      let authors;
-      if (filtered.authors?.length)
-      {
-        aa.log('outbox for '+filtered.authors.length+' authors');
-        outbox = aa.u.outbox(filtered.authors);
-        authors = filtered.authors;
-        delete filtered.authors;
-      }
-
-      if (outbox?.length)
-      {
-        aa.log('using '+outbox.length+' relays:');
-        let relays = [];
-        for (const r of outbox)
-        {
-          let filter = {...filtered};
-          let url = r[0];
-          filter.authors = r[1];
-          let req = ['REQ',fid,filter];
-          // console.log(url,req);
-          relays.push(url+' '+filter.authors.length);
-          aa.r.demand(req,[url],options);
-        }
-        aa.log(relays.join(', '));
-        aa.log(aa.mk.butt_action(aa.q.def.id+' close '+fid));
-      }
+      // let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
+      let dis = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
+      dis.push(fid);
+      aa.q.outbox(dis)
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
+  }
+};
+
+
+aa.q.outbox =([filtered,options,fid])=>
+{
+  // wip 
+  let outbox;
+  if (filtered.authors?.length)
+  {
+    aa.log('outbox for '+filtered.authors.length+' authors');
+    outbox = aa.u.outbox(filtered.authors);
+    delete filtered.authors;
+  }
+
+  if (outbox?.length)
+  {
+    aa.log('using '+outbox.length+' relays:');
+    let relays = [];
+    for (const r of outbox)
+    {
+      let filter = {...filtered};
+      let url = r[0];
+      filter.authors = r[1];
+      let req = ['REQ',fid,filter];
+      // console.log(url,req);
+      relays.push(url+' '+filter.authors.length);
+      aa.r.demand(req,[url],options);
+    }
+    aa.log(relays.join(', '));
+    aa.log(aa.mk.butt_action(aa.q.def.id+' close '+fid));
   }
 };
 
@@ -299,17 +336,22 @@ aa.q.replace_filter_vars =s=>
 };
 
 
+// request replies to note
+aa.clk.req =e=>
+{
+  const note = e.target.closest('.note');
+  const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
+  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
+};
+
+
 // raw req
 aa.q.req =s=>
 {
   let a = s.trim().split(' ');
   let rels = a.shift();
   let relays = aa.r.rel(rels);
-  if (!relays.length)
-  {
-    aa.log(aa.q.o+' req: invalid relay / relset ('+rels+')');
-    return false
-  }
+  
   const filt = a.join('').replace(' ','');
   let [filtered,options] = aa.q.replace_filter_vars(filt);
   if (!filtered)
@@ -318,8 +360,16 @@ aa.q.req =s=>
     return false
   }
   let rid = 'raw_'+aa.t.now;
-  aa.r.demand(['REQ',rid,filtered],relays,options);
-  aa.log(aa.mk.butt_action(aa.q.def.id+' close '+rid));
+  if (!relays.length)
+  {
+    aa.q.outbox([filtered,options,rid])
+  }
+  else
+  {
+    aa.r.demand(['REQ',rid,filtered],relays,options);
+    aa.log(aa.mk.butt_action(aa.q.def.id+' close '+rid));
+  }
+
 };
 
 
@@ -359,16 +409,19 @@ aa.q.stuff =()=>
   [
     'a {"authors":["u"],"kinds":[0,3,10002,37375]}',
     'b {"authors":["k3"],"kinds":[0,3,10002,10019]}',
-    'd {"#p":["u"],"kinds":[4],"since":"n_7"}',
     'f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,10002,10019,30023,30818],"since":"n_1"}',
     'n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}',
-    'r {"authors":["u","k3"],"kinds":[6,7,16],"since":"n_1"}',
     'u {"authors":["u"],"since":"n_5"}',
-    'w {"authors":["u"],"kinds":[7375,7376]}',
+    'w {"authors":["u"],"kinds":[7375,7376,10019,10020,37375]}',
     'z {"#p":["u"],"kinds":[9735],"since":"n_21"}'
   ];
   for (const s of queries) aa.q.add(s);
   aa.log(queries.length +' queries added to ['+aa.q.def.id+']');
+  aa.log(aa.mk.butt_action(aa.q.def.id+' run a'));
+  aa.log(aa.mk.butt_action(aa.q.def.id+' run b'));
+  aa.log(aa.mk.butt_action(aa.q.def.id+' run u,n'));
+  aa.log(aa.mk.butt_action(aa.q.def.id+' out f'));
+  aa.log(aa.mk.butt_action(aa.q.def.id+' run w'));
 };
 
 

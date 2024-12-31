@@ -31,9 +31,33 @@ const cash =
 };
 
 
+addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});
+
+
+cash.add =async a=> 
+{
+  const cache = await caches.open(cash.def.id);
+  await cache.addAll(a);
+};
+
+
+cash.clear =async()=>
+{
+  const cache = await caches.open(cash.def.id);
+  const results = await cache.matchAll();
+  for (const key of results) cache.delete(key);
+};
+
+
+cash.del =async key=>
+{
+  const cache = await caches.open(cash.def.id);
+  cache.delete(key)
+};
+
+
 // if we have the request cached, serve that,
 // if not, then fetch, cache and serve it
-
 cash.flow =async e=>
 {
   let res = await caches.match(e.request);
@@ -60,9 +84,6 @@ cash.flow =async e=>
   }
 };
 
-addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});
-
-// cache ops
 
 cash.get =async a=> 
 {
@@ -80,42 +101,6 @@ cash.get =async a=>
   postMessage(results);
 };
 
-cash.add =async a=> 
-{
-  const cache = await caches.open(cash.def.id);
-  await cache.addAll(a);
-};
-
-cash.put =async(k,res)=>
-{
-  if (typeof k === 'object' && k.url && k.url.startsWith('chrome')) return;
-  const cache = await caches.open(cash.def.id);
-  await cache.put(k,res);
-};
-
-cash.put_a =async(o)=>
-{
-  console.log('cash_put_a',);
-  const cache = await caches.open(cash.def.id);
-  for (const k in o) 
-  {
-    await cache.put(k,new Response(o[k],{headers:{'Content-Type':'application/json'}}));
-    // cash.put(k,new Response(o[k],{headers:{'Content-Type':'application/json'}}));
-  }
-};
-
-cash.rm =async key=>
-{
-  const cache = await caches.open(cash.def.id);
-  cache.delete(key)
-};
-
-cash.clear =async()=>
-{
-  const cache = await caches.open(cash.def.id);
-  const results = await cache.matchAll();
-  for (const res of results) cash.rm(res);
-};
 
 onactivate =e=>
 {
@@ -126,10 +111,31 @@ onactivate =e=>
   })
 };
 
+
 oninstall =e=>{e.waitUntil(cash.add(cash.def.ls))};
+
 
 onmessage =e=>
 {
   const ops = e.data;
   for (const k in ops) if (cash.hasOwnProperty(k)) cash[k](ops[k])
+};
+
+
+cash.put =async(k,res)=>
+{
+  if (typeof k === 'object' && k.url && k.url.startsWith('chrome')) return;
+  const cache = await caches.open(cash.def.id);
+  await cache.put(k,res);
+};
+
+
+cash.put_a =async(o)=>
+{
+  console.log('cash_put_a',);
+  const cache = await caches.open(cash.def.id);
+  for (const k in o) 
+  {
+    await cache.put(k,new Response(o[k],{headers:{'Content-Type':'application/json'}}));
+  }
 };

@@ -136,7 +136,7 @@
   color: rgb(var(--c));
   display: grid;
   grid-area: pub;
-  grid-template-areas: "author xpub created_at";
+  grid-template-areas: "author actions xpub created_at";
   grid-template-columns: 1fr auto;
   justify-items: end;
   justify-self: stretch;
@@ -165,11 +165,16 @@
   padding: var(--padm);
 }
 
-.profile > .pubkey .author span
+.profile .author .name
 {
+  background: rgb(var(--color-b));
+}
+
+.profile > .pubkey .author .name
+{
+  /*background: rgb(var(--color-b));*/
   justify-self: start;
   padding: var(--padm);
-  
 }
 
 .profile > .pubkey .author.has-picture img
@@ -209,8 +214,8 @@
   background: rgb(var(--color-b));
   color: rgb(var(--color-d));
   font-size: var(--font-size-s);
-  grid-template-areas: "author xpub created_at";
-  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "author actions xpub created_at";
+  grid-template-columns: auto auto 1fr auto;
   padding: var(--padm);
   padding: 0;
   position: sticky;
@@ -384,6 +389,8 @@ img[data-meta="picture"]
 img[data-meta="banner"].expanded,
 img[data-meta="picture"].expanded
 {
+  align-self: center;
+  justify-self: center;
   max-height: var(--media-max-height);
   max-width: unset;
   object-fit: contain;
@@ -515,7 +522,7 @@ p[data-meta="banner"]
   display: inline-grid;
   grid-template-areas: unset;
   grid-template-columns: unset;
-  margin: var(--pad);
+  margin: var(--padm);
   overflow-x: scroll;
   padding: 0;
 }
@@ -557,7 +564,7 @@ p[data-meta="banner"]
 
 /* @group profile actions */
 
-.profile > .actions
+/*.profile > .actions
 {
   align-self: stretch;
   background: rgb(var(--color-b));
@@ -581,7 +588,7 @@ p[data-meta="banner"]
 {
   padding-bottom: 0;
   padding-top: 0;
-}
+}*/
 
 /* @end */
 

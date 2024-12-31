@@ -25,6 +25,16 @@ aa.e.append_from_refs =()=>
 };
 
 
+aa.e.append_to =(dat,note,reply_tag)=>
+{
+  if (reply_tag && reply_tag.length) 
+  {
+    aa.e.append_check(dat,note,reply_tag) 
+  }
+  else aa.e.append_to_notes(note);
+};
+
+
 // append note to notes section
 aa.e.append_to_notes =note=>
 { 
@@ -49,6 +59,7 @@ aa.e.append_to_notes =note=>
   // setTimeout(()=>
   // {
   aa.e.note_refs(note.dataset.id);
+  if (note.dataset.id_a) aa.e.note_refs(note.dataset.id_a);
   // },100)
 };
 
@@ -131,6 +142,32 @@ aa.e.clear =s=>
 };
 
 
+//parse content as object
+aa.parse.content_o =async(data,note)=>
+{
+  if (data && typeof data === 'object')
+  {
+    let content = note.querySelector('.content');
+    content.textContent = '';
+    content.append(aa.mk.ls({ls:data}));
+  }
+};
+
+
+// toggle parsed content on note
+aa.parse.context =(note,event,trust)=>
+{
+  const content = note.querySelector('.content');
+  content.textContent = '';
+  content.classList.toggle('parsed');
+  if (content.classList.contains('parsed'))
+  {
+    content.append(aa.parse.content(event.content,trust));
+  }
+  else content.append(aa.mk.l('p',{cla:'paragraph',con:event.content}));
+};
+
+
 // make details section
 aa.mk.det =(cla='',id='')=>
 {
@@ -144,6 +181,32 @@ aa.mk.det =(cla='',id='')=>
   let summary = l.querySelector('summary');
   summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
   return l 
+};
+
+
+
+// load event list from db into memory
+aa.e.events =async a=>
+{
+  const a_to_get = [];
+  for (const x of a) if (!aa.db.e[x]) a_to_get.push(x);
+  if (a_to_get.length)
+  {
+    let stored = await aa.db.get('idb',{get_a:{store:'events',a:a_to_get}});
+    for (const dat of stored) aa.db.e[dat.event.id] = dat;
+  } 
+};
+
+
+// parse hashtag
+aa.parse.hashtag =(match)=>
+{
+  return aa.mk.l('span',
+  {
+    cla:'hashtag',
+    con:match[0],
+    lab:match[0].slice(1).toLowerCase()
+  })
 };
 
 
@@ -161,6 +224,12 @@ aa.e.load =()=>
       required:['value'],
       description:'search notes content for value',
       exe:aa.e.search
+    },
+    {
+      action:['e','json'],
+      required:['hex_id'],
+      description:'return event JSON',
+      exe:aa.e.json
     },
     {
       action:['e','view'],
@@ -184,8 +253,8 @@ aa.e.load =()=>
   );
   const section = aa.mk.section('e');
   const notes = aa.mk.l('div',{id:'notes'});
-  section.append(notes,aa.mk.pagination());
   aa.e.section_observer.observe(notes,{attributes:false,childList:true});
+  setTimeout(()=>{section.append(notes,aa.mk.pagination())},200);
 };
 
 
@@ -341,22 +410,32 @@ aa.get.missing =async type=>
       }
       else if (type === 'a')
       {
-        let chunks = aa.fx.chunks(ids,21);
-        for (const chunk of chunks)
+        for (const id of ids)
         {
-          let req = ['REQ','ida_'+aa.fx.random_s('12')];
-          // console.log('missing a:',ids);
-          
-          for (const id of chunk)
-          {
-            req.push(aa.fx.ida_rf(id));
-            // let notes = document.querySelectorAll('[data-id_a="'+id+'"]');
-            // for (const note of notes) note.dataset.nope = aa.miss[type][id].nope.join(' ');
-          }
+          let [k,x,s] = id.split(':');
+          filter = {kinds:[parseInt(k)],authors:[x],'#d':[s]};
+          let req = ['REQ',id.slice(0,12),filter];
           setTimeout(()=>{aa.r.demand(req,[url],{'eose':'close'})},0);
         }
+        
+        
+        // let chunks = aa.fx.chunks(ids,21);
+        // for (const chunk of chunks)
+        // {
+        //   let req = ['REQ','ida_'+aa.fx.random_s('12')];
+        //   // console.log('missing a:',ids);
+          
+        //   for (const id of chunk)
+        //   {
+        //     let [k,x,s] = id.split(':');
+        //     filter = {kinds:[parseInt(k)],authors:[x],'#d':[s]};
+        //     req.push(filter);
+        //     // let notes = document.querySelectorAll('[data-id_a="'+id+'"]');
+        //     // for (const note of notes) note.dataset.nope = aa.miss[type][id].nope.join(' ');
+        //   }
+        //   setTimeout(()=>{aa.r.demand(req,[url],{'eose':'close'})},0);
+        // }
       }
-      
     }
   },500,'miss_'+type);
 };
@@ -456,7 +535,7 @@ aa.e.note =dat=>
 {
   const note = aa.mk.l('article',{cla:'note'});
   const by = aa.mk.l('header',{cla:'by'});
-  
+
   note.append(by);
   if (dat.seen) note.dataset.seen = dat.seen.join(' ');
   if (dat.subs) note.dataset.subs = dat.subs.join(' ');
@@ -473,7 +552,7 @@ aa.e.note =dat=>
     {
       cla:'a nid',
       ref:'#'+nid,
-      con:nid,
+      con:'k'+dat.event.kind+' '+aa.k[dat.event.kind],
       clk:aa.clk.a
     });
     const h1_xid = aa.mk.l('span',{cla:'xid',con:dat.event.id});
@@ -498,7 +577,7 @@ aa.e.note =dat=>
       if (!p) p = aa.p.p(x);
       aa.fx.color(x,note);
       note.dataset.trust = p.score;
-      aa.p.p_link_data_upd(p_link,aa.p.p_link_data(p));  
+      aa.p.p_link_data_upd(p_link,aa.p.p_link_data(p));
       by.append(aa.e.note_actions(dat));
     });
   }
@@ -530,9 +609,10 @@ aa.e.note =dat=>
   if ('tags' in dat.event && dat.event.tags.length)
   {
     let tags_list = aa.mk.tag_list(dat.event.tags);
-    let tags_wrapper = aa.mk.details('#['+dat.event.tags.length+']',tags_list);
+    let tags_wrapper = aa.mk.details('tags',tags_list);
     tags_wrapper.classList.add('tags_wrapper');
-    note.append(tags_wrapper);      
+    tags_wrapper.querySelector('summary').dataset.count = dat.event.tags.length;
+    note.append(tags_wrapper);
   }
 
   if ('sig' in dat.event) 
@@ -570,8 +650,7 @@ aa.e.note_actions =dat=>
   else if (dat.clas.includes('blank')) a.push('fetch');
   else 
   {
-    a.push(['<3','na']);
-    
+    a.push(['…','na']);
   }
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
@@ -584,9 +663,9 @@ aa.clk.na =e=>
   let a = [
     [localStorage.reaction,'react'],
     ['req','req'],
-    ['bro','post'],
+    ['bro','bro'],
     ['parse','parse'],
-    ['mini','tiny']
+    ['tiny','tiny']
   ];
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
 };
@@ -746,7 +825,7 @@ aa.e.note_refs =id=>
 // note replace
 aa.e.note_replace =(l,dat)=>
 {
-  
+  dat.clas = aa.fx.a_rm(dat.clas,['draft']);
   let b = aa.e.note_by_kind(dat);
   l.id = 'temp-'+dat.event.id;
   let b_rep = b.querySelector('.replies');
@@ -836,6 +915,17 @@ aa.mk.pagination =()=>
 };
 
 
+// toggle parsed content
+aa.clk.parse =e=>
+{
+  const note = e.target.closest('.note');
+  const xid = note.dataset.id;
+  const event = aa.db.e[xid].event;
+  aa.parse.context(note,event,true);
+};
+
+
+// batch send data to print
 aa.e.to_printer =dat=>
 {
   aa.temp.print[dat.event.id] = dat;
@@ -868,8 +958,7 @@ aa.e.printer =()=>
     aa.get.missing('p');
     aa.get.missing('e');
     aa.get.missing('a');
-  },200)
-
+  },200);
 };
 
 
@@ -883,7 +972,6 @@ aa.e.print =dat=>
 
   let nid = aa.fx.encode('note',xid);
   let l = document.getElementById(nid);
-  if (!l)
   if (!l)
   {
     aa.fx.count_upd(document.getElementById('butt_e'));
@@ -939,11 +1027,12 @@ aa.e.print =dat=>
   }
 };
 
-aa.test =()=>
-{
-  let event = Object.keys(aa.db.e)[0].event
-  NostrTools.nip19.neventEncode(Object.keys(aa.db.e)[0].event)
-};
+
+// is tag conditions
+aa.is.tag ={};
+aa.is.tag.e =a=> a[0]==='e' && aa.is.x(a[1]);
+aa.is.tag.p =a=> a[0]==='p' && aa.is.x(a[1]);
+aa.is.tag.q =a=> a[0]==='q' && aa.is.x(a[1]);
 
 
 // create note intersection observer
@@ -972,7 +1061,7 @@ aa.e.quote =o=>
   if (o.dis) quote.cite = o.dis;
   quote.dataset.id = o.id;
   let by = aa.mk.l('p',{cla:'note_quote_by'});
-  by.append(aa.mk.nostr_link(aa.fx.encode('note',o.id)));
+  // by.append(aa.mk.nostr_link(aa.fx.encode('note',o.id)));
   quote.append(by);
   let has_pub;
   let pubkey = o.author ?? o.pubkey;
@@ -1000,11 +1089,11 @@ aa.e.quote_a =o=>
 // update blank quotes
 aa.e.quote_upd =async(quote,o)=>
 {
-  let dat = await aa.db.get_e(o.id);
   let by = quote.querySelector('.note_quote_by');
   let has_pub = by.querySelector('a.author') ? true : false;
   let content;
   let quote_classes = [];
+  let dat = await aa.db.get_e(o.id);
   if (dat) 
   {
     let p = await aa.db.get_p(dat.event.pubkey);
@@ -1014,6 +1103,7 @@ aa.e.quote_upd =async(quote,o)=>
       by.prepend(aa.mk.p_link(p.xpub));
       aa.fx.color(p.xpub,quote);
     }
+    by.append(aa.mk.nostr_link(aa.fx.encode('note',o.id)));
     content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
     quote_classes.push('parsed');
     aa.get.pubs([['p',dat.event.pubkey]]);
@@ -1031,7 +1121,11 @@ aa.e.quote_upd =async(quote,o)=>
       content.append(`\nrelays: ${o.relays}`);
       relays = o.relays
     }
+    let relay = relays.length?relays[0]:'read';
     aa.e.miss_e(o.id,relays);
+    let command = aa.q.def.id+' req';
+    let filter = '{"ids":["'+o.id+'"]}';
+    by.append(aa.mk.butt_action(`${command} ${relay} ${filter}`,'req'));
   }
   quote.append(content)
   quote.classList.add(...quote_classes);
@@ -1140,6 +1234,14 @@ aa.get.quotes =async id=>
 };
 
 
+aa.e.json =async(s='')=>
+{
+  let dat = await aa.db.get_e(s);
+  if (dat) return JSON.stringify(dat.event)
+  else return 'event not found '+s
+};
+
+
 // stash orphan
 aa.e.refs =(dat,note,tag)=>
 {
@@ -1169,27 +1271,6 @@ aa.e.reply_blank =(note,reply,reply_tag)=>
     }
   }
 };
-
-
-
-
-
-// // request event from relays
-// aa.e.req =async o=>
-// {
-//   if (!o || !o.id) return;
-
-//   let relays = [];
-//   if (o.relays?.length) 
-//   {
-//     req.relays = o.relays;
-//     // let relay_content = aa.mk.l('p',{con:'relays: '+o.relays});
-//     // content.append(relay_content);
-//     for (const r of o.relays) relays.push(r);
-//   }
-  
-//   aa.e.miss_e(o.id,o.relays);
-// };
 
 
 // search notes content for value
@@ -1228,6 +1309,32 @@ aa.e.section_mutated =a=>
   }
 };
 aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
+
+
+// update elapsed time of note and parents up to root
+aa.clk.time =e=> 
+{
+  if (!e.target) return;
+  const all = e.target.closest('.root')?.querySelectorAll('time');
+  if (all) for (const t of all)
+  {
+    const timestamp = parseInt(t.textContent);
+    const date = aa.t.to_date(timestamp);
+    t.dataset.elapsed = aa.t.elapsed(date);
+  }
+};
+
+
+// toggle tiny note 
+aa.clk.tiny =e=>
+{
+  const note = e.target.closest('.note');
+  note.classList.toggle('tiny');
+  const is_tiny = note.classList.contains('tiny');
+  if (is_tiny) sessionStorage[note.dataset.id] = 'tiny';
+  else sessionStorage[note.dataset.id] = '';
+  aa.fx.scroll(note,{behavior:'smooth',block:is_tiny?'start':'center'});
+};
 
 
 // update note path when appending
@@ -1288,14 +1395,8 @@ aa.kinds[1] =dat=>
   {
     let score = p ? p.score : 0;
     aa.parse.context(note,dat.event,aa.is.trusted(score));
-
-    let reply_tag = aa.get.reply_tag(dat.event.tags);
-    if (reply_tag && reply_tag.length) 
-    {
-      aa.e.append_check(dat,note,reply_tag) 
-    }
-    else aa.e.append_to_notes(note);
   });
+  aa.e.append_to(dat,note,aa.get.reply_tag(dat.event.tags));
   return note
 };
 
@@ -1363,6 +1464,7 @@ aa.kinds[7] =dat=>
   // setTimeout(()=>
   // {
     let reply_tag = aa.get.last_e_tag(dat.event.tags);
+    if (!reply_tag) reply_tag = aa.get.reply_tag(dat.event.tags);
     if (reply_tag && reply_tag.length) aa.e.append_check(dat,note,reply_tag);
     else aa.e.append_to_notes(note);
   // },0)
@@ -1578,10 +1680,6 @@ aa.get.seen =x=>
 };
 
 
-// returns tags of type from event
-aa.get.tags =(event,type)=> event.tags.filter(tag=>tag[0]===type);
-
-
 // returns tags for building a reply
 aa.get.tags_for_reply =event=>
 {  
@@ -1591,17 +1689,32 @@ aa.get.tags_for_reply =event=>
   let tag = aa.get.root_tag(event.tags);
   if (tag) 
   {
+    let root = aa.db.e[tag[1]].event;
     tag[2] = aa.is.url(tag[2])?.href || seen;
     tag[3] = 'root';
+    if (root) tag[4] = root.pubkey
     tag.splice(4);
     tags.push(tag);
-    if (aa.db.e[tag[1]]) tags.push(['K',''+aa.db.e[tag[1]].event.kind]);
-    tags.push(['e',event.id,seen,'reply'],['k',''+event.kind]);
+    if (root && aa.fx.kind_type(event.kind) !== 'parameterized') 
+    {
+      tags.push(['K',''+root.kind]);
+    }
+    tags.push(['e',event.id,seen,'reply',event.pubkey],['k',''+event.kind]);
   }
   else 
   {
-    tags.push(['e',event.id,seen,'root'],['K',''+event.kind]);
+    if (aa.fx.kind_type(event.kind) === 'parameterized')
+    {
+      let tag_a = aa.fx.tag.a(event);
+      if (tag_a) 
+      {
+        tag_a.push(seen,'root');
+        tags.push(tag_a);
+      }
+    }
+    tags.push(['e',event.id,seen,'root',event.pubkey],['K',''+event.kind]);
   }
+  
 
   const p_tags = event.tags.filter(t=>aa.is.tag.p(t) && t[1] !== aa.u.p.xpub);
   let dis_p_tags = [...new Set(p_tags)];
@@ -1618,7 +1731,7 @@ aa.get.reply_tag =tags=>
 {
   let tag = tags.filter(t=>t[0]==='e'&&t[3]==='reply')[0];
   if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop();
-  if (!tag) tag = tags.filter(t=>t[0]==='a')[0];
+  if (!tag) tag = tags.find(t=>t[0]==='a');
   if (tag) return tag;
   return false
 };

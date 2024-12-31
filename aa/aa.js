@@ -24,19 +24,21 @@ const aa =
     '/dep/qrcode.js',
     '/dep/bolt11.js',
     // '/dep/webtorrent.min.js',
-    // '/dep/asciidoctor.min.js?v=3.0.4',
+    '/dep/asciidoctor.min.js?v=3.0.4',
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
+    '/dep/math.js?v=14.0.1',
   ],
   extensions:
   {
     img:['jpg','jpeg','gif','webp','png','heic'],
-    av:['mp3','mp4','webm'],
+    av:['mp3','mp4','webm','m4a'],
   },
   fx:{},
   get:{},
   is:{},
   kinds:{},
+  misc:{},
   miss:{e:{},p:{},a:[]},
   mk:{},
   mods:
@@ -62,13 +64,9 @@ const aa =
   temp:{print:{},refs:{},orphan:{}},
   tools:
   [
-    '/aa/is.js?v='+aa_version,
-    // '/aa/t.js?v='+aa_version,
     '/aa/fx.js?v='+aa_version,
     '/aa/mk.js?v='+aa_version,
-    '/aa/clk.js?v='+aa_version,
-    '/aa/parse.js?v='+aa_version,
-    '/aa/db.js?v='+aa_version,
+    // '/aa/db.js?v='+aa_version,
     '/aa/state.js?v='+aa_version,
   ],
   ui:
@@ -85,6 +83,45 @@ aa.l = document.documentElement;
 // if ('serviceWorker' in navigator && ) navigator.serviceWorker.register('/cash.js');
 
 
+// returns false or true if the string is an action
+aa.is.act =s=>
+{
+  const ns = localStorage.ns;
+  if (!ns) return false; 
+  if (ns.startsWith(s) 
+  || s.startsWith(ns+' ') 
+  || s === ns
+  ) return true;
+  return false
+};
+
+
+// is alphanumeric and underscore
+aa.is.an =s=> aa.regex.an.test(s);
+
+
+// web cache worker
+aa.db.cash = { get new(){ return new Worker('/cash.js')} };
+
+
+// checks if element has no children and is empty, ignores trailing spaces
+aa.is.empty =l=>
+{
+  if (!l) return true;
+  const len = l.childNodes.length;
+  if (!len) return true;
+  else
+  {
+    if (l.firstChild.nodeType === 3)
+    {
+      const s = (l.textContent+'').trim();
+      if (!s || s === ' ') return true;
+    }
+  }
+  return false;
+};
+
+
 // parses string as action and executes it
 aa.exe =async s=>
 {
@@ -92,7 +129,7 @@ aa.exe =async s=>
   // console.log(a);
   let output;
   for (const action of a)
-  {
+  { 
     if (!action.length) continue;
     let acts = action.split(' | ');
     for (const ac of acts)
@@ -126,59 +163,116 @@ aa.exe =async s=>
       if (act && 'exe' in act) 
       {
         aa.cli.clear();
-        cut = cut.trim();
-        if (output) 
-        {
-          // if (typeof output !== 'string') 
-          // {
-          //   output = output.toString();
-          // }
-          output = await act.exe(cut+' '+output);
-        }
+        cut = cut ? cut.trim() : '';
+        if (output) output = await act.exe((cut?cut+' ':'')+output);
         else output = await act.exe(cut);
       }
-      // console.log(output);
     }
   }
+  if (output) aa.log(output)
 };
 
 
-// parses string as actions and executes them
-// aa.exe2 =async s=>
-// {
-//   let a = s.split(localStorage.ns+' ');
-//   console.log(a);
-//   let output;
-//   for (const action of a)
-//   {
-//     console.log()
-//     if (!action.length) continue;
-//     let act;
-//     let cmd = action.split(aa.regex.fw);
-//     let actions = aa.actions.filter(o=>o.action[0] === cmd[0]);
-//     if (actions.length > 1)
-//     {
-//       let sub_cmd = cmd[1].split(aa.regex.fw);
-//       let sub_actions = actions.filter(o=>o.action[1] === sub_cmd[0]);
-//       if (sub_actions.length)
-//       {
-//         act = sub_actions[0];
-//         cut = sub_cmd[1];
-//       }
-//     }
-//     else if (actions.length)
-//     {
-//       act = actions[0];
-//       cut = cmd[1];
-//     }
-//     if (act && 'exe' in act) 
-//     {
-//       if (output) output = await act.exe(cut+' '+output);
-//       else output = await act.exe(cut);
-//     }
-//     console.log(output);
-//   }
-// };
+// adds a clicked class to show interaction
+aa.clk.clkd =l=>
+{
+  l.classList.remove('clkd');
+  setTimeout(()=>{l.classList.add('clkd')},100);
+};
+
+
+// splits a string into paragraphs, then into lines and then into words 
+// and process each part separately
+aa.parse.content =(s,trusted)=>
+{
+  const df = new DocumentFragment();
+  let l = aa.mk.l('p',{cla:'paragraph'});
+  const another_l =last_l=>
+  {
+    last_l.normalize();
+    if (aa.is.empty(last_l)) last_l.remove();
+    else 
+    {
+      df.append(last_l);
+      l = aa.mk.l('p',{cla:'paragraph'});
+    }
+  };
+  let paragraphs = s.split(/\n\s*\n/);
+  if (paragraphs.length === 1) paragraphs = s.split(/\n/);
+  for (const paragraph of paragraphs)
+  { 
+    if (!paragraph.length) continue;    
+    
+    const lines = paragraph.trim().split(/\n/);
+    for (let li=0;li<lines.length;li++)
+    {
+      if (l.childNodes.length) l.append(aa.mk.l('br'));
+
+      const words = lines[li].trim().split(' ');
+      for (let i=0;i<words.length;i++)
+      {
+        let word = words[i].trim();
+        if (!word.length) continue;
+
+        if (aa.regex.url.test(word)) 
+        {
+          let dis_node = aa.parser('url',word,trusted);
+          l.append(dis_node,' ');
+        }
+        else if (aa.regex.nostr.test(word)) 
+        {
+          let parsed = aa.parser('nostr',word);
+          let quote = parsed.querySelector('blockquote');
+          if (quote)
+          {
+            another_l(l); 
+            df.append(quote)
+          }
+          else l.append(parsed);       
+        }
+        else if (aa.regex.hashtag.test(word)) 
+        {
+          let dis_node = aa.parser('hashtag',word);
+          l.append(dis_node,' ');
+        }
+        else 
+        {
+          if (i === words.length-1) l.append(word);
+          else l.append(word,' ');
+        }
+      }
+    }
+    another_l(l);
+  }
+  return df
+};
+
+
+// expand 
+aa.clk.expand =e=>
+{
+  if (e.hasOwnProperty('stopPropagation')) e.stopPropagation();
+  let l = document.getElementById(e.target.dataset.controls) || e.target;
+  if (!l) return;
+  
+  let block;
+  requestAnimationFrame(e=>
+  {
+    if (l.classList.contains('expanded'))
+    {
+      l.classList.remove('expanded');
+      sessionStorage[l.id] = '';
+      block = 'center';
+    }
+    else
+    {
+      l.classList.add('expanded');
+      sessionStorage[l.id] = 'expanded';
+      block = 'start';
+    }
+    aa.fx.scroll(l,{behavior:'smooth',block:block});
+  });
+};
 
 
 // open a dialog
@@ -213,6 +307,30 @@ aa.dialog =async o=>
 };
 
 
+// checks if page is loading from iframe
+aa.is.iframe =()=>
+{
+  try {return window.self !== window.top} 
+  catch(er) {return true}
+};
+
+
+// pass operations to worker and 
+aa.db.get =async(s,o)=>
+{
+  return new Promise(resolve=>
+  {
+    const db = aa.db[s].new;
+    db.onmessage =e=> 
+    {
+      setTimeout(()=>{db.terminate()},200);
+      resolve(e.data);
+    }
+    db.postMessage(o);
+  });
+};
+
+
 // make element with options
 aa.mk.l =(tag_name,o=false)=>
 {
@@ -232,7 +350,7 @@ aa.mk.l =(tag_name,o=false)=>
       case 'ref': l.href = v; break;
       case 'rel': l.rel = v; break;
       case 'src': l.src = v; break;
-      case 'tit': l.setAttribute('title',v); break;
+      case 'tit': l.title = v; break;
       case 'app': l.append(v); break;
       case 'clk': l.addEventListener('click',v); break;
       case 'nam': l.name = v; break;
@@ -309,6 +427,50 @@ aa.head_scripts =async scripts=>
 };
 
 
+// indexeddb stuff
+aa.db.idb = { get new(){ return new Worker('/aa/db_idb.js')} };
+
+
+// parse JSON
+aa.parse.j =son=>
+{
+  let o;
+  son = son.trim();
+  if (son.length > 2)
+  {
+    try { o = JSON.parse(son) }
+    catch (er) 
+    { 
+      console.log('aa.parse.j',son); 
+      console.error(er) 
+    }
+  }
+  return o
+};
+
+
+// is a valid nostr key
+aa.is.key =x=> aa.is.x(x) && x.length === 64; 
+
+
+// wip
+aa.clk.list_filter_input =e=>
+{
+  let ls = e.target.nextElementSibling;
+  let lf = aa.mk.l('div',{cla:'lf'});
+  let inp = aa.mk.l('input');
+  lf.append(inp);
+  inp.addEventListener('change',e=>
+  {
+    console.log(inp.value);
+    console.log(ls.childElementCount);
+  });
+  e.target.parentElement.insertBefore(lf,e.target);
+  e.target.remove();
+  // lf.prepend(e.target);
+};
+
+
 // if no options found, load with defaults
 aa.load =(o={})=>
 {
@@ -339,7 +501,15 @@ aa.load =(o={})=>
       description:'clear logs',
       exe:aa.logs_clear
     },
+    {
+      action:['fx','math'],
+      description:'math stuff',
+      exe:aa.math
+    },
   );
+
+  fetch('/stuff/nostr_kinds.json')
+  .then(dis=>dis.json()).then(kinds=> aa.k = kinds);  
 };
 
 
@@ -369,6 +539,7 @@ aa.log_read =async l=>
 {
   l.classList.remove('is_new');
   l.classList.add('just_added');
+  l.blur();
 };
 
 
@@ -396,6 +567,32 @@ aa.logs_clear =async s=>
 };
 
 
+aa.math =(s='')=>
+{
+  return math.evaluate(s)
+};
+
+
+// checks if string is only one character long
+aa.is.one =s=>
+{
+  let a = s.split(' ');
+  let seg = a[0];
+  try { seg = [...new Intl.Segmenter().segment(a[0])] } 
+  catch (error) { console.log('no Intl.Segmenter(), use a better browser')};
+  if (seg.length === 1) return true;
+  else return false
+};
+
+
+// perform cache operations and return results
+aa.db.cash.ops =async o=> await aa.db.get('cash',o);
+
+
+// perform indexeddb operations and return results
+aa.db.idb.ops =async o=> await aa.db.get('idb',o);
+
+
 // tries to delete everything saved locally 
 // and then reload clean
 aa.reset =()=>
@@ -418,14 +615,14 @@ aa.run =(o={})=>
   aa.mod_l = aa.mk.l('div',{id:'mods'});
   const main = aa.mk.l('main',{id:'view'});
   document.body.prepend(main);
-  if (aa.is.rigged()) aa.l.classList.add('rigged');
+  if (aa.is.iframe()) aa.l.classList.add('rigged');
   aa.wl.lock();
-  aa.log((aa.is.online() ? 'on' : 'off') + 'line at '+location.origin);
-  aa.u.check_signer();
+  aa.log((navigator.onLine ? 'on' : 'off') + 'line at '+location.origin);
+  
   let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
   u_u.append(aa.mod_l);
   document.body.insertBefore(u_u,document.body.lastChild);
-  // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   setTimeout(aa.logs_read,420);
 };
 
@@ -453,7 +650,7 @@ aa.mod_servers_add =(mod,s)=>
 aa.mod_servers_butts =(mod,l,o)=>
 {
   let url = l.querySelector('.url').innerText;
-  l.append(' ',aa.mk.butt_action(mod.def.id+' rm '+url,'rm','rm'));
+  l.append(' ',aa.mk.butt_action(mod.def.id+' del '+url,'del','del'));
   
   let sets = aa.mk.l('span',{cla:'sets'});
   if (o.sets && o.sets.length)
@@ -557,18 +754,39 @@ aa.mod_ui =(mod,k)=>
 };
 
 
+// wrapper for aa.parse functions
+aa.parser =(parse_id,s,trust,regex_id)=>
+{
+  const df = new DocumentFragment();
+  if (!regex_id) regex_id = parse_id;
+  const matches = [...s.matchAll(aa.regex[regex_id])];
+  let index = 0;
+  for (const match of matches) 
+  {
+    df.append(match.input.slice(index,match.index));
+    let parsed = aa.parse[parse_id](match,trust);
+    let childs = parsed.childNodes.length;
+    if (childs > 2) index = match.index + match.input.length;
+    else index = match.index + match[0].length;
+    df.append(parsed);
+  }
+  if (index < s.length) df.append(s.slice(index));
+  return df
+};
+
+
 // reusable regex
 aa.regex = 
 {
-  get an(){ return /^[A-Z_0-9]+$/i},
-  get hashtag(){ return /(\B[#])[\w+-]*/g},
-  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi},
-  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi},
-  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi}, 
-  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i}, //acdefghjklmnqprstuvwxyz987654320
-  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu},
-  get str(){ return /"([^"]+)"/ },
-  get fw(){ return /(?<=^\S+)\s/}
+  get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
+  get hashtag(){ return /(\B[#])[\w+-]*/g },
+  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
+  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
+  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu },
+  get str(){ return /"([^"]+)"/ }, // text in quotes ""
+  get fw(){ return /(?<=^\S+)\s/ }, // first word
 };
 
 
@@ -648,6 +866,27 @@ aa.to =async(f,t,s)=>
 };
 
 
+// converts string to URL and returns it or false
+aa.is.url =s=>
+{
+  let url;
+  try { url = new URL(s) } catch(er) {}
+  return url
+};
+
+
+// parse url as link or media given trust
+aa.parse.url =(match,tru)=>
+{
+  let l;
+  const type = aa.fx.url_type(match[0]);
+  if (tru && type[0] === 'img') l = aa.mk.img(type[1].href);
+  else if (tru && type[0] === 'av') l = aa.mk.av(type[1].href);
+  else if (type) l = aa.mk.link(type[1].href);
+  return l
+};
+
+
 // wakelock
 aa.wl = {wakelock:null,get haz_wakelock(){return 'wakeLock' in navigator}};
 
@@ -673,3 +912,15 @@ aa.wl.release =()=>
   if (aa.wl.wakelock) aa.wl.wakelock.release();
   aa.wl.wakelock = null;
 };
+
+
+// cache worker for operations without response
+aa.db.cash.worker = aa.db.cash.new;
+
+
+// indexedDB worker for operations without response
+aa.db.idb.worker = aa.db.idb.new;
+
+
+// is hexadecimal
+aa.is.x =s=> /^[A-F0-9]+$/i.test(s); 

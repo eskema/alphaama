@@ -137,6 +137,14 @@ the WoT score system used here is very primitive and consists of 2 integer value
 soon™
 
 
+## (b) blossom
+
+awesome blossom stuff
+blawsome
+aws alternative world storage
+soon™
+
+
 ## (d) decentipedia 
 
 a decent centipededadedidodude

@@ -36,6 +36,25 @@ aa.r.add_from_o =(relays)=>
 };
 
 
+// broadcast note action
+aa.clk.bro =e=>
+{
+  const note = e.target.closest('.note');
+  aa.cli.v(`${localStorage.ns} e bro ${note.dataset.id} `);
+};
+
+
+// broadcast event from id to relays
+// s = 'id relay relay relay'
+aa.r.bro =(s='')=>
+{
+  let a = s ? s.split(' ') : [];
+  let id = a.shift();
+  let dat = aa.db.e[id];
+  if (dat) aa.r.broadcast(dat.event,a);
+};
+
+
 // post event to relays
 aa.r.broadcast =(event,relays=false)=>
 {
@@ -45,6 +64,8 @@ aa.r.broadcast =(event,relays=false)=>
     aa.log('aa.r.broadcast: no relays');
     return false
   }
+
+  aa.log('note '+event.id+' sent to: '+relays);
 
   const opts = {send:{}};
   const dis = JSON.stringify(['EVENT',event]);
@@ -118,12 +139,33 @@ aa.r.close =(k,id)=>
     else console.log('close rs',r.ws?.readyState);
     setTimeout(()=>
     {
-      
       delete r.q[id];
       aa.r.upd_state(k);
     },500);
   }
   else console.log('no close ',k,id);
+};
+
+
+// remove relay(s)
+aa.r.del =s=>
+{  
+  const work =a=>
+  {
+    const url = aa.is.url(a.shift().trim())?.href;
+    if (url && aa.r.o.ls[url])
+    {
+      if (aa.r.active[url])
+      {
+        aa.r.force_close([url]);
+        delete aa.r.active[url];
+      }
+      delete aa.r.o.ls[url];
+      document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
+    }
+  };
+  aa.fx.loop(work,s);
+  aa.mod_save(aa.r);
 };
 
 
@@ -331,42 +373,47 @@ aa.r.hint_notice =(url,opts,set='hint')=>
 };
 
 
-// list relays from set
-aa.r.list =s=>
+// list relays from sets
+aa.r.ls =(s='')=>
 {
-  const err = ()=> {aa.log(aa.r.def.id+' ls: no relays found')};
-  let a = s.trim().split(' ');
+  let relay_list = [];
+  let a = s ? s.split(' ') : [];
   let ls = aa.r.o.ls;
-  if (!a.length || a[0] === '') a[0]= 'k10002';
-  let relays = aa.fx.in_sets(ls,a);
-  let rels = [];
-  if (relays.length)
-  {
-    for (const k of relays)
-    { 
-      let read, write;
-      const tag = [k];
-      if (ls[k].sets.includes('read')) read = true;
-      if (ls[k].sets.includes('write')) write = true;
-      if (read || write)
-      {
-        if (read && !write) tag.push('read');
-        if (!read && write) tag.push('write');
-        rels.push(tag.join(' '))
-      }
-    }
-  }
-  if (rels.length) aa.cli.v(localStorage.ns+' '+aa.r.def.id+' mkls '+rels.join(', '));
-  else err();
+  if (!a.length) relay_list.push(...Object.keys(ls));
+  else relay_list.push(...aa.fx.in_sets(ls,a,false));
+  let result = relay_list.join();
+  aa.log(relay_list.length+' relays in '+a);
+  aa.log(result);
+  return result 
 };
 
 
 // make relay list
-aa.r.list_mk =s=>
+aa.mk.k10002 =(s='')=>
 {
-  const a = s.trim().split(',');
+  let log = aa.r.def.id+' ls: ';
+  const err = (er)=>{aa.log(log+er)};
+
+  let ls = aa.r.o.ls;
+  let relay_list = [];
+  let a = s ? s.split(',') : Object.keys(ls);
+  
+  for (const k of a)
+  { 
+    let read, write;
+    const tag = [k];
+    if (ls[k].sets.includes('read')) read = true;
+    if (ls[k].sets.includes('write')) write = true;
+    if (read || write)
+    {
+      if (read && !write) tag.push('read');
+      if (!read && write) tag.push('write');
+      relay_list.push(tag.join(' '))
+    }
+  }
+
   const relays = [];
-  for (const r of a) 
+  for (const r of relay_list) 
   {
     let relay = r.trim().split(' ');
     relay.unshift('r');
@@ -389,7 +436,7 @@ aa.r.list_mk =s=>
           content:'',
           tags:relays
         };
-        aa.u.event_finalize(event);
+        // aa.e.finalize(event);
       }},
     });
   }
@@ -410,10 +457,10 @@ aa.r.load =()=>
       exe:mod.add
     },
     {
-      action:[id,'rm'],
+      action:[id,'del'],
       required:['url'], 
       description:'remove relay',
-      exe:mod.rm
+      exe:mod.del
     },
     {
       action:[id,'setrm'],
@@ -428,14 +475,21 @@ aa.r.load =()=>
     },
     {
       action:[id,'ls'],
-      required:['set'],
+      optional:['relset','relset'],
       description:'loads relay list from sets',
-      exe:mod.list
+      exe:mod.ls
     },
     {
-      action:[id,'mkls'],
+      action:['mk','10002'],
+      optional:['<url set1 set2>,<url>'],
       description:'create a relay list (kind-10002)',
-      exe:mod.list_mk
+      exe:aa.mk.k10002
+    },
+    {
+      action:['e','bro'],
+      optional:['<url set1 set2>,<url>'],
+      description:'broadcast note to relays',
+      exe:mod.bro
     },
     {
       action:[id,'resume'],
@@ -462,7 +516,7 @@ aa.r.message_type.auth =async message=>
   let event = {kind:22242,tags:[]};
   event.tags.push(['relay',url]);
   event.tags.push(['challenge',challenge]);
-  aa.u.event_normalise(event);
+  aa.e.normalise(event);
   event.id = aa.fx.hash(event);
   const signed = await aa.u.sign(event);
   if (signed) 
@@ -562,7 +616,6 @@ aa.r.message_type.ok =async message=>
   const [type,id,is_ok,reason] = message.data;
   if (is_ok) 
   {
-    console.log('ok',id,message.origin);
     let r = aa.r.active[message.origin];
     if (id in r.send) delete r.send[id];
     aa.fx.a_add(r.sent,[id]);
@@ -582,8 +635,9 @@ aa.r.message_type.ok =async message=>
         actions.replaceWith(aa.e.note_actions(dat))
       }
     }
+    aa.log('ok: '+id+(reason?' '+reason:'')+' '+message.origin);
   }
-  else aa.log(message.origin+' not ok: '+reason+' '+id);
+  else aa.log('not ok: '+reason+' '+id+' '+message.origin);
 };
 
 
@@ -614,28 +668,6 @@ aa.r.rel =s=>
   if (relay) a.push(relay);
   else a.push(...aa.fx.in_set(aa.r.o.ls,s));
   return a
-};
-
-
-// remove relay(s)
-aa.r.rm =s=>
-{  
-  const work =a=>
-  {
-    const url = aa.is.url(a.shift().trim())?.href;
-    if (url && aa.r.o.ls[url])
-    {
-      if (aa.r.active[url])
-      {
-        aa.r.force_close([url]);
-        delete aa.r.active[url];
-      }
-      delete aa.r.o.ls[url];
-      document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
-    }
-  };
-  aa.fx.loop(work,s);
-  aa.mod_save(aa.r);
 };
 
 
@@ -751,7 +783,7 @@ aa.kinds[10002] =dat=>
   aa.db.get_p(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
-    if (aa.p.new_replaceable(p,dat.event))
+    if (aa.p.events_newer(p,dat.event))
     {
       let relays = aa.r.from_tags(dat.event.tags,['k10002']);
       aa.p.relays_add(relays,p);

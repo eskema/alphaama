@@ -15,6 +15,17 @@ aa.fx.a_add =(a,items_to_add)=>
   return b
 };
 
+aa.fx.a_common =(a,b)=>
+{
+  let result = {common:[],uncommon:[]};
+  for (const i of b)
+  {
+    if (a.includes(i)) result.common.push(i);
+    else result.uncommon.push(i)
+  }
+  return result
+};
+
 
 // returns filtered array
 aa.fx.a_rm =(a,items_to_rm)=>
@@ -24,7 +35,7 @@ aa.fx.a_rm =(a,items_to_rm)=>
 };
 
 
-// return object from splitting array
+// return object from array of strings
 aa.fx.a_o =a=>
 {
   const o = {};
@@ -126,8 +137,15 @@ aa.fx.decode =s=>
 };
 
 
-// delay function
-aa.fx.delay =(f,t)=>{ return ()=> { setTimeout(f,t) } };
+// decrypt nip 4 / 44
+aa.fx.decrypt =async(s='')=>
+{
+  let [text,pubkey] = s.split(aa.regex.fw);
+  if (text) text = text.trim();
+  if (!pubkey) pubkey = aa.u.p.xpub;
+  if (aa.is.nip4(text)) return await window.nostr.nip04.decrypt(pubkey,text);
+  else return await window.nostr.nip44.decrypt(pubkey,text)
+};
 
 
 // encodes to bech32 (nip19)
@@ -146,6 +164,18 @@ aa.fx.encode =(s,x)=>
   }
   catch (er) { console.error('aa.fx.encode',s,x,er) };
   return encoded
+};
+
+
+aa.fx.encrypt44 =async(text,pubkey)=>
+{
+  if (!pubkey) pubkey = aa.u.p.xpub;
+  if (window.nostr) return await window.nostr.nip44.encrypt(pubkey,text)
+  else 
+  {
+    aa.log('you need a signer');
+    return false
+  }
 };
 
 
@@ -170,6 +200,15 @@ aa.fx.expanded =(id,expanded,l)=>
 };
 
 
+// hash event
+aa.fx.hash =o=> NostrTools.getEventHash(o);
+
+
+aa.fx.id_a =o=> 
+{
+  return ['a',`37375:${o.pubkey}:${o.id}`]
+};
+
 // generate keypair
 aa.fx.keypair =()=>
 {
@@ -178,13 +217,19 @@ aa.fx.keypair =()=>
 };
 
 
-// hash event
-aa.fx.hash =o=> NostrTools.getEventHash(o);
+aa.fx.kind_type =kind=> NostrTools.kinds.classifyKind(kind);
+
+
+aa.fx.kinds_type =kind=>
+{
+  let kinds = Object.entries(NostrTools.kinds);
+  return kinds.filter(k=> typeof k[1] === 'number' && k[1] === kind)
+};
 
 
 
 // returns items in a given set
-aa.fx.in_set =(ls,set,filter=true)=>
+aa.fx.in_set =(ls,set,filter='off')=>
 {
   let in_set = [];
   for (const k in ls)
@@ -192,7 +237,7 @@ aa.fx.in_set =(ls,set,filter=true)=>
     if (ls[k].sets.includes(set))
     {
       if (!filter) in_set.push(k);
-      else if (!ls[k].sets.includes('off')) in_set.push(k);
+      else if (!ls[k].sets.includes(filter)) in_set.push(k);
     } 
   }
   return in_set
@@ -200,10 +245,23 @@ aa.fx.in_set =(ls,set,filter=true)=>
 
 
 // return items in sets
-aa.fx.in_sets =(ls,sets)=>
+aa.fx.in_sets =(ls,sets,filter='off')=>
 {
   let a = [];
-  for (const i of sets) a.push(...aa.fx.in_set(ls,i));
+  for (const i of sets) a.push(...aa.fx.in_set(ls,i,filter));
+  return [...new Set(a)]
+};
+
+// return items in sets
+aa.fx.in_sets_all =(o,sets)=>
+{
+  let a = [];
+  
+  for (const k in o)
+  { 
+    let i = o[k];
+    if (!i.sets.includes('off') && sets.every(set=>i.sets.includes(set))) a.push(k);
+  }
   return [...new Set(a)]
 };
 
@@ -244,12 +302,26 @@ aa.fx.leading_zero_rm =x=>
 // on load
 aa.fx.load =()=>
 {
+  let id = 'fx';
+  let mod = aa.fx;
   aa.actions.push(
     {
-      action:['fx','qr'],
+      action:[id,'qr'],
       required:['text'],
       description:'create qr code',
-      exe:aa.fx.qr
+      exe:mod.qr
+    },
+    {
+      action:[id,'decode'],
+      required:['text'],
+      description:'decrypt cyphertext',
+      exe:mod.decode
+    },
+    {
+      action:[id,'decrypt'],
+      required:['pubkey','text'],
+      description:'decrypt cyphertext',
+      exe:mod.decrypt
     },
   )
 };
@@ -477,8 +549,8 @@ aa.fx.sort_l =(l,by)=>
 // sorting functions to use in .sort()
 aa.fx.sorts =
 {
-  asc(a,b){return a[1] - b[1] ? 1 : -1},
-  desc(a,b){return b[1] - a[1] ? 1 : -1},
+  asc(a,b){ return a[1] - b[1] ? 1 : -1 },
+  desc(a,b){ return b[1] - a[1] ? 1 : -1 },
   i_asc(a,b)
   {
     let a_val = parseInt(a.querySelector('.val').textContent);
@@ -491,7 +563,7 @@ aa.fx.sorts =
     let b_val = parseInt(b.querySelector('.val').textContent);
     return a_val < b_val ? 1 : -1
   },
-  rand(){return ()=> 0.5 - Math.random()},
+  rand(){ return ()=> 0.5 - Math.random() },
   sets(a,b)
   {
     return a[1].sets.length < b[1].sets.length ? 1 : -1
@@ -520,14 +592,22 @@ aa.fx.sorts =
     let b_val = b.event.created_at;
     return a_val < b_val ? 1 : -1
   },
-  v(a,b){return b[1].length > a[1].length ? 1 : -1},
-  v_desc(a,b){return b[1].length > a[1].length ? -1 : 1},
+  v(a,b){ return b[1].length > a[1].length ? 1 : -1 },
+  v_desc(a,b){ return b[1].length > a[1].length ? -1 : 1 },
 };
 
 
 aa.fx.tag ={};
+// create a tag from event
+aa.fx.tag.a =o=>
+{
+  let s = aa.fx.tag_value(o.tags,'d');
+  let ida = `${o.kind}:${o.pubkey}:${s}`;
+  let tag = ['a',ida];
+  return tag
+};
 // create p tag from hex pubkey
-aa.fx.tag.p =(x)=>
+aa.fx.tag.p =x=>
 {
   let tag = [];
   tag.push('p',x);
@@ -567,8 +647,17 @@ aa.fx.tag.q =(x)=>
   return tag
 };
 
+aa.fx.tag_value =(a,s)=>
+{
+  let value,tag = a.find(i=>i[0]===s);
+  if (tag && tag.length > 1) value = tag[1].trim();
+  return value;
+}
 
-
+aa.fx.tags_value =(a,s)=>
+{
+  return a.filter(t=>t[0]===s).map(r=>r[1].trim())
+};
 
 
 // creates a link from tag array
@@ -621,8 +710,6 @@ aa.fx.to_rgb =x=>
 // with given length and a separator in between (000…000)
 aa.fx.trunk =(s,len=3,sep='…')=> s.slice(0,len)+sep+s.slice(-len);
 
-
-aa.fx.kind_type =kind=> NostrTools.kinds.classifyKind(kind);
 
 // checks if string is valid url and then checks extension for media file types.
 // returns false if no media found or array with extension,URL

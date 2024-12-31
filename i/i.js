@@ -231,15 +231,14 @@ aa.mk.i_pubkey =(k,v,id)=>
 aa.i.load =()=>
 {
   aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
-  const app_i = ()=>
-  {
-    // let u = document.getElementById('u_u');
-    let l = document.querySelector('#e > header');
-    if (l) l.append(aa.i.l);
-    else setTimeout(app_i, 100);
-  };
-  app_i();
-  aa.i.run();
+  // const app_i = ()=>
+  // {
+  //   let l = document.querySelector('#e > header');
+  //   if (l) l.append(aa.i.l);
+  //   else setTimeout(app_i, 100);
+  // };
+  // app_i();
+  // aa.i.run();
 };
 
 
@@ -248,13 +247,6 @@ aa.i.run =()=>
 {  
   for (const k of aa.i.ls)
   {
-    // let li = aa.mk.l('li',
-    // {
-    //   cla:'item',
-    //   id:'i_'+k,
-    //   app:aa.mk.details(k,aa.mk.ls({id:'i_list_'+k}))
-    // });
-    // li.append();
     aa.i.l.append(aa.mk.l('li',
     {
       cla:'item',

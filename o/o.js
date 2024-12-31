@@ -38,6 +38,52 @@ aa.o =
 };
 
 
+// add key as value
+aa.o.add =s=>
+{
+  const work =a=>
+  {
+    let [k,v] = a;
+    if (k && v)
+    {
+      let old_v = localStorage[k];
+      localStorage[k] = v;
+      aa.mod_ui(aa.o,k);
+      let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
+      let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
+      log.append(' ',undo);
+      aa.log(log);
+    }
+  };
+  aa.fx.loop(work,s);
+};
+
+
+// remove option (if not default)
+aa.o.del =s=>
+{
+  const work =a=>
+  {
+    const id = aa.o.def.id;
+    const dis = localStorage.ns+' '+id+' rm ';
+    const k = a.shift().trim();
+    if (k && localStorage[k])
+    {
+      if (!aa.o.def.hasOwnProperty(k))
+      {
+        localStorage.removeItem(k);
+        let l = document.getElementById(id+'_'+k)
+        if (l) l.remove();
+        aa.log(dis+k);
+      }
+      else aa.log(dis+'key cannot be deleted');
+    }
+    else aa.log(dis+'key not found');
+  };
+  aa.fx.loop(work,s)
+};
+
+
 // on load
 aa.o.load =()=>
 {
@@ -84,14 +130,6 @@ aa.o.load =()=>
   });
   // detect when changes happen on other tabs 
   window.addEventListener('storage',e=> { console.log('storage',e); });
-};
-
-
-// given a theme, returns the other one for quick input
-aa.fx.theme =s=>
-{
-  if (s === 'dark') return 'light';
-  else return 'dark'
 };
 
 
@@ -149,31 +187,6 @@ aa.o.reset =s=>
 };
 
 
-// remove option (if not default)
-aa.o.del =s=>
-{
-  const work =a=>
-  {
-    const id = aa.o.def.id;
-    const dis = localStorage.ns+' '+id+' rm ';
-    const k = a.shift().trim();
-    if (k && localStorage[k])
-    {
-      if (!aa.o.def.hasOwnProperty(k))
-      {
-        localStorage.removeItem(k);
-        let l = document.getElementById(id+'_'+k)
-        if (l) l.remove();
-        aa.log(dis+k);
-      }
-      else aa.log(dis+'key cannot be deleted');
-    }
-    else aa.log(dis+'key not found');
-  };
-  aa.fx.loop(work,s)
-};
-
-
 // saves
 aa.o.save =()=>
 {
@@ -182,24 +195,22 @@ aa.o.save =()=>
 };
 
 
-// add key as value
-aa.o.add =s=>
+// given a theme, returns the other one for quick input
+aa.fx.theme =s=>
 {
-  const work =a=>
-  {
-    let [k,v] = a;
-    if (k && v)
-    {
-      let old_v = localStorage[k];
-      localStorage[k] = v;
-      aa.mod_ui(aa.o,k);
-      let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
-      let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
-      log.append(' ',undo);
-      aa.log(log);
-    }
-  };
-  aa.fx.loop(work,s);
+  if (s === 'dark') return 'light';
+  else return 'dark'
+};
+
+
+// returns wether or not a given level is trusted
+aa.is.trusted =trust=>
+{
+  let trust_needed;
+  try { trust_needed = parseInt(localStorage.trust) } 
+  catch (er) { console.error('!trust',localStorage.trust) }
+  if (Number.isInteger(trust_needed) && trust >= trust_needed) return true;
+  return false
 };
 
 

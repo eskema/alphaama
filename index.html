@@ -17,21 +17,54 @@ window.addEventListener('load',e=>
 {
   // run with defaults
   aa.run();
+
+  
+  // var doc = aa.asciidoc.loadFile('/README.adoc');
+  
+  // let title = doc.getDocumentTitle();
+  // let div = aa.mk.l('div');
+  // doc.convert();
+  // div.innerHTML = html;
+  
+  // let details = aa.mk.details(title,div);
+  // details.id = 'aa_read_me';
+  // document.getElementById('view')?.prepend(details);
+
+
+  // let doc = aa.asciidoc.convert(text,options);
+
+  // details.append(div)
   // fetch and append readme
-  fetch('/README.md?v=2').then(dis=>dis?.text()).then(text=>
+  fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
   {
     if (!text) return;
-    let l = aa.mk.l('article',
+    let article = aa.mk.l('article',
     {
       cla:'content parsed',
       app:aa.parse.content(text,aa.is.trusted(4))
     });
     let title = text.slice(0,text.indexOf('\n'));
-    if (title.startsWith('#')) title = title.slice(1).trim();
+    if (title.startsWith('=') || title.startsWith('#')) title = title.slice(1).trim();
     
-    let details = aa.mk.details(title,l);
+    // let options = 
+    // {
+    //   'to_file': false,
+    //   'attributes': 
+    //   { 
+    //     'showtitle':true,
+    //     // template_dir: '/path/to/templates/pug',
+    //   }
+    // };
+    // const doc = aa.asciidoc.load(text,options);
+
+    // let title = doc.getDocumentTitle();
+    // html = doc.convert();
+    // article.innerHTML = html;
+    
+    let details = aa.mk.details(title,article);
     details.id = 'aa_read_me';
     document.getElementById('view')?.prepend(details);
+    
   });
 });
 </script>

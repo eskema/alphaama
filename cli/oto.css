@@ -16,10 +16,13 @@
 
 #oto::before 
 {
+  background: rgb(var(--color-b));
   border-bottom: 1px dotted rgb(var(--color-c));
-  color: rgb(var(--color-f));
+  /*bottom: 0;*/
+  color: rgb(var(--color-c));
   content: attr(data-s);
   left: var(--line);
+  line-height: 1.6;
   pointer-events: none;
   position: absolute;
   white-space: pre;
@@ -139,8 +142,18 @@
   z-index: 2;
 }
 
+#oto .item.invalid
+{
+  background-color: rgb(var(--color-no));
+  cursor: text;
+  position: relative;
+  z-index: 2;
+}
+
 #oto .item.pinned > *,
-#oto .item.pinned::before
+#oto .item.pinned::before,
+#oto .item.invalid > *,
+#oto .item.invalid::before
 {
   color: rgb(var(--color-b));
 }
@@ -187,7 +200,7 @@
     color: rgb(var(--color-f));
   }
   
-  #oto .item:not(.pinned):hover,
+  #oto .item:not(.pinned):not(.invalid):hover,
   #oto .item.mention:hover
   {
     background-color: rgba(var(--color-c),1);

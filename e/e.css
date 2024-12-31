@@ -21,9 +21,9 @@
   grid-template-areas: 
   "by       by"
   "content  content"
-  "after    after"
+/*  "after    after"*/
   "opentags opentags"
-  "tags     tags"
+  "tags     after"
   "versions versions"
   "replies  replies"
   ;
@@ -45,8 +45,9 @@
   grid-template-areas: 
   "by       by       by"
   "content  content  replies"
-  "after    after    replies"
-  "tags     tags  replies"
+  /*"after    after    replies"*/
+  "opentags opentags replies"
+  "tags     after  replies"
   "versions versions versions"
   "sig      sig      sig"
   ;
@@ -57,12 +58,13 @@
   border-color: rgb(var(--color-e));
   grid-template-areas: 
   "by by"
-  "after after"
+  
   "content content"
   "tags tags"
   "opentags opentags"
   "sig sig"
-  "actions actions"
+  "after after"
+  /*"actions actions"*/
   "replies replies"
   ;
   grid-template-columns: 1fr 61.8vw;
@@ -101,7 +103,7 @@
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-c));
-  content: "k" attr(data-kind) " " attr(data-seen) " - " attr(data-subs);
+  content: attr(data-seen) " - " attr(data-subs);
   font-size: var(--font-size-xs);
   grid-area: after;
   padding: var(--padm);
@@ -114,7 +116,7 @@
   display: block;
   font-size: var(--font-size-s);
   padding: var(--padm);
-  text-align: center;
+  text-align: right;
   z-index: unset;
 }
 
@@ -160,7 +162,7 @@
   overflow-x: hidden;
   overflow-x: scroll;
   padding: var(--pad) var(--pad) 0 var(--pad);
-  text-align: center;
+  text-align: right;
 }
 
 
@@ -402,13 +404,16 @@ a.author
 {
   align-items: center;
   grid-area: nid;
+  /*grid-template-columns: 1fr;*/
   line-height: 1;
+  /*justify-self: stretch;*/
   padding: 0 var(--padm);
+  /*text-align: right;*/
   text-decoration: none;
   user-select: none;
   white-space: pre;
   word-break: keep-all;
-  font-size: 0;
+  /*font-size: 0;*/
 }
 
 .nid::before
@@ -445,7 +450,7 @@ a.author
 
 .in_view > .by .nid
 {
-  font-size: 0;
+  /*font-size: 0;*/
   opacity: 1;
 }
 
@@ -533,6 +538,11 @@ a.author
   z-index: 2;
 }
 
+.view_e .in_path:not(.in_view) > .content
+{
+  max-height: calc(12rem);
+}
+
 .in_view > .replies > .note > .content
 {
   top: calc(var(--line) + var(--line) + var(--padm));
@@ -550,6 +560,11 @@ a.author
 .draft > .content
 {
   max-height: unset;
+}
+
+.content > button
+{
+  line-height: var(--line);
 }
 
 .content .item > details > summary
@@ -583,6 +598,17 @@ a.author
 .hashtag
 {
   font-weight: bold;
+}
+
+.note:not(.tiny):not(.in_path) > .content::after
+{
+  color: rgb(var(--color-c));
+  content: "--";
+  display: block;
+  font-size: var(--font-size-xs);
+  line-height: 1.5rem;
+  margin-left: var(--pad);
+  
 }
 
 /* @end */
@@ -629,11 +655,21 @@ a.author
 }
 
 .view_e .in_path:not(.in_view) > .content .paragraph,
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply > .content .paragraph
+.replies:not(.expanded) .note:not(.is_new):not(.in_view).haz_new_reply > .content .paragraph
 {
   font-size: var(--font-size-s);
   line-height: 1rem;
-  padding: var(--padm);
+  padding: 0 var(--pad);
+}
+
+.paragraph:first-child
+{
+  margin-top: var(--pad);
+}
+
+.paragraph:last-child
+{
+  margin-bottom: var(--pad);
 }
 
 /* @end */
@@ -723,14 +759,18 @@ a.author
 
 .tags_wrapper[open]
 {
+  grid-area: opentags;
   max-height: 50vh;
   overflow-y:  scroll;
   padding-bottom: var(--line);
+  z-index: 1;
+  /*background: red;*/
 }
 
 .tags_wrapper summary
 {
   color: rgb(var(--color-d));
+  font-size: 0;
   line-height: 1.5rem;
   padding: 0 var(--padm);
   transition: none;
@@ -738,20 +778,28 @@ a.author
 
 .tags_wrapper[open] summary
 {
-  padding-bottom: var(--line);
+  font-size: var(--font-size-s);
+  padding-bottom: var(--pad);
   position: sticky;
   text-align: left;
   top: var(--font-size);
 }
 
+.tags_wrapper:not(.empty) summary::before,
 .tags_wrapper:not(.empty) summary::after
 {
-  content: "";
+  font-size: var(--font-size-s);
 }
 
-.tags_wrapper[open]:not(.empty) summary::before
+.tags_wrapper:not(.empty) summary::after
 {
-  content: "tags: ";
+  content: "[" attr(data-count) "]";
+  
+}
+
+.tags_wrapper[open]:not(.empty) summary::after
+{
+  content: ":";
 }
 
 .in_view > .tags_wrapper
@@ -837,6 +885,19 @@ a.author
 
 /* @group note actions */
 
+.actions 
+{
+  /*align-self: center;*/
+  /*background: rgba(var(--color-b),1);*/
+  font-size: var(--font-size-s);
+  grid-area: actions;
+  margin: 0 var(--pad);
+  overflow-x:  scroll;
+  position: relative;
+  white-space: pre;
+  width: auto;
+}
+
 .note .actions 
 {
   align-self: center;
@@ -850,7 +911,7 @@ a.author
   width: auto;
 }
 
-.note .actions > summary
+/*.note .actions > summary
 {
   line-height: 1.5rem;
   padding: 0 var(--padm);
@@ -860,7 +921,7 @@ a.author
 {
   display: inline-block;
   text-align: right;
-}
+}*/
 
 .note .actions .butt
 {
@@ -868,11 +929,11 @@ a.author
   /*opacity: .4;*/
   padding-left: calc(var(--padm)/2);
 }
-
+/*
 .in_view > .by > .actions > summary
 {
   line-height: 1.5rem;
-}
+}*/
 
 .note.root > .by .actions,
 .in_view > .replies > .note > .by .actions 
@@ -904,7 +965,7 @@ a.author
   padding-left: 0;
 }
 
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+html:not(.viewing) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
 .note.out > .replies::after,
@@ -912,6 +973,14 @@ a.author
 {
   display: none;
 }
+
+/*.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
+
+{
+  display: none;
+}*/
 
 .replies > summary
 {
@@ -1133,8 +1202,8 @@ a.author
 .note.tiny:not(.in_view),
 .note.in_view > .replies > .note.tiny
 {
-  grid-template-areas: "content by";
-  grid-template-columns: auto 1fr;
+  /*grid-template-areas: ". by";*/
+  /*grid-template-columns: auto 1fr;*/
 }
 
 .note.tiny:not(.in_view)::after
@@ -1145,11 +1214,13 @@ a.author
   font-size: var(--font-size-s);
   grid-area: content;
   padding: 0 var(--padm);
+  display: none;
 }
 
-.note.tiny:not(.in_view) > .by .author span
+.note.tiny:not(.in_view) > .by .author .name
 {
   margin-left: 0;
+  /*padding: 0;*/
 }
 
 .note.in_view > .replies > .note.tiny > .content,
@@ -1168,16 +1239,16 @@ a.author
 .note.tiny:not(.in_view) .paragraph
 {
   line-height: 1;
-  margin-bottom: 0;
+  margin: 0;
   padding: 0;
 }
 
-.note.tiny:not(.in_view) > .content > *,
-.note.tiny:not(.in_view) > .actions,
-.note.tiny:not(.in_view) > .tags_wrapper,
-.note.tiny:not(.in_view) > .replies,
-.note.tiny:not(.in_view) > .by .author .picture,
-.note.tiny:not(.in_view) > .by .author::before
+.note.tiny:not(.in_path) > .content > *,
+.note.tiny:not(.in_path) > .actions,
+.note.tiny:not(.in_path) > .tags_wrapper,
+.note.tiny:not(.in_path) > .replies,
+.note.tiny:not(.in_path) > .by .author .picture,
+.note.tiny:not(.in_path) > .by .author::before
 {
   display: none;
 }
@@ -1190,6 +1261,13 @@ a.author
 .note.tiny[data-kind="7"]
 {
   border: none;
+}
+
+.note.tiny[data-kind="7"]:not(.in_view),
+.note.in_view .note.tiny[data-kind="7"]
+{
+  grid-template-areas: "content by";
+  grid-template-columns: auto 1fr;
 }
 
 .note.tiny[data-kind="7"]:not(.in_view) > .content
@@ -1210,11 +1288,11 @@ a.author
   max-width: 1rem;
 }
 
-.note.tiny[data-kind="6"]:not(.in_view) > .content::before,
+/*.note.tiny[data-kind="6"]:not(.in_view) > .content::before,
 .note.tiny[data-kind="16"]:not(.in_view) > .content::before
 {
   content: "reposted by ";
-}
+}*/
 
 .note.tiny[data-kind="7"]:not(.in_view)::before,
 .note.tiny[data-kind="7"]:not(.in_view)::after,
@@ -1263,17 +1341,33 @@ html:not(.needs_pagin) .pagination
 {
   grid-area: versions;
   overflow: hidden;
-  background: red;
+  background: rgb(var(--color-a));
   position: relative;
   z-index: 4;
 }
 
 .versions > summary
 {
+  /*display: none;*/
+  /*padding: var(--pad);*/
   font-size: 0!important;
 }
 
-.versions > .note:not(.in_view) >*:not(.by)
+.note .versions > .note
+{
+  grid-template-areas: "by replies";
+  grid-template-columns: auto 61.8vw;
+  margin: 0;
+}
+
+.note .versions > .note > .by
+{
+  align-self: start;
+}
+
+.versions > .note:not(.in_view) >*:not(.by):not(.replies),
+.versions > .note:not(.in_view) > .by .author,
+.versions > .note:not(.in_view)::after
 {
   display: none;
 }
@@ -1286,17 +1380,6 @@ html:not(.needs_pagin) .pagination
   html:not(.view_e) #notes
   {
     margin-left: var(--pad-l);
-  }
-  
-  .note:not(.tiny):not(.in_path) > .content::after
-  {
-    color: rgb(var(--color-d));
-    content: "--";
-    display: block;
-    font-size: var(--font-size-xs);
-    line-height: 1.5rem;
-    margin-left: var(--pad);
-    
   }
   
   .note.root:not(.tiny):not(.in_path)::after
@@ -1329,8 +1412,14 @@ html:not(.needs_pagin) .pagination
   .note:not(.in_path) > .by:hover + .content
   {
     background: rgb(var(--color-a));
+  }
+
+  .replies .note:not(.in_path) > .by:hover + .content
+  {
+    background: rgb(var(--color-a));
     position: sticky;
     top: calc( var(--size) - var(--pad));
+    top: calc(var(--line * 3));
     z-index: 2;
   }
   

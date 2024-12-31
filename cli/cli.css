@@ -77,6 +77,11 @@
   white-space: pre-wrap;
 }
 
+#cli_t::after
+{
+  content: " yo";
+}
+
 #cli_t:focus
 {
   font-size: 16px;

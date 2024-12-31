@@ -302,7 +302,7 @@ aa.mk.ls =o=>
   // o = 
   // { 
   //   id:string,
-  //   cla:array,
+  //   cla:string,
   //   l:element,
   //   ls:object,
   //   sort:string,
@@ -398,20 +398,20 @@ aa.mk.notice =o=>
 
 
 // make a nostr link
-aa.mk.nostr_link =(dis,con=false)=>
+aa.mk.nostr_link =(s='',con=false)=>
 {
   const a = aa.mk.l('a',
   {
     cla:'nostr_link',
-    con:con||dis.slice(0,12),
-    ref:'#'+dis,
+    con:con||s.slice(0,12),
+    ref:'#'+s,
     // clk:aa.clk.a
   });
   setTimeout(()=>{
   a.addEventListener('click',aa.clk.a)
   },200);
 
-  if (!dis) 
+  if (!s) 
   {
     a.removeAttribute('href');
     a.classList.add('empty');

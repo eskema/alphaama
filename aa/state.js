@@ -6,6 +6,16 @@ state stuff
 */
 
 
+// internal links
+aa.clk.a =e=>
+{
+  e.preventDefault();
+  let dis = e.target.getAttribute('href');
+  if (dis==='/') dis = '';
+  aa.state.view(dis);
+};
+
+
 // clear view
 aa.state.clear =()=>
 {

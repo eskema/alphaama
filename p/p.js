@@ -10,25 +10,42 @@ aa.styleshit('/p/p.css');
 
 aa.p = 
 {
-  p(xpub)
+  p(x)
   {
     return {
-      xpub:xpub,
-      relay:'',
-      relays:{},
-      petname:'',
-      petnames:[],
-      npub: aa.fx.encode('npub',xpub),
-      score:0,
-      updated:0,
-      metadata:{},
-      verified:[], // [result,date]
-      sets:[],
+      events:{}, // n:[[id,created_at],...]
       follows:[],
       followers:[],
-      events:{}, // n:[[id,created_at],...]
+      metadata:{},
+      npub: aa.fx.encode('npub',x),
+      petname:'',
+      petnames:[],
+      pubkey:x,
+      relay:'',
+      relays:{},
+      sets:[],
+      score:0,
+      updated:0,    
+      verified:[], // [result,date]
+      xpub:x,
     }
   }
+};
+
+
+// follow add x to k3
+aa.p.add =async x=>
+{
+  //follow
+  let new_follow = [x];
+  const p = await aa.db.get_p(x);
+  new_follow.push(aa.p.relay(p));
+  let petname;
+  if (p.metadata?.name) petname = p.metadata.name;
+  else if (p.petnames.length) petname = p.petnames[0];
+  if (petname?.length) new_follow.push(aa.fx.an(petname));
+  else new_follow.push('');
+  aa.cli.v(localStorage.ns+' p add '+new_follow.join(', '));
 };
 
 // migrate deprecated fields to new values
@@ -95,15 +112,25 @@ aa.p.migrate_p_fields =p=>
 aa.p.actions =p=>
 {
   const l = aa.mk.l('p',{cla:'actions'});
-  let a = [[p.score+'','p_score']];
-  if (!aa.is.u(p.xpub))
-  {
-    let follow_con = aa.u.is_following(p.xpub)?'unfollow':'follow';
-    a.push([follow_con,'p_follow']);
-  }
-  a.push(['get_notes','p_req'],['refresh','p_refresh']);
+  let a = [['…','profile_actions']];
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
+};
+
+aa.clk.profile_actions =e=>
+{
+  let l = e.target.closest('.actions');
+  let note = l.closest('article');
+  e.target.remove();
+  let a = 
+  [
+    [`${note.dataset.trust}`,'p_score'],
+    ['get_notes','p_req'],
+    ['refresh','p_refresh']
+  ];
+  let x = note.dataset.xpub;
+  if (!aa.is.u(x)) a.push([aa.is.following(x)?'del':'add','k3']);
+  if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
 };
 
 
@@ -113,15 +140,6 @@ aa.p.author =async x=>
   let p = await aa.db.get_p(x);
   if (!p) p = aa.p.p(x);
   return p
-
-  // return await aa.db.get_pa(a)
-  // const p_to_get = [];
-  // for (const xpub of a) if (!aa.db.p[xpub]) p_to_get.push(xpub);
-  // if (p_to_get.length)
-  // {
-  //   let p_stored = await aa.db.get('idb',{get_a:{store:'authors',a:p_to_get}});
-  //   for (const p of p_stored) aa.db.p[p.xpub] = p;
-  // } 
 };
 
 
@@ -130,7 +148,7 @@ aa.p.authors =async a=>
 {
   // return await aa.db.get_pa(a)
   const p_to_get = [];
-  for (const xpub of a) if (!aa.db.p[xpub]) p_to_get.push(xpub);
+  for (const x of a) if (!aa.db.p[x]) p_to_get.push(x);
   if (p_to_get.length)
   {
     let p_stored = await aa.db.get('idb',{get_a:{store:'authors',a:p_to_get}});
@@ -173,6 +191,29 @@ aa.p.author_list =(a,l,sort='text_asc')=>
 };
 
 
+// populate list element with authors
+aa.p.authors_list =(a,clas,sort='text_asc')=>
+{
+  if (!a.length) return;
+  const l = aa.mk.l('ul',{cla:clas+' list list_grid author_list'});
+  aa.p.authors(a).then(e=>
+  {
+    let items = [];
+    for (const x of a)
+    {
+      items.push(aa.mk.l('li',
+      {
+        cla:'item author_list_item',
+        app:aa.mk.p_link(x)
+      }))
+    }
+    l.append(...items);
+    setTimeout(()=>{ aa.fx.sort_l(l,sort) },500);
+  });
+  return l
+};
+
+
 // clear profile filter
 aa.p.clear =e=>
 {
@@ -201,43 +242,49 @@ aa.p.clear =e=>
 };
 
 
-// check if replaceable event is newer
-aa.p.new_replaceable =(p,event)=>
+// follow / unfollow
+aa.p.del =x=>
 {
-  let upd;
-  let kn = p.events['k'+event.kind];
-  if (!kn) kn = p.events['k'+event.kind] = [];
-  
-  const c_at = event.created_at;
-  if (!kn.length || kn[0][1] < c_at) 
-  {
-    kn.unshift([event.id,c_at]);
-    if (c_at > p.updated) p.updated = c_at;
-    upd = true
-  }
-  return upd
+  // unfollow
+  let s = localStorage.ns+' p del ';
+  let sx = s+x;
+  let v = aa.cli.t.value;
+  if (v.length >= sx.length && v.startsWith(s))  sx = v+' '+x;
+  aa.cli.v(sx);
 };
 
-// check if replaceable parameterized event is newer
-// wip
-aa.p.new_replaceable_param =(p,event)=>
-{
-  let upd;
-  let k = p.events['k'+event.kind];
-  if (!k) k = p.events['k'+event.kind] = {};
 
-  let tag = event.tags.filter(t=>t[0]==='d')[0];
-  if (!tag) return false;
-  
-  let s = tag[1];
-  let kn = k[s];
-  if (!kn) kn = k[s] = [];
-  
-  const c_at = event.created_at;
-  if (!kn.length || kn[0][1] < c_at) 
+// return last stored replaceable event id from p of kind n
+aa.p.events_last =(p,kn,s='')=>
+{
+  if (p.events[kn])
   {
-    kn.unshift([event.id,c_at]);
-    if (c_at > p.updated) p.updated = c_at;
+    let id;
+    if (s && p.events[kn][s]?.length) id = p.events[kn][s][0][0];
+    else if (p.events[kn][0]) id = p.events[kn][0][0];
+    return id
+  }
+  return false
+};
+
+
+// check if replaceable event is newer
+aa.p.events_newer =(p,event,param)=>
+{
+  let upd = false;
+  if (!param) param = aa.fx.tag_value(event.tags,'d');
+  let kn = p.events['k'+event.kind];
+  if (!kn) kn = p.events['k'+event.kind] = param ? {} : [];
+  if (param)
+  {
+    if (!kn[param]) kn[param] = [];
+    kn = kn[param];
+  }
+  
+  if (!kn.length || kn[0][1] < event.created_at) 
+  {
+    kn.unshift([event.id,event.created_at]);
+    if (event.created_at > p.updated) p.updated = event.created_at;
     upd = true
   }
   return upd
@@ -248,7 +295,7 @@ aa.p.new_replaceable_param =(p,event)=>
 aa.mk.extradata =p=>
 {
   const extradata = aa.mk.l('section',{cla:'extradata'});
-  const a = ['p_petnames','p_relays','p_follows','p_followers'];//,'p_nutsack'
+  const a = ['p_petnames','p_relays','p_follows','p_followers'];
   for (const k of a)
   {
     let id = k.slice(2);
@@ -260,30 +307,18 @@ aa.mk.extradata =p=>
 };
 
 
-// return follows of pubkey
-aa.p.follows_of =async(s='')=>
-{
-  return new Promise(async resolve=>
-  {
-    s = s.trim();
-    let key = aa.is.key(s) ? s : aa.u.p.xpub;
-    let p = await aa.p.author(key);
-    aa.log(`${p.follows.length} follows of ${key}`);
-    aa.log(`${p.follows}`);
-    resolve(`${p.follows}`);
-  });
-};
 
 
-// return last replaceable event from p of kind n
-aa.p.get_last_of =async(p,kn)=>
-{
-  if (p.events[kn]?.length)
-  {
-    return await aa.db.get_e(p.events[kn][0][0]);
-  }
-  return false
-};
+
+// return last replaceable param event from p of kind n with s
+// aa.p.events_last_param =async(p,kn,s)=>
+// {
+//   if (p.events[kn]?.length && p.events[kn][s]?.length)
+//   {
+//     return await aa.db.get_e(p.events[kn][s][0][0]);
+//   }
+//   return false
+// };
 
 
 // returns profile if already loaded or get it from database
@@ -335,13 +370,29 @@ aa.p.relay =(p,set='write')=>
 };
 
 
-// // gets a relays of pubkey on a given set
-// aa.p.relays =(p,set='write')=>
-// {
-//   let relays = aa.fx.in_set(p.relays,'write');
-  
-//   return relays
-// };
+
+// follow / unfollow
+aa.clk.k3 =async e=>
+{
+  const x = e.target.closest('.profile').dataset.xpub;
+  const dis = e.target.textContent;
+  if (dis === 'del') aa.p.del(x);
+  else aa.p.add(x)
+};
+
+
+// return follows of pubkey
+aa.p.k3 =async(s='')=>
+{
+  return new Promise(async resolve=>
+  {
+    let key = aa.is.key(s) ? s : aa.u.p.xpub;
+    let p = await aa.p.author(key);
+    aa.log(`${p.follows.length} follows of ${key}`);
+    resolve(`${p.follows}`);
+  });
+};
+
 
 // on load
 aa.p.load =()=>
@@ -350,8 +401,8 @@ aa.p.load =()=>
   aa.actions.push(
     {
       action:['p','view'],
-      required:['hex_pub'],
-      description:'view profile by hex pubkey',
+      required:['pubkey'],
+      description:'view profile by pubkey',
       exe:(s)=>{ aa.state.view('#'+aa.fx.encode('npub',s)) }
     },
     {
@@ -367,27 +418,16 @@ aa.p.load =()=>
       exe:aa.p.verify_nip05
     },
     {
-      action:['p','fof'],
-      required:['hex_pub'], 
-      description:'returns a list of pubkeys that hex_pub follows',
-      exe:aa.p.follows_of
+      action:['p','k3'],
+      optional:['pubkey'], 
+      description:'returns k3 pubkeys of pubkey',
+      exe:aa.p.k3
     }
   );
   // create p section
   const section = aa.mk.section('p');
   aa.p.l = aa.mk.l('div',{id:'authors'});
   section.append(aa.p.l);
-  // create section mutation observer
-  // aa.p.section_observer = new MutationObserver(a=> 
-  // {
-  //   for (const mutation of a) 
-  //   {
-  //     const section = mutation.target.closest('section');
-  //     let butt = section.querySelector('section > header > .butt');
-  //     aa.fx.data_count(butt,'.profile');
-  //   }
-  // });
-  // aa.p.section_observer.observe(aa.p.l,{attributes:false,childList:true});
 };
 
 
@@ -399,8 +439,11 @@ aa.p.load_profiles =async a=>
   let stored = await aa.db.get('idb',{get_a:{store:'authors',a:a}});
   // let stored = await aa.db.get_pa(a);
   // let stored = await aa.db.cash.ops({get:a})
-  for (const dis of stored) aa.p.profile(dis);
-  for (const dis of stored) aa.db.p[dis.xpub] = dis;
+  for (const dis of stored) 
+  {
+    aa.db.p[dis.xpub] = dis;
+    aa.p.profile(dis);
+  }
   for (const x of a)
   {
     if (!aa.db.p[x]) 
@@ -466,7 +509,7 @@ aa.mk.metadata =p=>
         else if (typeof v === 'object') val = JSON.stringify(v)
         else val = v;
         l = aa.mk.l('p',{con:val});
-      } 
+      }
       l.dataset.meta = k;
       if (v === '') l.classList.add('empty');
       ul.append(l);
@@ -523,36 +566,6 @@ aa.mk.metadata_picture =(k,v,p)=>
 aa.mk.metadata_website =(k,v)=> aa.mk.link(v);
 
 
-// follow / unfollow
-aa.clk.p_follow =async e=>
-{
-  const x = e.target.closest('.profile').dataset.xpub;
-  const dis = e.target.textContent;
-  if (dis === 'unfollow')
-  {
-    // unfollow
-    let s = localStorage.ns+' p unfollow ';
-    let sx = s+x;
-    let v = aa.cli.t.value;
-    if (v.length >= sx.length && v.startsWith(s))  sx = v+' '+x;
-    aa.cli.v(sx);
-  }
-  else
-  {
-    //follow
-    let new_follow = [x];
-    const p = await aa.db.get_p(x);
-    new_follow.push(aa.p.relay(p));
-    let petname;
-    if (p.metadata?.name) petname = p.metadata.name;
-    else if (p.petnames.length) petname = p.petnames[0];
-    if (petname?.length) new_follow.push(aa.fx.an(petname));
-    else new_follow.push('')
-    aa.cli.v(localStorage.ns+' p follow '+new_follow.join(', '));
-  }
-};
-
-
 // refresh follows
 aa.clk.p_follows =e=>
 {
@@ -579,17 +592,22 @@ aa.mk.p_follows =(a,p)=>
 // make followers
 aa.mk.p_followers =(a,p)=>
 {
-  let ul = aa.mk.l('ul',{cla:'followers'});
-  let followers_details = aa.mk.details('followers ('+a.length+')', ul);
-  aa.p.author_list(a,ul);
+  let al = aa.p.authors_list(a,'followers');
+  // let ul = aa.mk.l('ul',{cla:'followers'});
+  // let followers_details = aa.mk.details('followers ('+a.length+')', ul);
+  let followers_details = aa.mk.details('followers ('+a.length+')', al);
+  // let butt = aa.mk.butt(['filter','lf']);
+  // butt.dataset.last = 'dis';
+  // followers_details.insertBefore(butt,al);
+  // aa.p.author_list(a,ul);
   return followers_details
 };
 
 
 // make p link
-aa.mk.p_link =(x,p=false)=>
+aa.mk.p_link =(x)=>
 {
-  if (!p) p = aa.db.p[x];
+  let p = aa.db.p[x];
   if (!p) p = aa.p.p(x);
 
   const l = aa.mk.l('a',
@@ -601,7 +619,7 @@ aa.mk.p_link =(x,p=false)=>
     app:aa.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
   });
   aa.fx.color(x,l);
-  aa.p.p_link_data_upd(l,aa.p.p_link_data(p));
+  setTimeout(()=>{aa.p.p_link_data_upd(l,aa.p.p_link_data(p))},200);
   return l
 };
 
@@ -622,7 +640,7 @@ aa.p.p_link_data =p=>
   if (p.verified.length) o.verified = p.verified[0];
   if (aa.is.u(p.xpub)) o.class_add.push('is_u');
   else o.class_rm.push('is_u');
-  if (aa.u.is_following(p.xpub)) 
+  if (aa.is.following(p.xpub)) 
   {
     o.class_rm.push('is_mf');
     o.class_add.push('is_bff');
@@ -634,7 +652,7 @@ aa.p.p_link_data =p=>
   }
   
   let common = 0;
-  for (const k of p.followers) { if (aa.u.is_following(k)) common++ }
+  for (const k of p.followers) { if (aa.is.following(k)) common++ }
   o.followers = common;
   if (p.metadata?.picture && aa.is.trusted(p.score))
   {
@@ -775,7 +793,7 @@ aa.p.profile =p=>
     profile.dataset.updated = p.updated ?? 0;
     aa.fx.color(p.xpub,profile);
     profile.append(aa.mk.pubkey(p));
-    profile.append(aa.p.actions(p));
+    // profile.append(aa.p.actions(p));
     profile.append(aa.mk.l('section',{cla:'metadata'}));
     profile.append(aa.mk.l('section',{cla:'extradata'}));
     aa.p.l.append(profile);
@@ -789,7 +807,8 @@ aa.p.profile =p=>
 aa.mk.pubkey =p=>
 {
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
-  pubkey.append(aa.mk.p_link(p.xpub,p));
+  pubkey.append(aa.mk.p_link(p.xpub));
+  pubkey.append(aa.p.actions(p));
   pubkey.append(' ',aa.mk.l('span',{cla:'xpub',con:p.xpub}));
   pubkey.append(' ',aa.mk.time(p.updated));
   return pubkey
@@ -853,6 +872,22 @@ aa.p.relays_add =(relays,p)=>
     else aa.fx.a_add(p.relays[relay].sets,relays[relay].sets);
   }
 };
+
+
+// request notes from profile
+aa.clk.p_req =e=>
+{
+  const profile = e.target.closest('.profile');
+  const xid = profile?.dataset.xpub;
+  const p = aa.db.p[xid];
+  const filter = `{"authors":["${p.xpub}"],"kinds":[1],"limit":100}`;
+  let relay = p.relay;
+  if (!relay && p.relays.length) 
+  relay = p.relays.filter(r=>r.sets.includes('write'))[0];
+  if (!relay) relay = 'read';
+  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req ${relay} ${filter}`);
+};
+
 
 // save p
 aa.p.save_to_n =()=>
@@ -1040,6 +1075,15 @@ aa.p.profile_upd =async(p)=>
 };
 
 
+// returns user trust
+aa.is.trust_x =x=> 
+{
+  let p = aa.db.p[x];
+  if (!p) return false;
+  return aa.is.trusted(p.score);
+}
+
+
 // verify nip05
 aa.p.verify_nip05 =async(s,p)=>
 {
@@ -1071,29 +1115,16 @@ aa.kinds[0] =dat=>
   aa.db.get_p(x).then(p=>
   {
     if (!p) p = aa.p.p(x);
-    if (aa.p.new_replaceable(p,dat.event))
+    if (aa.p.events_newer(p,dat.event))
     {
       if (aa.miss.p[x]) delete aa.miss.p[x];
       let metadata = aa.parse.j(dat.event.content);
       if (metadata)
       {
         p.metadata = metadata;
-
-        aa.p.p_links_upd(p);
         aa.p.save(p);
+        aa.p.p_links_upd(p);
       }
-      
-      // let metadata = aa.parse.j(dat.event.content);
-      // if (metadata)
-      // {
-      //   p.metadata = metadata;
-      //   let content = note.querySelector('.content');
-      //   content.textContent = '';
-      //   content.append(aa.mk.ls({ls:metadata}));
-      //   aa.p.p_links_upd(p);
-      //   aa.p.save(p);
-      // }
-
     }
   });
   aa.parse.content_o(aa.parse.j(dat.event.content),note);
@@ -1110,7 +1141,7 @@ aa.kinds[3] =dat=>
   aa.db.get_p(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
-    if (aa.p.new_replaceable(p,dat.event))
+    if (aa.p.events_newer(p,dat.event))
     {
       aa.p.process_k3_tags(dat.event);
       aa.p.save(p)
