@@ -417,6 +417,8 @@ aa.u.k3_add =async s=>
   if (!tag) return;
   
   let dat_k3 = await aa.p.events_last(aa.u.p,'k3');
+  if (!dat_k3) return false;
+  dat_k3 = await aa.db.get_e(dat_k3);
   if (!dat_k3)
   {
     aa.log('no k3 found, create one first');
@@ -457,7 +459,8 @@ aa.u.k3_del =async s=>
   
   let dat_k3 = await aa.p.events_last(aa.u.p,'k3');
   if (!dat_k3) return false;
-  
+  dat_k3 = await aa.db.get_e(dat_k3);
+  if (!dat_k3) return false;
   aa.cli.fuck_off();
 
   let keys_to_unfollow = s.trim().split(' ');
