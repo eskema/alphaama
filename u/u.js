@@ -145,7 +145,7 @@ aa.e.normalise =event=>
 
 
 // decrypt kind-4 from id
-aa.u.note_decrypt =async s=>
+aa.e.note_decrypt =async s=>
 { 
   if (!window.nostr) 
   {
@@ -185,12 +185,12 @@ aa.u.note_decrypt =async s=>
     return
   }
   
-  aa.u.note_content_decrypted(x,decrypted);
+  aa.e.note_decrypted_content(x,decrypted);
   return decrypted
 };
 
 
-aa.u.note_decrypted_content =async(x,decrypted)=>
+aa.e.note_decrypted_content =async(x,decrypted)=>
 {
   let l = document.getElementById(aa.fx.encode('note',x));
   if (!l) 
@@ -277,7 +277,7 @@ aa.u.load =()=>
       action:['e','decrypt'],
       required:['nid'],
       description:'decrypt note',
-      exe:mod.note_decrypt
+      exe:aa.e.note_decrypt
     },
     {
       action:['p','k0'],
@@ -897,7 +897,7 @@ aa.mk.note_encrypted =(dat,note)=>
   if (aa.u.o.ls.xpub === p_x)
   {
     note.classList.add('for_u');
-    content.append(aa.mk.butt_action('u decrypt '+dat.event.id,'decrypt','decrypt'));
+    content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
   }
   return p_x
 };

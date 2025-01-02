@@ -273,6 +273,8 @@ aa.mk.k7376 =async o=>
   // aa.e.finalize(event);
 
   let w = aa.w.o.ls[o.wid];
+  if (!w) return;
+  if (!w.history) w.history = [];
   w.history.unshift(
   [
     aa.t.now,
@@ -617,7 +619,7 @@ aa.w.load =()=>
     },
     {
       action:[id,'unit'],
-      required:['wid','unit'],
+      required:['unit','wid'],
       description:'set unit to walLNut',
       exe:mod.unit
     },
@@ -693,6 +695,20 @@ aa.w.load =()=>
       description:'pay ln invoice from wallet proofs',
       exe:mod.melt
     },
+    {
+      action:['cashu','token'],
+      required:['amount'],
+      optional:['wid'],
+      description:'create a token',
+      exe:mod.token
+    },
+    {
+      action:['cashu','receive'],
+      required:['token'],
+      optional:['wid'],
+      description:'receive a token',
+      exe:mod.receive
+    },
   );
   aa.mod_load(mod).then(mod.start);
 };
@@ -757,7 +773,7 @@ aa.w.mint =async(s='')=>
 };
 
 
-aa.w.tx_out =(proofs,wid)=>
+aa.w.tx_out =(proofs,wid,mint)=>
 {
   if (!proofs || !proofs.length) 
   {
@@ -771,13 +787,14 @@ aa.w.tx_out =(proofs,wid)=>
     aa.log(aa.w.def.id+' walLNut not found '+wid);
     return
   }
+  if (!mint) mint = w.mints[0];
+
   let amount = aa.w.proofs_out(proofs,w);
   aa.log(`${aa.w.def.id} -${amount} = ${w.balance} in ${wid}`);
   aa.w.save(wid);
 
-  // k7375
-  // del old k7375
-  // k7376 old_id=destroyed&new_id=created
+  aa.mk.k7375({mint:mint,proofs:proofs,wid:wid,amount:amount})
+  .then(o=>{aa.mk.k7376({direction:'out',...o})});
 };
 
 
@@ -1010,12 +1027,52 @@ aa.w.start =mod=>
 };
 
 
-// define unit of walLNut
-aa.w.unit =s=>
+
+aa.w.token =async(s='')=>
 {
-  let a = s.trim().split(' ');
-  let wid = a.shift();
-  aa.w.o.ls[wid].unit = a.shift();
+  let [amount,w_id] = s.split(aa.regex.fw);
+  amount = parseInt(amount);
+  let [wallet,w,wid] = aa.w.get_active(w_id);
+  const {keep,send} = await wallet.send(amount,w.proofs);
+  aa.w.tx_out(keep,wid);
+  const o = 
+  {
+    memo:'yo',
+    mint:wallet.mint._mintUrl,
+    proofs:send,
+    unit:'sat',
+  };
+  const token = cashuts.getEncodedTokenV4(o);
+  // aa.log(token);
+  return token
+
+  // const wallet2 = new CashuWallet(mint); // receiving wallet
+  // const receiveProofs = await wallet2.receive(token);
+};
+
+aa.w.receive =async(s='')=>
+{
+  let [token,w_id] = s.split(aa.regex.fw);
+  let [wallet,w,wid] = aa.w.get_active(w_id);
+  const proofs = await wallet.receive(token);
+  aa.w.tx_in(proofs,wid);
+  // const c_token = {token:[{mint:wallet.mint._mintUrl,proofs:send}]};
+  // const token = cashuts.getEncodedTokenV4({mint:wallet.mint._mintUrl,proofs:send});
+  // aa.log(token);
+
+  // const wallet2 = new CashuWallet(mint); // receiving wallet
+  // const receiveProofs = await wallet2.receive(token);
+};
+
+
+// define unit of walLNut
+aa.w.unit =(s='')=>
+{
+  let [unit,wid] = s.split(' ');
+  aa.w.o.ls[wid].unit = unit;
+  // let a = s.split(' ');
+  // let wid = a.shift();
+  // aa.w.o.ls[wid].unit = a.shift();
   aa.w.save(wid);
 };
 

@@ -514,7 +514,7 @@ aa.load =(o={})=>
 
 
 // log stuff to l
-aa.log =async(s,l=false)=>
+aa.log =(s,l=false)=>
 {
   const log = aa.mk.l('li',{cla:'l item is_new'});
   if (typeof s === 'string') s = aa.mk.l('p',{con:s});
@@ -524,9 +524,9 @@ aa.log =async(s,l=false)=>
   {
     l.append(log);
     log.addEventListener('click',aa.logs_read);
-    // log.scrollIntoView();
   }
-  else console.log('log:',s)
+  else console.log('log:',s);
+  return log
 };
 
 

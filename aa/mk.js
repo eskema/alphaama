@@ -339,6 +339,7 @@ aa.mk.mod =mod=>
   let o = {id:mod.def.id,ls:mod.o.ls};
   if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
   let mod_l = aa.mk.details(mod.def.id,aa.mk.ls(o));
+  mod_l.classList.add('mod');
   if (mod.l) 
   {
     mod.l.replaceWith(mod_l);
@@ -347,16 +348,13 @@ aa.mk.mod =mod=>
   else 
   {
     mod.l = mod_l;
-    mod.l.classList.add('mod');
     if (aa.mod_l) 
     {
       const last = [...aa.mod_l.children]
       .filter(i=> o.id < i.querySelector('summary').textContent)[0];
       aa.mod_l.insertBefore(mod_l,last);
-
-      // aa.mod_l.append(mod_l);
     }
-    else aa.log(mod_l).then(()=> { mod.l.classList.add('mod') });
+    else aa.log(mod_l)
   }
 };
 
