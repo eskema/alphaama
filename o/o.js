@@ -141,22 +141,14 @@ aa.o.mk =(k,v)=>
   // update 
   switch (k)
   {
-    case 'theme':    
+    case 'theme':
       if (aa.l.dataset.theme !== v) aa.l.dataset.theme = v; 
-      l.append(
-        aa.mk.butt_action(id+' add '+k+' '+aa.fx.theme(v),k,'key'),
-        ' ',
-        aa.mk.l('span',{cla:'val',con:v})
-      );
+      s = id+' add '+k+' '+aa.fx.theme(v);
       break;
     default:
-      l.append(
-        aa.mk.butt_action(id+' set '+k+' '+v,k,'key'),
-        ' ',
-        aa.mk.l('span',{cla:'val',con:v})
-      );
+      s = id+' add '+k+' '+v;
   }
-
+  l.append(aa.mk.item_action(k,v,s))
   return l
 };
 
@@ -167,7 +159,7 @@ aa.o.reset =s=>
   s.trim();
   if (s)
   {
-    const work =a=>
+    aa.fx.loop(a=>
     {
       const v = a[0];
       if (aa.o.def.ls[v])
@@ -175,8 +167,7 @@ aa.o.reset =s=>
         localStorage[v] = aa.o.def.ls[v];
         aa.mod_ui(aa.o,k);
       }
-    }
-    aa.fx.loop(work,s);
+    },s);
     aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
   } 
   else if (window.confirm('reset all options?')) 

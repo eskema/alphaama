@@ -155,12 +155,17 @@
   bottom: unset;
   /*top: calc(var(--line));*/
   z-index: 8;
-  
+}
+
+#u_u:hover,
+.cli_expanded #u_u:hover
+{
+  z-index: 99;
 }
 
 .cli_expanded #u_u.expanded
 {
-  padding-bottom: calc(60vh - var(--size) - var(--line) - var(--size));
+  padding-bottom: calc(90vh - var(--size) - var(--line) - var(--size));
   /*max-height: calc(100vh - var(--size) - var(--line) - var(--size))*/
 }
 
@@ -174,8 +179,5 @@
 
 @media screen and (min-width: 1025px) 
 {
-  #u_u:hover
-  {
-    z-index: 999;
-  }
+
 }

@@ -77,18 +77,6 @@ indexed_db.ops.dex_all =async(db,o)=>
 };
 
 
-indexed_db.ops.put =async(db,o)=>
-{ // o = {store:'',a:[]}
-  const chunks = chunker(o.a,indexed_db.chunks);
-  const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  
-  for (const chunk of chunks)
-  {
-    for (const item of chunk) odb.put(item)
-  }
-};
-
-
 indexed_db.ops.get =async(db,o)=>
 { // o = {store:'',key:'id'}
   const odb = db.transaction(o.store).objectStore(o.store);
@@ -121,6 +109,23 @@ indexed_db.ops.get_all =async(db,store)=>
 };
 
 
+const merge =(dis,dat)=>
+{
+
+
+  dis = Object.assign({},dis);
+  let sets = dat.entries.filter(i=>Array.isArray(i[1])).map(i=>i[0]);
+  let merged;
+  for (const set of sets)
+  {
+    if (!dis.hasOwnProperty(set)) {dis[set]=[];merged=true}
+    if (!dat.hasOwnProperty(set)) dat[set]=[];
+    if (a_add(dis[set],dat[set])) merged=true;
+  }
+  return merged ? dis : false 
+};
+
+
 indexed_db.ok =(db,o)=> 
 {
   const total = Object.keys(o).length;
@@ -142,6 +147,16 @@ onmessage =m=>
   db.onupgradeneeded = indexed_db.upg;
   db.onsuccess =e=> indexed_db.ok(e.target.result,m.data);  
 }
+
+
+indexed_db.ops.put =async(db,o)=>
+{ // o = {store:'',a:[]}
+  // const chunks = chunker(o.a,indexed_db.chunks);
+  const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
+  
+  // for (const chunk of chunks) for (const item of chunk) odb.put(item)
+  for (const item of o.a) odb.put(item)
+};
 
 
 indexed_db.ops.req =async(db,o)=>
@@ -188,32 +203,6 @@ indexed_db.ops.some =async(db,o)=>
   }
 };
 
-const merge =(dis,dat)=>
-{
-  const a_set =(a,dis)=>
-  {
-    let b;
-    for (const k of dis)
-    {
-      if (!a.includes(k)) 
-      {
-        a.push(k);
-        b = true;
-      }
-    }
-    return b
-  };
-  dis = Object.assign({},dis);
-  let merged,sets = ['seen','subs','clas','refs'];
-  for (const set of sets)
-  { 
-    if (!dis.hasOwnProperty(set)) { dis[set] = [];merged=true; } 
-    if (!dat.hasOwnProperty(set)) dat[set] = [];
-    if (a_set(dis[set],dat[set])) merged=true;
-  }
-  return merged ? dis : false 
-};
-
 
 indexed_db.upg =(e) => 
 {
@@ -253,46 +242,48 @@ indexed_db.upg =(e) =>
 indexed_db.ops.upd_e =async(db,o)=>
 {
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  const chunks = chunker(o.a,indexed_db.chunks);
-  for (const chunk of chunks)
-  {
-    for (const item of chunk)
+  // const chunks = chunker(o.a,indexed_db.chunks);
+  // for (const chunk of chunks)
+  // {
+    // for (const item of chunk)
+    for (const item of o.a)
     {
       odb.openCursor(item.event.id).onsuccess=e=>
       {
         const cursor = e.target.result; 
         if (cursor) 
-        { 
+        {
           const merged = merge(cursor.value,item);
           if (merged) cursor.update(merged);
         }
         else odb.put(item)
       }
     }
-  }
+  // }
 };
 
 
 indexed_db.ops.upd_p =async(db,o)=>
 {
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  const chunks = chunker(o.a,indexed_db.chunks);
-  for (const chunk of chunks)
-  {
-    for (const item of chunk) 
+  // const chunks = chunker(o.a,indexed_db.chunks);
+  // for (const chunk of chunks)
+  // {
+    // for (const item of chunk) 
+    for (const item of o.a) 
     {
       odb.openCursor(item.xpub).onsuccess=e=>
       {
         const cursor = e.target.result; 
-        if (cursor) 
-        { 
-          const merged = merge(cursor.value,item);
-          if (merged) cursor.update(merged);
-        }
+        if (cursor) cursor.update(item)
+        // { 
+        //   const merged = merge(cursor.value,item);
+        //   if (merged) cursor.update(merged);
+        // }
         else odb.put(item)
       }
     }
-  }
+  // }
 };
 
 

@@ -15,22 +15,26 @@ aa.fx.a_add =(a,items_to_add)=>
   return b
 };
 
-aa.fx.a_common =(a,b)=>
+
+// return array with items in both arrays
+// and array with items that don't
+aa.fx.a_ab =(a,b)=>
 {
-  let result = {common:[],uncommon:[]};
+  let o = {inc:[],exc:[]};
   for (const i of b)
   {
-    if (a.includes(i)) result.common.push(i);
-    else result.uncommon.push(i)
+    if (a.includes(i)) o.inc.push(i);
+    else o.exc.push(i)
   }
-  return result
+  return o
 };
 
 
 // returns filtered array
 aa.fx.a_rm =(a,items_to_rm)=>
 {
-  for (const item of items_to_rm) if (a.includes(item)) a=a.filter(i=>i!==item);
+  for (const item of items_to_rm) 
+    if (a.includes(item)) a=a.filter(i=>i!==item);
   return a
 };
 
@@ -62,6 +66,13 @@ aa.fx.an =s=>
 };
 
 
+// bytes to hex
+aa.fx.bytes_to_x =a=>
+{
+  return Array.from(a,b=>('0'+(b&0xFF).toString(16)).slice(-2)).join('');
+};
+
+
 // splits array into chunks of n items
 // returns array of chunks
 aa.fx.chunks =(a,n)=>
@@ -75,10 +86,56 @@ aa.fx.chunks =(a,n)=>
 // adds css color in rgb to element from hex string
 // and also sets luma
 aa.fx.color =async(x,l)=> 
-{ 
-  const rgb = aa.fx.to_rgb(aa.fx.leading_zero_rm(x));
+{
+  const rgb = aa.fx.color_xrgb(aa.fx.color_hex(x));
   l.style.setProperty('--c',rgb);
-  l.dataset.luma = aa.fx.luma(rgb);
+  l.dataset.luma = aa.fx.color_luma(rgb);
+};
+
+
+// removes leading zeroes from beginning of hexstring
+// to be used as a hex color from pubkeys 
+// but not too dark if pow/mined
+aa.fx.color_hex =x=>
+{
+  try { return x.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/,(x0,x_x)=>x_x) } 
+  catch(er) { return x }  
+};
+
+
+// returns if color is dark or light 
+aa.fx.color_luma =rgb=>
+{
+  const [r,g,b] = rgb.split(',');
+  var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
+  return luma < 128 ? 'dark' : 'light';
+};
+
+
+// converts hex to rgb
+aa.fx.color_xrgb =x=>
+{
+  return parseInt(x.slice(0,2),16)
+    +','+parseInt(x.slice(2,4),16)
+    +','+parseInt(x.slice(4,6),16)
+};
+
+
+// converts hsl to hex
+aa.fx.color_hslx =(h,s,l)=>
+{
+  s /= 100;
+  l /= 100;
+  const k =n=> (n + h / 30) % 12;
+  const a = s * Math.min(l, 1 - l);
+  const f = n => l - a * Math.max(-1,Math.min(k(n) - 3,9 - k(n),1));
+  const rgb = [255 * f(0), 255 * f(8), 255 * f(4)];
+  const to_x =x=>
+  {
+    const hex = x.toString(16);
+    return hex.length===1?'0'+hex:hex;
+  };
+  return rgb.map(to_x).join('');
 };
 
 
@@ -100,17 +157,8 @@ aa.fx.clz =x=>
 };
 
 
-// counts items from selector and sets result on element dataset
-aa.fx.data_count =async(l,s)=>
-{
-  const n = document.querySelectorAll(s).length;
-  if (!n) l.removeAttribute('data-count');
-  else l.dataset.count = n;
-  return n
-};
-
 // update counter
-aa.fx.count_upd =(l,pos = true)=>
+aa.fx.count_upd =(l,pos=true)=>
 {
   if (!l) return;
   if (!l.dataset.count) l.dataset.count = 0;
@@ -137,7 +185,7 @@ aa.fx.decode =s=>
 };
 
 
-// decrypt nip 4 / 44
+// decrypt nip4/44
 aa.fx.decrypt =async(s='')=>
 {
   let [text,pubkey] = s.split(aa.regex.fw);
@@ -148,25 +196,36 @@ aa.fx.decrypt =async(s='')=>
 };
 
 
+// decript and parse
+aa.fx.decrypt_parse =async(x,cypher,s)=>
+{
+  let a = await window.nostr.nip44.decrypt(x,cypher);
+  if (!a)
+  {
+    aa.log(s+'decrypt failed');
+    return
+  }
+  a = aa.parse.j(a);
+  if (!a)
+  {
+    aa.log(s+' decrypt parse failed');
+    return
+  }
+  return a
+};
+
+
 // encodes to bech32 (nip19)
 aa.fx.encode =(s,x)=>
 {
   let encoded;
-  try
-  {
-    encoded = NostrTools.nip19[s+'Encode'](x);
-    // switch (s) 
-    // {
-    //   case 'nid': encoded = NostrTools.nip19.noteEncode(x); break;
-    //   case 'npub': encoded = NostrTools.nip19.npubEncode(x); break;
-    //   case 'nev': encoded = NostrTools.nip19.neventEncode(x); break;
-    // }
-  }
-  catch (er) { console.error('aa.fx.encode',s,x,er) };
+  try {encoded = NostrTools.nip19[s+'Encode'](x)}
+  catch (er) {console.error('aa.fx.encode',s,x,er)};
   return encoded
 };
 
 
+// encrypt
 aa.fx.encrypt44 =async(text,pubkey)=>
 {
   if (!pubkey) pubkey = aa.u.p.xpub;
@@ -179,80 +238,56 @@ aa.fx.encrypt44 =async(text,pubkey)=>
 };
 
 
-// expanded class, checks sessionStorage for saved value
-aa.fx.expanded =(id,expanded,l)=>
-{
-  if (expanded)
-  {
-    if (sessionStorage.hasOwnProperty(id))
-    {
-      if (sessionStorage[id] === 'expanded') l.classList.add('expanded');
-    }
-    else l.classList.add('expanded');
-  }
-  else
-  {
-    if (sessionStorage.hasOwnProperty(id) && sessionStorage[id] === 'expanded')
-    {
-      l.classList.add('expanded');
-    }
-  }
-};
-
-
 // hash event
 aa.fx.hash =o=> NostrTools.getEventHash(o);
 
 
-aa.fx.id_a =o=> 
-{
-  return ['a',`37375:${o.pubkey}:${o.id}`]
-};
-
 // generate keypair
-aa.fx.keypair =()=>
+aa.fx.keypair =(secret=false)=>
 {
-  let secret = NostrTools.generateSecretKey();
+  if (!secret) secret = NostrTools.generateSecretKey();
+  else if (aa.is.key(secret)) secret = aa.fx.x_to_bytes(secret);
   return [secret,NostrTools.getPublicKey(secret)]
 };
 
 
+// return kind information
 aa.fx.kind_type =kind=> NostrTools.kinds.classifyKind(kind);
 
 
-aa.fx.kinds_type =kind=>
+aa.fx.kinds_type =n=>
 {
   let kinds = Object.entries(NostrTools.kinds);
-  return kinds.filter(k=> typeof k[1] === 'number' && k[1] === kind)
+  return kinds.filter(k=>typeof k[1]==='number'&&k[1]===n).map(i=>i[0])
 };
-
 
 
 // returns items in a given set
-aa.fx.in_set =(ls,set,filter='off')=>
+aa.fx.in_set =(o,set,filter='off')=>
 {
-  let in_set = [];
-  for (const k in ls)
-  { 
-    if (ls[k].sets.includes(set))
+  let a = [];
+  for (const k in o)
+  {
+    if (o[k].sets.includes(set))
     {
-      if (!filter) in_set.push(k);
-      else if (!ls[k].sets.includes(filter)) in_set.push(k);
-    } 
+      if (!filter) a.push(k);
+      else if (!o[k].sets.includes(filter)) a.push(k);
+    }
   }
-  return in_set
+  return a
 };
 
 
-// return items in sets
-aa.fx.in_sets =(ls,sets,filter='off')=>
+// return items in any set
+aa.fx.in_sets =(o,sets,filter='off')=>
 {
   let a = [];
-  for (const i of sets) a.push(...aa.fx.in_set(ls,i,filter));
+  for (const set of sets) a.push(...aa.fx.in_set(o,set,filter));
   return [...new Set(a)]
 };
 
-// return items in sets
+
+// return items in all sets if not 'off'
 aa.fx.in_sets_all =(o,sets)=>
 {
   let a = [];
@@ -270,33 +305,34 @@ aa.fx.in_sets_all =(o,sets)=>
 aa.fx.intersect =(o={},a=[],n=2)=>
 {
   if (typeof n !== 'number') n = 1;
-  let result = {};
-  let entries = Object.entries(o).sort(aa.fx.sorts.v);
+  let dis = {};
+  let items = Object.entries(o).sort(aa.fx.sorts.v);
   for (const x of a)
   {
     let i=0;
-    for (const r of entries)
+    for (const item of items)
     {
-      if (r[1].includes(x)) 
+      const [k,v] = item;
+      if (v.includes(x)) 
       {
-        if (!result[r[0]]) result[r[0]] = [];
-        aa.fx.a_add(result[r[0]],[x]);
-        i++; if (i>=n) break;
+        if (!dis[k]) dis[k] = [];
+        aa.fx.a_add(dis[k],[x]);
+        i++; 
+        if (i>=n) break;
       }
     }
   }
-  return result
+  return dis
 };
 
 
-// removes up to 5 leading zeroes from beginning of hexstring
-// to be used as a hex color from pubkeys 
-// but not too dark if pow/mined
-aa.fx.leading_zero_rm =x=>
+// convert a value from a range a_min/a_max into another range b_min/b_max
+aa.fx.linear_convert =(val,a_max,b_max,a_min,b_min)=>
 {
-  try { return x.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/,(x0,x_x)=>x_x) } 
-  catch(er) { return x }  
-};
+  if (!a_min) a_min = 0;
+  if (!b_min) b_min = 0;
+  return ((val-a_min)/(a_max-a_min))*(b_max-b_min)+b_min;
+}
 
 
 // on load
@@ -326,6 +362,7 @@ aa.fx.load =()=>
   )
 };
 
+
 // splits a string and then 
 // for each item, split and pass through function
 // then a callback
@@ -334,33 +371,9 @@ aa.fx.loop =(job,s,done)=>
   const a = s.split(',');
   if (a.length)
   {
-    for (const task of a) job(task.trim().split(' '));      
+    for (const task of a) job(task.trim().split(' '));
     if (done) done();
   }
-};
-
-
-// returns if color is dark or light 
-aa.fx.luma =rgb=>
-{
-  const [r,g,b] = rgb.split(',');
-  var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
-  return luma < 128 ? 'dark' : 'light';
-};
-
-
-// merge two dat objects
-aa.fx.merge =(dis,dat)=>
-{
-  dis = Object.assign({},dis);
-  let merged,sets = ['seen','subs','clas','refs'];
-  for (const set of sets)
-  { 
-    if (!dis.hasOwnProperty(set)) { dis[set]=[]; merged=true; } 
-    if (!dat.hasOwnProperty(set)) dat[set]=[];
-    if (aa.fx.a_add(dis[set],dat[set])) merged=true;
-  }
-  return merged ? dis : false
 };
 
 
@@ -654,7 +667,7 @@ aa.fx.tag_value =(a,s)=>
   return value;
 }
 
-aa.fx.tags_value =(a,s)=>
+aa.fx.tags_values =(a,s)=>
 {
   return a.filter(t=>t[0]===s).map(r=>r[1].trim())
 };
@@ -697,13 +710,7 @@ aa.fx.tags_value =(a,s)=>
 // };
 
 
-// converts hex to rgb
-aa.fx.to_rgb =x=>
-{
-  return parseInt(x.slice(0,2),16)
-    +','+parseInt(x.slice(2,4),16)
-    +','+parseInt(x.slice(4,6),16)
-};
+
 
 
 // truncate string to start and end 
@@ -790,5 +797,17 @@ aa.fx.verify_req_filters =a=>
   }
   return true
 };
+
+
+// bytes to hex
+aa.fx.x_to_bytes =x=>
+{
+  if (x.length % 2 !== 0) return;
+  const n = x.length / 2;
+  const a = new Uint8Array(n);
+  for (let i=0;i<n;i++) a[i] = parseInt(x.substr(i*2,2),16);
+  return a
+};
+
 
 window.addEventListener('load',aa.fx.load);

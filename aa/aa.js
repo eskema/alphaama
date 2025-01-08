@@ -43,16 +43,15 @@ const aa =
   mk:{},
   mods:
   [
-    '/cli/cli.js?v='+aa_version,
-    '/o/o.js?v='+aa_version,
-    '/e/e.js?v='+aa_version,
-    '/p/p.js?v='+aa_version,
-    '/q/q.js?v='+aa_version,
-    '/r/r.js?v='+aa_version,
-    '/u/u.js?v='+aa_version,
-    '/i/i.js?v='+aa_version,
-    // '/m/m.js?v='+aa_version,
-    '/w/w.js?v='+aa_version,
+    {id:'c',src:'/c/c.js?v='+aa_version,requires:[]},
+    {id:'o',src:'/o/o.js?v='+aa_version,requires:['c']},
+    {id:'r',src:'/r/r.js?v='+aa_version,requires:[]},
+    {id:'e',src:'/e/e.js?v='+aa_version,requires:['o']},
+    {id:'p',src:'/p/p.js?v='+aa_version,requires:[]},
+    {id:'q',src:'/q/q.js?v='+aa_version,requires:['o','r']},
+    {id:'u',src:'/u/u.js?v='+aa_version,requires:['o','p','e']},
+    {id:'i',src:'/i/i.js?v='+aa_version,requires:['e','p']},
+    {id:'w',src:'/w/w.js?v='+aa_version,requires:['r']},
   ],
   parse:{},
   state:{},
@@ -119,57 +118,6 @@ aa.is.empty =l=>
     }
   }
   return false;
-};
-
-
-// parses string as action and executes it
-aa.exe =async s=>
-{
-  let a = s.split(localStorage.ns+' ');
-  // console.log(a);
-  let output;
-  for (const action of a)
-  { 
-    if (!action.length) continue;
-    let acts = action.split(' | ');
-    for (const ac of acts)
-    {
-      let act;
-      let cut;
-      let cmd = ac.split(aa.regex.fw);
-      let actions = aa.actions.filter(o=>o.action[0] === cmd[0]);
-      if (actions.length > 1)
-      {
-        let sub_cmd = cmd[1].split(aa.regex.fw);
-        let sub_actions = actions.filter(o=>o.action[1] === sub_cmd[0]);
-        if (sub_actions.length)
-        {
-          act = sub_actions[0];
-          cut = sub_cmd[1];
-        }
-      }
-      else if (actions.length)
-      {
-        act = actions[0];
-        if (actions[0].action.length > 1)
-        {
-          cut = cmd[1].split(aa.regex.fw)[1];
-        }
-        else 
-        {
-          cut = cmd[1];
-        }
-      }
-      if (act && 'exe' in act) 
-      {
-        aa.cli.clear();
-        cut = cut ? cut.trim() : '';
-        if (output) output = await act.exe((cut?cut+' ':'')+output);
-        else output = await act.exe(cut);
-      }
-    }
-  }
-  if (output) aa.log(output)
 };
 
 
@@ -423,7 +371,6 @@ aa.head_scripts =async scripts=>
     // script.setAttribute('cross-origin','');
     document.head.append(script);
   }
-  
 };
 
 
@@ -482,7 +429,8 @@ aa.load =(o={})=>
   aa.tools_loaded = o.tools ? o.tools : aa.tools;
   aa.head_scripts(aa.tools_loaded);
   aa.mods_loaded = o.mods ? o.mods : aa.mods;
-  aa.head_scripts(aa.mods_loaded);
+  aa.head_scripts(aa.mods_loaded.map(i=>i.src));
+  // for (const mod_o of aa.mods_loaded) aa.mod_scripts(mod_o);
 
   aa.actions.push(
     {
@@ -573,57 +521,82 @@ aa.math =(s='')=>
 };
 
 
-// checks if string is only one character long
-aa.is.one =s=>
+// load mod
+aa.mod_load =async(mod)=>
 {
-  let a = s.split(' ');
-  let seg = a[0];
-  try { seg = [...new Intl.Segmenter().segment(a[0])] } 
-  catch (error) { console.log('no Intl.Segmenter(), use a better browser')};
-  if (seg.length === 1) return true;
-  else return false
-};
-
-
-// perform cache operations and return results
-aa.db.cash.ops =async o=> await aa.db.get('cash',o);
-
-
-// perform indexeddb operations and return results
-aa.db.idb.ops =async o=> await aa.db.get('idb',o);
-
-
-// tries to delete everything saved locally 
-// and then reload clean
-aa.reset =()=>
-{
-  aa.log('shh... go to sleep now.');
-  aa.db.cash.ops({clear:'ALL'});
-  aa.db.idb.ops({clear:{stores:['stuff','authors','events']}})
-  .then(()=>
+  if (!mod.o) 
   {
-    localStorage.clear();
-    sessionStorage.clear();
-    setTimeout(()=>{location.href = location.origin},1000)
-  });
+    mod.o = await aa.db.idb.ops({get:{store:'stuff',key:mod.def.id}});
+    if (!mod.o && mod.old_id) mod.o = await aa.mod_load_old(mod);
+    if (!mod.o && mod.def) mod.o = mod.def;
+  }
+  if (mod.o && !mod.o.ls) mod.o.ls = {};
+  return mod
 };
 
 
-// if no options found, run with defaults
-aa.run =(o={})=>
+// in case the db key path changes
+// load mod from old_id
+aa.mod_load_old =async mod=>
 {
-  aa.mod_l = aa.mk.l('div',{id:'mods'});
-  const main = aa.mk.l('main',{id:'view'});
-  document.body.prepend(main);
-  if (aa.is.iframe()) aa.l.classList.add('rigged');
-  aa.wl.lock();
-  aa.log((navigator.onLine ? 'on' : 'off') + 'line at '+location.origin);
-  
-  let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
-  u_u.append(aa.mod_l);
-  document.body.insertBefore(u_u,document.body.lastChild);
-  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
-  setTimeout(aa.logs_read,420);
+  let mod_o = await aa.db.idb.ops({get:{store:'stuff',key:mod.old_id}});
+  if (mod_o)
+  {
+    mod_o.id = mod.def.id;
+    mod.o = mod_o;
+    aa.mod_save(mod);
+  }
+  return mod_o
+};
+
+
+
+// checks if required mods have loaded
+aa.is.mods_loaded =a=>
+{
+  for (const id of a) if (!aa[id]?.o) return false
+  return true;
+};
+
+
+// save mod
+aa.mod_save = async mod=>
+{
+  return new Promise(resolve=>
+  {
+    // console.log(mod);
+    if (mod && mod.o && mod.o.id)
+    {
+      aa.db.idb.worker.postMessage({put:{store:'stuff',a:[mod.o]}});
+    }
+    resolve(mod)
+  })  
+};
+
+
+// append mod head scripts when required mods have been loaded
+aa.mod_scripts =o=>
+{
+  if (aa.is.mods_loaded(o.requires)) 
+  {
+    let script = aa.mk.l('script',{src:o.src});
+    script.onload =()=>
+    {
+      if (aa.hasOwnProperty(o.id)
+      && aa[o.id].hasOwnProperty('load')) aa[o.id].load()
+    };
+    // script.setAttribute('cross-origin','');
+    document.head.append(script);
+    // aa.head_scripts(o.srcs);
+    // aa[o.id].load();
+  }
+  else 
+  {
+    if (!o.attempts) o.attempts = 1;
+    else o.attempts++;
+    if (o.attempts < 20) setTimeout(()=>{aa.mod_scripts(o)},10 * o.attempts);
+    else aa.log('could not load mod '+o.id)
+  }
 };
 
 
@@ -681,62 +654,6 @@ aa.mod_setrm =(mod,s)=>
 };
 
 
-// load mod
-aa.mod_load =async(mod)=>
-{
-  if (!mod.o) 
-  {
-    mod.o = await aa.db.idb.ops({get:{store:'stuff',key:mod.def.id}});
-    if (!mod.o && mod.old_id) mod.o = await aa.mod_load_old(mod);
-    if (!mod.o && mod.def) mod.o = mod.def;
-  }
-  if (mod.o && !mod.o.ls) mod.o.ls = {};
-  return mod
-};
-
-
-// in case the db key path changes
-// load mod from old_id
-aa.mod_load_old =async mod=>
-{
-  let mod_o = await aa.db.idb.ops({get:{store:'stuff',key:mod.old_id}});
-  if (mod_o)
-  {
-    mod_o.id = mod.def.id;
-    mod.o = mod_o;
-    aa.mod_save(mod);
-  }
-  return mod_o
-};
-
-
-// checks if required mod has loaded
-aa.mods_required =mod=>
-{
-  // console.log(mod.requires);
-  for (const id of mod.requires)
-  {
-    if (!aa[id]?.o) return false
-  }
-  return true;
-};
-
-
-// save mod
-aa.mod_save = async mod=>
-{
-  return new Promise(resolve=>
-  {
-    // console.log(mod);
-    if (mod && mod.o && mod.o.id)
-    {
-      aa.db.idb.worker.postMessage({put:{store:'stuff',a:[mod.o]}});
-    }
-    resolve(mod)
-  })  
-};
-
-
 // update mod item element
 aa.mod_ui =(mod,k)=>
 {
@@ -751,6 +668,60 @@ aa.mod_ui =(mod,k)=>
     mod_l.classList.remove('empty');
     mod_l.parentElement.classList.remove('empty');
   } 
+};
+
+
+// checks if string is only one character long
+aa.is.one =s=>
+{
+  let a = s.split(' ');
+  let seg = a[0];
+  try { seg = [...new Intl.Segmenter().segment(a[0])] } 
+  catch (error) { console.log('no Intl.Segmenter(), use a better browser')};
+  if (seg.length === 1) return true;
+  else return false
+};
+
+
+// perform cache operations and return results
+aa.db.cash.ops =async o=> await aa.db.get('cash',o);
+
+
+// perform indexeddb operations and return results
+aa.db.idb.ops =async o=> await aa.db.get('idb',o);
+
+
+// tries to delete everything saved locally 
+// and then reload clean
+aa.reset =()=>
+{
+  aa.log('shh... go to sleep now.');
+  aa.db.cash.ops({clear:'ALL'});
+  aa.db.idb.ops({clear:{stores:['stuff','authors','events']}})
+  .then(()=>
+  {
+    localStorage.clear();
+    sessionStorage.clear();
+    setTimeout(()=>{location.href = location.origin},1000)
+  });
+};
+
+
+// if no options found, run with defaults
+aa.run =(o={})=>
+{
+  aa.mod_l = aa.mk.l('div',{id:'mods'});
+  const main = aa.mk.l('main',{id:'view'});
+  document.body.prepend(main);
+  if (aa.is.iframe()) aa.l.classList.add('rigged');
+  aa.wl.lock();
+  aa.log((navigator.onLine ? 'on' : 'off') + 'line at '+location.origin);
+  
+  let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
+  u_u.append(aa.mod_l);
+  document.body.insertBefore(u_u,document.body.lastChild);
+  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  setTimeout(aa.logs_read,420);
 };
 
 

@@ -1,13 +1,14 @@
 /*
 
 alphaama
-mod  cli
+mod    c
 command line interface
+cli
 
 */
 
-aa.styleshit('/cli/cli.css');
-aa.styleshit('/cli/oto.css');
+aa.styleshit('/c/cli.css');
+aa.styleshit('/c/oto.css');
 
 aa.cli = 
 {
@@ -15,6 +16,18 @@ aa.cli =
 };
 
 
+// a button that will populate the input with a command text
+aa.mk.butt_action =(s,con=false,cla=false)=>
+{
+  const butt = aa.mk.l('button',
+  {
+    con:con?con:s,
+    cla:'butt',
+    clk:e=>{ aa.cli.v(localStorage.ns+' '+s) }
+  });
+  if (cla) butt.classList.add(cla);
+  return butt
+};
 
 
 // clear input
@@ -82,6 +95,57 @@ aa.cli.dat_upd =async()=>
     else aa.cli.dat.event.content = s;
   }
   else if (aa.cli.hasOwnProperty('dat')) delete aa.cli.dat;
+};
+
+
+// parses string as action and executes it
+aa.exe =async s=>
+{
+  let a = s.split(localStorage.ns+' ');
+  // console.log(a);
+  let output;
+  for (const action of a)
+  { 
+    if (!action.length) continue;
+    let acts = action.split(' | ');
+    for (const ac of acts)
+    {
+      let act;
+      let cut;
+      let cmd = ac.split(aa.regex.fw);
+      let actions = aa.actions.filter(o=>o.action[0] === cmd[0]);
+      if (actions.length > 1)
+      {
+        let sub_cmd = cmd[1].split(aa.regex.fw);
+        let sub_actions = actions.filter(o=>o.action[1] === sub_cmd[0]);
+        if (sub_actions.length)
+        {
+          act = sub_actions[0];
+          cut = sub_cmd[1];
+        }
+      }
+      else if (actions.length)
+      {
+        act = actions[0];
+        if (actions[0].action.length > 1)
+        {
+          cut = cmd[1].split(aa.regex.fw)[1];
+        }
+        else 
+        {
+          cut = cmd[1];
+        }
+      }
+      if (act && 'exe' in act) 
+      {
+        aa.cli.clear();
+        cut = cut ? cut.trim() : '';
+        if (output) output = await act.exe((cut?cut+' ':'')+output);
+        else output = await act.exe(cut);
+      }
+    }
+  }
+  if (output) aa.log(output)
 };
 
 
@@ -174,6 +238,15 @@ aa.cli.keydown =async e=>
     aa.cli.history_next();
   }
   if (e.key === 'Escape') aa.cli.collapse();
+};
+
+
+// item content with key as butt_action
+aa.mk.item_action =(k,v,s)=>
+{
+  const df = new DocumentFragment();
+  df.append(aa.mk.butt_action(s,k,'key'),' ',aa.mk.l('span',{cla:'val',con:v}))
+  return df
 };
 
 

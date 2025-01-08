@@ -336,15 +336,6 @@ aa.q.replace_filter_vars =s=>
 };
 
 
-// request replies to note
-aa.clk.req =e=>
-{
-  const note = e.target.closest('.note');
-  const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
-  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
-};
-
-
 // raw req
 aa.q.req =s=>
 {
@@ -359,7 +350,7 @@ aa.q.req =s=>
     aa.log('invalid filter:'+filt);
     return false
   }
-  let rid = 'raw_'+aa.t.now;
+  let rid = 'req_'+aa.t.now;
   if (!relays.length)
   {
     aa.q.outbox([filtered,options,rid])
@@ -369,7 +360,6 @@ aa.q.req =s=>
     aa.r.demand(['REQ',rid,filtered],relays,options);
     aa.log(aa.mk.butt_action(aa.q.def.id+' close '+rid));
   }
-
 };
 
 
@@ -423,6 +413,5 @@ aa.q.stuff =()=>
   aa.log(aa.mk.butt_action(aa.q.def.id+' out f'));
   aa.log(aa.mk.butt_action(aa.q.def.id+' run w'));
 };
-
 
 window.addEventListener('load',aa.q.load);

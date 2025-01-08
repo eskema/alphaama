@@ -65,7 +65,11 @@ aa.r.broadcast =(event,relays=false)=>
     return false
   }
 
-  aa.log('note '+event.id+' sent to: '+relays);
+  let note_log = aa.mk.details('k'+event.kind+' sent '+event.id);
+  note_log.id = 'note_log_'+event.id;
+  note_log.append(aa.mk.l('p',{con:'to: '+relays}));
+  aa.log_read(aa.log(note_log));
+  
 
   const opts = {send:{}};
   const dis = JSON.stringify(['EVENT',event]);
@@ -84,7 +88,6 @@ aa.r.broadcast =(event,relays=false)=>
       if (relay.sent.includes(event.id))
       {
         aa.log(`event already sent to ${k}`);
-        // if (relay.send[event.id]) delete relay.send[event.id]
         continue;
       } 
       else aa.r.try(relay,dis)
@@ -144,6 +147,40 @@ aa.r.close =(k,id)=>
     },500);
   }
   else console.log('no close ',k,id);
+};
+
+
+aa.r.common =(a=[],sets=[])=>
+{
+  let common = {};
+  let offed = aa.fx.in_set(aa.r.o.ls,'off',0);
+  for (const x of a)
+  {
+    let has_set;
+    let relays = aa.db.p[x]?.relays;
+    if (relays) 
+    {
+      relays = aa.fx.in_sets_all(relays,sets);
+      if (relays.length) has_set = true;
+    }
+
+    for (const r of relays)
+    {
+      if (offed.includes(r)) continue;
+      if (!common[r]) common[r] = [];      
+      if (!common[r].includes(x)) common[r].push(x)
+    }
+
+    if (!has_set) 
+    {
+      for (const r of aa.fx.in_set(aa.r.o.ls,aa.r.o.r))
+      {
+        if (!common[r]) common[r] = [];
+        aa.fx.a_add(common[r],[x]);
+      }
+    }
+  }
+  return common
 };
 
 
@@ -332,12 +369,6 @@ aa.r.hint_notice =(url,opts,set='hint')=>
       aa.r.c_on(url,opts);
       e.target.closest('.is_new')?.classList.remove('is_new');
       e.target.remove();
-      // setTimeout(()=>
-      // {
-      //   let l = e.target.parentElement;
-      //   l.textContent = `${text} ${set}`;
-      //   l.append(aa.mk.l('button',{con:bt.title,cla:'butt '+b,clk:bt.exe}))
-      // },50);
     }
   };
   let set_off = 'off';
@@ -349,9 +380,6 @@ aa.r.hint_notice =(url,opts,set='hint')=>
       aa.r.add(`${url} ${set_off}`);
       e.target.closest('.is_new')?.classList.remove('is_new');
       e.target.remove();
-      
-      // setTimeout(()=>
-      // {e.target.parentElement.textContent = `${text} ${set_off}`},50);
     }
   };
   let set_other = 'other'
@@ -365,8 +393,6 @@ aa.r.hint_notice =(url,opts,set='hint')=>
       aa.cli.v(localStorage.ns+' '+text);
       e.target.closest('.is_new')?.classList.remove('is_new');
       e.target.remove();
-      // setTimeout(()=>
-      // {e.target.parentElement.textContent = `${text} ${set_other}`},50);
     }
   };
   aa.log(aa.mk.notice(notice));
@@ -383,7 +409,6 @@ aa.r.ls =(s='')=>
   else relay_list.push(...aa.fx.in_sets(ls,a,false));
   let result = relay_list.join();
   aa.log(relay_list.length+' relays in '+a);
-  aa.log(result);
   return result 
 };
 
@@ -614,6 +639,7 @@ aa.r.message_type.notice =async message=>
 aa.r.message_type.ok =async message=>
 {
   const [type,id,is_ok,reason] = message.data;
+  let log = 'not ok: '+reason+' '+id+' '+message.origin;
   if (is_ok) 
   {
     let r = aa.r.active[message.origin];
@@ -635,9 +661,11 @@ aa.r.message_type.ok =async message=>
         actions.replaceWith(aa.e.note_actions(dat))
       }
     }
-    aa.log('ok: '+id+(reason?' '+reason:'')+' '+message.origin);
+    log = 'ok: '+id+(reason?' '+reason:'')+' '+message.origin;
   }
-  else aa.log('not ok: '+reason+' '+id+' '+message.origin);
+  let log_l = document.getElementById('note_log_'+id);
+  if (log_l) log_l.append(aa.mk.l('p',{con:log}));
+  else aa.log(log);
 };
 
 

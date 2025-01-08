@@ -8,7 +8,7 @@ author pubkey profile
 
 aa.styleshit('/p/p.css');
 
-aa.p = 
+aa.p =
 {
   p(x)
   {

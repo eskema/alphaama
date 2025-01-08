@@ -12,7 +12,6 @@ aa.styleshit('/u/u.css');
 aa.u = 
 {
   def:{id:'u',ls:{}},
-  // old_id:'aka',
   requires:['o','p','e'],
   get p(){ return aa.db.p[aa.u.o.ls.xpub] },
 };
@@ -59,13 +58,8 @@ aa.clk.cancel =e=>
 aa.clk.edit =e=>
 {
   const note = e.target.closest('.note');
-  // const xid = note.dataset.id;
   aa.cli.v(aa.db.e[note.dataset.id].event.content);
   aa.e.note_rm(note);
-  // if (aa.viewing === note.id) aa.state.clear()
-  // note.remove();
-  // aa.fx.data_count(document.getElementById('butt_e'),'.note');
-  // delete aa.db.e[xid];
 };
 
 
@@ -114,8 +108,6 @@ aa.clk.encrypt =async e=>
 };
 
 
-
-
 // finalize event creation
 aa.e.finalize =async(event,relays)=>
 {
@@ -124,7 +116,7 @@ aa.e.finalize =async(event,relays)=>
   const signed = await aa.u.sign(event);
   if (signed)
   {
-    aa.db.e[event.id] = dat = aa.mk.dat({event:signed});
+    let dat = aa.db.e[event.id] = aa.mk.dat({event:signed});
     aa.db.upd_e(dat);
     aa.e.print(dat);
     aa.r.broadcast(signed,relays);
@@ -141,7 +133,7 @@ aa.e.normalise =event=>
   if (!event.tags) event.tags = [];
   if (!event.content) event.content = '';
   return event
-}
+};
 
 
 // decrypt kind-4 from id
@@ -263,7 +255,6 @@ aa.fx.tag_k3 =a=>
 // on load
 aa.u.load =()=>
 {
-  
   let id = 'u';
   const mod = aa[id];
   aa.actions.push(
@@ -560,6 +551,18 @@ aa.is.nip4 =s=>
 };
 
 
+// return sorted relay list for outbox
+aa.u.outbox =(a=[],sets=[])=>
+{
+  if (!sets.length) sets = [aa.r.o.w,'k10002'];
+  if (!a?.length) return [];
+  let relays = aa.r.common(a,sets);
+  let outbox = aa.fx.intersect(relays,a);
+  let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.v);
+  return sorted_outbox;
+};
+
+
 // post event
 aa.clk.post =e=>
 {
@@ -700,7 +703,7 @@ aa.u.sign =async event=>
       aa.log('you need a signer');
       resolve(false)
     }
-    window.nostr.signEvent(event).then(e=>resolve(e));
+    window.nostr.signEvent(event).then(resolve);
   });
 };
 
@@ -712,15 +715,11 @@ aa.u.mk =(k,v)=>
   switch (k)
   {
     case 'npub':
-      l = aa.mk.l('li',{id:aa.u.def.id+'_'+k,cla:'item'});
       let link = aa.mk.nostr_link(v,'view');
       link.classList.add('key');
       link.title = 'view u';
-      l.append(
-        link,
-        ' ',
-        aa.mk.l('span',{cla:'val',con:v})
-      );
+      l = aa.mk.l('li',{id:aa.u.def.id+'_'+k,cla:'item'});
+      l.append(link,' ',aa.mk.l('span',{cla:'val',con:v}));
       break;
       
     default: l = aa.mk.item(k,v);
@@ -818,53 +817,6 @@ aa.u.wot =async()=>
   return wot
 };
 
-aa.u.outbox =(a=[],sets=[])=>
-{
-  if (!sets.length) sets = [aa.r.o.w,'k10002'];
-  // console.log(sets);
-  if (!a?.length) return [];
-  let relays = aa.fx.common_relays(a,sets);
-  // console.log(relays);
-  let outbox = aa.fx.intersect(relays,a);
-  console.log(outbox);
-  let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.v);
-  console.log(sorted_outbox);
-  return sorted_outbox;
-};
-
-aa.fx.common_relays =(a=[],sets=[])=>
-{
-  let common = {};
-  let offed = aa.fx.in_set(aa.r.o.ls,'off',0);
-  for (const x of a)
-  {
-    let has_set;
-    let relays = aa.db.p[x]?.relays;
-    if (relays) 
-    {
-      relays = aa.fx.in_sets_all(relays,sets);
-      if (relays.length) has_set = true;
-    }
-
-    for (const r of relays)
-    {
-      if (offed.includes(r)) continue;
-      if (!common[r]) common[r] = [];      
-      if (!common[r].includes(x)) common[r].push(x)
-    }
-
-    if (!has_set) 
-    {
-      for (const r of aa.fx.in_set(aa.r.o.ls,aa.r.o.r))
-      {
-        if (!common[r]) common[r] = [];
-        aa.fx.a_add(common[r],[x]);
-      }
-    }
-  }
-  return common
-};
-
 
 // encrypted direct message
 aa.kinds[4] =dat=>
@@ -936,10 +888,10 @@ aa.clk.yolo =async e=>
       for (const x of pubs)
       {
         let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
-        let common = aa.fx.a_common(relays,read_relays);
-        if (!common.common.length < 3)
+        let ab = aa.fx.a_ab(relays,read_relays);
+        if (!ab.inc.length < 3)
         {
-          relays.push(...common.uncommon.slice(0,3 - common.common.length))
+          relays.push(...ab.exc.slice(0,3 - ab.inc.length))
         }
 
         

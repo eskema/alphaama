@@ -142,20 +142,6 @@ aa.mk.butt =sa=>
 };
 
 
-// a button that will populate the input with a command text
-aa.mk.butt_action =(s,con=false,cla=false)=>
-{
-  const butt = aa.mk.l('button',
-  {
-    con:con?con:s,
-    cla:'butt',
-    clk:e=>{ aa.cli.v(localStorage.ns+' '+s) }
-  });
-  if (cla) butt.classList.add(cla);
-  return butt
-};
-
-
 // button that toggles the class 'expanded'
 aa.mk.butt_expand =(id,con=false)=>
 {
@@ -237,7 +223,10 @@ aa.mk.img_modal =(src,cla=false)=>
   if (cla) img.classList.add(cla);
   img.addEventListener('click',e=>{dialog.close()});
   // dialog.title = img.src;
-  dialog.append(img);
+  dialog.append(aa.mk.l('button',{con:'size',clk:e=>
+  {
+    img.classList.toggle('contained');
+  }}),img);
   dialog.showModal();
 };
 

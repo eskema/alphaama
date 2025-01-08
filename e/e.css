@@ -132,6 +132,10 @@
 .haz_solo .note:not(.in_path)::before,
 .haz_solo .note:not(.in_path) > *:not(.replies),
 
+.in_view > .replies:not(.expanded) > .note:not(.is_new):not(.has_new) > *:not(.replies),
+
+/*.replies:not(.expanded) > .note:not(.in_path),*/
+
 .view_e .note:not(.in_path),
 .view_p .note:not(.in_path),
 .view_e #notes > .note:not(.in_path),
@@ -655,7 +659,8 @@ a.author
 }
 
 .view_e .in_path:not(.in_view) > .content .paragraph,
-.replies:not(.expanded) .note:not(.is_new):not(.in_view).haz_new_reply > .content .paragraph
+.view_e .in_path:not(.in_view) > .content .paragraph,
+.replies:not(.expanded) .note:not(.is_new):not(.in_view).haz_new > .content .paragraph
 {
   font-size: var(--font-size-s);
   line-height: 1rem;
@@ -941,11 +946,6 @@ a.author
   z-index: 3;
 }
 
-.view_e .in_path:not(.in_view) > .by .actions,
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply > .by .actions
-{
-  display: none;
-}
 
 /* @end */
 
@@ -965,7 +965,7 @@ a.author
   padding-left: 0;
 }
 
-html:not(.viewing) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
 .note.out > .replies::after,
@@ -1243,12 +1243,11 @@ html:not(.viewing) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply
   padding: 0;
 }
 
-.note.tiny:not(.in_path) > .content > *,
-.note.tiny:not(.in_path) > .actions,
-.note.tiny:not(.in_path) > .tags_wrapper,
+.note.tiny:not(.in_view) > .content > *,
+.note.tiny:not(.in_view) > .tags_wrapper,
 .note.tiny:not(.in_path) > .replies,
-.note.tiny:not(.in_path) > .by .author .picture,
-.note.tiny:not(.in_path) > .by .author::before
+.note.tiny:not(.in_view) > .by .author .picture,
+.note.tiny:not(.in_view) > .by .author::before
 {
   display: none;
 }

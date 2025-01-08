@@ -136,7 +136,6 @@ aa.e.clear =s=>
 {
   document.getElementById('notes').textContent = '';
   document.getElementById('butt_e').dataset.count = 0;
-  // aa.fx.data_count(document.getElementById('butt_e'),'.note');
   aa.log('events cleared');
   aa.cli.fuck_off();
 };
@@ -176,7 +175,11 @@ aa.mk.det =(cla='',id='')=>
   if (id)
   {
     l.id = id;
-    aa.fx.expanded(id,1,l);
+    if (sessionStorage.hasOwnProperty(id))
+    {
+      if (sessionStorage[id] === 'expanded') l.classList.add('expanded');
+    }
+    else l.classList.add('expanded');
   }
   let summary = l.querySelector('summary');
   summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
@@ -314,6 +317,21 @@ aa.clk.mark_read =e=>
 };
 
 
+// merge two dat objects
+aa.fx.merge =(dis,dat)=>
+{
+  dis = Object.assign({},dis);
+  let merged,sets = ['seen','subs','clas','refs'];
+  for (const set of sets)
+  { 
+    if (!dis.hasOwnProperty(set)) { dis[set]=[]; merged=true; } 
+    if (!dat.hasOwnProperty(set)) dat[set]=[];
+    if (aa.fx.a_add(dis[set],dat[set])) merged=true;
+  }
+  return merged ? dis : false
+};
+
+
 // add event id to missing event list
 aa.e.miss_e =(xid,relays=[])=>
 {
@@ -437,7 +455,7 @@ aa.get.missing =async type=>
         // }
       }
     }
-  },500,'miss_'+type);
+  },200,'miss_'+type);
 };
 
 
@@ -774,7 +792,7 @@ aa.e.note_pre =dat=>
   if (d_tag?.length > 1) 
   {
     let ds = d_tag[1];
-    let id_a = `${dat.event.kind}:${dat.event.pubkey}:${ds}`;
+    let id_a = [dat.event.kind,dat.event.pubkey,ds].join('_');
     note.dataset.d = ds;
     note.dataset.id_a = id_a;
     let og = document.querySelector(`[data-id_a="${id_a}"]`);
@@ -865,6 +883,7 @@ aa.e.note_replace =(l,dat)=>
     b_rep.removeAttribute('open');
     aa.e.note_observer.observe(b);
   }
+  return b
 };
 
 
@@ -875,9 +894,6 @@ aa.e.note_rm =note=>
   delete aa.db.e[note.dataset.id];
   note.remove();
   aa.fx.count_upd(document.getElementById('butt_e'),false);
-  // let counter = document.getElementById('butt_e');
-  // counter.dataset.count = counter.dataset.count--;
-  // aa.fx.data_count(document.getElementById('butt_e'),'.note')
 };
 
 
@@ -934,7 +950,7 @@ aa.e.to_printer =dat=>
   //   aa.log('... incoming events');
   //   aa.e.root_count = 1;
   // }
-  aa.to(aa.e.printer,200,'printer');
+  aa.to(aa.e.printer,100,'printer');
 };
 
 aa.e.printer =()=>
@@ -987,9 +1003,7 @@ aa.e.print =dat=>
       if (aa.p.viewing && aa.p.viewing[1] === k_v) 
       {
         aa.p.viewing[0].push(l);
-        // aa.i.solo(l,k_v);
       }
-      // setTimeout(()=>{aa.i.d(dat)},300);
     }
   }
   else
@@ -997,7 +1011,7 @@ aa.e.print =dat=>
     if (l.classList.contains('blank') 
     || l.classList.contains('draft')) 
     {
-      aa.e.note_replace(l,dat);
+      l = aa.e.note_replace(l,dat);
     }
     else
     {
@@ -1016,15 +1030,17 @@ aa.e.print =dat=>
   if (dat.clas.includes('miss')) 
   {
     dat.clas = aa.fx.a_rm(dat.clas,['miss']);
-    if (dat.id_a) 
-    {
-      aa.get.quotes(dat.id_a);
-    }
-    else 
-    {
-      aa.get.quotes(xid);
-    }
   }
+  let id_a = dat.id_a ? aa.fx.an(dat.id_a) : xid;
+  aa.get.quotes(id_a);
+  // if (dat.id_a) 
+  // {
+  //   aa.get.quotes(aa.fx.an(dat.id_a));
+  // }
+  // else 
+  // {
+  //   aa.get.quotes(id_a);
+  // }
 };
 
 
@@ -1072,16 +1088,16 @@ aa.e.quote =o=>
     pubkey = aa.mk.p_link(pubkey);
     by.prepend(pubkey);
   }
-  setTimeout(()=>{aa.e.quote_upd(quote,o)},200);
+  setTimeout(()=>{aa.e.quote_upd(quote,o)},0);
   return quote
 };
 
-// quote event
+// quote PRE event
 aa.e.quote_a =o=>
 {
   const quote = aa.mk.l('blockquote',{cla:'note_quote'});
   quote.dataset.id_a = o.id_a;
-  setTimeout(()=>{aa.e.quote_a_upd(quote,o)},200);
+  setTimeout(()=>{aa.e.quote_a_upd(quote,o)},0);
   return quote
 };
 
@@ -1110,6 +1126,9 @@ aa.e.quote_upd =async(quote,o)=>
   }
   else
   {
+    if (!aa.temp.note_quotes) aa.temp.note_quotes = {};
+    if (!aa.temp.note_quotes[o.id]) aa.temp.note_quotes[o.id] = [];
+    aa.temp.note_quotes[o.id].push(quote);
     quote_classes.push('blank_quote');
     if (!has_pub) by.prepend(aa.mk.l('span',{con:'?'}));
     content = aa.mk.l('p',{cla:'paragraph'});
@@ -1124,7 +1143,7 @@ aa.e.quote_upd =async(quote,o)=>
     let relay = relays.length?relays[0]:'read';
     aa.e.miss_e(o.id,relays);
     let command = aa.q.def.id+' req';
-    let filter = '{"ids":["'+o.id+'"]}';
+    let filter = '{"ids":["'+o.id+'"],"eose":"close"}';
     by.append(aa.mk.butt_action(`${command} ${relay} ${filter}`,'req'));
   }
   quote.append(content)
@@ -1135,7 +1154,7 @@ aa.e.quote_upd =async(quote,o)=>
 // update blank quotes
 aa.e.quote_a_upd =async(quote,o)=>
 {
-  let id = o.id_a;
+  let id = aa.fx.an(o.id_a);
   let pub = o.pubkey;
   let p = await aa.db.get_p(pub);
   if (!p) p = aa.p.p(pub);
@@ -1145,10 +1164,10 @@ aa.e.quote_a_upd =async(quote,o)=>
   by.append(aa.mk.p_link(pub));
   aa.fx.color(pub,quote);
 
-  let a_note = document.querySelector('.note[data-id_a="'+id+'"]');
+  let a_note = document.querySelector('.note[data-id_a="'+o.id_a+'"]');
   let content = new DocumentFragment();
   let quote_classes = [];
-  if (a_note) 
+  if (a_note)
   {    
     by.append(aa.mk.nostr_link(a_note.id)); 
     let og_content = a_note.querySelector('.content');
@@ -1161,6 +1180,9 @@ aa.e.quote_a_upd =async(quote,o)=>
   }
   else
   {
+    if (!aa.temp.note_quotes) aa.temp.note_quotes = {};
+    if (!aa.temp.note_quotes[id]) aa.temp.note_quotes[id] = [];
+    aa.temp.note_quotes[id].push(quote);
     quote_classes.push('blank_quote');
     content = aa.mk.l('p',{cla:'paragraph'});
     
@@ -1171,16 +1193,7 @@ aa.e.quote_a_upd =async(quote,o)=>
       content.append(`\nrelays: ${o.relays}`);
       relays = o.relays
     }
-    aa.e.miss_a(id,relays);
-    // setTimeout(()=>
-    // {
-    //   aa.r.demand(['REQ','a_'+Date.now(),
-    //   {
-    //     kinds:[o.kind],
-    //     authors:[o.pubkey],
-    //     '#d':[o.identifier]
-    //   }],relays,{eose:'close'})
-    // },100)
+    aa.e.miss_a(o.id_a,relays);
   }
   quote.append(content)
   quote.classList.add(...quote_classes);
@@ -1194,32 +1207,36 @@ aa.e.quotes_to =async q_id=>
   aa.temp[q_id] = [];
   
   for (const id of ids)
-  { 
+  {
 
-    let selector = '.blank_quote[data-id="'+id+'"]';
-    let quotes = document.querySelector(selector);
-    if (quotes) quotes = document.querySelectorAll(selector);
-    if (quotes?.length)
+    if (!aa.temp.note_quotes?.hasOwnProperty(id)) continue;
+    let quotes = aa.temp.note_quotes[id];
+    if (!quotes?.length) continue;
+    // let selector = '.blank_quote[data-id="'+id+'"]';
+    // let quotes = document.querySelector(selector);
+    // if (quotes) quotes = document.querySelectorAll(selector);
+    if (aa.is.key(id))
     {
       let dat = await aa.db.get_e(id);
-      if (!dat) dat = {event:{"id":id}};
-      // let quote = aa.e.quote(dat.event);
-      setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote(dat.event))},100);
+      if (dat) 
+      {
+        delete aa.temp.note_quotes[id];
+        setTimeout(()=>{for(const q of quotes) q.replaceWith(aa.e.quote(dat.event))},0);
+      }
     }
     else 
     {
-      selector = '.blank_quote[data-id_a="'+id+'"]';
-      quotes = document.querySelector(selector);
-      if (quotes) quotes = document.querySelectorAll(selector);
-      if (quotes?.length)
-      {
+      // selector = '.blank_quote[data-id_a="'+id+'"]';
+      // quotes = document.querySelector(selector);
+      // if (quotes) quotes = document.querySelectorAll(selector);
+      // if (quotes?.length)
+      // {
         // let dat = await aa.db.get_e(id);
         // if (!dat) dat = {event:{"id":id}};
-        let a = id.split(':');
-        let dis = {kind:a[0],pubkey:a[1],identifier:a[2],id_a:id};
-        // let quote = aa.e.quote_a(dis);
-        setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote_a(dis))},100);
-      }
+        let [kind,pubkey,sd] = id.split('_');
+        let dis = {kind:kind,pubkey:pubkey,sd:sd,id_a:id};
+        setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote_a(dis))},0);
+      // }
     }
   }
 };
@@ -1230,7 +1247,7 @@ aa.get.quotes =async id=>
   const q_id = 'get_quotes';
   if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
   aa.temp[q_id].push(id);
-  aa.to(aa.e.quotes_to,200,q_id);
+  aa.to(aa.e.quotes_to,500,q_id);
 };
 
 
@@ -1273,6 +1290,15 @@ aa.e.reply_blank =(note,reply,reply_tag)=>
 };
 
 
+// request replies to note
+aa.clk.req =e=>
+{
+  const note = e.target.closest('.note');
+  const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
+  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
+};
+
+
 // search notes content for value
 aa.e.search =async s=>
 {
@@ -1292,10 +1318,6 @@ aa.e.section_mutated =a=>
 {
   for (const mutation of a) 
   {
-    // const section = mutation.target.closest('section');
-    // aa.fx.count_upd(document.getElementById('butt_e'));
-    // let butt = section.querySelector('section > header > .butt');
-    // // aa.fx.data_count(butt,'.note');
     aa.e.root_count = mutation.target.childNodes.length;
     const needs = aa.e.root_count > parseInt(localStorage.pagination||0);
     if (needs && !aa.l.classList.contains('needs_pagin')) 
@@ -1819,7 +1841,7 @@ aa.db.get_a =async id_a=>
   } 
   catch(er)
   {
-    console.log('no id from '+id_a);
+    // console.log('no id from '+id_a);
   }
   if (id)
   {
@@ -1833,25 +1855,34 @@ aa.db.get_a =async id_a=>
 
 
 // merge event dat
-aa.db.merge_e =dat=>
-{
-  const xid = dat.event.id;
-  if (!aa.db.e[xid])
-  {
-    aa.db.e[xid] = dat;
-    return dat;
-  } 
-  else 
-  {
-    const merged = aa.fx.merge(aa.db.e[xid],dat);
-    if (merged) 
-    {
-      aa.db.e[xid] = merged;
-      return merged
-    }
-    else return false
-  }
-};
+// aa.db.merge_e =dat=>
+// {
+//   const xid = dat.event.id;
+//   if (!aa.db.e[xid])
+//   {
+//     aa.db.e[xid] = dat;
+//     return dat;
+//   } 
+//   else 
+//   {
+//     let dis = Object.assign({},aa.db.e[xid]);
+//     let sets = dat.entries.filter(i=>Array.isArray(i[1])).map(i=>i[0]);
+//     let upd;
+//     for (const set of sets)
+//     { 
+//       if (!dis.hasOwnProperty(set)) { dis[set]=[]; upd=true; } 
+//       if (!dat.hasOwnProperty(set)) dat[set]=[];
+//       if (aa.fx.a_add(dis[set],dat[set])) upd=true;
+//     }
+//     const merged = upd ? dis : false
+//     if (merged) 
+//     {
+//       aa.db.e[xid] = merged;
+//       return merged
+//     }
+//     else return false
+//   }
+// };
 
 
 // update event on database
