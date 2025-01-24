@@ -493,7 +493,7 @@ li.item > .val
   opacity: .6;
 }
 
-.item details
+.item > details
 {
   overflow: hidden;
 }
@@ -607,9 +607,16 @@ li.item > .val
   top: 0;
 }
 
+.mod .item 
+{
+  border-bottom: 1px solid rgba(var(--color-c),0);
+  border-top: 1px solid rgba(var(--color-c),0);
+}
+
 .mod details
 {
   text-align: left;
+  grid-column: 1 / -1;
 }
 
 .mod[open] .list
@@ -831,7 +838,7 @@ li.item > .val
   border: none;
   color: rgb(var(--color-d));
   display: grid;
-  max-height: calc(var(--media-max-height) + var(--line));
+  max-height: 100vh; /*calc(var(--media-max-height) + var(--line));*/
   max-width: 100vw;
   padding: 0;
 }
@@ -1013,7 +1020,8 @@ li.item > .val
   box-shadow: var(--pad) 0px var(--pad) rgb(var(--color-b));
 }
 
-.l > p 
+.l > p,
+.l > details p 
 {
   margin: 0;
   line-height: 1.5;
@@ -1136,9 +1144,12 @@ html:not(.cli_expanded) .l:not(.is_new),
     background: rgba(var(--color-a));
   }
 
-  .l .item:hover
+  .mod .item:hover
   {
-    background-color: rgb(var(--color-b));
+    border-bottom: 1px dotted rgb(var(--color-c));
+    border-top: 1px dotted rgb(var(--color-c));
+    /*background-color: rgb(var(--color-c));*/
+    /*color: rgb(var(--color-a));*/
   }
   
   html:not(.cli_expanded) .l.is_new:hover
@@ -1146,11 +1157,7 @@ html:not(.cli_expanded) .l:not(.is_new),
     background: rgb(var(--color-a));
     z-index: 9;
   }
-  
-  .l .item .butt:hover
-  {
-    color: rgb(var(--color-a));
-  }
+
   
 }
 

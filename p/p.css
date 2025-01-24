@@ -63,41 +63,41 @@
 
 /* @group p section details */
 
-.profile > * > details 
+.profile details 
 {
   border-bottom: 1px dotted rgb(var(--color-b));
 }
 
-.profile > * > details > summary
+.profile details > summary
 {
   line-height: 1.5rem;
   padding: 0 var(--padm);
 }
 
-.profile > * > details > .butt
+.profile details > .butt
 {
   display: inline;
   font-size: var(--font-size-s);
   line-height: 1.5rem;
 }
 
-.profile > * > details > .butt::before
+.profile details > .butt::before
 {
   content: "=> ";
 }
 
-.profile > * > details > .butt::after
+.profile details > .butt::after
 {
   content: " (" attr(data-last)")";
   opacity: .5;
 }
 
-.profile > * > details[open]
+.profile details[open]
 {
   padding-bottom: var(--pad);
 }
 
-.profile > * > details[open] > summary
+.profile details[open] > summary
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-e));
@@ -110,7 +110,7 @@
   overflow-x: scroll;
 }
 
-.profile > * > details > .list
+.profile details > .list
 {
   padding: var(--pad-l) 0;
 }

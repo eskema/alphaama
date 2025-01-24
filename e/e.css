@@ -53,6 +53,12 @@
   ;
 }
 
+.note.draft
+{
+  border-left: 1px dashed rgba(var(--color-main),1);
+  border-top: 1px dashed rgba(var(--color-main),1);
+}
+
 .note.in_path.in_view
 {
   border-color: rgb(var(--color-e));
@@ -92,7 +98,7 @@
   margin: 0;
 }
 
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   border-left: 1px dotted rgba(var(--c),1);
   border-top: 1px dotted rgba(var(--c),1);
@@ -768,7 +774,7 @@ a.author
   max-height: 50vh;
   overflow-y:  scroll;
   padding-bottom: var(--line);
-  z-index: 1;
+  z-index: 2;
   /*background: red;*/
 }
 
@@ -783,11 +789,13 @@ a.author
 
 .tags_wrapper[open] summary
 {
+  background: rgba(var(--color-b),.9);
   font-size: var(--font-size-s);
   padding-bottom: var(--pad);
+  padding-top: var(--font-size);
   position: sticky;
   text-align: left;
-  top: var(--font-size);
+  top: 0;
 }
 
 .tags_wrapper:not(.empty) summary::before,
@@ -807,7 +815,17 @@ a.author
   content: ":";
 }
 
-.in_view > .tags_wrapper
+.in_view > .tags_wrapper summary
+{
+  font-size: var(--font-size-s);
+}
+
+.in_view > .tags_wrapper:not(.empty):not([open]) summary::after
+{
+  content:":[" attr(data-count) "]";
+}
+
+/*.in_view > .tags_wrapper
 {
   bottom: 0;
   max-height: unset;
@@ -823,10 +841,10 @@ a.author
 .in_view > .tags_wrapper .tags
 {
   justify-content: center;
-}
+}*/
 
 .view_e .in_path:not(.in_view) > .tags_wrapper,
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply > .tags_wrapper
+.replies:not(.expanded) .note:not(.in_view):not(.is_new).haz_new_reply > .tags_wrapper
 {
   display: none;
 }
@@ -965,9 +983,9 @@ a.author
   padding-left: 0;
 }
 
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
 .note.out > .replies::after,
 .haz_solo .note:not(.in_path) > .replies::after
 {

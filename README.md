@@ -110,9 +110,7 @@ to run a request on specific relays, type: `.aa q run <fid> <relset>`
 - `fid` is explained above
 - `relset` is a single relay url or relay set; by leaving it empty, it defaults to your `read` relay set
 
-to query outbox relays, type: `.aa q out <fid>` 
-- `fid` is explained above
-- `relset` is a single relay url or relay set; by leaving it empty, it defaults to your `read` relay set
+to run a query as outbox, type: `.aa q out <fid>` 
 
 to close a request, type: `.aa q close <fid>`
 - if `fid` is omitted all opened requests will be closed instead

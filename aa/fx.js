@@ -163,7 +163,7 @@ aa.fx.count_upd =(l,pos=true)=>
   if (!l) return;
   if (!l.dataset.count) l.dataset.count = 0;
   if (pos) l.dataset.count++;
-  else l.dataset.count--;
+  else l.dataset.count--
 };
 
 
@@ -171,7 +171,7 @@ aa.fx.count_upd =(l,pos=true)=>
 aa.fx.dataset_add =async(l,s,items)=>
 {
   let a = l.dataset[s] ? l.dataset[s].trim().split(' ') : [];
-  if (aa.fx.a_add(a,items)) l.dataset[s] = a.join(' ');
+  if (aa.fx.a_add(a,items)) l.dataset[s] = a.join(' ')
 };
 
 
@@ -180,7 +180,7 @@ aa.fx.decode =s=>
 {
   let decoded;
   try { decoded = NostrTools.nip19.decode(s).data }
-  catch (er) { console.error('aa.fx.decode',s,er) };
+  catch (er) { console.error('aa.fx.decode',s,er) }
   return decoded
 };
 
@@ -188,7 +188,7 @@ aa.fx.decode =s=>
 // decrypt nip4/44
 aa.fx.decrypt =async(s='')=>
 {
-  let [text,pubkey] = s.split(aa.regex.fw);
+  let [text,pubkey] = s.split(aa.fx.regex.fw);
   if (text) text = text.trim();
   if (!pubkey) pubkey = aa.u.p.xpub;
   if (aa.is.nip4(text)) return await window.nostr.nip04.decrypt(pubkey,text);
@@ -252,13 +252,19 @@ aa.fx.keypair =(secret=false)=>
 
 
 // return kind information
-aa.fx.kind_type =kind=> NostrTools.kinds.classifyKind(kind);
-
-
-aa.fx.kinds_type =n=>
+aa.fx.kind_type =kind=> 
 {
+  if (typeof kind === 'string') kind = parseInt(kind.trim());
+  return NostrTools.kinds.classifyKind(kind);
+}
+
+
+aa.fx.kinds_type =kind=>
+{
+  if (typeof kind === 'string') kind = parseInt(kind.trim());
   let kinds = Object.entries(NostrTools.kinds);
-  return kinds.filter(k=>typeof k[1]==='number'&&k[1]===n).map(i=>i[0])
+  let result = kinds.filter(k=>typeof k[1]==='number'&&k[1]===kind).map(i=>i[0]);
+  return result.length ? result[0] : 'unknown'
 };
 
 
@@ -350,7 +356,7 @@ aa.fx.load =()=>
     {
       action:[id,'decode'],
       required:['text'],
-      description:'decrypt cyphertext',
+      description:'decode nip19 (bech32) to hex',
       exe:mod.decode
     },
     {
@@ -359,6 +365,12 @@ aa.fx.load =()=>
       description:'decrypt cyphertext',
       exe:mod.decrypt
     },
+    {
+      action:[id,'kind'],
+      required:['kind_number:n'],
+      description:'what is kind',
+      exe:mod.kinds_type
+    },
   )
 };
 
@@ -366,15 +378,15 @@ aa.fx.load =()=>
 // splits a string and then 
 // for each item, split and pass through function
 // then a callback
-aa.fx.loop =(job,s,done)=>
-{
-  const a = s.split(',');
-  if (a.length)
-  {
-    for (const task of a) job(task.trim().split(' '));
-    if (done) done();
-  }
-};
+// aa.fx.loop =(job,s,done)=>
+// {
+//   const a = s.split(',');
+//   if (a.length)
+//   {
+//     for (const task of a) job(task.trim().split(' '));
+//     if (done) done();
+//   }
+// };
 
 
 // merge datasets from one element to another
@@ -610,17 +622,18 @@ aa.fx.sorts =
 };
 
 
-aa.fx.tag ={};
 // create a tag from event
-aa.fx.tag.a =o=>
+aa.fx.tag_a =o=>
 {
   let s = aa.fx.tag_value(o.tags,'d');
   let ida = `${o.kind}:${o.pubkey}:${s}`;
   let tag = ['a',ida];
   return tag
 };
+
+
 // create p tag from hex pubkey
-aa.fx.tag.p =x=>
+aa.fx.tag_p =x=>
 {
   let tag = [];
   tag.push('p',x);
@@ -630,14 +643,16 @@ aa.fx.tag.p =x=>
     if (p.relay.length) tag.push(p.relay);
     if (p.petname.length) 
     {
-      if (!p.relay.length) tag.push('');
+      if (tag.length === 2) tag.push('');
       tag.push(p.petname);
     }
   }
   return tag
 };
+
+
 // create e tag from hex id
-aa.fx.tag.e =(x,mark=false)=>
+aa.fx.tag_e =(x,mark=false)=>
 {
   let tag = [];
   tag.push('e',x);
@@ -645,13 +660,14 @@ aa.fx.tag.e =(x,mark=false)=>
   if (relay) tag.push(relay);
   if (mark) 
   {
-    if (!relay) tag.push('');
+    if (tag.length===2) tag.push('');
     tag.push(mark);
-  }  
+  }
+  
   return tag
 };
 // create q tag from hex id
-aa.fx.tag.q =(x)=>
+aa.fx.tag_q =(x)=>
 {
   let tag = [];
   tag.push('q',x);
@@ -672,45 +688,81 @@ aa.fx.tags_values =(a,s)=>
   return a.filter(t=>t[0]===s).map(r=>r[1].trim())
 };
 
+// timestamp from string variable
+aa.fx.time_convert =s=>
+{
+  if (s === 'now') return aa.now;
+  let sliced = s.slice(2);
+  if (s.startsWith('n_')) 
+  {
+    const d = new Date();
+    d.setDate(d.getDate() - parseInt(sliced));
+    return Math.floor(d.getTime()/1000)
+  }
+  if (s.startsWith('d_')) 
+  {
+    try { return Date.parse(sliced) / 1000 } 
+    catch (er) { return aa.now }
+  }
+  return parseInt(s)
+};
 
-// creates a link from tag array
-// aa.fx.tag_a =a=>
+
+// timestamp from date string
+// aa.fx.time_d =s=>
 // {
-//   const tail =(a,l,i=1)=>{if (a.length>i)l.dataset.tail=a.slice(i).join(', ')};
-//   const type = a[0];
-//   const value = a[1];
-//   let relay;
-//   const l = aa.mk.l('a',{cla:'tag_a_'+type,clk:aa.clk.a});
-//   switch(type)
-//   {
-//     case 'e':
-//       relay = a[2];
-//       const nid = aa.fx.encode('note',value);
-//       l.textContent = nid;
-//       l.href = '#'+nid;
-//       if (relay) l.dataset.relay = relay;
-//       tail(a,l,3);
-//       break;
-//     case 'p':
-//       relay = a[2];
-//       const petname = a[3];
-//       const npub = aa.fx.encode('npub',value);
-//       l.textContent = npub;
-//       l.href = '#'+npub;
-//       if (relay) l.dataset.relay = relay;
-//       if (petname) l.dataset.petname = petname;
-//       tail(a,l,4);
-//       break;
-//     default:
-//       l.textContent = value;
-//       l.href = '#'+aa.fx.an(value);
-//       tail(a,l,2);
-//   }
-//   return l
+//   try { return Date.parse(s) / 1000 } 
+//   catch (er) { return false }
 // };
 
 
+// for display
+aa.fx.time_display =ts=> aa.fx.time_nice(new Date(ts*1000));
+aa.fx.time_display_ext =ts=> aa.fx.time_display(ts)+' ~'+aa.fx.time_elapsed(new Date(ts*1000));
 
+
+// time elapsed from date to string
+aa.fx.time_elapsed =date=>
+{
+  const seconds_ago = Math.floor((new Date() - date) / 1000);
+  const pad =t=> (Math.floor(t)+'').padStart(2,'0');  
+  let t = seconds_ago / 31536000; // years
+  if (t > 1) return pad(t)+'Y'; 
+  t = seconds_ago / 2592000; // months
+  if (t > 1) return pad(t)+'M'; 
+  t = seconds_ago / 86400; // days
+  if (t > 1) return pad(t)+'d'; 
+  t = seconds_ago / 3600; // hours
+  if (t > 1) return pad(t)+'h'; 
+  t = seconds_ago / 60; // minutes
+  if (t > 1) return pad(t)+'m'; 
+  return pad(seconds_ago)+'s'; // seconds
+};
+
+
+// nice format date to string
+aa.fx.time_nice =d=>
+{ 
+  return d.getFullYear()
+  +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
+  +'/'+ (d.getDate()  + '').padStart(2,'0') 
+  +' '+ (d.getHours() + '').padStart(2,'0') 
+  +':'+ (d.getMinutes()+'').padStart(2,'0') 
+  +':'+ (d.getSeconds()+'').padStart(2,'0')
+};
+
+
+// timestamp to date
+aa.fx.time_to_date =s=> new Date(s*1000);
+
+
+// timeout with delay if called again before for some time
+aa.fx.to =async(f,t,s)=>
+{
+  if (!aa.temp.todo) aa.temp.todo = {};
+  if (aa.temp.todo.hasOwnProperty(s)) clearTimeout(aa.temp.todo[s]);
+  aa.temp.todo[s] = setTimeout(()=>{f(s)},t);
+};
 
 
 // truncate string to start and end 

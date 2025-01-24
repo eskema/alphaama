@@ -39,7 +39,7 @@
   margin: 0;
   padding: 0;
   user-select: none;
-  transition: var(--trans-quart);
+  /*transition: var(--trans-quart);*/
   word-break: keep-all;
   white-space: pre;
   overflow-x: scroll;

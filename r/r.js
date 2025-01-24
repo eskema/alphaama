@@ -120,7 +120,10 @@ aa.r.c_on =(url,o=false)=>
     if (o)
     {
       if (o.req?.length) relay.q[o.req[1]] = o;
-      for (const ev in o.send) relay.send[ev] = o.send[ev];
+      for (const ev in o.send) 
+      {
+        relay.send[ev] = o.send[ev];
+      }
     }
     
     relay.ws = new WebSocket(url);
@@ -150,6 +153,8 @@ aa.r.close =(k,id)=>
 };
 
 
+// given a list of pubkeys
+// return list of relays in common by the pubkeys
 aa.r.common =(a=[],sets=[])=>
 {
   let common = {};
@@ -186,22 +191,42 @@ aa.r.common =(a=[],sets=[])=>
 
 // remove relay(s)
 aa.r.del =s=>
-{  
-  const work =a=>
+{
+  const as = s.split(',');
+  if (as.length)
   {
-    const url = aa.is.url(a.shift().trim())?.href;
-    if (url && aa.r.o.ls[url])
+    for (const i of as) 
     {
-      if (aa.r.active[url])
+      let a = i.trim().split(' ');
+      const url = aa.is.url(a.shift().trim())?.href;
+      if (url && aa.r.o.ls[url])
       {
-        aa.r.force_close([url]);
-        delete aa.r.active[url];
+        if (aa.r.active[url])
+        {
+          aa.r.force_close([url]);
+          delete aa.r.active[url];
+        }
+        delete aa.r.o.ls[url];
+        document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
       }
-      delete aa.r.o.ls[url];
-      document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
     }
-  };
-  aa.fx.loop(work,s);
+  }
+
+  // const work =a=>
+  // {
+  //   const url = aa.is.url(a.shift().trim())?.href;
+  //   if (url && aa.r.o.ls[url])
+  //   {
+  //     if (aa.r.active[url])
+  //     {
+  //       aa.r.force_close([url]);
+  //       delete aa.r.active[url];
+  //     }
+  //     delete aa.r.o.ls[url];
+  //     document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
+  //   }
+  // };
+  // aa.fx.loop(work,s);
   aa.mod_save(aa.r);
 };
 
@@ -328,23 +353,23 @@ aa.r.from_o =(o,sets=false)=>
 
 
 // returns relays object from tags array (kind-10002,etc..)
-aa.r.from_tags =(tags,sets=[])=>
-{
-  let relays = {};
-  for (const tag of tags)
-  {
-    const [type,url,permission] = tag;
-    const href = aa.is.url(url)?.href;
-    if (href)
-    {
-      let relay = relays[href] = {sets:[]};
-      if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
-      else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
-      else aa.fx.a_add(relay.sets,['read','write',...sets]);
-    }
-  }
-  return relays
-}
+// aa.r.from_tags =(tags,sets=[])=>
+// {
+//   let relays = {};
+//   for (const tag of tags)
+//   {
+//     const [type,url,permission] = tag;
+//     const href = aa.is.url(url)?.href;
+//     if (href)
+//     {
+//       let relay = relays[href] = {sets:[]};
+//       if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
+//       else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
+//       else aa.fx.a_add(relay.sets,['read','write',...sets]);
+//     }
+//   }
+//   return relays
+// }
 
 
 // relay hint notice
@@ -396,6 +421,42 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     }
   };
   aa.log(aa.mk.notice(notice));
+};
+
+
+
+// event template for relay list
+aa.kinds[10002] =dat=>
+{
+  const note = aa.e.note_regular(dat);
+  note.classList.add('root','tiny');
+  
+  aa.db.get_p(dat.event.pubkey).then(p=>
+  {
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (aa.p.events_newer(p,dat.event))
+    {
+      let relays = {};
+      let sets = ['k10002'];
+      let tags = dat.event.tags.filter(i=>i[0]==='r');
+      for (const tag of tags)
+      {
+        const [type,url,permission] = tag;
+        const href = aa.is.url(url)?.href;
+        if (!href) continue;
+        let relay = relays[href] = {sets:[]};
+        if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
+        else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
+        else aa.fx.a_add(relay.sets,['read','write',...sets]);
+      }
+      // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
+      aa.p.relays_add(relays,p);
+      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      aa.p.save(p);
+    }
+  });
+  
+  return note
 };
 
 
@@ -457,7 +518,7 @@ aa.mk.k10002 =(s='')=>
         {
           pubkey:aa.u.p.xpub,
           kind:10002,
-          created_at:aa.t.now,
+          created_at:aa.now,
           content:'',
           tags:relays
         };
@@ -714,7 +775,7 @@ aa.r.try =(relay,dis)=>
   {
     if (!relay.failed_cons) relay.failed_cons = 0; 
     relay.failed_cons = relay.failed_cons++;
-    if (relay.failed_cons < 10) setTimeout(()=>{aa.r.try(relay,dis)},500)
+    if (relay.failed_cons < 10) setTimeout(()=>{aa.r.try(relay,dis)},500*relay.failed_cons)
   }
   aa.r.upd_state(relay.ws.url);
 };
@@ -802,26 +863,6 @@ aa.r.ws_open =async e=>
 };
 
 
-// event template for relay list
-aa.kinds[10002] =dat=>
-{
-  const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
-  
-  aa.db.get_p(dat.event.pubkey).then(p=>
-  {
-    if (!p) p = aa.p.p(dat.event.pubkey);
-    if (aa.p.events_newer(p,dat.event))
-    {
-      let relays = aa.r.from_tags(dat.event.tags,['k10002']);
-      aa.p.relays_add(relays,p);
-      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-      aa.p.save(p);
-    }
-  });
-  
-  return note
-};
 
 
 // event template for relay data from monitor nip66
@@ -834,4 +875,4 @@ aa.kinds[30166] =dat=>
 };
 
 
-window.addEventListener('load',aa.r.load);
+// window.addEventListener('load',aa.r.load);

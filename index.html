@@ -8,15 +8,43 @@
 </head>
 <body>
 <script>
-// load alphaama, 
-// optionally override defaults with options object
+// load alphaama
 aa.load({
-  //styles:[], tools:[], mods:[],
+  // override defaults
+  // styles:[], tools:[], mods:[],
 });
+
+const on_loaded =()=>
+{
+  if (!aa.is.mod_loaded(aa.mod_loaded.map(i=>i.id)))
+  {
+    setTimeout(on_loaded,100);
+    return
+  }
+
+  fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
+  {
+    if (!text) return;
+    let article = aa.mk.l('article',
+    {
+      cla:'content parsed',
+      app:aa.parse.content(text,aa.is.trusted(4))
+    });
+    let title = text.slice(0,text.indexOf('\n'));
+    if (title.startsWith('=') || title.startsWith('#')) title = title.slice(1).trim();
+    
+    let details = aa.mk.details(title,article);
+    details.id = 'aa_read_me';
+    document.getElementById('view')?.prepend(details);
+  });
+};
+
+
 window.addEventListener('load',e=>
 {
   // run with defaults
   aa.run();
+  on_loaded()
 
   
   // var doc = aa.asciidoc.loadFile('/README.adoc');
@@ -35,37 +63,37 @@ window.addEventListener('load',e=>
 
   // details.append(div)
   // fetch and append readme
-  fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
-  {
-    if (!text) return;
-    let article = aa.mk.l('article',
-    {
-      cla:'content parsed',
-      app:aa.parse.content(text,aa.is.trusted(4))
-    });
-    let title = text.slice(0,text.indexOf('\n'));
-    if (title.startsWith('=') || title.startsWith('#')) title = title.slice(1).trim();
+  // fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
+  // {
+  //   if (!text) return;
+  //   let article = aa.mk.l('article',
+  //   {
+  //     cla:'content parsed',
+  //     app:aa.parse.content(text,aa.is.trusted(4))
+  //   });
+  //   let title = text.slice(0,text.indexOf('\n'));
+  //   if (title.startsWith('=') || title.startsWith('#')) title = title.slice(1).trim();
     
-    // let options = 
-    // {
-    //   'to_file': false,
-    //   'attributes': 
-    //   { 
-    //     'showtitle':true,
-    //     // template_dir: '/path/to/templates/pug',
-    //   }
-    // };
-    // const doc = aa.asciidoc.load(text,options);
+  //   // let options = 
+  //   // {
+  //   //   'to_file': false,
+  //   //   'attributes': 
+  //   //   { 
+  //   //     'showtitle':true,
+  //   //     // template_dir: '/path/to/templates/pug',
+  //   //   }
+  //   // };
+  //   // const doc = aa.asciidoc.load(text,options);
 
-    // let title = doc.getDocumentTitle();
-    // html = doc.convert();
-    // article.innerHTML = html;
+  //   // let title = doc.getDocumentTitle();
+  //   // html = doc.convert();
+  //   // article.innerHTML = html;
     
-    let details = aa.mk.details(title,article);
-    details.id = 'aa_read_me';
-    document.getElementById('view')?.prepend(details);
+  //   let details = aa.mk.details(title,article);
+  //   details.id = 'aa_read_me';
+  //   document.getElementById('view')?.prepend(details);
     
-  });
+  // });
 });
 </script>
 </body></html>

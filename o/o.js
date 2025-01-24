@@ -41,46 +41,90 @@ aa.o =
 // add key as value
 aa.o.add =s=>
 {
-  const work =a=>
+  const as = s.split(',');
+  if (as.length)
   {
-    let [k,v] = a;
-    if (k && v)
+    for (const i of as) 
     {
-      let old_v = localStorage[k];
-      localStorage[k] = v;
-      aa.mod_ui(aa.o,k);
-      let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
-      let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
-      log.append(' ',undo);
-      aa.log(log);
+      let a = i.trim().split(' ');
+      let [k,v] = a;
+      if (k && v)
+      {
+        let old_v = localStorage[k];
+        localStorage[k] = v;
+        aa.mod_ui(aa.o,k);
+        let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
+        let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
+        log.append(' ',undo);
+        aa.log(log);
+      }
     }
-  };
-  aa.fx.loop(work,s);
+  }
+
+  // const work =a=>
+  // {
+  //   let [k,v] = a;
+  //   if (k && v)
+  //   {
+  //     let old_v = localStorage[k];
+  //     localStorage[k] = v;
+  //     aa.mod_ui(aa.o,k);
+  //     let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
+  //     let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
+  //     log.append(' ',undo);
+  //     aa.log(log);
+  //   }
+  // };
+  // aa.fx.loop(work,s);
 };
 
 
 // remove option (if not default)
 aa.o.del =s=>
 {
-  const work =a=>
+  const as = s.split(',');
+  if (as.length)
   {
-    const id = aa.o.def.id;
-    const dis = localStorage.ns+' '+id+' rm ';
-    const k = a.shift().trim();
-    if (k && localStorage[k])
+    for (const i of as) 
     {
-      if (!aa.o.def.hasOwnProperty(k))
+      let a = i.trim().split(' ');
+      const id = aa.o.def.id;
+      const dis = localStorage.ns+' '+id+' rm ';
+      const k = a.shift().trim();
+      if (k && localStorage[k])
       {
-        localStorage.removeItem(k);
-        let l = document.getElementById(id+'_'+k)
-        if (l) l.remove();
-        aa.log(dis+k);
+        if (!aa.o.def.hasOwnProperty(k))
+        {
+          localStorage.removeItem(k);
+          let l = document.getElementById(id+'_'+k)
+          if (l) l.remove();
+          aa.log(dis+k);
+        }
+        else aa.log(dis+'key cannot be deleted');
       }
-      else aa.log(dis+'key cannot be deleted');
+      else aa.log(dis+'key not found');
     }
-    else aa.log(dis+'key not found');
-  };
-  aa.fx.loop(work,s)
+  }
+
+  // const work =a=>
+  // {
+  //   const id = aa.o.def.id;
+  //   const dis = localStorage.ns+' '+id+' rm ';
+  //   const k = a.shift().trim();
+  //   if (k && localStorage[k])
+  //   {
+  //     if (!aa.o.def.hasOwnProperty(k))
+  //     {
+  //       localStorage.removeItem(k);
+  //       let l = document.getElementById(id+'_'+k)
+  //       if (l) l.remove();
+  //       aa.log(dis+k);
+  //     }
+  //     else aa.log(dis+'key cannot be deleted');
+  //   }
+  //   else aa.log(dis+'key not found');
+  // };
+  // aa.fx.loop(work,s)
 };
 
 
@@ -154,20 +198,34 @@ aa.o.mk =(k,v)=>
 
 
 // reset one, multiple or all values
-aa.o.reset =s=>
+aa.o.reset =(s='')=>
 {
-  s.trim();
   if (s)
   {
-    aa.fx.loop(a=>
+    const as = s.split(',');
+    if (as.length)
     {
-      const v = a[0];
-      if (aa.o.def.ls[v])
+      for (const i of as) 
       {
-        localStorage[v] = aa.o.def.ls[v];
-        aa.mod_ui(aa.o,k);
+        let a = i.trim().split(' ');
+        const v = a[0];
+        if (aa.o.def.ls[v])
+        {
+          localStorage[v] = aa.o.def.ls[v];
+          aa.mod_ui(aa.o,k);
+        }
       }
-    },s);
+    }
+
+    // aa.fx.loop(a=>
+    // {
+    //   const v = a[0];
+    //   if (aa.o.def.ls[v])
+    //   {
+    //     localStorage[v] = aa.o.def.ls[v];
+    //     aa.mod_ui(aa.o,k);
+    //   }
+    // },s);
     aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
   } 
   else if (window.confirm('reset all options?')) 
@@ -178,7 +236,7 @@ aa.o.reset =s=>
 };
 
 
-// saves
+// save and update ui
 aa.o.save =()=>
 {
   aa.o.o = {id:'o',ls:localStorage};
@@ -205,4 +263,4 @@ aa.is.trusted =trust=>
 };
 
 
-window.addEventListener('load',aa.o.load);
+// window.addEventListener('load',aa.o.load);

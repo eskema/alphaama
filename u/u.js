@@ -7,12 +7,11 @@ user you
 */
 
 
-aa.styleshit('/u/u.css');
+aa.mk.styleshit('/u/u.css');
 
 aa.u = 
 {
   def:{id:'u',ls:{}},
-  requires:['o','p','e'],
   get p(){ return aa.db.p[aa.u.o.ls.xpub] },
 };
 
@@ -58,8 +57,9 @@ aa.clk.cancel =e=>
 aa.clk.edit =e=>
 {
   const note = e.target.closest('.note');
-  aa.cli.v(aa.db.e[note.dataset.id].event.content);
+  let dat = aa.db.e[note.dataset.id] || aa.cli.dat;
   aa.e.note_rm(note);
+  aa.cli.v(dat.event.content);
 };
 
 
@@ -72,8 +72,8 @@ aa.e.draft =async dat=>
   aa.db.e[dat.event.id] = dat;
   aa.e.print(dat);
   
-  let sect = document.getElementById('e');
-  if (sect && !sect.classList.contains('expanded')) aa.clk.expand({target:sect});
+  let target = document.getElementById('e');
+  if (target && !target.classList.contains('expanded')) aa.clk.expand({target});
 };
 
 
@@ -129,7 +129,7 @@ aa.e.normalise =event=>
 {
   if (!event.pubkey) event.pubkey = aa.u.p.xpub;
   if (!event.kind) event.kind = 1;
-  if (!event.created_at) event.created_at = aa.t.now;
+  if (!event.created_at) event.created_at = aa.now;
   if (!event.tags) event.tags = [];
   if (!event.content) event.content = '';
   return event
@@ -292,7 +292,7 @@ aa.u.load =()=>
       action:['mk','e'],
       required:['JSON'],
       description:'mk event from JSON',
-      exe:aa.e.draft_event_from_JSON
+      exe:aa.mk.e
     },
     {
       action:['fx','pow'],
@@ -385,7 +385,7 @@ aa.mk.k0 =async s=>
       {
         pubkey:aa.u.p.xpub,
         kind:0,
-        created_at:aa.t.now,
+        created_at:aa.now,
         content:JSON.stringify(md),
         tags:[]
       };
@@ -499,7 +499,7 @@ aa.u.k3_del =async s=>
 // Encrypted direct Message
 aa.mk.k4 =async(s='')=>
 {
-  let [pubkey,text] = s.split(aa.regex.fw);
+  let [pubkey,text] = s.split(aa.fx.regex.fw);
   let event = {kind:4,tags:[['p',pubkey]]};
   event.content = await window.nostr.nip04.encrypt(pubkey,text);
   aa.e.draft(aa.mk.dat(
@@ -527,7 +527,7 @@ aa.mk.k7 =async s=>
   {
     pubkey:aa.u.p.xpub,
     kind:7,
-    created_at:aa.t.now,
+    created_at:aa.now,
     content:reaction,
     tags:[]
   };
@@ -858,7 +858,8 @@ aa.mk.note_encrypted =(dat,note)=>
 aa.fx.split_str =(s='')=>
 {
   if (s.startsWith('"" ')) return ['',s.slice(3)];
-  let dis = s?.match(aa.regex.str);
+  else if (s.startsWith('""')) return ['',s.slice(2)];
+  let dis = s?.match(aa.fx.regex.str);
   if (dis && dis.length) return [dis[1],s.slice(dis.index+dis[0].length).trim()]
   return [s]
 };
@@ -884,7 +885,7 @@ aa.clk.yolo =async e=>
       dat.clas = aa.fx.a_rm(dat.clas,['draft']);
       aa.fx.a_add(dat.clas,['not_sent']);
       let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
-      let pubs = aa.p.authors_from_tags(dat.event.tags);
+      let pubs = dat.event.tags.filter(aa.is.tag_p).map(i=>i[1]);
       for (const x of pubs)
       {
         let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
@@ -913,4 +914,4 @@ aa.clk.yolo =async e=>
   })
 };
 
-window.addEventListener('load',aa.u.load);
+// window.addEventListener('load',aa.u.load);

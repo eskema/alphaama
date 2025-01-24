@@ -165,8 +165,7 @@
 
 .cli_expanded #u_u.expanded
 {
-  padding-bottom: calc(90vh - var(--size) - var(--line) - var(--size));
-  /*max-height: calc(100vh - var(--size) - var(--line) - var(--size))*/
+  padding-bottom: calc(100vh - var(--size) - var(--line) - var(--size));
 }
 
 /*#u_u.expanded #butt_u_u,*/

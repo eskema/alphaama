@@ -43,40 +43,43 @@ const aa =
   mk:{},
   mods:
   [
-    {id:'c',src:'/c/c.js?v='+aa_version,requires:[]},
-    {id:'o',src:'/o/o.js?v='+aa_version,requires:['c']},
-    {id:'r',src:'/r/r.js?v='+aa_version,requires:[]},
+    {id:'cli',src:'/c/c.js?v='+aa_version,requires:[]},
+    {id:'o',src:'/o/o.js?v='+aa_version,requires:['cli']},
+    {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
     {id:'e',src:'/e/e.js?v='+aa_version,requires:['o']},
-    {id:'p',src:'/p/p.js?v='+aa_version,requires:[]},
+    {id:'r',src:'/r/r.js?v='+aa_version,requires:['p','e']},
     {id:'q',src:'/q/q.js?v='+aa_version,requires:['o','r']},
-    {id:'u',src:'/u/u.js?v='+aa_version,requires:['o','p','e']},
-    {id:'i',src:'/i/i.js?v='+aa_version,requires:['e','p']},
+    {id:'i',src:'/i/i.js?v='+aa_version,requires:['p','e']},
+    {id:'u',src:'/u/u.js?v='+aa_version,requires:['p','e','o','r']},
     {id:'w',src:'/w/w.js?v='+aa_version,requires:['r']},
   ],
+  get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
   state:{},
   styles:
   [
     '/aa/aa.css?v='+aa_version,
   ],
-  t:{ get now(){ return Math.floor(Date.now()/1000) }},
   temp:{print:{},refs:{},orphan:{}},
   tools:
   [
+    
     '/aa/fx.js?v='+aa_version,
-    '/aa/mk.js?v='+aa_version,
+    // '/aa/mk.js?v='+aa_version,
+    '/av/av.js?v='+aa_version,
     // '/aa/db.js?v='+aa_version,
-    '/aa/state.js?v='+aa_version,
+    // '/aa/state.js?v='+aa_version,
   ],
   ui:
   {
     last_top: 0,
   },
   viewing:false,
+  view:false,
   views:[],
 };
 
-aa.l = document.documentElement;
+
 
 // web cache navigation for offline use
 // if ('serviceWorker' in navigator && ) navigator.serviceWorker.register('/cash.js');
@@ -96,29 +99,58 @@ aa.is.act =s=>
 
 
 // is alphanumeric and underscore
-aa.is.an =s=> aa.regex.an.test(s);
+aa.is.an =s=> aa.fx.regex.an.test(s);
 
+
+// make button
+aa.mk.butt =sa=> 
+{
+  let con,cla,clk;
+  if (Array.isArray(sa))
+  {
+    con = sa[0];
+    if (sa[1]) 
+    {
+      cla = sa[1];
+      if (sa[2]) clk = sa[2];
+      else clk = cla;
+    }
+    else clk = cla = con;      
+  }
+  else clk = cla = con = sa;
+  return aa.mk.l('button',{con:con,cla:'butt '+cla,clk:aa.clk[clk]});
+};
+
+
+// button that toggles the class 'expanded'
+aa.mk.butt_expand =(id,con=false)=>
+{
+  const butt = aa.mk.l('button',
+  {
+    con:con||id,
+    cla:'butt',
+    id:'butt_'+id,
+    clk:aa.clk.expand
+  });
+  butt.dataset.controls = id
+  return butt
+};
+
+
+// make event wrapper object
+aa.mk.dat =(o={})=>
+{
+  const dat ={};
+  dat.event = o.event ?? {};
+  dat.seen = o.seen ?? [];
+  dat.subs = o.subs ?? [];
+  dat.clas = o.clas ?? [];
+  dat.refs = o.refs ?? [];
+  return dat
+};
 
 // web cache worker
 aa.db.cash = { get new(){ return new Worker('/cash.js')} };
-
-
-// checks if element has no children and is empty, ignores trailing spaces
-aa.is.empty =l=>
-{
-  if (!l) return true;
-  const len = l.childNodes.length;
-  if (!len) return true;
-  else
-  {
-    if (l.firstChild.nodeType === 3)
-    {
-      const s = (l.textContent+'').trim();
-      if (!s || s === ' ') return true;
-    }
-  }
-  return false;
-};
 
 
 // adds a clicked class to show interaction
@@ -162,12 +194,12 @@ aa.parse.content =(s,trusted)=>
         let word = words[i].trim();
         if (!word.length) continue;
 
-        if (aa.regex.url.test(word)) 
+        if (aa.fx.regex.url.test(word)) 
         {
           let dis_node = aa.parser('url',word,trusted);
           l.append(dis_node,' ');
         }
-        else if (aa.regex.nostr.test(word)) 
+        else if (aa.fx.regex.nostr.test(word)) 
         {
           let parsed = aa.parser('nostr',word);
           let quote = parsed.querySelector('blockquote');
@@ -178,7 +210,7 @@ aa.parse.content =(s,trusted)=>
           }
           else l.append(parsed);       
         }
-        else if (aa.regex.hashtag.test(word)) 
+        else if (aa.fx.regex.hashtag.test(word)) 
         {
           let dis_node = aa.parser('hashtag',word);
           l.append(dis_node,' ');
@@ -194,6 +226,10 @@ aa.parse.content =(s,trusted)=>
   }
   return df
 };
+
+
+// count items in db store
+aa.db.count =async(s='')=>await aa.db.get('idb',{count:{store:s,key:''}});
 
 
 // expand 
@@ -220,6 +256,23 @@ aa.clk.expand =e=>
     }
     aa.fx.scroll(l,{behavior:'smooth',block:block});
   });
+};
+
+
+// make details element
+aa.mk.details =(s,l=false,open=false)=>
+{ 
+  const details = aa.mk.l('details');
+  if (open) details.open = true;
+  const summary = aa.mk.l('summary',{con:s});
+  details.append(summary);
+  if (!l) return details;
+  details.append(l);
+  // let is_empty = l.classList.contains('empty'); 
+  // if (is_empty) details.classList.add('empty');
+  if (open) details.open = true;
+  else if (l.classList.contains('list')) summary.dataset.after = l.childNodes.length;
+  return details;
 };
 
 
@@ -255,11 +308,39 @@ aa.dialog =async o=>
 };
 
 
-// checks if page is loading from iframe
-aa.is.iframe =()=>
+// get the dialog element or create it if not found
+aa.mk.dialog =()=>
 {
-  try {return window.self !== window.top} 
-  catch(er) {return true}
+  let dialog = document.getElementById('dialog');
+  if (!dialog) 
+  {
+    dialog = aa.mk.l('dialog',{id:'dialog'});
+    document.body.insertBefore(dialog,document.body.lastChild.previousSibling);
+    dialog.addEventListener('close',e=>
+    {
+      dialog.removeAttribute('title');
+      dialog.textContent = '';
+    });
+  }
+  return dialog
+};
+
+
+// checks if element has no children and is empty, ignores trailing spaces
+aa.is.empty =l=>
+{
+  if (!l) return true;
+  const len = l.childNodes.length;
+  if (!len) return true;
+  else
+  {
+    if (l.firstChild.nodeType === 3)
+    {
+      const s = (l.textContent+'').trim();
+      if (!s || s === ' ') return true;
+    }
+  }
+  return false;
 };
 
 
@@ -276,47 +357,6 @@ aa.db.get =async(s,o)=>
     }
     db.postMessage(o);
   });
-};
-
-
-// make element with options
-aa.mk.l =(tag_name,o=false)=>
-{
-  const l = document.createElement(tag_name);
-  if (!o || typeof o !== 'object') return l;
-  for (const k in o)
-  {
-    const v = o[k];
-    switch (k)
-    {
-      case 'con': l.textContent = v; break;
-      case 'id':  l.id = v; break;
-      case 'cla': l.className = v; break;
-      case 'bef': l.dataset.before = v; break;
-      case 'aft': l.dataset.after = v; break;
-      case 'lab': l.dataset.label = v; break;
-      case 'ref': l.href = v; break;
-      case 'rel': l.rel = v; break;
-      case 'src': l.src = v; break;
-      case 'tit': l.title = v; break;
-      case 'app': l.append(v); break;
-      case 'clk': l.addEventListener('click',v); break;
-      case 'nam': l.name = v; break;
-      case 'val': l.value = v; break;
-      case 'pla': l.placeholder = v; break;
-      case 'tab': l.tabIndex = v; break;
-      case 'siz': l.sizes = v; break;
-      case 'typ': l.type = v; break;
-    }
-  }
-  return l
-};
-
-
-// add stylesheet
-aa.styleshit =s=>
-{ 
-  document.head.append(aa.mk.l('link',{rel:'stylesheet',ref:s})) 
 };
 
 
@@ -378,6 +418,90 @@ aa.head_scripts =async scripts=>
 aa.db.idb = { get new(){ return new Worker('/aa/db_idb.js')} };
 
 
+// checks if page is loading from iframe
+aa.is.iframe =()=>
+{
+  try {return window.self !== window.top} 
+  catch(er) {return true}
+};
+
+
+// make generic image
+aa.mk.img =(src)=>
+{
+  const l = aa.mk.l('img',{cla:'content-img',src:src});
+  l.loading = 'lazy';
+  l.addEventListener('click',e=>{aa.mk.img_modal(src)});
+  return l
+};
+
+
+// show image in modal on click
+aa.mk.img_modal =(src,cla=false)=>
+{
+  const dialog = aa.mk.dialog();
+  const img = aa.mk.l('img',
+  {
+    cla:'modal-img contained'+(cla?' '+cla:''),
+    src:src,
+    clk:e=>{dialog.close()}
+  });
+  dialog.append(
+    aa.mk.l('button',
+    {
+      con:'full',
+      cla:'butt modal',
+      clk:e=>
+      {
+        let text = e.target.textContent;
+        e.target.textContent = e.target.textContent === 'full' 
+        ? 'contained' 
+        : 'full';
+        img.classList.toggle('contained')
+      }
+    }),
+    img
+  );
+  dialog.showModal();
+};
+
+
+// make generic list item from key : value
+aa.mk.item =(k='',v,tag_name='li')=>
+{
+  let l = aa.mk.l(tag_name,{cla:'item item_'+k});
+  if (Array.isArray(v))  
+  {
+    if (typeof v[0]!=='object')
+    {
+      if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
+      l.append(aa.mk.l('span',{cla:'val',con:v.join(', ')}));
+    }
+    else 
+    {
+      let list = aa.mk.ls({});
+      if (v.length) list.classList.remove('empty');
+      for (let i=0;i<v.length;i++) 
+      {
+        list.append(aa.mk.item(''+i,v[i]));
+      }
+      l.append(aa.mk.details(k,list));
+    }
+  }
+  else if (v && typeof v==='object') 
+  {
+    l.append(aa.mk.details(k,aa.mk.ls({ls:v})))
+  }
+  else 
+  {
+    if (v === null) v = 'null';
+    if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
+    l.append(aa.mk.l('span',{cla:'val',con:v}));
+  }
+  return l
+};
+
+
 // parse JSON
 aa.parse.j =son=>
 {
@@ -398,6 +522,58 @@ aa.parse.j =son=>
 
 // is a valid nostr key
 aa.is.key =x=> aa.is.x(x) && x.length === 64; 
+
+
+// make element with options
+aa.mk.l =(tag_name,o=false)=>
+{
+  const l = document.createElement(tag_name);
+  if (!o || typeof o !== 'object') return l;
+  for (const k in o)
+  {
+    const v = o[k];
+    switch (k)
+    {
+      case 'con': l.textContent = v; break;
+      case 'id':  l.id = v; break;
+      case 'cla': l.className = v; break;
+      case 'bef': l.dataset.before = v; break;
+      case 'aft': l.dataset.after = v; break;
+      case 'lab': l.dataset.label = v; break;
+      case 'ref': l.href = v; break;
+      case 'rel': l.rel = v; break;
+      case 'src': l.src = v; break;
+      case 'tit': l.title = v; break;
+      case 'app': l.append(v); break;
+      case 'clk': l.addEventListener('click',v); break;
+      case 'nam': l.name = v; break;
+      case 'val': l.value = v; break;
+      case 'pla': l.placeholder = v; break;
+      case 'tab': l.tabIndex = v; break;
+      case 'siz': l.sizes = v; break;
+      case 'typ': l.type = v; break;
+    }
+  }
+  return l
+};
+
+
+// make a regular link
+aa.mk.link =(url,text=false,title=false)=>
+{
+  let l;
+  if (!text) text = url;
+  if (aa.is.url(url))
+  {
+    l = aa.mk.l('a',{cla:'content_link',ref:url,con:text});
+    l.rel = 'noreferrer noopener';
+    l.target = '_blank';
+  }
+  else l = aa.mk.l('span',{cla:'content_link',con:text});
+  if (title) l.title = title;
+  
+  return l
+};
 
 
 // wip
@@ -425,12 +601,14 @@ aa.load =(o={})=>
   aa.styles_loaded = o.styles ? o.styles : aa.styles;
   aa.head_styles(aa.styles_loaded);
   aa.dependencies_loaded = o.dependencies ? o.dependencies : aa.dependencies;
-  aa.head_scripts(aa.dependencies_loaded);
   aa.tools_loaded = o.tools ? o.tools : aa.tools;
-  aa.head_scripts(aa.tools_loaded);
-  aa.mods_loaded = o.mods ? o.mods : aa.mods;
-  aa.head_scripts(aa.mods_loaded.map(i=>i.src));
-  // for (const mod_o of aa.mods_loaded) aa.mod_scripts(mod_o);
+  aa.head_scripts([...aa.dependencies_loaded,...aa.tools_loaded]);
+  
+  aa.l = document.documentElement;
+  aa.view = aa.mk.l('main',{id:'view'});
+  aa.mod_l = aa.mk.l('div',{id:'mods'});
+  aa.mod_loaded = o.mods ? o.mods : aa.mods;
+  for (const mod_o of aa.mod_loaded) aa.mod_scripts(mod_o);
 
   aa.actions.push(
     {
@@ -454,6 +632,12 @@ aa.load =(o={})=>
       description:'math stuff',
       exe:aa.math
     },
+    {
+      action:['db','count'],
+      required:['store'],
+      optional:['key_range'],
+      exe:aa.db.count
+    }
   );
 
   fetch('/stuff/nostr_kinds.json')
@@ -515,15 +699,79 @@ aa.logs_clear =async s=>
 };
 
 
+// make list element from object
+aa.mk.ls =o=>
+{
+  // o = 
+  // { 
+  //   id:string,
+  //   cla:string,
+  //   l:element,
+  //   ls:object,
+  //   sort:string,
+  //   mk:function 
+  // }
+
+  let l = o.l;
+  if (!l)
+  {
+    l = aa.mk.l('ul',{cla:'list'});
+    if (o.id) l.id = o.id;
+    if (o.cla) l.classList.add(...o.cla.split(' '));
+  }
+  l.textContent = '';
+  
+  if (o.ls && Object.keys(o.ls).length) 
+  {
+    const entries = Object.entries(o.ls);
+    if (o.sort) aa.fx.sort_by(entries,o.sort);
+    for (let i=0;i<entries.length;i++)
+    {
+      const [k,v] = entries[i];
+      l.append( o.hasOwnProperty('mk') ? o.mk(k,v) : aa.mk.item(k,v));
+    }
+  }
+  else l.classList.add('empty');
+  return l
+};
+
+
 aa.math =(s='')=>
 {
   return math.evaluate(s)
 };
 
 
+// make mod
+aa.mk.mod =mod=>
+{
+  let o = {id:mod.def.id,ls:mod.o.ls};
+  if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
+  let mod_l = aa.mk.details(mod.def.id,aa.mk.ls(o));
+  mod_l.classList.add('mod');
+  if (mod.l) 
+  {
+    mod.l.replaceWith(mod_l);
+    mod.l = mod_l;
+  }
+  else 
+  {
+    mod.l = mod_l;
+    if (aa.mod_l) 
+    {
+      const last = [...aa.mod_l.children]
+      .filter(i=> o.id < i.querySelector('summary').textContent)[0];
+      aa.mod_l.insertBefore(mod_l,last);
+    }
+    else aa.log(mod_l)
+  }
+};
+
+
 // load mod
 aa.mod_load =async(mod)=>
 {
+
   if (!mod.o) 
   {
     mod.o = await aa.db.idb.ops({get:{store:'stuff',key:mod.def.id}});
@@ -550,12 +798,11 @@ aa.mod_load_old =async mod=>
 };
 
 
-
 // checks if required mods have loaded
-aa.is.mods_loaded =a=>
+aa.is.mod_loaded =required=>
 {
-  for (const id of a) if (!aa[id]?.o) return false
-  return true;
+  for (const id of required) if (!aa.hasOwnProperty(id)) return false
+  return true
 };
 
 
@@ -577,18 +824,16 @@ aa.mod_save = async mod=>
 // append mod head scripts when required mods have been loaded
 aa.mod_scripts =o=>
 {
-  if (aa.is.mods_loaded(o.requires)) 
+  // console.log(o);
+  if (aa.is.mod_loaded(o.requires))
   {
     let script = aa.mk.l('script',{src:o.src});
-    script.onload =()=>
+    document.head.append(script);
+    script.addEventListener('load',e=>
     {
       if (aa.hasOwnProperty(o.id)
       && aa[o.id].hasOwnProperty('load')) aa[o.id].load()
-    };
-    // script.setAttribute('cross-origin','');
-    document.head.append(script);
-    // aa.head_scripts(o.srcs);
-    // aa[o.id].load();
+    });
   }
   else 
   {
@@ -602,20 +847,38 @@ aa.mod_scripts =o=>
 
 // add server item with sets to mod
 aa.mod_servers_add =(mod,s)=>
-{   
-  const work =a=>
+{
+  const as = s.split(',');
+  if (as.length)
   {
-    let url_string = a.shift().trim();
-    const url = aa.is.url(url_string)?.href;
-    if (url)
+    for (const i of as) 
     {
-      if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
-      aa.fx.a_add(mod.o.ls[url].sets,a);
-      aa.mod_ui(mod,url);
+      let a = i.trim().split(' ');
+      let url_string = a.shift().trim();
+      const url = aa.is.url(url_string)?.href;
+      if (url)
+      {
+        if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
+        aa.fx.a_add(mod.o.ls[url].sets,a);
+        aa.mod_ui(mod,url);
+      }
     }
-  };
-  aa.fx.loop(work,s);
+  }
   aa.mod_save(mod);
+
+  // const work =a=>
+  // {
+  //   let url_string = a.shift().trim();
+  //   const url = aa.is.url(url_string)?.href;
+  //   if (url)
+  //   {
+  //     if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
+  //     aa.fx.a_add(mod.o.ls[url].sets,a);
+  //     aa.mod_ui(mod,url);
+  //   }
+  // };
+  // aa.fx.loop(work,s);
+  // aa.mod_save(mod);
 };
 
 
@@ -640,16 +903,31 @@ aa.mod_servers_butts =(mod,l,o)=>
 // remove set from server
 aa.mod_setrm =(mod,s)=>
 {
-  const work =a=>
+  const as = s.split(',');
+  if (as.length)
   {
-    let url_string = a.shift().trim();
-    const url = aa.is.url(url_string)?.href;
-    const server = mod.o.ls[url];
-    if (!server) return;
-    server.sets = aa.fx.a_rm(server.sets,a);
-    aa.mod_ui(mod,url);
-  };
-  aa.fx.loop(work,s);
+    for (const i of as) 
+    {
+      let a = i.trim().split(' ');
+      let url_string = a.shift().trim();
+      const url = aa.is.url(url_string)?.href;
+      const server = mod.o.ls[url];
+      if (!server) return;
+      server.sets = aa.fx.a_rm(server.sets,a);
+      aa.mod_ui(mod,url);
+    }
+  }
+
+  // const work =a=>
+  // {
+  //   let url_string = a.shift().trim();
+  //   const url = aa.is.url(url_string)?.href;
+  //   const server = mod.o.ls[url];
+  //   if (!server) return;
+  //   server.sets = aa.fx.a_rm(server.sets,a);
+  //   aa.mod_ui(mod,url);
+  // };
+  // aa.fx.loop(work,s);
   aa.mod_save(mod)
 };
 
@@ -668,6 +946,65 @@ aa.mod_ui =(mod,k)=>
     mod_l.classList.remove('empty');
     mod_l.parentElement.classList.remove('empty');
   } 
+};
+
+
+// log a notice
+aa.mk.notice =o=>
+{
+// o =
+// {
+//   title:'',
+//   description:'',
+//   butts:
+//   {
+//    no:{title:'',exe:()=>{}},
+//    yes:{title:'',exe:()=>{}},
+//   }
+// }
+
+  let l = aa.mk.l('div',{cla:'notice'});
+  if (o.hasOwnProperty('id')) 
+  {
+    l.id = o.id;
+  }
+  if (o.hasOwnProperty('title')) 
+  {
+    l.append(aa.mk.l('p',{cla:'title',con:o.title}));
+  }
+  if (o.hasOwnProperty('description')) 
+  {
+    l.append(aa.mk.l('p',{cla:'description',con:o.description}));
+  }
+  for (const b in o.butts)
+  {
+    let bt = o.butts[b];
+    l.append(aa.mk.l('button',{con:bt.title,cla:'butt '+b,clk:bt.exe}));
+  }
+  return l
+};
+
+
+// make a nostr link
+aa.mk.nostr_link =(s='',con=false)=>
+{
+  const a = aa.mk.l('a',
+  {
+    cla:'nostr_link',
+    con:con||s.slice(0,12),
+    ref:'#'+s,
+    // clk:aa.clk.a
+  });
+  setTimeout(()=>{
+    a.addEventListener('click',aa.clk.a)
+  },200);
+
+  if (!s) 
+  {
+    a.removeAttribute('href');
+    a.classList.add('empty');
+  }
+  return a
 };
 
 
@@ -691,6 +1028,62 @@ aa.db.cash.ops =async o=> await aa.db.get('cash',o);
 aa.db.idb.ops =async o=> await aa.db.get('idb',o);
 
 
+// wrapper for aa.parse functions
+aa.parser =(parse_id,s,trust,regex_id)=>
+{
+  const df = new DocumentFragment();
+  if (!regex_id) regex_id = parse_id;
+  const matches = [...s.matchAll(aa.fx.regex[regex_id])];
+  let index = 0;
+  for (const match of matches) 
+  {
+    df.append(match.input.slice(index,match.index));
+    let parsed = aa.parse[parse_id](match,trust);
+    let childs = parsed.childNodes.length;
+    if (childs > 2) index = match.index + match.input.length;
+    else index = match.index + match[0].length;
+    df.append(parsed);
+  }
+  if (index < s.length) df.append(s.slice(index));
+  return df
+};
+
+
+// qr code
+aa.mk.qr =s=>
+{
+  let l = aa.mk.l('div',{cla:'qrcode'});
+  aa.temp.qr = new QRCode(l,
+  {
+    text:s.trim(),
+    width: 512,
+    height: 512,
+    colorDark : "#000000",
+    colorLight : "#ffffff",
+    correctLevel : QRCode.CorrectLevel.H
+  });
+  let img = l.querySelector('img');
+  img.classList.add('qr');
+  img.addEventListener('click',e=>{aa.mk.img_modal(img.src,'qr')});
+  return img
+};
+
+
+// reusable regex
+aa.fx.regex = 
+{
+  get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
+  get hashtag(){ return /(\B[#])[\w+-]*/g },
+  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
+  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
+  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu },
+  get str(){ return /"([^"]+)"/ }, // text in quotes ""
+  get fw(){ return /(?<=^\S+)\s/ }, // first word
+};
+
+
 // tries to delete everything saved locally 
 // and then reload clean
 aa.reset =()=>
@@ -710,130 +1103,60 @@ aa.reset =()=>
 // if no options found, run with defaults
 aa.run =(o={})=>
 {
-  aa.mod_l = aa.mk.l('div',{id:'mods'});
-  const main = aa.mk.l('main',{id:'view'});
-  document.body.prepend(main);
+  document.body.prepend(aa.mk.header(),aa.view);
+  let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
+  u_u.append(aa.mod_l);
+  document.body.insertBefore(u_u,document.body.lastChild.previousSibling);
+
   if (aa.is.iframe()) aa.l.classList.add('rigged');
   aa.wl.lock();
   aa.log((navigator.onLine ? 'on' : 'off') + 'line at '+location.origin);
-  
-  let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
-  u_u.append(aa.mod_l);
-  document.body.insertBefore(u_u,document.body.lastChild);
   aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  setTimeout(aa.state.pop,100);
   setTimeout(aa.logs_read,420);
 };
 
 
-// wrapper for aa.parse functions
-aa.parser =(parse_id,s,trust,regex_id)=>
+// make section element
+aa.mk.section =(id,expanded=false,l=false)=>
 {
-  const df = new DocumentFragment();
-  if (!regex_id) regex_id = parse_id;
-  const matches = [...s.matchAll(aa.regex[regex_id])];
-  let index = 0;
-  for (const match of matches) 
-  {
-    df.append(match.input.slice(index,match.index));
-    let parsed = aa.parse[parse_id](match,trust);
-    let childs = parsed.childNodes.length;
-    if (childs > 2) index = match.index + match.input.length;
-    else index = match.index + match[0].length;
-    df.append(parsed);
-  }
-  if (index < s.length) df.append(s.slice(index));
-  return df
+  const section = aa.mk.l('section',{id:id});
+  if (expanded) section.classList.add('expanded');
+  const section_header = aa.mk.l('header');
+  section_header.append(aa.mk.butt_expand(id));
+  section.append(section_header);
+  aa.view.append(section);
+  if (l) section.append(l);
+  return section
 };
 
 
-// reusable regex
-aa.regex = 
+// make server item
+aa.mk.server =(k,v)=>
 {
-  get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
-  get hashtag(){ return /(\B[#])[\w+-]*/g },
-  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
-  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
-  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
-  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
-  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu },
-  get str(){ return /"([^"]+)"/ }, // text in quotes ""
-  get fw(){ return /(?<=^\S+)\s/ }, // first word
+  k = aa.is.url(k);
+  if (!k) return false;
+
+  const l = aa.mk.l('li',{cla:'item server'});
+  const url_l = aa.mk.l('p',{cla:'url'});
+  url_l.append(
+    aa.mk.l('span',{cla:'protocol',con:k.protocol+'//'}),
+    aa.mk.l('span',{cla:'host',con:k.host}),
+    aa.mk.l('span',{cla:'pathname',con:k.pathname}),
+    aa.mk.l('span',{cla:'hashsearch',con:k.hash+k.search})
+  ); 
+  l.append(url_l); 
+  if (v.sets && v.sets.length) l.dataset.sets = v.sets;   
+  return l
 };
 
 
-// timestamp to date
-aa.t.to_date =s=> new Date(s*1000);
-
-
-// timestamp from date string
-aa.t.d =s=>
+// add stylesheet
+aa.mk.styleshit =s=>
 {
-  try { return Date.parse(s) / 1000 } 
-  catch (er) { return false }
-};
-
-
-// timestamp from n days ago 
-aa.t.n =days=>
-{
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return Math.floor(d.getTime()/1000)
-};
-
-
-// nice format date to string
-aa.t.nice =d=>
-{ 
-  return d.getFullYear()
-  +'/'+ (d.getMonth()+1+'').padStart(2,'0') 
-  +'/'+ (d.getDate()  + '').padStart(2,'0') 
-  +' '+ (d.getHours() + '').padStart(2,'0') 
-  +':'+ (d.getMinutes()+'').padStart(2,'0') 
-  +':'+ (d.getSeconds()+'').padStart(2,'0')
-};
-
-
-// time elapsed from date to string
-aa.t.elapsed =date=>
-{
-  const seconds_ago = Math.floor((new Date() - date) / 1000);
-  const pad =t=> (Math.floor(t)+'').padStart(2,'0');  
-  let t = seconds_ago / 31536000; // years
-  if (t > 1) return pad(t)+'Y'; 
-  t = seconds_ago / 2592000; // months
-  if (t > 1) return pad(t)+'M'; 
-  t = seconds_ago / 86400; // days
-  if (t > 1) return pad(t)+'d'; 
-  t = seconds_ago / 3600; // hours
-  if (t > 1) return pad(t)+'h'; 
-  t = seconds_ago / 60; // minutes
-  if (t > 1) return pad(t)+'m'; 
-  return pad(seconds_ago)+'s'; // seconds
-};
-
-
-// timestamp from string variable
-aa.t.convert =s=>
-{
-  if (s === 'now') return aa.t.now; 
-  if (s.startsWith('n_')) return aa.t.n(s.slice(2));
-  if (s.startsWith('d_')) return aa.t.d(s.slice(2));  
-  return parseInt(s)
-};
-
-
-// for display
-aa.t.display =timestamp=> aa.t.nice(aa.t.to_date(timestamp));
-aa.t.display_ext =ts=>aa.t.display(ts)+' ~'+aa.t.elapsed(aa.t.to_date(ts));
-
-
-// timeout with delay if called again before for some time
-aa.to =async(f,t,s)=>
-{
-  if (!aa.todo) aa.todo = {};
-  if (aa.todo.hasOwnProperty(s)) clearTimeout(aa.todo[s]);
-  aa.todo[s] = setTimeout(()=>{f(s)},t);
+  let l = aa.mk.l('link',{rel:'stylesheet',ref:s});
+  document.head.append(l);
+  return l
 };
 
 
@@ -841,7 +1164,7 @@ aa.to =async(f,t,s)=>
 aa.is.url =s=>
 {
   let url;
-  try { url = new URL(s) } catch(er) {}
+  try {url = new URL(s)}catch(er){}
   return url
 };
 
@@ -894,4 +1217,141 @@ aa.db.idb.worker = aa.db.idb.new;
 
 
 // is hexadecimal
-aa.is.x =s=> /^[A-F0-9]+$/i.test(s); 
+aa.is.x =s=> /^[A-F0-9]+$/i.test(s);
+
+
+
+// internal links
+aa.clk.a =e=>
+{
+  e.preventDefault();
+  let dis = e.target.getAttribute('href');
+  if (dis==='/') dis = '';
+  aa.state.view(dis);
+};
+
+
+// clear view
+aa.state.clear =()=>
+{
+  if (aa.viewing)
+  {
+    const in_view = aa.l.querySelector('.in_view');
+    if (in_view) 
+    {
+      in_view.classList.remove('in_view');
+      if (in_view.classList.contains('note'))
+      {
+        const in_path = aa.l.querySelectorAll('.in_path');
+        if (in_path) for (const l of in_path) l.classList.remove('in_path');
+      }
+    }
+  }
+  if (aa.state.l) aa.state.l.textContent = '';
+  aa.l.classList.remove('viewing','view_e','view_p');
+  aa.viewing = false;
+  for (const c of aa.clear) c();
+};
+
+
+// on load
+aa.mk.header =e=>
+{
+  const header = aa.mk.l('header',{id:'header'});
+  const caralho =  aa.mk.l('a',
+  {
+    id:'caralho',
+    ref:'/',
+    con:'A<3',
+    tit:'vai pró caralho',
+    clk:aa.clk.a
+  });
+  const state = aa.mk.l('h1',{id:'state',con:'dickbutt'});
+  state.dataset.pathname = location.pathname;
+  aa.state.l = state;
+  header.append(caralho,state);
+  return header
+};
+
+
+// pop state into view
+aa.state.pop =()=>
+{
+  let hash = location.hash;
+  let search = location.search;
+  if (hash.length) [hash,search] = location.hash.split('?');
+  if (!search) search = '';
+  let no_state = !history.state || !history.state.hasOwnProperty('view')
+  || history.state === '';
+  if (no_state) aa.state.view(hash,search);
+  else 
+  {
+    aa.state.clear();
+    const state = history.state.view;
+    if (state.length) 
+    {
+      document.title = 'A<3 '+state;
+      aa.state.resolve(state,search);  
+    }
+    else document.title = 'alphaama';
+    if (aa.state.l) aa.state.l.textContent = state;
+  }
+};
+
+
+// replace state
+aa.state.replace =s=>
+{
+  const dis = history.state;
+  dis.view = s;
+  const hash_is_h = dis.view.length ? dis.view : '';
+  const path = location.origin+location.pathname+hash_is_h;
+  history.replaceState(dis,'',path);
+};
+
+
+// resolve state view
+aa.state.resolve =(s,search)=>
+{
+  if (s.startsWith('#')) s = s.slice(1);
+  let has_view = false;
+  for (const v in aa.views)
+  {
+    if (s.startsWith(v)) 
+    {
+      has_view = true;
+      setTimeout(()=>{aa.views[v](s)},100);
+      break;
+    }
+  }
+  if (!has_view) aa.log('no view for '+s);
+};
+
+
+// view state or go back if same state
+aa.state.view =(s,search='')=>
+{
+  if (s?.length) s.trim();
+  if (search?.length) search = s.length?'?'+search:search;
+  let view = s+search;
+  let state,last;
+  if (!history.state || history.state.view !== view)
+  {
+    last = history.state?.view ?? '';
+    state = {view:view,last:last};
+
+  }
+  else 
+  {
+    last = history.state.last;
+    state = {view:last,last:view};
+    // history.pushState(dis,'',path);
+    // aa.state.pop()
+  }
+  history.pushState(state,'',location.origin+location.pathname+state.view);
+  aa.state.pop();
+  // history.back();
+};
+
+window.addEventListener('popstate',aa.state.pop);
+// window.addEventListener('load',aa.state.load);

@@ -91,7 +91,7 @@ indexed_db.ops.get_a =async(db,o)=>
   let done = 0;
   for (const item of o.a)
   {
-    odb.get(item).onsuccess=e=> 
+    odb.get(item).onsuccess=e=>
     {
       done++;
       let result = e.target.result
@@ -156,6 +156,15 @@ indexed_db.ops.put =async(db,o)=>
   
   // for (const chunk of chunks) for (const item of chunk) odb.put(item)
   for (const item of o.a) odb.put(item)
+};
+
+
+indexed_db.ops.count =async(db,o)=>
+{ // o = {store:'',key:''}
+  const odb = db.transaction(o.store,'readonly').objectStore(o.store);
+  // if (o.key) odb.count(IDBKeyRange.bound('startKey', 'endKey'));
+  const count = odb.count();
+  count.onsuccess =e=> postMessage(count.result);
 };
 
 

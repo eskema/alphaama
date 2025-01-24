@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-US" data-team="dark">
+<html lang="en-US" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,7 +14,7 @@
       padding: var(--pad);
     }
 
-    #team
+    #theme
     {
       justify-self: end;
     }
@@ -253,19 +253,19 @@ const resize_textarea =e=>
   e.target.style.height = e.target.scrollHeight+'px';
 };
 
-const dis_team =team=>
+const dis_theme =theme=>
 {
-  if (team === 'dark') return 'light';
+  if (theme === 'dark') return 'light';
   else return 'dark'
 };
 
-const change_team =e=>
+const change_theme =e=>
 {
   let l = e.target;
-  let team = l.textContent;
-  sessionStorage.team = team;
-  document.documentElement.dataset.team = team;
-  l.textContent = dis_team(team);
+  let theme = l.textContent;
+  sessionStorage.theme = theme;
+  document.documentElement.dataset.theme = theme;
+  l.textContent = dis_theme(theme);
 };
 
 window.addEventListener('resize',resize_textarea);
@@ -273,13 +273,13 @@ window.addEventListener('resize',resize_textarea);
 window.addEventListener('load',e=>
 {
   let header = document.querySelector('body > header');
-  if (!sessionStorage.team) sessionStorage.team = 'dark';
-  document.documentElement.dataset.team = sessionStorage.team;
-  let team = document.createElement('button');
-  team.id = 'team';
-  team.textContent = dis_team(sessionStorage.team);
-  team.addEventListener('click',change_team);
-  header.append(team);
+  if (!sessionStorage.theme) sessionStorage.theme = 'dark';
+  document.documentElement.dataset.theme = sessionStorage.theme;
+  let theme = document.createElement('button');
+  theme.id = 'theme';
+  theme.textContent = dis_theme(sessionStorage.theme);
+  theme.addEventListener('click',change_theme);
+  header.append(theme);
   
 
   let pubkey = document.getElementById('pubkey');

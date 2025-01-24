@@ -6,7 +6,7 @@ index filtering
 
 */
 
-aa.styleshit('/i/i.css');
+aa.mk.styleshit('/i/i.css');
 
 aa.i =
 {
@@ -67,7 +67,7 @@ aa.i.dex.at =(v,id)=>
   }
   if (l)
   {
-    l.textContent = s+aa.t.display(v);
+    l.textContent = s+aa.fx.time_display(v);
     l.href = '#'+aa.fx.encode('note',id);
     l.classList.remove('empty');
   }
