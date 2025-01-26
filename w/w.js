@@ -454,16 +454,6 @@ aa.mk.k7376 =async o=>
 //     [ "p", "e9fbced3a42dcf551486650cc752ab354347dd413b307484e4fd1818ab53f991" ], // recipient of nut zap
 // ]
 
-// nutzap butt clk event
-aa.clk.nzap =e=>
-{
-  const note = e.target.closest('.note');
-  const pub = note.dataset.pubkey;
-  const xid = note.dataset.id;
-  let t = `${localStorage.ns} mk 9321 ${localStorage.nzap}`;
-  t = `${t} ${pub} "${localStorage.nzap_memo}" ${xid}`;
-  aa.cli.v(t);
-};
 
 // s = amount_n pubkey_s_key memo_s_q id_s_key wid_s_an
 aa.mk.k9321 =async(s='')=>
@@ -777,6 +767,11 @@ aa.w.load =()=>
     aa.o.add('zap 21');
     aa.o.save();
   }
+  if (!localStorage.hasOwnProperty('zap_memo')) 
+  {
+    aa.o.add('zap_memo walLNutzap');
+    aa.o.save();
+  }
 
   aa.temp.quotes = {};
   let mod = aa.w;
@@ -900,6 +895,7 @@ aa.w.load =()=>
       exe:mod.redeem
     },
   );
+  aa.e.butts_for?.na?.push('nzap');
   aa.mod_load(mod).then(mod.start);
 };
 
@@ -972,6 +968,18 @@ aa.w.mk =(k,v)=>
   );
   l.append(details);
   return l
+};
+
+
+// nutzap butt clk event
+aa.clk.nzap =e=>
+{
+  const note = e.target.closest('.note');
+  const pub = note.dataset.pubkey;
+  const xid = note.dataset.id;
+  let t = `${localStorage.ns} mk 9321 ${localStorage.zap}`;
+  t = `${t} ${pub} "${localStorage.zap_memo}" ${xid}`;
+  aa.cli.v(t);
 };
 
 
@@ -1226,21 +1234,18 @@ aa.w.start =mod=>
     if (!mod.o.hasOwnProperty('redeemable')) mod.o.redeemable = [];
     aa.w.save();
   }
-  // if (aa.is.mod_loaded(mod)) 
-  // {
-    aa.mk.mod(mod);
-    let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
-    let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
-    
-    mod.l.insertBefore(upd_butt,document.getElementById(mod.def.id));
-    mod.l.insertBefore(add_butt,upd_butt);
-  // }
-  // else 
-  // {
-  //   if (!mod.attempts) mod.attempts = 1;
-  //   else mod.attempts++;
-  //   if (mod.attempts < 20) setTimeout(()=>{aa.w.start(mod)}, 100 * mod.attempts);
-  // }
+
+  aa.mk.mod(mod);
+  let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
+  let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
+  
+  let ids = mod.o.redeemable.map(i=>i[0]).join(' ');
+  let amount = mod.o.redeemable.map(i=>i[i]).reduce((a,b)=>a+b,0);
+  let redeem_butt = aa.mk.butt_action(`${mod.def.id} redeem ${ids}`,'🐿️['+amount+']');
+  
+  mod.l.insertBefore(upd_butt,document.getElementById(mod.def.id));
+  mod.l.insertBefore(add_butt,upd_butt);
+  mod.l.insertBefore(redeem_butt,upd_butt);
 };
 
 
@@ -1333,12 +1338,12 @@ aa.w.upg =(k,v)=>
       upd=1
     }
   }
-  if (!v.hasOwnProperty('history')) 
+  if (!v.hasOwnProperty('history'))
   {
     v.history = [];
     upd=1
   }
-  if (!v.hasOwnProperty('mints')) 
+  if (!v.hasOwnProperty('mints'))
   {
     v.mints = [];
     upd=1

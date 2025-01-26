@@ -112,7 +112,7 @@ aa.r.c_on =(url,o=false)=>
   }
 
   let relay = aa.r.active[url] ? aa.r.active[url] 
-  : aa.r.active[url] = {q:{},send:{},sent:[],cc:[]};
+  : aa.r.active[url] = {q:{},send:{},sent:[],cc:[],err:[]};
   
   if (relay.ws?.readyState !== 1)
   {
@@ -830,9 +830,12 @@ aa.r.ws_message =async e=>
 {
   const err = async e=> 
   { 
+    if (!aa.r.active[e.target.url].err) aa.r.active[e.target.url].err = [];
+    aa.r.active[e.target.url].err.push(e);
     aa.log('unknown data from '+e.target.url);
     console.log('unknown data from '+e.target.url,e);
   };
+  if (e.data.length > 100000) console.log(e.data.length,e.data);
 
   let a = aa.parse.j(e.data);
   if (a && Array.isArray(a))

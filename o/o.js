@@ -217,21 +217,13 @@ aa.o.reset =(s='')=>
       }
     }
 
-    // aa.fx.loop(a=>
-    // {
-    //   const v = a[0];
-    //   if (aa.o.def.ls[v])
-    //   {
-    //     localStorage[v] = aa.o.def.ls[v];
-    //     aa.mod_ui(aa.o,k);
-    //   }
-    // },s);
     aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
   } 
   else if (window.confirm('reset all options?')) 
   {
     localStorage.clear();
     for (const k in aa.o.def.ls) localStorage[k] = aa.o.def.ls[k];
+    aa.mod_ui(aa.o);
   }
 };
 

@@ -19,14 +19,12 @@
   box-sizing: border-box;
   display: grid;
   grid-template-areas: 
-  "by       by"
-  "content  content"
-/*  "after    after"*/
-  "opentags opentags"
-  "tags     after"
-  "versions versions"
-  "replies  replies"
-  ;
+    "by       by"
+    "content  content"
+    "open_t   open_t"
+    "tags     after"
+    "versions versions"
+    "replies  replies";
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
   margin: var(--pad) 0;
@@ -45,9 +43,8 @@
   grid-template-areas: 
   "by       by       by"
   "content  content  replies"
-  /*"after    after    replies"*/
-  "opentags opentags replies"
-  "tags     after  replies"
+  "open_t   open_t replies"
+  "tags     after    replies"
   "versions versions versions"
   "sig      sig      sig"
   ;
@@ -63,14 +60,12 @@
 {
   border-color: rgb(var(--color-e));
   grid-template-areas: 
-  "by by"
-  
+  "by      by"
   "content content"
-  "tags tags"
-  "opentags opentags"
-  "sig sig"
-  "after after"
-  /*"actions actions"*/
+  "tags    tags"
+  "open_t  open_t"
+  "sig     sig"
+  "after   after"
   "replies replies"
   ;
   grid-template-columns: 1fr 61.8vw;
@@ -151,7 +146,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   display: none;
 }
 
-.view_e .note.in_view.in_path .note,
+.view_e .note.in_view .replies.expanded > .note,
 #e:not(.expanded) .note.in_view .note
 {
   display: grid;
@@ -252,11 +247,15 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 a.author 
 {
+  border-bottom: 1px dotted rgb(var(--c));
+  border-top: 1px solid transparent;
+  
   color: rgb(var(--color-d));
   grid-template-areas: "img name nip5 flw";
   overflow-x: scroll;
   text-decoration: none;
   user-select: none;
+
 }
 
 .author::before
@@ -330,12 +329,21 @@ a.author
 .by .author
 {
   grid-area: author;
+  border-bottom: 1px solid transparent;
+  
+  /*border-bottom: 1px dotted rgb(var(--c));*/
+}
+
+.by .author .name
+{
+  /*border-top: 1px dotted rgb(var(--c));*/
+  /*border-bottom: 1px solid transparent;*/
 }
 
 .paragraph > a.author
 {
-  border-bottom: 1px solid rgb(var(--c));
-  border-top: 1px solid transparent;
+/*  border-bottom: 1px solid rgb(var(--c));
+  border-top: 1px solid transparent;*/
 }
 
 .paragraph > a.author .name
@@ -770,7 +778,7 @@ a.author
 
 .tags_wrapper[open]
 {
-  grid-area: opentags;
+  grid-area: open_t;
   max-height: 50vh;
   overflow-y:  scroll;
   padding-bottom: var(--line);
@@ -906,7 +914,7 @@ a.author
 /* @end */
 
 
-/* @group note actions */
+/* @group actions */
 
 .actions 
 {
@@ -914,24 +922,28 @@ a.author
   /*background: rgba(var(--color-b),1);*/
   font-size: var(--font-size-s);
   grid-area: actions;
-  margin: 0 var(--pad);
+  margin: 0;
   overflow-x:  scroll;
   position: relative;
+  user-select: none;
   white-space: pre;
   width: auto;
 }
 
-.note .actions 
+.actions:not(.expanded)
 {
-  align-self: center;
-  background: rgba(var(--color-b),1);
+  font-size: 0;
+}
+
+.actions:not(.expanded) :first-child
+{
   font-size: var(--font-size-s);
-  grid-area: actions;
-  margin: 0 var(--pad);
-  overflow-x:  scroll;
-  position: relative;
-  white-space: pre;
-  width: auto;
+  
+}
+
+.actions:not(.expanded) > *:not(:first-child)
+{
+  display: none;
 }
 
 /*.note .actions > summary
@@ -946,11 +958,12 @@ a.author
   text-align: right;
 }*/
 
-.note .actions .butt
+.note .actions.expanded .butt
 {
   /*color: rgb(var(--color-f));*/
   /*opacity: .4;*/
-  padding-left: calc(var(--padm)/2);
+  font-size: var(--font-size-s);
+  /*padding-left: calc(var(--padm)/2);*/
 }
 /*
 .in_view > .by > .actions > summary
@@ -1133,7 +1146,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   border: 1px dashed rgba(var(--color-c),1);
   display: grid;
-  margin: var(--pad);
+  margin: var(--padm);
   margin-bottom: var(--line);
   max-height: var(--media-height);
   max-width: 960px;
@@ -1175,7 +1188,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   font-size: var(--font-size-s);
   line-height: 1.5;
-  padding: 0 var(--padm);
   padding: var(--padm);
 }
 
@@ -1184,15 +1196,22 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   max-height: var(--size-l);
 }
 
-.in_view > .content .note_quote
+.in_view > .content .note_quote,
+.content .note_quote .note_quote
 {
-  margin: var(--line);
+  /*margin: var(--line);*/
   max-height: unset;
 }
 
 .root > .content .note_quote
 {
   overflow-y:  scroll;
+}
+
+.note_quote .note_quote .note_quote .note_quote 
+{
+  margin: /*var(--padm)*/;
+  /*padding: 2px;*/
 }
 
 /* @end */
@@ -1490,12 +1509,12 @@ html:not(.needs_pagin) .pagination
   #notes > .note:not(.root):not(.in_path)
   {
     grid-template-areas: 
-    "by       by"
-    "content  content"
-    "opentags opentags"
-    "tags     actions"
-    "after    after"
-    "replies  replies"
+    "by      by"
+    "content content"
+    "open_t  open_t"
+    "tags    actions"
+    "after   after"
+    "replies replies"
     ;
     grid-template-columns: auto 1fr;
   }

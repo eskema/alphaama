@@ -21,6 +21,14 @@ aa.e =
   },
   requires:['o'],
   root_count:0,
+  butts_for:
+  {
+    na:[[localStorage.reaction,'react'],'req','bro','parse','tiny'],
+    k4:['encrypt','edit','cancel'],
+    draft:['encrypt','edit','cancel'],
+    not_sent:['post','cancel'],
+    blank:['fetch']
+  }
 };
 
 
@@ -196,7 +204,6 @@ aa.mk.det =(cla='',id='')=>
 
 
 // returns events if already loaded or get them from database
-// load author list from db into memory
 aa.db.events =async a=>
 {
   // return await aa.db.get_pa(a)
@@ -226,7 +233,7 @@ aa.e.events =async a=>
   {
     let stored = await aa.db.get('idb',{get_a:{store:'events',a:a_to_get}});
     for (const dat of stored) aa.db.e[dat.event.id] = dat;
-  } 
+  }
 };
 
 
@@ -435,15 +442,18 @@ aa.fx.merge =(dis,dat)=>
 
 
 // add event id to missing event list
-aa.e.miss_e =(xid,relays=[])=>
+aa.e.miss_e =(id,relays=[])=>
 {
-  if (!aa.miss.e[xid]) aa.miss.e[xid] = {nope:[],relays:[]};
-  relays.push(...aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
-  for (const rel of relays)
-  {
-    const r = aa.is.url(rel);
-    if (r && !aa.miss.e[xid].relays.includes(r.href)) aa.miss.e[xid].relays.push(r.href);
-  }
+  if (!aa.miss.e[id]) aa.miss.e[id] = {nope:[],relays:[]}
+  aa.fx.a_add(relays,aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
+  aa.fx.a_add(aa.miss.e[id].relays,relays);
+  // if (!aa.miss.e[xid]) aa.miss.e[xid] = {nope:[],relays:[]};
+  // relays.push(...aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
+  // for (const rel of relays)
+  // {
+  //   const r = aa.is.url(rel);
+  //   if (r && !aa.miss.e[xid].relays.includes(r.href)) aa.miss.e[xid].relays.push(r.href);
+  // }
 };
 
 // add event id to missing event list
@@ -471,11 +481,37 @@ aa.e.miss_print =(tag,relays=[])=>
 {
   const xid = tag[1];
   if (tag[2]) relays.push(tag[2]);
-  aa.db.get_e(xid).then(dat=>
+
+  if (!aa.temp.db_get_events) aa.temp.db_get_events = {};
+  let dis = aa.temp.db_get_events[xid];
+  if (!dis) dis = aa.temp.db_get_events[xid] = [];
+  aa.fx.a_add(dis,relays);
+  aa.fx.to(aa.e.miss_to,500,'db_get_events');
+
+  // aa.db.get_e(xid).then(dat=>
+  // {
+  //   if (dat) aa.e.to_printer(dat);
+  //   else aa.e.miss_e(xid,relays);
+  // });
+};
+
+
+aa.e.miss_to =async()=>
+{
+  let ids = Object.keys(aa.temp.db_get_events);
+  let events = await aa.db.events(ids);
+  for (const dat of events)
   {
-    if (dat) aa.e.to_printer(dat);
-    else aa.e.miss_e(xid,relays);
-  });
+    let id = dat.event.id;
+    ids = ids.filter(i=>i!==id);
+    delete aa.temp.db_get_events[id];
+    aa.e.to_printer(dat)
+  }
+  for (const id of ids) 
+  {
+    aa.e.miss_e(id,aa.temp.db_get_events[id]);
+    delete aa.temp.db_get_events[id];
+  }
 };
 
 
@@ -792,10 +828,10 @@ aa.e.note =dat=>
       aa.fx.color(x,note);
       note.dataset.trust = p.score;
       aa.p.p_link_data_upd(p_link,aa.p.p_link_data(p));
-      by.append(aa.e.note_actions(dat));
     });
   }
-  else by.append(aa.e.note_actions(dat));
+
+  by.append(aa.e.note_actions(dat))
   
   if ('kind' in dat.event) 
   {
@@ -852,37 +888,37 @@ aa.e.note_actions =dat=>
       case 4: 
         if (!dat.clas.includes('encrypted'))
         {
-          a.push('encrypt','edit','cancel');
+          a.push(...aa.e.butts_for.k4);
           break;
         }
       default: 
-        a.push('yolo','sign','pow','edit','cancel');
+        a.push(...aa.e.butts_for.draft);
     }
     l.setAttribute('open','')
   }
-  else if (dat.clas.includes('not_sent')) a.push('post','cancel');
-  else if (dat.clas.includes('blank')) a.push('fetch');
-  else 
+  else if (dat.clas.includes('not_sent')) a.push(...aa.e.butts_for.not_sent);
+  else if (dat.clas.includes('blank')) a.push(...aa.e.butts_for.blank);
+  else
   {
     a.push(['…','na']);
+    l.classList.add('empty');
   }
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
-  
   return l
 };
 
 aa.clk.na =e=>
 {
   let l = e.target.closest('.actions');
-  e.target.remove();
-  let a = [
-    [localStorage.reaction,'react'],
-    ['req','req'],
-    ['bro','bro'],
-    ['parse','parse'],
-    ['tiny','tiny']
-  ];
-  if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
+  if (l.classList.contains('empty'))
+  {
+    for (const s of aa.e.butts_for.na) l.append(aa.mk.butt(s),' ');
+    l.classList.remove('empty');
+  }
+  l.classList.toggle('expanded');
+  // e.target.remove();
+  // let a = aa.e.butts_for.na;
+  // if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
 };
 
 
@@ -1207,7 +1243,7 @@ aa.e.printer =()=>
     aa.get.missing('p');
     aa.get.missing('e');
     aa.get.missing('a');
-  },200);
+  },500);
 };
 
 
@@ -1400,38 +1436,25 @@ aa.e.quotes_to =async q_id=>
 {
   let ids = [...new Set(aa.temp[q_id])];
   aa.temp[q_id] = [];
-  
   for (const id of ids)
   {
-
     if (!aa.temp.note_quotes?.hasOwnProperty(id)) continue;
     let quotes = aa.temp.note_quotes[id];
     if (!quotes?.length) continue;
-    // let selector = '.blank_quote[data-id="'+id+'"]';
-    // let quotes = document.querySelector(selector);
-    // if (quotes) quotes = document.querySelectorAll(selector);
     if (aa.is.key(id))
     {
       let dat = await aa.db.get_e(id);
-      if (dat) 
+      if (dat)
       {
         delete aa.temp.note_quotes[id];
         setTimeout(()=>{for(const q of quotes) q.replaceWith(aa.e.quote(dat.event))},10);
       }
     }
-    else 
+    else
     {
-      // selector = '.blank_quote[data-id_a="'+id+'"]';
-      // quotes = document.querySelector(selector);
-      // if (quotes) quotes = document.querySelectorAll(selector);
-      // if (quotes?.length)
-      // {
-        // let dat = await aa.db.get_e(id);
-        // if (!dat) dat = {event:{"id":id}};
-        let [kind,pubkey,sd] = id.split('_');
-        let dis = {kind:kind,pubkey:pubkey,sd:sd,id_a:id};
-        setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote_a(dis))},10);
-      // }
+      let [kind,pubkey,sd] = id.split('_');
+      let dis = {kind:kind,pubkey:pubkey,sd:sd,id_a:id};
+      setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote_a(dis))},10);
     }
   }
 };
@@ -1562,17 +1585,17 @@ aa.e.search =async s=>
 
 
 // mutation observer for notes section
-aa.e.section_mutated =a=> 
+aa.e.section_mutated =a=>
 {
-  for (const mutation of a) 
+  for (const mutation of a)
   {
     aa.e.root_count = mutation.target.childNodes.length;
     const needs = aa.e.root_count > (parseInt(localStorage.pagination)||0);
-    if (needs && !aa.l.classList.contains('needs_pagin')) 
+    if (needs && !aa.l.classList.contains('needs_pagin'))
     {
       aa.l.classList.add('needs_pagin')
     }
-    else if (!needs && aa.l.classList.contains('needs_pagin')) 
+    else if (!needs && aa.l.classList.contains('needs_pagin'))
     {
       aa.l.classList.remove('needs_pagin')
     }

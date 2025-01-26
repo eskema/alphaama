@@ -109,28 +109,39 @@ aa.p.migrate_p_fields =p=>
 
 
 // profile actions
-aa.p.actions =p=>
-{
-  const l = aa.mk.l('p',{cla:'actions'});
-  let a = [['…','profile_actions']];
-  if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
-  return l
-};
+aa.p.actions =()=> aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt(['…','pa'])});
 
-aa.clk.profile_actions =e=>
+aa.clk.pa =e=>
 {
   let l = e.target.closest('.actions');
-  let note = l.closest('article');
-  e.target.remove();
-  let a = 
-  [
-    [`${note.dataset.trust}`,'p_score'],
-    ['get_notes','p_req'],
-    ['refresh','p_refresh']
-  ];
-  let x = note.dataset.xpub;
-  if (!aa.is.u(x)) a.push([aa.is.following(x)?'del':'add','k3']);
-  if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
+  let profile = l.closest('article');
+  let x = profile.dataset.xpub;
+  if (l.classList.contains('empty'))
+  {
+    let butts = 
+    [
+      [`${profile.dataset.trust}`,'p_score'],
+      ['get_notes','p_req'],
+      ['refresh','p_refresh']
+    ];
+    if (!aa.is.u(x)) butts.push([aa.is.following(x)?'del':'add','k3']);
+    for (const s of butts) l.append(aa.mk.butt(s),' ');
+    l.classList.remove('empty');
+  }
+  l.classList.toggle('expanded');
+
+  // let l = e.target.closest('.actions');
+  // let note = l.closest('article');
+  // e.target.remove();
+  // let a = 
+  // [
+  //   [`${note.dataset.trust}`,'p_score'],
+  //   ['get_notes','p_req'],
+  //   ['refresh','p_refresh']
+  // ];
+  // let x = note.dataset.xpub;
+  // if (!aa.is.u(x)) a.push([aa.is.following(x)?'del':'add','k3']);
+  // for (const i of a) l.append(aa.mk.butt(i),' ');
 };
 
 
@@ -789,7 +800,6 @@ aa.p.profile =p=>
     profile.dataset.updated = p.updated ?? 0;
     aa.fx.color(p.xpub,profile);
     profile.append(aa.mk.pubkey(p));
-    // profile.append(aa.p.actions(p));
     profile.append(aa.mk.l('section',{cla:'metadata'}));
     profile.append(aa.mk.l('section',{cla:'extradata'}));
     aa.p.l.append(profile);
@@ -804,10 +814,57 @@ aa.mk.pubkey =p=>
 {
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
   pubkey.append(aa.mk.p_link(p.xpub));
-  pubkey.append(aa.p.actions(p));
+  pubkey.append(aa.p.actions());
   pubkey.append(' ',aa.mk.l('span',{cla:'xpub',con:p.xpub}));
   pubkey.append(' ',aa.mk.time(p.updated));
   return pubkey
+};
+
+// get profile from tag and prints it,
+// otherwise add to missing list
+aa.p.miss_print =(tag,relays=[])=>
+{
+  const id = tag[1];
+  if (tag[2]) relays.push(tag[2]);
+
+  if (!aa.temp.profiles) aa.temp.profiles = {};
+  let dis = aa.temp.profiles[id];
+  if (!dis) dis = aa.temp.profiles[id] = [];
+  aa.fx.a_add(dis,relays);
+  aa.fx.to(aa.db.miss_profiles,500,'profiles');
+
+  // aa.db.get_e(id).then(dat=>
+  // {
+  //   if (dat) aa.e.to_printer(dat);
+  //   else aa.e.miss_e(id,relays);
+  // });
+};
+
+// add event id to missing event list
+aa.p.miss_p =(id,relays=[])=>
+{
+  if (!aa.miss.p[id]) aa.miss.p[id] = {nope:[],relays:[]}
+  aa.fx.a_add(aa.miss.p[id].relays,aa.temp.pubs[id]);
+};
+
+aa.db.miss_profiles =async()=>
+{
+  let pubkeys = Object.keys(aa.temp.profiles);
+  let profiles = await aa.db.profiles(pubkeys);
+  for (const p of profiles)
+  {
+    let id = p.xpub;
+    pubkeys = pubkeys.filter(i=>i!==id);
+    delete aa.temp.profiles[id];
+    aa.db.p[id] = p;
+    delete aa.temp.profiless[id];
+    aa.p.p_links_upd(p);
+  }
+  for (const id of pubkeys)
+  {
+    aa.p.miss_p(id,aa.temp.profiles[id]);
+    delete aa.temp.profiles[id];
+  }
 };
 
 
@@ -841,7 +898,7 @@ aa.get.pubs =async tags=>
             aa.db.p[p.xpub] = p;
             delete aa.temp.pubs[p.xpub];
             aa.p.p_links_upd(p);
-          }          
+          }
         }
         for (const xpub in aa.temp.pubs) 
         {
@@ -1035,8 +1092,8 @@ aa.p.profile_upd =async(p)=>
   const pubkey = profile.querySelector('.pubkey');
   pubkey.replaceWith(aa.mk.pubkey(p));
 
-  const actions = profile.querySelector('.actions');
-  actions.replaceWith(aa.p.actions(p));
+  // const actions = profile.querySelector('.actions');
+  // actions.replaceWith(aa.p.actions());
 
   const metadata = profile.querySelector('.metadata');
   metadata.replaceWith(aa.mk.metadata(p));
