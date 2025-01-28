@@ -918,7 +918,7 @@ a.author
 
 .actions 
 {
-  /*align-self: center;*/
+  align-self: center;
   /*background: rgba(var(--color-b),1);*/
   font-size: var(--font-size-s);
   grid-area: actions;

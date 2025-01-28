@@ -111,7 +111,7 @@ aa.clk.encrypt =async e=>
 // finalize event creation
 aa.e.finalize =async(event,relays)=>
 {
-  event.tags = [...new Set(event.tags)];
+  event.tags = aa.fx.a_u(event.tags);
   if (!event.id) event.id = aa.fx.hash(event);
   const signed = await aa.u.sign(event);
   if (signed)
@@ -428,13 +428,7 @@ aa.u.k3_add =async s=>
     l:aa.mk.tag_list(new_k3.tags),
     scroll:true,
     no:{exe:()=>{}},
-    yes:
-    {
-      exe:()=>
-      { 
-        aa.e.finalize(new_k3).then(e=>{console.log('sent')})
-      }
-    }
+    yes:{exe:()=>{ aa.e.finalize(new_k3) }}
   });
 };
 
@@ -489,7 +483,7 @@ aa.u.k3_del =async s=>
           content:dat_k3.event.content,
           tags:new_follows
         };
-        aa.e.finalize(event);
+        aa.e.finalize(aa.e.normalise(event));
       }},
     });
   }
@@ -558,7 +552,7 @@ aa.u.outbox =(a=[],sets=[])=>
   if (!a?.length) return [];
   let relays = aa.r.common(a,sets);
   let outbox = aa.fx.intersect(relays,a);
-  let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.v);
+  let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
   return sorted_outbox;
 };
 

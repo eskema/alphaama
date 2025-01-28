@@ -13,7 +13,7 @@ aa.e =
 {
   renders:
   {
-    content:[1,23],
+    content:[1,9802,30023],
     encrypted:[4],
     image:[20],
     object:[0],
@@ -158,13 +158,13 @@ aa.e.clear =s=>
 
 
 //parse content as object
-aa.parse.content_o =async(data,note)=>
+aa.parse.content_o =async(ls,note,sort='')=>
 {
-  if (data && typeof data === 'object')
+  if (ls && typeof ls === 'object')
   {
     let content = note.querySelector('.content');
     content.textContent = '';
-    content.append(aa.mk.ls({ls:data}));
+    content.append(aa.mk.ls({ls,sort}));
   }
 };
 
@@ -1499,6 +1499,26 @@ aa.e.render =async l=>
 };
 
 
+aa.e.render_encrypted =async(l,dat)=>
+{
+  let content = l.querySelector('.content');
+  content.classList.add('encrypted');
+  content.querySelector('.paragraph').classList.add('cypher');
+  if (!dat.clas.includes('draft'))
+  {
+    l.querySelector('.actions .butt.react')?.remove();
+    l.querySelector('.actions .butt.req')?.remove();
+  }
+  let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
+  if (aa.u.o.ls.xpub === p_x)
+  {
+    l.classList.add('for_u');
+    content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
+  }
+  return p_x
+};
+
+
 // render content as rich text
 aa.e.render_content =async(l,dat)=>
 {
@@ -1721,10 +1741,9 @@ aa.get.tags_for_reply =event=>
     tags.push(['e',event.id,seen,'root',event.pubkey],['K',''+event.kind]);
   }
 
-  const p_tags = event.tags.filter(t=>aa.is.tag_p(t) && t[1] !== aa.u.p.xpub);
-  let dis_p_tags = [...new Set(p_tags)];
+  const dis_p_tags = aa.fx.a_u(event.tags.filter(t=>aa.is.tag_p(t) && t[1] !== aa.u.p.xpub));
   if (event.pubkey !== aa.u.p.xpub 
-  && !dis_p_tags.some(t=>t[1] === event.pubkey)) dis_p_tags.push(['p',event.pubkey]);
+  && !dis_p_tags.some(t=>t[1] === event.pubkey)) dis_p_tags.push(aa.fx.tag_p(event.pubkey));
   // needs to do more here...
   tags.push(...dis_p_tags);
   return tags

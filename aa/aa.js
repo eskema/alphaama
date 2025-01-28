@@ -721,14 +721,17 @@ aa.mk.ls =o=>
   }
   l.textContent = '';
   
-  if (o.ls && Object.keys(o.ls).length) 
+  if (o.ls) 
   {
-    const entries = Object.entries(o.ls);
-    if (o.sort) aa.fx.sort_by(entries,o.sort);
-    for (let i=0;i<entries.length;i++)
+    let keys = Object.keys(o.ls);
+    if (keys?.length)
     {
-      const [k,v] = entries[i];
-      l.append( o.hasOwnProperty('mk') ? o.mk(k,v) : aa.mk.item(k,v));
+      if (o.sort) keys = keys.sort(aa.fx.sorts[o.sort]);
+      for (const k of keys)
+      {
+        const v = o.ls[k];
+        l.append( o.hasOwnProperty('mk') ? o.mk(k,v) : aa.mk.item(k,v));
+      }
     }
   }
   else l.classList.add('empty');
@@ -745,7 +748,7 @@ aa.math =(s='')=>
 // make mod
 aa.mk.mod =mod=>
 {
-  let o = {id:mod.def.id,ls:mod.o.ls};
+  let o = {id:mod.def.id,ls:mod.o.ls,sort:'a'};
   if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
   let mod_l = aa.mk.details(mod.def.id,aa.mk.ls(o));
   mod_l.classList.add('mod');
@@ -839,7 +842,7 @@ aa.mod_scripts =o=>
   {
     if (!o.attempts) o.attempts = 1;
     else o.attempts++;
-    if (o.attempts < 20) setTimeout(()=>{aa.mod_scripts(o)},10 * o.attempts);
+    if (o.attempts < 420) setTimeout(()=>{aa.mod_scripts(o)},o.attempts);
     else aa.log('could not load mod '+o.id)
   }
 };
@@ -1148,6 +1151,59 @@ aa.mk.server =(k,v)=>
   l.append(url_l); 
   if (v.sets && v.sets.length) l.dataset.sets = v.sets;   
   return l
+};
+
+
+// sorting functions to use in .sort()
+aa.fx.sorts =
+{
+  a(a,b){ return a.localeCompare(b)},
+  d(a,b){ return b.localeCompare(a)},
+  asc(a,b){ return a[1] - b[1] ? 1 : -1 },
+  desc(a,b){ return b[1] - a[1] ? 1 : -1 },
+  i_asc(a,b)
+  {
+    let a_val = parseInt(a.querySelector('.val').textContent);
+    let b_val = parseInt(b.querySelector('.val').textContent);
+    return a_val > b_val ? 1 : -1
+  },
+  i_desc(a,b)
+  {
+    let a_val = parseInt(a.querySelector('.val').textContent);
+    let b_val = parseInt(b.querySelector('.val').textContent);
+    return a_val < b_val ? 1 : -1
+  },
+  rand(){ return ()=> 0.5 - Math.random() },
+  sets(a,b)
+  {
+    return a[1].sets.length < b[1].sets.length ? 1 : -1
+  },
+  text_asc(a,b)
+  {
+    let a_val = a.textContent.toLowerCase();
+    let b_val = b.textContent.toLowerCase();
+    return a_val > b_val ? 1 : -1
+  },
+  text_desc(a,b)
+  {
+    let a_val = a.textContent.toLowerCase();
+    let b_val = b.textContent.toLowerCase();
+    return a_val < b_val ? 1 : -1
+  },
+  ca_asc(a,b)
+  {
+    let a_val = a.event.created_at;
+    let b_val = b.event.created_at;
+    return a_val > b_val ? 1 : -1
+  },
+  ca_desc(a,b)
+  {
+    let a_val = a.event.created_at;
+    let b_val = b.event.created_at;
+    return a_val < b_val ? 1 : -1
+  },
+  len(a,b){ return b[1].length > a[1].length ? 1 : -1 },
+  len_desc(a,b){ return b[1].length > a[1].length ? -1 : 1 },
 };
 
 

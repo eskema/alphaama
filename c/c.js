@@ -387,6 +387,11 @@ aa.cli.oto_act =(s,a)=>
   else
   {
     let dis_act = aa.actions.filter(i=>i.action[0] === a[1] && i.action[1] === a[2])[0];
+    if (!dis_act)
+    {
+      let single_action = aa.actions.filter(i=>i.action[0] === a[1])[0];
+      if (single_action && single_action.action.length === 1) dis_act = single_action;
+    } 
     if (dis_act) aa.cli.oto.append(aa.mk.oto_act_item(dis_act,'pinned'));
     else
     {
@@ -480,7 +485,7 @@ aa.cli.note =async(s='')=>
     aa.cli.dat.event.created_at = aa.now;
     if (aa.cli.dat.event.kind === 1)
     {
-      aa.cli.dat.event.tags.push(...aa.get.hashtag(s));
+      aa.fx.tags_add(aa.cli.dat.event.tags,aa.get.hashtag(s));
       const mentions = await aa.get.mentions(s);
       aa.fx.tags_add(aa.cli.dat.event.tags,mentions);
     }

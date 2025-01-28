@@ -873,7 +873,7 @@ aa.kinds[30166] =dat=>
 {
   const note = aa.e.note_pre(dat);
   note.classList.add('root');
-  aa.parse.content_o(aa.parse.j(dat.event.content),note);
+  aa.parse.content_o(aa.parse.j(dat.event.content),note,'text_asc');
   return note
 };
 

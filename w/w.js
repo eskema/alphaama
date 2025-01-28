@@ -6,6 +6,9 @@ walLNuts
 
 */
 
+if (!localStorage.hasOwnProperty('zap')) localStorage.zap = '21';
+if (!localStorage.hasOwnProperty('zap_memo')) localStorage.zap_memo = 'walLNut';
+
 aa.w =
 {
   name:'walLNuts',
@@ -148,57 +151,70 @@ aa.w.import =async(s='')=>
     authors:[aa.u.p.xpub]
   };
   
-  let proofs_id = aa.p.events_last(aa.u.p,'k7375',wid);
-  if (proofs_id)
-  {
-    let dat = await aa.db.get_e(proofs_id);
-    if (dat)
-    {
-      let decrypted = await aa.fx.decrypt(dat.event.content);
-      if (decrypted)
-      {
-        let o = aa.parse.j(decrypted);
-        if (o?.proofs?.length) aa.w.proofs_in(o.proofs,w);
-      }
-    }
-    else filter.kinds.push(7375);
-  }
-  else filter.kinds.push(7375);
+  let haz_proofs = await aa.w.import_7375(wid);
+  if (!haz_proofs) filter.kinds.push(7375);
 
-  let tx_ids = aa.u.p.events.k7376;
-  if (tx_ids) tx_ids = tx_ids[wid]?.map(i=>i[0]).reverse();
-  if (tx_ids?.length)
+  let haz_history = await aa.w.import_7376(wid);
+  if (!haz_history) filter.kinds.push(7375);
+  
+  if (haz_history && haz_proofs 
+    && haz_history === haz_proofs) aa.log('7376 import: all good');
+  else aa.log(`7376 import: proofs missing ${haz_proofs} ${haz_history}`);
+  aa.w.save(wid);
+  if (filter.kinds.length) aa.r.demand(['REQ','w',filter],w.relays,{eose:'close'});
+};
+
+
+aa.w.import_7375 =async(wid,id)=>
+{
+  if (!id) id = aa.p.events_last(aa.u.p,'k7375',wid);
+  if (!id) return;
+  let dat = await aa.db.get_e(id);
+  if (!dat) return;
+  let decrypted = await aa.fx.decrypt(dat.event.content);
+  if (!decrypted) return;
+  let {proofs} = aa.parse.j(decrypted);
+  if (proofs?.length) aa.w.proofs_in(proofs,wid);
+  return id
+};
+
+
+aa.w.import_7376 =async(wid,ids)=>
+{
+  if (!ids) 
   {
-    let created;
-    if (window.confirm(`decrypt all ${tx_ids.length} transactions?`))
+    let events = aa.u.p.events.k7376;
+    if (!events) return;
+    let w_events = events[wid];
+    if (!w_events) return;
+    ids = w_events?.map(i=>i[0]).reverse();
+  }
+  let created;
+  if (window.confirm(`decrypt all ${ids.length} transactions?`))
+  {
+    await aa.e.events(ids);
+    for (const id of ids)
     {
-      await aa.e.events(tx_ids);
-      for (const id of tx_ids)
+      let dat = aa.db.e[id];
+      if (dat)
       {
-        let dat = aa.db.e[id];
-        if (dat)
+        let tags = await aa.fx.decrypt(dat.event.content);
+        if (tags) tags = aa.parse.j(tags);
+        if (tags?.length) 
         {
-          let tags = await aa.fx.decrypt(dat.event.content);
-          if (tags) tags = aa.parse.j(tags);
-          if (tags?.length) 
-          {
-            tags.push(...dat.event.tags);
-            let direction = aa.fx.tag_value(tags,'direction')==='in'?'+':'-';
-            let amount = aa.fx.tag_value(tags,'amount');
-            created = tags.find(i=>i[0]==='e'&&i[3]==='created');
-            if (created && created[1]) created = created[1];
-            w.history.unshift([dat.event.created_at,direction+amount,'7376:'+id]);
-          }
+          tags.push(...dat.event.tags);
+          let direction = aa.fx.tag_value(tags,'direction')==='in'?'+':'-';
+          let amount = aa.fx.tag_value(tags,'amount');
+          created = tags.find(i=>i[0]==='e'&&i[3]==='created');
+          if (created && created[1]) created = created[1];
+          let w = aa.w.o.ls[wid];
+          if (w) w.history.unshift([dat.event.created_at,direction+amount,'7376:'+id]);
         }
       }
     }
-
-    if (created && created === proofs_id) aa.log('7376 import: all good');
-    else aa.log('7376 import: proofs missing'+(created||''));
+    if (ids.length) aa.w.save(wid)
   }
-  else filter.kinds.push(7376);
-  aa.w.save(wid);
-  if (filter.kinds.length) aa.r.demand(['REQ','w',filter],w.relays,{eose:'close'});
+  return created
 };
 
 
@@ -263,8 +279,8 @@ aa.mk.k5 =(s='')=>
   let ids = rest.split(',');
   for (const i of ids)
   {
-    let a = i.split(' ');
-    let id = a.shift();
+    // let a = i.split(' ');
+    let id = i.trim();
     let tag = [id];
     let kind;
     if (aa.is.key(id)) 
@@ -347,7 +363,7 @@ aa.mk.k7375 =async(o={})=>
   }
 
   let mint = o.mint||w.mints[0];
-  let proofs = o.proofs||w.proofs;
+  let proofs = w.proofs;
   
   let previous = aa.p.events_last(aa.u.p,'k7375');
   let pubkey = aa.u.p.xpub;
@@ -355,22 +371,16 @@ aa.mk.k7375 =async(o={})=>
   let private = {mint,proofs};
   
   event.content = await aa.fx.encrypt44(JSON.stringify(private));  
-  // aa.e.draft(aa.mk.dat({event:aa.e.normalise(event)}));
   aa.e.finalize(aa.e.normalise(event));
   
-  let options = 
+  let created = [[event.id]];
+  let amount = o.amount || aa.fx.sum_amounts(proofs);
+  let options = {wid,created,amount};
+
+  if (previous)
   {
-    wid:wid,
-    created:[[event.id]]
-  };
-  if (o.amount) options.amount = o.amount;
-  else options.amount = aa.fx.sum_amounts(proofs);
-  // check for previous
-  
-  if (previous) 
-  {
-    aa.mk.k5('"" '+previous);
     options.destroyed = [[previous]];
+    aa.mk.k5('"" '+previous);
   }
   aa.w.save(wid);
   return options
@@ -601,7 +611,7 @@ aa.kinds[7375] =dat=>
   // }
 
   const note = aa.e.note(dat);
-  aa.mk.note_encrypted(dat,note);
+  // aa.mk.note_encrypted(dat,note);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
   note.querySelector('.tags_wrapper').setAttribute('open','');
   const x = dat.event.pubkey;
@@ -638,7 +648,7 @@ aa.kinds[7376] =dat=>
 // }
 
   const note = aa.e.note(dat);
-  aa.mk.note_encrypted(dat,note);
+  //aa.mk.note_encrypted(dat,note);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
   note.querySelector('.tags_wrapper').setAttribute('open','');
   const x = dat.event.pubkey;
@@ -733,8 +743,7 @@ aa.kinds[10019] =dat=>
 aa.kinds[37375] =dat=>
 {
   const note = aa.e.note_pre(dat);
-  aa.mk.note_encrypted(dat,note);
-  if (!dat.clas.includes('draft')) note.classList.add('tiny');
+  //aa.mk.note_encrypted(dat,note);
   note.querySelector('.tags_wrapper').setAttribute('open','');
   if (aa.is.u(dat.event.pubkey))
   {
@@ -745,14 +754,7 @@ aa.kinds[37375] =dat=>
     }
 
     let butt = aa.mk.butt_action(aa.w.def.id+' import '+dat.event.id,'import');
-    
     note.querySelector('.content').append(butt)
-    // setTimeout(()=>
-    // {
-    //   let content = note.querySelector('.content');
-    //   content.append(butt);
-    //   aa.log(butt);
-    // },2000);
   }
   
   return note
@@ -762,17 +764,7 @@ aa.kinds[37375] =dat=>
 // on load
 aa.w.load =()=>
 {
-  if (!localStorage.hasOwnProperty('zap')) 
-  {
-    aa.o.add('zap 21');
-    aa.o.save();
-  }
-  if (!localStorage.hasOwnProperty('zap_memo')) 
-  {
-    aa.o.add('zap_memo walLNutzap');
-    aa.o.save();
-  }
-
+  aa.fx.a_add(aa.e.render.encrypted,[7375,7376,37375]);
   aa.temp.quotes = {};
   let mod = aa.w;
   let id = mod.def.id;
@@ -984,8 +976,10 @@ aa.clk.nzap =e=>
 
 
 // save proofs from tx in
-aa.w.proofs_in =(proofs,w)=>
+aa.w.proofs_in =(proofs,wid)=>
 {
+  let w = aa.w.o.ls[wid];
+  if (!w) return;
   const amount = aa.fx.sum_amounts(proofs);
   w.proofs.push(...proofs);
   w.balance = aa.fx.sum_amounts(w.proofs);
@@ -994,8 +988,10 @@ aa.w.proofs_in =(proofs,w)=>
 
 
 // save proofs from tx out
-aa.w.proofs_out =(proofs,w)=>
+aa.w.proofs_out =(proofs,wid)=>
 {
+  let w = aa.w.o.ls[wid];
+  if (!w) return;
   let old_balance = aa.fx.sum_amounts(w.proofs);
   let new_balance = aa.fx.sum_amounts(proofs);
   w.proofs = [...proofs];
@@ -1284,7 +1280,7 @@ aa.w.tx_in =async(proofs,wid,o)=>
   const amount = aa.w.proofs_in(proofs,w);
   aa.log(`${aa.w.def.id} ${wid} +${amount} = ${w.balance}`);
   aa.w.save(wid);
-  aa.mk.k7375({mint,proofs,wid,amount,redeemed})
+  aa.mk.k7375({mint,wid,amount,redeemed})
   .then(o=>{aa.mk.k7376({direction:'in',...o})});
 };
 
@@ -1305,11 +1301,11 @@ aa.w.tx_out =(proofs,wid,mint)=>
   }
   if (!mint) mint = w.mints[0];
 
-  let amount = aa.w.proofs_out(proofs,w);
+  let amount = aa.w.proofs_out(proofs,wid);
   aa.log(`${aa.w.def.id} -${amount} = ${w.balance} in ${wid}`);
   aa.w.save(wid);
 
-  aa.mk.k7375({mint,proofs,wid,amount})
+  aa.mk.k7375({mint,wid,amount})
   .then(o=>{aa.mk.k7376({direction:'out',...o})});
 };
 
@@ -1371,7 +1367,7 @@ aa.w.w =()=>
     history:[],
     quotes:{},
     privkey:'',
-    public:'',
+    pubkey:'',
     relays:[],
   }
 };

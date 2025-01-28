@@ -39,7 +39,7 @@ aa.o =
 
 
 // add key as value
-aa.o.add =s=>
+aa.o.add =(s='')=>
 {
   const as = s.split(',');
   if (as.length)
@@ -60,22 +60,6 @@ aa.o.add =s=>
       }
     }
   }
-
-  // const work =a=>
-  // {
-  //   let [k,v] = a;
-  //   if (k && v)
-  //   {
-  //     let old_v = localStorage[k];
-  //     localStorage[k] = v;
-  //     aa.mod_ui(aa.o,k);
-  //     let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
-  //     let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
-  //     log.append(' ',undo);
-  //     aa.log(log);
-  //   }
-  // };
-  // aa.fx.loop(work,s);
 };
 
 
@@ -216,7 +200,6 @@ aa.o.reset =(s='')=>
         }
       }
     }
-
     aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
   } 
   else if (window.confirm('reset all options?')) 

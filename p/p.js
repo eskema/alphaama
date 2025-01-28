@@ -1137,7 +1137,7 @@ aa.p.verify_nip05 =async(s,p)=>
 
   aa.log('nip5 '+verified+' for '+s);
 };
-  
+
 
 // event template for user metadata 
 aa.kinds[0] =dat=>
@@ -1160,7 +1160,7 @@ aa.kinds[0] =dat=>
       }
     }
   });
-  aa.parse.content_o(aa.parse.j(dat.event.content),note);
+  aa.parse.content_o(aa.parse.j(dat.event.content),note,'a');
   return note
 };
 

@@ -51,6 +51,12 @@ aa.fx.a_o =a=>
   return o
 };
 
+aa.fx.a_u =a=>
+{
+  let ar = [...new Set(a.map(i=>JSON.stringify(i)))];
+  return ar.map(i=>JSON.parse(i))
+};
+
 
 // converts string to alphanumeric, 
 // replaces everything else with underscore
@@ -312,7 +318,7 @@ aa.fx.intersect =(o={},a=[],n=2)=>
 {
   if (typeof n !== 'number') n = 1;
   let dis = {};
-  let items = Object.entries(o).sort(aa.fx.sorts.v);
+  let items = Object.entries(o).sort(aa.fx.sorts.len);
   for (const x of a)
   {
     let i=0;
@@ -568,57 +574,6 @@ aa.fx.sort_l =(l,by)=>
 {
   let a = [...l.children].sort(aa.fx.sorts[by]);
   for (const node of a) l.append(node)
-};
-
-
-// sorting functions to use in .sort()
-aa.fx.sorts =
-{
-  asc(a,b){ return a[1] - b[1] ? 1 : -1 },
-  desc(a,b){ return b[1] - a[1] ? 1 : -1 },
-  i_asc(a,b)
-  {
-    let a_val = parseInt(a.querySelector('.val').textContent);
-    let b_val = parseInt(b.querySelector('.val').textContent);
-    return a_val > b_val ? 1 : -1
-  },
-  i_desc(a,b)
-  {
-    let a_val = parseInt(a.querySelector('.val').textContent);
-    let b_val = parseInt(b.querySelector('.val').textContent);
-    return a_val < b_val ? 1 : -1
-  },
-  rand(){ return ()=> 0.5 - Math.random() },
-  sets(a,b)
-  {
-    return a[1].sets.length < b[1].sets.length ? 1 : -1
-  },
-  text_asc(a,b)
-  {
-    let a_val = a.textContent.toLowerCase();
-    let b_val = b.textContent.toLowerCase();
-    return a_val > b_val ? 1 : -1
-  },
-  text_desc(a,b)
-  {
-    let a_val = a.textContent.toLowerCase();
-    let b_val = b.textContent.toLowerCase();
-    return a_val < b_val ? 1 : -1
-  },
-  ca_asc(a,b)
-  {
-    let a_val = a.event.created_at;
-    let b_val = b.event.created_at;
-    return a_val > b_val ? 1 : -1
-  },
-  ca_desc(a,b)
-  {
-    let a_val = a.event.created_at;
-    let b_val = b.event.created_at;
-    return a_val < b_val ? 1 : -1
-  },
-  v(a,b){ return b[1].length > a[1].length ? 1 : -1 },
-  v_desc(a,b){ return b[1].length > a[1].length ? -1 : 1 },
 };
 
 
