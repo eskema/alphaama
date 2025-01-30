@@ -941,6 +941,12 @@ li.item > .val
   grid-row: 2;
 }
 
+.notice .butt.slap
+{
+  color: rgb(var(--color-c));
+  pointer-events: none;
+}
+
 /* @end */
 
 /* @group logs */
@@ -951,6 +957,7 @@ li.item > .val
   position: relative;
   scrollbar-width: none;
   transition: max-height 1s cubic-bezier(0.87, 0, 0.13, 1);
+  transition: var(--trans-fast);
 }
 
 #l > header
@@ -1078,6 +1085,11 @@ li.item > .val
   position: sticky;
   top: 0;
   z-index: 1;
+}
+
+.cli_expanded #l.expanded
+{
+  padding-bottom: var(--line);
 }
 
 #l.expanded > header .butt::before

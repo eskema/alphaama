@@ -376,9 +376,15 @@ aa.r.from_o =(o,sets=false)=>
 aa.r.hint_notice =(url,opts,set='hint')=>
 {
   // needs to display info from what npub, where does the notice come from?
-  
+
   let id = 'notice_'+aa.fx.an(url);
   if (document.getElementById(id)) return;
+
+  let cleanup =e=>
+  {
+    e.target.closest('.is_new')?.classList.remove('is_new');
+    e.target.classList.add('slap');
+  }
   
   let text = `r add ${url} `;
   let notice = {title:text};
@@ -392,8 +398,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     {
       aa.r.add(`${url} ${set}`);
       aa.r.c_on(url,opts);
-      e.target.closest('.is_new')?.classList.remove('is_new');
-      e.target.remove();
+      cleanup(e);
     }
   };
   let set_off = 'off';
@@ -403,8 +408,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
     exe:e=>
     {
       aa.r.add(`${url} ${set_off}`);
-      e.target.closest('.is_new')?.classList.remove('is_new');
-      e.target.remove();
+      cleanup(e);
     }
   };
   let set_other = 'other'
@@ -416,8 +420,7 @@ aa.r.hint_notice =(url,opts,set='hint')=>
       aa.r.add(url);
       aa.r.c_on(url,opts);
       aa.cli.v(localStorage.ns+' '+text);
-      e.target.closest('.is_new')?.classList.remove('is_new');
-      e.target.remove();
+      cleanup(e);
     }
   };
   aa.log(aa.mk.notice(notice));
@@ -835,7 +838,7 @@ aa.r.ws_message =async e=>
     aa.log('unknown data from '+e.target.url);
     console.log('unknown data from '+e.target.url,e);
   };
-  if (e.data.length > 100000) console.log(e.data.length,e.data);
+  if (e.data.length > 200000) console.log(e.data.length,e.data);
 
   let a = aa.parse.j(e.data);
   if (a && Array.isArray(a))

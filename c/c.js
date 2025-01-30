@@ -123,7 +123,7 @@ aa.cli.dat_mk =async(s,reply_to)=>
         const reply_e = aa.db.e[x].event;
         aa.cli.dat.event.tags.push(...aa.get.tags_for_reply(reply_e));
         aa.cli.dat.replying = reply_to;
-      }      
+      }
     }
     else if (reply_to.startsWith('npub'))
     {
@@ -131,7 +131,7 @@ aa.cli.dat_mk =async(s,reply_to)=>
       aa.cli.dat.event.tags = [['p',x]];
     }
   }
-  aa.cli.draft(aa.cli.dat);
+  // aa.cli.draft(aa.cli.dat);
 };
 
 
@@ -156,7 +156,7 @@ aa.cli.dat_upd =async()=>
     if (reply_to && aa.cli.dat?.replying !== reply_to) delete aa.cli.dat;
     if (!aa.cli.hasOwnProperty('dat')) aa.cli.dat_mk(s,reply_to)
     else aa.cli.dat.event.content = s;
-    aa.cli.draft(aa.cli.dat);
+    // aa.cli.draft(aa.cli.dat);
   }
   else if (aa.cli.hasOwnProperty('dat')) 
   {
@@ -569,7 +569,8 @@ aa.cli.upd =e=>
     const last_word = a[a.length - 1].toLowerCase();
     // if is a mention attempt
     if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
-    if (aa.u.p) aa.cli.dat_upd()
+    if (aa.u.p) aa.cli.dat_upd();
+    aa.cli.oto.dataset.s = '';
   }
   setTimeout(aa.cli.h,0);
 };

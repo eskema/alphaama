@@ -573,7 +573,7 @@ aa.clk.post =e=>
 aa.clk.pow =e=>
 {
   let id = e.target.closest('.note').dataset.id;
-  aa.cli.v(`${localStorage.ns} e pow ${id} ${localStorage.pow}`);
+  aa.cli.v(`${localStorage.ns} fx pow ${id} ${localStorage.pow}`);
 };
 
 

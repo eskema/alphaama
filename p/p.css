@@ -143,6 +143,7 @@
   line-height: 1;
   margin: 0;
   position: relative;
+  padding-left: 1px;
 }
 
 .profile > .pubkey .author

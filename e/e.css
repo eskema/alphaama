@@ -67,6 +67,7 @@
   "sig     sig"
   "after   after"
   "replies replies"
+  "versions versions"
   ;
   grid-template-columns: 1fr 61.8vw;
   margin: 0;
@@ -137,7 +138,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /*.replies:not(.expanded) > .note:not(.in_path),*/
 
-.view_e .note:not(.in_path),
+/*.view_e .note:not(.in_path),*/
 .view_p .note:not(.in_path),
 .view_e #notes > .note:not(.in_path),
 
@@ -958,6 +959,11 @@ a.author
   text-align: right;
 }*/
 
+.note .actions.expanded
+{
+  background: rgba(var(--color-a));
+}
+
 .note .actions.expanded .butt
 {
   /*color: rgb(var(--color-f));*/
@@ -1373,7 +1379,7 @@ html:not(.needs_pagin) .pagination
 
 /* @group versions */
 
-.note > .versions
+.versions
 {
   grid-area: versions;
   overflow: hidden;
@@ -1386,17 +1392,17 @@ html:not(.needs_pagin) .pagination
 {
   /*display: none;*/
   /*padding: var(--pad);*/
-  font-size: 0!important;
+  /*font-size: 0!important;*/
 }
 
-.note .versions > .note
+.versions > .note:not(.in_view)
 {
   grid-template-areas: "by replies";
   grid-template-columns: auto 61.8vw;
   margin: 0;
 }
 
-.note .versions > .note > .by
+.versions > .note > .by
 {
   align-self: start;
 }

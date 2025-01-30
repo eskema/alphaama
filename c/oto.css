@@ -16,10 +16,10 @@
 
 #oto::before 
 {
-  background: rgb(var(--color-b));
+  background: rgba(var(--color-b),.1);
   border-bottom: 1px dotted rgb(var(--color-c));
   /*bottom: 0;*/
-  color: rgb(var(--color-c));
+  color: rgba(var(--color-f),1);
   content: attr(data-s);
   left: var(--line);
   line-height: 1.5;

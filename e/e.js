@@ -24,8 +24,8 @@ aa.e =
   butts_for:
   {
     na:[[localStorage.reaction,'react'],'req','bro','parse','tiny'],
-    k4:['encrypt','edit','cancel'],
-    draft:['encrypt','edit','cancel'],
+    // k4:['encrypt'],
+    draft:['yolo','sign','pow','edit','cancel'],
     not_sent:['post','cancel'],
     blank:['fetch']
   }
@@ -170,14 +170,19 @@ aa.parse.content_o =async(ls,note,sort='')=>
 
 
 // toggle parsed content on note
-aa.parse.context =(note,event,trust)=>
+aa.parse.context =(l,event,trust)=>
 {
-  const content = note.querySelector('.content');
-  content.textContent = '';
-  content.classList.toggle('parsed');
+  let content = l.querySelector('.content');
+  if (!content) content = l;
+  else 
+  {
+    content.textContent = '';
+    content.classList.toggle('parsed');
+  }
   if (content.classList.contains('parsed'))
   {
-    content.append(aa.parse.content(event.content,trust));
+    let parsed = aa.parse.content(event.content,trust);
+    if (parsed) content.append(parsed);
   }
   else content.append(aa.mk.l('p',{cla:'paragraph',con:event.content}));
 };
@@ -879,7 +884,7 @@ aa.e.note =dat=>
 // note actions
 aa.e.note_actions =dat=>
 { 
-  const l = aa.mk.l('p',{cla:'actions'});
+  const l = aa.mk.l('p',{cla:'actions expanded'});
   let a = [];
   if (dat.clas.includes('draft')) 
   {
@@ -888,20 +893,21 @@ aa.e.note_actions =dat=>
       case 4: 
         if (!dat.clas.includes('encrypted'))
         {
-          a.push(...aa.e.butts_for.k4);
+          aa.fx.a_add(a,aa.e.butts_for.k4);
           break;
         }
       default: 
-        a.push(...aa.e.butts_for.draft);
+        aa.fx.a_add(a,aa.e.butts_for.draft);
     }
     l.setAttribute('open','')
   }
-  else if (dat.clas.includes('not_sent')) a.push(...aa.e.butts_for.not_sent);
-  else if (dat.clas.includes('blank')) a.push(...aa.e.butts_for.blank);
+  else if (dat.clas.includes('not_sent')) aa.fx.a_add(a,aa.e.butts_for.not_sent);
+  else if (dat.clas.includes('blank')) aa.fx.a_add(a,aa.e.butts_for.blank);
   else
   {
-    a.push(['…','na']);
+    aa.fx.a_add(a,[['…','na']]);
     l.classList.add('empty');
+    l.classList.remove('expanded');
   }
   if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
   return l
@@ -1400,7 +1406,8 @@ aa.e.quote_upd =async(quote,o)=>
       aa.fx.color(p.xpub,quote);
     }
     by.append(aa.mk.nostr_link(aa.fx.encode('note',o.id)));
-    content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
+    aa.e.render(quote,dat);
+    // content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
     quote_classes.push('parsed');
     aa.get.pubs([['p',dat.event.pubkey]]);
   }
@@ -1426,7 +1433,7 @@ aa.e.quote_upd =async(quote,o)=>
     let filter = '{"ids":["'+o.id+'"],"eose":"close"}';
     by.append(aa.mk.butt_action(`${command} ${relay} ${filter}`,'req'));
   }
-  quote.append(content)
+  if (content) quote.append(content)
   quote.classList.add(...quote_classes);
 };
 
@@ -1557,8 +1564,10 @@ aa.e.render_image =async(note,dat)=>
   if (url)
   {
     let l = trusted?aa.mk.img(url):aa.mk.link(url);
-    note.querySelector('.content')
-      .prepend(aa.mk.l('p',{cla:'paragraph',app:l}));
+    let img = aa.mk.l('p',{cla:'paragraph',app:l})
+    let content = note.querySelector('.content');
+    if (content) content.prepend(img);
+    else note.insertBefore(img,note.children[1])
   }
 };
 

@@ -364,25 +364,22 @@ aa.mk.k7375 =async(o={})=>
 
   let mint = o.mint||w.mints[0];
   let proofs = w.proofs;
-  
-  let previous = aa.p.events_last(aa.u.p,'k7375');
+  let del = [];
+  let last = aa.p.events_last(aa.u.p,'k7375');
+  if (last) del.push(last);
+  if (o.del) aa.fx.a_add(del,o.odel);
   let pubkey = aa.u.p.xpub;
   let event = {kind:7375,tags:[['a',`37375:${pubkey}:${wid}`]]};
-  let private = {mint,proofs};
-  
-  event.content = await aa.fx.encrypt44(JSON.stringify(private));  
+  let private = {mint,proofs,del};
+  event.content = await aa.fx.encrypt44(JSON.stringify(private));
   aa.e.finalize(aa.e.normalise(event));
   
-  let created = [[event.id]];
-  let amount = o.amount || aa.fx.sum_amounts(proofs);
-  let options = {wid,created,amount};
-
-  if (previous)
-  {
-    options.destroyed = [[previous]];
-    aa.mk.k5('"" '+previous);
-  }
+  // let created = [[event.id]];
+  // let amount = o.amount || aa.fx.sum_amounts(proofs);
+  // let options = {wid,created,amount};
   aa.w.save(wid);
+  if (del.length) aa.mk.k5('"poof" '+del.join());
+  
   return options
 };
 
@@ -764,7 +761,7 @@ aa.kinds[37375] =dat=>
 // on load
 aa.w.load =()=>
 {
-  aa.fx.a_add(aa.e.render.encrypted,[7375,7376,37375]);
+  aa.fx.a_add(aa.e.renders.encrypted,[7375,7376,37375]);
   aa.temp.quotes = {};
   let mod = aa.w;
   let id = mod.def.id;
@@ -1281,7 +1278,7 @@ aa.w.tx_in =async(proofs,wid,o)=>
   aa.log(`${aa.w.def.id} ${wid} +${amount} = ${w.balance}`);
   aa.w.save(wid);
   aa.mk.k7375({mint,wid,amount,redeemed})
-  .then(o=>{aa.mk.k7376({direction:'in',...o})});
+  // .then(o=>{aa.mk.k7376({direction:'in',...o})});
 };
 
 
@@ -1306,7 +1303,7 @@ aa.w.tx_out =(proofs,wid,mint)=>
   aa.w.save(wid);
 
   aa.mk.k7375({mint,wid,amount})
-  .then(o=>{aa.mk.k7376({direction:'out',...o})});
+  // .then(o=>{aa.mk.k7376({direction:'out',...o})});
 };
 
 
