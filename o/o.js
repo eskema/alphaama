@@ -53,9 +53,8 @@ aa.o.add =(s='')=>
         let old_v = localStorage[k];
         localStorage[k] = v;
         aa.mod_ui(aa.o,k);
-        let log = aa.mk.l('p',{con:aa.o.def.id+' add '+k+' '+v});
-        let undo = aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo');
-        log.append(' ',undo);
+        let log = aa.mk.l('p',{con:k+' '+v});
+        if (old_v) log.append(' ',aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo'));
         aa.log(log);
       }
     }

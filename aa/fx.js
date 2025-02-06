@@ -577,6 +577,33 @@ aa.fx.sort_l =(l,by)=>
 };
 
 
+aa.fx.split_at =(i,a)=> [a.slice(0,i),a.slice(i)];
+
+// splits string, given '"quoted text" and something else'
+// returns ['quoted text','and something else']
+aa.fx.split_str =(s='')=>
+{
+  if (s.startsWith('"" ')) return ['',s.slice(3)];
+  else if (s.startsWith('""')) return ['',s.slice(2)];
+  let dis = s?.match(aa.fx.regex.str);
+  if (dis && dis.length) return [dis[1],s.slice(dis.index+dis[0].length).trim()]
+  return [s]
+};
+
+
+
+
+aa.fx.split_ida =ida=>
+{
+  let ind =string=> string.indexOf(':');
+  let a = ida.split(':');
+  let kind = a.shift();
+  let pubkey = a.shift();
+  let identifier = a.join(':');
+  return [kind,pubkey,identifier]
+};
+
+
 // create a tag from event
 aa.fx.tag_a =o=>
 {

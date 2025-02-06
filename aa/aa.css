@@ -368,6 +368,17 @@ textarea:focus
 
 /* @group butts */
 
+
+.butt.plug
+{
+  background: rgb(var(--color-c));
+  border-radius: 2px;
+  border: 1px solid rgb(var(--color-b));
+  color: rgb(var(--color-a));
+  /*line-height: 1.4;*/
+  /*text-decoration: underline;*/
+}
+
 /*.butt.sign,*/
 .butt.decrypt,
 .butt.confirm,
@@ -456,19 +467,24 @@ textarea:focus
   grid-area: aft;
 }
 
-li.item > .key,
+.item > .val
+{
+  margin: 0 var(--pad);
+}
+
+/*li.item > .key,
 li.item > .val 
 {
   margin: 0;
   padding: 0;
-}
+}*/
 
-.item > .key::after 
+/*.item > .key::after 
 {
   content: "";
   margin-right: var(--padm);
-  /*white-space: pre;*/
-}
+  /*white-space: pre;*!/
+}*/
 
 .item .sets
 {
@@ -478,6 +494,7 @@ li.item > .val
 .item .del 
 {
   color: rgb(var(--color-no));
+  margin-left: var(--pad);
 }
 
 .server .url 
@@ -498,15 +515,24 @@ li.item > .val
   overflow: hidden;
 }
 
+.l.item > details[open]
+{
+  border-bottom: 1px dotted rgb(var(--color-c));
+  border-top: 1px dotted rgb(var(--color-c));
+  margin: var(--padm);
+  padding: var(--padm);
+}
+
 .item > details > summary
 {
   /*margin-left: 0;*/
 }
 
-.item > details[open] > summary
+.l.item > details[open] > summary
 {
   /*color: rgb(var(--color-main));*/
-  /*margin-left: var(--padm);*/
+  margin-bottom: var(--padm);
+  margin-left: calc(var(--padm)* -1);
   /*font-size: var(--font-size);*/
 }
 
@@ -534,12 +560,6 @@ li.item > .val
 .item > details.empty > summary::after 
 {
   content: " empty";
-}
-
-#q .item 
-{
-  grid-template-areas: "bef s k v aft";
-  grid-template-columns: auto auto auto 1fr auto;
 }
 
 /* @end */
@@ -613,6 +633,11 @@ li.item > .val
   border-top: 1px solid rgba(var(--color-c),0);
 }
 
+.mod .item > .butts
+{
+  grid-area: s;
+}
+
 .mod details
 {
   text-align: left;
@@ -628,7 +653,7 @@ li.item > .val
 .mod > .butt
 {
   font-size: var(--font-size);
-  padding: var(--padm);
+  /*padding: var(--padm);*/
 }
 
 .mod .server::after
@@ -1039,15 +1064,15 @@ li.item > .val
   padding: 0;
 }
 
-.l > .butt,
+/*.l > .butt,
 .l > p > .butt
 {
   color: rgb(var(--color-d));
-  /*border-bottom: 1px dashed rgb(var(--color-d));*/
-  /*font-size: var(--font-size-xs);*/
+  /*border-bottom: 1px dashed rgb(var(--color-d));*!/
+  /*font-size: var(--font-size-xs);*!/
   padding: 0;
   text-decoration: underline;
-}
+}*/
 
 .l .butt.clkd::after
 {
@@ -1089,7 +1114,7 @@ li.item > .val
 
 .cli_expanded #l.expanded
 {
-  padding-bottom: var(--line);
+  /*padding-bottom: var(--line);*/
 }
 
 #l.expanded > header .butt::before
@@ -1168,6 +1193,11 @@ html:not(.cli_expanded) .l:not(.is_new),
   {
     background: rgb(var(--color-a));
     z-index: 9;
+  }
+  
+  .butt.plug:hover
+  {
+    background: rgb(var(--color-f));
   }
 
   

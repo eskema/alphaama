@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const aa_version = 44;
+const aa_version = 46;
 
 const aa = 
 {
@@ -39,7 +39,7 @@ const aa =
   is:{},
   kinds:{},
   misc:{},
-  miss:{e:{},p:{},a:[]},
+  miss:{e:{},p:{},a:{}},
   mk:{},
   mods:
   [
@@ -48,10 +48,10 @@ const aa =
     {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
     {id:'e',src:'/e/e.js?v='+aa_version,requires:['o']},
     {id:'r',src:'/r/r.js?v='+aa_version,requires:['p','e']},
-    {id:'q',src:'/q/q.js?v='+aa_version,requires:['o','r']},
+    {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
     {id:'i',src:'/i/i.js?v='+aa_version,requires:['p','e']},
-    {id:'u',src:'/u/u.js?v='+aa_version,requires:['p','e','o','r']},
-    {id:'w',src:'/w/w.js?v='+aa_version,requires:['r']},
+    {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
+    {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
   ],
   get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
@@ -208,7 +208,7 @@ aa.parse.content =(s,trusted)=>
             another_l(l); 
             df.append(quote)
           }
-          else l.append(parsed);       
+          else l.append(parsed);
         }
         else if (aa.fx.regex.hashtag.test(word)) 
         {
@@ -852,6 +852,9 @@ aa.mod_scripts =o=>
 aa.mod_servers_add =(mod,s)=>
 {
   const as = s.split(',');
+  const valid = [];
+  const invalid = [];
+  const off = [];
   if (as.length)
   {
     for (const i of as) 
@@ -864,24 +867,14 @@ aa.mod_servers_add =(mod,s)=>
         if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
         aa.fx.a_add(mod.o.ls[url].sets,a);
         aa.mod_ui(mod,url);
+        aa.fx.a_add(valid,[url]);
+        if (a.includes('off')) aa.fx.a_add(off,[url])
       }
+      else aa.fx.a_add(invalid,[url])
     }
   }
   aa.mod_save(mod);
-
-  // const work =a=>
-  // {
-  //   let url_string = a.shift().trim();
-  //   const url = aa.is.url(url_string)?.href;
-  //   if (url)
-  //   {
-  //     if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
-  //     aa.fx.a_add(mod.o.ls[url].sets,a);
-  //     aa.mod_ui(mod,url);
-  //   }
-  // };
-  // aa.fx.loop(work,s);
-  // aa.mod_save(mod);
+  return [valid,invalid,off]
 };
 
 

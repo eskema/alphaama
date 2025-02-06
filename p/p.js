@@ -1000,7 +1000,8 @@ aa.p.score =async s=>
     aa.cli.fuck_off();
     const p = await aa.db.get_p(xpub);
     if (!p) p = aa.p.p(xpub);
-    p.score = score;    
+    p.score = score;
+    aa.p.profile_upd(p);
     setTimeout(()=>{aa.p.save(p)},200)
   }
   else aa.log('invalid data to score')

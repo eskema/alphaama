@@ -6,13 +6,25 @@ user you
 
 */
 
-
+aa.head_scripts(['/u/is.js']);
 aa.mk.styleshit('/u/u.css');
 
 aa.u = 
 {
   def:{id:'u',ls:{}},
   get p(){ return aa.db.p[aa.u.o.ls.xpub] },
+};
+
+
+// add user
+aa.u.add =(pubkey='')=>
+{
+  if (aa.is.key(pubkey))
+  {
+    aa.u.o.ls = {xpub:pubkey,npub:aa.fx.encode('npub',pubkey)};
+    aa.mk.mod(aa.u);
+    aa.mod_save(aa.u).then(aa.u.start);
+  }
 };
 
 
@@ -201,18 +213,6 @@ aa.e.note_decrypted_content =async(x,decrypted)=>
 };
 
 
-// true if you follow pubkey
-aa.is.following =xpub=>
-{
-  if (aa.u?.p?.follows?.includes(xpub)) return true;
-  return false
-};
-
-
-// if hex key is your pubkey
-aa.is.u =x=> aa.u?.o?.ls?.xpub === x;
-
-
 // make p tag array from array
 aa.fx.tag_k3 =a=>
 {
@@ -260,8 +260,8 @@ aa.u.load =()=>
   aa.actions.push(
     {
       action:[id,'login'],
-      optional:['easy || hard'],
-      description:'load pubkey and relays from ext with optional mode, leave blank for default',
+      optional:['mode','pubkey','relay'],
+      description:'login as pubkey, leave blank to load from extension (nip-7)',
       exe:mod.login
     },
     {
@@ -327,33 +327,96 @@ aa.u.load =()=>
 
 
 // u login
-aa.u.login =async s=>  
-{  
-
-  // return new Promise(resolve=>
-  // {
-    if (window.nostr && aa.u)
+aa.u.login =async(s='')=>
+{
+  aa.log('attempting to login…');
+  let pubkey = '';
+  let relays = [];
+  let [mode,pub,relay] = s.split(' ').map(i=>i.trim());
+  
+  if (!mode) mode = 'easy';
+  else mode = aa.fx.an(mode);
+  
+  relay = aa.is.url(relay)?.href;
+  if (relay) relays.push(relay);
+  
+  if (pub)
+  {
+    if (aa.is.key(pub)) pubkey = pub;
+    else
     {
-      await aa.u.set_mode(s.trim());
-      window.nostr.getPublicKey().then(x=>
+      if (pub.find('@'))
       {
-        aa.u.set_u_p(x);
-        if (aa.r) 
+        // fetch pubkey from nip5
+      }
+      else if (pub.startsWith('np'))
+      {
+        if (pub.startsWith('npub1'))
         {
-          aa.r.ext().then(()=>
-          {
-            // resolve('login with relays')
-          });
+
         }
-        // else resolve('login without relays')
-      });
+        else if (pub.startsWith('nprofile1'))
+        {
+
+        }
+      }
+      
     }
-    else 
+  }
+
+  if (!pubkey && window.nostr)
+  {
+    // login via extension
+    aa.log('no pubkey, trying nip-7 extension…');
+    pubkey = await window.nostr.getPublicKey();
+  }
+  else
+  {
+    aa.log('enable extension first and try again');
+    return
+  }
+
+  if (!pubkey)
+  {
+    aa.log('unable to get public key from extension');
+    return
+  }
+
+  aa.o.add(`mode ${mode},trust 4`);
+  aa.u.add(pubkey);
+  aa.u.start();
+  aa.q.stuff();
+  
+  if (!relays.length) relays = await aa.r.ext();
+  if (!relays.length)
+  {
+    aa.log(aa.mk.butt_action('r add wss://url.com read write'));
+    return
+  }
+  else
+  {
+    setTimeout(()=>
     {
-      aa.log('enable extension first and try again');
-      // resolve('no login');
-    }
-  // });
+      aa.log('fetching your stuff with: .aa q run a');
+      aa.q.run('a');
+    },1000);
+    setTimeout(()=>
+    {
+      aa.log('fetching your follows stuff + your recent notes + notifications');
+      aa.log('combining multiple queries: .aa q run b,u,n');
+      aa.q.run('b,u,n');
+    },2000);
+    setTimeout(()=>
+    {
+      aa.log('fetching b again but as outbox: .aa q out b');
+      aa.q.outbox('b');
+    },5000);
+    setTimeout(()=>
+    {
+      aa.log('fetching your feed: .aa q out f');
+      aa.q.outbox('f');
+    },9000);
+  }
 };
 
 
@@ -533,16 +596,16 @@ aa.mk.k7 =async s=>
 
 
 // is nip4 cyphertext
-aa.is.nip4 =s=> 
-{
-  let l = s.length;
-  if (l < 28) return false;
+// aa.is.nip4 =s=> 
+// {
+//   let l = s.length;
+//   if (l < 28) return false;
 
-  return s[l - 28] == '?' 
-  && s[l - 27] == 'i'
-  && s[l - 26] == 'v'
-  && s[l - 25] == '='
-};
+//   return s[l - 28] == '?' 
+//   && s[l - 27] == 'i'
+//   && s[l - 26] == 'v'
+//   && s[l - 25] == '='
+// };
 
 
 // return sorted relay list for outbox
@@ -628,43 +691,6 @@ aa.clk.react =e=>
 };
 
 
-// u set mode
-aa.u.set_mode =s=>
-{
-  switch (s)
-  {
-    case 'easy':
-      // let butt_u = document.getElementById('butt_u');
-      // if (!butt_u.parentElement.classList.contains('.expanded')) butt_u.click();
-      aa.o.add('mode easy');
-      aa.q.stuff();
-      break;
-
-    case 'hard': 
-      aa.o.add('mode hard'); 
-      break;
-
-    default:
-      aa.o.add('mode normal');
-  }
-};
-
-
-// u set pubkey
-aa.u.set_u_p =s=>
-{   
-  let pub = s.trim();
-  if (pub) 
-  {
-    let o = {};
-    if (!aa.is.x(pub) && pub.startsWith('npub')) o = {xpub:aa.fx.decode(pub),npub:pub};
-    else if (aa.is.x(pub)) o = {xpub:pub,npub:aa.fx.encode('npub',pub)};
-    aa.u.o.ls = o;
-    aa.mod_save(aa.u).then(aa.u.start);
-  } 
-};
-
-
 // sign event
 aa.clk.sign =e=>
 {
@@ -723,20 +749,20 @@ aa.u.mk =(k,v)=>
 
 
 // start mod
-aa.u.start =async mod=>
+aa.u.start =async()=>
 {
+  let mod = aa.u;
   let ls = mod?.o?.ls;
   if (!ls.xpub)
-  { 
-    let log = aa.mk.l('p',{cla:'u_login'});
-    log.append(aa.mk.butt_action('u login '));
-    log.append(' ',aa.mk.butt_action('u login easy','easy'));
-    log.append(' ',aa.mk.butt_action('u login hard','hard'));
-    aa.log(log); 
-    return 
+  {
+    let log = aa.mk.l('p',{id:'u_login',app:aa.mk.butt_action('u login')});
+    // log.append());
+    // log.append(' ',aa.mk.butt_action('u login easy','easy'));
+    // log.append(' ',aa.mk.butt_action('u login hard','hard'));
+    aa.log(log);
+    return
   }
-  else document.querySelector('.u_login')?.parentElement.remove();
-
+  else document.getElementById('u_login')?.parentElement.remove();
   
   aa.fx.color(ls.xpub,document.getElementById('u_u'));
 
@@ -849,16 +875,6 @@ aa.mk.note_encrypted =(dat,note)=>
 };
 
 
-aa.fx.split_str =(s='')=>
-{
-  if (s.startsWith('"" ')) return ['',s.slice(3)];
-  else if (s.startsWith('""')) return ['',s.slice(2)];
-  let dis = s?.match(aa.fx.regex.str);
-  if (dis && dis.length) return [dis[1],s.slice(dis.index+dis[0].length).trim()]
-  return [s]
-};
-
-
 // sign and broadcast event
 aa.clk.yolo =async e=>
 {
@@ -884,28 +900,10 @@ aa.clk.yolo =async e=>
       {
         let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
         let ab = aa.fx.a_ab(relays,read_relays);
-        if (!ab.inc.length < 3)
-        {
-          relays.push(...ab.exc.slice(0,3 - ab.inc.length))
-        }
-
-        
-        // let p = aa.db.p[pub];
-        // let i = 0;
-        // for (const r in p.relays)
-        // {
-        //   i++;
-        //   let rr = [];
-        //   if (p.relays[r].sets.includes('read')) rr.push(r);
-        //   aa.fx.a_add(relays,rr);
-        //   if (i>3) break;
-        // }
+        if (!ab.inc.length < 3) relays.push(...ab.exc.slice(0,3 - ab.inc.length))
       }
       relays = new Set(relays);
-      
       aa.r.broadcast(dat.event,relays);
     }
   })
 };
-
-// window.addEventListener('load',aa.u.load);

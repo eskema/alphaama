@@ -19,20 +19,22 @@ aa.r =
 // add relays
 aa.r.add =s=>
 {
-  aa.mod_servers_add(aa.r,s);
+  let [valid,invalid,off] = aa.mod_servers_add(aa.r,s);
   let a = s.split(' ');
   let url = a.shift();
-  if (a.includes('off')) aa.r.force_close([url]);
+  aa.log(valid.length+' relays added:\n'+valid.join(', '));
+  if (invalid.length) aa.log(invalid.length+' relays:\n'+invalid.join(', '));
+  for (const url of off) aa.r.force_close([url]);
 };
 
 
 // add relays from object
-aa.r.add_from_o =(relays)=>
+aa.r.add_from_o =relays=>
 {
+  //o = {'wss://url.com':{sets:['read','write'}}
   let a = [];
   for (const r in relays) a.push(r+' '+relays[r].sets.join(' '));
-  if (a.length) aa.r.add(a.join(',')); 
-  aa.log(a.length+' relays added to ['+aa.r.def.id+']');
+  if (a.length) aa.r.add(a.join(','));
 };
 
 
@@ -143,11 +145,8 @@ aa.r.close =(k,id)=>
   {
     if (r.ws?.readyState === 1) r.ws.send(JSON.stringify(['CLOSE',id]));
     else console.log('close rs',r.ws?.readyState);
-    setTimeout(()=>
-    {
-      delete r.q[id];
-      aa.r.upd_state(k);
-    },500);
+    delete r.q[id];
+    setTimeout(()=>{aa.r.upd_state(k)},500);
   }
   else console.log('no close ',k,id);
 };
@@ -283,19 +282,26 @@ aa.r.demand =(request,relays,options)=>
       if (no_active_connection) aa.r.c_on(url,opts);
       else 
       {
+        let requestr = JSON.stringify(request);
         if (opts)
         {
-          if (opts.req?.length) rel_active.q[opts.req[1]] = opts;
+          if (opts.req?.length) 
+          {
+            let q_id = opts.req[1];
+            let q = rel_active.q[q_id];
+            if (!q) q = rel_active.q[q_id] = opts;
+            else if (JSON.stringify(q.req) === requestr) continue;
+          }
           if (opts.send?.length) rel_active.send = opts.send;
         }
-        aa.r.try(rel_active,JSON.stringify(request));
+        aa.r.try(rel_active,requestr);
       }
     }
   }
 };
 
 
-// get relays from extension (nip7)
+// add relays from extension (nip7)
 aa.r.ext =async()=>
 {
   return new Promise(resolve=>
@@ -305,13 +311,13 @@ aa.r.ext =async()=>
       window.nostr.getRelays().then(r=>
       {
         aa.r.add_from_o(aa.r.from_o(r,['ext']));
-        resolve('rel ext done');
+        resolve(Object.keys(r));
       });
-    } 
+    }
     else 
     {
       aa.log('no extension found, make sure it is enabled.');
-      resolve('rel ext done');
+      resolve([]);
     }
   });
 };
@@ -666,10 +672,10 @@ aa.r.message_type.event =message=>
     }
     else if (aa.fx.kind_type(event.kind) === 'parameterized')
     {
-      let ds = event.tags.filter(t=>t[0]==='d')[0][1];
-      let id = `${event.kind}:${event.pubkey}:${ds}`;
+      let identifier = event.tags.find(t=>t[0]==='d')[1];
+      let id = `${event.kind}:${event.pubkey}:${identifier}`;
       dat.id_a = id;
-      if (aa.miss.a[id])       
+      if (aa.miss.a[id])
       {
         delete aa.miss.a[id];
         dat.clas.push('miss');

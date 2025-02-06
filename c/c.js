@@ -24,7 +24,7 @@ aa.mk.butt_action =(s,con=false,cla=false)=>
   const butt = aa.mk.l('button',
   {
     con:con?con:s,
-    cla:'butt',
+    cla:'butt plug',
     clk:e=>{ aa.cli.v(localStorage.ns+' '+s) }
   });
   if (cla) butt.classList.add(cla);
@@ -97,7 +97,11 @@ aa.cli.exe =async s=>
       }
     }
   }
-  if (output) aa.log(output)
+  if (output) 
+  {
+    if (typeof output === 'object') output = JSON.stringify(output);
+    aa.log(output)
+  }
 };
 
 

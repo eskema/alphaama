@@ -42,6 +42,9 @@ aa.w.add =(s='')=>
 };
 
 
+aa.fx.amount_display =(num,unit)=> num+aa.fx.plural(num,unit);
+
+
 // delete walLNut(s)
 aa.w.del =s=>
 {
@@ -141,7 +144,12 @@ aa.w.import =async(s='')=>
   aa.fx.a_add(w.mints,aa.fx.tags_values(a,'mint'));
   aa.fx.a_add(w.relays,aa.fx.tags_values(a,'relay'));
 
-  for (const i of ['name','description','privkey']) w[i] = aa.fx.tag_value(a,i);
+  for (const i of ['name','description','privkey']) 
+  {
+    let v = aa.fx.tag_value(a,i);
+    if (v) w[i] = v;
+  }
+  if (w.privkey.length) w.pubkey = aa.fx.keypair(w.privkey)[1];
   aa.log(`k37375 imported ${event.id}`);
 
   let filter =
@@ -153,13 +161,15 @@ aa.w.import =async(s='')=>
   
   let haz_proofs = await aa.w.import_7375(wid);
   if (!haz_proofs) filter.kinds.push(7375);
+  else aa.log(`7375 imported: ${aa.fx.amount_display(aa.fx.sum_amounts(haz_proofs))}`)
 
-  let haz_history = await aa.w.import_7376(wid);
-  if (!haz_history) filter.kinds.push(7375);
+  // let haz_history = await aa.w.import_7376(wid);
+  // if (!haz_history) filter.kinds.push(7375);
   
-  if (haz_history && haz_proofs 
-    && haz_history === haz_proofs) aa.log('7376 import: all good');
-  else aa.log(`7376 import: proofs missing ${haz_proofs} ${haz_history}`);
+  // if (haz_history && haz_proofs 
+  //   && haz_history === haz_proofs) aa.log('7376 import: all good');
+  // else aa.log(`7376 import: proofs missing ${haz_proofs} ${haz_history}`);
+
   aa.w.save(wid);
   if (filter.kinds.length) aa.r.demand(['REQ','w',filter],w.relays,{eose:'close'});
 };
@@ -175,7 +185,7 @@ aa.w.import_7375 =async(wid,id)=>
   if (!decrypted) return;
   let {proofs} = aa.parse.j(decrypted);
   if (proofs?.length) aa.w.proofs_in(proofs,wid);
-  return id
+  return proofs
 };
 
 
@@ -684,7 +694,7 @@ aa.kinds[9321] =dat=>
   let p_x = aa.fx.tag_value(dat.event.tags,'p');
   if (aa.is.u(p_x) && !aa.w.is_redeemed(dat.event.id)) 
   {
-    if (!aa.w.o.hasOwnProperty(redeemable)) aa.w.o.redeemable = [];
+    if (!aa.w.o.hasOwnProperty('redeemable')) aa.w.o.redeemable = [];
     if (!aa.w.o.redeemable.find(i=>i[0]===dat.event.id))
     {
       let amount = aa.fx.tag_value(dat.event.tags,'amount');
@@ -761,6 +771,8 @@ aa.kinds[37375] =dat=>
 // on load
 aa.w.load =()=>
 {
+  aa.fx.a_add(aa.q.ls.a.kinds,[10019,37375]);
+  aa.q.ls.w = {"authors":["u"],"kinds":[7375,10019,37375]};
   aa.fx.a_add(aa.e.renders.encrypted,[7375,7376,37375]);
   aa.temp.quotes = {};
   let mod = aa.w;
@@ -928,8 +940,8 @@ aa.w.mint =async(s='')=>
   let amount = w.quotes[quote_id].amount;
   if (!amount) return;
   let mint = wallet.mint.mintUrl;
-  let units = aa.fx.plural(amount,'sat');
-  aa.log(`minting proofs for ${amount}${units} from ${quote_id}`);
+  let units = aa.fx.amount_display(amount,'sat');
+  aa.log(`minting proofs for ${units} from ${quote_id}`);
   
   let proofs = await wallet.mintProofs(amount,quote_id);
   aa.w.tx_in(proofs,wid,{mint});
@@ -1361,7 +1373,7 @@ aa.w.w =()=>
     unit:'sat',
     mints:[],
     proofs:[],
-    history:[],
+    // history:[],
     quotes:{},
     privkey:'',
     pubkey:'',

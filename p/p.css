@@ -187,10 +187,11 @@
 
 .profile > .pubkey .xpub
 {
-  display: none;
+  /*display: none;*/
+  font-size: var(--font-size-s);
   grid-area: xpub;
   justify-self: stretch;
-  max-width: calc(var(--size) - var(--pad));
+  /*max-width: calc(var(--size) - var(--pad));*/
   overflow-x: scroll;
   padding: 0 var(--pad);
   text-align: right;

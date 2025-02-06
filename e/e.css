@@ -138,7 +138,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /*.replies:not(.expanded) > .note:not(.in_path),*/
 
-/*.view_e .note:not(.in_path),*/
+.view_e .note:not(.in_path),
 .view_p .note:not(.in_path),
 .view_e #notes > .note:not(.in_path),
 
@@ -147,7 +147,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   display: none;
 }
 
-.view_e .note.in_view .replies.expanded > .note,
+.view_e .note.in_view > .replies.expanded .note,
 #e:not(.expanded) .note.in_view .note
 {
   display: grid;
@@ -920,6 +920,7 @@ a.author
 .actions 
 {
   align-self: center;
+  color: rgb(var(--color-e));
   /*background: rgba(var(--color-b),1);*/
   font-size: var(--font-size-s);
   grid-area: actions;
@@ -1328,6 +1329,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .note.tiny[data-kind="7"]:not(.in_view) > .content .content-img
 {
   max-width: 1rem;
+  padding: 0;
 }
 
 /*.note.tiny[data-kind="6"]:not(.in_view) > .content::before,
@@ -1390,9 +1392,13 @@ html:not(.needs_pagin) .pagination
 
 .versions > summary
 {
-  /*display: none;*/
-  /*padding: var(--pad);*/
-  /*font-size: 0!important;*/
+  padding-left: var(--pad);
+  font-size: 0;
+}
+
+.note.in_view > .versions > summary
+{
+  font-size: var(--font-size-s);
 }
 
 .versions > .note:not(.in_view)

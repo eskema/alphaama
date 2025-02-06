@@ -8,10 +8,45 @@ queries
 
 
 aa.q =
-{ 
+{
+  active:{},
   def:{id:'q',ls:{}},
+  ls:
+  {
+    a:
+    {
+      "authors":["u"],
+      "kinds":[0,3,10002,10019]
+    },
+    b:
+    {
+      "authors":["u","k3"],
+      "kinds":[0,10002,10019]
+    },
+    f:
+    {
+      "authors":["u","k3"],
+      "kinds":[0,1,3,6,7,16,20,21,22,10002,10019,30023,30818],
+      "since":"n_1"
+    },
+    id:{"ids":["x"],"eose":"close"},
+    ida:
+    {
+      "kinds":[30023],
+      "authors":["u"],
+      "#d":["s"]
+    },
+    n:
+    {
+      "#p":["u"],
+      "kinds":[1,4,6,7,16,9321,9735],
+      "since":"n_21"
+    },
+    ref:{"#e":["x"],"limit":200},
+    tag:{"#t":["s"],"limit":200},
+    u:{"authors":["u"],"since":"n_7"},
+  },
   old_id:'q_e',
-  active:{}
 };
 
 
@@ -216,15 +251,18 @@ aa.q.mk =(k,v) =>
   k = aa.fx.an(k);
   const id = aa.q.def.id;
   const l = aa.mk.l('li',{id:`${id}_${k}`,cla:'item filter'});
-  let out = aa.mk.butt_action(`${id} out ${k}`,'out','out');
-  let run = aa.mk.butt_action(`${id} run ${k}`,'run','run');
-  let add = aa.mk.butt_action(`${id} add ${k} ${v.v}`,k,'add');
-  let del = aa.mk.butt_action(`${id} del ${k}`,'del','del');
+  let butts = aa.mk.l('span',{cla:'butts'});
+  butts.append(
+    aa.mk.butt_action(`${id} del ${k}`,'del'),' ',
+    aa.mk.butt_action(`${id} run ${k}`,'run'),' ',
+    aa.mk.butt_action(`${id} out ${k}`,'out'),' ',
+  );
+  let key = aa.mk.l('span',{cla:'key',app:aa.mk.butt_action(`${id} add ${k} ${v.v}`,k,'add')});
   let val = aa.mk.l('span',{cla:'val',con:v.v});
   
   
   l.append(
-    out,' ',run,' ',add,' ',val,' ',del
+    key,' ',val,' ',butts
   );
   return l
 };
@@ -421,23 +459,45 @@ aa.q.run =async s=>
 // add useful queries
 aa.q.stuff =()=>
 {
-  let queries = 
-  [
-    'a {"authors":["u"],"kinds":[0,3,10002,37375]}',
-    'b {"authors":["k3"],"kinds":[0,3,10002,10019]}',
-    'f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,10002,10019,30023,30818],"since":"n_1"}',
-    'n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}',
-    'u {"authors":["u"],"since":"n_5"}',
-    'w {"authors":["u"],"kinds":[7375,7376,10019,10020,37375]}',
-    'z {"#p":["u"],"kinds":[9735],"since":"n_21"}'
-  ];
-  for (const s of queries) aa.q.add(s);
-  aa.log(queries.length +' queries added to ['+aa.q.def.id+']');
-  aa.log(aa.mk.butt_action(aa.q.def.id+' run a'));
-  aa.log(aa.mk.butt_action(aa.q.def.id+' run b'));
-  aa.log(aa.mk.butt_action(aa.q.def.id+' run u,n'));
-  aa.log(aa.mk.butt_action(aa.q.def.id+' out f'));
-  aa.log(aa.mk.butt_action(aa.q.def.id+' run w'));
+  let id = aa.q.def.id;
+  let keys = Object.keys(aa.q.ls);
+  let queries = aa.mk.details(keys.length +' queries added');
+  // let queries = 
+  // [
+  //   'a {"authors":["u"],"kinds":[0,3,10002,37375]}',
+  //   'b {"authors":["k3"],"kinds":[0,3,10002,10019]}',
+  //   'f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,10002,10019,30023,30818],"since":"n_1"}',
+  //   'n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}',
+  //   'u {"authors":["u"],"since":"n_5"}',
+  //   'w {"authors":["u"],"kinds":[7375,7376,10019,10020,37375]}',
+  //   'z {"#p":["u"],"kinds":[9735],"since":"n_21"}'
+  // ];
+  // [
+  //   'data {"authors":["u","k3"],"kinds":[0,3,10002,10019]}',
+  //   'feed {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,21,22,10002,10019,30023,30818],"since":"n_1"}',
+  //   'notifs {"#p":["u"],"kinds":[1,4,6,7,16,9321,9735],"since":"n_21"}',
+  //   'profile {"authors":["u"],"kinds":[0,10002]}',
+  //   'ids {"ids":["<id>"],"eose":"close"}',
+  //   'replies {"#e":["<id>"],"limit":200}',
+  //   'wallnut {"authors":["u"],"kinds":[10019,37375]}',
+  //   'me {"authors":["u"],"since":"n_7"}',
+  // ];
+  
+  for (const key of keys)
+  {
+    let filter = JSON.stringify(aa.q.ls[key]);
+    let s = `${key} ${filter}`;
+    aa.q.add(s);
+    queries.append(aa.mk.l('p',{con:s}))
+  }
+  aa.log(queries);
+  
+  aa.log(aa.mk.l('p',{con:'query for user data: ',app:aa.mk.butt_action(id+' out a')}));
+  aa.log(aa.mk.l('p',{con:'query for user recent notes: ',app:aa.mk.butt_action(id+' run u')}));
+  aa.log(aa.mk.l('p',{con:'query for notifications: ',app:aa.mk.butt_action(id+' run n')}));
+  aa.log(aa.mk.l('p',{con:'query for feed from your follows: ',app:aa.mk.butt_action(id+' out f')}));
+  aa.log(aa.mk.l('p',{con:'multiple queries: ',app:aa.mk.butt_action(id+' out f,u,n')}));
+  
 };
 
 // window.addEventListener('load',aa.q.load);

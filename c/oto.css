@@ -78,6 +78,7 @@
 {
   color: rgb(var(--color-e));
   grid-area: val;
+  margin: 0;
   padding: 0;
 }
 
