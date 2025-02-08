@@ -5,7 +5,7 @@ A<3   aa
 v3
 
 */
-const aa_version = 46;
+const aa_version = 48;
 
 const aa = 
 {
@@ -20,7 +20,8 @@ const aa =
   dependencies:
   [
     '/dep/cashuts.js?v=2.0.0',
-    '/dep/nostr-tools.js?v=2.10.3',
+    '/dep/nostr-tools_2_10_4.js',
+    // '/dep/nostr-tools.js?v=2.10.4',
     '/dep/qrcode.js',
     '/dep/bolt11.js',
     // '/dep/webtorrent.min.js',
@@ -656,6 +657,7 @@ aa.log =(s,l=false)=>
   {
     l.append(log);
     log.addEventListener('click',aa.logs_read);
+    aa.fx.scroll(log);
   }
   else console.log('log:',s);
   return log
@@ -849,14 +851,18 @@ aa.mod_scripts =o=>
 
 
 // add server item with sets to mod
-aa.mod_servers_add =(mod,s)=>
+aa.mod_servers_add =(mod,s='',cla='server')=>
 {
   const as = s.split(',');
   const valid = [];
   const invalid = [];
   const off = [];
-  if (as.length)
+  let len = as.length;
+  if (len)
   {
+    let pa = aa.mk.l('p');
+    let details = aa.mk.details(`${len} ${aa.fx.plural(len,cla)}`,pa);
+    let haz;
     for (const i of as) 
     {
       let a = i.trim().split(' ');
@@ -865,13 +871,30 @@ aa.mod_servers_add =(mod,s)=>
       if (url)
       {
         if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
-        aa.fx.a_add(mod.o.ls[url].sets,a);
-        aa.mod_ui(mod,url);
-        aa.fx.a_add(valid,[url]);
-        if (a.includes('off')) aa.fx.a_add(off,[url])
+        let updd = aa.fx.a_add(mod.o.ls[url].sets,a);
+        let sets = aa.r.o.ls[url].sets.join(' ');
+        if (updd)
+        {
+          haz = true;
+          aa.mod_ui(mod,url);
+          aa.fx.a_add(valid,[url]);
+          let text = `\nadded: ${url} ${sets}`;
+          if (a.includes('off')) 
+          {
+            aa.fx.a_add(off,[url]);
+            text = `\noff: ${url} ${sets}`;
+          }
+          pa.append(text)
+        }
       }
-      else aa.fx.a_add(invalid,[url])
+      else 
+      {
+        haz = true;
+        aa.fx.a_add(invalid,[url]);
+        pa.append(`\ninvalid: ${url}`)
+      }
     }
+    if (haz) aa.log(details);
   }
   aa.mod_save(mod);
   return [valid,invalid,off]

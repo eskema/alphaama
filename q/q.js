@@ -15,7 +15,7 @@ aa.q =
   {
     a:
     {
-      "authors":["u"],
+      "authors":["u",'k3'],
       "kinds":[0,3,10002,10019]
     },
     b:
@@ -282,7 +282,6 @@ aa.q.outbox =async s=>
       if (!aa.q.active.out.includes(fid)) aa.q.active.out.push(fid);
       sessionStorage.q_out = aa.q.active.out;
 
-      // let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
       let dis = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
       dis.push(fid);
       aa.q.as_outbox(dis)
@@ -295,24 +294,26 @@ aa.q.outbox =async s=>
 // demand request as outbox
 aa.q.as_outbox =([filtered,options,fid])=>
 {
-  // wip 
   let outbox;
   let authors_len = 0;
   if (filtered.authors?.length)
   {
     authors_len = filtered.authors.length;
-    // aa.log('outbox for '+authors_len+' authors');
     outbox = aa.u.outbox(filtered.authors);
     delete filtered.authors;
   }
 
   if (outbox?.length)
   {
-    // aa.log('using '+outbox.length+' relays:');
+    aa.mod_servers_add(aa.r,outbox.map(i=>i[0]+' out').join(','),'relay');
     let relays = [];
     for (const r of outbox)
     {
       let url = r[0];
+
+      // if (!aa.r.o.ls[url] || !aa.r.o.ls[url].sets.includes('out'))
+      //   aa.r.add(url+' out');
+
       let filter = {...filtered};
       filter.authors = r[1];
       // console.log(['REQ',fid,filter],[url],options);
@@ -461,28 +462,7 @@ aa.q.stuff =()=>
 {
   let id = aa.q.def.id;
   let keys = Object.keys(aa.q.ls);
-  let queries = aa.mk.details(keys.length +' queries added');
-  // let queries = 
-  // [
-  //   'a {"authors":["u"],"kinds":[0,3,10002,37375]}',
-  //   'b {"authors":["k3"],"kinds":[0,3,10002,10019]}',
-  //   'f {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,10002,10019,30023,30818],"since":"n_1"}',
-  //   'n {"#p":["u"],"kinds":[1,4,6,7,16,9735],"since":"n_3"}',
-  //   'u {"authors":["u"],"since":"n_5"}',
-  //   'w {"authors":["u"],"kinds":[7375,7376,10019,10020,37375]}',
-  //   'z {"#p":["u"],"kinds":[9735],"since":"n_21"}'
-  // ];
-  // [
-  //   'data {"authors":["u","k3"],"kinds":[0,3,10002,10019]}',
-  //   'feed {"authors":["u","k3"],"kinds":[0,1,3,6,7,16,20,21,22,10002,10019,30023,30818],"since":"n_1"}',
-  //   'notifs {"#p":["u"],"kinds":[1,4,6,7,16,9321,9735],"since":"n_21"}',
-  //   'profile {"authors":["u"],"kinds":[0,10002]}',
-  //   'ids {"ids":["<id>"],"eose":"close"}',
-  //   'replies {"#e":["<id>"],"limit":200}',
-  //   'wallnut {"authors":["u"],"kinds":[10019,37375]}',
-  //   'me {"authors":["u"],"since":"n_7"}',
-  // ];
-  
+  let queries = aa.mk.details(keys.length +' default queries');
   for (const key of keys)
   {
     let filter = JSON.stringify(aa.q.ls[key]);
@@ -491,13 +471,6 @@ aa.q.stuff =()=>
     queries.append(aa.mk.l('p',{con:s}))
   }
   aa.log(queries);
-  
-  aa.log(aa.mk.l('p',{con:'query for user data: ',app:aa.mk.butt_action(id+' out a')}));
-  aa.log(aa.mk.l('p',{con:'query for user recent notes: ',app:aa.mk.butt_action(id+' run u')}));
-  aa.log(aa.mk.l('p',{con:'query for notifications: ',app:aa.mk.butt_action(id+' run n')}));
-  aa.log(aa.mk.l('p',{con:'query for feed from your follows: ',app:aa.mk.butt_action(id+' out f')}));
-  aa.log(aa.mk.l('p',{con:'multiple queries: ',app:aa.mk.butt_action(id+' out f,u,n')}));
-  
 };
 
 // window.addEventListener('load',aa.q.load);

@@ -165,7 +165,7 @@
 
 .cli_expanded #u_u.expanded
 {
-  padding-bottom: calc(100vh - var(--size) - var(--line) - var(--size));
+  padding-bottom: calc(90vh - var(--size) - var(--line) - var(--size));
 }
 
 /*#u_u.expanded #butt_u_u,*/
@@ -174,6 +174,16 @@
   bottom: unset;
   top: 0;
 
+}
+
+#u_u #mods
+{
+  pointer-events: none;
+}
+
+#u_u #mods > *
+{
+  pointer-events: auto;
 }
 
 @media screen and (min-width: 1025px) 

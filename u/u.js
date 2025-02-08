@@ -395,27 +395,32 @@ aa.u.login =async(s='')=>
   }
   else
   {
+    aa.log('fetching your data: .aa q run a');
+    aa.q.run('a');
+    
     setTimeout(()=>
     {
-      aa.log('fetching your stuff with: .aa q run a');
+      aa.log('again to include your follows and mor relays...');
       aa.q.run('a');
+    },600);
+    
+    setTimeout(()=>
+    {
+      aa.log('and again but now in outbox: .aa q out a');
+      aa.q.outbox('a');
     },1000);
+
     setTimeout(()=>
     {
-      aa.log('fetching your follows stuff + your recent notes + notifications');
-      aa.log('combining multiple queries: .aa q run b,u,n');
-      aa.q.run('b,u,n');
-    },2000);
-    setTimeout(()=>
-    {
-      aa.log('fetching b again but as outbox: .aa q out b');
-      aa.q.outbox('b');
-    },5000);
+      aa.log('fetching your recent notes + notifications: .aa q run u,n');
+      aa.q.run('u,n');
+    },3000);
+   
     setTimeout(()=>
     {
       aa.log('fetching your feed: .aa q out f');
       aa.q.outbox('f');
-    },9000);
+    },5000);
   }
 };
 
@@ -763,8 +768,6 @@ aa.u.start =async()=>
     return
   }
   else document.getElementById('u_login')?.parentElement.remove();
-  
-  aa.fx.color(ls.xpub,document.getElementById('u_u'));
 
   let p = await aa.db.get_p(ls.xpub);
   if (!p) p = aa.p.p(ls.xpub);
@@ -777,17 +780,24 @@ aa.u.start =async()=>
   }
   if (aa.fx.a_add(p.sets,['u'])) upd = true;
   
-  let butt_u = document.getElementById('butt_u_u');
-  if (butt_u) 
-  {
-    butt_u.textContent = ls.xpub.slice(0,1)+'_'+ls.xpub.slice(-1);
-    if (aa.is.trusted(p.score)) aa.p.p_link_pic(butt_u,p.metadata.picture);
-  }
+  aa.u.upd_u_u()
   aa.p.profile(p);
   if (p.events.k3?.length) aa.p.load_profiles(p.follows);
   if (upd) aa.p.save(p);
   aa.mk.mod(mod);
   // mod.l.append(aa.mk.ls({ls:p}));
+};
+
+
+// update u_u button
+aa.u.upd_u_u =()=>
+{
+  let butt_u = document.getElementById('butt_u_u');
+  if (!butt_u || !aa.u.p) return;
+  let p = aa.u.p;
+  aa.fx.color(p.xpub,document.getElementById('u_u'));
+  butt_u.textContent = p.xpub.slice(0,1)+'_'+p.xpub.slice(-1);
+  if (aa.is.trusted(p.score)) aa.p.p_link_pic(butt_u,p.metadata.picture);
 };
 
 

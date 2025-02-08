@@ -543,8 +543,10 @@ a.author
 }
 
 .viewing .root:not(.in_view) > .content,
-.root:not(.in_view):not(.in_path) > .content
+.root:not(.tiny):not(.in_path) > .content,
+.in_view > .replies > .note > .content
 {
+  /*height: calc(100vh - 8rem);  */
   overflow-y:  scroll;
 }
 
@@ -1210,7 +1212,8 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   max-height: unset;
 }
 
-.root > .content .note_quote
+.root > .content .note_quote,
+.in_view > .replies > .note > .content .note_quote
 {
   overflow-y:  scroll;
 }
@@ -1229,6 +1232,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .note.tiny
 {
   margin: 0;
+  
 }
 
 .note.tiny:last-child

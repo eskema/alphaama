@@ -67,6 +67,7 @@ aa.w.del =s=>
 };
 
 
+// return single or plural string
 aa.fx.plural =(n,s)=>
 {
   return n === 1 ? s : s+'s';
@@ -699,7 +700,7 @@ aa.kinds[9321] =dat=>
     {
       let amount = aa.fx.tag_value(dat.event.tags,'amount');
       aa.w.o.redeemable.push([dat.event.id,amount]);
-      a.w.save();
+      aa.w.save();
       aa.log('nut zap +'+amount+' '+dat.event.id);
       //aa.log(redeem_butt)
     }

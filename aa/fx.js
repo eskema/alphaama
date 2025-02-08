@@ -752,6 +752,20 @@ aa.fx.to =async(f,t,s)=>
 aa.fx.trunk =(s,len=3,sep='…')=> s.slice(0,len)+sep+s.slice(-len);
 
 
+aa.fx.url_from_tags =tags=>
+{
+  let url;
+  let tag = tags.find(t=>t[0] === 'url');
+  if (!tag || tag.length < 2)
+  {
+    tag = tags.find(t=>t[0] === 'imeta');
+    if (tag) url = aa.is.url(aa.fx.a_o(tag).url)?.href;
+  }
+  else url = aa.is.url(tag[1])?.href;
+  return url
+};
+
+
 // checks if string is valid url and then checks extension for media file types.
 // returns false if no media found or array with extension,URL
 aa.fx.url_type =s=>
@@ -773,17 +787,17 @@ aa.fx.url_type =s=>
   };
    
   return check_ext(is_img)?['img',url]
-  :check_ext(is_av)?['av',url] 
+  :check_ext(is_av)?['av',url]
   :['link',url]
 };
 
 
 // verify event object
-aa.fx.verify_event =o=> 
+aa.fx.verify_event =o=>
 {
   let verified;
-  try { verified = NostrTools.verifyEvent(o) }
-  catch (er) { console.log('unable to verify',o) };
+  try {verified = NostrTools.verifyEvent(o)}
+  catch (er){aa.log('unable to verify:' +JSON.stringify(o))};
   return verified
 };
 

@@ -18,6 +18,11 @@
   z-index: 9;
 }
 
+#cli_t > strong
+{
+  color: red;
+}
+
 #cli_collapse
 {
   align-self: stretch;
@@ -75,11 +80,6 @@
   position: relative;
   resize: none;
   white-space: pre-wrap;
-}
-
-#cli_t::after
-{
-  content: " yo";
 }
 
 #cli_t:focus

@@ -14,17 +14,18 @@ dat:
 * is public domain, free and open-source.
 * you can do whatever the fuck you want with it.
 
-source code:
+source code:  
 https://github.com/eskema/alphaama
 
 nostr:
 https://github.com/nostr-protocol/nostr
 
+stable deployment:
+https://alphaama.com
+
 work in progress dev deployment:
 https://wip.alphaama.com
 
-stable deployment:
-https://alphaama.com
 
 
 image::https://i.nostr.build/XyflANm8pOEQUHI6.jpg["screenshot of alphaama"]
@@ -39,7 +40,7 @@ image::https://i.nostr.build/XyflANm8pOEQUHI6.jpg["screenshot of alphaama"]
 * can be used to create any event type and autofills the missing required fields (raw JSON)
 * you can use multiple tabs with different requests
 * to reset everything, type: `.aa zzz`
-* some commands can be repeated using `,` as a separator (ex:`.aa o add trust 4, theme light, pagination 500, ns gm`)
+* some commands can be repeated using `,` as a separator (ex: `.aa o add trust 4, theme light, pagination 500, ns gm`)
 * some commands may be piped using ` | `
 
 
@@ -57,11 +58,11 @@ video::https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4["example of how to switch them
 
 * relays are kept locally and are separate from your published relays
 * relays can be added to sets
-* default relay set for reading is "read"
-* default relay set for writing is "write"
-* default relay set for disabled is "off"
-* relay sets (relset) can be used in requests or to create a list (kind:10002)
-* depending from where relays were imported, some sets are added automatically (ext, k3, k10002, hint)
+* default relay set for reading is `read`
+* default relay set for writing is `write`
+* default relay set for disabled is `off`
+* relay sets (relset) can be used in requests or to create lists
+* depending from where relays were imported, some sets are added automatically (`ext`, `k3`, `k10002`, `out`, `hint`)
 
 to add a relay, type: `.aa r add <url> <set_1> <set_2>`
 
@@ -137,9 +138,10 @@ example: `.aa q run f, u, n`
 
 soon™
 
-the WoT score system used here is very primitive and consists of 2 integer values: 
-. a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc). this value relates to the `trust` option
-. a generated value from the number of followers a pubkey has that you also follow. this is only used as a visual hint
+the WoT score system used here is very primitive and consists of 2 integer values:
+
+* a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc). this value relates to the `trust` option
+* a generated value from the number of followers a pubkey has that you also follow. this is only used as a visual hint
 
 
 == (e) INTERACTING WITH EVENTS 

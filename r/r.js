@@ -19,11 +19,7 @@ aa.r =
 // add relays
 aa.r.add =s=>
 {
-  let [valid,invalid,off] = aa.mod_servers_add(aa.r,s);
-  let a = s.split(' ');
-  let url = a.shift();
-  aa.log(valid.length+' relays added:\n'+valid.join(', '));
-  if (invalid.length) aa.log(invalid.length+' relays:\n'+invalid.join(', '));
+  let [valid,invalid,off] = aa.mod_servers_add(aa.r,s,'relay');
   for (const url of off) aa.r.force_close([url]);
 };
 
@@ -146,9 +142,9 @@ aa.r.close =(k,id)=>
     if (r.ws?.readyState === 1) r.ws.send(JSON.stringify(['CLOSE',id]));
     else console.log('close rs',r.ws?.readyState);
     delete r.q[id];
-    setTimeout(()=>{aa.r.upd_state(k)},500);
   }
   else console.log('no close ',k,id);
+  setTimeout(()=>{aa.r.upd_state(k)},500);
 };
 
 
@@ -607,19 +603,28 @@ aa.r.message_type.auth =async message=>
   let url = message.origin;
   let challenge = message.data[1];
   if (!url || !challenge) return;
+  
+  let active = aa.r.active[url];
+  if (!active) return;
+  active.challenge = challenge;
 
-  let event = {kind:22242,tags:[]};
-  event.tags.push(['relay',url]);
-  event.tags.push(['challenge',challenge]);
-  aa.e.normalise(event);
-  event.id = aa.fx.hash(event);
-  const signed = await aa.u.sign(event);
-  if (signed) 
+  let event = {kind:22242,tags:[['relay',url],['challenge',challenge]]};
+
+  let relay = aa.r.o.ls[url];
+  let signed;
+  if (!relay?.sets.includes('auth'))
   {
-    let relay = aa.r.active[url];
-    relay.challenge = challenge;
-    aa.r.broadcast(signed,[url]);
+    if (!relay.keys) relay.keys = aa.fx.keypair();
+    signed = NostrTools.finalizeEvent(event,relay.keys[0]);
   }
+  else
+  {
+    aa.e.normalise(event);
+    event.id = aa.fx.hash(event);
+    signed = await aa.u.sign(event);
+  }
+
+  if (signed) aa.r.broadcast(signed,[url]);
 };
 
 

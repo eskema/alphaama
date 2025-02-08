@@ -142,7 +142,7 @@ indexed_db.ok =(db,o)=>
 onmessage =m=> 
 { 
   // console.log('db onmessage',m.data);
-  const db = indexedDB.open("alphaama", 15);
+  const db = indexedDB.open("alphaama", 16);
   db.onerror =e=>{ console.log('db error',e)};
   db.onupgradeneeded = indexed_db.upg;
   db.onsuccess =e=> indexed_db.ok(e.target.result,m.data);  
@@ -233,6 +233,7 @@ indexed_db.upg =(e) =>
   if (!st.indexNames.contains('kind')) st.createIndex('kind','event.kind',{unique:false});
   if (!st.indexNames.contains('created_at')) st.createIndex('created_at','event.created_at',{unique:false});
   if (!st.indexNames.contains('refs')) st.createIndex('refs','refs',{unique:false,multiEntry:true});
+  if (!st.indexNames.contains('id_a')) st.createIndex('id_a','id_a',{unique:false});
   // if (!st.indexNames.contains('tags')) st.createIndex('tags','event.tags',{unique:false,multiEntry:true});
 
   if (!db.objectStoreNames.contains('authors'))
@@ -240,6 +241,7 @@ indexed_db.upg =(e) =>
     db.createObjectStore('authors',{keyPath:'xpub'});
   }
   st = tx.objectStore('authors');
+  if (!st.indexNames.contains('pubkey')) st.createIndex('pubkey','pubkey');
   if (!st.indexNames.contains('npub')) st.createIndex('npub','npub');
   if (st.indexNames.contains('updated')) st.deleteIndex('updated');
   if (!st.indexNames.contains('name')) st.createIndex('name','metadata.name',{unique:false});

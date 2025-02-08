@@ -1534,42 +1534,38 @@ aa.e.render_content =async(l,dat)=>
   aa.parse.context(l,dat.event,aa.is.trusted(score));
 };
 
-
+// renders video from tags
 aa.e.render_video =async(l,dat)=>
 {
   let p = await aa.db.get_p(dat.event.pubkey);
-  let score = p?p.score:0;
-  let vid_url = aa.is.url(aa.fx.tag_value(dat.event.tags,'url'))?.href;
-  if (!vid_url) return
-  let vid = aa.is.trusted(score)?aa.mk.av(vid_url):aa.mk.link(vid_url);
-  vid = aa.mk.l('p',{cla:'paragraph',app:vid})
-  let content = l.querySelector('.content');
-  if (content) content.prepend(vid);
-  else l.insertBefore(vid,l.children[1])
+  let trusted = aa.is.trusted(p?.score||0);
+  aa.parse.context(l,dat.event,trusted);
+  let url = aa.fx.url_from_tags(dat.event.tags);
+  if (url)
+  {
+    let av = trusted?aa.mk.av(url):aa.mk.link(url);
+    av = aa.mk.l('p',{cla:'paragraph',app:av});
+    let content = l.querySelector('.content');
+    if (content) content.prepend(av);
+    else l.insertBefore(av,l.children[1])
+  }
 };
 
 
-aa.e.render_image =async(note,dat)=>
+// renders image from tags
+aa.e.render_image =async(l,dat)=>
 {
   let p = await aa.db.get_p(dat.event.pubkey);
   let trusted = aa.is.trusted(p?.score||0);
-  aa.parse.context(note,dat.event,trusted);
-  let tag = dat.event.tags.find(t=>t[0] === 'url');
-  let url;
-  if (!tag || tag.length < 2) 
-  {
-    tag = dat.event.tags.find(t=>t[0] === 'imeta');
-    if (tag) url = aa.is.url(aa.fx.a_o(tag).url)?.href;
-  }
-  else url = aa.is.url(tag[1])?.href;
-
+  aa.parse.context(l,dat.event,trusted);
+  let url = aa.fx.url_from_tags(dat.event.tags);
   if (url)
   {
     let img = trusted?aa.mk.img(url):aa.mk.link(url);
     img = aa.mk.l('p',{cla:'paragraph',app:img})
-    let content = note.querySelector('.content');
+    let content = l.querySelector('.content');
     if (content) content.prepend(img);
-    else note.insertBefore(img,note.children[1])
+    else l.insertBefore(img,l.children[1])
   }
 };
 

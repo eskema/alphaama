@@ -1121,7 +1121,6 @@ aa.is.trust_x =x=>
 // verify nip05
 aa.p.verify_nip05 =async(s,p)=>
 {
-  s = s.trim();
   let verified = false;
   let dis = await NostrTools.nip05.queryProfile(s);
   if (dis)
@@ -1158,6 +1157,7 @@ aa.kinds[0] =dat=>
         p.metadata = metadata;
         aa.p.save(p);
         aa.p.p_links_upd(p);
+        if (aa.is.u(x) && aa.u) aa.u.upd_u_u();
       }
     }
   });

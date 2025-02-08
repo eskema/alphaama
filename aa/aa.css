@@ -104,8 +104,9 @@ html[data-theme="light"]
 
 ::selection
 {
-  background: rgba(var(--color-f), .99);
+  background: rgba(var(--color-f), .6);
   color: rgba(var(--color-a), .99);
+  /*mix-blend-mode: multiply;*/
 }
 
 ::placeholder
@@ -578,16 +579,6 @@ li.item > .val
   padding-left: 0;
 }
 
-#u_u #mods
-{
-  pointer-events: none;
-}
-
-#mods > *
-{
-  pointer-events: auto;
-}
-
 .mod
 {
   background: rgba(var(--color-b),.8);
@@ -933,6 +924,7 @@ li.item > .val
 #dialog > button
 {
   padding-bottom: var(--pad);
+  padding-top: var(--padm);
   position: sticky;
   top: 0;
 /*  position: absolute;
@@ -1057,6 +1049,7 @@ li.item > .val
 {
   margin: 0;
   line-height: 1.5;
+  white-space: pre-wrap;
 }
 
 .l > .list > li
@@ -1140,13 +1133,17 @@ html:not(.cli_expanded) .l:not(.is_new),
 
 @media screen and (min-width: 1025px) 
 {
-
   #caralho:hover::before 
   {
     background: rgb(var(--color-b));
-    content: "|<=";
+    content: "!<=";
     position: absolute;
   }
+  
+/*  .viewing #caralho:hover::before 
+  {
+    content: "X<=";
+  }*/
 
   details > summary:hover
   {
