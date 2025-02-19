@@ -6,6 +6,8 @@ index filtering
 
 */
 
+
+
 aa.mk.styleshit('/i/i.css');
 
 aa.i =
@@ -141,18 +143,22 @@ aa.i.filter_out_rm =(items,k_v)=>
 // remove class 'solo' from items
 aa.i.filter_solo_rm =(items,k_v)=>
 {
-  let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k_v]) : [];
-  if (a.length) aa.l.dataset.solo = a.join(' ');
-  else
+  fastdom.mutate(()=>
   {
-    aa.l.dataset.solo = '';
-    aa.l.classList.remove('haz_solo');
-  }
-  for (const l of items)
-  {
-    l.classList.remove('solo');
-    aa.fx.path_rm(k_v);
-  }
+    let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k_v]) : [];
+    if (a.length) aa.l.dataset.solo = a.join(' ');
+    else
+    {
+      aa.l.dataset.solo = '';
+      aa.l.classList.remove('haz_solo');
+    }
+    for (const l of items)
+    {
+      l.classList.remove('solo');
+      aa.fx.path_rm(k_v);
+    }
+  })
+
 };
 
 
@@ -165,15 +171,18 @@ aa.i.filter_out_apply =(items,k_v)=>
 
 // apply class 'solo' to items
 aa.i.filter_solo_apply =(items,k_v)=>
-{ 
-  aa.l.classList.add('haz_solo');
-  if (!aa.l.dataset.solo) aa.l.dataset.solo = k_v;
-  else 
+{
+  fastdom.mutate(()=>
   {
-    let a = aa.l.dataset.solo.trim().split(' ');
-    aa.fx.a_add(a,[k_v]);
-    aa.l.dataset.solo = a.join(' ')
-  }
+    aa.l.classList.add('haz_solo');
+    if (!aa.l.dataset.solo) aa.l.dataset.solo = k_v;
+    else 
+    {
+      let a = aa.l.dataset.solo.trim().split(' ');
+      aa.fx.a_add(a,[k_v]);
+      aa.l.dataset.solo = a.join(' ')
+    }
+  });
 
   for (const l of items) aa.i.solo(l,k_v);
 };

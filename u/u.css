@@ -65,6 +65,7 @@
   color: rgb(var(--color-b));
   display: grid;
   height: var(--size);
+  object-fit: cover;
   padding: 0;
   position: fixed;
   right: 0;
@@ -85,14 +86,16 @@
 
 #butt_u_u img 
 {
-  height: 100%;
+  height: var(--size);
   object-fit: cover;
   object-position: 50% 61.8%;
   overflow: hidden;
   pointer-events: none;
   transform: scale(.82);
   transition: var(--trans-quart);
-  width: 100%;
+  transition: transform .4s ease-in-out;
+  transform-origin: center center;
+  width: var(--size);
 }
 
 #butt_u_u img:not([src])
@@ -102,12 +105,12 @@
 
 #u_u.expanded
 {
-  max-height: calc(100vh - var(--line) - var(--size));
   max-height: calc(100vh - var(--line));
   overflow-y: scroll;
 }
 
-#u_u.expanded #butt_u_u
+#u_u.expanded #butt_u_u,
+#u_u.expanded #butt_u_u img
 {
   width: var(--line);
   height: var(--line);
@@ -118,6 +121,11 @@
   font-size: var(--font-size-s);
 }
 
+#u_u.expanded #butt_u_u:.has-picture
+{
+  font-size: 0;
+}
+
 #u_u.expanded:not([style]) #butt_u_u:not(.has-picture)::after
 {
   content: "u_u";
@@ -126,9 +134,10 @@
 
 #u_u.expanded #butt_u_u.has-picture img
 {
-  position: relative;
-  transform: scale(.8);
-  z-index: 1;
+  /*position: relative;*/
+  /*transform: scale(.8);*/
+  /*z-index: 1;*/
+  /*display: none;*/
 }
 
 #u_u:not(.expanded) > *:not(#butt_u_u)

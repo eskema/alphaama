@@ -5,6 +5,8 @@ A<3   aa
 v3
 
 */
+
+
 const aa_version = 48;
 
 const aa = 
@@ -19,16 +21,20 @@ const aa =
   clk:{},
   dependencies:
   [
-    '/dep/cashuts.js?v=2.0.0',
-    '/dep/nostr-tools_2_10_4.js',
-    // '/dep/nostr-tools.js?v=2.10.4',
-    '/dep/qrcode.js',
-    '/dep/bolt11.js',
-    // '/dep/webtorrent.min.js',
     '/dep/asciidoctor.min.js?v=3.0.4',
+    '/dep/bolt11.js',
+    '/dep/cashuts.js?v=2.0.0',
+    '/dep/fastdom.js?v=1.0.4',
+    // '/dep/fastdom-strict.js?v=1.0.4',
+    '/dep/math.js?v=14.0.1',
+    '/dep/nostr-tools.js?v=2.10.4',
+    '/dep/qrcode.js',
+    
+    // '/dep/webtorrent.min.js',
+    
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
-    '/dep/math.js?v=14.0.1',
+    
   ],
   extensions:
   {
@@ -61,15 +67,11 @@ const aa =
   [
     '/aa/aa.css?v='+aa_version,
   ],
-  temp:{print:{},refs:{},orphan:{}},
+  temp:{},
   tools:
   [
-    
     '/aa/fx.js?v='+aa_version,
-    // '/aa/mk.js?v='+aa_version,
     '/av/av.js?v='+aa_version,
-    // '/aa/db.js?v='+aa_version,
-    // '/aa/state.js?v='+aa_version,
   ],
   ui:
   {
@@ -241,18 +243,20 @@ aa.clk.expand =e=>
   if (!l) return;
   
   let block;
-  requestAnimationFrame(e=>
+  let id = l.id || l.closest('.note').dataset.id+'_replies';
+
+  fastdom.mutate(()=>
   {
     if (l.classList.contains('expanded'))
     {
       l.classList.remove('expanded');
-      sessionStorage[l.id] = '';
+      sessionStorage[id] = '';
       block = 'center';
     }
     else
     {
       l.classList.add('expanded');
-      sessionStorage[l.id] = 'expanded';
+      sessionStorage[id] = 'expanded';
       block = 'start';
     }
     aa.fx.scroll(l,{behavior:'smooth',block:block});
@@ -473,6 +477,7 @@ aa.mk.item =(k='',v,tag_name='li')=>
   let l = aa.mk.l(tag_name,{cla:'item item_'+k});
   if (Array.isArray(v))  
   {
+    if (!v.length) l.classList.add('empty');
     if (typeof v[0]!=='object')
     {
       if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
@@ -489,15 +494,18 @@ aa.mk.item =(k='',v,tag_name='li')=>
       l.append(aa.mk.details(k,list));
     }
   }
-  else if (v && typeof v==='object') 
+  else if (v && typeof v==='object')
   {
+    if (!Object.keys(v).length) l.classList.add('empty');
     l.append(aa.mk.details(k,aa.mk.ls({ls:v})))
   }
-  else 
+  else
   {
-    if (v === null) v = 'null';
     if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
-    l.append(aa.mk.l('span',{cla:'val',con:v}));
+    if (!v || !v.length) l.classList.add('empty');  
+    if (v === null) v = 'null';
+    let vl = aa.mk.l('span',{cla:'val',con:v})
+    l.append(vl);
   }
   return l
 };
@@ -608,8 +616,8 @@ aa.load =(o={})=>
   aa.l = document.documentElement;
   aa.view = aa.mk.l('main',{id:'view'});
   aa.mod_l = aa.mk.l('div',{id:'mods'});
-  aa.mod_loaded = o.mods ? o.mods : aa.mods;
-  for (const mod_o of aa.mod_loaded) aa.mod_scripts(mod_o);
+  aa.mods_loaded = o.mods ? o.mods : aa.mods;
+  for (const mod_o of aa.mods_loaded) aa.mod_scripts(mod_o);
 
   aa.actions.push(
     {
@@ -647,9 +655,10 @@ aa.load =(o={})=>
 
 
 // log stuff to l
-aa.log =(s,l=false)=>
+aa.log =(s,l=false,is_new=true)=>
 {
-  const log = aa.mk.l('li',{cla:'l item is_new'});
+  let cla = 'l item'+(is_new?' is_new':'');
+  const log = aa.mk.l('li',{cla});
   if (typeof s === 'string') s = aa.mk.l('p',{con:s});
   log.append(s);
   if (!l) l = aa.logs || document.getElementById('logs');
@@ -657,7 +666,7 @@ aa.log =(s,l=false)=>
   {
     l.append(log);
     log.addEventListener('click',aa.logs_read);
-    aa.fx.scroll(log);
+    // aa.fx.scroll(log);
   }
   else console.log('log:',s);
   return log
@@ -671,9 +680,15 @@ aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
 // mark log as read
 aa.log_read =async l=>
 {
-  l.classList.remove('is_new');
-  l.classList.add('just_added');
-  l.blur();
+  fastdom.measure(()=>
+  {
+    l.blur();
+  });
+  fastdom.mutate(()=>
+  {
+    l.classList.remove('is_new');
+    l.classList.add('just_added');
+  })
 };
 
 
@@ -766,7 +781,7 @@ aa.mk.mod =mod=>
     {
       const last = [...aa.mod_l.children]
       .filter(i=> o.id < i.querySelector('summary').textContent)[0];
-      aa.mod_l.insertBefore(mod_l,last);
+      fastdom.mutate(()=>{aa.mod_l.insertBefore(mod_l,last)});
     }
     else aa.log(mod_l)
   }
@@ -803,14 +818,6 @@ aa.mod_load_old =async mod=>
 };
 
 
-// checks if required mods have loaded
-aa.is.mod_loaded =required=>
-{
-  for (const id of required) if (!aa.hasOwnProperty(id)) return false
-  return true
-};
-
-
 // save mod
 aa.mod_save = async mod=>
 {
@@ -830,7 +837,7 @@ aa.mod_save = async mod=>
 aa.mod_scripts =o=>
 {
   // console.log(o);
-  if (aa.is.mod_loaded(o.requires))
+  if (aa.is.mods_loaded(o.requires))
   {
     let script = aa.mk.l('script',{src:o.src});
     document.head.append(script);
@@ -965,6 +972,14 @@ aa.mod_ui =(mod,k)=>
     mod_l.classList.remove('empty');
     mod_l.parentElement.classList.remove('empty');
   } 
+};
+
+
+// checks if required mods have loaded
+aa.is.mods_loaded =required=>
+{
+  for (const id of required) if (!aa.hasOwnProperty(id)) return false
+  return true
 };
 
 
@@ -1125,7 +1140,10 @@ aa.run =(o={})=>
   document.body.prepend(aa.mk.header(),aa.view);
   let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
   u_u.append(aa.mod_l);
-  document.body.insertBefore(u_u,document.body.lastChild.previousSibling);
+  fastdom.mutate(()=>
+  {
+    document.body.insertBefore(u_u,document.body.lastChild.previousSibling);
+  });
 
   if (aa.is.iframe()) aa.l.classList.add('rigged');
   aa.wl.lock();
@@ -1144,8 +1162,8 @@ aa.mk.section =(id,expanded=false,l=false)=>
   const section_header = aa.mk.l('header');
   section_header.append(aa.mk.butt_expand(id));
   section.append(section_header);
-  aa.view.append(section);
   if (l) section.append(l);
+  if (aa.view) aa.view.append(section);
   return section
 };
 
@@ -1311,16 +1329,23 @@ aa.state.clear =()=>
     const in_view = aa.l.querySelector('.in_view');
     if (in_view) 
     {
-      in_view.classList.remove('in_view');
-      if (in_view.classList.contains('note'))
+      fastdom.mutate(()=>
       {
-        const in_path = aa.l.querySelectorAll('.in_path');
-        if (in_path) for (const l of in_path) l.classList.remove('in_path');
-      }
+        in_view.classList.remove('in_view');
+        if (in_view.classList.contains('note'))
+        {
+          const in_path = aa.l.querySelectorAll('.in_path');
+          if (in_path) for (const l of in_path) l.classList.remove('in_path');
+        }
+      });
     }
   }
-  if (aa.state.l) aa.state.l.textContent = '';
-  aa.l.classList.remove('viewing','view_e','view_p');
+  fastdom.mutate(()=>
+  {
+    if (aa.state.l) aa.state.l.textContent = '';
+    aa.l.classList.remove('viewing','view_e','view_p');
+  });
+
   aa.viewing = false;
   for (const c of aa.clear) c();
 };
@@ -1366,7 +1391,10 @@ aa.state.pop =()=>
       aa.state.resolve(state,search);  
     }
     else document.title = 'alphaama';
-    if (aa.state.l) aa.state.l.textContent = state;
+    fastdom.mutate(()=>
+    {
+      if (aa.state.l) aa.state.l.textContent = state;
+    })
   }
 };
 
@@ -1411,19 +1439,14 @@ aa.state.view =(s,search='')=>
   {
     last = history.state?.view ?? '';
     state = {view:view,last:last};
-
   }
   else 
   {
     last = history.state.last;
     state = {view:last,last:view};
-    // history.pushState(dis,'',path);
-    // aa.state.pop()
   }
   history.pushState(state,'',location.origin+location.pathname+state.view);
   aa.state.pop();
-  // history.back();
 };
 
 window.addEventListener('popstate',aa.state.pop);
-// window.addEventListener('load',aa.state.load);

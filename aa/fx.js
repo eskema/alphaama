@@ -94,8 +94,11 @@ aa.fx.chunks =(a,n)=>
 aa.fx.color =async(x,l)=> 
 {
   const rgb = aa.fx.color_xrgb(aa.fx.color_hex(x));
-  l.style.setProperty('--c',rgb);
-  l.dataset.luma = aa.fx.color_luma(rgb);
+  fastdom.mutate(()=>
+  {
+    l.style.setProperty('--c',rgb);
+    l.dataset.luma = aa.fx.color_luma(rgb);
+  });
 };
 
 
@@ -167,9 +170,32 @@ aa.fx.clz =x=>
 aa.fx.count_upd =(l,pos=true)=>
 {
   if (!l) return;
-  if (!l.dataset.count) l.dataset.count = 0;
-  if (pos) l.dataset.count++;
-  else l.dataset.count--
+  fastdom.mutate(()=>
+  {
+    if (!l.dataset.count) l.dataset.count = 0;
+    if (pos) l.dataset.count++;
+    else l.dataset.count--
+  })
+};
+
+
+// countdown to something in seconds
+aa.fx.countdown =async(s,seconds)=>
+{
+  return new Promise(resolve=>
+  {
+    setTimeout(()=>
+    {
+      aa.log(`${s}: done!`);
+      resolve(true)
+    },seconds*1000);
+
+    for (let i=0;i<seconds;i++)
+    {
+      let num = seconds - i;
+      setTimeout(()=>{aa.log(`${s}${num}s...`)},i*1000)
+    }
+  })
 };
 
 
@@ -203,18 +229,19 @@ aa.fx.decrypt =async(s='')=>
 
 
 // decript and parse
-aa.fx.decrypt_parse =async(x,cypher,s)=>
+aa.fx.decrypt_parse =async event=>
 {
-  let a = await window.nostr.nip44.decrypt(x,cypher);
+  let {pubkey,content} = event;
+  let a = await window.nostr.nip44.decrypt(pubkey,content);
   if (!a)
   {
-    aa.log(s+'decrypt failed');
+    aa.log(event.id+' decrypt failed');
     return
   }
   a = aa.parse.j(a);
   if (!a)
   {
-    aa.log(s+' decrypt parse failed');
+    aa.log(event.id+' decrypt parse failed');
     return
   }
   return a
@@ -455,8 +482,12 @@ aa.fx.path_rm =s=>
 };
 
 
+// return single or plural string
+aa.fx.plural =(n,s)=> n === 1 ? s : s+'s';
+
+
 // proof of work abort
-aa.fx.pow_a =(id)=>
+aa.fx.pow_abort =(id)=>
 {
   let m = aa.temp.mining[id]
   if (!m) return;
@@ -505,7 +536,7 @@ aa.fx.pow =async(event,dif)=>
     
     const kill =()=>
     {
-      setTimeout(()=>{aa.fx.pow_a(event.id)},200);
+      setTimeout(()=>{aa.fx.pow_abort(event.id)},200);
     };
     let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk:kill});
     log.append(butt_cancel);
@@ -542,7 +573,7 @@ aa.fx.random_s =(length)=>
 // scroll with delay
 aa.fx.scroll =async(l,options={})=>
 {
-  if (l) requestAnimationFrame(()=>{ l.scrollIntoView(options) });
+  if (l) l.scrollIntoView(options)
 }; 
 
 

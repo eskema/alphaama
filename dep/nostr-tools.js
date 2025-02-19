@@ -50,6 +50,7 @@ var NostrTools = (() => {
     nip44: () => nip44_exports,
     nip47: () => nip47_exports,
     nip57: () => nip57_exports,
+    nip59: () => nip59_exports,
     nip98: () => nip98_exports,
     parseReferences: () => parseReferences,
     serializeEvent: () => serializeEvent,
@@ -2553,17 +2554,18 @@ var NostrTools = (() => {
     CreateOrUpdateStall: () => CreateOrUpdateStall,
     Curationsets: () => Curationsets,
     Date: () => Date2,
+    DirectMessageRelaysList: () => DirectMessageRelaysList,
     DraftClassifiedListing: () => DraftClassifiedListing,
     DraftLong: () => DraftLong,
     Emojisets: () => Emojisets,
     EncryptedDirectMessage: () => EncryptedDirectMessage,
-    EncryptedDirectMessages: () => EncryptedDirectMessages,
     EventDeletion: () => EventDeletion,
     FileMetadata: () => FileMetadata,
     FileServerPreference: () => FileServerPreference,
     Followsets: () => Followsets,
     GenericRepost: () => GenericRepost,
     Genericlists: () => Genericlists,
+    GiftWrap: () => GiftWrap,
     HTTPAuth: () => HTTPAuth,
     Handlerinformation: () => Handlerinformation,
     Handlerrecommendation: () => Handlerrecommendation,
@@ -2586,6 +2588,7 @@ var NostrTools = (() => {
     NostrConnect: () => NostrConnect,
     OpenTimestamps: () => OpenTimestamps,
     Pinlist: () => Pinlist,
+    PrivateDirectMessage: () => PrivateDirectMessage,
     ProblemTracker: () => ProblemTracker,
     ProfileBadges: () => ProfileBadges,
     PublicChatsList: () => PublicChatsList,
@@ -2596,6 +2599,7 @@ var NostrTools = (() => {
     Report: () => Report,
     Reporting: () => Reporting,
     Repost: () => Repost,
+    Seal: () => Seal,
     SearchRelaysList: () => SearchRelaysList,
     ShortTextNote: () => ShortTextNote,
     Time: () => Time,
@@ -2606,6 +2610,7 @@ var NostrTools = (() => {
     ZapRequest: () => ZapRequest,
     classifyKind: () => classifyKind,
     isEphemeralKind: () => isEphemeralKind,
+    isKind: () => isKind,
     isParameterizedReplaceableKind: () => isParameterizedReplaceableKind,
     isRegularKind: () => isRegularKind,
     isReplaceableKind: () => isReplaceableKind
@@ -2633,16 +2638,21 @@ var NostrTools = (() => {
       return "parameterized";
     return "unknown";
   }
+  function isKind(event, kind) {
+    const kindAsArray = kind instanceof Array ? kind : [kind];
+    return validateEvent(event) && kindAsArray.includes(event.kind) || false;
+  }
   var Metadata = 0;
   var ShortTextNote = 1;
   var RecommendRelay = 2;
   var Contacts = 3;
   var EncryptedDirectMessage = 4;
-  var EncryptedDirectMessages = 4;
   var EventDeletion = 5;
   var Repost = 6;
   var Reaction = 7;
   var BadgeAward = 8;
+  var Seal = 13;
+  var PrivateDirectMessage = 14;
   var GenericRepost = 16;
   var ChannelCreation = 40;
   var ChannelMetadata = 41;
@@ -2650,6 +2660,7 @@ var NostrTools = (() => {
   var ChannelHideMessage = 43;
   var ChannelMuteUser = 44;
   var OpenTimestamps = 1040;
+  var GiftWrap = 1059;
   var FileMetadata = 1063;
   var LiveChatMessage = 1311;
   var ProblemTracker = 1971;
@@ -2674,6 +2685,7 @@ var NostrTools = (() => {
   var SearchRelaysList = 10007;
   var InterestsList = 10015;
   var UserEmojiList = 10030;
+  var DirectMessageRelaysList = 10050;
   var FileServerPreference = 10096;
   var NWCWalletInfo = 13194;
   var LightningPubRPC = 21e3;
@@ -2874,6 +2886,7 @@ var NostrTools = (() => {
     _onauth = null;
     baseEoseTimeout = 4400;
     connectionTimeout = 4400;
+    publishTimeout = 4400;
     openSubs = /* @__PURE__ */ new Map();
     connectionTimeoutHandle;
     connectionPromise;
@@ -3017,11 +3030,13 @@ var NostrTools = (() => {
             const ok = data[2];
             const reason = data[3];
             const ep = this.openEventPublishes.get(id);
-            if (ok)
-              ep.resolve(reason);
-            else
-              ep.reject(new Error(reason));
-            this.openEventPublishes.delete(id);
+            if (ep) {
+              if (ok)
+                ep.resolve(reason);
+              else
+                ep.reject(new Error(reason));
+              this.openEventPublishes.delete(id);
+            }
             return;
           }
           case "CLOSED": {
@@ -3068,6 +3083,13 @@ var NostrTools = (() => {
         this.openEventPublishes.set(event.id, { resolve, reject });
       });
       this.send('["EVENT",' + JSON.stringify(event) + "]");
+      setTimeout(() => {
+        const ep = this.openEventPublishes.get(event.id);
+        if (ep) {
+          ep.reject(new Error("publish timed out"));
+          this.openEventPublishes.delete(event.id);
+        }
+      }, this.publishTimeout);
       return ret;
     }
     async count(filters, params) {
@@ -3317,7 +3339,17 @@ var NostrTools = (() => {
           return Promise.reject("duplicate url");
         }
         let r = await this.ensureRelay(url);
-        return r.publish(event);
+        return r.publish(event).then((reason) => {
+          if (this.trackRelays) {
+            let set = this.seenOn.get(event.id);
+            if (!set) {
+              set = /* @__PURE__ */ new Set();
+              this.seenOn.set(event.id, set);
+            }
+            set.add(r);
+          }
+          return reason;
+        });
       });
     }
     listConnectionStatus() {
@@ -3348,6 +3380,7 @@ var NostrTools = (() => {
   __export(nip19_exports, {
     BECH32_REGEX: () => BECH32_REGEX,
     Bech32MaxSize: () => Bech32MaxSize,
+    NostrTypeGuard: () => NostrTypeGuard,
     decode: () => decode,
     encodeBytes: () => encodeBytes,
     naddrEncode: () => naddrEncode,
@@ -3355,7 +3388,6 @@ var NostrTools = (() => {
     noteEncode: () => noteEncode,
     nprofileEncode: () => nprofileEncode,
     npubEncode: () => npubEncode,
-    nrelayEncode: () => nrelayEncode,
     nsecEncode: () => nsecEncode
   });
 
@@ -3713,6 +3745,15 @@ var NostrTools = (() => {
   var coderTypeError = `Invalid encoding type. Available types: ${Object.keys(CODERS).join(", ")}`;
 
   // nip19.ts
+  var NostrTypeGuard = {
+    isNProfile: (value) => /^nprofile1[a-z\d]+$/.test(value || ""),
+    isNEvent: (value) => /^nevent1[a-z\d]+$/.test(value || ""),
+    isNAddr: (value) => /^naddr1[a-z\d]+$/.test(value || ""),
+    isNSec: (value) => /^nsec1[a-z\d]{58}$/.test(value || ""),
+    isNPub: (value) => /^npub1[a-z\d]{58}$/.test(value || ""),
+    isNote: (value) => /^note1[a-z\d]+$/.test(value || ""),
+    isNcryptsec: (value) => /^ncryptsec1[a-z\d]+$/.test(value || "")
+  };
   var Bech32MaxSize = 5e3;
   var BECH32_REGEX = /[\x21-\x7E]{1,83}1[023456789acdefghjklmnpqrstuvwxyz]{6,}/;
   function integerToUint8Array(number4) {
@@ -3781,15 +3822,6 @@ var NostrTools = (() => {
             kind: parseInt(bytesToHex2(tlv[3][0]), 16),
             relays: tlv[1] ? tlv[1].map((d) => utf8Decoder.decode(d)) : []
           }
-        };
-      }
-      case "nrelay": {
-        let tlv = parseTLV(data);
-        if (!tlv[0]?.[0])
-          throw new Error("missing TLV 0 for nrelay");
-        return {
-          type: "nrelay",
-          data: utf8Decoder.decode(tlv[0][0])
         };
       }
       case "nsec":
@@ -3862,12 +3894,6 @@ var NostrTools = (() => {
       3: [new Uint8Array(kind)]
     });
     return encodeBech32("naddr", data);
-  }
-  function nrelayEncode(url) {
-    let data = encodeTLV({
-      0: [utf8Encoder.encode(url)]
-    });
-    return encodeBech32("nrelay", data);
   }
   function encodeTLV(tlv) {
     let entries = [];
@@ -4787,16 +4813,19 @@ var NostrTools = (() => {
   var nip05_exports = {};
   __export(nip05_exports, {
     NIP05_REGEX: () => NIP05_REGEX,
+    isNip05: () => isNip05,
     isValid: () => isValid,
     queryProfile: () => queryProfile,
     searchDomain: () => searchDomain,
     useFetchImplementation: () => useFetchImplementation
   });
   var NIP05_REGEX = /^(?:([\w.+-]+)@)?([\w_-]+(\.[\w_-]+)+)$/;
+  var isNip05 = (value) => NIP05_REGEX.test(value || "");
   var _fetch;
   try {
     _fetch = fetch;
-  } catch {
+  } catch (_) {
+    null;
   }
   function useFetchImplementation(fetchImplementation) {
     _fetch = fetchImplementation;
@@ -4804,7 +4833,10 @@ var NostrTools = (() => {
   async function searchDomain(domain, query = "") {
     try {
       const url = `https://${domain}/.well-known/nostr.json?name=${query}`;
-      const res = await _fetch(url, { redirect: "error" });
+      const res = await _fetch(url, { redirect: "manual" });
+      if (res.status !== 200) {
+        throw Error("Wrong response code");
+      }
       const json = await res.json();
       return json.names;
     } catch (_) {
@@ -4815,18 +4847,22 @@ var NostrTools = (() => {
     const match = fullname.match(NIP05_REGEX);
     if (!match)
       return null;
-    const [_, name = "_", domain] = match;
+    const [, name = "_", domain] = match;
     try {
       const url = `https://${domain}/.well-known/nostr.json?name=${name}`;
-      const res = await (await _fetch(url, { redirect: "error" })).json();
-      let pubkey = res.names[name];
-      return pubkey ? { pubkey, relays: res.relays?.[pubkey] } : null;
+      const res = await _fetch(url, { redirect: "manual" });
+      if (res.status !== 200) {
+        throw Error("Wrong response code");
+      }
+      const json = await res.json();
+      const pubkey = json.names[name];
+      return pubkey ? { pubkey, relays: json.relays?.[pubkey] } : null;
     } catch (_e) {
       return null;
     }
   }
   async function isValid(pubkey, nip05) {
-    let res = await queryProfile(nip05);
+    const res = await queryProfile(nip05);
     return res ? res.pubkey === pubkey : false;
   }
 
@@ -4840,51 +4876,98 @@ var NostrTools = (() => {
       reply: void 0,
       root: void 0,
       mentions: [],
-      profiles: []
+      profiles: [],
+      quotes: []
     };
-    const eTags = [];
-    for (const tag of event.tags) {
+    let maybeParent;
+    let maybeRoot;
+    for (let i2 = event.tags.length - 1; i2 >= 0; i2--) {
+      const tag = event.tags[i2];
       if (tag[0] === "e" && tag[1]) {
-        eTags.push(tag);
+        const [_, eTagEventId, eTagRelayUrl, eTagMarker, eTagAuthor] = tag;
+        const eventPointer = {
+          id: eTagEventId,
+          relays: eTagRelayUrl ? [eTagRelayUrl] : [],
+          author: eTagAuthor
+        };
+        if (eTagMarker === "root") {
+          result.root = eventPointer;
+          continue;
+        }
+        if (eTagMarker === "reply") {
+          result.reply = eventPointer;
+          continue;
+        }
+        if (eTagMarker === "mention") {
+          result.mentions.push(eventPointer);
+          continue;
+        }
+        if (!maybeParent) {
+          maybeParent = eventPointer;
+        } else {
+          maybeRoot = eventPointer;
+        }
+        result.mentions.push(eventPointer);
+        continue;
+      }
+      if (tag[0] === "q" && tag[1]) {
+        const [_, eTagEventId, eTagRelayUrl] = tag;
+        result.quotes.push({
+          id: eTagEventId,
+          relays: eTagRelayUrl ? [eTagRelayUrl] : []
+        });
       }
       if (tag[0] === "p" && tag[1]) {
         result.profiles.push({
           pubkey: tag[1],
           relays: tag[2] ? [tag[2]] : []
         });
+        continue;
       }
     }
-    for (let eTagIndex = 0; eTagIndex < eTags.length; eTagIndex++) {
-      const eTag = eTags[eTagIndex];
-      const [_, eTagEventId, eTagRelayUrl, eTagMarker] = eTag;
-      const eventPointer = {
-        id: eTagEventId,
-        relays: eTagRelayUrl ? [eTagRelayUrl] : []
-      };
-      const isFirstETag = eTagIndex === 0;
-      const isLastETag = eTagIndex === eTags.length - 1;
-      if (eTagMarker === "root") {
-        result.root = eventPointer;
-        continue;
-      }
-      if (eTagMarker === "reply") {
-        result.reply = eventPointer;
-        continue;
-      }
-      if (eTagMarker === "mention") {
-        result.mentions.push(eventPointer);
-        continue;
-      }
-      if (isFirstETag) {
-        result.root = eventPointer;
-        continue;
-      }
-      if (isLastETag) {
-        result.reply = eventPointer;
-        continue;
-      }
-      result.mentions.push(eventPointer);
+    if (!result.root) {
+      result.root = maybeRoot || maybeParent || result.reply;
     }
+    if (!result.reply) {
+      result.reply = maybeParent || result.root;
+    }
+    ;
+    [result.reply, result.root].forEach((ref) => {
+      if (!ref)
+        return;
+      let idx = result.mentions.indexOf(ref);
+      if (idx !== -1) {
+        result.mentions.splice(idx, 1);
+      }
+      if (ref.author) {
+        let author = result.profiles.find((p) => p.pubkey === ref.author);
+        if (author && author.relays) {
+          if (!ref.relays) {
+            ref.relays = [];
+          }
+          author.relays.forEach((url) => {
+            if (ref.relays?.indexOf(url) === -1)
+              ref.relays.push(url);
+          });
+          author.relays = ref.relays;
+        }
+      }
+    });
+    result.mentions.forEach((ref) => {
+      if (ref.author) {
+        let author = result.profiles.find((p) => p.pubkey === ref.author);
+        if (author && author.relays) {
+          if (!ref.relays) {
+            ref.relays = [];
+          }
+          author.relays.forEach((url) => {
+            if (ref.relays.indexOf(url) === -1)
+              ref.relays.push(url);
+          });
+          author.relays = ref.relays;
+        }
+      }
+    });
     return result;
   }
 
@@ -4911,17 +4994,18 @@ var NostrTools = (() => {
   // nip13.ts
   var nip13_exports = {};
   __export(nip13_exports, {
+    fastEventHash: () => fastEventHash,
     getPow: () => getPow,
     minePow: () => minePow
   });
   function getPow(hex2) {
     let count = 0;
-    for (let i2 = 0; i2 < hex2.length; i2++) {
-      const nibble = parseInt(hex2[i2], 16);
+    for (let i2 = 0; i2 < 64; i2 += 8) {
+      const nibble = parseInt(hex2.substring(i2, i2 + 8), 16);
       if (nibble === 0) {
-        count += 4;
+        count += 32;
       } else {
-        count += Math.clz32(nibble) - 28;
+        count += Math.clz32(nibble);
         break;
       }
     }
@@ -4933,18 +5017,23 @@ var NostrTools = (() => {
     const tag = ["nonce", count.toString(), difficulty.toString()];
     event.tags.push(tag);
     while (true) {
-      const now = Math.floor(new Date().getTime() / 1e3);
-      if (now !== event.created_at) {
+      const now2 = Math.floor(new Date().getTime() / 1e3);
+      if (now2 !== event.created_at) {
         count = 0;
-        event.created_at = now;
+        event.created_at = now2;
       }
       tag[1] = (++count).toString();
-      event.id = getEventHash(event);
+      event.id = fastEventHash(event);
       if (getPow(event.id) >= difficulty) {
         break;
       }
     }
     return event;
+  }
+  function fastEventHash(evt) {
+    return bytesToHex2(
+      sha2562(utf8Encoder.encode(JSON.stringify([0, evt.pubkey, evt.created_at, evt.kind, evt.tags, evt.content])))
+    );
   }
 
   // nip18.ts
@@ -6225,6 +6314,86 @@ var NostrTools = (() => {
       zap.tags.push(["preimage", preimage]);
     }
     return zap;
+  }
+
+  // nip59.ts
+  var nip59_exports = {};
+  __export(nip59_exports, {
+    createRumor: () => createRumor,
+    createSeal: () => createSeal,
+    createWrap: () => createWrap,
+    unwrapEvent: () => unwrapEvent,
+    unwrapManyEvents: () => unwrapManyEvents,
+    wrapEvent: () => wrapEvent,
+    wrapManyEvents: () => wrapManyEvents
+  });
+  var TWO_DAYS = 2 * 24 * 60 * 60;
+  var now = () => Math.round(Date.now() / 1e3);
+  var randomNow = () => Math.round(now() - Math.random() * TWO_DAYS);
+  var nip44ConversationKey = (privateKey, publicKey) => getConversationKey(privateKey, publicKey);
+  var nip44Encrypt = (data, privateKey, publicKey) => encrypt3(JSON.stringify(data), nip44ConversationKey(privateKey, publicKey));
+  var nip44Decrypt = (data, privateKey) => JSON.parse(decrypt3(data.content, nip44ConversationKey(privateKey, data.pubkey)));
+  function createRumor(event, privateKey) {
+    const rumor = {
+      created_at: now(),
+      content: "",
+      tags: [],
+      ...event,
+      pubkey: getPublicKey(privateKey)
+    };
+    rumor.id = getEventHash(rumor);
+    return rumor;
+  }
+  function createSeal(rumor, privateKey, recipientPublicKey) {
+    return finalizeEvent(
+      {
+        kind: Seal,
+        content: nip44Encrypt(rumor, privateKey, recipientPublicKey),
+        created_at: randomNow(),
+        tags: []
+      },
+      privateKey
+    );
+  }
+  function createWrap(seal, recipientPublicKey) {
+    const randomKey = generateSecretKey();
+    return finalizeEvent(
+      {
+        kind: GiftWrap,
+        content: nip44Encrypt(seal, randomKey, recipientPublicKey),
+        created_at: randomNow(),
+        tags: [["p", recipientPublicKey]]
+      },
+      randomKey
+    );
+  }
+  function wrapEvent(event, senderPrivateKey, recipientPublicKey) {
+    const rumor = createRumor(event, senderPrivateKey);
+    const seal = createSeal(rumor, senderPrivateKey, recipientPublicKey);
+    return createWrap(seal, recipientPublicKey);
+  }
+  function wrapManyEvents(event, senderPrivateKey, recipientsPublicKeys) {
+    if (!recipientsPublicKeys || recipientsPublicKeys.length === 0) {
+      throw new Error("At least one recipient is required.");
+    }
+    const senderPublicKey = getPublicKey(senderPrivateKey);
+    const wrappeds = [wrapEvent(event, senderPrivateKey, senderPublicKey)];
+    recipientsPublicKeys.forEach((recipientPublicKey) => {
+      wrappeds.push(wrapEvent(event, senderPrivateKey, recipientPublicKey));
+    });
+    return wrappeds;
+  }
+  function unwrapEvent(wrap, recipientPrivateKey) {
+    const unwrappedSeal = nip44Decrypt(wrap, recipientPrivateKey);
+    return nip44Decrypt(unwrappedSeal, recipientPrivateKey);
+  }
+  function unwrapManyEvents(wrappedEvents, recipientPrivateKey) {
+    let unwrappedEvents = [];
+    wrappedEvents.forEach((e) => {
+      unwrappedEvents.push(unwrapEvent(e, recipientPrivateKey));
+    });
+    unwrappedEvents.sort((a, b) => a.created_at - b.created_at);
+    return unwrappedEvents;
   }
 
   // nip98.ts

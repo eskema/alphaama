@@ -44,9 +44,12 @@ aa.cli.clear =async()=>
 // on cli collapse
 aa.cli.collapse =e=>
 {
-  aa.l.classList.remove('cli_expanded');
-  aa.cli.t.blur();
-  aa.logs_read();
+  fastdom.mutate(()=>
+  {
+    aa.l.classList.remove('cli_expanded');
+    aa.cli.t.blur();
+    aa.logs_read();
+  });
 };
 
 
@@ -174,10 +177,14 @@ aa.cli.dat_upd =async()=>
 // on cli expand
 aa.cli.expand =e=>
 {
-  aa.l.classList.add('cli_expanded');
-  aa.cli.foc();
-  aa.cli.upd();
-  aa.logs_read();
+  fastdom.mutate(()=>
+  {
+    aa.l.classList.add('cli_expanded');
+    aa.cli.foc();
+    aa.cli.upd();
+    aa.logs_read();
+    aa.fx.scroll(aa.logs.lastChild)
+  });
 };
 
 
@@ -273,7 +280,10 @@ aa.mk.item_action =(k,v,s)=>
 aa.cli.load =e=>
 {
   let l = aa.cli.mk();
-  document.body.insertBefore(l,document.body.lastChild.previousSibling);
+  fastdom.mutate(()=>
+  {
+    document.body.insertBefore(l,document.body.lastChild.previousSibling);
+  });
 };
 
 
@@ -557,26 +567,31 @@ aa.cli.upd =e=>
   const maybe_action = !s.length || (ns.startsWith(a[0]) && a.length < 2);
   const is_action = a[0] === ns;
 
-  aa.cli.oto.textContent = '';
-  aa.cli.oto.dataset.s = s;
   
-  if (maybe_action) 
+  
+  fastdom.mutate(()=>
   {
-    aa.cli.oto.append(aa.mk.oto_act_item({action:[]}));
-    let draft = aa.cli.l.querySelector('.note.draft');
-    if (draft) draft.parentElement.remove();
-  }
-  else if (is_action) aa.cli.oto_act(s,a); 
-  else 
-  { 
-    // it's not an action, check for last word
-    const last_word = a[a.length - 1].toLowerCase();
-    // if is a mention attempt
-    if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
-    if (aa.u.p) aa.cli.dat_upd();
-    aa.cli.oto.dataset.s = '';
-  }
-  setTimeout(aa.cli.h,0);
+    aa.cli.oto.textContent = '';
+    aa.cli.oto.dataset.s = s;
+    if (maybe_action) 
+    {
+      aa.cli.oto.append(aa.mk.oto_act_item({action:[]}));
+      // let draft = aa.cli.l.querySelector('.note.draft');
+      // if (draft) draft.parentElement.remove();
+    }
+    else if (is_action) aa.cli.oto_act(s,a); 
+    else 
+    { 
+      // it's not an action, check for last word
+      const last_word = a[a.length - 1].toLowerCase();
+      // if is a mention attempt
+      if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
+      if (aa.u.p) aa.cli.dat_upd();
+      aa.cli.oto.dataset.s = '';
+      aa.cli.h
+    }
+  })
+  // setTimeout(aa.cli.h,0);
 };
 
 // update textarea height

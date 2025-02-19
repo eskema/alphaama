@@ -15,36 +15,43 @@ aa.q =
   {
     a:
     {
-      "authors":["u",'k3'],
-      "kinds":[0,3,10002,10019]
+      "authors":["u"],
+      "kinds":[0,3,10002]
     },
     b:
     {
-      "authors":["u","k3"],
-      "kinds":[0,10002,10019]
+      "authors":["k3"],
+      "kinds":[0,3,10002]
+    },
+    c:
+    {
+      "authors":["k3"],
+      "kinds":[0,10002]
     },
     f:
     {
       "authors":["u","k3"],
-      "kinds":[0,1,3,6,7,16,20,21,22,10002,10019,30023,30818],
-      "since":"n_1"
+      "kinds":[0,1,3,6,7,16,20,21,22,10002,30023,30818],
+      "since":"n_1",
     },
     id:{"ids":["x"],"eose":"close"},
     ida:
     {
       "kinds":[30023],
       "authors":["u"],
-      "#d":["s"]
+      "#d":["s"],
+      "limit":1
     },
     n:
     {
       "#p":["u"],
-      "kinds":[1,4,6,7,16,9321,9735],
-      "since":"n_21"
+      "kinds":[1,4,6,7,16],
+      "since":"n_21",
+      "limit":500
     },
     ref:{"#e":["x"],"limit":200},
     tag:{"#t":["s"],"limit":200},
-    u:{"authors":["u"],"since":"n_7"},
+    u:{"authors":["u"],"since":"n_7","limit":500},
   },
   old_id:'q_e',
 };
@@ -230,17 +237,6 @@ aa.q.load =()=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
     mod.l.insertBefore(add_butt,document.getElementById(id));
-    
-    if (sessionStorage.q_run) 
-    {
-      let run = `${id} run ${sessionStorage.q_run}`;
-      setTimeout(()=>{aa.log(aa.mk.butt_action(run))},300);
-    }
-    if (sessionStorage.q_out) 
-    {
-      let out = `${id} out ${sessionStorage.q_out}`;
-      setTimeout(()=>{aa.log(aa.mk.butt_action(out))},350);
-    }
   });
 };
 
@@ -325,12 +321,18 @@ aa.q.as_outbox =([filtered,options,fid])=>
     if (!options.eose || options.eose !== 'close')
     {
       let note_log = aa.mk.details('q out '+fid);
-      note_log.id = fid;
+      note_log.id = 'q_out_'+fid;
       note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+fid));
       note_log.append(aa.mk.l('p',{con:'outbox for '+authors_len+' authors'}));
       note_log.append(aa.mk.l('p',{con:'using '+outbox.length+' relays:'}));
       note_log.append(aa.mk.l('p',{con:relays.join(', ')}));
-      aa.log_read(aa.log(note_log));
+      let l = document.getElementById(note_log.id);
+      if (l) 
+      {
+        l.replaceWith(note_log);
+        aa.logs.append(note_log.parentElement);
+      }
+      else aa.log(note_log,0,1)
     }
   }
 
@@ -380,7 +382,7 @@ aa.q.replace_filter_vars =s=>
                 break;
             }
           }
-          if (!o[k].length) return false
+          if (!o[k].length) return []
         }
     }
   }
@@ -404,7 +406,6 @@ aa.q.req =(s='')=>
     aa.log('invalid filter:'+filt);
     return false
   }
-
   
   if (!relays.length)
   {
@@ -419,7 +420,13 @@ aa.q.req =(s='')=>
     note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+rid));
     note_log.append(aa.mk.l('p',{con:'to: '+relays}));
     note_log.append(aa.mk.l('p',{app:aa.mk.ls({ls:{filter:filtered,options:options}})}));
-    aa.log_read(aa.log(note_log));
+    let l = document.getElementById(note_log.id);
+    if (l) 
+    {
+      l.replaceWith(note_log);
+      aa.logs.append(note_log.parentElement);
+    }
+    else aa.log(note_log,0,1)
   }
 };
 
@@ -449,8 +456,22 @@ aa.q.run =async s=>
       if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
       setTimeout(e=>{aa.r.demand(request,relays,options)},delay);
       delay = delay + 1000;
-      if (!options.eose || options.eose !== 'close') 
-      aa.log(aa.mk.butt_action(aa.q.def.id+' close '+request[1]));
+      
+      let note_log = aa.mk.details('q run '+fid);
+      note_log.id = 'q_run_'+fid;
+      note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+fid));
+      note_log.append(aa.mk.l('p',{con:'to: '+relays}));
+      note_log.append(aa.mk.l('p',{app:aa.mk.ls({ls:{filter:filtered,options:options}})}));
+      let l = document.getElementById(note_log.id);
+      if (l) 
+      {
+        l.replaceWith(note_log);
+        aa.logs.append(note_log.parentElement);
+      }
+      else aa.log(note_log,0,1);
+
+      // if (!options?.eose || options.eose !== 'close') 
+      //   aa.log(aa.mk.butt_action(aa.q.def.id+' close '+request[1]));
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
   }

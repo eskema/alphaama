@@ -9,7 +9,7 @@
   "l"
   "oto"
   "cli_t";
-  grid-template-rows: repeat(3, auto) 1fr;
+  grid-template-rows: auto auto 1fr auto;
   left: 0;
   max-height: 4rem;
   position: fixed;
@@ -73,13 +73,15 @@
   -webkit-line-break: normal;
   line-height: 1.5rem;
   margin: 0;
-  max-height: 60vh;
+  max-height: 40vh;
   overflow-y: scroll;
   outline: none;
   padding: var(--pad-l);
   position: relative;
   resize: none;
   white-space: pre-wrap;
+  position: sticky;
+  bottom: 0;
 }
 
 #cli_t:focus

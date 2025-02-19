@@ -54,7 +54,7 @@ aa.r.bro =(s='')=>
 
 
 // post event to relays
-aa.r.broadcast =(event,relays=false)=>
+aa.r.broadcast =(event,relays=false,options={})=>
 {
   if (!relays || !relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
   if (!relays.length) 
@@ -63,10 +63,14 @@ aa.r.broadcast =(event,relays=false)=>
     return false
   }
 
-  let note_log = aa.mk.details('k'+event.kind+' sent '+event.id);
-  note_log.id = 'note_log_'+event.id;
-  note_log.append(aa.mk.l('p',{con:'to: '+relays}));
-  aa.log_read(aa.log(note_log));
+  if (options.log !== false)
+  {
+    let note_log = aa.mk.details('k'+event.kind+' sent '+event.id);
+    note_log.id = 'note_log_'+event.id;
+    note_log.append(aa.mk.l('p',{con:'to: '+relays}));
+    aa.log(note_log,0,1);
+  }
+
   
 
   const opts = {send:{}};
@@ -95,7 +99,7 @@ aa.r.broadcast =(event,relays=false)=>
 
 
 // make relay connection
-aa.r.c_on =(url,o=false)=> 
+aa.r.c_on =async(url,o=false)=> 
 {
   if (localStorage.mode === 'hard') 
   {
@@ -110,8 +114,13 @@ aa.r.c_on =(url,o=false)=>
   }
 
   let relay = aa.r.active[url] ? aa.r.active[url] 
-  : aa.r.active[url] = {q:{},send:{},sent:[],cc:[],err:[]};
+  : aa.r.active[url] = {q:{},send:{},sent:[],cc:[],err:[],failed:0};
   
+  if (relay.fc) return;
+  // {
+  //   aa.log(url+' is force closed')
+  //   return;
+  // }
   if (relay.ws?.readyState !== 1)
   {
     if (relay.fc) delete relay.fc;
@@ -125,10 +134,26 @@ aa.r.c_on =(url,o=false)=>
     }
     
     relay.ws = new WebSocket(url);
-    relay.ws.onopen = aa.r.ws_open;
+    
+    const relay_to = setTimeout(()=> 
+    {
+      // aa.log(relay?.ws?.readyState);
+      if (relay?.ws?.readyState === 0) 
+      {
+        relay.failed = relay.failed++;
+        if (relay.failed > 21) aa.r.force_close([url]);
+      }
+    },10000);
+
+    relay.ws.onopen =e=>
+    {
+      clearTimeout(relay_to);
+      aa.r.ws_open(e);
+    }
+    
     relay.ws.onclose = aa.r.ws_close;
-    relay.ws.onmessage = aa.r.ws_message;
     relay.ws.onerror = aa.r.ws_error;
+    relay.ws.onmessage = aa.r.ws_message;
   }
 };
 
@@ -144,7 +169,7 @@ aa.r.close =(k,id)=>
     delete r.q[id];
   }
   else console.log('no close ',k,id);
-  setTimeout(()=>{aa.r.upd_state(k)},500);
+  aa.r.upd_state(k);
 };
 
 
@@ -163,6 +188,7 @@ aa.r.common =(a=[],sets=[])=>
       relays = aa.fx.in_sets_all(relays,sets);
       if (relays.length) has_set = true;
     }
+    else relays = [];
 
     for (const r of relays)
     {
@@ -330,6 +356,7 @@ aa.r.force_close =(a=[])=>
       r.fc = true; 
       r.ws.close(); 
       delete r.ws;
+      aa.r.upd_state(k)
     }
   }
 };
@@ -352,26 +379,6 @@ aa.r.from_o =(o,sets=false)=>
   }
   return relays
 }
-
-
-// returns relays object from tags array (kind-10002,etc..)
-// aa.r.from_tags =(tags,sets=[])=>
-// {
-//   let relays = {};
-//   for (const tag of tags)
-//   {
-//     const [type,url,permission] = tag;
-//     const href = aa.is.url(url)?.href;
-//     if (href)
-//     {
-//       let relay = relays[href] = {sets:[]};
-//       if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
-//       else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
-//       else aa.fx.a_add(relay.sets,['read','write',...sets]);
-//     }
-//   }
-//   return relays
-// }
 
 
 // relay hint notice
@@ -429,42 +436,6 @@ aa.r.hint_notice =(url,opts,set='hint')=>
 };
 
 
-
-// event template for relay list
-aa.kinds[10002] =dat=>
-{
-  const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
-  
-  aa.db.get_p(dat.event.pubkey).then(p=>
-  {
-    if (!p) p = aa.p.p(dat.event.pubkey);
-    if (aa.p.events_newer(p,dat.event))
-    {
-      let relays = {};
-      let sets = ['k10002'];
-      let tags = dat.event.tags.filter(i=>i[0]==='r');
-      for (const tag of tags)
-      {
-        const [type,url,permission] = tag;
-        const href = aa.is.url(url)?.href;
-        if (!href) continue;
-        let relay = relays[href] = {sets:[]};
-        if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
-        else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
-        else aa.fx.a_add(relay.sets,['read','write',...sets]);
-      }
-      // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
-      aa.p.relays_add(relays,p);
-      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-      aa.p.save(p);
-    }
-  });
-  
-  return note
-};
-
-
 // list relays from sets
 aa.r.ls =(s='')=>
 {
@@ -476,61 +447,6 @@ aa.r.ls =(s='')=>
   let result = relay_list.join();
   aa.log(relay_list.length+' relays in '+a);
   return result 
-};
-
-
-// make relay list
-aa.mk.k10002 =(s='')=>
-{
-  let log = aa.r.def.id+' ls: ';
-  const err = (er)=>{aa.log(log+er)};
-
-  let ls = aa.r.o.ls;
-  let relay_list = [];
-  let a = s ? s.split(',') : Object.keys(ls);
-  
-  for (const k of a)
-  { 
-    let read, write;
-    const tag = [k];
-    if (ls[k].sets.includes('read')) read = true;
-    if (ls[k].sets.includes('write')) write = true;
-    if (read || write)
-    {
-      if (read && !write) tag.push('read');
-      if (!read && write) tag.push('write');
-      relay_list.push(tag.join(' '))
-    }
-  }
-
-  const relays = [];
-  for (const r of relay_list) 
-  {
-    let relay = r.trim().split(' ');
-    relay.unshift('r');
-    relays.push(relay);
-  }
-  if (relays.length)
-  {
-    aa.dialog(
-    {
-      title:'new relay list',
-      l:aa.mk.tag_list(relays),
-      no:{exe:()=>{} },
-      yes:{exe:()=>
-      {
-        const event = 
-        {
-          pubkey:aa.u.p.xpub,
-          kind:10002,
-          created_at:aa.now,
-          content:'',
-          tags:relays
-        };
-        // aa.e.finalize(event);
-      }},
-    });
-  }
 };
 
 
@@ -615,7 +531,11 @@ aa.r.message_type.auth =async message=>
   if (!relay?.sets.includes('auth'))
   {
     if (!relay.keys) relay.keys = aa.fx.keypair();
+    event.pubkey = relay.keys[1];
+    aa.e.normalise(event);
+    console.log(event);
     signed = NostrTools.finalizeEvent(event,relay.keys[0]);
+    console.log(event);
   }
   else
   {
@@ -624,7 +544,7 @@ aa.r.message_type.auth =async message=>
     signed = await aa.u.sign(event);
   }
 
-  if (signed) aa.r.broadcast(signed,[url]);
+  if (signed) aa.r.broadcast(signed,[url],{log:false});
 };
 
 
@@ -715,11 +635,15 @@ aa.r.message_type.ok =async message=>
 {
   const [type,id,is_ok,reason] = message.data;
   let log = 'not ok: '+reason+' '+id+' '+message.origin;
+  let r = aa.r.active[message.origin];
   if (is_ok) 
   {
-    let r = aa.r.active[message.origin];
-    if (id in r.send) delete r.send[id];
-    aa.fx.a_add(r.sent,[id]);
+    if (id in r.send) 
+    {
+      aa.fx.a_add(r.sent,[id]);
+      delete r.send[id];
+    }
+
     let dat = aa.db.e[id];
     if (dat)
     {
@@ -738,6 +662,14 @@ aa.r.message_type.ok =async message=>
     }
     log = 'ok: '+id+(reason?' '+reason:'')+' '+message.origin;
   }
+  else
+  {
+    if (reason.startsWith('auth-required:') 
+    || reason.startsWith('blocked:'))
+    {
+      aa.r.force_close([message.origin])
+    }
+  }
   let log_l = document.getElementById('note_log_'+id);
   if (log_l) log_l.append(aa.mk.l('p',{con:log}));
   else aa.log(log);
@@ -745,7 +677,7 @@ aa.r.message_type.ok =async message=>
 
 
 // make r mod item
-aa.r.mk =(k,v) =>
+aa.r.mk =(k,v)=>
 {
   // k = url
   // v = {sets:[]}
@@ -784,12 +716,13 @@ aa.r.resume =()=>
 // try to send and retry if fails
 aa.r.try =(relay,dis)=>
 {
+  if (!relay || !relay.ws) return;
   if (relay.ws.readyState === 1) relay.ws.send(dis);
   else 
   {
-    if (!relay.failed_cons) relay.failed_cons = 0; 
-    relay.failed_cons = relay.failed_cons++;
-    if (relay.failed_cons < 10) setTimeout(()=>{aa.r.try(relay,dis)},500*relay.failed_cons)
+    relay.failed = relay.failed++;
+    if (relay.failed < 10) setTimeout(()=>{aa.r.try(relay,dis)},500*relay.failed);
+    else aa.r.force_close([url]);
   }
   aa.r.upd_state(relay.ws.url);
 };
@@ -808,7 +741,7 @@ aa.r.upd_state =url=>
       {
         l.dataset.state = relay?.ws?.readyState ||  '';
         l.dataset.q = Object.keys(relay.q);
-      },100);
+      },500);
     }
     else console.log('aa.r.upd_state '+url,'no relay found')
   }
@@ -818,25 +751,35 @@ aa.r.upd_state =url=>
 // on websocket close
 aa.r.ws_close =async e=>
 {
-  const rl = e.target.url;
-  let relay = aa.r.active[rl];
+  const url = e.target.url;
+  let relay = aa.r.active[url];
   aa.r.upd_state(e.target.url);
   
-  if (relay && !relay.fc) 
+  if (relay && !relay.fc)
   {
     let cc = relay.cc;
-    const fails = cc.unshift(Math.floor(e.timeStamp));
+    cc.unshift(Math.floor(e.timeStamp));
     // reconnect if somewhat stable
-    if (cc[1] && cc[0] - cc[1] > 99999 || fails < 21) 
+    if (cc[1] && cc[0] - cc[1] > 99999 || cc.length < 21) 
     {  
-      setTimeout(()=>{ aa.r.c_on(rl) }, 420 * fails)
+      setTimeout(()=>{ aa.r.c_on(url) }, 420 * cc.length)
     }
-  } else aa.log(rl+' closed');
+  }
+  else
+  {
+    aa.r.add(url+' off');
+    // aa.log(url+' closed');
+  }
 };
 
 
 // on websocket error
-aa.r.ws_error =e=>{ console.log('ws error:',e) };
+aa.r.ws_error =e=>
+{ 
+  console.log('ws error:',e);
+  aa.r.ws_close(e);
+  // aa.r.force_close([e.target.url])
+};
 
 
 // on websocket message
@@ -880,6 +823,87 @@ aa.r.ws_open =async e=>
 };
 
 
+// make relay list
+aa.mk.k10002 =(s='')=>
+{
+  let log = aa.r.def.id+' ls: ';
+  const err = (er)=>{aa.log(log+er)};
+
+  let ls = aa.r.o.ls;
+  let relay_list = [];
+  let a = s ? s.split(',') : Object.keys(ls);
+  
+  for (const k of a)
+  { 
+    let read, write;
+    const tag = [k];
+    if (ls[k].sets.includes('read')) read = true;
+    if (ls[k].sets.includes('write')) write = true;
+    if (read || write)
+    {
+      if (read && !write) tag.push('read');
+      if (!read && write) tag.push('write');
+      relay_list.push(tag.join(' '))
+    }
+  }
+
+  const relays = [];
+  for (const r of relay_list) 
+  {
+    let relay = r.trim().split(' ');
+    relay.unshift('r');
+    relays.push(relay);
+  }
+  if (relays.length)
+  {
+    aa.dialog(
+    {
+      title:'new relay list',
+      l:aa.mk.tag_list(relays),
+      no:{exe:()=>{}},
+      yes:{exe:()=>
+      {
+        const event = aa.e.normalise({kind:10002,tags:relays});
+        aa.e.finalize(event);
+      }}
+    });
+  }
+};
+
+
+// event template for relay list
+aa.kinds[10002] =dat=>
+{
+  const note = aa.e.note_regular(dat);
+  note.classList.add('root','tiny');
+  
+  aa.db.get_p(dat.event.pubkey).then(p=>
+  {
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (aa.p.events_newer(p,dat.event))
+    {
+      let relays = {};
+      let sets = ['k10002'];
+      let tags = dat.event.tags.filter(i=>i[0]==='r');
+      for (const tag of tags)
+      {
+        const [type,url,permission] = tag;
+        const href = aa.is.url(url)?.href;
+        if (!href) continue;
+        let relay = relays[href] = {sets:[]};
+        if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
+        else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
+        else aa.fx.a_add(relay.sets,['read','write',...sets]);
+      }
+      // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
+      aa.p.relays_add(relays,p);
+      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      aa.p.save(p);
+    }
+  });
+  
+  return note
+};
 
 
 // event template for relay data from monitor nip66

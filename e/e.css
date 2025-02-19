@@ -215,6 +215,15 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   z-index: 10;
 }
 
+.in_view > .by
+{
+  grid-template-areas: 
+  "id id actions"
+  
+  "author created_at clas";
+  grid-template-columns: 1fr auto;
+}
+
 .replies > .note:not(.in_path) > .by
 {
   position: sticky;
@@ -550,23 +559,9 @@ a.author
   overflow-y:  scroll;
 }
 
-.in_view > .replies > .note > .content,
-.viewing .root:not(.in_path) > .content,
-.root:not(.in_view):not(.in_path) > .content
-{
-  position: sticky;
-  top: 1rem;
-  z-index: 2;
-}
-
 .view_e .in_path:not(.in_view) > .content
 {
   max-height: calc(12rem);
-}
-
-.in_view > .replies > .note > .content
-{
-  top: calc(var(--line) + var(--line) + var(--padm));
 }
 
 .in_view > .content
@@ -999,7 +994,7 @@ a.author
 }
 
 .view_e .in_path:not(.in_view) > .replies,
-.replies:not(.expanded) [data-level="11"]:not(.is_new):not(.haz_new_reply) .replies,
+.replies.expanded [data-level="11"]:not(.is_new) .replies,
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies
 {
   padding-left: 0;
@@ -1099,7 +1094,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .in_view > .replies > summary .mark_read
 {
-  color: rgb(var(--color-d));
+  /*color: rgb(var(--color-d));*/
 }
 
 .in_view > .replies > summary .mark_read
@@ -1475,6 +1470,8 @@ html:not(.needs_pagin) .pagination
     z-index: 2;
   }
   
+
+
   .by .id:hover
   {
     opacity: 1;
@@ -1509,6 +1506,19 @@ html:not(.needs_pagin) .pagination
   {
     position: sticky;
     top: 1rem;
+  }
+  
+  .in_view > .replies > .note > .content,
+  .viewing .root:not(.in_path) > .content,
+  .root:not(.in_view):not(.in_path) > .content
+  {
+    position: sticky;
+    top: 1rem;
+    z-index: 2;
+  }
+  .in_view > .replies > .note > .content
+  {
+    top: calc(var(--line) + var(--line) + var(--padm));
   }
 
 }

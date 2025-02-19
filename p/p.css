@@ -353,7 +353,8 @@
 [data-meta="banner"]
 {
   grid-area: picture;
-  transition: var(--trans-quart);
+  /*transition: var(--trans-quart);*/
+  user-select: none;
 }
 
 [data-meta="picture"] 

@@ -5,13 +5,14 @@
   display: none;
   font-size: 16px;
   grid-area: oto;
+  max-height: 60vh;
   overflow: hidden;
   overflow-y: scroll;
-  max-height: 50vh;
   padding-left: var(--line);
   padding-top: var(--line);
   padding-bottom: 1px;
-  /*position: absolute;*/
+/*  position: absolute;
+  bottom: 0;*/
 }
 
 #oto::before 

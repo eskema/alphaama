@@ -16,13 +16,21 @@ aa.load({
 
 const on_loaded =()=>
 {
-  if (!aa.is.mod_loaded(aa.mod_loaded.map(i=>i.id)))
+  if (!aa.is.mods_loaded(aa.mods_loaded.map(i=>i.id)))
   {
     setTimeout(on_loaded,100);
     return
   }
 
-  fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
+  if (aa.p?.l) aa.mk.section('p',false,aa.p.l);
+  if (aa.e?.l) 
+  {
+    let e_section = aa.mk.section('e',false,aa.e.l);
+    setTimeout(()=>{e_section.append(aa.mk.pagination())},200);
+  }
+
+  fetch('/README.adoc').then(dis=>dis?.text())
+  .then(text=>
   {
     if (!text) return;
     let article = aa.mk.l('article',
@@ -35,8 +43,22 @@ const on_loaded =()=>
     
     let details = aa.mk.details(title,article);
     details.id = 'aa_read_me';
-    document.getElementById('view')?.prepend(details);
+    aa.view?.prepend(details);
   });
+
+  setTimeout(()=>
+  {
+    if (sessionStorage.q_run) 
+    {
+      let run = `q run ${sessionStorage.q_run}`;
+      setTimeout(()=>{aa.log(aa.mk.butt_action(run))},200);
+    }
+    if (sessionStorage.q_out) 
+    {
+      let out = `q out ${sessionStorage.q_out}`;
+      setTimeout(()=>{aa.log(aa.mk.butt_action(out))},600);
+    }
+  },1000);
 };
 
 
@@ -45,55 +67,6 @@ window.addEventListener('load',e=>
   // run with defaults
   aa.run();
   on_loaded()
-
-  
-  // var doc = aa.asciidoc.loadFile('/README.adoc');
-  
-  // let title = doc.getDocumentTitle();
-  // let div = aa.mk.l('div');
-  // doc.convert();
-  // div.innerHTML = html;
-  
-  // let details = aa.mk.details(title,div);
-  // details.id = 'aa_read_me';
-  // document.getElementById('view')?.prepend(details);
-
-
-  // let doc = aa.asciidoc.convert(text,options);
-
-  // details.append(div)
-  // fetch and append readme
-  // fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
-  // {
-  //   if (!text) return;
-  //   let article = aa.mk.l('article',
-  //   {
-  //     cla:'content parsed',
-  //     app:aa.parse.content(text,aa.is.trusted(4))
-  //   });
-  //   let title = text.slice(0,text.indexOf('\n'));
-  //   if (title.startsWith('=') || title.startsWith('#')) title = title.slice(1).trim();
-    
-  //   // let options = 
-  //   // {
-  //   //   'to_file': false,
-  //   //   'attributes': 
-  //   //   { 
-  //   //     'showtitle':true,
-  //   //     // template_dir: '/path/to/templates/pug',
-  //   //   }
-  //   // };
-  //   // const doc = aa.asciidoc.load(text,options);
-
-  //   // let title = doc.getDocumentTitle();
-  //   // html = doc.convert();
-  //   // article.innerHTML = html;
-    
-  //   let details = aa.mk.details(title,article);
-  //   details.id = 'aa_read_me';
-  //   document.getElementById('view')?.prepend(details);
-    
-  // });
 });
 </script>
 </body></html>

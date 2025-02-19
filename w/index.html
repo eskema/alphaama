@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>alphaama</title>
+  <script src="/aa/aa.js"></script>
+</head>
+<body>
+<script>
+// load alphaama
+aa.load({
+  // override defaults
+  // styles:[], tools:[], mods:[],
+});
+
+const on_loaded =()=>
+{
+  if (!aa.is.mods_loaded(aa.mods_loaded.map(i=>i.id)))
+  {
+    setTimeout(on_loaded,100);
+    return
+  }
+  aa.log('walLNut');
+  aa.q.run('w');
+};
+
+
+window.addEventListener('load',e=>
+{
+  aa.run();
+  on_loaded()
+});
+</script>
+</body></html>

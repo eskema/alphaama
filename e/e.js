@@ -54,7 +54,7 @@ aa.e.append_to =async(dat,l,a)=>
 // append note to notes section
 aa.e.append_to_notes =note=>
 { 
-  let notes = document.getElementById('notes');
+  let notes = document.getElementById('notes') || aa.e.l;
   if (!note.classList.contains('rendered')) 
   {
     note.querySelector('.replies').removeAttribute('open');
@@ -67,21 +67,35 @@ aa.e.append_to_notes =note=>
   }
   else 
   {
-    const last = [...notes.children]
-    .filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
-    notes.insertBefore(note,last)
+    aa.e.append_in_order(notes,note);
+    // const last = [...notes.children]
+    // .filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
+    // notes.insertBefore(note,last)
   }
   if (history.state?.view === '#'+note.id) setTimeout(()=>{aa.e.view(note)},1000);
   aa.get.note_refs(note);
 };
 
 
+// order note by stamp order
+aa.e.append_in_order =(notes,note)=>
+{
+  const l = [...notes.children].find(i=>note.dataset.stamp > i.dataset.stamp);
+  // notes.insertBefore(note,l)
+  fastdom.mutate(()=>
+  {
+    notes.insertBefore(note,l)
+  })
+};
+
+
+
 // append to another note as reply
 aa.e.append_to_rep =(note,rep)=>
 {
   const last = [...rep.children]
-  .filter(i=> i.tagName === 'ARTICLE' 
-  && i.dataset.created_at > note.dataset.created_at)[0];
+  .find(i=> i.tagName === 'ARTICLE' 
+  && i.dataset.created_at > note.dataset.created_at);
   note.classList.add('reply','not_yet');
   note.classList.remove('root');
   if (note.classList.contains('in_path')) rep.parentNode.classList.add('in_path')
@@ -91,10 +105,12 @@ aa.e.append_to_rep =(note,rep)=>
     note.classList.add('is_new');
     rep.parentNode.classList.add('haz_new_reply');
   }
-  rep.insertBefore(note,last?last:null);
-  note.classList.add('testing');
+  fastdom.mutate(()=>
+  {
+    rep.insertBefore(note,last?last:null);
+    aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
+  });
   aa.e.note_observer.observe(note);
-  aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
   if (history.state?.view === '#'+note.id) setTimeout(()=>{aa.e.view(note)},100);
   aa.get.note_refs(note);
 };
@@ -106,22 +122,23 @@ aa.e.append_check =(dat,note,tag_reply)=>
   const reply_id = tag_reply[1];
   let p = aa.db.p[dat.event.pubkey];
   let relays = aa.fx.in_set(p?.relays,'write');
-  
+  let notes = document.getElementById('notes') || aa.e.l;
+  let reply;
+
   if (tag_reply[0] === 'a')
   {
-    let id_a = tag_reply[1];
-    let a_note = document.querySelector('.note[data-id_a="'+id_a+'"]');
-    if (!a_note)
+    reply = notes.querySelector('.note[data-id_a="'+reply_id+'"]');
+    if (!reply)
     {
       aa.e.refs(dat,note,tag_reply);
       aa.e.miss_print_a(tag_reply,relays);
     }
-    else aa.e.append_to_rep(note,a_note.querySelector('.replies'));
+    else aa.e.append_to_rep(note,reply.querySelector('.replies'));
     return;
   }
   
   const reply_nid = aa.fx.encode('note',reply_id);
-  let reply = document.getElementById(reply_nid);
+  reply = notes.querySelector(`.note[data-id="${reply_id}"`);
   if (!reply)
   {
     aa.e.refs(dat,note,tag_reply);
@@ -129,8 +146,8 @@ aa.e.append_check =(dat,note,tag_reply)=>
     if (tag_root && tag_root[1] !== reply_id)
     {
       let root_id = tag_root[1];
-      let root_nid = aa.fx.encode('note',root_id);
-      let root = document.getElementById(root_nid);
+      // let root_nid = aa.fx.encode('note',root_id);
+      let root = notes.querySelector(`.note[data-id="${root_id}"`); // document.getElementById(root_nid);
       if (!root) aa.e.miss_print(tag_root);
     }
     aa.e.miss_print(tag_reply,relays);
@@ -152,10 +169,13 @@ aa.e.append_check =(dat,note,tag_reply)=>
 // clear notes from section
 aa.e.clear =s=>
 {
-  document.getElementById('notes').textContent = '';
-  document.getElementById('butt_e').dataset.count = 0;
-  aa.log('events cleared');
-  aa.cli.fuck_off();
+  fastdom.mutate(()=>
+  {
+    document.getElementById('notes').textContent = '';
+    document.getElementById('butt_e').dataset.count = 0;
+    aa.log('events cleared');
+    aa.cli.fuck_off();
+  });
 };
 
 
@@ -195,15 +215,7 @@ aa.mk.det =(cla='',id='')=>
 {
   let l = aa.mk.details('',false,true);
   if (cla) l.classList.add(cla);
-  if (id)
-  {
-    l.id = id;
-    if (sessionStorage.hasOwnProperty(id))
-    {
-      if (sessionStorage[id] === 'expanded') l.classList.add('expanded');
-    }
-    else l.classList.add('expanded');
-  }
+  if (id) l.id = id;
   let summary = l.querySelector('summary');
   summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
   return l 
@@ -314,6 +326,10 @@ aa.e.json =async(s='')=>
 // on load
 aa.e.load =()=>
 {
+  aa.temp.orphan = {};
+  aa.temp.print = {};
+  aa.temp.printed = new Map();
+  aa.temp.refs = {};
   aa.actions.push(
     {
       action:['e','clear'],
@@ -352,11 +368,8 @@ aa.e.load =()=>
       exe:aa.state.view
     }
   );
-  const section = aa.mk.section('e');
-  const notes = aa.mk.l('div',{id:'notes'});
-  aa.e.section_observer.observe(notes,{attributes:false,childList:true});
-  section.append(notes);
-  setTimeout(()=>{section.append(aa.mk.pagination())},200);
+  aa.e.l = aa.mk.l('div',{id:'notes'});
+  aa.e.section_observer.observe(aa.e.l,{attributes:false,childList:true});
 };
 
 
@@ -874,7 +887,13 @@ aa.e.note =dat=>
   //   note.append(aa.mk.l('p',{cla:'sig',con:dat.event.sig}));
   // }
 
-  let replies = aa.mk.det('replies',replies_id);
+  let replies = aa.mk.det('replies');
+  if (sessionStorage.hasOwnProperty(replies_id))
+  {
+    if (sessionStorage[replies_id] === 'expanded') 
+      replies.classList.add('expanded');
+  }
+  else replies.classList.add('expanded');
   note.append(replies);
   return note
 };
@@ -1150,11 +1169,11 @@ aa.e.note_intersect =l=>
 {
   if (!l.classList.contains('rendered'))
   {
-    l.classList.remove('not_yet','testing');
+
+    l.classList.remove('not_yet');
     l.classList.add('rendered');
     l.querySelector('.replies').setAttribute('open','');
-    // aa.e.render(l);
-      // aa.e.note_observer.unobserve(l);
+    aa.e.note_observer.unobserve(l);
   }
 };
 
@@ -1164,7 +1183,12 @@ aa.e.note_observer = new IntersectionObserver(a=>
 {
   for (const b of a)
   {
-    if (b.isIntersecting) aa.e.note_intersect(b.target)
+    if (b.isIntersecting) 
+    {
+      aa.e.note_intersect(b.target);
+      // b.target.classList.add('in_viewport');
+    }
+    // else b.target.classList.remove('in_viewport');
   }
 },{root:null,threshold:.9});
 
@@ -1183,24 +1207,31 @@ aa.mk.pagination =()=>
   document.head.append(style);
 
   let pagination = aa.mk.l('p',{cla:'pagination'});
-  let butt_more = aa.mk.l('button',{cla:'butt',con:'moar',
-  clk:e=>
+  let butt_more = aa.mk.l('button',
   {
-    if (aa.l.classList.contains('pagin'))
+    cla:'butt',
+    con:'moar',
+    clk:e=>
     {
-      let position = aa.l.scrollTop;
-      aa.l.classList.remove('pagin');
-      e.target.textContent = 'less';
-      aa.l.scrollTop = position;
+      fastdom.mutate(()=>
+      {
+        if (aa.l.classList.contains('pagin'))
+        {
+          let position = aa.l.scrollTop;
+          aa.l.classList.remove('pagin');
+          e.target.textContent = 'less';
+          aa.l.scrollTop = position;
+        }
+        else 
+        {
+          aa.l.classList.add('pagin');
+          e.target.textContent = 'moar';
+        }
+      });
     }
-    else 
-    {
-      aa.l.classList.add('pagin');
-      e.target.textContent = 'moar';
-    }
-  }});
+  });
   pagination.append(butt_more);
-  aa.l.classList.add('pagin');
+  fastdom.mutate(()=>{aa.l.classList.add('pagin')});
   return pagination
 };
 
@@ -1260,12 +1291,14 @@ aa.e.print =dat=>
   if (!aa.db.e[xid]) aa.db.e[xid] = dat;
   if (aa.temp.orphan[xid]) return;
 
-  let nid = aa.fx.encode('note',xid);
-  let l = document.getElementById(nid);
+  // let nid = aa.fx.encode('note',xid);
+  let l = aa.temp.printed.get(xid);
+  // let l = aa.e.l.querySelector(`[data-id="${xid}"]`);//document.getElementById(nid);
   if (!l)
   {
     aa.fx.count_upd(document.getElementById('butt_e'));
     l = aa.e.note_by_kind(dat);
+    aa.temp.printed?.set(xid,l);
     aa.e.render(l);
     if (!l) console.log(dat);
     else 
@@ -1531,7 +1564,11 @@ aa.e.render_content =async(l,dat)=>
 {
   let p = await aa.db.get_p(dat.event.pubkey);
   let score = p ? p.score : 0;
-  aa.parse.context(l,dat.event,aa.is.trusted(score));
+  let trust = aa.is.trusted(score)
+  fastdom.mutate(()=>
+  {
+    aa.parse.context(l,dat.event,trust);
+  })
 };
 
 // renders video from tags
@@ -1861,7 +1898,7 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
       if (summary && some > 0) sum_butt.textContent = some+(all>some?'.'+all:'')
     }
   }
-  if (root && updated) aa.e.append_to_notes(root);
+  if (root && updated && !root.classList.contains('in_viewport')) aa.e.append_to_notes(root);
   if (og) og.dataset.level = levels;
 }
 
@@ -1869,12 +1906,16 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
 // view event
 aa.e.view =l=>
 {
-  if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
-  aa.l.classList.add('viewing','view_e');
-  l.classList.add('in_view');
-  aa.clk.time({target:l.querySelector('.by .created_at')});
-  aa.fx.path(l);
-  aa.fx.scroll(l);
+  fastdom.mutate(()=>
+  {
+    if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
+    aa.l.classList.add('viewing','view_e');
+    l.classList.add('in_view');
+    aa.clk.time({target:l.querySelector('.by .created_at')});
+    aa.fx.path(l);
+    aa.fx.scroll(l);
+  });
+
   // setTimeout(()=>
   // {
   //   aa.fx.path(l);

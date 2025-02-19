@@ -13,7 +13,21 @@ aa.w =
 {
   name:'walLNuts',
   desc:'the best kind of nuts',
-  def:{id:'w',ls:{},def:'',redeemed:[],redeemable:[]},
+  def:
+  {
+    id:'w',
+    ls:
+    {
+      balance:0,
+      def:'',
+      mints:{},
+      privkey:'',
+      pubkey:'',
+      redeemable:[],
+      redeemed:[],
+      relays:[]
+    },
+  },
   requires:['r'],
   active:{},
 };
@@ -22,99 +36,75 @@ aa.w =
 // add walLNut
 aa.w.add =(s='')=>
 {
-  // s = wid mint mint...
+  // s = mint mint...
   let a = s.split(' ');
-  let wid = aa.fx.an(a.shift());
-  let w = aa.w.o.ls[wid];
-  if (!w) w = aa.w.o.ls[wid] = aa.w.w();
-
-  // mints
   if (a.length) 
   {
     for (let url of a)
     {
       url = aa.is.url(url.trim())?.href;
-      if (url) aa.fx.a_add(w.mints,[url]);
+      if (url && !aa.w.o.ls.mints[url]) aa.w.o.ls.mints[url] = {proofs:[],quotes:[]};
+      if (aa.w.o.def === '') aa.w.o.def = url;
     }
   }
-  aa.w.save(wid);
-  return wid
+  aa.w.save();
+  return aa.w.o
 };
 
 
+// 21,'sat => 21sats
 aa.fx.amount_display =(num,unit)=> num+aa.fx.plural(num,unit);
 
 
-// delete walLNut(s)
-aa.w.del =s=>
+// get active wallet from mint
+// if no mint is provided
+// def is returned
+aa.w.get_active =async(id)=>
 {
-  aa.log('disabled until walLNuts are persisted to nostr to avoid loss of funds')
-  
-  // const work =a=>
-  // {
-  //   let k = a.shift();
-  //   if (aa.w.o.ls.hasOwnProperty(k)) 
-  //   {
-  //     delete aa.w.o.ls[k];
-
-  //     document.getElementById(aa.w.def.id+'_'+aa.fx.an(k)).remove();
-  //     aa.log(aa.w.def.id+' walLNut deleted: '+k);
-  //   }
-  //   else aa.log(aa.w.def.id+' '+k+' not found')
-  // };
-  // aa.fx.loop(work,s);
-  // aa.mod_save(aa.w);
-};
-
-
-// return single or plural string
-aa.fx.plural =(n,s)=>
-{
-  return n === 1 ? s : s+'s';
-};
-
-
-// get active wallet from id
-// if no wallet id is provided
-// first found is returned
-aa.w.get_active =async(id,mints=[])=>
-{
-  let w;
-  let wallet;
-  if (id)
+  if (!id) id = aa.w.get_def();
+  if (!id) return [];
+  let w = aa.w.o;
+  let active = aa.w.active[id] || {};
+  if (!active.wallet)
   {
-    w = aa.w.o.ls[id];
-    if (!w) return [];
-    wallet = aa.w.active[id]?.w;
-    if (!wallet) 
+    active.mint = new cashuts.CashuMint(id);
+    let haz_keys;
+    let options = {};
+    if (w.ls.mints[id].keys) 
     {
-      let mint;
-      let mints_o = aa.fx.a_ab(w.mints,mints);
-      if (mints_o.inc.length) mint = mints_o.inc[0];
-      else return [];
-
-      let active = aa.w.active[id] = {};
-      active.mint = new cashuts.CashuMint(mint);
-      active.w = new cashuts.CashuWallet(active.mint);
-      await active.w.loadMint();
-      wallet = active.w;
+      options.keys = w.ls.mints[id].keys;
+      options.keysets = w.ls.mints[id].keysets;
+      haz_keys = true;
+    }
+    active.wallet = new cashuts.CashuWallet(active.mint,options);
+    if (!haz_keys)
+    {
+      await active.wallet.loadMint();
+      w.ls.mints[id].keys = active.wallet.keys;
+      w.ls.mints[id].keysets = active.wallet.keysets;
+      aa.w.save();
     }
   }
-  else 
-  {
-    id = aa.w.o.def || Object.keys(aa.w.active)[0];
-    if (id) return id;
-    else 
-    {
-      id = Object.keys(aa.w.o.ls)[0];
-      if (id) return await aa.w.get_active(id,mints);
-    }
-  }
-  return [wallet,w,id]
+  return [active.wallet,w.ls.mints[id],id]
 };
 
 
-// import walLNut from k37375
+// get default mint
+// fallback to first active
+// fallback to first added
+aa.w.get_def =()=>
+{
+  let id = aa.w.o.def || Object.keys(aa.w.active)[0];
+  if (!id) id = Object.keys(aa.w.o.ls.mints)[0];
+  return id
+};
+
+
+// get mint object
+aa.w.get_mint =s=> aa.w.o.ls.mints[s];
+
+
+// import walLNut from k17375
 aa.w.import =async(s='')=>
 {
   if (!s) return;
@@ -125,44 +115,24 @@ aa.w.import =async(s='')=>
     aa.log('w import: event not found');
     return
   }
-  let event = dat.event;
 
-  let wid = aa.fx.tag_value(event.tags,'d');
-  let w = aa.w.o.ls[wid];
-  if (!w)
-  {
-    w = aa.w.o.ls[aa.w.add(wid)];
-    if (!w) 
-    {
-      aa.log('k37375 import failed');
-      return 
-    }
-  }
-
-  let a = await aa.fx.decrypt_parse(event.pubkey,event.content,event.id);
-  a.push(...event.tags);
-
-  aa.fx.a_add(w.mints,aa.fx.tags_values(a,'mint'));
-  aa.fx.a_add(w.relays,aa.fx.tags_values(a,'relay'));
-
-  for (const i of ['name','description','privkey']) 
-  {
-    let v = aa.fx.tag_value(a,i);
-    if (v) w[i] = v;
-  }
-  if (w.privkey.length) w.pubkey = aa.fx.keypair(w.privkey)[1];
-  aa.log(`k37375 imported ${event.id}`);
-
-  let filter =
-  {
-    '#a':[`37375:${aa.u.p.xpub}:${wid}`],
-    kinds:[],
-    authors:[aa.u.p.xpub]
-  };
+  let w = aa.w.o;
   
-  let haz_proofs = await aa.w.import_7375(wid);
-  if (!haz_proofs) filter.kinds.push(7375);
-  else aa.log(`7375 imported: ${aa.fx.amount_display(aa.fx.sum_amounts(haz_proofs))}`)
+
+  let a = await aa.fx.decrypt_parse(dat.event);
+  a.push(...tags);
+  for (const url of aa.fx.tags_values(a,'mint')) 
+  {
+    if (!w.ls.mints[url]) w.ls.mints[url] = {proofs:[],quotes:[]};
+  }
+  let relays = aa.fx.tags_values(a,'relay');
+  let privkey = aa.fx.tag_value(a,'privkey');
+  let pubkey = aa.fx.keypair(w.privkey)[1];
+  w.ls = {mints,relays,privkey,pubkey};
+  
+  //let haz_proofs = await aa.w.import_7375(wid);
+  //if (!haz_proofs) filter.kinds.push(7375);
+  //else aa.log(`7375 imported: ${aa.fx.amount_display(aa.fx.sum_amounts(haz_proofs))}`)
 
   // let haz_history = await aa.w.import_7376(wid);
   // if (!haz_history) filter.kinds.push(7375);
@@ -171,74 +141,46 @@ aa.w.import =async(s='')=>
   //   && haz_history === haz_proofs) aa.log('7376 import: all good');
   // else aa.log(`7376 import: proofs missing ${haz_proofs} ${haz_history}`);
 
-  aa.w.save(wid);
-  if (filter.kinds.length) aa.r.demand(['REQ','w',filter],w.relays,{eose:'close'});
+  aa.w.save();
+  // if (filter.kinds.length) aa.r.demand(['REQ','w',filter],w.relays,{eose:'close'});
 };
 
 
-aa.w.import_7375 =async(wid,id)=>
+aa.w.import_7375 =async(id)=>
 {
-  if (!id) id = aa.p.events_last(aa.u.p,'k7375',wid);
   if (!id) return;
   let dat = await aa.db.get_e(id);
   if (!dat) return;
-  let decrypted = await aa.fx.decrypt(dat.event.content);
-  if (!decrypted) return;
-  let {proofs} = aa.parse.j(decrypted);
-  if (proofs?.length) aa.w.proofs_in(proofs,wid);
+  let {proofs} = await aa.fx.decrypt_parse(dat.event);
+  if (proofs?.length) aa.w.proofs_in(proofs);
   return proofs
 };
 
 
-aa.w.import_7376 =async(wid,ids)=>
+// nutzap has been redeemed
+aa.w.is_redeemed =id=>
 {
-  if (!ids) 
+  if (aa.w.o.ls.redeemed.includes(id)) return true;
+  else 
   {
-    let events = aa.u.p.events.k7376;
-    if (!events) return;
-    let w_events = events[wid];
-    if (!w_events) return;
-    ids = w_events?.map(i=>i[0]).reverse();
+    let event = aa.db.e[id].event;
+    let amount = aa.fx.tag_value(event.tags,'amount');
+    aa.w.o.ls.redeemable.push([amount,id]);  
   }
-  let created;
-  if (window.confirm(`decrypt all ${ids.length} transactions?`))
-  {
-    await aa.e.events(ids);
-    for (const id of ids)
-    {
-      let dat = aa.db.e[id];
-      if (dat)
-      {
-        let tags = await aa.fx.decrypt(dat.event.content);
-        if (tags) tags = aa.parse.j(tags);
-        if (tags?.length) 
-        {
-          tags.push(...dat.event.tags);
-          let direction = aa.fx.tag_value(tags,'direction')==='in'?'+':'-';
-          let amount = aa.fx.tag_value(tags,'amount');
-          created = tags.find(i=>i[0]==='e'&&i[3]==='created');
-          if (created && created[1]) created = created[1];
-          let w = aa.w.o.ls[wid];
-          if (w) w.history.unshift([dat.event.created_at,direction+amount,'7376:'+id]);
-        }
-      }
-    }
-    if (ids.length) aa.w.save(wid)
-  }
-  return created
+  return false
 };
 
 
 // add keypair to walLNut
-aa.w.key =(s='')=>
+aa.w.key =(privkey='')=>
 {
-  let [wid,privkey] = s.split(' ').map(i=>i.trim());
-  let w = aa.w.o.ls[wid];
+  let w = aa.w.o.ls;
   if (!w)
   {
     aa.log('w key: wallet not found');
     return
   }
+
   let pub;
   if (!privkey)
   {
@@ -260,20 +202,21 @@ aa.w.key =(s='')=>
       aa.log('w key: key invalid');
       return
     }
-    if (window.confirm('replace privkey?'))
+
+    pub = aa.fx.keypair(privkey)[1];
+    let sdo = w.privkey.length ? window.confirm('replace privkey?') : true;
+    if (sdo)
     {
       w.privkey = privkey;
-      w.pubkey = pub = aa.fx.keypair(privkey)[1];
+      w.pubkey = pub;
       upd = true;
     }
-    // aa.w.save(wid);
-    // return w.pubkey;
   }
   if (upd) 
   {
-    aa.w.save(wid);
+    aa.w.save();
     // aa.mk.k10019();
-    // aa.mk.k37375(wid);
+    // aa.mk.k17375(wid);
   }
   return pub
 };
@@ -326,24 +269,11 @@ aa.mk.k5 =(s='')=>
 // update kind-10019 
 aa.mk.k10019 =(s='')=>
 {
-  let event = { kind:10019, tags:[]};
-  let mints = [];
-  let relays = [];
-  let pubkeys = [];
-  for (const id in aa.w.o.ls)
-  {
-    const w = aa.w.o.ls[id];
-
-    if (w.mints.length) aa.fx.a_add(mints,w.mints);
-    if (w.relays.length) aa.fx.a_add(relays,w.relays)
-    if (w.pubkey?.length) aa.fx.a_add(pubkeys,[w.pubkey]);
-  }
-  
-  for (const i of mints) event.tags.push(['mint',i,'sat']);
-  for (const i of relays) event.tags.push(['relay',i]);
-  for (const i of pubkeys) event.tags.push(['pubkey',i]);
-
-  // aa.e.draft(aa.mk.dat({event:aa.e.normalise(event)}));
+  let o = aa.w.o.ls;
+  let event = {kind:10019,tags:[]};
+  for (const i of Object.keys(o.mints)) event.tags.push(['mint',i,'sat']);
+  for (const i of o.relays) event.tags.push(['relay',i]);
+  if (o.pubkey.length) event.tags.push(['pubkey',o.pubkey]);
   aa.e.finalize(aa.e.normalise(event));
 };
 
@@ -352,111 +282,38 @@ aa.mk.k10019 =(s='')=>
 // "content": nip44_encrypt({
 //   "mint": "https://stablenut.umint.cash",
 //   "proofs": [
+//     // one or more proofs in the default cashu format
 //     {
-//       "id": "005c2502034d4f12",
-//       "amount": 1,
-//       "secret": "z+zyxAVLRqN9lEjxuNPSyRJzEstbl69Jc1vtimvtkPg=",
-//       "C": "0241d98a8197ef238a192d47edf191a9de78b657308937b4f7dd0aa53beae72c46"
+//         "id": "005c2502034d4f12",
+//         "amount": 1,
+//         "secret": "z+zyxAVLRqN9lEjxuNPSyRJzEstbl69Jc1vtimvtkPg=",
+//         "C": "0241d98a8197ef238a192d47edf191a9de78b657308937b4f7dd0aa53beae72c46"
 //     }
-//   ]
+//   ],
+//   // tokens that were destroyed in the creation of this token (helps on wallet state transitions)
+//   "del": [ "token-event-id-1", "token-event-id-2" ]
 // }),
-// "tags": [
-//   [ "a", "37375:<pubkey>:my-wallet" ]
-// ]
 aa.mk.k7375 =async(o={})=>
 {
-  const wid = o.wid||Object.keys(aa.w.o.ls)[0];
-  const w = aa.w.o.ls[wid];
+  // o = {mint,del}
+  const w = aa.w.o;
   if (!w) 
   {
     aa.log('unable to create event, walLNut not found');
     return
   }
 
-  let mint = o.mint||w.mints[0];
-  let proofs = w.proofs;
+  let mint = o.mint||aa.w.def();
+  let proofs = w.ls.mints[mint].proofs;
   let del = [];
   let last = aa.p.events_last(aa.u.p,'k7375');
   if (last) del.push(last);
-  if (o.del) aa.fx.a_add(del,o.odel);
-  let pubkey = aa.u.p.xpub;
-  let event = {kind:7375,tags:[['a',`37375:${pubkey}:${wid}`]]};
-  let private = {mint,proofs,del};
-  event.content = await aa.fx.encrypt44(JSON.stringify(private));
+  if (o.del) aa.fx.a_add(del,o.del);
+  let event = {kind:7375};
+  event.content = await aa.fx.encrypt44(JSON.stringify({mint,proofs,del}));
   aa.e.finalize(aa.e.normalise(event));
-  
-  // let created = [[event.id]];
-  // let amount = o.amount || aa.fx.sum_amounts(proofs);
-  // let options = {wid,created,amount};
-  aa.w.save(wid);
   if (del.length) aa.mk.k5('"poof" '+del.join());
-  
-  return options
-};
-
-
-// "kind": 7376,
-// "content": nip44_encrypt([
-//     [ "direction", "in" ], // in = received, out = sent
-//     [ "amount", "1", "sat" ],
-//     [ "e", "<event-id-of-spent-token>", "<relay-hint>", "created" ],
-// ]),
-// "tags": [
-//     [ "a", "37375:<pubkey>:my-wallet" ],
-// ]
-aa.mk.k7376 =async o=>
-{
-  // {
-  //   'amount':amount,
-  //   'direction':'in',
-  //   'created':[[id]],
-  //   'destroyed':[[id,relay]],
-  //   'redeemed':[],
-  //   'pubkeys:[],
-  //   'memo':'',
-  //   'wid':'',
-  // }
-  
-  let pubkey = aa.u.p.xpub;
-  let direction = o.direction || 'in';
-  let event = {kind:7376,tags:[['a',`37375:${pubkey}:${o.wid}`]]};
-  let private = 
-  [
-    ['direction',direction],
-    ['amount',''+o.amount,aa.fx.plural(o.amount,'sat')]
-  ];
-
-  if (o.destroyed?.length) for (const i of o.destroyed)
-  {
-    private.push(aa.fx.tag_e(i[0],'destroyed'));
-  }
-  if (o.created?.length) for (const i of o.created)
-  {
-    private.push(aa.fx.tag_e(i[0],'created'));
-  }
-  if (o.redeemed?.length) for (const i of o.redeemed)
-  {
-    dat.event.tags.push(aa.fx.tag_e(i[0],'redeemed'));
-  }
-  if (o.pubkeys?.length) for (const i of o.pubkeys)
-  {
-    dat.event.tags.push(aa.fx.tag_p(i[0]))
-  }
-  event.content = await aa.fx.encrypt44(JSON.stringify(private));
-  aa.e.finalize(aa.e.normalise(event));
-
-  let w = aa.w.o.ls[o.wid];
-  if (!w) return;
-  if (!w.history) w.history = [];
-  w.history.unshift(
-  [
-    event.id,
-    aa.now,
-    (direction==='in'?'+':'-')+o.amount,
-    o.created[0][0],
-    o.memo
-  ]);
-  aa.w.save(o.wid);
+  return event.id
 };
 
 
@@ -472,19 +329,18 @@ aa.mk.k7376 =async o=>
 //     [ "p", "e9fbced3a42dcf551486650cc752ab354347dd413b307484e4fd1818ab53f991" ], // recipient of nut zap
 // ]
 
-
 // s = amount_n pubkey_s_key memo_s_q id_s_key wid_s_an
 aa.mk.k9321 =async(s='')=>
 {
   const err =str=>{aa.log('mk.k9321: '+str)};
-  let amount,pubkey,memo,id,w_id;
+  let amount,pubkey,memo,id;
   [amount,s] = s.split(aa.fx.regex.fw);
   if (!amount) { err('no amount'); return}
   [pubkey,s] = s.split(aa.fx.regex.fw);
   if (!aa.is.key(pubkey)) { err('no pubkey'); return};
-  [memo,s] = aa.fx.split_str(s);
-  [id,w_id] = s.split(' ');
-  await aa.db.events([id]);  
+  [memo,id] = aa.fx.split_str(s);
+  if (id && !aa.is.key(id)) { err('invalid id'); return};
+  await aa.db.events([id]);
 
   let p = await aa.db.get_p(pubkey);
   let p2pk = p.p2pk?.length ? p.p2pk : pubkey;
@@ -502,10 +358,9 @@ aa.mk.k9321 =async(s='')=>
     }
   }
   
-  let [wallet,w,wid] = await aa.w.get_active(w_id,p.mints);
-  if (!wallet) {err('no wallet');return}
+  let [wallnut,w,mint] = await aa.w.get_active();
+  if (!wallnut) {err('no walLNut');return}
   
-  let mint = wallet.mint._mintUrl;
   let event = 
   {
     kind:9321,
@@ -518,81 +373,51 @@ aa.mk.k9321 =async(s='')=>
     ]
   };
   if (id?.length) event.tags.push(aa.fx.tag_e(id));
-  let opts = {};
-  if (p2pk) opts.pubkey = p2pk;
-  const {keep,send} = await wallet.send(parseInt(amount),w.proofs,opts);
+  let opts = {pubkey:p2pk};
+  const {keep,send} = await wallnut.send(parseInt(amount),w.proofs,opts);
   aa.w.tx_out(keep,wid);
   event.tags.push(...send.map(i=>['proof',JSON.stringify(i)]));
-  event = aa.e.normalise(event);
-  aa.e.finalize(event);
-  // aa.e.draft(aa.mk.dat({event}));
-  // console.log(event);
+  aa.e.finalize(aa.e.normalise(event));
 };
 
 
-//   "kind": 37375,
+//   "kind": 17375,
 //   "content": nip44_encrypt([
-//       [ "balance", "100", "sat" ],
-//       [ "privkey", "hexkey" ] // explained in NIP-61
-//   ]),
-//   "tags": [
-//     [ "d", "my-wallet" ],
+//     [ "privkey", "hexkey" ],
 //     [ "mint", "https://mint1" ],
 //     [ "mint", "https://mint2" ],
 //     [ "mint", "https://mint3" ],
-//     [ "name", "my shitposting wallet" ],
-//     [ "unit", "sat" ],
-//     [ "description", "a wallet for my day-to-day shitposting" ],
 //     [ "relay", "wss://relay1" ],
 //     [ "relay", "wss://relay2" ],
+//   ]),
+//   "tags": [
+
 //   ]
-// update kind-37375 
-aa.mk.k37375 =async(s='')=>
+// update kind-17375 
+aa.mk.k17375 =async(s='')=>
 {
-  let id = s.trim();
-  if (!id) id = Object.keys(aa.w.o.ls)[0];
-  const w = aa.w.o.ls[id];
+  const w = aa.w.o.ls;
   if (!w) 
   {
     aa.log('unable to create event, walLNut not found');
     return
   }
 
-  let event = { kind:37375, tags:[['d',id]] };
-  let private = [];
-  private.push(['balance',''+w.balance,w.unit]);
-  for (const mint of w.mints) private.push(['mint',mint]);
-  for (const relay of w.relays) private.push(['relay',relay]);
-  if (w.name?.length) private.push(['name',w.name]);
-  if (w.description?.length) private.push(['description',w.description]);
-  if (w.privkey?.length) private.push(['privkey',w.privkey]);
+  let event = {kind:17375,tags:[]};
+  let data = [['privkey',w.privkey]];
+  for (const mint of Object.keys(aa.w.o.ls.mints)) data.push(['mint',mint]);
+  
   // todo: show modal to confirm before encrypting
-  event.content = await aa.fx.encrypt44(JSON.stringify(private));
-  // aa.e.draft(aa.mk.dat({event:aa.e.normalise(event)}));
+  event.content = await aa.fx.encrypt44(JSON.stringify(data));
   aa.e.finalize(aa.e.normalise(event));
 };
 
 
+// event template for event deletion requests
 aa.kinds[5] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('tiny');
-  note.querySelector('.tags_wrapper').setAttribute('open','');
-  // let ids = aa.fx.tags_values(dat.event.tags,'e');
-  // let ida = aa.fx.tags_values(dat.event.tags,'a');
-  // const x = dat.event.pubkey;
-  // if (aa.is.u(x))
-  // {
-  //   let p = aa.u.p;
-  //   let tag_a = aa.fx.tag_value(dat.event.tags,'a');
-  //   let wid = tag_a.split(':')[2];
-  //   if (aa.p.events_newer(p,dat.event,wid))
-  //   {
-  //     aa.p.save(p);
-  //     // aa.log(`k7376: walLNut tx from ${wid}`);
-  //   }
-  // }
-  // aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
   return note
 };
 
@@ -600,110 +425,42 @@ aa.kinds[5] =dat=>
 // event template for walLNut proofs
 aa.kinds[7375] =dat=>
 {
-  // {
-  //   "kind": 7375,
-  //   "content": nip44_encrypt({
-  //     "mint": "https://stablenut.umint.cash",
-  //     "proofs": [
-  //       {
-  //         "id": "005c2502034d4f12",
-  //         "amount": 1,
-  //         "secret": "z+zyxAVLRqN9lEjxuNPSyRJzEstbl69Jc1vtimvtkPg=",
-  //         "C": "0241d98a8197ef238a192d47edf191a9de78b657308937b4f7dd0aa53beae72c46"
-  //       }
-  //     ]
-  //   }),
-  //   "tags": [
-  //     [ "a", "37375:<pubkey>:my-wallet" ]
-  //   ]
-  // }
-
-  const note = aa.e.note(dat);
+  const note = aa.e.note_regular(dat);
   // aa.mk.note_encrypted(dat,note);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  note.querySelector('.tags_wrapper').setAttribute('open','');
-  const x = dat.event.pubkey;
-  if (aa.is.u(x))
+  note.querySelector('.tags_wrapper')?.setAttribute('open','');
+  if (aa.is.u(dat.event.pubkey))
   {
     let p = aa.u.p;
-    let tag_a = aa.fx.tag_value(dat.event.tags,'a');
-    let wid = tag_a.split(':')[2];
-    if (aa.p.events_newer(p,dat.event,wid))
+    // let tag_a = aa.fx.tag_value(dat.event.tags,'a');
+    // let wid = tag_a.split(':')[2];
+    if (aa.p.events_newer(p,dat.event))
     {
       aa.p.save(p);
-      // aa.log(`k7375: walLNut proofs from ${wid}`);
     }
   }
   // aa.e.append_to_notes(note);
-  aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
+  // aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
   return note
 };
 
-
-// event template for walLNut proofs
-aa.kinds[7376] =dat=>
-{
-// {
-//     "kind": 7376,
-//     "content": nip44_encrypt([
-//         [ "direction", "in" ], // in = received, out = sent
-//         [ "amount", "1", "sat" ],
-//         [ "e", "<event-id-of-spent-token>", "<relay-hint>", "created" ],
-//     ]),
-//     "tags": [
-//         [ "a", "37375:<pubkey>:my-wallet" ],
-//     ]
-// }
-
-  const note = aa.e.note(dat);
-  //aa.mk.note_encrypted(dat,note);
-  if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  note.querySelector('.tags_wrapper').setAttribute('open','');
-  const x = dat.event.pubkey;
-  if (aa.is.u(x))
-  {
-    let p = aa.u.p;
-    let tag_a = aa.fx.tag_value(dat.event.tags,'a');
-    let wid = tag_a.split(':')[2];
-    if (aa.p.events_newer(p,dat.event,wid))
-    {
-      aa.p.save(p);
-      // aa.log(`k7376: walLNut tx from ${wid}`);
-    }
-  }
-  aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
-  return note
-};
-
-aa.w.is_redeemed =x=>
-{
-  if (!aa.w.o.redeemed) 
-  {
-    aa.w.o.redeemed = [];
-    aa.w.save();
-    return false
-  }
-  if (aa.w.o.redeemed.includes(x)) return true;
-  return false
-};
 
 // event template for nutzap
 aa.kinds[9321] =dat=>
 {
   const note = aa.e.note(dat);
-  const x = dat.event.pubkey;
   let p_x = aa.fx.tag_value(dat.event.tags,'p');
-  if (aa.is.u(p_x) && !aa.w.is_redeemed(dat.event.id)) 
+  let e_id = aa.fx.tag_value(dat.event.tags,'e');
+  if (aa.is.u(p_x) && !aa.w.is_redeemed(dat.event.id))
   {
-    if (!aa.w.o.hasOwnProperty('redeemable')) aa.w.o.redeemable = [];
-    if (!aa.w.o.redeemable.find(i=>i[0]===dat.event.id))
+    aa.w.save();
+    setTimeout(async()=>
     {
-      let amount = aa.fx.tag_value(dat.event.tags,'amount');
-      aa.w.o.redeemable.push([dat.event.id,amount]);
-      aa.w.save();
-      aa.log('nut zap +'+amount+' '+dat.event.id);
-      //aa.log(redeem_butt)
-    }
+      let log = `nutzapped +${amount} by `;
+      log += await aa.p.author(dat.event.pubkey);
+      if (e_id) log += ` for ${e_id}`;
+      aa.log(log);
+    },0);
   }
   aa.e.append_to(dat,note,aa.get.tag_reply(dat.event.tags));
   return note
@@ -716,7 +473,7 @@ aa.kinds[10019] =dat=>
   const note = aa.e.note_regular(dat);
   note.classList.add('root');
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  
+  note.querySelector('.tags_wrapper')?.setAttribute('open','');
   aa.db.get_p(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
@@ -739,20 +496,16 @@ aa.kinds[10019] =dat=>
       aa.p.save(p);
     }
   });
-
-  let tags = note.querySelector('.tags_wrapper');
-  tags.setAttribute('open','');
-  
   return note
 };
 
 
 // event template for walLNut 
-aa.kinds[37375] =dat=>
+aa.kinds[17375] =dat=>
 {
   const note = aa.e.note_pre(dat);
   //aa.mk.note_encrypted(dat,note);
-  note.querySelector('.tags_wrapper').setAttribute('open','');
+  note.querySelector('.tags_wrapper')?.setAttribute('open','');
   if (aa.is.u(dat.event.pubkey))
   {
     let p = aa.u.p;
@@ -764,7 +517,6 @@ aa.kinds[37375] =dat=>
     let butt = aa.mk.butt_action(aa.w.def.id+' import '+dat.event.id,'import');
     note.querySelector('.content').append(butt)
   }
-  
   return note
 };
 
@@ -772,42 +524,37 @@ aa.kinds[37375] =dat=>
 // on load
 aa.w.load =()=>
 {
-  aa.fx.a_add(aa.q.ls.a.kinds,[10019,37375]);
-  aa.q.ls.w = {"authors":["u"],"kinds":[7375,10019,37375]};
-  aa.fx.a_add(aa.e.renders.encrypted,[7375,7376,37375]);
+  if (aa.q?.ls)
+  {
+    aa.q.ls.w = {"authors":["u"],"kinds":[7375,10019,17375]};
+
+    if (aa.q.ls.a) aa.fx.a_add(aa.q.ls.a.kinds,[10019,17375]);
+    if (aa.q.ls.b) aa.fx.a_add(aa.q.ls.b.kinds,[10019]);
+    if (aa.q.ls.c) aa.fx.a_add(aa.q.ls.c.kinds,[10019]);
+    if (aa.q.ls.f) aa.fx.a_add(aa.q.ls.f.kinds,[10019]);
+    if (aa.q.ls.n) aa.fx.a_add(aa.q.ls.n.kinds,[9321,9735]);
+  }
+
+  aa.fx.a_add(aa.e.renders.encrypted,[7375,7376,17375]);
   aa.temp.quotes = {};
   let mod = aa.w;
   let id = mod.def.id;
   aa.actions.push(
     {
       action:[id,'add'],
-      required:['wid','mint'],
-      optional:['mint'],
+      required:['mint'],
       description:'add walLNut',
       exe:mod.add
     },
-    // {
-    //   action:[id,'del'],
-    //   required:['wid'],
-    //   description:'delete walLNut',
-    //   exe:mod.del
-    // },
     {
       action:[id,'key'],
-      required:['wid','hex_privkey'],
+      optional:['hex_privkey'],
       description:'set private key to decrypt p2pk tokens',
       exe:mod.key
     },
     {
-      action:[id,'unit'],
-      required:['unit','wid'],
-      description:'set unit to walLNut',
-      exe:mod.unit
-    },
-    {
       action:[id,'relays'],
-      required:['wid','relset'],
-      optional:['relset'],
+      required:['url'],
       description:'set relay sets to walLNut',
       exe:mod.relays
     },
@@ -860,7 +607,7 @@ aa.w.load =()=>
       required:['quote'],
       optional:['wid'],
       description:'keeps checking quote state',
-      exe:mod.quote_re_check
+      exe:mod.quote_check
     },
     {
       action:['cashu','mint'],
@@ -905,47 +652,51 @@ aa.w.load =()=>
 // melt proofs
 aa.w.melt =async(s='')=>
 {
-  let [invoice,w_id] = s.split(aa.fx.regex.fw);
-  let [wallet,w,wid] = await aa.w.get_active(w_id);
-  if (!wallet) 
+  // let [invoice,w_id] = s.split(aa.fx.regex.fw);
+  let [wallnut,w,mint] = await aa.w.get_active();
+  if (!wallnut)
   {
     aa.log('w melt: no walLNut found')
     return
   }
-  const quote = await wallet.createMeltQuote(invoice);
+  const quote = await wallnut.createMeltQuote(s);
+  if (!quote)
+  {
+    aa.log('w melt: no quote created')
+    return
+  }
   const amount = quote.amount + quote.fee_reserve;
   const options = {includeFees:true};
-  const proofs = await wallet.send(amount,w.proofs,options);
+  const {keep,send} = await wallnut.send(amount,w.proofs,options);
   console.log(proofs);
-  const melt_response = await wallet.meltProofs(quote,proofs.to_send);
+  const melt_response = await wallnut.meltProofs(quote,send);
   aa.log(aa.mk.ls({ls:melt_response}));
   console.log(melt_response);
-  proofs.to_keep.push(...melt_response.change);
-  aa.w.tx_out(proofs.to_keep,wid);
+  keep.push(...melt_response.change);
+  aa.w.tx_out(keep);
 };
 
 
 // mint proofs from quote
 aa.w.mint =async(s='')=>
 {
-  let a = s.split(' ');
-  let quote_id = a.shift();
+  // let a = s.split(' ');
+  // let quote_id = a.shift();
   // let amount = a.length ? parseInt(a.shift()) : 0;
-  let w_id = a.length ? a.shift() : false;
-  let [wallet,w,wid] = await aa.w.get_active(w_id);
+  // let w_id = a.length ? a.shift() : false;
+  let [wallet,w,mint] = await aa.w.get_active();
   if (!wallet) 
   {
     aa.log('no walLNut found')
     return
   }
-  let amount = w.quotes[quote_id].amount;
+  let amount = w.quotes[s]?.amount;
   if (!amount) return;
-  let mint = wallet.mint.mintUrl;
   let units = aa.fx.amount_display(amount,'sat');
-  aa.log(`minting proofs for ${units} from ${quote_id}`);
+  aa.log(`minting proofs for ${units} from ${s}`);
   
-  let proofs = await wallet.mintProofs(amount,quote_id);
-  aa.w.tx_in(proofs,wid,{mint});
+  let proofs = await wallet.mintProofs(amount,s);
+  aa.w.tx_in(proofs,mint);
 };
 
 
@@ -953,23 +704,24 @@ aa.w.mint =async(s='')=>
 aa.w.mk =(k,v)=>
 {
   const id = aa.w.def.id;
-  let upg = aa.w.upg(k,v);
-  if (upg) setTimeout(()=>{aa.w.save(k)},200);
-  // walLNut mod item
-  const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
-  // walLNut list
-  const ul = aa.mk.walLNut(k,v);
-  // walLNut details
-  const details = aa.mk.details(k,ul,1);
-  details.append(
-    // aa.mk.butt_action(`${id} del ${k}`,'del','del'),
-    // ' ',
-    aa.mk.butt_action('mk 37375 '+k,'k37375'),
-    // ' ',
-    // aa.mk.butt_action(`${id} upd ${k}`,'upd','upd')
-  );
-  l.append(details);
-  return l
+  // aa.w.upg(k,v);
+  return aa.mk.item(k,v);
+  
+  // // walLNut mod item
+  // const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
+  // // walLNut list
+  // const ul = aa.mk.walLNut(k,v);
+  // // walLNut details
+  // const details = aa.mk.details(k,aa.mk.ls({ls:ul,1);
+  // details.append(
+  //   // aa.mk.butt_action(`${id} del ${k}`,'del','del'),
+  //   // ' ',
+  //   aa.mk.butt_action('mk 17375 '+k,'k17375'),
+  //   // ' ',
+  //   // aa.mk.butt_action(`${id} upd ${k}`,'upd','upd')
+  // );
+  // l.append(details);
+  // return l
 };
 
 
@@ -986,9 +738,9 @@ aa.clk.nzap =e=>
 
 
 // save proofs from tx in
-aa.w.proofs_in =(proofs,wid)=>
+aa.w.proofs_in =(proofs,mint)=>
 {
-  let w = aa.w.o.ls[wid];
+  let w = aa.w.get_mint(mint);
   if (!w) return;
   const amount = aa.fx.sum_amounts(proofs);
   w.proofs.push(...proofs);
@@ -998,9 +750,9 @@ aa.w.proofs_in =(proofs,wid)=>
 
 
 // save proofs from tx out
-aa.w.proofs_out =(proofs,wid)=>
+aa.w.proofs_out =(proofs,mint)=>
 {
-  let w = aa.w.o.ls[wid];
+  let w = aa.w.get_mint(mint);
   if (!w) return;
   let old_balance = aa.fx.sum_amounts(w.proofs);
   let new_balance = aa.fx.sum_amounts(proofs);
@@ -1013,27 +765,24 @@ aa.w.proofs_out =(proofs,wid)=>
 // mint quote
 aa.w.quote =async s=>
 {
-  const a = s.split(' ');
-  let amount = parseInt(a.shift());
-  
-  let w_id = a.shift();
-  let [wallet,w,wid] = await aa.w.get_active(w_id);
-  if (!wallet)
+  let [amount,url] = s.split(' ');
+  amount = parseInt(amount);
+  let [wallnut,w,mint] = await aa.w.get_active(url);
+  if (!wallnut)
   {
-    aa.log('no wallet found');
+    aa.log('no wallnut found');
     return ''
   }
   
-  const quote = await wallet.createMintQuote(amount);
-  if (quote) 
+  const quote = await wallnut.createMintQuote(amount);
+  if (quote)
   {
     quote.amount = amount;
     // aa.temp.quotes[quote.quote] = {amount:amount,quote:quote};
-    if (!w.quotes) w.quotes = {};
     // w.quotes.push(quote);
     w.quotes[quote.quote] = quote;//{amount:amount,quote:quote};
-    aa.w.save(wid);
-    aa.log('quote for '+amount+' from mint '+wallet?.mint?.mintUrl);
+    aa.w.save();
+    aa.log('quote for '+aa.fx.amount_display(amount,'sat')+' from mint '+mint);
     return quote.quote
   }
   return '';
@@ -1043,23 +792,13 @@ aa.w.quote =async s=>
 // check quote state
 aa.w.quote_check =async(s='')=>
 {
-  let a = s.split(' ');
-  let quote_id = a.shift();
-  let wid = a.length ? a.shift() : false;
-  let [wallet] = await aa.w.get_active(wid);
-  if (!wallet) return;
-  const quote = await wallet.checkMintQuote(quote_id);
-  return quote.state
-};
-
-
-// check quote state
-aa.w.quote_re_check =async(s='')=>
-{
-  let a = s.split(' ');
-  let quote_id = a.shift();
-  let w_id = a.length ? a.shift() : false;
-  let [wallet,w,wid] = await aa.w.get_active(w_id);
+  let [quote_id,url] = s.split(' ');
+  let [wallnut,w,mint] = await aa.w.get_active(url);
+  if (!wallnut)
+  {
+    aa.log('no wallnut found');
+    return ''
+  }
   let checks = 0;
   let log = aa.mk.l('div',{cla:'quote_check'});
   let butt = aa.mk.l('button',
@@ -1072,7 +811,7 @@ aa.w.quote_re_check =async(s='')=>
   {
     if (!log || checks > 21) return;
     let amount = w.quotes[quote_id].amount;
-    const quote = await wallet.checkMintQuote(quote_id);
+    const quote = await wallnut.checkMintQuote(quote_id);
     quote.amount = amount;
     let state = quote.state.toLowerCase();
     switch (state)
@@ -1089,8 +828,7 @@ aa.w.quote_re_check =async(s='')=>
         if (!log.classList.contains(state)) 
         {
           log.classList.remove('unpaid');
-          aa.w.mint(quote_id+' '+wid);
-          // log.append(aa.mk.butt_action('w quote_check '+quote.quote))
+          aa.w.mint(quote_id+' '+mint);
         }
         setTimeout(()=>{re_check(quote_id)},5000);
         break;
@@ -1104,154 +842,137 @@ aa.w.quote_re_check =async(s='')=>
   log.append(butt);
   aa.log(log);
   re_check(quote_id);
-
-  // const quote = await wallet.checkMintQuote(quote_id);
-  // // if (!w.quotes[quote_id]) w.quotes[quote_id] = {amount:'',quote:quote};
-  // // else w.quotes[quote_id].quote = quote;
-  // // aa.w.save(wid);
-  // aa.log('w quote_check '+quote_id+': '+quote.state);
-  // if (quote.state === 'UNPAID') 
-  // {
-  //   aa.log(aa.mk.qr(quote.request));
-  //   aa.log(aa.mk.butt_action('w quote_check '+quote.quote))
-  // }
-  // if (quote.state === 'PAID') 
-  // {
-  //   aa.log(aa.mk.butt_action('w mint '+quote.quote))
-  // }
-  // return quote.state
 };
 
 
 // receive token
 aa.w.receive =async(s='')=>
 {
-  let [token,w_id] = s.split(aa.fx.regex.fw);
-  let [wallet,w,wid] = await aa.w.get_active(w_id);
-  let opts = {};
-  if (w.privkey) opts.privkey = w.privkey;
-  const proofs = await wallet.receive(token,opts);
-  aa.w.tx_in(proofs,wid);
+  let [token,url] = s.split(aa.fx.regex.fw);
+  let [wallnut,w,mint] = await aa.w.get_active(url);
+  if (!wallnut)
+  {
+    aa.log('no wallnut found');
+    return ''
+  }
+  const proofs = await wallnut.receive(token,{privkey:w.privkey});
+  aa.w.tx_in(proofs,mint);
 };
 
 
 aa.w.redeem =async(s='')=>
 {
   let ids = s.split(' ').map(i=>i.trim()).filter(aa.is.key);
-  const o = {sat:{}};
+  return ids
+  // const o = {sat:{}};
 
-  for (const id of ids)
-  {
-    let dat = aa.db.e[id];
-    if (!dat) continue;
+  // for (const id of ids)
+  // {
+  //   let dat = aa.db.e[id];
+  //   if (!dat) continue;
     
-    let proofs = aa.fx.tags_values(dat.event.tags,'proof')
-      .map(i=>aa.parse.j(i));
-    if (!proofs.length) continue;
+  //   let proofs = aa.fx.tags_values(dat.event.tags,'proof')
+  //     .map(i=>aa.parse.j(i));
+  //   if (!proofs.length) continue;
 
-    let unit = aa.fx.tag_value(dat.event.tags,'unit');
-    if (!unit) continue;
-    if (!o[unit]) o[unit] = {};
+  //   let unit = aa.fx.tag_value(dat.event.tags,'unit');
+  //   if (!unit) continue;
+  //   if (!o[unit]) o[unit] = {};
 
-    let mint = aa.is.url(aa.fx.tag_value(dat.event.tags,'u'))?.href;
-    if (!mint) continue;
-    if (!o[unit][mint]) o[unit][mint] = [];
-    let pubkey = dat.event.pubkey;
-    o[unit][mint].push({proofs,id,pubkey});
-  }
-  for (const unit in o)
-  {
-    for (const mint in o[unit])
-    {
-      let [wallet,w,wid] = await aa.w.get_active('',[mint]);
-      if (!wallet) continue;
-      let swap_options = {};
-      if (w.privkey) swap_options.privkey = w.privkey;
-
-      let redeemed = [];
-      let pubkeys = [];
-      let c_proofs = [];
-      for (const i of o[unit][mint])
-      {
-        let proofs = i.proofs;
-        let amount = aa.fx.sum_amounts(proofs);
-        const {keep,send} = await wallet.swap(amount,proofs,swap_options);
-        c_proofs.push(...keep,...send);
-        aa.fx.a_add(redeemed,i.id);
-        aa.fx.a_add(pubkeys,i.pubkey);
-      }
-      aa.w.tx_in(c_proofs,wid,{redeemed,pubkeys,mint});
-    }
-  }
+  //   let mint = aa.is.url(aa.fx.tag_value(dat.event.tags,'u'))?.href;
+  //   if (!mint) continue;
+  //   if (!o[unit][mint]) o[unit][mint] = [];
+  //   let pubkey = dat.event.pubkey;
+  //   o[unit][mint].push({proofs,id,pubkey});
+  // }
+  // for (const unit in o)
+  // {
+  //   for (const mint in o[unit])
+  //   {
+  //     let [wallnut,w] = await aa.w.get_active(mint);
+  //     if (!wallnut) continue;
+  //     let swap_options = {privkey:aa.w.o.ls.privkey};
+  //     let redeemed = [];
+  //     let pubkeys = [];
+  //     let c_proofs = [];
+  //     for (const i of o[unit][mint])
+  //     {
+  //       let amount = aa.fx.sum_amounts(i.proofs);
+  //       const {keep,send} = await wallnut.swap(amount,i.proofs,swap_options);
+  //       c_proofs.push(...keep,...send);
+  //       aa.fx.a_add(redeemed,i.id);
+  //       aa.fx.a_add(pubkeys,i.pubkey);
+  //     }
+  //     aa.w.tx_in(c_proofs,{redeemed,pubkeys,mint});
+  //   }
+  // }
 };
 
 
 
 // define relay sets to walLNut
-aa.w.relays =s=>
+aa.w.relays =(s='')=>
 {
-  let a = s.trim().split(' ');
-  let wid = a.shift();
-  aa.w.o.ls[wid].relays = a;
-  aa.w.save(wid);
+  let a = s.split(' ').map(i=>aa.is.url(i.trim())?.href);
+  aa.fx.a_add(aa.w.o.ls.relays,a)
+  aa.w.save();
 };
 
 
 // save walLNut
-aa.w.save =wid=>
+aa.w.save =id=>
 {
-  if (wid) aa.mod_ui(aa.w,wid);
+  if (id) aa.mod_ui(aa.w,id);
   aa.mod_save(aa.w);
 };
 
 
-// returns proofs to send
+// returns token to send
 aa.w.send =async(s='')=>
 {
   let [amount,w_id,pubkey] = s.split(' ');
   amount = parseInt(amount);
-  let [wallet,w,wid] = await aa.w.get_active(w_id);
+  let [wallnut,w,mint] = await aa.w.get_active();
   let opts = {};
   if (pubkey)
   {
     pubkey = pubkey.trim();
     if (aa.is.key(pubkey)) opts.pubkey = '02'+pubkey;
   }
-  const {keep,send} = await wallet.send(amount,w.proofs,opts);
-  aa.w.tx_out(keep,wid);
+  const {keep,send} = await wallnut.send(amount,w.proofs,opts);
+  aa.w.tx_out(keep,mint);
   // return send
-  const o = 
+  // const o = 
+  // {
+  //   memo:'yo',
+  //   mint:mint,
+  //   proofs:send,
+  //   unit:'sat',
+  // };
+  return cashuts.getEncodedTokenV4(
   {
     memo:'yo',
-    mint:wallet.mint._mintUrl,
+    mint:mint,
     proofs:send,
     unit:'sat',
-  };
-  return cashuts.getEncodedTokenV4(o)
+  })
 };
 
 
 // start mod
 aa.w.start =mod=>
 {
-  if (!mod.o.hasOwnProperty('redeemable')||!mod.o.hasOwnProperty('redeemed')) 
-  {
-    if (!mod.o.hasOwnProperty('redeemed')) mod.o.redeemed = [];
-    if (!mod.o.hasOwnProperty('redeemable')) mod.o.redeemable = [];
-    aa.w.save();
-  }
-
   aa.mk.mod(mod);
   let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
   let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
   
-  let ids = mod.o.redeemable.map(i=>i[0]).join(' ');
-  let amount = mod.o.redeemable.map(i=>i[i]).reduce((a,b)=>a+b,0);
-  let redeem_butt = aa.mk.butt_action(`${mod.def.id} redeem ${ids}`,'🐿️['+amount+']');
+  // let ids = mod.o.ls.redeemable.map(i=>i[0]).join(' ');
+  // let amount = mod.o.redeemable.map(i=>i[i]).reduce((a,b)=>a+b,0);
+  // let redeem_butt = aa.mk.butt_action(`${mod.def.id} redeem ${ids}`,'🐿️['+amount+']');
   
   mod.l.insertBefore(upd_butt,document.getElementById(mod.def.id));
   mod.l.insertBefore(add_butt,upd_butt);
-  mod.l.insertBefore(redeem_butt,upd_butt);
+  // mod.l.insertBefore(redeem_butt,upd_butt);
 };
 
 
@@ -1264,12 +985,7 @@ aa.fx.sum_amounts =a=>
 };
 
 
-
-
-
-
-
-aa.w.tx_in =async(proofs,wid,o)=>
+aa.w.tx_in =async(proofs,mint,o)=>
 {
   if (!proofs || !proofs.length) 
   {
@@ -1277,25 +993,26 @@ aa.w.tx_in =async(proofs,wid,o)=>
     return
   }
 
-  const w = aa.w.o.ls[wid];
+  const w = aa.w.o.ls[mint];
   if (!w) 
   {
     aa.log(aa.w.def.id+' walLNut not found');
     return
   }
 
-  let mint = o?.mint || w.mints[0];
+  // let mint = o?.mint || w.mints[0];
   let redeemed = o?.redeemed?.length ? o.redeemed : [];
 
-  const amount = aa.w.proofs_in(proofs,w);
-  aa.log(`${aa.w.def.id} ${wid} +${amount} = ${w.balance}`);
-  aa.w.save(wid);
-  aa.mk.k7375({mint,wid,amount,redeemed})
-  // .then(o=>{aa.mk.k7376({direction:'in',...o})});
+  const amount = aa.w.proofs_in(proofs,mint);
+  aa.log(`${aa.w.def.id} +${amount} = ${aa.w.o.ls.balance}`);
+  aa.w.save();
+  aa.mk.k7375({mint,amount,redeemed})
 };
 
 
-aa.w.tx_out =(proofs,wid,mint)=>
+
+
+aa.w.tx_out =(proofs,mint)=>
 {
   if (!proofs || !proofs.length) 
   {
@@ -1303,146 +1020,53 @@ aa.w.tx_out =(proofs,wid,mint)=>
     return
   }
 
-  const w = aa.w.o.ls[wid];
+  const w = aa.w.o.ls[mint];
   if (!w) 
   {
-    aa.log(aa.w.def.id+' walLNut not found '+wid);
+    aa.log(aa.w.def.id+' walLNut not found');
     return
   }
-  if (!mint) mint = w.mints[0];
+  if (!mint) mint = aa.w.get_def();
 
-  let amount = aa.w.proofs_out(proofs,wid);
+  let amount = aa.w.proofs_out(proofs,mint);
   aa.log(`${aa.w.def.id} -${amount} = ${w.balance} in ${wid}`);
-  aa.w.save(wid);
+  aa.w.save();
 
-  aa.mk.k7375({mint,wid,amount})
+  aa.mk.k7375({mint})
   // .then(o=>{aa.mk.k7376({direction:'out',...o})});
 };
 
-
-// define unit of walLNut
-aa.w.unit =(s='')=>
-{
-  let [unit,wid] = s.split(' ');
-  aa.w.o.ls[wid].unit = unit;
-  // let a = s.split(' ');
-  // let wid = a.shift();
-  // aa.w.o.ls[wid].unit = a.shift();
-  aa.w.save(wid);
-};
 
 
 aa.w.upg =(k,v)=>
 {
   let upd;
-  let to_rm = ['e','k37375','k7375','change'];
-  for (const i of to_rm)
-  {
-    if (v.hasOwnProperty(i))
-    {
-      delete v[i];
-      upd=1
-    }
-  }
-  if (!v.hasOwnProperty('history'))
-  {
-    v.history = [];
-    upd=1
-  }
-  if (!v.hasOwnProperty('mints'))
-  {
-    v.mints = [];
-    upd=1
-  }
-  if (v.hasOwnProperty('mint'))
-  {
-    if (v.mint.length) aa.fx.a_add(v.mints,[v.mint]);
-    delete v.mint;
-    upd=1
-  }
-  return upd
+  // let to_rm = ['e','k37375','k7375','change'];
+  // for (const i of to_rm)
+  // {
+  //   if (v.hasOwnProperty(i))
+  //   {
+  //     delete v[i];
+  //     upd=1
+  //   }
+  // }
+  // if (!v.hasOwnProperty('history'))
+  // {
+  //   v.history = [];
+  //   upd=1
+  // }
+  // if (!v.hasOwnProperty('mints'))
+  // {
+  //   v.mints = {};
+  //   upd=1
+  // }
+  // if (v.hasOwnProperty('mint'))
+  // {
+  //   if (v.mint.length) aa.fx.a_add(v.mints,[v.mint]);
+  //   delete v.mint;
+  //   upd=1
+  // }
+  if (upd) setTimeout(()=>{aa.w.save()},200);
 };
-
-
-// walLNut object template
-aa.w.w =()=>
-{
-  return  {
-    name:'',
-    description:'',
-    balance:0,
-    unit:'sat',
-    mints:[],
-    proofs:[],
-    // history:[],
-    quotes:{},
-    privkey:'',
-    pubkey:'',
-    relays:[],
-  }
-};
-
-
-// make walLNut element
-aa.mk.walLNut =(k,v)=>
-{
-  const id = aa.w.def.id;
-  const ul = aa.mk.l('ul',{cla:'list'});
-  
-  for (const key in v)
-  {
-    let val = v[key];
-    let li = aa.mk.l('li',{cla:'item item_'+key});
-    if (key === 'balance')
-    {
-      let balance = val+' '+v.unit;
-      li.append(
-        aa.mk.l('span',{cla:'key',con:key}),
-        ' ',aa.mk.l('span',{cla:'val',con:balance})
-      );
-    }
-    // else if (key === 'proofs' 
-    // || key === 'quotes' 
-    // || key === 'k7375'
-    // || key === 'k37375'
-    // || key === 'change')
-    else
-    {
-      if (key === 'unit') continue;
-      if (key === 'privkey') val = '******';
-      if (!val) continue;
-      if (typeof val === 'object')
-      {
-        if (Array.isArray(val) && !val.length) continue; 
-        else if (!Object.keys(val).length) continue;
-      }
-      li = aa.mk.item(key,val);
-    }
-    // else if (key === 'k37375')
-    // {
-    //   // li = aa.mk.item(key,val);
-    //   // let k37375 = aa.mk.nostr_link(val,'k37375');
-    //   // k37375.classList.add('key');
-    //   li.append(
-    //     // k37375,
-    //     aa.mk.butt_action(`e view ${val} `,key,'key'),
-    //     ' ',
-    //     aa.mk.l('span',{cla:'val',con:val})
-    //   );
-    // }
-    // else 
-    // {
-    //   li.append(
-    //     aa.mk.butt_action(`${id} ${key} ${k} ${val}`,key,'key'),
-    //     ' ',
-    //     aa.mk.l('span',{cla:'val',con:val})
-    //   );
-    //   if (key === 'relays') li.dataset.sets = aa.fx.in_sets(aa.r.o.ls,val);
-    // }
-    ul.append(li);
-  }
-  return ul
-};
-
 
 // window.addEventListener('load',aa.w.load);

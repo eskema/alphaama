@@ -6,6 +6,7 @@ user you
 
 */
 
+
 aa.head_scripts(['/u/is.js']);
 aa.mk.styleshit('/u/u.css');
 
@@ -22,9 +23,12 @@ aa.u.add =(pubkey='')=>
   if (aa.is.key(pubkey))
   {
     aa.u.o.ls = {xpub:pubkey,npub:aa.fx.encode('npub',pubkey)};
+
     aa.mk.mod(aa.u);
     aa.mod_save(aa.u).then(aa.u.start);
+    aa.log('u = '+pubkey);
   }
+  else return false
 };
 
 
@@ -60,7 +64,7 @@ aa.clk.cancel =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
-  if (aa.temp.mining && aa.temp.mining[xid]) aa.fx.pow_a(xid);
+  if (aa.temp.mining && aa.temp.mining[xid]) aa.fx.pow_abort(xid);
   aa.e.note_rm(note);
 };
 
@@ -336,6 +340,8 @@ aa.u.login =async(s='')=>
   
   if (!mode) mode = 'easy';
   else mode = aa.fx.an(mode);
+  aa.log(`setting options with: .aa o add mode ${mode},trust 4`)
+  aa.o.add(`mode ${mode},trust 4`);
   
   relay = aa.is.url(relay)?.href;
   if (relay) relays.push(relay);
@@ -345,22 +351,25 @@ aa.u.login =async(s='')=>
     if (aa.is.key(pub)) pubkey = pub;
     else
     {
-      if (pub.find('@'))
+      if (pub.includes('@'))
       {
-        // fetch pubkey from nip5
+        let dis = await NostrTools.nip05.queryProfile(pub);
+        if (dis?.pubkey?.length) pubkey = dis.pubkey;
+        if (dis.relays?.length) relays.push(...dis.relays);
       }
       else if (pub.startsWith('np'))
       {
         if (pub.startsWith('npub1'))
         {
-
+          pubkey = aa.fx.decode(pub);
         }
         else if (pub.startsWith('nprofile1'))
         {
-
+          let dis = aa.fx.decode(pub);
+          if (dis?.pubkey?.length) pubkey = dis.pubkey;
+          if (dis.relays?.length) relays.push(...dis.relays);
         }
       }
-      
     }
   }
 
@@ -369,60 +378,62 @@ aa.u.login =async(s='')=>
     // login via extension
     aa.log('no pubkey, trying nip-7 extension…');
     pubkey = await window.nostr.getPublicKey();
-  }
-  else
-  {
-    aa.log('enable extension first and try again');
-    return
-  }
-
-  if (!pubkey)
-  {
-    aa.log('unable to get public key from extension');
-    return
+    if (!pubkey)
+    {
+      aa.log('unable to get public key from extension');
+      return
+    }
   }
 
-  aa.o.add(`mode ${mode},trust 4`);
   aa.u.add(pubkey);
-  aa.u.start();
+  await aa.u.start();
+  aa.log('adding some useful queries')
   aa.q.stuff();
   
   if (!relays.length) relays = await aa.r.ext();
+  else if (relay) aa.r.add(relay+' read write');
   if (!relays.length)
   {
     aa.log(aa.mk.butt_action('r add wss://url.com read write'));
     return
   }
-  else
+  else aa.u.fetch()
+};
+
+
+// fetch basic stuff to get things started
+aa.u.fetch =()=>
+{
+  aa.log('fetching your stuff: .aa q run a');
+  aa.q.run('a');
+  setTimeout(()=>
   {
-    aa.log('fetching your data: .aa q run a');
     aa.q.run('a');
-    
-    setTimeout(()=>
-    {
-      aa.log('again to include your follows and mor relays...');
-      aa.q.run('a');
-    },600);
-    
-    setTimeout(()=>
-    {
-      aa.log('and again but now in outbox: .aa q out a');
-      aa.q.outbox('a');
-    },1000);
 
     setTimeout(()=>
     {
-      aa.log('fetching your recent notes + notifications: .aa q run u,n');
-      aa.q.run('u,n');
+      if (aa.u.p.follows.length)
+      {
+        aa.log(`found ${aa.u.p.follows.length} ${aa.fx.plural(aa.u.p.follows.length,'follow')}`);
+      }
+      aa.log('fetching your follows (k3) stuff on your relays: .aa q run b');
+      aa.log('k3 = '+aa.u.p.follows.join(', '));
+      setTimeout(()=>
+      {
+        aa.log('fetching k3 stuff as outbox: .aa q out b');
+        setTimeout(()=>{aa.q.outbox('b')},0);
+        // await aa.fx.countdown('page reloading in ',10)
+        sessionStorage.q_out = 'f';
+        sessionStorage.q_run = 'n';
+        setTimeout(()=>{aa.log('login done. reload page when things stop moving.')},1000);
+      },5000);
+      aa.q.run('b');
+    
     },3000);
-   
-    setTimeout(()=>
-    {
-      aa.log('fetching your feed: .aa q out f');
-      aa.q.outbox('f');
-    },5000);
-  }
+    
+  },1000);
 };
+
 
 
 // load your metadata into input prefixed with set metadata command
@@ -760,11 +771,8 @@ aa.u.start =async()=>
   let ls = mod?.o?.ls;
   if (!ls.xpub)
   {
-    let log = aa.mk.l('p',{id:'u_login',app:aa.mk.butt_action('u login')});
-    // log.append());
-    // log.append(' ',aa.mk.butt_action('u login easy','easy'));
-    // log.append(' ',aa.mk.butt_action('u login hard','hard'));
-    aa.log(log);
+    let login_butt = aa.mk.l('p',{id:'u_login',app:aa.mk.butt_action('u login')});
+    setTimeout(()=>{aa.log(login_butt)},500);
     return
   }
   else document.getElementById('u_login')?.parentElement.remove();
@@ -795,9 +803,12 @@ aa.u.upd_u_u =()=>
   let butt_u = document.getElementById('butt_u_u');
   if (!butt_u || !aa.u.p) return;
   let p = aa.u.p;
-  aa.fx.color(p.xpub,document.getElementById('u_u'));
-  butt_u.textContent = p.xpub.slice(0,1)+'_'+p.xpub.slice(-1);
-  if (aa.is.trusted(p.score)) aa.p.p_link_pic(butt_u,p.metadata.picture);
+  fastdom.mutate(()=>
+  {
+    aa.fx.color(p.xpub,document.getElementById('u_u'));
+    butt_u.textContent = p.xpub.slice(0,1)+'_'+p.xpub.slice(-1);
+    if (aa.is.trusted(p.score)) aa.p.p_link_pic(butt_u,p.metadata.picture);
+  })
 };
 
 

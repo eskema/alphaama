@@ -24,7 +24,7 @@
   --font-size-xl: 3.6rem;
   --line: 2rem;
   --pad: .6rem;
-  --padm: .4rem;
+  --padm: .42rem;
   --pad-l: calc(calc(var(--size) - 1.5rem)/2);
   --size: calc(4 * var(--font-size));
   --size-s: 2rem;
@@ -468,9 +468,15 @@ textarea:focus
   grid-area: aft;
 }
 
+.item > .key
+{
+  grid-area: k;
+}
+
 .item > .val
 {
   margin: 0 var(--pad);
+  grid-area: v;
 }
 
 /*li.item > .key,
@@ -531,10 +537,8 @@ li.item > .val
 
 .l.item > details[open] > summary
 {
-  /*color: rgb(var(--color-main));*/
   margin-bottom: var(--padm);
   margin-left: calc(var(--padm)* -1);
-  /*font-size: var(--font-size);*/
 }
 
 .item > details > summary::before,
@@ -561,6 +565,12 @@ li.item > .val
 .item > details.empty > summary::after 
 {
   content: " empty";
+}
+
+.item.empty::after 
+{
+  content: " empty";
+  grid-area: v
 }
 
 /* @end */
@@ -975,6 +985,7 @@ li.item > .val
   scrollbar-width: none;
   transition: max-height 1s cubic-bezier(0.87, 0, 0.13, 1);
   transition: var(--trans-fast);
+  max-height: 40vh;
 }
 
 #l > header
@@ -1000,6 +1011,7 @@ li.item > .val
 #logs
 {
   position: relative;
+  counter-reset: log -1;
 }
 
 .l
@@ -1033,15 +1045,28 @@ li.item > .val
 
 .l::before
 {
-  content: "//";
-  opacity: .5;
-  padding-left: var(--pad);
+  align-content: center;
+  
+  content: counter(log) "";
+  counter-increment: log;
+  display: grid;
+  /*font-size: var(--font-size-xs);*/
+  margin-left: var(--pad);
+  opacity: .6;
+  overflow: hidden;
+  text-align: right;
+  width: calc(var(--padm)*4);
 }
 
 .l.is_new
 {
   background-color: rgb(var(--color-a));
   box-shadow: var(--pad) 0px var(--pad) rgb(var(--color-b));
+}
+
+.l.is_new::before
+{
+  content: "//";
 }
 
 .l > p,
@@ -1115,6 +1140,12 @@ li.item > .val
   color: rgb(var(--color-f));
   content: "//";
   font-size: var(--font-size-s);
+}
+
+.cli_expanded .l.is_new
+{
+  position: sticky;
+  bottom: 0;
 }
 
 html:not(.cli_expanded) .l.is_new
@@ -1209,6 +1240,6 @@ html:not(.cli_expanded) .l:not(.is_new),
   html:not(.cli_expanded) .l.is_new
   {
     position: absolute;
-    transform: translateY(calc(calc(var(--line) + var(--padm))*-1));
+    transform: translateY(calc(var(--size)*-1));
   }
 }
