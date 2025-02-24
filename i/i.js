@@ -143,8 +143,8 @@ aa.i.filter_out_rm =(items,k_v)=>
 // remove class 'solo' from items
 aa.i.filter_solo_rm =(items,k_v)=>
 {
-  fastdom.mutate(()=>
-  {
+  // fastdom.mutate(()=>
+  // {
     let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k_v]) : [];
     if (a.length) aa.l.dataset.solo = a.join(' ');
     else
@@ -157,7 +157,7 @@ aa.i.filter_solo_rm =(items,k_v)=>
       l.classList.remove('solo');
       aa.fx.path_rm(k_v);
     }
-  })
+  // })
 
 };
 
@@ -172,8 +172,8 @@ aa.i.filter_out_apply =(items,k_v)=>
 // apply class 'solo' to items
 aa.i.filter_solo_apply =(items,k_v)=>
 {
-  fastdom.mutate(()=>
-  {
+  // fastdom.mutate(()=>
+  // {
     aa.l.classList.add('haz_solo');
     if (!aa.l.dataset.solo) aa.l.dataset.solo = k_v;
     else 
@@ -182,7 +182,7 @@ aa.i.filter_solo_apply =(items,k_v)=>
       aa.fx.a_add(a,[k_v]);
       aa.l.dataset.solo = a.join(' ')
     }
-  });
+  // });
 
   for (const l of items) aa.i.solo(l,k_v);
 };
@@ -237,7 +237,7 @@ aa.mk.i_pubkey =(k,v,id)=>
 
 
 // on load
-aa.i.load =()=>
+aa.i.load =async()=>
 {
   aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
   // const app_i = ()=>

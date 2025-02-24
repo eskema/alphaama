@@ -47,15 +47,13 @@ aa.o.add =(s='')=>
     for (const i of as) 
     {
       let a = i.trim().split(' ');
-      let [k,v] = a;
-      if (k && v)
+      let [key,newValue] = a;
+      if (key && newValue)
       {
-        let old_v = localStorage[k];
-        localStorage[k] = v;
-        aa.mod_ui(aa.o,k);
-        let log = aa.mk.l('p',{con:k+' '+v});
-        if (old_v) log.append(' ',aa.mk.butt_action(aa.o.def.id+' add '+k+' '+old_v,'undo'));
-        aa.log(log);
+        let oldValue = localStorage[key];
+        localStorage[key] = newValue;
+        aa.mod_ui(aa.o,key);
+        aa.o.on_storage({key,newValue,oldValue})
       }
     }
   }
@@ -112,7 +110,7 @@ aa.o.del =s=>
 
 
 // on load
-aa.o.load =()=>
+aa.o.load =async()=>
 {
   const mod = aa.o;
   const id = mod.def.id;
@@ -153,10 +151,25 @@ aa.o.load =()=>
   aa.mod_load(mod).then(aa.mk.mod).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} set `,'+','set');
-    mod.l.insertBefore(add_butt,document.getElementById(id));
+    fastdom.mutate(()=>
+    {
+      mod.l.insertBefore(add_butt,mod.l.lastChild);
+    })
   });
-  // detect when changes happen on other tabs 
-  window.addEventListener('storage',e=> { console.log('storage',e); });
+  // detect when changes happen on other tabs
+  window.onstorage = aa.o.on_storage;
+  // window.addEventListener('storage',e=> 
+  // { 
+  //   aa.log('o changed '+e.data); 
+  // });
+};
+
+
+aa.o.on_storage =async o=>
+{
+  let log = aa.mk.l('p',{con:o.key+' '+o.newValue});
+  if (o.oldValue?.length) log.append(' ',aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo'));
+  aa.log(log);
 };
 
 

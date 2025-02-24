@@ -82,10 +82,10 @@ aa.e.append_in_order =(notes,note)=>
 {
   const l = [...notes.children].find(i=>note.dataset.stamp > i.dataset.stamp);
   // notes.insertBefore(note,l)
-  fastdom.mutate(()=>
-  {
+  // fastdom.mutate(()=>
+  // {
     notes.insertBefore(note,l)
-  })
+  // })
 };
 
 
@@ -93,20 +93,22 @@ aa.e.append_in_order =(notes,note)=>
 // append to another note as reply
 aa.e.append_to_rep =(note,rep)=>
 {
-  const last = [...rep.children]
-  .find(i=> i.tagName === 'ARTICLE' 
-  && i.dataset.created_at > note.dataset.created_at);
+  
   note.classList.add('reply','not_yet');
   note.classList.remove('root');
-  if (note.classList.contains('in_path')) rep.parentNode.classList.add('in_path')
-  rep.parentNode.classList.add('haz_reply'); 
-  if (!sessionStorage[note.dataset.id]) 
-  {
-    note.classList.add('is_new');
-    rep.parentNode.classList.add('haz_new_reply');
-  }
+
   fastdom.mutate(()=>
   {
+    if (!sessionStorage[note.dataset.id]) 
+    {
+      note.classList.add('is_new');
+      rep.parentNode.classList.add('haz_new_reply');
+    }
+    rep.parentNode.classList.add('haz_reply');
+    if (note.classList.contains('in_path')) rep.parentNode.classList.add('in_path')
+    
+    const last = [...rep.children].find(i=> i.tagName === 'ARTICLE' 
+    && i.dataset.created_at > note.dataset.created_at);
     rep.insertBefore(note,last?last:null);
     aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
   });
@@ -127,7 +129,8 @@ aa.e.append_check =(dat,note,tag_reply)=>
 
   if (tag_reply[0] === 'a')
   {
-    reply = notes.querySelector('.note[data-id_a="'+reply_id+'"]');
+    reply = aa.temp.printed.find(i=>i.dataset.id_a === reply_id);
+    // reply = notes.querySelector('.note[data-id_a="'+reply_id+'"]');
     if (!reply)
     {
       aa.e.refs(dat,note,tag_reply);
@@ -138,7 +141,8 @@ aa.e.append_check =(dat,note,tag_reply)=>
   }
   
   const reply_nid = aa.fx.encode('note',reply_id);
-  reply = notes.querySelector(`.note[data-id="${reply_id}"`);
+  reply = aa.temp.printed.find(i=>i.dataset.id === reply_id);
+  // reply = notes.querySelector(`.note[data-id="${reply_id}"`);
   if (!reply)
   {
     aa.e.refs(dat,note,tag_reply);
@@ -147,7 +151,8 @@ aa.e.append_check =(dat,note,tag_reply)=>
     {
       let root_id = tag_root[1];
       // let root_nid = aa.fx.encode('note',root_id);
-      let root = notes.querySelector(`.note[data-id="${root_id}"`); // document.getElementById(root_nid);
+      let root = aa.temp.printed.find(i=>i.dataset.id === root_id);
+      // let root = notes.querySelector(`.note[data-id="${root_id}"`); // document.getElementById(root_nid);
       if (!root) aa.e.miss_print(tag_root);
     }
     aa.e.miss_print(tag_reply,relays);
@@ -201,12 +206,16 @@ aa.parse.context =(l,event,trust)=>
     content.textContent = '';
     content.classList.toggle('parsed');
   }
+  let parsed;
   if (content.classList.contains('parsed'))
   {
-    let parsed = aa.parse.content(event.content,trust);
-    if (parsed.childNodes.length) content.append(parsed);
+    parsed = aa.parse.content(event.content,trust);
   }
-  else content.append(aa.mk.l('p',{cla:'paragraph',con:event.content}));
+  else parsed = aa.mk.l('p',{cla:'paragraph',con:event.content});
+  if (parsed.childNodes.length) 
+  {
+    fastdom.mutate(()=>{content.append(parsed)});
+  }
 };
 
 
@@ -324,11 +333,11 @@ aa.e.json =async(s='')=>
 
 
 // on load
-aa.e.load =()=>
+aa.e.load =async()=>
 {
   aa.temp.orphan = {};
   aa.temp.print = {};
-  aa.temp.printed = new Map();
+  aa.temp.printed = [];
   aa.temp.refs = {};
   aa.actions.push(
     {
@@ -686,39 +695,6 @@ aa.views.nevent1 =async nevent=>
 };
 
 
-// parse nip19 to render as mention or quote
-aa.parse.nip19 =s=>
-{
-  let d = aa.fx.decode(s);
-  if (!d) return s;
-  let l;
-  if (s.startsWith('npub1'))  l = aa.mk.p_link(d);
-  else if (s.startsWith('nprofile1')) l = aa.mk.p_link(d.pubkey);
-  else if (s.startsWith('note1')) l = aa.e.quote({"id":d});
-  else if (s.startsWith('nevent1'))
-  {
-    if (d.id) 
-    {
-      d.s = s;
-      l = aa.e.quote(d);
-    }
-    else l = aa.mk.l('span',{con:s+': '+JSON.stringify(d)})
-  }
-  else if (s.startsWith('naddr1'))
-  {
-    if (d.kind && d.pubkey && d.identifier)
-    {
-      d.s = s;
-      d.id_a = `${d.kind}:${d.pubkey}:${d.identifier}`;
-      l = aa.e.quote_a(d);
-    }
-    else l = aa.mk.l('span',{con:s+':'+JSON.stringify(d)})
-  }
-  else l = aa.mk.nostr_link(s);
-  return l
-};
-
-
 // update blank note not found on relays
 aa.e.nope =(id,a,b,miss)=>
 {
@@ -730,48 +706,6 @@ aa.e.nope =(id,a,b,miss)=>
       aa.fx.a_add(miss[url],[id]);
     }
   }
-};
-
-
-// parse nostr:stuff
-// use with aa.parser('nostr',s)
-aa.parse.nostr =match=>
-{
-  let df = new DocumentFragment();
-  df.append(match.input.slice(0,match.index)); 
-
-  let matches = (match[0]).split('nostr:').join(' ').trim().split(' ');
-  for (const m of matches)
-  {
-    let a = m.split('1');
-    if (a[1])
-    {
-      let mm = a[1].match(aa.fx.regex.bech32);
-      if (mm[0] && mm.index === 0)
-      {
-        let s = a[0] + '1' + mm[0];
-        let decoded = aa.fx.decode(s);
-        if (decoded)
-        {
-          df.append(aa.parse.nip19(s),' ');
-          if (mm[0].length < mm.input.length)
-          {
-            df.append(mm.input.slice(mm[0].length),' ');
-          }
-        }
-        else df.append(m,' ');
-      }
-    }
-    // else
-    // {
-    //   console.log(match)
-    // }
-  }
-  if (match[0].length < match.input.length)
-  {
-    df.append(match.input.slice(match[0].length),' ');
-  }
-  return df
 };
 
 
@@ -844,7 +778,7 @@ aa.e.note =dat=>
       if (!p) p = aa.p.p(x);
       aa.fx.color(x,note);
       note.dataset.trust = p.score;
-      aa.p.p_link_data_upd(p_link,aa.p.p_link_data(p));
+      setTimeout(()=>{aa.p.p_link_data_upd(p_link,aa.p.p_link_data(p))},500);
     });
   }
 
@@ -936,7 +870,7 @@ aa.clk.na =e=>
   let l = e.target.closest('.actions');
   if (l.classList.contains('empty'))
   {
-    for (const s of aa.e.butts_for.na) l.append(aa.mk.butt(s),' ');
+    for (const s of aa.e.butts_for.na) l.append(' ',aa.mk.butt(s));
     l.classList.remove('empty');
   }
   l.classList.toggle('expanded');
@@ -1290,16 +1224,19 @@ aa.e.print =dat=>
   const xid = dat.event.id;
   if (!aa.db.e[xid]) aa.db.e[xid] = dat;
   if (aa.temp.orphan[xid]) return;
-
+  
+  let id_a = dat.id_a?.length ? dat.id_a : xid;
   // let nid = aa.fx.encode('note',xid);
-  let l = aa.temp.printed.get(xid);
+  let l = aa.temp.printed.find(i=>i.dataset.id === xid);
+  // let l = aa.temp.printed.get(xid);
   // let l = aa.e.l.querySelector(`[data-id="${xid}"]`);//document.getElementById(nid);
   if (!l)
   {
     aa.fx.count_upd(document.getElementById('butt_e'));
     l = aa.e.note_by_kind(dat);
-    aa.temp.printed?.set(xid,l);
-    aa.e.render(l);
+    aa.temp.printed.push(l);
+    
+    setTimeout(()=>{aa.e.render(l)},1000);
     if (!l) console.log(dat);
     else 
     {
@@ -1332,7 +1269,7 @@ aa.e.print =dat=>
 
   
   if (dat.clas.includes('miss')) dat.clas = aa.fx.a_rm(dat.clas,['miss']);
-  let id_a = dat.id_a?.length ? dat.id_a : xid; //.split(':').join('_')
+   //.split(':').join('_')
   setTimeout(()=>{aa.get.quotes(id_a)},100);
   // if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},1000);
 };
@@ -1565,10 +1502,10 @@ aa.e.render_content =async(l,dat)=>
   let p = await aa.db.get_p(dat.event.pubkey);
   let score = p ? p.score : 0;
   let trust = aa.is.trusted(score)
-  fastdom.mutate(()=>
-  {
+  // fastdom.mutate(()=>
+  // {
     aa.parse.context(l,dat.event,trust);
-  })
+  // })
 };
 
 // renders video from tags

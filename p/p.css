@@ -6,6 +6,8 @@
 #authors
 {
   padding-left: var(--pad-l);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .profile 
@@ -18,7 +20,8 @@
   grid-template-columns: 1fr auto;
   grid-template-rows: auto 1fr auto;
   padding: 1px;
-  z-index: 0;
+  pointer-events: auto;
+  z-index: 10000000;
   /*scroll-snap-align: start;*/
 }
 
@@ -136,8 +139,8 @@
   color: rgb(var(--c));
   display: grid;
   grid-area: pub;
-  grid-template-areas: "author actions xpub created_at";
-  grid-template-columns: 1fr auto;
+  grid-template-areas: "author xpub created_at actions";
+  grid-template-columns: 2fr 1fr auto;
   justify-items: end;
   justify-self: stretch;
   line-height: 1;

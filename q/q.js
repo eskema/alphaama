@@ -183,7 +183,7 @@ aa.clk.fetch =e=>
 
 
 // on load
-aa.q.load =()=>
+aa.q.load =async()=>
 {
   let mod = aa.q;
   let id = mod.def.id;
@@ -236,7 +236,10 @@ aa.q.load =()=>
   aa.mod_load(mod).then(aa.mk.mod).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
-    mod.l.insertBefore(add_butt,document.getElementById(id));
+    fastdom.mutate(()=>
+    {
+      mod.l.insertBefore(add_butt,mod.l.lastChild)
+    })
   });
 };
 

@@ -267,7 +267,7 @@ button
   font-size: inherit;
   line-height: inherit;
   margin: 0;
-  padding: 0 var(--padm);
+  padding: 0;
   text-align: left;
   -webkit-user-select: none;
   -moz-user-select: none;
@@ -369,13 +369,17 @@ textarea:focus
 
 /* @group butts */
 
+.butt
+{
+  border-radius: 2px;
+  border: 1px solid rgba(var(--color-a),0);
+}
 
 .butt.plug
 {
   background: rgb(var(--color-c));
-  border-radius: 2px;
-  border: 1px solid rgb(var(--color-b));
   color: rgb(var(--color-a));
+  padding: 0 var(--padm);
   /*line-height: 1.4;*/
   /*text-decoration: underline;*/
 }
@@ -401,7 +405,8 @@ textarea:focus
 
 .butt:focus
 {
-  color: rgb(var(--color-f));
+  /*border: 1px solid rgb(var(--color-maybe));*/
+  /*color: rgb(var(--color-f));*/
 }
 
 .butt.yolo
@@ -567,11 +572,16 @@ li.item > .val
   content: " empty";
 }
 
-.item.empty::after 
+.item.empty
+{
+  text-decoration: line-through;
+}
+
+/*.item.empty::after 
 {
   content: " empty";
   grid-area: v
-}
+}*/
 
 /* @end */
 
@@ -594,6 +604,8 @@ li.item > .val
   background: rgba(var(--color-b),.8);
   font-size: var(--font-size-s);
   justify-self: end;
+  max-width: 100%;
+  overflow-y: scroll;
 /*  max-height: 50vh;
   max-width: 100vw;
   overflow-y: scroll;*/
@@ -1045,7 +1057,7 @@ li.item > .val
 
 .l::before
 {
-  align-content: center;
+  align-content: start;
   
   content: counter(log) "";
   counter-increment: log;
@@ -1062,6 +1074,7 @@ li.item > .val
 {
   background-color: rgb(var(--color-a));
   box-shadow: var(--pad) 0px var(--pad) rgb(var(--color-b));
+  max-height: var(--line);
 }
 
 .l.is_new::before
@@ -1227,8 +1240,6 @@ html:not(.cli_expanded) .l:not(.is_new),
   {
     background: rgb(var(--color-f));
   }
-
-  
 }
 
 @media screen and (max-width: 768px) 
@@ -1237,9 +1248,9 @@ html:not(.cli_expanded) .l:not(.is_new),
     --pad: .68rem;
   }
   
-  html:not(.cli_expanded) .l.is_new
+/*  html:not(.cli_expanded) .l.is_new
   {
     position: absolute;
-    transform: translateY(calc(var(--size)*-1));
-  }
+    transform: translateY(calc(var(--pad)*-1));
+  }*/
 }

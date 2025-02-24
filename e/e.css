@@ -73,6 +73,16 @@
   margin: 0;
 }
 
+.note.root:not(.in_path):not(first-child)
+{
+  border-left: 1px solid rgba(var(--c),.5);
+}
+
+.note.root:not(.in_path):not(first-child)
+{
+  margin-top: var(--size);
+}
+
 .note.root:not(.in_path):first-child,
 .note.reply:nth-child(2),
 .note.in_path.haz_new_reply,
@@ -218,16 +228,16 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .in_view > .by
 {
   grid-template-areas: 
-  "id id actions"
+  "id id id id"
   
-  "author created_at clas";
-  grid-template-columns: 1fr auto;
+  "author actions created_at clas";
+  grid-template-columns: auto 1fr auto;
 }
 
 .replies > .note:not(.in_path) > .by
 {
   position: sticky;
-  top: calc(var(--line) + var(--padm) + 1px);
+  top: calc(var(--line) + var(--padm) + 2px);
 }
 
 .in_view .replies .note .by
@@ -372,7 +382,10 @@ a.author
 .in_view > .by .author
 {
   color: rgb(var(--color-d));
-  grid-template-areas: "img name flw" "img nip5 flw"
+  grid-template-areas: 
+  "img name flw" 
+  "img . ."
+  ;
 }
 
 .in_view > .by .author::before
@@ -392,7 +405,10 @@ a.author
 {
   align-self: start;
   display: grid;
-  grid-template-areas: "name petname" "nip5 nip5";
+  grid-template-areas: 
+  "name petname" 
+  "nip5 nip5";
+  grid-template-columns: auto 1fr;
 }
 
 .in_view > .by .author .name[data-nip05]::before
@@ -420,7 +436,7 @@ a.author
   display: grid;
   grid-area: id;
   grid-template-areas: "nid xid";
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 2fr minmax(var(--size),max-content);
   line-height: 1rem;
   margin: 0;
   opacity: .21;
@@ -625,6 +641,11 @@ a.author
   line-height: 1.5rem;
   margin-left: var(--pad);
   
+}
+
+.content > .butt
+{
+  margin: var(--pad);
 }
 
 /* @end */
@@ -923,6 +944,7 @@ a.author
   grid-area: actions;
   margin: 0;
   overflow-x:  scroll;
+  padding: 0 var(--pad);
   position: relative;
   user-select: none;
   white-space: pre;
@@ -956,6 +978,11 @@ a.author
   display: inline-block;
   text-align: right;
 }*/
+
+.actions.expanded > *:first-child
+{
+  margin-right: var(--pad);
+}
 
 .note .actions.expanded
 {
@@ -1069,6 +1096,11 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   color: rgb(var(--color-c));
   padding: 0;
+}
+
+.mark_read:focus
+{
+  /*border: 1px dashed rgb(var(--color-f));*/
 }
 
 .replies.expanded > summary .mark_read::before
@@ -1227,7 +1259,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .note.tiny
 {
   margin: 0;
-  
 }
 
 .note.tiny:last-child
@@ -1238,7 +1269,12 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .note.root:not(.in_path).tiny 
 {
   border-bottom: none;
-  margin-bottom: 0;
+  /*margin-bottom: 0;*/
+  /*margin-top: 0;*/
+}
+
+.note.root:not(.in_path).tiny + .note.root:not(.in_path).tiny 
+{
   margin-top: 0;
 }
 
@@ -1439,6 +1475,11 @@ html:not(.needs_pagin) .pagination
     margin-bottom: 3rem;
   }
   
+  .note:hover
+  {
+    border-left: 1px solid rgba(var(--c),.5);
+  }
+  
   .mark_read:hover
   {
     background-color: rgba(var(--color-a),1);
@@ -1529,6 +1570,11 @@ html:not(.needs_pagin) .pagination
     /*--font-size: 14px;*/
   }
   
+  html:not(.view_e) #notes
+  {
+    margin-left: var(--padm);
+  }
+  
   .note,
   .note.root:not(.in_path),
   .note.in_view > .replies > .note,
@@ -1547,7 +1593,10 @@ html:not(.needs_pagin) .pagination
   
   .note.root:not(.in_path)
   {
-    border-bottom: 1px solid rgb(var(--color-c));
+    /*border-bottom: 1px solid rgb(var(--color-c));*/
+    border-left: 1px solid rgb(var(--c));
+    margin-bottom: var(--size);
+    margin-top: var(--size);
   }
   
   .root:not(.in_view):not(.in_path) > .content

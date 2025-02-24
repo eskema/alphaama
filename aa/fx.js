@@ -276,11 +276,27 @@ aa.fx.hash =o=> NostrTools.getEventHash(o);
 
 
 // generate keypair
-aa.fx.keypair =(secret=false)=>
+aa.fx.keypair =(xsec='')=>
 {
-  if (!secret) secret = NostrTools.generateSecretKey();
-  else if (aa.is.key(secret)) secret = aa.fx.x_to_bytes(secret);
-  return [secret,NostrTools.getPublicKey(secret)]
+  if (xsec && !aa.is.key(xsec))
+  {
+    aa.log('fx keypair: invalid key provided');
+    return false
+  }
+
+  let secret, public, nsec;
+  if (!xsec?.length)
+  {
+    secret = NostrTools.generateSecretKey();
+    xsec = aa.fx.bytes_to_x(secret)
+  }
+  else secret = aa.fx.x_to_bytes(xsec);
+  if (secret)
+  {
+    public = NostrTools.getPublicKey(secret);
+    nsec = NostrTools.nip19.nsecEncode(secret);
+  }
+  return [secret,public,xsec,nsec]
 };
 
 
@@ -375,7 +391,7 @@ aa.fx.linear_convert =(val,a_max,b_max,a_min,b_min)=>
 
 
 // on load
-aa.fx.load =()=>
+aa.fx.load =async()=>
 {
   let id = 'fx';
   let mod = aa.fx;
@@ -403,6 +419,11 @@ aa.fx.load =()=>
       required:['kind_number:n'],
       description:'what is kind',
       exe:mod.kinds_type
+    },
+    {
+      action:[id,'keypair'],
+      description:'generate a new keypair',
+      exe:mod.keypair
     },
   )
 };
@@ -446,7 +467,7 @@ aa.fx.path =(l,s=false)=>
     if (l.classList.contains('note'))
     {
       l.classList.add('in_path');
-      if (s) 
+      if (s)
       {
         let a = l.dataset.path ? l.dataset.path.trim().split(' ') : [];
         aa.fx.a_add(a,[s]);

@@ -127,7 +127,7 @@ aa.clk.pa =e=>
       ['refresh','p_refresh']
     ];
     if (!aa.is.u(x)) butts.push([aa.is.following(x)?'del':'add','k3']);
-    for (const s of butts) l.append(aa.mk.butt(s),' ');
+    for (const s of butts) l.append(' ',aa.mk.butt(s));
     l.classList.remove('empty');
   }
   l.classList.toggle('expanded');
@@ -224,7 +224,6 @@ aa.p.authors_list =(a,clas,sort='text_asc')=>
 // clear profile filter
 aa.p.clear =e=>
 {
-  // console.log('p clear',aa.p.viewing);
   if (aa.l.dataset.solo?.length)
   {
     if (aa.p.viewing) 
@@ -243,8 +242,8 @@ aa.p.clear =e=>
         items = aa.get.index_items('pubkey',pub);
         k_v = 'pubkey_'+pub;
         aa.i.filter_solo_rm(items,k_v);
-      }      
-    }   
+      }
+    }
   }
 };
 
@@ -400,11 +399,23 @@ aa.p.k3 =async(s='')=>
   });
 };
 
+// updates all links from p
+aa.p.links_upd =async p=>
+{
+  const options = aa.p.p_link_data(p);
+  const a = aa.temp.printed.filter(i=>i.dataset.pubkey === p.xpub)
+  .map(i=>i.querySelector('.by .author'));
+  // const a = document.querySelectorAll('.author[href="#'+p.npub+'"]');
+  for (const l of a) aa.p.p_link_data_upd(l,options);  
+  // update aa.i item element
+  // aa.i.upd_item_pubkey(a[0],p);
+};
+
 
 // on load
-aa.p.load =()=>
+aa.p.load =async()=>
 {
-  aa.clear.push(aa.p.clear);
+  aa.clears.push(aa.p.clear);
   aa.actions.push(
     {
       action:['p','view'],
@@ -621,6 +632,17 @@ aa.mk.p_link =(x)=>
   let p = aa.db.p[x];
   if (!p) p = aa.p.p(x);
 
+  if (!aa.temp.p_link) aa.temp.p_link = [];
+  let o = aa.temp.p_link.find(i=>i.pubkey === x);
+  if (!o) o = {pubkey:x,data:aa.p.p_link_data(p),a:[]};
+  aa.temp.p_link.push(o);
+    
+  // setTimeout(()=>
+  // {
+  //   for (const i of o.a) aa.p.p_link_data_upd(i,o.data);
+  //   // aa.p.p_link_data_upd(l,o)
+  // },0);
+  
   const l = aa.mk.l('a',
   {
     cla:'a author',
@@ -629,8 +651,11 @@ aa.mk.p_link =(x)=>
     clk:aa.clk.a,
     app:aa.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
   });
+  
   aa.fx.color(x,l);
-  setTimeout(()=>{aa.p.p_link_data_upd(l,aa.p.p_link_data(p))},0);
+  aa.p.p_link_data_upd(l,o.data);
+  o.a.push(l);
+
   return l
 };
 
@@ -653,29 +678,39 @@ aa.p.p_link_data =p=>
   : p.petnames.length ? p.petnames[0] 
   : false;
   if (petname) o.petname = petname;
-  if (p.metadata?.nip05) o.nip05 = p.metadata.nip05;
-  if (p.verified.length) o.verified = p.verified[0];
-  if (aa.is.u(p.xpub)) o.class_add.push('is_u');
-  else o.class_rm.push('is_u');
+  if (p.metadata)
+  {
+    if (p.metadata.nip05) o.nip05 = p.metadata.nip05;
+    if (p.verified.length) o.verified = p.verified[0];
+    if (p.metadata.picture && aa.is.trusted(p.score))
+    {
+      let url = aa.is.url(p.metadata.picture.trim())?.href;
+      if (url) o.src = url;
+    } 
+  }
+  else o.miss = true;
+
+  if (aa.is.u(p.xpub)) 
+  {
+    aa.fx.a_add(o.class_add,['is_u']);
+    aa.fx.a_add(o.class_rm,['is_mf','is_bff'])
+  }
+  else aa.fx.a_add(o.class_rm,['is_u']);
+  
   if (aa.is.following(p.xpub)) 
   {
-    o.class_rm.push('is_mf');
-    o.class_add.push('is_bff');
+    aa.fx.a_add(o.class_rm,['is_mf']);
+    aa.fx.a_add(o.class_add,['is_bff']);
   }
   else
   {
-    o.class_rm.push('is_bff');
-    o.class_add.push('is_mf');
+    aa.fx.a_add(o.class_rm,['is_bff']);
+    aa.fx.a_add(o.class_add,['is_mf']);
   }
-  
+  // followed by those you follow
   let common = 0;
   for (const k of p.followers) { if (aa.is.following(k)) common++ }
   o.followers = common;
-  if (p.metadata?.picture && aa.is.trusted(p.score))
-  {
-    let url = aa.is.url(p.metadata.picture.trim())?.href;
-    if (url) o.src = url;
-  } 
   return o
 };
 
@@ -683,11 +718,10 @@ aa.p.p_link_data =p=>
 // update link
 aa.p.p_link_data_upd =async(l,o)=>
 {
-  // name
-  let name = l.querySelector('.name');
-  if (!name) console.log(l);
   fastdom.mutate(()=>
   {
+    // name
+    let name = l.querySelector('.name');
     if (name.textContent !== o.name) name.textContent = o.name;
     if (!name.childNodes.length) name.classList.add('empty');
     else name.classList.remove('empty');
@@ -746,7 +780,7 @@ aa.p.p_links_upd =async p=>
   const a = document.querySelectorAll('.author[href="#'+p.npub+'"]');
   for (const l of a) aa.p.p_link_data_upd(l,options);  
   // update aa.i item element
-  aa.i.upd_item_pubkey(a[0],p);
+  // aa.i.upd_item_pubkey(a[0],p);
 };
 
 
@@ -873,7 +907,7 @@ aa.db.miss_profiles =async()=>
     delete aa.temp.profiles[id];
     aa.db.p[id] = p;
     delete aa.temp.profiless[id];
-    aa.p.p_links_upd(p);
+    // aa.p.p_links_upd(p);
   }
   for (const id of pubkeys)
   {
@@ -912,7 +946,7 @@ aa.get.pubs =async tags=>
           {
             aa.db.p[p.xpub] = p;
             delete aa.temp.pubs[p.xpub];
-            aa.p.p_links_upd(p);
+            // aa.p.p_links_upd(p);
           }
         }
         for (const xpub in aa.temp.pubs) 
@@ -962,7 +996,12 @@ aa.p.save_to =()=>
   let pubs = [...new Set(aa.temp[q_id])];
   aa.temp[q_id] = [];
   let a = [];
-  for (const pub of pubs) a.push(aa.db.p[pub]);
+  for (const pub of pubs) 
+  {
+    const p = aa.db.p[pub];
+    a.push(p);
+    
+  }
   let chunks = aa.fx.chunks(a,4444);
   // let times = 0;
   for (const chunk of chunks)
@@ -978,6 +1017,11 @@ aa.p.save = async p=>
 
   aa.db.p[p.xpub] = p;
   if (aa.viewing === p.npub) aa.p.profile_upd(p);
+  let l = [...aa.p.l.childNodes].find(i=>i.dataset.xpub === p.xpub);
+  if (l) aa.p.p_link_data_upd(
+    l.querySelector('.pubkey .author'),
+    aa.p.p_link_data(p)
+  );
   
   aa.temp[q_id].push(p.xpub);
   
@@ -1096,7 +1140,7 @@ aa.p.profile_upd =async(p)=>
     profile.dataset.trust = p.score;
     profile.dataset.updated = p.updated ?? 0;
   });
-  aa.p.p_links_upd(p)
+  // aa.p.p_links_upd(p)
 };
 
 
@@ -1148,6 +1192,16 @@ aa.kinds[0] =dat=>
       {
         p.metadata = metadata;
         aa.p.save(p);
+        
+        let options = aa.temp.p_link?.find(i=>i.pubkey === x);
+        if (!options) options = {pubkey:x,a:[]};
+        options.data = aa.p.p_link_data(p);
+        setTimeout(()=>
+        {
+          for (const i of options.a) aa.p.p_link_data_upd(i,options.data);
+        },200);
+
+        // aa.p.links_upd(p);
         // aa.p.p_links_upd(p);
         if (aa.is.u(x) && aa.u) aa.u.upd_u_u();
       }

@@ -451,7 +451,7 @@ aa.r.ls =(s='')=>
 
 
 // on load
-aa.r.load =()=>
+aa.r.load =async()=>
 {
   const mod = aa.r;
   const id = mod.def.id;
@@ -507,7 +507,10 @@ aa.r.load =()=>
   aa.mod_load(mod).then(aa.mk.mod).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
-    mod.l.insertBefore(add_butt,document.getElementById(id));
+    fastdom.mutate(()=>
+    {
+      mod.l.insertBefore(add_butt,mod.l.lastChild)
+    })
   });
 }
 

@@ -43,7 +43,7 @@
   box-sizing: border-box;
   min-width: var(--size);
   max-width: 100vw;
-  pointer-events: none;
+  /*pointer-events: none;*/
   position: fixed;
   right: 0;
   z-index: 12;
@@ -51,7 +51,7 @@
 
 #u_u > *
 {
-  pointer-events: auto;
+  /*pointer-events: auto;*/
 }
 
 #butt_u_u
@@ -187,12 +187,12 @@
 
 #u_u #mods
 {
-  pointer-events: none;
+  /*pointer-events: none;*/
 }
 
 #u_u #mods > *
 {
-  pointer-events: auto;
+  /*pointer-events: auto;*/
 }
 
 @media screen and (min-width: 1025px) 

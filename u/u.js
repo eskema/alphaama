@@ -13,7 +13,7 @@ aa.mk.styleshit('/u/u.css');
 aa.u = 
 {
   def:{id:'u',ls:{}},
-  get p(){ return aa.db.p[aa.u.o.ls.xpub] },
+  get p(){ return aa.db?.p[aa.u.o?.ls?.xpub] },
 };
 
 
@@ -257,7 +257,7 @@ aa.fx.tag_k3 =a=>
 
 
 // on load
-aa.u.load =()=>
+aa.u.load =async()=>
 {
   let id = 'u';
   const mod = aa[id];
@@ -326,7 +326,8 @@ aa.u.load =()=>
     },
   );
   aa.u.check_signer();
-  aa.mod_load(mod).then(mod.start);
+  await aa.mod_load(mod);
+  await mod.start(mod);
 };
 
 
@@ -387,7 +388,7 @@ aa.u.login =async(s='')=>
 
   aa.u.add(pubkey);
   await aa.u.start();
-  aa.log('adding some useful queries')
+  aa.log('adding some useful queries to fetch stuff')
   aa.q.stuff();
   
   if (!relays.length) relays = await aa.r.ext();
@@ -397,40 +398,41 @@ aa.u.login =async(s='')=>
     aa.log(aa.mk.butt_action('r add wss://url.com read write'));
     return
   }
-  else aa.u.fetch()
+  else aa.u.jump()
 };
 
 
 // fetch basic stuff to get things started
-aa.u.fetch =()=>
+aa.u.jump =()=>
 {
-  aa.log('fetching your stuff: .aa q run a');
+  aa.log('querying for your metadata:\n.aa q run a');
   aa.q.run('a');
   setTimeout(()=>
   {
+    aa.log('running it again to include newly found relays');
     aa.q.run('a');
-
+    // get data from pubkeys found on your follow list
     setTimeout(()=>
     {
       if (aa.u.p.follows.length)
       {
         aa.log(`found ${aa.u.p.follows.length} ${aa.fx.plural(aa.u.p.follows.length,'follow')}`);
       }
-      aa.log('fetching your follows (k3) stuff on your relays: .aa q run b');
-      aa.log('k3 = '+aa.u.p.follows.join(', '));
+      // aa.log('k3 = '+aa.u.p.follows.join(', '));
+      aa.log('querying for your follows data on your relays:\n.aa q run b');
+      aa.q.run('b');
       setTimeout(()=>
       {
-        aa.log('fetching k3 stuff as outbox: .aa q out b');
+        aa.log('querying for your follows data as outbox:\n.aa q out b');
         setTimeout(()=>{aa.q.outbox('b')},0);
-        // await aa.fx.countdown('page reloading in ',10)
-        sessionStorage.q_out = 'f';
-        sessionStorage.q_run = 'n';
-        setTimeout(()=>{aa.log('login done. reload page when things stop moving.')},1000);
+        setTimeout(()=>
+        {
+          sessionStorage.q_out = 'f';
+          sessionStorage.q_run = 'n';
+          aa.log('login done. reload page when things stop moving.')
+        },1000);
       },5000);
-      aa.q.run('b');
-    
     },3000);
-    
   },1000);
 };
 
@@ -539,7 +541,7 @@ aa.u.k3_del =async s=>
       ul.append(aa.mk.l('li',{con:k,cla:'disabled'}));
       new_follows = new_follows.filter(tag=>tag[1]!==k);
       aa.p.score(k+' 4');
-      aa.db.get_p(k).then(p=>aa.p.p_links_upd(p))
+      // aa.db.get_p(k).then(p=>aa.p.p_links_upd(p))
     }
     else aa.log('invalid pubkey to unfollow')
   }
@@ -787,11 +789,8 @@ aa.u.start =async()=>
     upd = true;
   }
   if (aa.fx.a_add(p.sets,['u'])) upd = true;
-  
-  aa.u.upd_u_u()
-  aa.p.profile(p);
-  if (p.events.k3?.length) aa.p.load_profiles(p.follows);
   if (upd) aa.p.save(p);
+  aa.u.upd_u_u();
   aa.mk.mod(mod);
   // mod.l.append(aa.mk.ls({ls:p}));
 };

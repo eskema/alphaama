@@ -17,7 +17,7 @@ const aa =
     e:{}, // memory events (dat)
     p:{}, // memory profiles (pro)
   },
-  clear:[],
+  clears:[],
   clk:{},
   dependencies:
   [
@@ -502,6 +502,7 @@ aa.mk.item =(k='',v,tag_name='li')=>
   else
   {
     if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
+    v = v+'';
     if (!v || !v.length) l.classList.add('empty');  
     if (v === null) v = 'null';
     let vl = aa.mk.l('span',{cla:'val',con:v})
@@ -604,7 +605,7 @@ aa.clk.list_filter_input =e=>
 
 
 // if no options found, load with defaults
-aa.load =(o={})=>
+aa.load =async(o={})=>
 {
   aa.head_meat();
   aa.styles_loaded = o.styles ? o.styles : aa.styles;
@@ -632,6 +633,12 @@ aa.load =(o={})=>
       exe:aa.log
     },
     {
+      action:['l','parse'],
+      required:['stringified_object'],
+      description:'parse stringified object as structured element',
+      exe:aa.log_parse
+    },
+    {
       action:['l','x'],
       description:'clear logs',
       exe:aa.logs_clear
@@ -650,7 +657,8 @@ aa.load =(o={})=>
   );
 
   fetch('/stuff/nostr_kinds.json')
-  .then(dis=>dis.json()).then(kinds=> aa.k = kinds);  
+  .then(dis=>dis.json()).then(kinds=> aa.k = kinds);
+  return true
 };
 
 
@@ -658,16 +666,11 @@ aa.load =(o={})=>
 aa.log =(s,l=false,is_new=true)=>
 {
   let cla = 'l item'+(is_new?' is_new':'');
-  const log = aa.mk.l('li',{cla});
+  const log = aa.mk.l('li',{cla,clk:aa.logs_read});
   if (typeof s === 'string') s = aa.mk.l('p',{con:s});
   log.append(s);
   if (!l) l = aa.logs || document.getElementById('logs');
-  if (l) 
-  {
-    l.append(log);
-    log.addEventListener('click',aa.logs_read);
-    // aa.fx.scroll(log);
-  }
+  if (l) fastdom.mutate(()=>{l.append(log)});
   else console.log('log:',s);
   return log
 };
@@ -675,6 +678,12 @@ aa.log =(s,l=false,is_new=true)=>
 
 // logs container element
 aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
+
+
+aa.log_parse =(s='')=>
+{
+  aa.log(aa.mk.item('parse',aa.parse.j(s),'p'))
+}
 
 
 // mark log as read
@@ -791,7 +800,6 @@ aa.mk.mod =mod=>
 // load mod
 aa.mod_load =async(mod)=>
 {
-
   if (!mod.o) 
   {
     mod.o = await aa.db.idb.ops({get:{store:'stuff',key:mod.def.id}});
@@ -844,7 +852,10 @@ aa.mod_scripts =o=>
     script.addEventListener('load',e=>
     {
       if (aa.hasOwnProperty(o.id)
-      && aa[o.id].hasOwnProperty('load')) aa[o.id].load()
+      && aa[o.id].hasOwnProperty('load')) aa[o.id].load().then(()=>
+      {
+        aa[o.id].loaded = true;
+      })
     });
   }
   else 
@@ -978,8 +989,42 @@ aa.mod_ui =(mod,k)=>
 // checks if required mods have loaded
 aa.is.mods_loaded =required=>
 {
-  for (const id of required) if (!aa.hasOwnProperty(id)) return false
+  for (const id of required) 
+    if (!aa.hasOwnProperty(id) || !aa[id].loaded) return false
   return true
+};
+
+
+// parse nip19 to render as mention or quote
+aa.parse.nip19 =s=>
+{
+  let d = aa.fx.decode(s);
+  if (!d) return s;
+  let l;
+  if (s.startsWith('npub1'))  l = aa.mk.p_link(d);
+  else if (s.startsWith('nprofile1')) l = aa.mk.p_link(d.pubkey);
+  else if (s.startsWith('note1')) l = aa.e.quote({"id":d});
+  else if (s.startsWith('nevent1'))
+  {
+    if (d.id) 
+    {
+      d.s = s;
+      l = aa.e.quote(d);
+    }
+    else l = aa.mk.l('span',{con:s+': '+JSON.stringify(d)})
+  }
+  else if (s.startsWith('naddr1'))
+  {
+    if (d.kind && d.pubkey && d.identifier)
+    {
+      d.s = s;
+      d.id_a = `${d.kind}:${d.pubkey}:${d.identifier}`;
+      l = aa.e.quote_a(d);
+    }
+    else l = aa.mk.l('span',{con:s+':'+JSON.stringify(d)})
+  }
+  else l = aa.mk.nostr_link(s);
+  return l
 };
 
 
@@ -1016,6 +1061,44 @@ aa.mk.notice =o=>
     l.append(aa.mk.l('button',{con:bt.title,cla:'butt '+b,clk:bt.exe}));
   }
   return l
+};
+
+
+// parse nostr:stuff
+// use with aa.parser('nostr',s)
+aa.parse.nostr =match=>
+{
+  let df = new DocumentFragment();
+  df.append(match.input.slice(0,match.index)); 
+
+  let matches = (match[0]).split('nostr:').join(' ').trim().split(' ');
+  for (const m of matches)
+  {
+    let a = m.split('1');
+    if (a[1])
+    {
+      let mm = a[1].match(aa.fx.regex.bech32);
+      if (mm[0] && mm.index === 0)
+      {
+        let s = a[0] + '1' + mm[0];
+        let decoded = aa.fx.decode(s);
+        if (decoded)
+        {
+          df.append(aa.parse.nip19(s),' ');
+          if (mm[0].length < mm.input.length)
+          {
+            df.append(mm.input.slice(mm[0].length),' ');
+          }
+        }
+        else df.append(m,' ');
+      }
+    }
+  }
+  if (match[0].length < match.input.length)
+  {
+    df.append(match.input.slice(match[0].length),' ');
+  }
+  return df
 };
 
 
@@ -1329,25 +1412,25 @@ aa.state.clear =()=>
     const in_view = aa.l.querySelector('.in_view');
     if (in_view) 
     {
-      fastdom.mutate(()=>
-      {
+      // fastdom.mutate(()=>
+      // {
         in_view.classList.remove('in_view');
         if (in_view.classList.contains('note'))
         {
           const in_path = aa.l.querySelectorAll('.in_path');
           if (in_path) for (const l of in_path) l.classList.remove('in_path');
         }
-      });
+      // });
     }
   }
-  fastdom.mutate(()=>
-  {
+  // fastdom.mutate(()=>
+  // {
     if (aa.state.l) aa.state.l.textContent = '';
     aa.l.classList.remove('viewing','view_e','view_p');
-  });
+  // });
 
   aa.viewing = false;
-  for (const c of aa.clear) c();
+  for (const c of aa.clears) c();
 };
 
 
@@ -1391,10 +1474,10 @@ aa.state.pop =()=>
       aa.state.resolve(state,search);  
     }
     else document.title = 'alphaama';
-    fastdom.mutate(()=>
-    {
+    // fastdom.mutate(()=>
+    // {
       if (aa.state.l) aa.state.l.textContent = state;
-    })
+    // })
   }
 };
 
@@ -1420,7 +1503,7 @@ aa.state.resolve =(s,search)=>
     if (s.startsWith(v)) 
     {
       has_view = true;
-      setTimeout(()=>{aa.views[v](s)},100);
+      setTimeout(()=>{aa.views[v](s)},200);
       break;
     }
   }

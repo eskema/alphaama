@@ -95,16 +95,19 @@ aa.cli.exe =async s=>
       {
         aa.cli.clear();
         cut = cut ? cut.trim() : '';
-        if (output) output = await act.exe((cut?cut+' ':'')+output);
-        else output = await act.exe(cut);
+        if (output) 
+        {
+          output = await act.exe((cut?cut+' ':'')+output);
+        }
+        else 
+        {
+          output = await act.exe(cut);
+        }
+        if (typeof output === 'object') output = JSON.stringify(output);
       }
     }
   }
-  if (output) 
-  {
-    if (typeof output === 'object') output = JSON.stringify(output);
-    aa.log(output)
-  }
+  if (output) aa.log(output)
 };
 
 
@@ -277,7 +280,7 @@ aa.mk.item_action =(k,v,s)=>
 
 
 // on load
-aa.cli.load =e=>
+aa.cli.load =async e=>
 {
   let l = aa.cli.mk();
   fastdom.mutate(()=>
@@ -307,6 +310,7 @@ aa.cli.mk =()=>
   aa.cli.t.oninput = aa.cli.upd;
   aa.cli.t.onfocus = aa.cli.expand;
   aa.cli.t.onkeydown = aa.cli.keydown;
+  aa.cli.t.onselectionchange = aa.cli.selection;
   aa.cli.t.rows = 1;
 
   aa.cli.l.append(
@@ -491,6 +495,12 @@ aa.cli.run =async s=>
 };
 
 
+aa.cli.selection =e=>
+{
+  // console.log(e.target.selectionStart,e.target.selectionEnd)
+};
+
+
 // make a note from text input
 aa.cli.note =async(s='')=>
 {
@@ -567,6 +577,7 @@ aa.cli.upd =e=>
   const maybe_action = !s.length || (ns.startsWith(a[0]) && a.length < 2);
   const is_action = a[0] === ns;
 
+  // console.log(aa.cli.t.selectionStart,aa.cli.t.selectionEnd);
   
   
   fastdom.mutate(()=>
@@ -583,13 +594,15 @@ aa.cli.upd =e=>
     else 
     { 
       // it's not an action, check for last word
-      const last_word = a[a.length - 1].toLowerCase();
+      
       // if is a mention attempt
-      if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
+      // if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
       if (aa.u.p) aa.cli.dat_upd();
       aa.cli.oto.dataset.s = '';
-      aa.cli.h
+      aa.cli.h()
     }
+    const last_word = a[a.length-1].toLowerCase();
+    if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
   })
   // setTimeout(aa.cli.h,0);
 };
