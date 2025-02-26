@@ -648,6 +648,11 @@ a.author
   margin: var(--pad);
 }
 
+.content.parsed
+{
+  animation: loading .4s ease-in 0s 1 reverse;
+}
+
 /* @end */
 
 
