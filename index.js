@@ -2,8 +2,7 @@
 aa.load({
   // override defaults
   // styles:[], tools:[], mods:[],
-})
-.then(e=>
+}).then(e=>
 {
   console.log('aa.load.then');
   window.addEventListener('load',e=>
@@ -19,10 +18,9 @@ aa.load({
 
 const on_loaded =()=>
 {
-  if (!aa.is.mods_loaded(aa.mods_loaded.map(i=>i.id)))
+  if (!aa.is.mods_loaded(aa.mods.map(i=>i.id)))
   {
-    console.log('!mods.loaded');
-    setTimeout(on_loaded,100);
+    setTimeout(on_loaded,10);
     return
   }
 
@@ -33,15 +31,12 @@ const on_loaded =()=>
     setTimeout(()=>{e_section.append(aa.mk.pagination())},200);
   }
 
-  // setTimeout(()=>
-  // {
-    let p = aa.u?.p;
-    if (p)
-    {
-      aa.p.profile(p);
-      if (p.events.k3?.length) aa.p.load_profiles(p.follows);
-    }
-  // },500);
+  let p = aa.u?.p;
+  if (p)
+  {
+    aa.p.profile(p);
+    if (p.events.k3?.length) aa.p.load_profiles(p.follows);
+  }
 
   setTimeout(()=>
   {
@@ -66,16 +61,13 @@ const on_loaded =()=>
       cla:'content parsed',
       app:aa.parse.content(text,aa.is.trusted(4))
     });
+
     let title = text.slice(0,text.indexOf('\n'));
-    if (title.startsWith('=') || title.startsWith('#')) title = title.slice(1).trim();
+    if (title.startsWith('=') || title.startsWith('#')) 
+      title = title.slice(1).trim();
     
     let details = aa.mk.details(title,article);
     details.id = 'aa_read_me';
     aa.view?.prepend(details);
   });
 };
-
-
-
-
-

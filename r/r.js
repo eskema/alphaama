@@ -742,11 +742,15 @@ aa.r.upd_state =url=>
     {
       setTimeout(()=>
       {
-        l.dataset.state = relay?.ws?.readyState ||  '';
-        l.dataset.q = Object.keys(relay.q);
+        fastdom.mutate(()=>
+        {
+          l.dataset.state = relay?.ws?.readyState ||  '';
+          l.dataset.q = Object.keys(relay.q);
+          l.parentElement?.prepend(l);
+        })
       },500);
     }
-    else console.log('aa.r.upd_state '+url,'no relay found')
+    else console.log('aa.r.upd_state '+url,'no element found')
   }
 };
 

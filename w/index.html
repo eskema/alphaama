@@ -12,24 +12,27 @@
 aa.load({
   // override defaults
   // styles:[], tools:[], mods:[],
-});
-
-const on_loaded =()=>
+}).then(()=>
 {
-  if (!aa.is.mods_loaded(aa.mods_loaded.map(i=>i.id)))
+  const on_loaded =()=>
   {
-    setTimeout(on_loaded,100);
-    return
-  }
-  aa.log('walLNut');
-  aa.q.run('w');
-};
+    if (!aa.is.mods_loaded(['w']))
+    {
+      setTimeout(on_loaded,100);
+      return
+    }
+    aa.log('walLNut');
+    aa.q.run('w');
+  };
 
 
-window.addEventListener('load',e=>
-{
-  aa.run();
-  on_loaded()
+  window.addEventListener('load',e=>
+  {
+    aa.run();
+    on_loaded()
+  });
 });
+
+
 </script>
 </body></html>

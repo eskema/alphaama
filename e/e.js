@@ -6,7 +6,7 @@ events notes
 
 */
 
-aa.mk.styleshit('/e/e.css');
+aa.mk.styles(['/e/e.css']);
 
 
 aa.e = 
@@ -23,7 +23,7 @@ aa.e =
   root_count:0,
   butts_for:
   {
-    na:[[localStorage.reaction,'react'],'req','bro','parse','tiny'],
+    na:[[localStorage.reaction,'react'],'req','bro','render','tiny'],
     // k4:['encrypt'],
     draft:['yolo','sign','pow','edit','cancel'],
     not_sent:['post','cancel'],
@@ -778,7 +778,7 @@ aa.e.note =dat=>
       if (!p) p = aa.p.p(x);
       aa.fx.color(x,note);
       note.dataset.trust = p.score;
-      setTimeout(()=>{aa.p.p_link_data_upd(p_link,aa.p.p_link_data(p))},500);
+      setTimeout(()=>{aa.p.link_data_upd(p_link,aa.p.link_data(p))},500);
     });
   }
 
@@ -1171,12 +1171,13 @@ aa.mk.pagination =()=>
 
 
 // toggle parsed content
-aa.clk.parse =e=>
+aa.clk.render =e=>
 {
   const note = e.target.closest('.note');
-  const xid = note.dataset.id;
-  const event = aa.db.e[xid].event;
-  aa.parse.context(note,event,true);
+  // const xid = note.dataset.id;
+  // const event = aa.db.e[xid].event;
+  aa.e.render(note,{trust:localStorage.trust});
+  // aa.parse.context(note,event,true);
 };
 
 
@@ -1379,7 +1380,7 @@ aa.e.quote_upd =async(quote,o)=>
     aa.e.render(quote,dat);
     // content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
     quote_classes.push('parsed');
-    aa.get.pubs([['p',dat.event.pubkey]]);
+    aa.p.from_tags([['p',dat.event.pubkey]]);
   }
   else
   {
@@ -1461,7 +1462,7 @@ aa.e.refs =(dat,note,tag)=>
 
 // if the event is in the viewport
 // do additional ui enhancements
-aa.e.render =async l=>
+aa.e.render =async(l,options)=>
 {
   let dat = aa.db.e[l?.dataset.id];
   if (!dat) return;
@@ -1470,12 +1471,26 @@ aa.e.render =async l=>
     if (aa.e.renders[key].includes(dat.event.kind))
     {
       let fid = 'render_'+key;
-      if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat);
+      if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat,options);
     }
   }
 };
 
 
+// render content as rich text
+aa.e.render_content =async(l,dat,o={})=>
+{
+  let p = await aa.p.author(dat.event.pubkey);
+  let score = o.hasOwnProperty('trust') ? o.trust : p.score;
+  let trust = aa.is.trusted(score)
+  // fastdom.mutate(()=>
+  // {
+    aa.parse.context(l,dat.event,trust);
+  // })
+};
+
+
+// render content encrypted cyphertext
 aa.e.render_encrypted =async(l,dat)=>
 {
   let content = l.querySelector('.content');
@@ -1496,17 +1511,30 @@ aa.e.render_encrypted =async(l,dat)=>
 };
 
 
-// render content as rich text
-aa.e.render_content =async(l,dat)=>
+// renders image from tags
+aa.e.render_image =async(l,dat)=>
 {
   let p = await aa.db.get_p(dat.event.pubkey);
-  let score = p ? p.score : 0;
-  let trust = aa.is.trusted(score)
-  // fastdom.mutate(()=>
-  // {
-    aa.parse.context(l,dat.event,trust);
-  // })
+  let trusted = aa.is.trusted(p?.score||0);
+  aa.parse.context(l,dat.event,trusted);
+  let url = aa.fx.url_from_tags(dat.event.tags);
+  if (url)
+  {
+    let img = trusted?aa.mk.img(url):aa.mk.link(url);
+    img = aa.mk.l('p',{cla:'paragraph',app:img})
+    let content = l.querySelector('.content');
+    if (content) content.prepend(img);
+    else l.insertBefore(img,l.children[1])
+  }
 };
+
+
+// render content as object
+aa.e.render_object =async(l,dat)=>
+{
+  aa.parse.content_o(aa.parse.j(dat.event.content),l,'a');
+};
+
 
 // renders video from tags
 aa.e.render_video =async(l,dat)=>
@@ -1522,24 +1550,6 @@ aa.e.render_video =async(l,dat)=>
     let content = l.querySelector('.content');
     if (content) content.prepend(av);
     else l.insertBefore(av,l.children[1])
-  }
-};
-
-
-// renders image from tags
-aa.e.render_image =async(l,dat)=>
-{
-  let p = await aa.db.get_p(dat.event.pubkey);
-  let trusted = aa.is.trusted(p?.score||0);
-  aa.parse.context(l,dat.event,trusted);
-  let url = aa.fx.url_from_tags(dat.event.tags);
-  if (url)
-  {
-    let img = trusted?aa.mk.img(url):aa.mk.link(url);
-    img = aa.mk.l('p',{cla:'paragraph',app:img})
-    let content = l.querySelector('.content');
-    if (content) content.prepend(img);
-    else l.insertBefore(img,l.children[1])
   }
 };
 
@@ -1865,7 +1875,7 @@ aa.e.view =l=>
 aa.kinds[1] =dat=>
 {
   let note = aa.e.note(dat);
-  aa.get.pubs(dat.event.tags);
+  aa.p.from_tags(dat.event.tags);
   aa.e.append_to(dat,note,aa.get.tag_reply(dat.event.tags));
   return note
 };
@@ -1891,12 +1901,11 @@ aa.kinds[6] =dat=>
         }
         else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
       });
-      
     }
     aa.e.append_check(dat,note,tag_reply);
   }
   else aa.e.append_to_notes(note);
-  aa.get.pubs(dat.event.tags);
+  aa.p.from_tags(dat.event.tags);
   return note
 };
 
@@ -1905,7 +1914,7 @@ aa.kinds[6] =dat=>
 aa.kinds[7] =dat=>
 {
   let note = aa.e.note(dat);
-  aa.get.pubs(dat.event.tags);
+  aa.p.from_tags(dat.event.tags);
   note.classList.add('tiny');
   let content = note.querySelector('.content');
   // let con_t = content.textContent;
@@ -1938,7 +1947,7 @@ aa.kinds[7] =dat=>
 // image template
 aa.kinds[20] =dat=>
 {
-  aa.get.pubs(dat.event.tags);
+  aa.p.from_tags(dat.event.tags);
   let note = aa.e.note(dat);
   aa.e.append_to_notes(note);
   return note
@@ -1949,14 +1958,41 @@ aa.kinds[20] =dat=>
 aa.kinds[1063] =dat=>
 {
   let note = aa.e.note(dat);
-  aa.get.pubs(dat.event.tags);
+  aa.p.from_tags(dat.event.tags);
   aa.e.append_to_notes(note);
   return note
 };
 
 
 // repost of generic note
-aa.kinds[16] = aa.kinds[6];
+aa.kinds[16] =dat=>
+{
+  let note = aa.e.note(dat);
+  note.classList.add('tiny'); // 'is_new',
+  aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
+  // let tag_reply = aa.get.tag_reply(dat.event.tags);
+  // if (tag_reply && tag_reply.length)
+  // {    
+  //   let repost_id = tag_reply[1];
+  //   if (repost_id) 
+  //   {
+  //     aa.db.get_e(repost_id).then(dat_e=>
+  //     {
+  //       if (!dat_e) 
+  //       {
+  //         let repost = aa.parse.j(dat.event.content);
+  //         if (repost) aa.r.message_type.event({data:['EVENT','k6',repost],origin:dat.seen[0]});
+  //       }
+  //       else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
+  //     });
+      
+  //   }
+  //   aa.e.append_check(dat,note,tag_reply);
+  // }
+  // else aa.e.append_to_notes(note);
+  aa.p.from_tags(dat.event.tags);
+  return note
+};
 
 // zap template
 aa.kinds[9735] = aa.kinds[1];
@@ -1968,7 +2004,7 @@ aa.kinds[9802] = aa.kinds[1];
 aa.kinds[30023] =dat=>
 {
   let note = aa.e.note_pre(dat);
-  aa.get.pubs(dat.event.tags);
+  aa.p.from_tags(dat.event.tags);
   return note
 };
 
@@ -1976,7 +2012,7 @@ aa.kinds[30023] =dat=>
 aa.kinds[34235] =dat=>
 {
   let note = aa.e.note_pre(dat);
-  aa.get.pubs(dat.event.tags);
+  aa.p.from_tags(dat.event.tags);
   return note
 };
 

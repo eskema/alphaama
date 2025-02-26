@@ -7,8 +7,9 @@ user you
 */
 
 
-aa.head_scripts(['/u/is.js']);
-aa.mk.styleshit('/u/u.css');
+aa.mk.styles(['/u/u.css']);
+aa.mk.scripts(['/u/is.js']);
+
 
 aa.u = 
 {
@@ -275,12 +276,6 @@ aa.u.load =async()=>
       exe:aa.e.note_decrypt
     },
     {
-      action:['p','k0'],
-      optional:['pubkey'], 
-      description:'return metadata of pubkey',
-      exe:aa.p.k0
-    },
-    {
       action:['mk','0'],
       required:['{JSON}'], 
       description:'set metadata (kind-0)',
@@ -437,19 +432,6 @@ aa.u.jump =()=>
 };
 
 
-
-// load your metadata into input prefixed with set metadata command
-aa.p.k0 =(s='')=>
-{
-  let p;
-  if (aa.is.key(s) && aa.db.p[s]) p = aa.db.p[s];
-  else p = aa.u.p;
-  if (p.metadata) return JSON.stringify(p.metadata);
-  return ''
-  // if (p.metadata) aa.cli.v(localStorage.ns+' mk 0 '+JSON.stringify(p.metadata));
-};
-
-
 // set your metadata (kind-0)
 aa.mk.k0 =async s=>
 {
@@ -541,7 +523,6 @@ aa.u.k3_del =async s=>
       ul.append(aa.mk.l('li',{con:k,cla:'disabled'}));
       new_follows = new_follows.filter(tag=>tag[1]!==k);
       aa.p.score(k+' 4');
-      // aa.db.get_p(k).then(p=>aa.p.p_links_upd(p))
     }
     else aa.log('invalid pubkey to unfollow')
   }
@@ -806,7 +787,7 @@ aa.u.upd_u_u =()=>
   {
     aa.fx.color(p.xpub,document.getElementById('u_u'));
     butt_u.textContent = p.xpub.slice(0,1)+'_'+p.xpub.slice(-1);
-    if (aa.is.trusted(p.score)) aa.p.p_link_pic(butt_u,p.metadata.picture);
+    if (aa.is.trusted(p.score)) aa.p.link_img(butt_u,p.metadata.picture);
   })
 };
 
@@ -859,40 +840,39 @@ aa.u.wot =async()=>
 
 
 // encrypted direct message
-aa.kinds[4] =dat=>
-{
-  let note = aa.e.note_regular(dat);
-  let p_x = aa.mk.note_encrypted(dat,note);
+// aa.kinds[4] =dat=>
+// {
+//   let note = aa.e.note_regular(dat);
 
-  let k_v = 'pubkey_'+p_x;
-  if (aa.p.viewing && aa.p.viewing[1] === k_v) 
-  {
-    aa.p.viewing[0].push(note);
-    aa.i.solo(note,k_v);
-  }
+//   let k_v = 'pubkey_'+dat.event;
+//   if (aa.p.viewing && aa.p.viewing[1] === k_v) 
+//   {
+//     aa.p.viewing[0].push(note);
+//     aa.i.solo(note,k_v);
+//   }
 
-  return note
-};
+//   return note
+// };
 
 
-aa.mk.note_encrypted =(dat,note)=>
-{
-  let content = note.querySelector('.content');
-  content.classList.add('encrypted');
-  content.querySelector('.paragraph').classList.add('cypher');
-  if (!dat.clas.includes('draft'))
-  {
-    note.querySelector('.actions .butt.react')?.remove();
-    note.querySelector('.actions .butt.req')?.remove();
-  }
-  let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
-  if (aa.u.o.ls.xpub === p_x)
-  {
-    note.classList.add('for_u');
-    content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
-  }
-  return p_x
-};
+// aa.mk.note_encrypted =(dat,note)=>
+// {
+//   let content = note.querySelector('.content');
+//   content.classList.add('encrypted');
+//   content.querySelector('.paragraph').classList.add('cypher');
+//   if (!dat.clas.includes('draft'))
+//   {
+//     note.querySelector('.actions .butt.react')?.remove();
+//     note.querySelector('.actions .butt.req')?.remove();
+//   }
+//   let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
+//   if (aa.u.o.ls.xpub === p_x)
+//   {
+//     note.classList.add('for_u');
+//     content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
+//   }
+//   return p_x
+// };
 
 
 // sign and broadcast event

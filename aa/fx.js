@@ -608,6 +608,59 @@ aa.fx.scrolled =async()=>
 };
 
 
+// sorting functions to use in .sort()
+aa.fx.sorts =
+{
+  a(a,b){ return a.localeCompare(b)},
+  d(a,b){ return b.localeCompare(a)},
+  asc(a,b){ return a[1] - b[1] ? 1 : -1 },
+  desc(a,b){ return b[1] - a[1] ? 1 : -1 },
+  i_asc(a,b)
+  {
+    let a_val = parseInt(a.querySelector('.val').textContent);
+    let b_val = parseInt(b.querySelector('.val').textContent);
+    return a_val > b_val ? 1 : -1
+  },
+  i_desc(a,b)
+  {
+    let a_val = parseInt(a.querySelector('.val').textContent);
+    let b_val = parseInt(b.querySelector('.val').textContent);
+    return a_val < b_val ? 1 : -1
+  },
+  rand(){ return ()=> 0.5 - Math.random() },
+  sets(a,b)
+  {
+    return a[1].sets.length < b[1].sets.length ? 1 : -1
+  },
+  text_asc(a,b)
+  {
+    let a_val = a.textContent.toLowerCase();
+    let b_val = b.textContent.toLowerCase();
+    return a_val > b_val ? 1 : -1
+  },
+  text_desc(a,b)
+  {
+    let a_val = a.textContent.toLowerCase();
+    let b_val = b.textContent.toLowerCase();
+    return a_val < b_val ? 1 : -1
+  },
+  ca_asc(a,b)
+  {
+    let a_val = a.event.created_at;
+    let b_val = b.event.created_at;
+    return a_val > b_val ? 1 : -1
+  },
+  ca_desc(a,b)
+  {
+    let a_val = a.event.created_at;
+    let b_val = b.event.created_at;
+    return a_val < b_val ? 1 : -1
+  },
+  len(a,b){ return b[1].length > a[1].length ? 1 : -1 },
+  len_desc(a,b){ return b[1].length > a[1].length ? -1 : 1 },
+};
+
+
 // sorts array by order, defaults to ascending
 aa.fx.sort_by =(a,by)=>
 {

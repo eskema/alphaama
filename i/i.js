@@ -8,7 +8,7 @@ index filtering
 
 
 
-aa.mk.styleshit('/i/i.css');
+aa.mk.styles(['/i/i.css']);
 
 aa.i =
 {

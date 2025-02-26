@@ -1057,7 +1057,6 @@ aa.kinds[10019] =dat=>
 aa.kinds[17375] =dat=>
 {
   const note = aa.e.note_pre(dat);
-  //aa.mk.note_encrypted(dat,note);
   note.querySelector('.tags_wrapper')?.setAttribute('open','');
   if (aa.is.u(dat.event.pubkey))
   {

@@ -7,8 +7,9 @@ cli
 
 */
 
-aa.mk.styleshit('/c/cli.css');
-aa.mk.styleshit('/c/oto.css');
+
+aa.mk.styles(['/c/cli.css','/c/oto.css']);
+
 
 aa.cli = 
 {
@@ -185,7 +186,7 @@ aa.cli.expand =e=>
     aa.l.classList.add('cli_expanded');
     aa.cli.foc();
     aa.cli.upd();
-    aa.logs_read();
+    // aa.logs_read();
     aa.fx.scroll(aa.logs.lastChild)
   });
 };
@@ -576,6 +577,12 @@ aa.cli.upd =e=>
   const ns = localStorage.ns;
   const maybe_action = !s.length || (ns.startsWith(a[0]) && a.length < 2);
   const is_action = a[0] === ns;
+  const last_word = a[a.length-1].toLowerCase();
+  // const start = aa.cli.t.selectionStart;
+  // const behind = s.lastIndexOf(' ',start);
+  // current_word = s.slice(s.lastIndexOf(' ',start),start);
+  // console.log(current_word);
+
 
   // console.log(aa.cli.t.selectionStart,aa.cli.t.selectionEnd);
   
@@ -594,15 +601,16 @@ aa.cli.upd =e=>
     else 
     { 
       // it's not an action, check for last word
-      
+      aa.cli.oto.dataset.s = '';
+      aa.cli.dat_upd();
       // if is a mention attempt
       // if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
-      if (aa.u.p) aa.cli.dat_upd();
-      aa.cli.oto.dataset.s = '';
-      aa.cli.h()
+
+      
     }
-    const last_word = a[a.length-1].toLowerCase();
-    if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
+    
+    if (last_word.startsWith('@') && last_word.length > 1) aa.cli.mention(last_word);
+    aa.cli.h();
   })
   // setTimeout(aa.cli.h,0);
 };

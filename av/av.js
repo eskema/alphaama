@@ -1,4 +1,4 @@
-aa.mk.styleshit('/av/av.css');
+aa.mk.styles(['/av/av.css']);
 
 // video element
 aa.mk.av =(src,poster=false)=>
