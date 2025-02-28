@@ -458,51 +458,6 @@ aa.fx.merge_datasets =(a,l_1,l_2)=>
 };
 
 
-// adds classes to notes up the parent tree starting from element
-// if a string is given, it will be added to a dataset array 
-aa.fx.path =(l,s=false)=>
-{
-  for (;l&&l!==document;l=l.parentNode) 
-  {
-    if (l.classList.contains('note'))
-    {
-      l.classList.add('in_path');
-      if (s)
-      {
-        let a = l.dataset.path ? l.dataset.path.trim().split(' ') : [];
-        aa.fx.a_add(a,[s]);
-        l.dataset.path = a.join(' ');
-      }
-    }
-  }
-};
-
-
-// removes path class and dataset from element
-aa.fx.path_remove =l=>
-{
-  l.classList.remove('in_path');
-  l.removeAttribute('data-path');
-};
-
-
-// removes path dataset from element and class if empty dataset 
-aa.fx.path_rm =s=>
-{
-  let in_path = document.querySelectorAll('.in_path');
-  if (in_path) for (const l of in_path)
-  {
-    if (s && l.dataset.path)
-    {
-      let a = aa.fx.a_rm(l.dataset.path.trim().split(' '),[s]);
-      if (a.length) l.dataset.path = a.join(' ');
-      else aa.fx.path_remove(l);
-    }
-    else aa.fx.path_remove(l);
-  }
-};
-
-
 // return single or plural string
 aa.fx.plural =(n,s)=> n === 1 ? s : s+'s';
 
@@ -591,6 +546,21 @@ aa.fx.random_s =(length)=>
 };
 
 
+// reusable regex
+aa.fx.regex = 
+{
+  get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
+  get hashtag(){ return /(\B[#])[\w+-]*/g },
+  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
+  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
+  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu },
+  get str(){ return /"([^"]+)"/ }, // text in quotes ""
+  get fw(){ return /(?<=^\S+)\s/ }, // first word
+};
+
+
 // scroll with delay
 aa.fx.scroll =async(l,options={})=>
 {
@@ -599,13 +569,14 @@ aa.fx.scroll =async(l,options={})=>
 
 
 // scroll stuff
-aa.fx.scrolled =async()=>
-{
-  const new_top = aa.l.scrollTop;
-  if (new_top > aa.ui.last_top) aa.ui.scroll_direction = 'down';
-  else if (new_top < aa.ui.last_top) aa.ui.scroll_direction = 'up';
-  aa.ui.last_top = new_top <= 0 ? 0 : new_top;
-};
+// aa.fx.scrolled =async()=>
+// {
+//   if (!aa.temp.scroll) aa.temp.scroll = {top:0,dir:''};
+//   const new_top = aa.l.scrollTop;
+//   if (new_top > aa.temp.scroll.top) aa.temp.scroll.dir = 'down';
+//   else if (new_top < aa.temp.scroll.top) aa.ui.scroll_direction = 'up';
+//   aa.temp.scroll.top = new_top <= 0 ? 0 : new_top;
+// };
 
 
 // sorting functions to use in .sort()

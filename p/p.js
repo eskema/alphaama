@@ -82,7 +82,7 @@ aa.p.authors =async a=>
   for (const x of a) if (!aa.db.p[x]) p_to_get.push(x);
   if (p_to_get.length)
   {
-    let p_stored = await aa.db.get('idb',{get_a:{store:'authors',a:p_to_get}});
+    let p_stored = await aa.db.ops('idb',{get_a:{store:'authors',a:p_to_get}});
     for (const p of p_stored) 
     {
       aa.db.p[p.xpub] = p;
@@ -239,7 +239,7 @@ aa.p.from_tags =async tags=>
   {
     aa.fx.to(()=>
     {
-      aa.db.idb.ops({get_a:{store:'authors',a:pubkeys}}).then(dat=>
+      aa.db.ops('idb',{get_a:{store:'authors',a:pubkeys}}).then(dat=>
       {
         for (const p of dat) 
         {
@@ -411,13 +411,13 @@ aa.p.load =async()=>
       action:['p','check'],
       required:['name@domain'], 
       description:'check nip5 validity',
-      exe:aa.p.verify_nip05
+      exe:aa.p.check_nip05
     },
     {
       action:['p','md'],
       optional:['pubkey'], 
       description:'return metadata of pubkey',
-      exe:aa.p.k0
+      exe:aa.p.md
     },
     // {
     //   action:['p','k3'],
@@ -426,6 +426,7 @@ aa.p.load =async()=>
     //   exe:aa.p.follows
     // }
   );
+  aa.cli.on_upd.push(aa.p.oto);
   aa.p.l = aa.mk.l('div',{id:'authors'});
 };
 
@@ -435,7 +436,7 @@ aa.p.load_profiles =async a=>
 {
   if (!a?.length) return;
 
-  let stored = await aa.db.get('idb',{get_a:{store:'authors',a:a}});
+  let stored = await aa.db.ops('idb',{get_a:{store:'authors',a:a}});
   for (const dis of stored) 
   {
     aa.db.p[dis.xpub] = dis;
@@ -449,7 +450,7 @@ aa.p.load_profiles =async a=>
       aa.db.p[x] = aa.p.p(x);
     }
     aa.p.profile(aa.db.p[x])
-  } 
+  }
 };
 
 
@@ -461,7 +462,6 @@ aa.p.md =(s='')=>
   else p = aa.u?.p;
   if (p.metadata) return JSON.stringify(p.metadata);
   return ''
-  // if (p.metadata) aa.cli.v(localStorage.ns+' mk 0 '+JSON.stringify(p.metadata));
 };
 
 
@@ -551,6 +551,35 @@ aa.p.miss_p =(id,relays=[])=>
 {
   if (!aa.miss.p[id]) aa.miss.p[id] = {nope:[],relays:[]}
   aa.fx.a_add(aa.miss.p[id].relays,aa.temp.pubs[id]);
+};
+
+
+// creates a mention on cli
+aa.p.oto =text=>
+{
+  const w = text.split(' ').pop();
+  if (!w.startsWith('@') || w.length < 2) return
+  // remove @ from start of word string
+  let s = w.slice(1).toLowerCase();
+  // filter p conditions
+  const for_mentions =p=> 
+  {
+    if (p.hasOwnProperty('metadata'))
+    {
+      if (p.metadata.hasOwnProperty('name') && p.metadata.name?.length
+      && p.metadata.name.toLowerCase().includes(s)) 
+        return true;
+      if (p.metadata.hasOwnProperty('nip05') && p.metadata.nip05?.length
+      && p.metadata.nip05.toLowerCase().includes(s)) 
+        return true;
+    }
+    if (p.petname?.length
+    && p.petname.toLowerCase().includes(s)) 
+      return true;
+  };
+  // 
+  const a = Object.values(aa.db.p).filter(for_mentions);
+  for (const p of a) aa.cli.oto.append(aa.mk.mention_item(p,w));
 };
 
 
@@ -741,7 +770,7 @@ aa.p.save_to =()=>
   // let times = 0;
   for (const chunk of chunks)
   {
-    aa.db.idb.worker.postMessage({put:{store:'authors',a:chunk}})
+    aa.db.idb.postMessage({put:{store:'authors',a:chunk}})
   }
 };
 
@@ -785,7 +814,7 @@ aa.p.score =async s=>
 
 
 // verify nip05
-aa.p.verify_nip05 =async(s,p)=>
+aa.p.check_nip05 =async(s,p)=>
 {
   let verified = false;
   let dis = await NostrTools.nip05.queryProfile(s);

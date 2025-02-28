@@ -99,7 +99,7 @@ aa.q.add =str=>
       aa.q.close(k);
       aa.log(log);
     }
-    aa.mod_save(aa.q).then(mod=>{aa.mod_ui(mod,k)});      
+    aa.mod.save(aa.q).then(mod=>{aa.mod.ui(mod,k)});      
   }
    
   return k
@@ -136,41 +136,9 @@ aa.q.del =s=>
 
     delete aa.q.o.ls[k];
     document.getElementById(aa.q.def.id+'_'+aa.fx.an(k)).remove();
-    aa.mod_save(aa.q);
+    aa.mod.save(aa.q);
   }
   else aa.log(aa.q.def.id+' '+k+' not found')
-};
-
-
-// fetch note
-aa.clk.fetch =e=>
-{
-  const note = e.target.closest('.note');
-  
-  let filter = '{';
-  const id = note.dataset.id;
-  if (id)
-  {
-    filter += `"ids":["${id}"],`;
-  } 
-  else
-  {
-    const [kind,pubkey,ds] = note.dataset.id_a.split(':');
-    filter += `"authors":[${pubkey}],"kinds":[${kind}],"#d":[${ds}],`;
-  }
-  filter += '"eose":"close"}';
-  
-  let relset = 'read ';
-  if (note.dataset.r)
-  {
-    let r = note.dataset.r.trim().split(' ');
-    if (r.length) 
-    {
-      let url = aa.is.url(r[0])?.href;
-      if (url) relset = url+' ';
-    }
-  }
-  aa.cli.v(localStorage.ns+' '+aa.q.def.id+' req '+relset+filter);
 };
 
 
@@ -233,7 +201,7 @@ aa.q.load =async()=>
   );
 
   // add shortcut buttons with last queries executed
-  aa.mod_load(mod).then(aa.mk.mod).then(e=>
+  aa.mod.load(mod).then(aa.mod.mk).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
     fastdom.mutate(()=>
@@ -304,7 +272,7 @@ aa.q.as_outbox =([filtered,options,fid])=>
 
   if (outbox?.length)
   {
-    aa.mod_servers_add(aa.r,outbox.map(i=>i[0]+' out').join(','),'relay');
+    aa.mod.servers_add(aa.r,outbox.map(i=>i[0]+' out').join(','),'relay');
     let relays = [];
     for (const r of outbox)
     {

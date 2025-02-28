@@ -63,21 +63,34 @@ aa.mk.details =(s,l=false,open=false)=>
 };
 
 
-// get the dialog element or create it if not found
-aa.mk.dialog =()=>
+aa.mk.dialog =async o=>
 {
-  let dialog = document.getElementById('dialog');
-  if (!dialog) 
+  const dialog = aa.dialog;
+  if (!dialog || dialog.open) return false;
+  if (o.title) dialog.title = o.title;
+  if (o.hasOwnProperty('l')) dialog.append(o.l);
+  
+  const dialog_options = aa.mk.l('p',{id:'dialog_options'});
+  
+  const dialog_no = aa.mk.l('button',
   {
-    dialog = aa.mk.l('dialog',{id:'dialog'});
-    document.body.insertBefore(dialog,document.body.lastChild.previousSibling);
-    dialog.addEventListener('close',e=>
-    {
-      dialog.removeAttribute('title');
-      dialog.textContent = '';
-    });
-  }
-  return dialog
+    con:o.no.title ?? 'cancel',
+    cla:'butt cancel',
+    clk:e=>{ o.no.exe(); dialog.close()}
+  });
+  dialog_no.setAttribute('autofocus',true);
+  
+  const dialog_yes = aa.mk.l('button',
+  {
+    con:o.yes.title ?? 'confirm',
+    cla:'butt confirm',
+    clk:e=>{ o.yes.exe(); dialog.close()}
+  });
+
+  dialog_options.append(dialog_no,dialog_yes);
+  dialog.append(dialog_options);
+  dialog.showModal();
+  if (o.scroll) dialog.scrollTop = dialog.scrollHeight;
 };
 
 
@@ -114,7 +127,7 @@ aa.mk.img =(src)=>
 // show image in modal on click
 aa.mk.img_modal =(src,cla=false)=>
 {
-  const dialog = aa.mk.dialog();
+  const dialog = aa.dialog;
   const img = aa.mk.l('img',
   {
     cla:'modal-img contained'+(cla?' '+cla:''),
@@ -238,32 +251,6 @@ aa.mk.ls =o=>
   }
   else l.classList.add('empty');
   return l
-};
-
-
-// make mod
-aa.mk.mod =mod=>
-{
-  let o = {id:mod.def.id,ls:mod.o.ls,sort:'a'};
-  if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
-  let mod_l = aa.mk.details(mod.def.id,aa.mk.ls(o));
-  mod_l.classList.add('mod');
-  if (mod.l) 
-  {
-    mod.l.replaceWith(mod_l);
-    mod.l = mod_l;
-  }
-  else 
-  {
-    mod.l = mod_l;
-    if (aa.mod_l) 
-    {
-      const last = [...aa.mod_l.children]
-      .filter(i=> o.id < i.querySelector('summary').textContent)[0];
-      fastdom.mutate(()=>{aa.mod_l.insertBefore(mod_l,last)});
-    }
-    else aa.log(mod_l)
-  }
 };
 
 

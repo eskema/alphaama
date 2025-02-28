@@ -373,13 +373,16 @@ textarea:focus
 {
   border-radius: 2px;
   border: 1px solid rgba(var(--color-a),0);
+  
 }
 
 .butt.plug
 {
+  align-self: center;
   background: rgb(var(--color-c));
-  color: rgb(var(--color-a));
+  color: rgb(var(--color-e));
   padding: 0 var(--padm);
+  line-height: 1.5;
   /*line-height: 1.4;*/
   /*text-decoration: underline;*/
 }
@@ -469,6 +472,7 @@ textarea:focus
 
 .item[data-after]::after 
 {
+  color: rgb(var(--color-c));
   content: attr(data-after);
   grid-area: aft;
 }
@@ -661,6 +665,7 @@ li.item > .val
 {
   background-color: rgb(var(--color-a));
   margin-bottom: var(--padm);
+  margin-top: var(--line);
 }
 
 .mod > .butt
@@ -1238,7 +1243,8 @@ html:not(.cli_expanded) .l:not(.is_new),
   
   .butt.plug:hover
   {
-    background: rgb(var(--color-f));
+    background: rgb(var(--color-e));
+    color: rgb(var(--color-a));
   }
 }
 

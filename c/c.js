@@ -9,27 +9,25 @@ cli
 
 
 aa.mk.styles(['/c/cli.css','/c/oto.css']);
+aa.mk.scripts([
+  // '/c/clk.js',
+  // '/c/db.js',
+  '/c/fx.js',
+  // '/c/get.js',
+  // '/c/is.js',
+  // '/c/kinds.js',
+  '/c/mk.js',
+  // '/c/parse.js',
+  // '/c/views.js'
+]);
 
 
 aa.cli = 
 {
   o:{id:'cli',history:[],index:0},
-  on_run:[],
+  def:false,
+  // on_run:[],
   on_upd:[]
-};
-
-
-// a button that will populate the input with a command text
-aa.mk.butt_action =(s,con=false,cla=false)=>
-{
-  const butt = aa.mk.l('button',
-  {
-    con:con?con:s,
-    cla:'butt plug',
-    clk:e=>{ aa.cli.v(localStorage.ns+' '+s) }
-  });
-  if (cla) butt.classList.add(cla);
-  return butt
 };
 
 
@@ -37,7 +35,7 @@ aa.mk.butt_action =(s,con=false,cla=false)=>
 aa.cli.clear =async()=>
 {
   aa.cli.t.value = '';
-  aa.cli.dat_upd();
+  // aa.cli.dat_upd();
   aa.cli.upd();
 };
 
@@ -58,7 +56,6 @@ aa.cli.collapse =e=>
 aa.cli.exe =async s=>
 {
   let a = s.split(localStorage.ns+' ');
-  // console.log(a);
   let output;
   for (const action of a)
   { 
@@ -83,27 +80,16 @@ aa.cli.exe =async s=>
       else if (actions.length)
       {
         act = actions[0];
-        if (actions[0].action.length > 1)
-        {
-          cut = cmd[1].split(aa.fx.regex.fw)[1];
-        }
-        else 
-        {
-          cut = cmd[1];
-        }
+        let sub = actions[0].action.length > 1;
+        if (sub) cut = cmd[1].split(aa.fx.regex.fw)[1];
+        else cut = cmd[1];
       }
-      if (act && 'exe' in act) 
+      if (act && 'exe' in act)
       {
         aa.cli.clear();
         cut = cut ? cut.trim() : '';
-        if (output) 
-        {
-          output = await act.exe((cut?cut+' ':'')+output);
-        }
-        else 
-        {
-          output = await act.exe(cut);
-        }
+        let cat = output ? (cut?cut+' ':'')+output : cut;
+        output = await act.exe(cat);
         if (typeof output === 'object') output = JSON.stringify(output);
       }
     }
@@ -148,7 +134,7 @@ aa.cli.dat_mk =async(s,reply_to)=>
 
 aa.cli.draft =(dat)=>
 {
-  let note = aa.e.note(dat);
+  let note = aa.mk.note(dat);
   aa.parse.context(note,dat.event,true);
   note.querySelector('.by').remove()
   let draft = aa.cli.l.querySelector('.note.draft');
@@ -206,6 +192,18 @@ aa.cli.fuck_off =(reason=false)=>
   aa.cli.clear();
   aa.cli.collapse();
   if (reason) aa.log(reason)
+};
+
+
+// update textarea height
+aa.cli.h =()=>
+{
+  aa.cli.t.style.height = 'unset';
+  aa.cli.t.style.height = aa.cli.t.scrollHeight+'px';
+  if (aa.cli.t.selectionStart === aa.cli.t.value.length) 
+  {
+    aa.cli.t.scrollTop = aa.cli.t.scrollHeight;
+  }
 };
 
 
@@ -271,15 +269,6 @@ aa.cli.keydown =async e=>
 };
 
 
-// item content with key as butt_action
-aa.mk.item_action =(k,v,s)=>
-{
-  const df = new DocumentFragment();
-  df.append(aa.mk.butt_action(s,k,'key'),' ',aa.mk.l('span',{cla:'val',con:v}))
-  return df
-};
-
-
 // on load
 aa.cli.load =async e=>
 {
@@ -294,7 +283,6 @@ aa.cli.load =async e=>
 // make cli element
 aa.cli.mk =()=>
 {
-  aa.cli.fun = aa.cli.note;
   aa.cli.l = aa.mk.l('search',{id:'cli'});
   aa.cli.oto = aa.mk.l('ul',{id:'oto',cla:'list'});
   aa.cli.t = aa.mk.l('textarea',
@@ -331,65 +319,11 @@ aa.cli.mk =()=>
 };
 
 
-// creates a mention
-aa.cli.mention =w=>
-{
-  // remove @ from start of word string
-  let s = w.slice(1).toLowerCase();
-  // filter p conditions
-  const for_mentions =p=> 
-  {
-    if (p.hasOwnProperty('metadata'))
-    {
-      if (p.metadata.hasOwnProperty('name') && p.metadata.name?.length
-      && p.metadata.name.toLowerCase().includes(s)) 
-        return true;
-      if (p.metadata.hasOwnProperty('nip05') && p.metadata.nip05?.length
-      && p.metadata.nip05.toLowerCase().includes(s)) 
-        return true;
-    }
-    if (p.petname?.length
-    && p.petname.toLowerCase().includes(s)) 
-      return true;
-  };
-  // 
-  const a = Object.values(aa.db.p).filter(for_mentions);
-  for (const p of a) aa.cli.oto.append(aa.mk.mention_item(p,w));
-};
-
-aa.mk.mention_item =(p,w)=>
-{
-  const l = aa.mk.l('li',{cla:'item mention',bef:p.metadata.name??''});
-  let after = (p.petname?p.petname:p.petnames[0])+' '+(p.metadata.nip05??'');
-  l.append(
-    aa.mk.l('span',{cla:'description',con:after,}),
-    aa.mk.l('span',{cla:'val',con:p.npub})
-  );
-  l.tabIndex = '1';
-  
-  const clk =e=>
-  {
-    aa.cli.upd_from_oto('nostr:'+e.target.querySelector('.val').textContent,w);
-  };
-  l.onclick = clk;
-  l.onkeydown =e=>
-  {
-    if (e.key === 'Enter')
-    {
-      e.stopPropagation();
-      e.preventDefault();
-      clk(e)
-    }
-  };
-  return l
-}
-
-
 // filters actions for autocomplete and add items to oto
-aa.cli.oto_act =(s,a)=>
+aa.cli.oto_act =(s)=>
 {
-  const sort_act =(a,b)=>{ return a.action[1] > b.action[1] ? 1 : -1 };
-
+  const a = s.split(' ');
+  // first level, group all actions by section
   if (a.length === 1 || (a.length === 2 && a[1] === ''))
   {
     let sn = {};
@@ -404,23 +338,25 @@ aa.cli.oto_act =(s,a)=>
     for (const k of sorted) aa.cli.oto.append(aa.mk.oto_act_item(sn[k]));
   }
   else
+  // sub level, display actions in a single section
   {
-    let dis_act = aa.actions.filter(i=>i.action[0] === a[1] && i.action[1] === a[2])[0];
+    let dis_act = aa.actions.find(i=>i.action[0] === a[1] && i.action[1] === a[2]);
+    // let dis_act = aa.actions.filter(i=>i.action[0] === a[1] && i.action[1] === a[2])[0];
     if (!dis_act)
     {
-      let single_action = aa.actions.filter(i=>i.action[0] === a[1])[0];
+      let single_action = aa.actions.find(i=>i.action[0] === a[1]);
+      // let single_action = aa.actions.filter(i=>i.action[0] === a[1])[0];
       if (single_action && single_action.action.length === 1) dis_act = single_action;
     } 
     if (dis_act) aa.cli.oto.append(aa.mk.oto_act_item(dis_act,'pinned'));
     else
     {
-      let actions = aa.actions.filter(o=>o.action[0].startsWith(a[1])).sort(sort_act);
-      // console.log(actions);
+      let actions = aa.actions.filter(o=>o.action[0].startsWith(a[1]))
+      .sort((a,b)=>a.action[1]>b.action[1]?1:-1);
       for(const act of actions)
       {
         let action = localStorage.ns+' '+act.action[0]+' '+act.action[1];
         if (action.startsWith(s)) aa.cli.oto.append(aa.mk.oto_act_item(act));
-        // else if (s.startsWith(action)) aa.cli.oto.append(aa.mk.oto_act_item(act,'pinned'));
       }
       if (!aa.cli.oto.childNodes.length)
       {
@@ -431,68 +367,17 @@ aa.cli.oto_act =(s,a)=>
 };
 
 
-// makes an action item for otocomplete
-aa.mk.oto_act_item =(o,s)=>
-{
-  const l = aa.mk.l('li',{cla:'item',bef:localStorage.ns});
-  l.append(aa.mk.l('span',{cla:'val',con:o.action.join(' ')}));
-  l.tabIndex = '1';
-  if (o.required) l.append(' ',aa.mk.l('span',{cla:'required',con:o.required.join(' ')}));
-  if (o.optional) l.append(' ',aa.mk.l('span',{cla:'optional',con:o.optional.join(' ')}));
-  if (o.description) l.append(' ',aa.mk.l('span',{cla:'description',con:o.description}));
-  if (o.acts?.length)
-  {
-    let acts = aa.mk.l('span',{cla:'acts'})
-    l.append(' ',acts);
-    for (const act of o.acts)
-    {
-      let butt = aa.mk.l('button',{cla:'butt acts',con:act,clk:e=>
-      {
-        e.stopPropagation();
-        e.preventDefault();
-        let text = localStorage.ns+' ';
-        text += e.target.closest('.item').querySelector('.val').textContent+' ';
-        text += act+' ';
-        aa.cli.upd_from_oto(text);
-      }});
-      acts.append(butt);
-    }
-  }
-  
-  if (s === 'pinned' || s === 'invalid') l.classList.add(s);
-  else
-  {
-    const clk =e=>
-    {
-      e.stopPropagation();
-      e.preventDefault();
-      aa.cli.upd_from_oto(localStorage.ns+' '+e.target.closest('.item').querySelector('.val').textContent);
-    };
-    l.onclick = clk;
-    l.onkeydown =e=>
-    {
-      if (e.key === 'Enter')
-      {
-        e.stopPropagation();
-        e.preventDefault();
-        clk(e)
-      }
-    };
-  }
-  return l
-};
-
-
 // when input is triggered
 aa.cli.run =async s=>
 {
   aa.cli.history_upd(s);
   if (aa.is.act(s)) aa.cli.exe(s);
-  else 
-  {
-    let l = aa.cli.fun(s);
-    if (aa.cli.on_run?.length) for (const f of aa.cli.on_run) f(s,l);
-  }
+  else if (aa.cli.def) aa.cli.def.exe(s)
+  else aa.log(s)
+  // {
+  //   let l = aa.cli.def.exe(s);
+  //   if (aa.cli.on_run?.length) for (const f of aa.cli.on_run) f(s,l);
+  // }
 };
 
 
@@ -502,128 +387,37 @@ aa.cli.selection =e=>
 };
 
 
-// make a note from text input
-aa.cli.note =async(s='')=>
-{
-  if (aa.cli.dat)
-  {
-    aa.cli.dat.event.created_at = aa.now;
-    if (aa.cli.dat.event.kind === 1)
-    {
-      aa.fx.tags_add(aa.cli.dat.event.tags,aa.get.hashtag(s));
-      const mentions = await aa.get.mentions(s);
-      aa.fx.tags_add(aa.cli.dat.event.tags,mentions);
-    }
-    aa.e.draft(aa.cli.dat);
-    delete aa.cli.dat;
-    aa.cli.fuck_off();
-  }
-  else
-  {
-    aa.log(s);
-    let log_text = 'unable to create note';
-    if (!aa.u?.p?.xpub)
-    {
-      log_text += ', login first using the command: ';
-      log_text += localStorage.ns+' u login';
-    }
-    aa.log(log_text);
-  }
-};
-
-aa.fx.tags_add =(a,b)=>
-{
-  for (const i of b)
-  {
-    if (!a.some(t=>t[0] === i[0] && t[1] === i[1])) a.push(i)
-    // let add = true;
-    // for (const t of a)
-    // {
-    //   if (t[0] === i[0] && t[1] === i[1]) add = false;
-    // }
-    // if (add) a.push(i)
-  }
-};
-
-aa.mk.k1 =async(s='')=>
-{
-  //     const mentions = await aa.get.mentions(s);
-      
-  //   }
-    
-  //   aa.e.draft(aa.cli.dat);
-  //   delete aa.cli.dat;
-  //   aa.cli.fuck_off();
-  // }
-  // else 
-  // {
-  //   aa.log(s);
-  //   let log_text = 'unable to create note';
-  //   if (!aa.u?.p?.xpub)
-  //   {
-  //     log_text += ', login first using the command: ';
-  //     log_text += localStorage.ns+' u login';
-  //   }
-  //   aa.log(log_text);      
-  // }
-};
-
-
 // on cli update event
 aa.cli.upd =e=>
 {
   const s = aa.cli.t.value.replace(/\u2028/g,'');
-  const a = s.split(' ');
   const ns = localStorage.ns;
-  const maybe_action = !s.length || (ns.startsWith(a[0]) && a.length < 2);
-  const is_action = a[0] === ns;
-  const last_word = a[a.length-1].toLowerCase();
-  // const start = aa.cli.t.selectionStart;
-  // const behind = s.lastIndexOf(' ',start);
-  // current_word = s.slice(s.lastIndexOf(' ',start),start);
-  // console.log(current_word);
-
-
-  // console.log(aa.cli.t.selectionStart,aa.cli.t.selectionEnd);
-  
-  
+  let space = s.includes(' ');
+  let first = space?s.slice(0,s.indexOf(' ')):s;
   fastdom.mutate(()=>
   {
     aa.cli.oto.textContent = '';
     aa.cli.oto.dataset.s = s;
-    if (maybe_action) 
+    
+    if (!s.length || (!space && ns.startsWith(first)))
+    // maybe action
     {
       aa.cli.oto.append(aa.mk.oto_act_item({action:[]}));
-      // let draft = aa.cli.l.querySelector('.note.draft');
-      // if (draft) draft.parentElement.remove();
     }
-    else if (is_action) aa.cli.oto_act(s,a); 
-    else 
-    { 
-      // it's not an action, check for last word
+    else if (first === ns)
+    // is action
+    {
+      aa.cli.oto_act(s); 
+    }
+    else
+    {
+      if (aa.cli.def) aa.cli.oto.append(aa.mk.oto_act_item(aa.cli.def,'pinned'));
       aa.cli.oto.dataset.s = '';
       aa.cli.dat_upd();
-      // if is a mention attempt
-      // if (last_word.startsWith('@') && last_word.length > 1)  aa.cli.mention(last_word);
-
-      
     }
-    
-    if (last_word.startsWith('@') && last_word.length > 1) aa.cli.mention(last_word);
+    if (s) for (const fun of aa.cli.on_upd) fun(s);
     aa.cli.h();
-  })
-  // setTimeout(aa.cli.h,0);
-};
-
-// update textarea height
-aa.cli.h =()=>
-{
-  aa.cli.t.style.height = 'unset';
-  aa.cli.t.style.height = aa.cli.t.scrollHeight+'px';
-  if (aa.cli.t.selectionStart === aa.cli.t.value.length) 
-  {
-    aa.cli.t.scrollTop = aa.cli.t.scrollHeight;
-  }
+  });
 };
 
 
@@ -642,5 +436,3 @@ aa.cli.v =async s=>
   aa.cli.t.value = s;
   aa.cli.expand();
 };
-
-// window.addEventListener('load',aa.cli.load);

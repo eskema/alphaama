@@ -94,7 +94,7 @@ aa.mk.metadata_nip05 =(k,v,p)=>
     l.dataset.verified_on = aa.fx.time_display_ext(p.verified[0][1]);
     if (p.verified[0][0] === true) l.classList.add('nip05-verified');
   }
-  l.addEventListener('click',e=>{e.preventDefault(); aa.p.verify_nip05(v,p)});
+  l.addEventListener('click',e=>{e.preventDefault(); aa.p.check_nip05(v,p)});
   
   return l
 };

@@ -11,15 +11,16 @@ aa.views.npub1 =async npub=>
   fastdom.mutate(()=>
   {
     l.classList.add('in_view');
+    aa.in_view = l;
     aa.l.classList.add('viewing','view_p');
     aa.fx.scroll(l);
   });
 
 
-  let items = aa.get.index_items(k,v);
-  const k_v = k+'_'+aa.fx.an(v);
-  aa.p.viewing = [items,k_v];
-  aa.i.filter_solo_apply(items,k_v);
+  // let items = aa.get.index_items(k,v);
+  // const k_v = k+'_'+aa.fx.an(v);
+  // aa.p.viewing = [items,k_v];
+  // aa.i.filter_solo_apply(items,k_v);
 };
 
 // view for nprofile

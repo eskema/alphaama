@@ -1,3 +1,17 @@
+aa.mk.styles(['/e/e.css']);
+aa.mk.scripts([
+  '/e/clk.js',
+  '/e/db.js',
+  '/e/fx.js',
+  '/e/get.js',
+  '/e/is.js',
+  '/e/kinds.js',
+  '/e/mk.js',
+  '/e/parse.js',
+  '/e/views.js'
+]);
+
+
 /*
 
 alphaama
@@ -5,8 +19,6 @@ mod    e
 events notes
 
 */
-
-aa.mk.styles(['/e/e.css']);
 
 
 aa.e = 
@@ -20,7 +32,7 @@ aa.e =
     video:[21,22,1063,34235,34236],
   },
   requires:['o'],
-  root_count:0,
+  // root_count:0,
   butts_for:
   {
     na:[[localStorage.reaction,'react'],'req','bro','render','tiny'],
@@ -42,7 +54,6 @@ aa.e.append_from_refs =()=>
 };
 
 
-
 // decides where to append a note
 aa.e.append_to =async(dat,l,a)=>
 {
@@ -52,53 +63,41 @@ aa.e.append_to =async(dat,l,a)=>
 
 
 // append note to notes section
-aa.e.append_to_notes =note=>
-{ 
-  let notes = document.getElementById('notes') || aa.e.l;
-  if (!note.classList.contains('rendered')) 
-  {
-    note.querySelector('.replies').removeAttribute('open');
-    note.classList.add('root','not_yet');
-    aa.e.note_observer.observe(note);
-  }
-  if (note.classList.contains('blank')) 
-  {
-    notes.append(note)
-  }
-  else 
-  {
-    aa.e.append_in_order(notes,note);
-    // const last = [...notes.children]
-    // .filter(i=>note.dataset.stamp > i.dataset.stamp)[0];
-    // notes.insertBefore(note,last)
-  }
-  if (history.state?.view === '#'+note.id) setTimeout(()=>{aa.e.view(note)},1000);
-  aa.get.note_refs(note);
-};
-
-
-// order note by stamp order
-aa.e.append_in_order =(notes,note)=>
+aa.e.append_to_notes =l=>
 {
-  const l = [...notes.children].find(i=>note.dataset.stamp > i.dataset.stamp);
-  // notes.insertBefore(note,l)
-  // fastdom.mutate(()=>
-  // {
-    notes.insertBefore(note,l)
-  // })
+  const notes = aa.e.l;
+  if (!l.classList.contains('rendered')) 
+  {
+    l.querySelector('.replies').removeAttribute('open');
+    l.classList.add('root','not_yet');
+  }
+  fastdom.mutate(()=>
+  {
+    if (l.classList.contains('blank')) 
+    {
+      notes.append(l)
+    }
+    else 
+    {
+      notes.insertBefore(l,
+        [...notes.children].find(i=> l.dataset.stamp > i.dataset.stamp)
+      )
+      aa.get.note_refs(l);
+    }
+  });
+  aa.e.note_observer.observe(l);
+  if (history.state?.view === '#'+l.id) setTimeout(()=>{aa.e.view(l)},1000);
 };
-
 
 
 // append to another note as reply
 aa.e.append_to_rep =(note,rep)=>
 {
-  
-  note.classList.add('reply','not_yet');
-  note.classList.remove('root');
-
   fastdom.mutate(()=>
   {
+    note.classList.add('reply','not_yet');
+    note.classList.remove('root');
+
     if (!sessionStorage[note.dataset.id]) 
     {
       note.classList.add('is_new');
@@ -107,14 +106,15 @@ aa.e.append_to_rep =(note,rep)=>
     rep.parentNode.classList.add('haz_reply');
     if (note.classList.contains('in_path')) rep.parentNode.classList.add('in_path')
     
-    const last = [...rep.children].find(i=> i.tagName === 'ARTICLE' 
+    const last = [...rep.children].find(i=>i.tagName==='ARTICLE' 
     && i.dataset.created_at > note.dataset.created_at);
-    rep.insertBefore(note,last?last:null);
+    
+    rep.insertBefore(note,last || null);
     aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
+    aa.get.note_refs(note);
+    aa.e.note_observer.observe(note);
   });
-  aa.e.note_observer.observe(note);
   if (history.state?.view === '#'+note.id) setTimeout(()=>{aa.e.view(note)},100);
-  aa.get.note_refs(note);
 };
 
 
@@ -168,9 +168,6 @@ aa.e.append_check =(dat,note,tag_reply)=>
 };
 
 
-
-
-
 // clear notes from section
 aa.e.clear =s=>
 {
@@ -184,74 +181,6 @@ aa.e.clear =s=>
 };
 
 
-//parse content as object
-aa.parse.content_o =async(ls,note,sort='')=>
-{
-  if (ls && typeof ls === 'object')
-  {
-    let content = note.querySelector('.content');
-    content.textContent = '';
-    content.append(aa.mk.ls({ls,sort}));
-  }
-};
-
-
-// toggle parsed content on note
-aa.parse.context =(l,event,trust)=>
-{
-  let content = l.querySelector('.content');
-  if (!content) content = l;
-  else 
-  {
-    content.textContent = '';
-    content.classList.toggle('parsed');
-  }
-  let parsed;
-  if (content.classList.contains('parsed'))
-  {
-    parsed = aa.parse.content(event.content,trust);
-  }
-  else parsed = aa.mk.l('p',{cla:'paragraph',con:event.content});
-  if (parsed.childNodes.length) 
-  {
-    fastdom.mutate(()=>{content.append(parsed)});
-  }
-};
-
-
-// make details section
-aa.mk.det =(cla='',id='')=>
-{
-  let l = aa.mk.details('',false,true);
-  if (cla) l.classList.add(cla);
-  if (id) l.id = id;
-  let summary = l.querySelector('summary');
-  summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
-  return l 
-};
-
-
-// returns events if already loaded or get them from database
-aa.db.events =async a=>
-{
-  // return await aa.db.get_pa(a)
-  const events = [];
-  const to_get = [];
-  for (const x of a) 
-  {
-    if (!aa.db.e[x]) to_get.push(x);
-    else events.push(aa.db.e[x])
-  }
-  if (to_get.length)
-  {
-    let stored = await aa.db.get('idb',{get_a:{store:'events',a:to_get}});
-    for (const i of stored) aa.db.e[i.event.id] = i;
-    events.push(...stored);
-  }
-  return events
-};
-
-
 // load event list from db into memory
 aa.e.events =async a=>
 {
@@ -259,71 +188,13 @@ aa.e.events =async a=>
   for (const x of a) if (!aa.db.e[x]) a_to_get.push(x);
   if (a_to_get.length)
   {
-    let stored = await aa.db.get('idb',{get_a:{store:'events',a:a_to_get}});
+    let stored = await aa.db.ops('idb',{get_a:{store:'events',a:a_to_get}});
     for (const dat of stored) aa.db.e[dat.event.id] = dat;
   }
 };
 
 
-// returns event if already loaded or get it from database
-aa.db.get_a =async id_a=>
-{
-  const [kind,pubkey,ds] = id_a.split(':');
-  let p = await aa.db.get_p(pubkey);
-
-  let id;
-  try
-  {
-    id = p.events['k'+kind][ds][0][0];
-  } 
-  catch(er)
-  {
-    // console.log('no id from '+id_a);
-  }
-  if (id)
-  {
-    if (aa.db.e[id]) return aa.db.e[id];
-    let dat = await aa.db.idb.ops({get:{store:'events',key:id}});
-    if (dat) aa.db.e[id] = dat;
-    return dat
-  }
-  return false
-};
-
-
-// returns event if already loaded or get it from database
-aa.db.get_e =async xid=>
-{
-  if (aa.db.e[xid]) return aa.db.e[xid];  
-  let dat = await aa.db.idb.ops({get:{store:'events',key:xid}});
-  if (dat) aa.db.e[xid] = dat;
-  return dat
-};
-
-
-// returns array of tags with all #hashtags in string
-aa.get.hashtag =s=>
-{
-  const tags = [];
-  const hashtags = s.match(aa.fx.regex.hashtag);
-  if (hashtags) for (const h of hashtags) tags.push(['t',h.slice(1).toLowerCase()])
-  return tags
-};
-
-
-// parse hashtag
-aa.parse.hashtag =(match)=>
-{
-  return aa.mk.l('span',
-  {
-    cla:'hashtag',
-    con:match[0],
-    lab:match[0].slice(1).toLowerCase()
-  })
-};
-
-
-// 
+// returns event raw json
 aa.e.json =async(s='')=>
 {
   let dat = await aa.db.get_e(s);
@@ -335,27 +206,29 @@ aa.e.json =async(s='')=>
 // on load
 aa.e.load =async()=>
 {
+  let mod = aa.e;
   aa.temp.orphan = {};
   aa.temp.print = {};
   aa.temp.printed = [];
   aa.temp.refs = {};
+
   aa.actions.push(
     {
       action:['e','clear'],
       description:'clear e section',
-      exe:aa.e.clear
+      exe:mod.clear
     },
     {
       action:['e','s'],
       required:['value'],
       description:'search notes content for value',
-      exe:aa.e.search
+      exe:mod.search
     },
     {
       action:['e','json'],
       required:['hex_id'],
       description:'return event JSON',
-      exe:aa.e.json
+      exe:mod.json
     },
     {
       action:['e','view'],
@@ -363,113 +236,10 @@ aa.e.load =async()=>
       description:'view event by hex_id',
       exe:(s)=>{ aa.state.view('#'+aa.fx.encode('note',s)) }
     },
-    {
-      action:['db','some'],
-      required:['number'],
-      optional:['oldest'],
-      description:'request n events from db',
-      exe:aa.db.some
-    },
-    {
-      action:['db','view'],
-      required:['id'],
-      description:'view event',
-      exe:aa.state.view
-    }
   );
-  aa.e.l = aa.mk.l('div',{id:'notes'});
-  aa.e.section_observer.observe(aa.e.l,{attributes:false,childList:true});
-};
-
-
-// mark replies as read
-aa.clk.mark_read =e=>
-{
-  e.stopPropagation();
-  const classes = ['haz_new_reply','haz_new','is_new'];
-  const replies = e.target.closest('.replies');
-  const note = e.target.closest('.note');
-  const root = e.target.closest('.root');
-  const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
-  note.classList.remove(...classes);
-  
-  if (new_stuff.length)
-  {
-    e.preventDefault();
-    for (const l of new_stuff) 
-    {
-      sessionStorage[l.dataset.id] = 'is_read';
-      l.classList.remove(...classes);
-    }
-    if (replies.classList.contains('expanded')) 
-    {
-      sessionStorage[replies.id] = '';
-      replies.classList.remove('expanded');
-    }
-  }
-  else 
-  {
-    if (replies.classList.contains('expanded')) 
-    {
-      sessionStorage[replies.id] = '';
-      replies.classList.remove('expanded');
-    }
-    else 
-    {
-      sessionStorage[replies.id] = 'expanded';
-      replies.classList.add('expanded');
-    }
-  }
-  if (!aa.viewing)
-  {
-    let top = root.offsetTop + (3 * parseFloat(getComputedStyle(document.documentElement).fontSize));
-    if (top < aa.l.scrollTop) aa.l.scrollTo(0,top);
-  }
-};
-
-
-// gets all nostr:stuff from string 
-// and returns array of tags
-// to use when creating a new note
-aa.get.mentions =async s=>
-{
-  const mentions = [];
-  const matches = [...s.matchAll(aa.fx.regex.nostr)];
-  for (const m of matches)
-  {
-    let dis = m[0].slice(6);
-    if (dis.startsWith('npub')) 
-    {
-      let p_x = aa.fx.decode(dis);
-      if (p_x) mentions.push(aa.fx.tag_p(p_x));
-    }
-    else if (dis.startsWith('note'))
-    {
-      const e_x = aa.fx.decode(dis);
-      if (e_x) 
-      {
-        mentions.push(aa.fx.tag_q(e_x));
-        let dat = await aa.db.get_e(e_x);
-        if (dat && dat.event.pubkey !== aa.u.p.xpub) mentions.push(aa.fx.tag_p(dat.event.pubkey));
-      }
-    }
-  }
-  return mentions
-};
-
-
-// merge two dat objects
-aa.fx.merge =(dis,dat)=>
-{
-  dis = Object.assign({},dis);
-  let merged,sets = ['seen','subs','clas','refs'];
-  for (const set of sets)
-  { 
-    if (!dis.hasOwnProperty(set)) { dis[set]=[]; merged=true; } 
-    if (!dat.hasOwnProperty(set)) dat[set]=[];
-    if (aa.fx.a_add(dis[set],dat[set])) merged=true;
-  }
-  return merged ? dis : false
+  mod.l = aa.mk.l('div',{id:'notes'});
+  mod.section_observer = new MutationObserver(mod.section_mutated);
+  mod.section_observer.observe(mod.l,{attributes:false,childList:true});
 };
 
 
@@ -487,6 +257,7 @@ aa.e.miss_e =(id,relays=[])=>
   //   if (r && !aa.miss.e[xid].relays.includes(r.href)) aa.miss.e[xid].relays.push(r.href);
   // }
 };
+
 
 // add event id to missing event list
 aa.e.miss_a =(id,relays=[])=>
@@ -576,125 +347,6 @@ aa.e.miss_print_a =(tag,relays=[])=>
 };
 
 
-// get missing e or p from def relays
-aa.get.missing =async type=>
-{
-  aa.fx.to(()=>
-  {
-    let miss = {};
-    
-    let def_relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-    for (const xid in aa.miss[type])
-    {
-      let v = aa.miss[type][xid];
-      aa.e.nope(xid,def_relays,v.nope,miss);
-      aa.e.nope(xid,v.relays,v.nope,miss);
-    }
-
-    if (Object.keys(miss).length)
-    {
-      let options = {eose:'close'};
-      let filter;
-      let req;
-    
-      let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
-      for (const id of ids) aa.fx.a_add(aa.miss[type][id].nope,[url]);
-      
-      if (type === 'e' || type === 'p')
-      {
-        if (type === 'p') filter = {authors:ids,kinds:[0]};
-        else filter = {ids:ids};
-      }
-      else if (type === 'a')
-      {
-        for (const id of ids)
-        {
-          let [n,x,s] = aa.fx.split_ida(id);
-          filter = {kinds:[parseInt(n)],authors:[x],'#d':[s]};
-        }
-      }
-      if (filter)
-      {
-        let keys = Object.keys(filter).sort();
-        let tags = [];
-        for (const key of keys)
-        {
-          let item = [key];
-          let i = filter[key];
-          if (Array.isArray(i)) item.push(...i.map(b=>typeof b==='string'?b:b.toString()).sort());
-          else item.push(i);
-          tags.push(item);
-        }
-        
-        let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(32);
-
-        req = ['REQ',req_id,filter];
-        setTimeout(()=>
-        {
-          aa.r.demand(req,[url],options);
-          setTimeout(()=>
-          {
-            if (Object.keys(aa.miss[type]).length) aa.get.missing(type);
-          },500)
-        },0);
-      }
-    }
-  },200,'miss_'+type);
-};
-
-
-aa.views.naddr1 =async naddress=>
-{
-  let data = aa.fx.decode(naddress);
-  console.log(data);
-};
-
-
-aa.views.nevent1 =async nevent=>
-{
-  let data = aa.fx.decode(nevent);
-  if (data && data.id)
-  {
-    let nid = aa.fx.encode('note',data.id);
-    let l = document.getElementById(nid);
-    if (!l)
-    {
-      let dat = await aa.db.get_e(data.id);
-      if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
-      else 
-      {
-        dat = aa.mk.dat(
-        {
-          event:{id:data.id,created_at:aa.now - 10},
-          seen:[aa.fx.in_set(aa.r.o.ls,aa.r.o.r)]
-        });
-
-        if (data.author) dat.event.pubkey = data.author;
-        if (data.kind) dat.event.kind = data.kind;
-        if (data.relays)
-        {
-          for (let url of data.relays)
-          {
-            url = aa.is.url(url)?.href;
-            if (url) aa.fx.a_add(dat.seen,[url]);
-          }
-        }
-        // console.log(dat);
-        let blank = aa.e.note(dat);
-        blank.classList.add('blank');
-        aa.e.append_to_notes(blank);
-        aa.r.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
-      }
-    }
-    else 
-    {
-      aa.state.replace(nid);
-      aa.state.resolve(history.state.view);
-    }
-  }
-};
-
-
 // update blank note not found on relays
 aa.e.nope =(id,a,b,miss)=>
 {
@@ -709,128 +361,7 @@ aa.e.nope =(id,a,b,miss)=>
 };
 
 
-aa.views.note1 =async nid=>
-{
-  aa.viewing = nid;
-  let l = document.getElementById(nid);
-  if (l && !l.classList.contains('blank')) aa.e.view(l);
-  else
-  {
-    let x = aa.fx.decode(nid);
-    let dat = await aa.db.get_e(x);
-    if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
-    else 
-    {
-      let blank = aa.e.note({event:{id:x},clas:['blank','root']});
-      aa.e.append_to_notes(blank);
-      aa.e.miss_e(x);
-      aa.get.missing('e');
-      setTimeout(()=>{aa.e.view(blank)},500);
-    }
-  }
-};
 
-
-// make generic note element
-aa.e.note =dat=>
-{
-  const note = aa.mk.l('article',{cla:'note'});
-  const by = aa.mk.l('header',{cla:'by'});
-
-  note.append(by);
-  if (dat.seen) note.dataset.seen = dat.seen.join(' ');
-  if (dat.subs) note.dataset.subs = dat.subs.join(' ');
-  if (dat.clas) note.classList.add(...dat.clas);
-  
-  let replies_id;
-  if ('id' in dat.event)
-  {
-    const nid = aa.fx.encode('note',dat.event.id);
-    note.id = nid;
-    note.dataset.id = dat.event.id;
-    const h1 = aa.mk.l('h1',{cla:'id'});
-    const h1_nid = aa.mk.l('a',
-    {
-      cla:'a nid',
-      ref:'#'+nid,
-      con:'k'+dat.event.kind+' '+aa.k[dat.event.kind],
-      clk:aa.clk.a
-    });
-    const h1_xid = aa.mk.l('span',{cla:'xid',con:dat.event.id});
-    h1.append(h1_nid,h1_xid);
-    by.prepend(h1);
-    replies_id = dat.event.id+'_replies';
-    
-    let stored = sessionStorage[dat.event.id];
-    if (stored && stored === 'tiny') note.classList.add('tiny');
-    // by.append(aa.mk.butt(['x','tiny']));
-  }
-
-  if ('pubkey' in dat.event)
-  {
-    const x = dat.event.pubkey;
-    note.dataset.pubkey = x;
-    let p_link = aa.mk.p_link(dat.event.pubkey);
-    by.append(p_link);
-    aa.db.get_p(x).then(p=>
-    {
-      if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
-      if (!p) p = aa.p.p(x);
-      aa.fx.color(x,note);
-      note.dataset.trust = p.score;
-      setTimeout(()=>{aa.p.link_data_upd(p_link,aa.p.link_data(p))},500);
-    });
-  }
-
-  by.append(aa.e.note_actions(dat))
-  
-  if ('kind' in dat.event) 
-  {
-    note.dataset.kind = dat.event.kind;
-  }
-
-  if ('created_at' in dat.event)
-  {
-    let ca = dat.event.created_at;
-    let stamp = aa.now < ca ? aa.now : ca
-    note.dataset.created_at = ca;
-    note.dataset.stamp = stamp;
-    by.append(aa.mk.time(ca));
-  }
-
-  if ('content' in dat.event)
-  {
-    note.append(aa.mk.l('section',
-    {
-      cla:'content',
-      app:aa.mk.l('p',{cla:'paragraph',con:dat.event.content})
-    }));
-  }
-
-  if ('tags' in dat.event && dat.event.tags.length)
-  {
-    let tags_list = aa.mk.tag_list(dat.event.tags);
-    let tags_wrapper = aa.mk.details('tags',tags_list);
-    tags_wrapper.classList.add('tags_wrapper');
-    tags_wrapper.querySelector('summary').dataset.count = dat.event.tags.length;
-    note.append(tags_wrapper);
-  }
-
-  // if ('sig' in dat.event) 
-  // {
-  //   note.append(aa.mk.l('p',{cla:'sig',con:dat.event.sig}));
-  // }
-
-  let replies = aa.mk.det('replies');
-  if (sessionStorage.hasOwnProperty(replies_id))
-  {
-    if (sessionStorage[replies_id] === 'expanded') 
-      replies.classList.add('expanded');
-  }
-  else replies.classList.add('expanded');
-  note.append(replies);
-  return note
-};
 
 
 // note actions
@@ -865,20 +396,6 @@ aa.e.note_actions =dat=>
   return l
 };
 
-aa.clk.na =e=>
-{
-  let l = e.target.closest('.actions');
-  if (l.classList.contains('empty'))
-  {
-    for (const s of aa.e.butts_for.na) l.append(' ',aa.mk.butt(s));
-    l.classList.remove('empty');
-  }
-  l.classList.toggle('expanded');
-  // e.target.remove();
-  // let a = aa.e.butts_for.na;
-  // if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
-};
-
 
 // process note by kind if available, otherwise default
 aa.e.note_by_kind =dat=>
@@ -898,86 +415,20 @@ aa.e.note_by_kind =dat=>
 };
 
 
-// blank note
-// aa.e.note_blank =(tag,dat,seconds)=>
-// {
-//   const id = tag[1];
-//   const blank_event = 
-//   {
-//     id:id,
-//     created_at:dat.event.created_at - seconds,
-//     tags:[tag],
-//     content:id+'\n'+aa.fx.encode('note',id)
-//   }
-//   const seen = aa.fx.in_set(aa.r.o.ls,'read');
-//   let r;
-//   if (tag[2])
-//   {
-//     const url = aa.is.url(tag[2]);
-//     if (url) 
-//     {
-//       aa.fx.a_add(seen,[url.href]);
-//       blank_event.content = blank_event.content+'\n'+url.href;
-//       r = url.href;
-//     }
-//     else console.log('malformed tag on',dat);
-//   }
-//   const note = aa.e.note({event:blank_event,seen:seen,subs:dat.subs,clas:['blank']});
-//   note.classList.add('blank','is_new');
-//   if (r) note.dataset.r = r;
-//   return note
-// };
-
-
-// blank note
-// aa.e.note_blank_pre =(tag,dat,seconds)=>
-// {
-//   const id = tag[1];
-//   const [kind,pubkey,ds] = id.split(':');
-//   let timestamp = dat?.event?.created_at ?? aa.now - 1000;
-//   const blank_event = 
-//   {
-//     kind:kind,
-//     pubkey:pubkey,
-//     created_at:timestamp - seconds,
-//     tags:[tag],
-//     content:id
-//   }
-//   const seen = aa.fx.in_set(aa.r.o.ls,'read');
-//   let r;
-//   if (tag[2])
-//   {
-//     const url = aa.is.url(tag[2]);
-//     if (url) 
-//     {
-//       aa.fx.a_add(seen,[url.href]);
-//       blank_event.content = blank_event.content+'\n'+url.href;
-//       r = url.href;
-//     }
-//     else console.log('malformed tag on',tag);
-//   }
-//   const subs = dat?.subs ?? [];
-//   const note = aa.e.note({event:blank_event,seen:seen,subs:dat.subs,clas:['blank']});
-//   note.classList.add('blank');
-//   note.dataset.id_a = id;
-//   if (r) note.dataset.r = r;
-//   return note
-// };
-
-
 // regular note
 aa.e.note_regular =dat=>
 {
-  let note = aa.e.note(dat);
+  let note = aa.mk.note(dat);
   aa.e.append_to_notes(note);
   return note
 };
+
 
 // replaceable parameterized note
 aa.e.note_pre =dat=>
 {
   // console.log('pre',dat);
-  let note = aa.e.note(dat);
+  let note = aa.mk.note(dat);
 
   let d_tag = dat.event.tags.filter(t=>t[0] === 'd')[0];
   if (d_tag?.length > 1) 
@@ -1031,16 +482,6 @@ aa.e.note_refs =id=>
 };
 
 
-aa.get.note_refs =note=>
-{
-  setTimeout(()=>
-  {
-    aa.e.note_refs(note.dataset.id);
-    if (note.dataset.id_a) aa.e.note_refs(note.dataset.id_a);
-  },0)
-};
-
-
 // note replace
 aa.e.note_replace =(l,dat)=>
 {
@@ -1091,7 +532,7 @@ aa.e.note_replace =(l,dat)=>
 // remove note
 aa.e.note_rm =note=>
 {
-  if (aa.viewing === note.id) aa.state.clear()
+  if (aa.viewing === note.id) aa.clear()
   delete aa.db.e[note.dataset.id];
   note.remove();
   aa.fx.count_upd(document.getElementById('butt_e'),false);
@@ -1103,7 +544,6 @@ aa.e.note_intersect =l=>
 {
   if (!l.classList.contains('rendered'))
   {
-
     l.classList.remove('not_yet');
     l.classList.add('rendered');
     l.querySelector('.replies').setAttribute('open','');
@@ -1127,60 +567,6 @@ aa.e.note_observer = new IntersectionObserver(a=>
 },{root:null,threshold:.9});
 
 
-// restrict amount of root events displayed at once, 
-aa.mk.pagination =()=>  
-{
-  let n = parseInt(localStorage.pagination??'0');
-  
-  const style = aa.mk.l('style',
-  {
-    id:'e_pagination',
-    con:`.pagin #notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
-  });
-
-  document.head.append(style);
-
-  let pagination = aa.mk.l('p',{cla:'pagination'});
-  let butt_more = aa.mk.l('button',
-  {
-    cla:'butt',
-    con:'moar',
-    clk:e=>
-    {
-      fastdom.mutate(()=>
-      {
-        if (aa.l.classList.contains('pagin'))
-        {
-          let position = aa.l.scrollTop;
-          aa.l.classList.remove('pagin');
-          e.target.textContent = 'less';
-          aa.l.scrollTop = position;
-        }
-        else 
-        {
-          aa.l.classList.add('pagin');
-          e.target.textContent = 'moar';
-        }
-      });
-    }
-  });
-  pagination.append(butt_more);
-  fastdom.mutate(()=>{aa.l.classList.add('pagin')});
-  return pagination
-};
-
-
-// toggle parsed content
-aa.clk.render =e=>
-{
-  const note = e.target.closest('.note');
-  // const xid = note.dataset.id;
-  // const event = aa.db.e[xid].event;
-  aa.e.render(note,{trust:localStorage.trust});
-  // aa.parse.context(note,event,true);
-};
-
-
 // batch send data to print
 aa.e.to_printer =dat=>
 {
@@ -1192,6 +578,7 @@ aa.e.to_printer =dat=>
   // }
   aa.fx.to(aa.e.printer,100,'printer');
 };
+
 
 aa.e.printer =()=>
 {
@@ -1237,7 +624,7 @@ aa.e.print =dat=>
     l = aa.e.note_by_kind(dat);
     aa.temp.printed.push(l);
     
-    setTimeout(()=>{aa.e.render(l)},1000);
+    // setTimeout(()=>{aa.e.render(l)},0);
     if (!l) console.log(dat);
     else 
     {
@@ -1438,15 +825,6 @@ aa.e.quotes_to =async q_id=>
 };
 
 
-aa.get.quotes =async id=>
-{
-  const q_id = 'get_quotes';
-  if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
-  aa.temp[q_id].push(id);
-  aa.fx.to(aa.e.quotes_to,100,q_id);
-};
-
-
 // stash orphan
 aa.e.refs =(dat,note,tag)=>
 {
@@ -1494,6 +872,8 @@ aa.e.render_content =async(l,dat,o={})=>
 aa.e.render_encrypted =async(l,dat)=>
 {
   let content = l.querySelector('.content');
+  if (!content) return;
+
   content.classList.add('encrypted');
   content.querySelector('.paragraph').classList.add('cypher');
   if (!dat.clas.includes('draft'))
@@ -1572,15 +952,6 @@ aa.e.reply_blank =(note,reply,tag_reply)=>
 };
 
 
-// request replies to note
-aa.clk.req =e=>
-{
-  const note = e.target.closest('.note');
-  const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
-  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
-};
-
-
 // search notes content for value
 aa.e.search =async s=>
 {
@@ -1598,220 +969,23 @@ aa.e.search =async s=>
 // mutation observer for notes section
 aa.e.section_mutated =a=>
 {
+  let threshold = parseInt(localStorage.pagination)||0;
   for (const mutation of a)
   {
-    aa.e.root_count = mutation.target.childNodes.length;
-    const needs = aa.e.root_count > (parseInt(localStorage.pagination)||0);
+    let count  = mutation.target.children.length;
+    const needs = count > threshold;
+    
     if (needs && !aa.l.classList.contains('needs_pagin'))
     {
-      aa.l.classList.add('needs_pagin')
+      fastdom.mutate(()=>{aa.l.classList.add('needs_pagin')})
     }
     else if (!needs && aa.l.classList.contains('needs_pagin'))
     {
-      aa.l.classList.remove('needs_pagin')
+      fastdom.mutate(()=>{aa.l.classList.remove('needs_pagin')})
     }
   }
 };
-aa.e.section_observer = new MutationObserver(aa.e.section_mutated);
 
-
-// returns a relay that has event x or empty string
-aa.get.seen =x=>
-{
-  const dat = aa.db.e[x];
-  if (dat && dat.seen.length) return dat.seen[0];
-  return ''
-};
-
-
-// get n events from database
-// default direction: newest
-// other direction: oldest
-aa.db.some =async s=>
-{
-  aa.cli.fuck_off();
-  const a = s.trim().split(' ');
-  const n = a.shift();
-  const direction = a.shift();
-  const db_op = {};
-  db_op.n = n ? parseInt(n) : 1;
-  db_op.direction = direction && direction === 'oldest' ? 'next' : 'prev';
-  let o = {some:db_op};
-  aa.log(localStorage.ns+' db some '+db_op.n);
-
-  const events = await aa.db.get('idb',o);
-  for (const dat of events) aa.e.to_printer(dat); //aa.e.print(dat);
-};
-
-// is tag conditions
-aa.is.tag_e =a=> a[0]==='e' && aa.is.x(a[1]);
-
-
-// gets last e tag
-aa.get.tag_e_last =tags=>
-{
-  let tag = tags.filter(t=>t[0]==='e').pop();
-  if (tag && aa.is.tag_e(tag)) return tag;
-  return false
-};
-
-
-// make tag list
-aa.mk.tag_list =tags=>
-{
-  const times = tags.length;
-  const l = aa.mk.l('ol',{cla:'tags'});
-  l.start = 0;
-  
-  for (let i=0;i<times;i++) 
-  {
-    let tent = tags[i].join(', ');
-    let li = aa.mk.l('li',{cla:'tag tag_'+tags[i][0],con:tent});
-    li.dataset.i = i;
-    l.append(li);//aa.mk.tag(tags[i],i));
-  }
-  return l
-};
-
-aa.is.tag_p =a=> a[0]==='p' && aa.is.x(a[1]);
-aa.is.tag_q =a=> a[0]==='q' && aa.is.x(a[1]);
-
-// gets e tag marked 'reply' or the last not marked 'mention'
-aa.get.tag_reply =tags=>
-{
-  let tag = tags.filter(t=>t[0]==='e'&&t[3]==='reply')[0];
-  if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop();
-  if (!tag) tag = tags.find(t=>t[0]==='a');
-  if (tag) return tag;
-  return false
-};
-
-
-// gets e tag marked 'root' or the first not marked 'mention'
-aa.get.tag_root =tags=>
-{
-  let tag = tags.filter(t=>t[0]==='e'&&t[3]==='root')[0];
-  if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention')[0];
-  if (tag && aa.is.tag_e(tag)) return tag;
-  return false
-};
-
-
-// returns tags for building a reply
-aa.get.tags_for_reply =event=>
-{  
-  // wip... needs to account for "a" tag
-  const tags = [];
-  const seen = aa.get.seen(event.id);
-  let tag = aa.get.tag_root(event.tags);
-  if (tag) 
-  {
-    let root = aa.db.e[tag[1]].event;
-    tag[2] = aa.is.url(tag[2])?.href || seen;
-    tag[3] = 'root';
-    if (root) tag[4] = root.pubkey
-    tag.splice(4);
-    tags.push(tag);
-    if (root && aa.fx.kind_type(event.kind) !== 'parameterized') 
-    {
-      tags.push(['K',''+root.kind]);
-    }
-    tags.push(['e',event.id,seen,'reply',event.pubkey],['k',''+event.kind]);
-  }
-  else 
-  {
-    if (aa.fx.kind_type(event.kind) === 'parameterized')
-    {
-      let tag_a = aa.fx.tag_a(event);
-      if (tag_a) 
-      {
-        tag_a.push(seen,'root');
-        tags.push(tag_a);
-      }
-    }
-    tags.push(['e',event.id,seen,'root',event.pubkey],['K',''+event.kind]);
-  }
-
-  const dis_p_tags = aa.fx.a_u(event.tags.filter(t=>aa.is.tag_p(t) && t[1] !== aa.u.p.xpub));
-  if (event.pubkey !== aa.u.p.xpub 
-  && !dis_p_tags.some(t=>t[1] === event.pubkey)) dis_p_tags.push(aa.fx.tag_p(event.pubkey));
-  // needs to do more here...
-  tags.push(...dis_p_tags);
-  return tags
-};
-
-
-// update elapsed time of note and parents up to root
-aa.clk.time =e=> 
-{
-  if (!e.target) return;
-  const all = e.target.closest('.root')?.querySelectorAll('time');
-  if (all) for (const t of all)
-  {
-    const timestamp = parseInt(t.textContent);
-    const date = aa.fx.time_to_date(timestamp);
-    t.dataset.elapsed = aa.fx.time_elapsed(date);
-  }
-};
-
-
-// make time element from timestamp
-aa.mk.time =timestamp=>
-{
-  const d = new Date(timestamp*1000);//aa.fx.time_to_date(timestamp);
-  const title = aa.fx.time_display(timestamp);
-  const l = aa.mk.l('time',
-  {
-    cla:'created_at',
-    con:timestamp,
-    clk:aa.clk.time
-  });
-  l.setAttribute('datetime', d.toISOString());
-  l.title = title;
-  l.dataset.elapsed = aa.fx.time_elapsed(d);
-  return l
-};
-
-
-// toggle tiny note 
-aa.clk.tiny =e=>
-{
-  const note = e.target.closest('.note');
-  note.classList.toggle('tiny');
-  const is_tiny = note.classList.contains('tiny');
-  if (is_tiny) sessionStorage[note.dataset.id] = 'tiny';
-  else sessionStorage[note.dataset.id] = '';
-  aa.fx.scroll(note,{behavior:'smooth',block:is_tiny?'start':'center'});
-};
-
-
-// update event on database
-aa.db.upd_e =async dat=>
-{
-  const q_id = 'upd_e';
-  if (!aa.temp[q_id]) aa.temp[q_id] = {};
-  aa.temp[q_id][dat.event.id] = dat;
-  aa.fx.to(aa.db.upd_e_to,500,q_id);
-};
-aa.db.upd_e_to =()=>
-{
-  const q_id = 'upd_e';
-  const q = Object.values(aa.temp[q_id]);
-  aa.temp[q_id] = {};
-  if (q.length) 
-  {
-    let chunks = aa.fx.chunks(q,444);
-    let times = 0;
-    for (const chunk of chunks)
-    {
-      setTimeout(()=>
-      {
-        aa.db.idb.worker.postMessage({put:{store:'events',a:chunk}});
-      },times * 100);
-      times++;
-    }
-  }
-};
 
 // update note path when appending
 aa.e.upd_note_path =(l,stamp,is_u=false)=> 
@@ -1858,163 +1032,9 @@ aa.e.view =l=>
     if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
     aa.l.classList.add('viewing','view_e');
     l.classList.add('in_view');
+    aa.in_view = l;
     aa.clk.time({target:l.querySelector('.by .created_at')});
     aa.fx.path(l);
     aa.fx.scroll(l);
   });
-
-  // setTimeout(()=>
-  // {
-  //   aa.fx.path(l);
-  //   aa.fx.scroll(l);
-  // },1000);
 };
-
-
-// plain note
-aa.kinds[1] =dat=>
-{
-  let note = aa.e.note(dat);
-  aa.p.from_tags(dat.event.tags);
-  aa.e.append_to(dat,note,aa.get.tag_reply(dat.event.tags));
-  return note
-};
-
-
-// repost of kind-1 note
-aa.kinds[6] =dat=>
-{
-  let note = aa.e.note(dat);
-  note.classList.add('tiny'); // 'is_new',
-  let tag_reply = aa.get.tag_e_last(dat.event.tags);
-  if (tag_reply && tag_reply.length)
-  {    
-    let repost_id = tag_reply[1];
-    if (repost_id) 
-    {
-      aa.db.get_e(repost_id).then(dat_e=>
-      {
-        if (!dat_e) 
-        {
-          let repost = aa.parse.j(dat.event.content);
-          if (repost) aa.r.message_type.event({data:['EVENT','k6',repost],origin:dat.seen[0]});
-        }
-        else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
-      });
-    }
-    aa.e.append_check(dat,note,tag_reply);
-  }
-  else aa.e.append_to_notes(note);
-  aa.p.from_tags(dat.event.tags);
-  return note
-};
-
-
-// reaction
-aa.kinds[7] =dat=>
-{
-  let note = aa.e.note(dat);
-  aa.p.from_tags(dat.event.tags);
-  note.classList.add('tiny');
-  let content = note.querySelector('.content');
-  // let con_t = content.textContent;
-
-  let emoji = dat.event.tags.filter(t=>t[0]==='emoji')[0];
-  if (emoji) 
-  {
-    emoji = aa.is.url(emoji[2])?.href;
-    if (emoji) 
-    {
-      aa.db.get_p(dat.event.pubkey).then(p=>
-      {
-        if (p && aa.is.trust_x(dat.event.pubkey))
-        {
-          content.textContent = '';
-          content.append(aa.mk.img(emoji));
-        }
-      });
-    }
-  }
-
-  let tag_reply = aa.get.tag_e_last(dat.event.tags);
-  if (!tag_reply) tag_reply = aa.get.tag_reply(dat.event.tags);
-  aa.e.append_to(dat,note,tag_reply);
-  
-  return note
-};
-
-
-// image template
-aa.kinds[20] =dat=>
-{
-  aa.p.from_tags(dat.event.tags);
-  let note = aa.e.note(dat);
-  aa.e.append_to_notes(note);
-  return note
-};
-
-
-// video template
-aa.kinds[1063] =dat=>
-{
-  let note = aa.e.note(dat);
-  aa.p.from_tags(dat.event.tags);
-  aa.e.append_to_notes(note);
-  return note
-};
-
-
-// repost of generic note
-aa.kinds[16] =dat=>
-{
-  let note = aa.e.note(dat);
-  note.classList.add('tiny'); // 'is_new',
-  aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
-  // let tag_reply = aa.get.tag_reply(dat.event.tags);
-  // if (tag_reply && tag_reply.length)
-  // {    
-  //   let repost_id = tag_reply[1];
-  //   if (repost_id) 
-  //   {
-  //     aa.db.get_e(repost_id).then(dat_e=>
-  //     {
-  //       if (!dat_e) 
-  //       {
-  //         let repost = aa.parse.j(dat.event.content);
-  //         if (repost) aa.r.message_type.event({data:['EVENT','k6',repost],origin:dat.seen[0]});
-  //       }
-  //       else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
-  //     });
-      
-  //   }
-  //   aa.e.append_check(dat,note,tag_reply);
-  // }
-  // else aa.e.append_to_notes(note);
-  aa.p.from_tags(dat.event.tags);
-  return note
-};
-
-// zap template
-aa.kinds[9735] = aa.kinds[1];
-
-// highlight template
-aa.kinds[9802] = aa.kinds[1];
-
-// long-form template
-aa.kinds[30023] =dat=>
-{
-  let note = aa.e.note_pre(dat);
-  aa.p.from_tags(dat.event.tags);
-  return note
-};
-
-// video
-aa.kinds[34235] =dat=>
-{
-  let note = aa.e.note_pre(dat);
-  aa.p.from_tags(dat.event.tags);
-  return note
-};
-
-
-// window.addEventListener('load',aa.e.load);

@@ -1,8 +1,9 @@
+aa.db.p = {};
 // returns profile if already loaded or get it from database
 aa.db.get_p =async xpub=>
 {
   if (aa.db.p[xpub]) return aa.db.p[xpub];
-  let p = await aa.db.idb.ops({get:{store:'authors',key:xpub}});
+  let p = await aa.db.ops('idb',{get:{store:'authors',key:xpub}});
   if (p) 
   {
     aa.db.p[xpub] = p;

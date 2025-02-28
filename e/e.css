@@ -629,7 +629,8 @@ a.author
 
 .hashtag
 {
-  font-weight: bold;
+  color: rgb(var(--color-alt));
+  /*font-weight: bold;*/
 }
 
 .note:not(.tiny):not(.in_path) > .content::after
@@ -650,7 +651,7 @@ a.author
 
 .content.parsed
 {
-  animation: loading .4s ease-in 0s 1 reverse;
+  /*animation: loading .4s ease-in 0s 1 reverse;*/
 }
 
 /* @end */
@@ -1129,6 +1130,21 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   content: " read */";  
 }
 
+.replies:not([open]) > summary .mark_read::before
+{
+  content: "!<-- ";  
+}
+
+.replies:not([open]) > summary .mark_read::after
+{
+  content: " hidden -->";  
+}
+
+.replies:not([open]) > summary .mark_read
+{
+  pointer-events: none;
+}
+
 .in_view > .replies > summary .mark_read
 {
   /*color: rgb(var(--color-d));*/
@@ -1479,6 +1495,19 @@ html:not(.needs_pagin) .pagination
   {
     margin-bottom: 3rem;
   }
+  
+/*  .note.root:hover
+  {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+  
+  .note.root:hover > .replies
+  {
+    max-height: calc(100vh - var(--size));
+    overflow-y: scroll;
+  }*/
   
   .note:hover
   {

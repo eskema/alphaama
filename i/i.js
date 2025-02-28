@@ -294,26 +294,26 @@ aa.get.notes_with_tag =(k,v)=>
 
 
 // get elements with key:value
-aa.get.index_items =(k,v)=>
-{ 
-  switch (k)
-  {
-    // case 'clas':
-    case 'seen':
-    case 'subs': 
-      let items = document.querySelectorAll('.note[data-'+k+']');
-      return Array.from(items).filter(i=>i.dataset[k].includes(v));
-    case 'pubkey': 
-      return Array.from(document.querySelectorAll('.note[data-pubkey="'+v+'"]'));
-    case 'kind': 
-      return Array.from(document.querySelectorAll('.note[data-kind="'+v+'"]'));
-    case 'tag_t':
-    case 'tag_subject': 
-    case 'tag_d': 
-      return aa.get.notes_with_tag(k,v);
-  }
-  return []
-};
+// aa.get.index_items =(k,v)=>
+// { 
+//   switch (k)
+//   {
+//     // case 'clas':
+//     case 'seen':
+//     case 'subs': 
+//       let items = document.querySelectorAll('.note[data-'+k+']');
+//       return Array.from(items).filter(i=>i.dataset[k].includes(v));
+//     case 'pubkey': 
+//       return Array.from(document.querySelectorAll('.note[data-pubkey="'+v+'"]'));
+//     case 'kind': 
+//       return Array.from(document.querySelectorAll('.note[data-kind="'+v+'"]'));
+//     case 'tag_t':
+//     case 'tag_subject': 
+//     case 'tag_d': 
+//       return aa.get.notes_with_tag(k,v);
+//   }
+//   return []
+// };
 
 
 // click on key

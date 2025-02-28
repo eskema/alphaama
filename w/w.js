@@ -6,8 +6,18 @@ walLNuts
 
 */
 
+
+aa.mk.scripts([
+  '/w/clk.js',
+  '/w/fx.js',
+  '/w/kinds.js',
+  '/w/mk.js',
+]);
+
+
 if (!localStorage.hasOwnProperty('zap')) localStorage.zap = '21';
 if (!localStorage.hasOwnProperty('zap_memo')) localStorage.zap_memo = 'walLNut';
+
 
 aa.w =
 {
@@ -18,7 +28,6 @@ aa.w =
     id:'w',
     ls:
     {
-      balance:0,
       def:'',
       mints:{},
       privkey:'',
@@ -58,15 +67,12 @@ aa.w.add =(s='')=>
 };
 
 
-// 21,'sat' => 21sats
-aa.fx.amount_display =(num,unit)=> num+aa.fx.plural(num,unit);
-
 
 aa.w.balance =()=>
 {
   let balance = aa.fx.sum_amounts(Object.values(aa.w.o.ls.mints));
   aa.w.o.ls.balance = balance;
-  aa.mk.mod(aa.w);
+  aa.mod.mk(aa.w);
   return balance
 }
 
@@ -201,204 +207,13 @@ aa.w.key =(privkey='',confirm=true)=>
 };
 
 
-aa.mk.k5 =(s='')=>
-{
-  let [reason,rest] = aa.fx.split_str(s);
-  if (!rest) return;
-  
-  const event = {kind:5,content:reason,tags:[]};
-  const relays = [];
-  
-  let ids = rest.split(',');
-  for (const i of ids)
-  {
-    // let a = i.split(' ');
-    let id = i.trim();
-    let tag = [id];
-    let kind;
-    if (aa.is.key(id)) 
-    {
-      tag.unshift('e');
-      let dat = aa.db.e[id];
-      if (dat)
-      {
-        kind = dat.event.kind+'';
-        aa.fx.a_add(relays,dat.seen);
-        dat.clas.push('k5');
-        aa.db.upd_e(dat);
-      }
-    }
-    else tag.unshift('a');
-    event.tags.push(tag);
-    if (kind) event.tags.push(['k',kind])
-  }
-  if (window.confirm('confirm delete request for these events:\n'+ids))
-    aa.e.finalize(aa.e.normalise(event),relays);
-};
-
-
-//   "kind": 10019,
-//   "tags": [
-//       [ "relay", "wss://relay1" ],
-//       [ "relay", "wss://relay2" ],
-//       [ "mint", "https://mint1", "usd", "sat" ],
-//       [ "mint", "https://mint2", "sat" ],
-//       [ "pubkey", "<p2pk-pubkey>" ]
-//   ]
-// update kind-10019 
-aa.mk.k10019 =(s='')=>
-{
-  let w = aa.w.o.ls;
-  let event = {kind:10019,tags:[]};
-  for (const i of Object.keys(w.mints)) event.tags.push(['mint',i,'sat']);
-  for (const i of w.relays) event.tags.push(['relay',i]);
-  if (w.pubkey.length) event.tags.push(['pubkey',w.pubkey]);
-  aa.e.finalize(aa.e.normalise(event));
-};
-
-
-// "kind": 7375,
-// "content": nip44_encrypt({
-//   "mint": "https://stablenut.umint.cash",
-//   "proofs": [
-//     // one or more proofs in the default cashu format
-//     {
-//         "id": "005c2502034d4f12",
-//         "amount": 1,
-//         "secret": "z+zyxAVLRqN9lEjxuNPSyRJzEstbl69Jc1vtimvtkPg=",
-//         "C": "0241d98a8197ef238a192d47edf191a9de78b657308937b4f7dd0aa53beae72c46"
-//     }
-//   ],
-//   // tokens that were destroyed in the creation of this token (helps on wallet state transitions)
-//   "del": [ "token-event-id-1", "token-event-id-2" ]
-// }),
-aa.mk.k7375 =async(o={})=>
-{
-  // o = {mint,del}
-  const w = aa.w.o;
-  if (!w) 
-  {
-    aa.log('unable to make event k7375, walLNut not found');
-    return
-  }
-
-  let mint = o.mint||aa.w.get_def();
-  let proofs = w.ls.mints[mint].proofs;
-
-  let del = [];
-  let last = aa.p.events_last(aa.u.p,'k7375');
-  if (last) del.push(last);
-  if (o.del) aa.fx.a_add(del,o.del);
-
-  let content = await aa.fx.encrypt44(JSON.stringify({mint,proofs,del}));
-  let event = aa.e.normalise({kind:7375,content});
-  aa.e.finalize(event);
-  
-  if (del.length) setTimeout(()=>{ aa.mk.k5('"poof" '+del.join()) },200);
-  
-  return event.id
-};
-
-
-// kind: 9321,
-// content: "Thanks for this great idea.",
-// pubkey: "sender-pubkey",
-// tags: [
-//     [ "amount", "1" ],
-//     [ "unit", "sat" ],
-//     [ "proof", "{\"amount\":1,\"C\":\"02277c66191736eb72fce9d975d08e3191f8f96afb73ab1eec37e4465683066d3f\",\"id\":\"000a93d6f8a1d2c4\",\"secret\":\"[\\\"P2PK\\\",{\\\"nonce\\\":\\\"b00bdd0467b0090a25bdf2d2f0d45ac4e355c482c1418350f273a04fedaaee83\\\",\\\"data\\\":\\\"02eaee8939e3565e48cc62967e2fde9d8e2a4b3ec0081f29eceff5c64ef10ac1ed\\\"}]\"}" ],
-//     [ "u", "https://stablenut.umint.cash", ],
-//     [ "e", "<zapped-event-id>", "<relay-hint>" ],
-//     [ "p", "e9fbced3a42dcf551486650cc752ab354347dd413b307484e4fd1818ab53f991" ], // recipient of nut zap
-// ]
-
-// s = amount_n pubkey_s_key memo_s_q id_s_key
-aa.mk.k9321 =async(s='')=>
-{
-  const err =str=>{aa.log('mk.k9321: '+str)};
-  let amount,pubkey,memo,id;
-  [amount,s] = s.split(aa.fx.regex.fw);
-  if (!amount) { err('no amount'); return}
-  [pubkey,s] = s.split(aa.fx.regex.fw);
-  if (!aa.is.key(pubkey)) { err('no pubkey'); return};
-  [memo,id] = aa.fx.split_str(s);
-  if (id && !aa.is.key(id)) { err('invalid id'); return};
-  await aa.db.events([id]);
-
-  let p = await aa.db.get_p(pubkey);
-  let p2pk = p.p2pk?.length ? p.p2pk : pubkey;
-  if (p2pk.length === 64) p2pk = '02'+p2pk;
-
-  if (!p.mints?.length)
-  {
-    let last_id = aa.p.events_last(p,'k10019');
-    let dat = await aa.db.get_e(last_id);
-    if (dat)
-    {
-      p.mints = aa.fx.tags_values(dat.event.tags,'mint');
-      if (p.mints?.length) aa.p.save(p);
-      else {err('no mints');return}
-    }
-  }
-  
-  let [wallnut,w,mint] = await aa.w.get_active();
-  if (!wallnut) {err('no walLNut');return}
-  
-  let event = 
-  {
-    kind:9321,
-    content:memo,
-    tags:[
-      ['amount',amount],
-      ['unit','sat'],
-      ['u',mint],
-      aa.fx.tag_p(pubkey)
-    ]
-  };
-  if (id?.length) event.tags.push(aa.fx.tag_e(id));
-  let opts = {pubkey:p2pk};
-  const {keep,send} = await wallnut.send(parseInt(amount),w.proofs,opts);
-  aa.w.tx_out(keep,mint);
-  event.tags.push(...send.map(i=>['proof',JSON.stringify(i)]));
-  aa.e.finalize(aa.e.normalise(event));
-};
-
-
-//   "kind": 17375,
-//   "content": nip44_encrypt([
-//     [ "privkey", "hexkey" ],
-//     [ "mint", "https://mint1" ],
-//     [ "mint", "https://mint2" ],
-//     [ "mint", "https://mint3" ],
-//     [ "relay", "wss://relay1" ],
-//     [ "relay", "wss://relay2" ],
-//   ]),
-//   "tags": [
-
-//   ]
-// update kind-17375 
-aa.mk.k17375 =async(s='')=>
-{
-  const w = aa.w.o.ls;
-  if (!w) 
-  {
-    aa.log('unable to create event, walLNut not found');
-    return
-  }
-
-  let event = {kind:17375,tags:[]};
-  let data = [['privkey',w.privkey]];
-  for (const mint of Object.keys(aa.w.o.ls.mints)) data.push(['mint',mint]);
-  
-  // todo: show modal to confirm before encrypting
-  event.content = await aa.fx.encrypt44(JSON.stringify(data));
-  aa.e.finalize(aa.e.normalise(event));
-};
-
-
 // on load
 aa.w.load =async()=>
 {
+  let mod = aa.w;
+  let id = mod.def.id;
+
+  // extend queries
   if (aa.q?.ls)
   {
     aa.q.ls.w = {"authors":["u"],"kinds":[7374,7375,7376,10019,17375,37375]};
@@ -409,11 +224,9 @@ aa.w.load =async()=>
     if (aa.q.ls.f) aa.fx.a_add(aa.q.ls.f.kinds,[10019]);
     if (aa.q.ls.n) aa.fx.a_add(aa.q.ls.n.kinds,[9321,9735]);
   }
-
+  // extend renders
   aa.fx.a_add(aa.e.renders.encrypted,[7374,7375,7376,17375,37375]);
-  aa.temp.quotes = {};
-  let mod = aa.w;
-  let id = mod.def.id;
+  // extend actions
   aa.actions.push(
     {
       action:[id,'add'],
@@ -434,23 +247,6 @@ aa.w.load =async()=>
       exe:mod.relays
     },
     {
-      action:['mk','10019'],
-      description:'create kind:10019 from walLNut',
-      exe:aa.mk.k10019
-    },
-    {
-      action:['mk','9321'],
-      required:['amount:n','pubkey:sx64'],
-      optional:['memo:sq','nid:sx64','wid:sa'],
-      description:'nut zap pubkey and/or events',
-      exe:aa.mk.k9321
-    },
-    {
-      action:['mk','17375'],
-      description:'create kind:17375 from walLNut',
-      exe:aa.mk.k37375
-    },
-    {
       action:[id,'import'],
       required:['nid'],
       description:'create walLNut from kind:17375/37375',
@@ -461,19 +257,6 @@ aa.w.load =async()=>
       required:['nid'],
       description:'import proofs from kind:7375',
       exe:mod.import_7375
-    },
-    // {
-    //   action:['mk','7375'],
-    //   optional:['wid'],
-    //   description:'create kind:7375 proofs from walLNut',
-    //   exe:aa.mk.k7375
-    // },
-    {
-      action:['mk','5'],
-      required:['reason','nid'],
-      optional:['nid','nid'],
-      description:'request notes to be deleted',
-      exe:aa.mk.k5
     },
     {
       action:['cashu','quote'],
@@ -524,8 +307,10 @@ aa.w.load =async()=>
       exe:mod.redeem
     },
   );
+  // extend butt actions
   aa.e.butts_for?.na?.push('nzap');
-  await aa.mod_load(mod);
+  // load
+  await aa.mod.load(mod);
   await mod.start(mod);
 };
 
@@ -561,10 +346,6 @@ aa.w.melt =async(s='')=>
 // mint proofs from quote
 aa.w.mint =async(s='')=>
 {
-  // let a = s.split(' ');
-  // let quote_id = a.shift();
-  // let amount = a.length ? parseInt(a.shift()) : 0;
-  // let w_id = a.length ? a.shift() : false;
   let [wallet,w,mint] = await aa.w.get_active();
   if (!wallet) 
   {
@@ -593,34 +374,6 @@ aa.w.mk =(k,v)=>
   }
   // aa.w.upg(k,v);
   return item;
-  
-  // // walLNut mod item
-  // const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
-  // // walLNut list
-  // const ul = aa.mk.walLNut(k,v);
-  // // walLNut details
-  // const details = aa.mk.details(k,aa.mk.ls({ls:ul,1);
-  // details.append(
-  //   // aa.mk.butt_action(`${id} del ${k}`,'del','del'),
-  //   // ' ',
-  //   aa.mk.butt_action('mk 17375 '+k,'k17375'),
-  //   // ' ',
-  //   // aa.mk.butt_action(`${id} upd ${k}`,'upd','upd')
-  // );
-  // l.append(details);
-  // return l
-};
-
-
-// nutzap butt clk event
-aa.clk.nzap =e=>
-{
-  const note = e.target.closest('.note');
-  const pub = note.dataset.pubkey;
-  const xid = note.dataset.id;
-  let t = `${localStorage.ns} mk 9321 ${localStorage.zap}`;
-  t = `${t} ${pub} "${localStorage.zap_memo}" ${xid}`;
-  aa.cli.v(t);
 };
 
 
@@ -666,8 +419,6 @@ aa.w.quote =async s=>
   if (quote)
   {
     quote.amount = amount;
-    // aa.temp.quotes[quote.quote] = {amount:amount,quote:quote};
-    // w.quotes.push(quote);
     w.quotes[quote.quote] = quote;//{amount:amount,quote:quote};
     aa.w.save();
     aa.log('quote for '+aa.fx.amount_display(amount,'sat')+' from mint '+mint);
@@ -811,8 +562,8 @@ aa.w.relays =(s='')=>
 // save walLNut
 aa.w.save =()=>
 {
-  aa.mod_save(aa.w);
-  aa.mk.mod(aa.w);
+  aa.mod.save(aa.w);
+  aa.mod.mk(aa.w);
 };
 
 
@@ -851,7 +602,7 @@ aa.w.send =async(s='')=>
 // start mod
 aa.w.start =mod=>
 {
-  aa.mk.mod(mod);
+  aa.mod.mk(mod);
   let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
   let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
   
@@ -866,15 +617,6 @@ aa.w.start =mod=>
     mod.l.insertBefore(add_butt,mod.l.lastChild);
     mod.l.insertBefore(upd_butt,mod.l.lastChild)
   })
-};
-
-
-// calculate balance from proofs
-aa.fx.sum_amounts =a=>
-{
-  let total = 0;
-  for (const i of a) total = total + i.amount;
-  return total
 };
 
 
@@ -903,8 +645,6 @@ aa.w.tx_in =async({proofs,mint,o})=>
 };
 
 
-
-
 aa.w.tx_out =(proofs,mint)=>
 {
   if (!proofs || !proofs.length) 
@@ -930,146 +670,8 @@ aa.w.tx_out =(proofs,mint)=>
 };
 
 
-
 aa.w.upg =(k,v)=>
 {
   let upd;
-  // let to_rm = ['e','k37375','k7375','change'];
-  // for (const i of to_rm)
-  // {
-  //   if (v.hasOwnProperty(i))
-  //   {
-  //     delete v[i];
-  //     upd=1
-  //   }
-  // }
-  // if (!v.hasOwnProperty('history'))
-  // {
-  //   v.history = [];
-  //   upd=1
-  // }
-  // if (!v.hasOwnProperty('mints'))
-  // {
-  //   v.mints = {};
-  //   upd=1
-  // }
-  // if (v.hasOwnProperty('mint'))
-  // {
-  //   if (v.mint.length) aa.fx.a_add(v.mints,[v.mint]);
-  //   delete v.mint;
-  //   upd=1
-  // }
   if (upd) setTimeout(()=>{aa.w.save()},200);
 };
-
-// event template for event deletion requests
-aa.kinds[5] =dat=>
-{
-  const note = aa.e.note_regular(dat);
-  note.classList.add('tiny');
-  return note
-};
-
-
-// event template for walLNut proofs
-aa.kinds[7375] =dat=>
-{
-  const note = aa.e.note(dat);
-  if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  if (aa.is.u(dat.event.pubkey))
-  {
-    let p = aa.u.p;
-    if (aa.p.events_newer(p,dat.event))
-    {
-      aa.p.save(p);
-    }
-  }
-  if (dat.event.kind === 7375)
-  {
-    let butt = aa.mk.butt_action(aa.w.def.id+' proofs '+dat.event.id,'import');
-    note.querySelector('.content').append(butt)
-  }
-  aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
-  return note
-};
-
-aa.kinds[7374] = aa.kinds[7375];
-aa.kinds[7376] = aa.kinds[7375];
-
-
-// event template for nutzap
-aa.kinds[9321] =dat=>
-{
-  const note = aa.e.note(dat);
-  let p_x = aa.fx.tag_value(dat.event.tags,'p');
-  let e_id = aa.fx.tag_value(dat.event.tags,'e');
-  if (aa.is.u(p_x) && !aa.w.is_redeemed(dat.event.id))
-  {
-    aa.w.save();
-    setTimeout(async()=>
-    {
-      let log = `nutzapped +${amount} by `;
-      log += await aa.p.author(dat.event.pubkey);
-      if (e_id) log += ` for ${e_id}`;
-      aa.log(log);
-    },0);
-  }
-  aa.e.append_to(dat,note,aa.get.tag_reply(dat.event.tags));
-  return note
-};
-
-
-// event template for walLNut discovery
-aa.kinds[10019] =dat=>
-{
-  const note = aa.e.note_regular(dat);
-  note.classList.add('root');
-  if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  aa.db.get_p(dat.event.pubkey).then(p=>
-  {
-    if (!p) p = aa.p.p(dat.event.pubkey);
-    if (aa.p.events_newer(p,dat.event))
-    {
-      let relays = {};
-      let sets = ['k10019'];
-      let tags = dat.event.tags.filter(i=>i[0]==='relay');
-      for (const tag of tags)
-      {
-        const [type,url,permission] = tag;
-        const href = aa.is.url(url)?.href;
-        if (!href) continue;
-        relays[href] = {sets};
-      }
-      aa.p.relays_add(relays,p);
-      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-      p.mints = aa.fx.tags_values(dat.event.tags,'mint');
-      p.p2pk = aa.fx.tag_value(dat.event.tags,'pubkey');
-      aa.p.save(p);
-    }
-  });
-  return note
-};
-
-
-// event template for walLNut 
-aa.kinds[17375] =dat=>
-{
-  const note = aa.e.note_pre(dat);
-  note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  if (aa.is.u(dat.event.pubkey))
-  {
-    let p = aa.u.p;
-    if (p && aa.p.events_newer(p,dat.event))
-    {
-      aa.p.save(p);
-    }
-
-    let butt = aa.mk.butt_action(aa.w.def.id+' import '+dat.event.id,'import');
-    note.querySelector('.content').append(butt)
-  }
-  return note
-};
-
-aa.kinds[37375] = aa.kinds[17375];

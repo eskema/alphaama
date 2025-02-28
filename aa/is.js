@@ -68,5 +68,16 @@ aa.is.url =s=>
 };
 
 
+// returns wether or not a given level is trusted
+aa.is.trusted =trust=>
+{
+  let trust_needed;
+  try { trust_needed = parseInt(localStorage.trust) } 
+  catch (er) { console.error('!trust',localStorage.trust) }
+  if (Number.isInteger(trust_needed) && trust >= trust_needed) return true;
+  return false
+};
+
+
 // is hexadecimal
 aa.is.x =s=> /^[A-F0-9]+$/i.test(s);

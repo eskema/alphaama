@@ -6,11 +6,17 @@ relays
 
 */
 
+aa.mk.scripts
+([
+  '/r/clk.js',
+  '/r/mk.js',
+]);
+
 
 aa.r = 
 {
-  def:{id:'r',ls:{},r:'read',w:'write'},
   active:{},
+  def:{id:'r',ls:{},r:'read',w:'write'},
   message_type:{},
   old_id:'rel',
 };
@@ -19,7 +25,7 @@ aa.r =
 // add relays
 aa.r.add =s=>
 {
-  let [valid,invalid,off] = aa.mod_servers_add(aa.r,s,'relay');
+  let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relay');
   for (const url of off) aa.r.force_close([url]);
 };
 
@@ -34,21 +40,13 @@ aa.r.add_from_o =relays=>
 };
 
 
-// broadcast note action
-aa.clk.bro =e=>
-{
-  const note = e.target.closest('.note');
-  aa.cli.v(`${localStorage.ns} e bro ${note.dataset.id} `);
-};
-
-
 // broadcast event from id to relays
 // s = 'id relay relay relay'
-aa.r.bro =(s='')=>
+aa.r.bro =async(s='')=>
 {
-  let a = s ? s.split(' ') : [];
+  let a = s.split(' ');
   let id = a.shift();
-  let dat = aa.db.e[id];
+  let dat = await aa.db.events(id)[0];
   if (dat) aa.r.broadcast(dat.event,a);
 };
 
@@ -70,8 +68,6 @@ aa.r.broadcast =(event,relays=false,options={})=>
     note_log.append(aa.mk.l('p',{con:'to: '+relays}));
     aa.log(note_log,0,1);
   }
-
-  
 
   const opts = {send:{}};
   const dis = JSON.stringify(['EVENT',event]);
@@ -232,23 +228,7 @@ aa.r.del =s=>
       }
     }
   }
-
-  // const work =a=>
-  // {
-  //   const url = aa.is.url(a.shift().trim())?.href;
-  //   if (url && aa.r.o.ls[url])
-  //   {
-  //     if (aa.r.active[url])
-  //     {
-  //       aa.r.force_close([url]);
-  //       delete aa.r.active[url];
-  //     }
-  //     delete aa.r.o.ls[url];
-  //     document.getElementById(aa.r.def.id+'_'+aa.fx.an(url)).remove();
-  //   }
-  // };
-  // aa.fx.loop(work,s);
-  aa.mod_save(aa.r);
+  aa.mod.save(aa.r);
 };
 
 
@@ -473,7 +453,7 @@ aa.r.load =async()=>
       action:[id,'setrm'],
       required:['url','set'],
       description:'remove set from relays',
-      exe:s=>aa.mod_setrm(mod,s)
+      exe:s=>aa.mod.setrm(mod,s)
     },
     {
       action:[id,'ext'],
@@ -487,10 +467,9 @@ aa.r.load =async()=>
       exe:mod.ls
     },
     {
-      action:['mk','10002'],
-      optional:['<url set1 set2>,<url>'],
-      description:'create a relay list (kind-10002)',
-      exe:aa.mk.k10002
+      action:[id,'resume'],
+      description:'resume open queries',
+      exe:mod.resume
     },
     {
       action:['e','bro'],
@@ -498,13 +477,8 @@ aa.r.load =async()=>
       description:'broadcast note to relays',
       exe:mod.bro
     },
-    {
-      action:[id,'resume'],
-      description:'resume open queries',
-      exe:mod.resume
-    },
   );
-  aa.mod_load(mod).then(aa.mk.mod).then(e=>
+  aa.mod.load(mod).then(aa.mod.mk).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
     fastdom.mutate(()=>
@@ -690,7 +664,7 @@ aa.r.mk =(k,v)=>
   {
     l.id = aa.r.def.id+'_'+aa.fx.an(k);
     l.dataset.state = 0;
-    aa.mod_servers_butts(aa.r,l,v);
+    aa.mod.servers_butts(aa.r,l,v);
     aa.r.upd_state(k);
     return l
   }
@@ -828,99 +802,3 @@ aa.r.ws_open =async e=>
   for (const ev in relay.send) aa.r.try(relay,relay.send[ev]);
   aa.r.upd_state(e.target.url);
 };
-
-
-// make relay list
-aa.mk.k10002 =(s='')=>
-{
-  let log = aa.r.def.id+' ls: ';
-  const err = (er)=>{aa.log(log+er)};
-
-  let ls = aa.r.o.ls;
-  let relay_list = [];
-  let a = s ? s.split(',') : Object.keys(ls);
-  
-  for (const k of a)
-  { 
-    let read, write;
-    const tag = [k];
-    if (ls[k].sets.includes('read')) read = true;
-    if (ls[k].sets.includes('write')) write = true;
-    if (read || write)
-    {
-      if (read && !write) tag.push('read');
-      if (!read && write) tag.push('write');
-      relay_list.push(tag.join(' '))
-    }
-  }
-
-  const relays = [];
-  for (const r of relay_list) 
-  {
-    let relay = r.trim().split(' ');
-    relay.unshift('r');
-    relays.push(relay);
-  }
-  if (relays.length)
-  {
-    aa.dialog(
-    {
-      title:'new relay list',
-      l:aa.mk.tag_list(relays),
-      no:{exe:()=>{}},
-      yes:{exe:()=>
-      {
-        const event = aa.e.normalise({kind:10002,tags:relays});
-        aa.e.finalize(event);
-      }}
-    });
-  }
-};
-
-
-// event template for relay list
-aa.kinds[10002] =dat=>
-{
-  const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
-  
-  aa.db.get_p(dat.event.pubkey).then(p=>
-  {
-    if (!p) p = aa.p.p(dat.event.pubkey);
-    if (aa.p.events_newer(p,dat.event))
-    {
-      let relays = {};
-      let sets = ['k10002'];
-      let tags = dat.event.tags.filter(i=>i[0]==='r');
-      for (const tag of tags)
-      {
-        const [type,url,permission] = tag;
-        const href = aa.is.url(url)?.href;
-        if (!href) continue;
-        let relay = relays[href] = {sets:[]};
-        if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
-        else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
-        else aa.fx.a_add(relay.sets,['read','write',...sets]);
-      }
-      // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
-      aa.p.relays_add(relays,p);
-      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
-      aa.p.save(p);
-    }
-  });
-  
-  return note
-};
-
-
-// event template for relay data from monitor nip66
-aa.kinds[30166] =dat=>
-{
-  const note = aa.e.note_pre(dat);
-  note.classList.add('root');
-  aa.parse.content_o(aa.parse.j(dat.event.content),note,'text_asc');
-  return note
-};
-
-
-// window.addEventListener('load',aa.r.load);

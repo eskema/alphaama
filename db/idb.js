@@ -111,8 +111,6 @@ indexed_db.ops.get_all =async(db,store)=>
 
 const merge =(dis,dat)=>
 {
-
-
   dis = Object.assign({},dis);
   let sets = dat.entries.filter(i=>Array.isArray(i[1])).map(i=>i[0]);
   let merged;
@@ -140,7 +138,7 @@ indexed_db.ok =(db,o)=>
 
 
 onmessage =m=> 
-{ 
+{
   // console.log('db onmessage',m.data);
   const db = indexedDB.open("alphaama", 16);
   db.onerror =e=>{ console.log('db error',e)};
@@ -296,5 +294,3 @@ indexed_db.ops.upd_p =async(db,o)=>
     }
   // }
 };
-
-

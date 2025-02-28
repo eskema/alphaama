@@ -8,7 +8,13 @@ user you
 
 
 aa.mk.styles(['/u/u.css']);
-aa.mk.scripts(['/u/is.js']);
+aa.mk.scripts([
+  '/u/clk.js',
+  '/u/e.js',
+  '/u/fx.js',
+  '/u/is.js',
+  '/u/mk.js',
+]);
 
 
 aa.u = 
@@ -25,8 +31,8 @@ aa.u.add =(pubkey='')=>
   {
     aa.u.o.ls = {xpub:pubkey,npub:aa.fx.encode('npub',pubkey)};
 
-    aa.mk.mod(aa.u);
-    aa.mod_save(aa.u).then(aa.u.start);
+    aa.mod.mk(aa.u);
+    aa.mod.save(aa.u).then(aa.u.start);
     aa.log('u = '+pubkey);
   }
   else return false
@@ -60,203 +66,6 @@ aa.u.check_signer =()=>
 };
 
 
-// cancel event draft
-aa.clk.cancel =e=>
-{
-  const note = e.target.closest('.note');
-  const xid = note.dataset.id;
-  if (aa.temp.mining && aa.temp.mining[xid]) aa.fx.pow_abort(xid);
-  aa.e.note_rm(note);
-};
-
-
-// edit event
-aa.clk.edit =e=>
-{
-  const note = e.target.closest('.note');
-  let dat = aa.db.e[note.dataset.id] || aa.cli.dat;
-  aa.e.note_rm(note);
-  aa.cli.v(dat.event.content);
-};
-
-
-// draft event
-aa.e.draft =async dat=>
-{
-  aa.fx.a_add(dat.clas,['draft']);
-  dat.event.tags = [...new Set(dat.event.tags)];
-  if (!dat.event.id) dat.event.id = aa.fx.hash(dat.event);
-  aa.db.e[dat.event.id] = dat;
-  aa.e.print(dat);
-  
-  let target = document.getElementById('e');
-  if (target && !target.classList.contains('expanded')) aa.clk.expand({target});
-};
-
-
-// make event from JSON string, autocompletes missing fields
-aa.mk.e =s=>
-{
-  let event = aa.parse.j(s);
-  if (event)
-  {
-    aa.e.draft(aa.mk.dat({event:aa.e.normalise(event)}));
-    aa.cli.fuck_off();
-  }
-};
-
-
-// encrypt note
-aa.clk.encrypt =async e=>
-{
-  const note = e.target.closest('.note');
-  const id = note.dataset.id;
-  let dat = aa.db.e[id];
-  let peer = dat.event.tags.find(t=>t[0]==='p')[1];
-  let encrypted = await window.nostr.nip04.encrypt(peer,dat.event.content);
-  let dis = Object.assign({},dat.event);
-  dis.content = encrypted;
-  delete dis.id;
-  if ('sig' in dis) delete dis.sig;
-  note.remove();
-  delete aa.db.e[id];
-  console.log(dis);
-  aa.e.draft(aa.mk.dat({event:dis,clas:['encrypted']}));
-};
-
-
-// finalize event creation
-aa.e.finalize =async(event,relays)=>
-{
-  event.tags = aa.fx.a_u(event.tags);
-  if (!event.id) event.id = aa.fx.hash(event);
-  const signed = await aa.u.sign(event);
-  if (signed)
-  {
-    let dat = aa.db.e[event.id] = aa.mk.dat({event:signed});
-    aa.db.upd_e(dat);
-    aa.e.print(dat);
-    aa.r.broadcast(signed,relays);
-  }
-};
-
-
-// event complete
-aa.e.normalise =event=>
-{
-  if (!event.pubkey) event.pubkey = aa.u.p.xpub;
-  if (!event.kind) event.kind = 1;
-  if (!event.created_at) event.created_at = aa.now;
-  if (!event.tags) event.tags = [];
-  if (!event.content) event.content = '';
-  return event
-};
-
-
-// decrypt kind-4 from id
-aa.e.note_decrypt =async s=>
-{ 
-  if (!window.nostr) 
-  {
-    aa.log('no extension found');
-    return
-  }
-
-  let x = s.trim();
-  if (!aa.is.x(x))
-  {
-    aa.log('invalid id');
-    return
-  }
-  
-  let dat = await aa.db.get_e(x);
-  if (!dat) 
-  {
-    aa.log('event not found');
-    return
-  }
-
-  let decrypted;
-  if (dat.event.kind === 4) 
-  {
-    let p_x = dat.event.tags.find(t=>t[0]==='p')[1];
-    if (aa.u.p.xpub !== p_x)
-    {
-      aa.log('content not for you');
-      return
-    }
-    decrypted = await window.nostr.nip04.decrypt(dat.event.pubkey,dat.event.content);
-  }
-  else decrypted = await window.nostr.nip44.decrypt(dat.event.pubkey,dat.event.content);
-  if (!decrypted)
-  {
-    aa.log('decrypt failed');
-    return
-  }
-  
-  aa.e.note_decrypted_content(x,decrypted);
-  return decrypted
-};
-
-
-aa.e.note_decrypted_content =async(x,decrypted)=>
-{
-  let l = document.getElementById(aa.fx.encode('note',x));
-  if (!l) 
-  {
-    aa.log('decrypted cyphertext:');
-    aa.log(decrypted);
-  }
-  else
-  {
-    let content = l.querySelector('.content');
-    content.classList.remove('encrypted');
-    content.classList.add('decrypted');
-    content.querySelector('.butt.decrypt').remove();
-    l.querySelector('.content').append(aa.parse.content(decrypted));
-  }
-};
-
-
-// make p tag array from array
-aa.fx.tag_k3 =a=>
-{
-  let tag = ['p'];
-  let k,relay,petname;
-  
-  if (a.length) k = a.shift().trim();
-  if (!k) return false;
-  if (k.startsWith('npub')) k = aa.fx.decode(k);
-  if (!aa.is.key(k)) 
-  {
-    aa.log('invalid key to follow '+k);
-    return false
-  }
-  if (aa.is.following(k)) 
-  {
-    aa.log('already following '+k);
-    return false
-  }
-  tag.push(k);
-
-  if (a.length) 
-  {
-    relay = a.shift().trim();
-    let url = aa.is.url(relay);
-    if (url) tag.push(url.href);
-    else tag.push('')
-  }
-
-  if (a.length) 
-  {
-    petname = a.shift().trim();
-    tag.push(aa.fx.an(petname));
-  }
-  while (tag[tag.length - 1].trim() === '') tag.pop();
-  return tag
-};
-
-
 // on load
 aa.u.load =async()=>
 {
@@ -268,30 +77,6 @@ aa.u.load =async()=>
       optional:['mode','pubkey','relay'],
       description:'login as pubkey, leave blank to load from extension (nip-7)',
       exe:mod.login
-    },
-    {
-      action:['e','decrypt'],
-      required:['nid'],
-      description:'decrypt note',
-      exe:aa.e.note_decrypt
-    },
-    {
-      action:['mk','0'],
-      required:['{JSON}'], 
-      description:'set metadata (kind-0)',
-      exe:aa.mk.k0
-    },
-    {
-      action:['mk','7'],
-      required:['id','reaction'], 
-      description:'react to a note',
-      exe:aa.mk.k7
-    },
-    {
-      action:['mk','e'],
-      required:['JSON'],
-      description:'mk event from JSON',
-      exe:aa.mk.e
     },
     {
       action:['fx','pow'],
@@ -313,15 +98,9 @@ aa.u.load =async()=>
       description:'unfollow account (hex or npub)',
       exe:mod.k3_del
     },
-    {
-      action:['mk','4'],
-      required:['pubkey','text'],
-      description:'encrypt text to pubkey',
-      exe:aa.mk.k4
-    },
   );
   aa.u.check_signer();
-  await aa.mod_load(mod);
+  await aa.mod.load(mod);
   await mod.start(mod);
 };
 
@@ -432,32 +211,6 @@ aa.u.jump =()=>
 };
 
 
-// set your metadata (kind-0)
-aa.mk.k0 =async s=>
-{
-  let md = aa.parse.j(s);
-  if (!md) return;
-  aa.dialog(
-  {
-    title:'new metadata',
-    l:aa.mk.ls({ls:md}),
-    no:{exe:()=>{}},
-    yes:{exe:()=>
-    {
-      const event = 
-      {
-        pubkey:aa.u.p.xpub,
-        kind:0,
-        created_at:aa.now,
-        content:JSON.stringify(md),
-        tags:[]
-      };
-      aa.e.finalize(event).then(e=>{console.log(e)});
-    }},
-  });
-};
-
-
 // u add to s
 aa.u.k3_add =async s=>
 {
@@ -552,48 +305,6 @@ aa.u.k3_del =async s=>
 };
 
 
-// Encrypted direct Message
-aa.mk.k4 =async(s='')=>
-{
-  let [pubkey,text] = s.split(aa.fx.regex.fw);
-  let event = {kind:4,tags:[['p',pubkey]]};
-  event.content = await window.nostr.nip04.encrypt(pubkey,text);
-  aa.e.draft(aa.mk.dat(
-  {
-    event:aa.e.normalise(event),
-    clas:['encrypted']
-  }));
-};
-
-
-// new reaction event (kind-7)
-// should go to aa.e
-aa.mk.k7 =async s=>
-{
-  let [xid,reaction] = s.trim().split(' ');
-  if (!aa.is.x(xid) || !aa.is.one(reaction))
-  {
-    aa.log('reaction failed');
-    return
-  }
-  
-  aa.cli.fuck_off();
-    
-  const event = 
-  {
-    pubkey:aa.u.p.xpub,
-    kind:7,
-    created_at:aa.now,
-    content:reaction,
-    tags:[]
-  };
-
-  let reply_dat = await aa.db.get_e(xid);
-  if (reply_dat) event.tags.push(...aa.get.tags_for_reply(reply_dat.event));
-  aa.e.finalize(event);
-};
-
-
 // is nip4 cyphertext
 // aa.is.nip4 =s=> 
 // {
@@ -616,26 +327,6 @@ aa.u.outbox =(a=[],sets=[])=>
   let outbox = aa.fx.intersect(relays,a);
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
   return sorted_outbox;
-};
-
-
-// post event
-aa.clk.post =e=>
-{
-  let dat = aa.db.e[e.target.closest('.note').dataset.id];
-  if (dat) 
-  {
-    let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).filter(r=>!dat.seen.includes(r));
-    aa.r.broadcast(dat.event,relays);
-  }
-};
-
-
-// pow event
-aa.clk.pow =e=>
-{
-  let id = e.target.closest('.note').dataset.id;
-  aa.cli.v(`${localStorage.ns} fx pow ${id} ${localStorage.pow}`);
 };
 
 
@@ -678,37 +369,6 @@ aa.u.pow_note =async(nid,difficulty=0)=>
     }
     resolve(event.id)
   });
-};
-
-
-// react to event
-aa.clk.react =e=>
-{
-  const note = e.target.closest('.note');
-  const xid = note.dataset.id;
-  aa.cli.v(`${localStorage.ns} mk 7 ${xid} ${localStorage.reaction}`);
-};
-
-
-// sign event
-aa.clk.sign =e=>
-{
-  let dat = aa.db.e[e.target.closest('.note').dataset.id];
-  if (dat && !dat.event.sig)
-  {
-    aa.u.sign(dat.event).then(signed=>
-    {
-      if (signed)
-      {
-        dat.event = signed;
-        dat.clas = aa.fx.a_rm(dat.clas,['draft']);
-        aa.fx.a_add(dat.clas,['not_sent']);
-        aa.db.upd_e(dat);
-        aa.e.print(dat);
-      }
-    })
-  }
-  else aa.log('nothing to sign')
 };
 
 
@@ -772,7 +432,7 @@ aa.u.start =async()=>
   if (aa.fx.a_add(p.sets,['u'])) upd = true;
   if (upd) aa.p.save(p);
   aa.u.upd_u_u();
-  aa.mk.mod(mod);
+  aa.mod.mk(mod);
   // mod.l.append(aa.mk.ls({ls:p}));
 };
 
@@ -819,7 +479,7 @@ aa.u.wot =async()=>
 
   if (to_get.length)
   {
-    let dat = await aa.db.idb.ops({get_a:{store:'authors',a:to_get}});
+    let dat = await aa.db.ops('idb',{get_a:{store:'authors',a:to_get}});
     if (dat) for (const p of dat) aa.db.p[p.xpub] = p;
   }
   
@@ -836,74 +496,4 @@ aa.u.wot =async()=>
   }
 
   return wot
-};
-
-
-// encrypted direct message
-// aa.kinds[4] =dat=>
-// {
-//   let note = aa.e.note_regular(dat);
-
-//   let k_v = 'pubkey_'+dat.event;
-//   if (aa.p.viewing && aa.p.viewing[1] === k_v) 
-//   {
-//     aa.p.viewing[0].push(note);
-//     aa.i.solo(note,k_v);
-//   }
-
-//   return note
-// };
-
-
-// aa.mk.note_encrypted =(dat,note)=>
-// {
-//   let content = note.querySelector('.content');
-//   content.classList.add('encrypted');
-//   content.querySelector('.paragraph').classList.add('cypher');
-//   if (!dat.clas.includes('draft'))
-//   {
-//     note.querySelector('.actions .butt.react')?.remove();
-//     note.querySelector('.actions .butt.req')?.remove();
-//   }
-//   let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
-//   if (aa.u.o.ls.xpub === p_x)
-//   {
-//     note.classList.add('for_u');
-//     content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
-//   }
-//   return p_x
-// };
-
-
-// sign and broadcast event
-aa.clk.yolo =async e=>
-{
-  let xid = await aa.u.pow_note(e.target.closest('.note').dataset.id);
-  if (!xid)
-  {
-    aa.log('nothing to sign');
-    return
-  }
-
-  let dat = aa.db.e[xid];
-
-  aa.u.sign(dat.event).then(signed=>
-  {
-    if (signed)
-    {
-      dat.event = signed;
-      dat.clas = aa.fx.a_rm(dat.clas,['draft']);
-      aa.fx.a_add(dat.clas,['not_sent']);
-      let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
-      let pubs = dat.event.tags.filter(aa.is.tag_p).map(i=>i[1]);
-      for (const x of pubs)
-      {
-        let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
-        let ab = aa.fx.a_ab(relays,read_relays);
-        if (!ab.inc.length < 3) relays.push(...ab.exc.slice(0,3 - ab.inc.length))
-      }
-      relays = new Set(relays);
-      aa.r.broadcast(dat.event,relays);
-    }
-  })
 };

@@ -35,6 +35,7 @@ aa.o =
 //       'exit':'Escape'
 //     }
   },
+  defaults:{}
 };
 
 
@@ -52,7 +53,7 @@ aa.o.add =(s='')=>
       {
         let oldValue = localStorage[key];
         localStorage[key] = newValue;
-        aa.mod_ui(aa.o,key);
+        aa.mod.ui(aa.o,key);
         aa.o.on_storage({key,newValue,oldValue})
       }
     }
@@ -61,51 +62,27 @@ aa.o.add =(s='')=>
 
 
 // remove option (if not default)
-aa.o.del =s=>
+aa.o.del =(s='')=>
 {
-  const as = s.split(',');
-  if (as.length)
+  for (const i of s.split(',')) 
   {
-    for (const i of as) 
+    let a = i.trim().split(' ');
+    const id = aa.o.def.id;
+    const dis = localStorage.ns+' '+id+' rm ';
+    const k = a.shift().trim();
+    if (k && localStorage[k])
     {
-      let a = i.trim().split(' ');
-      const id = aa.o.def.id;
-      const dis = localStorage.ns+' '+id+' rm ';
-      const k = a.shift().trim();
-      if (k && localStorage[k])
+      if (!aa.o.def.hasOwnProperty(k))
       {
-        if (!aa.o.def.hasOwnProperty(k))
-        {
-          localStorage.removeItem(k);
-          let l = document.getElementById(id+'_'+k)
-          if (l) l.remove();
-          aa.log(dis+k);
-        }
-        else aa.log(dis+'key cannot be deleted');
+        localStorage.removeItem(k);
+        let l = document.getElementById(id+'_'+k)
+        if (l) l.remove();
+        aa.log(dis+k);
       }
-      else aa.log(dis+'key not found');
+      else aa.log(dis+'key cannot be deleted');
     }
+    else aa.log(dis+'key not found');
   }
-
-  // const work =a=>
-  // {
-  //   const id = aa.o.def.id;
-  //   const dis = localStorage.ns+' '+id+' rm ';
-  //   const k = a.shift().trim();
-  //   if (k && localStorage[k])
-  //   {
-  //     if (!aa.o.def.hasOwnProperty(k))
-  //     {
-  //       localStorage.removeItem(k);
-  //       let l = document.getElementById(id+'_'+k)
-  //       if (l) l.remove();
-  //       aa.log(dis+k);
-  //     }
-  //     else aa.log(dis+'key cannot be deleted');
-  //   }
-  //   else aa.log(dis+'key not found');
-  // };
-  // aa.fx.loop(work,s)
 };
 
 
@@ -148,12 +125,13 @@ aa.o.load =async()=>
     aa.o.del('team');
   }
 
-  aa.mod_load(mod).then(aa.mk.mod).then(e=>
+  aa.mod.load(mod).then(aa.mod.mk).then(e=>
   {
-    let add_butt = aa.mk.butt_action(`${id} set `,'+','set');
+    let add_butt = aa.mk.butt_action(`${id} add `,'add');
     fastdom.mutate(()=>
     {
-      mod.l.insertBefore(add_butt,mod.l.lastChild);
+      // mod.l.append(add_butt)
+      mod.l.insertBefore(add_butt,mod.l.firstChild.nextSibling);
     })
   });
   // detect when changes happen on other tabs
@@ -173,20 +151,23 @@ aa.o.on_storage =async o=>
 };
 
 
-// makes a mod option item, to use with aa.mk.mod()
+// makes a mod option item, to use with aa.mod.mk()
 aa.o.mk =(k,v)=>
 {
   const id = aa.o.def.id;
   const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
-  // update 
-  switch (k)
+  let s = id+' add '+k+' '+v;
+  if (k in aa.o.defaults)
   {
-    case 'theme':
-      if (aa.l.dataset.theme !== v) aa.l.dataset.theme = v; 
-      s = id+' add '+k+' '+aa.fx.theme(v);
-      break;
-    default:
-      s = id+' add '+k+' '+v;
+    let dis = aa.o.defaults[k];
+    if ('options' in dis) 
+    {
+      l.dataset.after = dis.options.join()
+      if (!dis.options.includes(v)) 
+        v = dis.options[0];
+    }
+    if ('exe' in dis) dis.exe(v);
+    if ('fx' in dis) s = id+' add '+k+' '+dis.fx(v);
   }
   l.append(aa.mk.item_action(k,v,s))
   return l
@@ -198,27 +179,28 @@ aa.o.reset =(s='')=>
 {
   if (s)
   {
-    const as = s.split(',');
-    if (as.length)
-    {
-      for (const i of as) 
+    // const as = s.split(',');
+    // if (as.length)
+    // {
+      for (const i of s.split(',')) 
       {
         let a = i.trim().split(' ');
         const v = a[0];
         if (aa.o.def.ls[v])
         {
           localStorage[v] = aa.o.def.ls[v];
-          aa.mod_ui(aa.o,k);
+          aa.mod.ui(aa.o,k);
         }
+        else localStorage.removeItem(v);
       }
-    }
-    aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
-  } 
+    // }
+    // aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
+  }
   else if (window.confirm('reset all options?')) 
   {
     localStorage.clear();
     for (const k in aa.o.def.ls) localStorage[k] = aa.o.def.ls[k];
-    aa.mod_ui(aa.o);
+    aa.mod.ui(aa.o);
   }
 };
 
@@ -227,27 +209,17 @@ aa.o.reset =(s='')=>
 aa.o.save =()=>
 {
   aa.o.o = {id:'o',ls:localStorage};
-  aa.mk.mod(aa.o); 
+  aa.mod.mk(aa.o); 
 };
 
 
 // given a theme, returns the other one for quick input
-aa.fx.theme =s=>
+aa.o.defaults.theme =
 {
-  if (s === 'dark') return 'light';
-  else return 'dark'
+  options:['dark','light'],
+  exe:s=>
+  {
+    if (aa.l.dataset.theme !== s) aa.l.dataset.theme = s;
+  },
+  fx:s=> aa.o.defaults.theme.options.find(i=>i!==s)
 };
-
-
-// returns wether or not a given level is trusted
-aa.is.trusted =trust=>
-{
-  let trust_needed;
-  try { trust_needed = parseInt(localStorage.trust) } 
-  catch (er) { console.error('!trust',localStorage.trust) }
-  if (Number.isInteger(trust_needed) && trust >= trust_needed) return true;
-  return false
-};
-
-
-// window.addEventListener('load',aa.o.load);
