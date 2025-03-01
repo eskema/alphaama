@@ -272,10 +272,9 @@ aa.cli.keydown =async e=>
 // on load
 aa.cli.load =async e=>
 {
-  let l = aa.cli.mk();
   fastdom.mutate(()=>
   {
-    document.body.insertBefore(l,document.body.lastChild.previousSibling);
+    document.body.insertBefore(aa.cli.mk(),document.body.lastChild.previousSibling);
   });
 };
 
@@ -301,7 +300,6 @@ aa.cli.mk =()=>
   aa.cli.t.onkeydown = aa.cli.keydown;
   aa.cli.t.onselectionchange = aa.cli.selection;
   aa.cli.t.rows = 1;
-
   aa.cli.l.append(
     aa.mk.l('button',
     {

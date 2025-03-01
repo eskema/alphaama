@@ -35,6 +35,14 @@ aa.is.empty =l=>
 };
 
 
+// true if you follow pubkey
+aa.is.following =xpub=>
+{
+  if (aa.u?.p?.follows?.includes(xpub)) return true;
+  return false
+};
+
+
 // checks if page is loading from iframe
 aa.is.iframe =()=>
 {
@@ -57,6 +65,10 @@ aa.is.one =s=>
   if (seg.length === 1) return true;
   else return false
 };
+
+
+// if hex key is your pubkey
+aa.is.u =x=> aa.u?.o?.ls?.xpub === x;
 
 
 // converts string to URL and returns it or false

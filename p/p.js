@@ -284,7 +284,7 @@ aa.p.link_data =p=>
   }
   else o.miss = true;
 
-  if (aa.is.u(p.xpub)) 
+  if (aa.is.u(p.xpub))
   {
     aa.fx.a_add(o.class_add,['is_u']);
     aa.fx.a_add(o.class_rm,['is_mf','is_bff'])

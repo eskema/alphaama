@@ -81,7 +81,7 @@ const aa =
 
 
 // web cache navigation for offline use
-// if ('serviceWorker' in navigator && ) navigator.serviceWorker.register('/cash.js');
+// if ('serviceWorker' in navigator) navigator.serviceWorker.register('/cash.js');
 
 
 // clear view
