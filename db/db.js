@@ -4,22 +4,25 @@ aa.db.worker.idb = '/db/idb.js';
 aa.db.idb = new Worker(aa.db.worker.idb);
 
 // web cache navigation for offline use
-if ('serviceWorker' in navigator && localStorage.cash === 'on')
+if ('serviceWorker' in navigator)
 {
-  navigator.serviceWorker.register(aa.db.worker.cash,{scope:'/'});
-}
-else
-{
-  navigator.serviceWorker.getRegistrations()
-  .then(async a=> 
+  if (localStorage.cash === 'on')
   {
-    if (a.length && localStorage.cash === 'off')
+    navigator.serviceWorker.register(aa.db.worker.cash,{scope:'/'});
+  }
+  else
+  {
+    navigator.serviceWorker.getRegistrations()
+    .then(async a=> 
     {
-      await aa.db.ops('cash',{clear:'ALL'});
-      for (let r of a) r.unregister();
-    }
-  })
-  .catch(err=>{ console.log(err)});
+      if (a.length && localStorage.cash === 'off')
+      {
+        await aa.db.ops('cash',{clear:'ALL'});
+        for (let r of a) r.unregister();
+      }
+    })
+    .catch(err=>{ console.log(err)});
+  }
 }
 
 

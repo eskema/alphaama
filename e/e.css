@@ -585,7 +585,6 @@ a.author
 .hashtag
 {
   color: rgb(var(--color-main));
-  /*font-weight: bold;*/
 }
 
 .note:not(.tiny):not(.in_path) > .content::after
@@ -602,11 +601,6 @@ a.author
 .content > .butt
 {
   margin: var(--pad);
-}
-
-.content.parsed
-{
-  /*animation: loading .4s ease-in 0s 1 reverse;*/
 }
 
 
@@ -754,7 +748,6 @@ a.author
   background: rgba(var(--color-b),1);
   bottom: calc(var(--size) + var(--pad));
   grid-area: tags;
-  /*overflow: hidden;*/
   position: sticky;
   
 }
@@ -762,28 +755,7 @@ a.author
 .tags_wrapper[open]
 {
   background: rgba(var(--color-a),0);
-  /*grid-column: 1 / -1;*/
-/*  border-top: 1px solid rgb(var(--color-c));
-  border-bottom: 1px solid rgb(var(--color-c));*/
-  /*margin: 0;*/
-  /*padding-bottom: var(--pad);*/
-  
-  /*overflow-y: scroll;*/
   z-index: 2;
-}
-
-.note.root > .tags_wrapper[open]
-{
-  /*grid-area: open_t;*/
-  /*transform: translateY(calc(-100% - 4rem));*/
-}
-
-.note:not(.in_view) > .tags_wrapper[open]
-{
-/*  grid-row: 1 / 5;
-  grid-column: 1 / -1;*/
-/*  width: 100vw;
-  height: 6rem;*/
 }
 
 .tags_wrapper summary
@@ -791,37 +763,21 @@ a.author
   background: rgba(var(--color-a),0);
   display: inline-block;
   color: rgb(var(--color-b));
-  /*font-size: 0;*/
-  line-height: 1rem;
   line-height: 1.5rem;
   padding: 0 var(--padm);
   position: relative;
-  /*transition: none;*/
 }
 
 .tags_wrapper[open] summary
 {
   background: rgba(var(--color-a),1);
   color: rgb(var(--color-e));
-  /*background: red;*/
-  
-  
-  /*background: rgba(var(--color-a),1);*/
-  /*font-size: var(--font-size-s);*/
-  /*line-height: 1.5rem;*/
-  /*padding: var(--pad) var(--padm);*/
-  /*padding-top: var(--font-size);*/
-  /*position: sticky;*/
-  /*text-align: left;*/
-  /*z-index: 2;*/
-  /*top: 0;*/
 }
 
 .tags_wrapper:not(.empty) summary::before,
 .tags_wrapper:not(.empty) summary::after
 {
   color: rgb(var(--color-d));
-  /*display: inline-block;*/
   font-size: var(--font-size-s);
 }
 
@@ -848,60 +804,30 @@ a.author
   z-index: 3;
 }
 
-.replies .tags_wrapper
-{
-  /*display: none;*/
-}
-
-
-.replies .tags_wrapper[open]
-{
-/*  bottom: 0;
-  top: calc(1rem + 2px);*/
-}
-
 .tags 
 {
   background: rgba(var(--color-a),0);
   box-sizing: border-box;
   display: grid;
   font-size: var(--font-size-s);
-  /*height: 0;*/
   list-style: none;
   margin: 0;
-  padding: 0;
-  padding: var(--pad);
-  /*transition: var(--trans-slow);*/
-  /*max-height: 100%;*/
-  /*overflow-y: scroll;*/
-  /*overflow-x: scroll;*/
-  /*max-width: calc(50vw - 2rem);*/
   max-width: 100%;
+  padding: var(--pad);
 }
 
 .note .tags 
 {
   position: absolute;
-  /*transform: scaleY(0) translateY(0);*/
   transform: scaleY(1) translateY(calc(-100% - 1.2rem));
   transform-origin: bottom;
   width: max-content;
-}
-
-.root > .tags_wrapper .tags
-{
-  /*max-width: calc(100vw - 2rem);*/
 }
 
 .tags_wrapper[open] .tags
 {
   background: rgba(var(--color-a),.82);
   box-shadow: 0px 0px var(--pad) rgb(var(--color-b));
-  /*background: red;*/
-  /*height: auto;*/
-  
-  /*transform: scaleY(1) translateY(calc(-100% - 1.74rem));*/
-  /*max-height: 100%;*/
 }
 
 .tag
@@ -947,12 +873,7 @@ a.author
 
 .in_view > .tags_wrapper[open]
 {
-  /*background: none;*/
-  /*bottom: 0;*/
   max-height: unset;
-  /*position: relative;*/
-  /*grid-area: open_t;*/
-  /*top: unset;*/
 }
 
 .in_view > .tags_wrapper[open] .tags
@@ -970,7 +891,6 @@ a.author
 {
   align-self: center;
   color: rgb(var(--color-e));
-  /*background: rgba(var(--color-b),1);*/
   font-size: var(--font-size-s);
   grid-area: actions;
   margin: 0;
@@ -998,18 +918,6 @@ a.author
   display: none;
 }
 
-/*.note .actions > summary
-{
-  line-height: 1.5rem;
-  padding: 0 var(--padm);
-}
-
-.note .actions[open] > summary
-{
-  display: inline-block;
-  text-align: right;
-}*/
-
 .actions.expanded > *:first-child
 {
   margin-right: var(--pad);
@@ -1022,16 +930,8 @@ a.author
 
 .note .actions.expanded .butt
 {
-  /*color: rgb(var(--color-f));*/
-  /*opacity: .4;*/
   font-size: var(--font-size-s);
-  /*padding-left: calc(var(--padm)/2);*/
 }
-/*
-.in_view > .by > .actions > summary
-{
-  line-height: 1.5rem;
-}*/
 
 .note.root > .by .actions,
 .in_view > .replies > .note > .by .actions 
@@ -1049,7 +949,6 @@ a.author
 {
   grid-area: replies;
   padding-left: var(--padm);
-  /*position: relative;*/
 }
 
 .view_e .in_path:not(.in_view) > .replies,
@@ -1067,14 +966,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   display: none;
 }
-
-/*.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
-
-{
-  display: none;
-}*/
 
 .replies > summary
 {
@@ -1125,19 +1016,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   display: none;
 }
 
-.mark_read
-{
-  /*background-color: rgb(var(--color-a));*/
-  /*color: rgb(var(--color-d));*/
-  /*padding: 0;*/
-  /*mix-blend-mode: luma;*/
-}
-
-.mark_read:focus
-{
-  /*border: 1px dashed rgb(var(--color-f));*/
-}
-
 .replies.expanded > summary .mark_read::before
 {
   content: "// ";  
@@ -1172,11 +1050,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .replies:not([open]) > summary .mark_read
 {
   pointer-events: none;
-}
-
-.in_view > .replies > summary .mark_read
-{
-  /*color: rgb(var(--color-d));*/
 }
 
 .in_view > .replies > summary .mark_read
@@ -1285,7 +1158,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .in_view > .content .note_quote,
 .content .note_quote .note_quote
 {
-  /*margin: var(--line);*/
   max-height: unset;
 }
 
@@ -1293,12 +1165,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .in_view > .replies > .note > .content .note_quote
 {
   overflow-y:  scroll;
-}
-
-.note_quote .note_quote .note_quote .note_quote 
-{
-  /*margin: var(--padm);*/
-  /*padding: 2px;*/
 }
 
 /* @end */
@@ -1319,8 +1185,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .note.root:not(.in_path).tiny 
 {
   border-bottom: none;
-  /*margin-bottom: 0;*/
-  /*margin-top: 0;*/
 }
 
 .note.root:not(.in_path).tiny + .note.root:not(.in_path).tiny 
@@ -1328,28 +1192,20 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   margin-top: 0;
 }
 
-.note.tiny:not(.in_view),
-.note.in_view > .replies > .note.tiny
-{
-  /*grid-template-areas: ". by";*/
-  /*grid-template-columns: auto 1fr;*/
-}
-
 .note.tiny:not(.in_view)::after
 {
   align-self: center;
   color: rgb(var(--color-d));
   content: "k" attr(data-kind) !important;
+  display: none;
   font-size: var(--font-size-s);
   grid-area: content;
   padding: 0 var(--padm);
-  display: none;
 }
 
 .note.tiny:not(.in_view) > .by .author .name
 {
   margin-left: 0;
-  /*padding: 0;*/
 }
 
 .note.in_view > .replies > .note.tiny > .content,
@@ -1400,7 +1256,11 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .note.tiny[data-kind="7"]:not(.in_view) > .content
 {
-  font-family: Apple Color Emoji,"Segoe UI Emoji","Source Code Pro", monospace;
+  font-family: 
+    Apple Color Emoji,
+    "Segoe UI Emoji",
+    "Source Code Pro",
+    monospace;
   font-variant-emoji: emoji;
   padding-left: 0;
   padding: 1px;  
@@ -1416,12 +1276,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   max-width: 1rem;
   padding: 0;
 }
-
-/*.note.tiny[data-kind="6"]:not(.in_view) > .content::before,
-.note.tiny[data-kind="16"]:not(.in_view) > .content::before
-{
-  content: "reposted by ";
-}*/
 
 .note.tiny[data-kind="7"]:not(.in_view)::before,
 .note.tiny[data-kind="7"]:not(.in_view)::after,
@@ -1524,19 +1378,6 @@ html:not(.needs_pagin) .pagination
   {
     margin-bottom: 3rem;
   }
-  
-/*  .note.root:hover
-  {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-  }
-  
-  .note.root:hover > .replies
-  {
-    max-height: calc(100vh - var(--size));
-    overflow-y: scroll;
-  }*/
   
   .note:hover
   {
@@ -1657,7 +1498,6 @@ html:not(.needs_pagin) .pagination
   
   .note.root:not(.in_path)
   {
-    /*border-bottom: 1px solid rgb(var(--color-c));*/
     border-left: 1px solid rgb(var(--c));
     margin-bottom: var(--size);
     margin-top: var(--size);

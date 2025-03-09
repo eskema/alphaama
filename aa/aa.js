@@ -63,6 +63,7 @@ const aa =
   temp:{},
   tools:
   [
+    '/db/db.js?v='+aa_version,
     '/aa/clk.js?v='+aa_version,
     '/aa/is.js?v='+aa_version,
     '/aa/fx.js?v='+aa_version,
@@ -72,7 +73,7 @@ const aa =
     '/aa/parse.js?v='+aa_version,
     '/aa/wl.js?v='+aa_version,
     '/av/av.js?v='+aa_version,
-    '/db/db.js?v='+aa_version,
+    
   ],
   viewing:false,
   view:false,
