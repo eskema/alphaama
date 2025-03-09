@@ -113,6 +113,32 @@ aa.mk.metadata_picture =(k,v,p)=>
 aa.mk.metadata_website =(k,v)=> aa.mk.link(v);
 
 
+// returns the profile of p
+// creates the profile from p object if not found
+aa.mk.profile =p=>
+{
+  // aa.p.migrate_p_fields(p);
+  let profile = [...aa.p.l.childNodes].find(i=>i.dataset.xpub === p.xpub);
+  if (!profile)
+  {
+    profile = aa.mk.l('article',{cla:'profile',id:p.npub});
+    profile.dataset.trust = p.score;
+    profile.dataset.xpub = p.xpub;
+    profile.dataset.updated = p.updated ?? 0;
+
+    profile.append(
+      aa.mk.pubkey(p),
+      ' ',aa.mk.l('section',{cla:'metadata'}),
+      ' ',aa.mk.l('section',{cla:'extradata'})
+    );
+    aa.fx.color(p.xpub,profile);
+    aa.p.l.append(profile);
+    aa.fx.count_upd(document.getElementById('butt_p'));
+  }
+  return profile
+};
+
+
 // make follows
 aa.mk.p_follows =(a,p)=>
 {
@@ -178,4 +204,18 @@ aa.mk.p_relays =(a,p)=>
   if (p.events.k10002?.length) 
     butt_relays.dataset.last = aa.fx.time_display(p.events.k10002[0][1]);
   return relays_details
+};
+
+
+// make profile header
+aa.mk.pubkey =(p)=>
+{
+  const pubkey = aa.mk.l('p',{cla:'pubkey'});
+  pubkey.append(
+    aa.mk.p_link(p.xpub),
+    ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt(['…','pa'])}),
+    ' ',aa.mk.l('span',{cla:'xpub',con:p.xpub}),
+    ' ',aa.mk.time(p.updated)
+  );
+  return pubkey
 };

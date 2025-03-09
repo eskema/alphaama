@@ -117,9 +117,11 @@ aa.mk.header =e=>
 // make generic image
 aa.mk.img =(src)=>
 {
-  const l = aa.mk.l('img',{cla:'content-img',src:src});
+  const l = aa.mk.l('img',{cla:'content-img'});
+  l.dataset.src = src;
   l.loading = 'lazy';
   l.addEventListener('click',e=>{aa.mk.img_modal(src)});
+  aa.lazy_dog.observe(l);
   return l
 };
 

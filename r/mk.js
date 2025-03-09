@@ -31,7 +31,7 @@ aa.mk.k10002 =(s='')=>
   }
   if (relays.length)
   {
-    aa.dialog(
+    aa.mk.dialog(
     {
       title:'new relay list',
       l:aa.mk.tag_list(relays),

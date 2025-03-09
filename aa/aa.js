@@ -80,70 +80,56 @@ const aa =
 };
 
 
-// web cache navigation for offline use
-// if ('serviceWorker' in navigator) navigator.serviceWorker.register('/cash.js');
-
-
 // clear view
 aa.clear =()=>
 {
   if (aa.viewing)
   {
     const in_view = aa.in_view;
-    // const in_view = aa.l.querySelector('.in_view');
     if (in_view) 
     {
-      fastdom.mutate(()=>
+      in_view.classList.remove('in_view');
+      if (in_view.classList.contains('note'))
       {
-        in_view.classList.remove('in_view');
-        if (in_view.classList.contains('note'))
-        {
-          // const in_path = aa.l.querySelectorAll('.in_path');
-          if (aa.in_path?.length) for (const l of aa.in_path) aa.fx.path_rm(l);
-        }
-        delete aa.in_view;
-      });
+        if (aa.in_path?.length) for (const l of aa.in_path) aa.fx.path_rm(l);
+      }
+      delete aa.in_view;
     }
   }
-  // fastdom.mutate(()=>
-  // {
-    if (aa.state.l) aa.state.l.textContent = '';
-    aa.l.classList.remove('viewing','view_e','view_p');
-  // });
-
   aa.viewing = false;
+  if (aa.state.l) aa.state.l.textContent = '';
+  aa.l.classList.remove('viewing','view_e','view_p') 
   for (const c of aa.clears) c();
 };
 
 
 // make element with options
-aa.mk.l =(tag_name,o=false)=>
+aa.mk.l =(tag_name='div',o={})=>
 {
   const l = document.createElement(tag_name);
-  if (!o || typeof o !== 'object') return l;
   for (const k in o)
   {
     const v = o[k];
     switch (k)
     {
-      case 'con': l.textContent = v; break;
-      case 'id':  l.id = v; break;
-      case 'cla': l.className = v; break;
-      case 'bef': l.dataset.before = v; break;
       case 'aft': l.dataset.after = v; break;
+      case 'app': l.append(v); break;
+      case 'bef': l.dataset.before = v; break;
+      case 'cla': l.className = v; break;
+      case 'clk': l.addEventListener('click',v); break;
+      case 'con': l.textContent = v; break;
+      case  'id': l.id = v; break;
       case 'lab': l.dataset.label = v; break;
+      case 'nam': l.name = v; break;
+      case 'pla': l.placeholder = v; break;
       case 'ref': l.href = v; break;
       case 'rel': l.rel = v; break;
-      case 'src': l.src = v; break;
-      case 'tit': l.title = v; break;
-      case 'app': l.append(v); break;
-      case 'clk': l.addEventListener('click',v); break;
-      case 'nam': l.name = v; break;
-      case 'val': l.value = v; break;
-      case 'pla': l.placeholder = v; break;
-      case 'tab': l.tabIndex = v; break;
       case 'siz': l.sizes = v; break;
+      case 'src': l.src = v; break;
+      case 'tab': l.tabIndex = v; break;
+      case 'tit': l.title = v; break;
       case 'typ': l.type = v; break;
+      case 'val': l.value = v; break;
     }
   }
   return l
@@ -156,19 +142,37 @@ aa.load =async(o={})=>
   // setup document
   aa.l = document.documentElement;
   aa.mk.manifest();
-  
+
   let styles = o.styles || aa.styles;
-  
+  aa.mk.styles(styles);
   let dependencies = o.dependencies || aa.dependencies;
   let tools = o.tools || aa.tools;
   let mods = o.mods || aa.mods;
   
-  aa.mk.styles(styles);
-  aa.mk.scripts([...dependencies,...tools]);
+  await aa.mk.scripts([...dependencies,...tools]);
   
+  aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
   aa.view = aa.mk.l('main',{id:'view'});
   aa.mod_l = aa.mk.l('div',{id:'mods'});
   aa.mods_load(mods);
+
+  // media observer for lazy cache fetching
+  aa.lazy_dog = new IntersectionObserver(a=>
+  {
+    for (const b of a)
+    {
+      if (b.isIntersecting) 
+      {
+        let l = b.target;
+        fastdom.mutate(()=>
+        {
+          if (l.dataset.src) l.src = l.dataset.src;
+          l.classList.add('quick_fox')
+        });
+        aa.lazy_dog.unobserve(l);
+      }
+    }
+  },{root:null,threshold:.1});
 
   aa.actions.push(
     {
@@ -204,8 +208,6 @@ aa.log =(con='',l=false,is_new=true)=>
   else console.log('log:',con);
   return log
 };
-
-aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
 
 
 // get meta data from manifest
@@ -251,12 +253,12 @@ aa.mods_load =a=>
       let l = aa.mk.l('script',{src:o.src});
       l.addEventListener('load',e=>
       {
-        if (aa.hasOwnProperty(o.id) && aa[o.id].hasOwnProperty('load')) 
+        if (aa.hasOwnProperty(o.id) && aa[o.id].hasOwnProperty('load'))
           aa[o.id].load().then(()=>{aa[o.id].loaded = true})
       });
       document.head.append(l);
     }
-    else 
+    else
     {
       if (!o.attempts) o.attempts = 1;
       else o.attempts++;
@@ -324,7 +326,19 @@ aa.run =(o={})=>
 // head scripts
 aa.mk.scripts =async a=>
 {
-  for (const src of a) document.head.append(aa.mk.l('script',{src}));
+  return new Promise(resolve=>
+  {
+    let n = 0;
+    for (const src of a) 
+    {
+      let l = aa.mk.l('script',{src});
+      l.addEventListener('load',e=>
+      {
+        n++; if (n===a.length) resolve(true)
+      });
+      document.head.append(l);
+    }
+  })
 };
 
 
@@ -341,12 +355,12 @@ aa.state.pop =()=>
 {
   let hash = location.hash;
   let search = location.search;
-  if (hash.length) [hash,search] = location.hash.split('?');
-  if (!search) search = '';
+  if(hash.length) [hash,search] = location.hash.split('?');
+  if(!search) search = '';
   let no_state = !history.state || !history.state.hasOwnProperty('view')
   || history.state === '';
-  if (no_state) aa.state.view(hash,search);
-  else 
+  if(no_state) aa.state.view(hash,search);
+  else
   {
     aa.clear();
     const state = history.state.view;
@@ -356,7 +370,7 @@ aa.state.pop =()=>
       aa.state.resolve(state,search);  
     }
     else document.title = 'alphaama';
-    if (aa.state.l) aa.state.l.textContent = state;
+    fastdom.mutate(()=>{if(aa.state.l) aa.state.l.textContent = state;});
   }
 };
 
@@ -399,17 +413,11 @@ aa.state.view =(s,search='')=>
   if (!history.state || history.state.view !== view)
   {
     last = history.state?.view ?? '';
-    state = {view:view,last:last};
-    history.pushState(state,'',location.origin+location.pathname+state.view);
+    state = {view,last};
+    history.pushState(state,'',location.origin+location.pathname+view);
     aa.state.pop();
   }
-  else 
-  {
-    if (history.length) history.back();
-    // last = history.state.last;
-    // state = {view:last,last:view};
-  }
-  
+  else if (history.length) history.back();
 };
 
 window.addEventListener('popstate',aa.state.pop);

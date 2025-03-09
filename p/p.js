@@ -7,14 +7,7 @@ author pubkey profile
 */
 
 aa.mk.styles(['/p/p.css']);
-aa.mk.scripts([
-  '/p/clk.js',
-  '/p/db.js',
-  '/p/is.js',
-  '/p/kinds.js',
-  '/p/mk.js',
-  '/p/views.js'
-]);
+
 
 aa.p =
 {
@@ -392,6 +385,15 @@ aa.p.links_upd =async p=>
 // on load
 aa.p.load =async()=>
 {
+  await aa.mk.scripts([
+    '/p/clk.js',
+    '/p/db.js',
+    '/p/is.js',
+    '/p/kinds.js',
+    '/p/mk.js',
+    '/p/views.js'
+  ]);
+
   aa.temp.p_link = [];
   aa.clears.push(aa.p.clear);
   aa.actions.push(
@@ -440,7 +442,7 @@ aa.p.load_profiles =async a=>
   for (const dis of stored) 
   {
     aa.db.p[dis.xpub] = dis;
-    aa.p.profile(dis);
+    aa.mk.profile(dis);
   }
   for (const x of a)
   {
@@ -449,7 +451,7 @@ aa.p.load_profiles =async a=>
       if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
       aa.db.p[x] = aa.p.p(x);
     }
-    aa.p.profile(aa.db.p[x])
+    aa.mk.profile(aa.db.p[x])
   }
 };
 
@@ -658,51 +660,18 @@ aa.p.process_k3_tags =async(event)=>
 };
 
 
-// returns the profile of p
-// creates the profile from p object if not found
-aa.p.profile =p=>
-{
-  // aa.p.migrate_p_fields(p);
-  let profile = [...aa.p.l.childNodes].find(i=>i.dataset.xpub === p.xpub);
-  if (!profile)
-  {
-    profile = aa.mk.l('article',{cla:'profile',id:p.npub});
-    profile.dataset.trust = p.score;
-    profile.dataset.xpub = p.xpub;
-    profile.dataset.updated = p.updated ?? 0;
-
-    const pubkey = aa.mk.l('p',{cla:'pubkey'});
-    pubkey.append(
-      aa.mk.p_link(p.xpub),
-      ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt(['…','pa'])}),
-      ' ',aa.mk.l('span',{cla:'xpub',con:p.xpub}),
-      ' ',aa.mk.time(p.updated)
-    );
-    profile.append(
-      pubkey,
-      ' ',aa.mk.l('section',{cla:'metadata'}),
-      ' ',aa.mk.l('section',{cla:'extradata'})
-    );
-    aa.fx.color(p.xpub,profile);
-    aa.p.l.append(profile);
-    aa.fx.count_upd(document.getElementById('butt_p'));
-  }
-  return profile
-};
-
-
 // update profile
 aa.p.profile_upd =async(p)=>
 {
-  let profile = aa.p.profile(p);
-  // const pubkey = profile.querySelector('.pubkey');
+  let profile = aa.mk.profile(p);
+  const pubkey = profile.querySelector('.pubkey');
   const metadata = profile.querySelector('.metadata');
   const extradata = profile.querySelector('.extradata');
   
   fastdom.mutate(()=>
   {
     profile.classList.add('upd');
-    // pubkey.replaceWith(aa.mk.pubkey(p));
+    pubkey.replaceWith(aa.mk.pubkey(p));
     metadata.replaceWith(aa.mk.metadata(p));
     extradata.replaceWith(aa.mk.extradata(p));
     profile.dataset.trust = p.score;

@@ -6,12 +6,6 @@ relays
 
 */
 
-aa.mk.scripts
-([
-  '/r/clk.js',
-  '/r/mk.js',
-]);
-
 
 aa.r = 
 {
@@ -131,7 +125,7 @@ aa.r.c_on =async(url,o=false)=>
     
     relay.ws = new WebSocket(url);
     
-    const relay_to = setTimeout(()=> 
+    const relay_to = setTimeout(()=>
     {
       // aa.log(relay?.ws?.readyState);
       if (relay?.ws?.readyState === 0) 
@@ -433,6 +427,12 @@ aa.r.ls =(s='')=>
 // on load
 aa.r.load =async()=>
 {
+  await aa.mk.scripts
+  ([
+    '/r/clk.js',
+    '/r/mk.js',
+  ]);
+
   const mod = aa.r;
   const id = mod.def.id;
   aa.actions.push(
@@ -801,4 +801,33 @@ aa.r.ws_open =async e=>
 
   for (const ev in relay.send) aa.r.try(relay,relay.send[ev]);
   aa.r.upd_state(e.target.url);
+};
+
+
+aa.r.worker =async o=>
+{
+  // return new Promise(resolve=>
+  // {
+    const worker = new Worker('/r/worker.js');
+    worker.onmessage =e=> 
+    {
+      // setTimeout(()=>{worker.terminate()},8);
+      // resolve(e.data);
+      console.log(e.data);
+    }
+    worker.postMessage(o);
+  // });
+};
+
+aa.test =async s=>
+{
+  let filter = s || '{"authors":["u"],"kinds":[0,3,10002,10019,17375]}';
+  filter = aa.q.replace_filter_vars(filter)[0];
+  if (!filter) return;
+  let dis = await aa.r.worker(
+  [
+    ['boot','wss://r.alphaama.com'],
+    ['REQ','yo',filter]
+  ]);
+  return dis
 };

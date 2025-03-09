@@ -16,6 +16,7 @@ aa.mod.load =async mod=>
   if (!mod.o)
   {
     mod.o = await aa.db.ops('idb',{get:{store:'stuff',key:mod.def.id}});
+    if (mod.o) mod.used = true;
     if (!mod.o && mod.old_id)
     {
       // in case the db key path changes

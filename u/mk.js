@@ -15,7 +15,7 @@ aa.mk.k0 =async s=>
 {
   let md = aa.parse.j(s);
   if (!md) return;
-  aa.dialog(
+  aa.mk.dialog(
   {
     title:'new metadata',
     l:aa.mk.ls({ls:md}),

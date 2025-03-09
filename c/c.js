@@ -8,20 +8,6 @@ cli
 */
 
 
-aa.mk.styles(['/c/cli.css','/c/oto.css']);
-aa.mk.scripts([
-  // '/c/clk.js',
-  // '/c/db.js',
-  '/c/fx.js',
-  // '/c/get.js',
-  // '/c/is.js',
-  // '/c/kinds.js',
-  '/c/mk.js',
-  // '/c/parse.js',
-  // '/c/views.js'
-]);
-
-
 aa.cli = 
 {
   o:{id:'cli',history:[],index:0},
@@ -272,6 +258,10 @@ aa.cli.keydown =async e=>
 // on load
 aa.cli.load =async e=>
 {
+  await aa.mk.scripts([
+    '/c/fx.js',
+    '/c/mk.js',
+  ]);
   fastdom.mutate(()=>
   {
     document.body.insertBefore(aa.cli.mk(),document.body.lastChild.previousSibling);
@@ -434,3 +424,6 @@ aa.cli.v =async s=>
   aa.cli.t.value = s;
   aa.cli.expand();
 };
+
+
+aa.mk.styles(['/c/cli.css','/c/oto.css']);

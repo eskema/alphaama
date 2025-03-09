@@ -8,13 +8,6 @@ user you
 
 
 aa.mk.styles(['/u/u.css']);
-aa.mk.scripts([
-  '/u/clk.js',
-  '/u/e.js',
-  '/u/fx.js',
-  '/u/is.js',
-  '/u/mk.js',
-]);
 
 
 aa.u = 
@@ -69,6 +62,14 @@ aa.u.check_signer =()=>
 // on load
 aa.u.load =async()=>
 {
+  await aa.mk.scripts([
+    '/u/clk.js',
+    '/u/e.js',
+    '/u/fx.js',
+    '/u/is.js',
+    '/u/mk.js',
+  ]);
+
   let id = 'u';
   const mod = aa[id];
   aa.actions.push(
@@ -169,28 +170,34 @@ aa.u.login =async(s='')=>
   else if (relay) aa.r.add(relay+' read write');
   if (!relays.length)
   {
-    aa.log(aa.mk.butt_action('r add wss://url.com read write'));
-    return
+    relay = window.prompt('provide a relay');
+    if (!relay) return
+    // aa.log(aa.mk.butt_action('r add wss://url.com read write'));
   }
-  else aa.u.jump()
+  aa.u.jump()
 };
 
 
 // fetch basic stuff to get things started
 aa.u.jump =()=>
 {
+  aa.log('fetching basic stuff to get things started');
   aa.log('querying for your metadata:\n.aa q run a');
   aa.q.run('a');
   setTimeout(()=>
   {
     aa.log('running it again to include newly found relays');
     aa.q.run('a');
-    // get data from pubkeys found on your follow list
+    
     setTimeout(()=>
     {
+      // get data from pubkeys found on your follow list  
       if (aa.u.p.follows.length)
       {
-        aa.log(`found ${aa.u.p.follows.length} ${aa.fx.plural(aa.u.p.follows.length,'follow')}`);
+        const follows_details = aa.mk.details(aa.u.p.follows.length,0);
+        follows_details.append('k3 = '+aa.u.p.follows.join(', '));
+        aa.log(follows_details);
+        // aa.log(`found ${aa.u.p.follows.length} ${aa.fx.plural(aa.u.p.follows.length,'follow')}`);
       }
       // aa.log('k3 = '+aa.u.p.follows.join(', '));
       aa.log('querying for your follows data on your relays:\n.aa q run b');
@@ -216,35 +223,40 @@ aa.u.k3_add =async s=>
 {
   if (!aa.u.p) 
   {
-    aa.log('no u found, set one first')
+    aa.log('login')
     return
   }
-  
-  let tag = aa.fx.tag_k3(s.trim().split(','));
+  let a = s.split(',');
+  let tag = aa.fx.tag_k3(a);
   if (!tag) return;
   
-  let dat_k3 = await aa.p.events_last(aa.u.p,'k3');
-  if (!dat_k3) return false;
-  dat_k3 = await aa.db.get_e(dat_k3);
-  if (!dat_k3)
+  let dat = await aa.p.events_last(aa.u.p,'k3');
+  if (!dat) return false;
+  dat = await aa.db.get_e(dat);
+  if (!dat)
   {
     aa.log('no k3 found, create one first');
     return
   }
-  const new_k3 = aa.e.normalise(
+
+  const event = aa.e.normalise(
   {
     kind:3,
-    content:dat_k3.event.content,
-    tags:[...dat_k3.event.tags,tag]
+    content:dat.event.content,
+    tags:[...dat.event.tags,tag]
   });
 
-  aa.dialog(
+  aa.mk.dialog(
   {
     title:'new follow list',
-    l:aa.mk.tag_list(new_k3.tags),
+    l:aa.mk.tag_list(event.tags),
     scroll:true,
     no:{exe:()=>{}},
-    yes:{exe:()=>{ aa.e.finalize(new_k3) }}
+    yes:{exe:()=>
+    { 
+      aa.e.finalize(event);
+      setTimeout(()=>{aa.p.author(a[0]).then(p=>{aa.p.profile_upd(p)});},500);
+    }}
   });
 };
 
@@ -264,7 +276,7 @@ aa.u.k3_del =async s=>
   if (!dat_k3) return false;
   aa.cli.fuck_off();
 
-  let keys_to_unfollow = s.trim().split(' ');
+  let keys_to_unfollow = s.split(' ');
   let new_follows = [...dat_k3.event.tags];
   const old_len = new_follows.length;
   let ul = aa.mk.l('ul',{cla:'list removed_tags'});
@@ -284,7 +296,7 @@ aa.u.k3_del =async s=>
   {
     const l = aa.mk.l('div',{cla:'wrap'});
     l.append(aa.mk.tag_list(new_follows),ul);
-    aa.dialog(
+    aa.mk.dialog(
     {
       title:'new follow list:'+old_len+'->'+new_follows.length,
       l:l,
@@ -433,6 +445,7 @@ aa.u.start =async()=>
   if (upd) aa.p.save(p);
   aa.u.upd_u_u();
   aa.mod.mk(mod);
+  aa.mk.profile(p)
   // mod.l.append(aa.mk.ls({ls:p}));
 };
 

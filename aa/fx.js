@@ -547,10 +547,10 @@ aa.fx.random_s =(length)=>
 
 
 // reusable regex
-aa.fx.regex = 
+aa.fx.regex =
 {
   get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
-  get hashtag(){ return /(\B[#])[\w+-]*/g },
+  get hashtag(){ return /(\B[#])[\w_-]+/g },
   get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
   get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
   get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 

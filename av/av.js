@@ -70,7 +70,8 @@ aa.mk.av =(src,poster=false)=>
   l.loop = true;
   l.setAttribute('playsinline','');
   l.setAttribute('preload','metadata');
-  l.setAttribute('src',src)
+  l.dataset.src = src;
+  // l.setAttribute('src',src);
   if (poster) l.setAttribute('poster',poster);
   l.onclick = vip;
 
@@ -114,6 +115,5 @@ aa.mk.av =(src,poster=false)=>
   
   trols.append(rewind_butt,mute_butt,pip_butt,url,progressbar);
   av.append(l,trols);
-  
   return av
 };

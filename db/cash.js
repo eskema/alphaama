@@ -1,8 +1,8 @@
 /*
 
 alphaama
-    cash
-cache service worker
+cash
+// cache service worker
 
 */
 
@@ -38,14 +38,18 @@ cash.add =async a=>
 {
   const cache = await caches.open(cash.def.id);
   await cache.addAll(a);
+  postMessage(true);
 };
 
 
-cash.clear =async()=>
+cash.clear =async(key)=>
 {
   const cache = await caches.open(cash.def.id);
-  const results = await cache.matchAll();
-  for (const key of results) cache.delete(key);
+  let results;
+  if (key === 'ALL') results = await cache.matchAll();
+  else results = await cache.matchAll(key);
+  for (const key of results) await cache.delete(key);
+  postMessage(true);
 };
 
 
@@ -60,7 +64,8 @@ cash.del =async key=>
 // if not, then fetch, cache and serve it
 cash.flow =async e=>
 {
-  let res = await caches.match(e.request);
+  let cache = await caches.open(cash.def.id);
+  let res = await cache.match(e.request);
   if (res) return res;
   
   res = await e.preloadResponse;
@@ -78,7 +83,7 @@ cash.flow =async e=>
   }
   catch (er) 
   {
-    res = await caches.match('/');
+    res = await cache.match('/');
     if (res) return res;
     return new Response('wut?',{status:408,headers:{'Content-Type':'text/plain'}});
   }
@@ -87,17 +92,27 @@ cash.flow =async e=>
 
 cash.get =async a=> 
 {
-  const results = [];
   const cache = await caches.open(cash.def.id);
+  const results = [];
   if (!Array.isArray(a)) a = [a];
   for (const s of a)
   {
     let result;
     const res = await cache.match(s);
-    if (res) result = await res.json();
+    if (res) 
+    {
+      let ct = res.headers.get('content-type');
+      switch (ct)
+      {
+        case 'text/html':
+          result = await res.text();break;
+        case 'application/json':
+          result = await res.json();break;
+        default: result = await res.blob();
+      }
+    }
     if (result) results.push(result);
   }
-  
   postMessage(results);
 };
 

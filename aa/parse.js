@@ -159,8 +159,15 @@ aa.parse.url =(match,tru)=>
 {
   let l;
   const type = aa.fx.url_type(match[0]);
-  if (tru && type[0] === 'img') l = aa.mk.img(type[1].href);
-  else if (tru && type[0] === 'av') l = aa.mk.av(type[1].href);
+  if (tru && type[0] === 'img') 
+  {
+    l = aa.mk.img(type[1].href);
+  }
+  else if (tru && type[0] === 'av') 
+  {
+    l = aa.mk.av(type[1].href);
+    aa.lazy_dog.observe(l.querySelector('video'));
+  }
   else if (type) l = aa.mk.link(type[1].href);
   return l
 };

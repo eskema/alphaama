@@ -1,7 +1,34 @@
-aa.db.worker.cash = '/cash.js';
+aa.db.worker.cash = '/db/cash.js';
 aa.db.cash = new Worker(aa.db.worker.cash);
 aa.db.worker.idb = '/db/idb.js';
 aa.db.idb = new Worker(aa.db.worker.idb);
+
+// web cache navigation for offline use
+if ('serviceWorker' in navigator && localStorage.cash === 'on')
+{
+  navigator.serviceWorker.register(aa.db.worker.cash,{scope:'/'});
+}
+else
+{
+  navigator.serviceWorker.getRegistrations()
+  .then(async a=> 
+  {
+    if (a.length && localStorage.cash === 'off')
+    {
+      await aa.db.ops('cash',{clear:'ALL'});
+      for (let r of a) r.unregister();
+    }
+  })
+  .catch(err=>{ console.log(err)});
+}
+
+
+aa.clear_cash =async()=>
+{
+  const cache = await caches.open('cash');
+  const results = await cache.matchAll();
+  for (const key of results) cache.delete(key);
+};
 
 
 // count items in db store

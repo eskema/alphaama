@@ -7,14 +7,6 @@ walLNuts
 */
 
 
-aa.mk.scripts([
-  '/w/clk.js',
-  '/w/fx.js',
-  '/w/kinds.js',
-  '/w/mk.js',
-]);
-
-
 if (!localStorage.hasOwnProperty('zap')) localStorage.zap = '21';
 if (!localStorage.hasOwnProperty('zap_memo')) localStorage.zap_memo = 'walLNut';
 
@@ -145,7 +137,8 @@ aa.w.import =async(s='')=>
   
   if (mints.length) aa.w.add(mints.join(' '));
   if (privkey.length) aa.w.key(privkey);
-
+  aa.q.run('w');
+  
 };
 
 
@@ -210,6 +203,13 @@ aa.w.key =(privkey='',confirm=true)=>
 // on load
 aa.w.load =async()=>
 {
+  await aa.mk.scripts([
+    '/w/clk.js',
+    '/w/fx.js',
+    '/w/kinds.js',
+    '/w/mk.js',
+  ]);
+
   let mod = aa.w;
   let id = mod.def.id;
 
@@ -603,20 +603,23 @@ aa.w.send =async(s='')=>
 aa.w.start =mod=>
 {
   aa.mod.mk(mod);
-  let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
-  let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
-  
-  // let ids = mod.o.ls.redeemable.map(i=>i[0]).join(' ');
-  // let amount = mod.o.redeemable.map(i=>i[1]).reduce((a,b)=>a+b,0);
-  // let redeem_butt = aa.mk.butt_action(`${mod.def.id} redeem ${ids}`,'🐿️['+amount+']');
-  
-  // mod.l.insertBefore(upd_butt,document.getElementById(mod.def.id));
-  // mod.l.insertBefore(add_butt,upd_butt);
-  fastdom.mutate(()=>
+  if (aa.w.used)
   {
-    mod.l.insertBefore(add_butt,mod.l.lastChild);
-    mod.l.insertBefore(upd_butt,mod.l.lastChild)
-  })
+    let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
+    let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
+    fastdom.mutate(()=>
+    {
+      mod.l.insertBefore(add_butt,mod.l.lastChild);
+      mod.l.insertBefore(upd_butt,mod.l.lastChild)
+    })
+  }
+  else
+  {
+    fastdom.mutate(()=>
+    {
+      mod.l.append(aa.mk.butt_action(`${mod.def.id} import`,'import'))
+    })
+  }
 };
 
 

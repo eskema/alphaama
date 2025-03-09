@@ -34,7 +34,7 @@ const on_loaded =()=>
   let p = aa.u?.p;
   if (p)
   {
-    aa.p.profile(p);
+    aa.mk.profile(p);
     if (p.events.k3?.length) aa.p.load_profiles(p.follows);
   }
 
@@ -70,4 +70,8 @@ const on_loaded =()=>
     details.id = 'aa_read_me';
     aa.view?.prepend(details);
   });
+
+  // aa.u.worker = new Worker('/local/worker.js');
+  // aa.u.worker.onmessage =e=>{console.log(e.data)}
+
 };

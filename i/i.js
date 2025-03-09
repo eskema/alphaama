@@ -158,7 +158,6 @@ aa.i.filter_solo_rm =(items,k_v)=>
       aa.fx.path_rm(k_v);
     }
   // })
-
 };
 
 
@@ -184,7 +183,11 @@ aa.i.filter_solo_apply =(items,k_v)=>
     }
   // });
 
-  for (const l of items) aa.i.solo(l,k_v);
+  for (const l of items) // solo item
+  {
+    l.classList.add('solo'); 
+    aa.fx.path(l,k_v);
+  };
 };
 
 
@@ -265,14 +268,6 @@ aa.i.run =()=>
   }
   aa.i.l.append(aa.mk.i_at('since',0));
   aa.i.l.append(aa.mk.i_at('until',0));
-}; 
-
-
-// solo item
-aa.i.solo =(l,k_v)=>
-{
-  l.classList.add('solo'); 
-  aa.fx.path(l,k_v);
 };
 
 

@@ -1,17 +1,3 @@
-aa.mk.styles(['/e/e.css']);
-aa.mk.scripts([
-  '/e/clk.js',
-  '/e/db.js',
-  '/e/fx.js',
-  '/e/get.js',
-  '/e/is.js',
-  '/e/kinds.js',
-  '/e/mk.js',
-  '/e/parse.js',
-  '/e/views.js'
-]);
-
-
 /*
 
 alphaama
@@ -206,6 +192,18 @@ aa.e.json =async(s='')=>
 // on load
 aa.e.load =async()=>
 {
+  await aa.mk.scripts([
+    '/e/clk.js',
+    '/e/db.js',
+    '/e/fx.js',
+    '/e/get.js',
+    '/e/is.js',
+    '/e/kinds.js',
+    '/e/mk.js',
+    '/e/parse.js',
+    '/e/views.js'
+  ]);
+
   let mod = aa.e;
   aa.temp.orphan = {};
   aa.temp.print = {};
@@ -580,27 +578,19 @@ aa.e.to_printer =dat=>
 };
 
 
+// printer queue handler
 aa.e.printer =()=>
 {
   let to_print = Object.values(aa.temp.print);
   aa.temp.print = {};
   to_print.sort(aa.fx.sorts.ca_asc);
-  // if (aa.e.root_count === 1)
-  // {
-    // aa.log('printing '+to_print.length+' events');
-  // }
-  for (const dat of to_print) 
-  {
-    setTimeout(()=>
-    {
-      aa.e.print(dat)
-    },0);
-  }
+
+  for (const dat of to_print) setTimeout(()=>{aa.e.print(dat)},0);
   setTimeout(()=>
   {
+    aa.get.missing('a');
     aa.get.missing('p');
     aa.get.missing('e');
-    aa.get.missing('a');
   },500);
 };
 
@@ -663,7 +653,6 @@ aa.e.print =dat=>
 };
 
 
-
 // quote event
 aa.e.quote =o=>
 {
@@ -672,7 +661,6 @@ aa.e.quote =o=>
   if (o.dis) quote.cite = o.dis;
   quote.dataset.id = o.id;
   let by = aa.mk.l('p',{cla:'note_quote_by'});
-  // by.append(aa.mk.nostr_link(aa.fx.encode('note',o.id)));
   quote.append(by);
   let has_pub;
   let pubkey = o.author ?? o.pubkey;
@@ -1038,3 +1026,5 @@ aa.e.view =l=>
     aa.fx.scroll(l);
   });
 };
+
+aa.mk.styles(['/e/e.css']);

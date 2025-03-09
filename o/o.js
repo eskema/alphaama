@@ -14,6 +14,7 @@ aa.o =
     id:'o',
     ls:
     {
+      'cash':'off',
       'ns':'.aa', // used as the prefix for actions
       'pagination': '100', // number of root events displayed
       'pow':'0', // proof of work difficulty
@@ -35,7 +36,34 @@ aa.o =
 //       'exit':'Escape'
 //     }
   },
-  defaults:{}
+};
+
+// given a theme, returns the other one for quick input
+aa.o.defaults =
+{
+  cash:
+  {
+    options:['on','off'],
+    exe:s=>
+    {
+      // aa.log('reload page for cache options to take effect')
+    },
+    fx:s=> aa.fx.pick_other(s,aa.o.defaults.cash.options),
+    pre:s=>
+    {
+      if (s === 'on') return window.confirm('turn cache on?');
+      else return true
+    }
+  },
+  theme:
+  {
+    options:['dark','light'],
+    exe:s=>
+    {
+      if (aa.l.dataset.theme !== s) aa.l.dataset.theme = s;
+    },
+    fx:s=> aa.fx.pick_other(s,aa.o.defaults.theme.options)
+  }
 };
 
 
@@ -213,13 +241,7 @@ aa.o.save =()=>
 };
 
 
-// given a theme, returns the other one for quick input
-aa.o.defaults.theme =
+aa.fx.pick_other =(s,a)=>
 {
-  options:['dark','light'],
-  exe:s=>
-  {
-    if (aa.l.dataset.theme !== s) aa.l.dataset.theme = s;
-  },
-  fx:s=> aa.o.defaults.theme.options.find(i=>i!==s)
+  return a.find(i=>i!==s)
 };
