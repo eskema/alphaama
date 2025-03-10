@@ -6,14 +6,17 @@
 #authors
 {
   padding-left: var(--pad-l);
-  z-index: 1;
   pointer-events: none;
+  z-index: 1;
 }
 
 .profile 
 {
   align-items: end;
-  background: linear-gradient(to left, rgb(var(--color-a)) 0%, rgb(var(--c)) 100%);
+  background: 
+    linear-gradient(to left, 
+      rgb(var(--color-a)) 0%, 
+      rgb(var(--c))       100%);
   border-bottom: var(--pad) solid rgb(var(--color-b));
   display: grid;
   grid-template-areas: "pub actions";
@@ -22,7 +25,6 @@
   padding: 1px;
   pointer-events: auto;
   z-index: 10000000;
-  /*scroll-snap-align: start;*/
 }
 
 .profile[data-luma="light"]
@@ -38,11 +40,10 @@
 .profile.in_view 
 {
   grid-template-areas: 
-  "pub pub"
-  "metadata metadata"
-  "extradata extradata"
-  "actions actions"
-  ;
+    "pub pub"
+    "metadata metadata"
+    "extradata extradata"
+    "actions actions";
   margin-bottom: calc(var(--line) + calc(var(--pad)*2));
 }
 
@@ -176,7 +177,6 @@
 
 .profile > .pubkey .author .name
 {
-  /*background: rgb(var(--color-b));*/
   justify-self: start;
   padding: var(--padm);
 }
@@ -190,11 +190,9 @@
 
 .profile > .pubkey .xpub
 {
-  /*display: none;*/
   font-size: var(--font-size-s);
   grid-area: xpub;
   justify-self: stretch;
-  /*max-width: calc(var(--size) - var(--pad));*/
   overflow-x: scroll;
   padding: 0 var(--pad);
   text-align: right;
@@ -221,7 +219,6 @@
   font-size: var(--font-size-s);
   grid-template-areas: "author actions xpub created_at";
   grid-template-columns: auto auto 1fr auto;
-  padding: var(--padm);
   padding: 0;
   position: sticky;
   top: 0;
@@ -231,9 +228,8 @@
 .in_view > .pubkey .xpub 
 {
   display: unset;
-  max-width: 30vw;
-  max-width: unset;
   margin-right: var(--pad);
+  max-width: unset;
 }
 
 /* @end */
@@ -253,13 +249,12 @@
   align-self: start;
   display: grid;
   grid-template-areas: 
-  "picture"
-  "name"
-  "about"
-  "nip05"
-  "luds"
-  "website"
-  ;
+    "picture"
+    "name"
+    "about"
+    "nip05"
+    "luds"
+    "website";
 }
 
 .metadata_list > *
@@ -282,14 +277,14 @@
   background: rgb(var(--color-b));
   color: rgb(var(--color-d));
   font-size: var(--font-size-s);
-  grid-row: 99;
   grid-area: unset;
+  grid-row: 99;
   justify-self: start;
   line-height: 1;
   margin: 0;
   margin-bottom: 1px;
-  padding-top: var(--padm);
   padding-bottom: var(--padm);
+  padding-top: var(--padm);
 }
 
 [data-meta]::before, 
@@ -303,11 +298,7 @@
   text-decoration: line-through;
 }
 
-.in_view > .metadata
-{
-  display: block;
-}
-
+.in_view > .metadata,
 .in_view .metadata_list > *
 {
   display: block;
@@ -356,7 +347,6 @@
 [data-meta="banner"]
 {
   grid-area: picture;
-  /*transition: var(--trans-quart);*/
   user-select: none;
 }
 
@@ -437,7 +427,7 @@ p[data-meta="banner"]
 [data-meta="lud16"]:not(.empty)::before 
 {
   content: "\020BF"  "⚡️ ";
-  font-family: Apple Color Emoji,"Segoe UI Emoji","Source Code Pro", monospace;
+  font-family: var(--font-emoji),var(--font-main);
   font-variant-emoji: emoji;
 }
 

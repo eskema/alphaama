@@ -746,10 +746,9 @@ a.author
 {
   align-self: end;
   background: rgba(var(--color-b),1);
-  bottom: calc(var(--size) + var(--pad));
+  bottom: var(--size);
   grid-area: tags;
   position: sticky;
-  
 }
 
 .tags_wrapper[open]
@@ -1256,11 +1255,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .note.tiny[data-kind="7"]:not(.in_view) > .content
 {
-  font-family: 
-    Apple Color Emoji,
-    "Segoe UI Emoji",
-    "Source Code Pro",
-    monospace;
+  font-family: var(--font-emoji),var(--font-main);
   font-variant-emoji: emoji;
   padding-left: 0;
   padding: 1px;  
@@ -1471,9 +1466,9 @@ html:not(.needs_pagin) .pagination
 
 @media screen and (max-width: 768px) 
 {
-  :root {
-    /*--font-size: 14px;*/
-  }
+/*  :root {
+    --font-size: 14px;
+  }*/
   
   html:not(.view_e) #notes
   {

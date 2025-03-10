@@ -818,16 +818,3 @@ aa.r.worker =async o=>
     worker.postMessage(o);
   // });
 };
-
-aa.test =async s=>
-{
-  let filter = s || '{"authors":["u"],"kinds":[0,3,10002,10019,17375]}';
-  filter = aa.q.replace_filter_vars(filter)[0];
-  if (!filter) return;
-  let dis = await aa.r.worker(
-  [
-    ['boot','wss://r.alphaama.com'],
-    ['REQ','yo',filter]
-  ]);
-  return dis
-};

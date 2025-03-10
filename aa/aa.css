@@ -16,6 +16,9 @@
   --trans-slow: all .6s var(--cb) 0s;
   --trans-quart-io: all .3s var(--cb-io) 0s;
   --font-main: "Source Code Pro", monospace;
+  --font-emoji:  
+      Apple Color Emoji,
+      "Segoe UI Emoji";
   --font-size: 16px;
   --font-size-s: .69420rem;
   --font-size-xs: .5236rem;
@@ -1075,7 +1078,7 @@ img:not([src]) {
 html:not(.cli_expanded) .l.is_new
 {
   position: absolute;
-  transform: translateY(calc(var(--pad)*-1)) translateX(var(--pad-l));
+  transform: translateX(var(--pad-l));
   padding-left: 0;
   margin-left: 0;
 }
