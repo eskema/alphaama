@@ -77,7 +77,7 @@ aa.clk.mark_read =e=>
       replies.classList.add('expanded');
     }
   }
-  if (!aa.viewing)
+  if (!aa.view.active)
   {
     let top = root.offsetTop + (3 * parseFloat(getComputedStyle(aa.l).fontSize));
     if (top < aa.l.scrollTop) aa.l.scrollTo(0,top);

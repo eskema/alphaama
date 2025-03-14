@@ -14,6 +14,9 @@ aa.mk.det =(cla='',id='')=>
 aa.mk.note =dat=>
 {
   const note = aa.mk.l('article',{cla:'note'});
+  // const heading = aa.mk.l('h1',{cla:'heading'});
+  // `a ${aa.k[dat.event.kind]} by`
+  // heading.textContent = 'k'+dat.event.kind+' '+aa.k[dat.event.kind];
   const by = aa.mk.l('header',{cla:'by'});
 
   note.append(by);
@@ -27,7 +30,7 @@ aa.mk.note =dat=>
     const nid = aa.fx.encode('note',dat.event.id);
     note.id = nid;
     note.dataset.id = dat.event.id;
-    const h1 = aa.mk.l('h1',{cla:'id'});
+    const h1 = aa.mk.l('span',{cla:'id'});
     const h1_nid = aa.mk.l('a',
     {
       cla:'a nid',
@@ -42,7 +45,15 @@ aa.mk.note =dat=>
     
     let stored = sessionStorage[dat.event.id];
     if (stored && stored === 'tiny') note.classList.add('tiny');
-    // by.append(aa.mk.butt(['x','tiny']));
+    
+    const clicker = aa.mk.l('a',
+    {
+      cla:'a clicker',
+      ref:'#'+nid,
+      con:'k'+dat.event.kind+' '+aa.k[dat.event.kind],
+      clk:aa.clk.a
+    });
+    note.prepend(clicker);
   }
 
   if ('pubkey' in dat.event)

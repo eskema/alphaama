@@ -63,6 +63,7 @@ const aa =
   temp:{},
   tools:
   [
+    '/aa/view.js?v='+aa_version,
     '/db/db.js?v='+aa_version,
     '/aa/clk.js?v='+aa_version,
     '/aa/is.js?v='+aa_version,
@@ -75,33 +76,17 @@ const aa =
     '/av/av.js?v='+aa_version,
     
   ],
-  viewing:false,
-  view:false,
-  views:[],
-};
-
-
-// clear view
-aa.clear =()=>
-{
-  if (aa.viewing)
+  
+  view:
   {
-    const in_view = aa.in_view;
-    if (in_view) 
-    {
-      in_view.classList.remove('in_view');
-      if (in_view.classList.contains('note'))
-      {
-        if (aa.in_path?.length) for (const l of aa.in_path) aa.fx.path_rm(l);
-      }
-      delete aa.in_view;
-    }
+    active:false,
+    l:false,
+    ls:{},
   }
-  aa.viewing = false;
-  if (aa.state.l) aa.state.l.textContent = '';
-  aa.l.classList.remove('viewing','view_e','view_p') 
-  for (const c of aa.clears) c();
 };
+
+
+
 
 
 // make element with options
@@ -142,7 +127,7 @@ aa.load =async(o={})=>
 {
   // setup document
   aa.l = document.documentElement;
-  aa.mk.manifest();
+
 
   let styles = o.styles || aa.styles;
   aa.mk.styles(styles);
@@ -152,9 +137,11 @@ aa.load =async(o={})=>
   
   await aa.mk.scripts([...dependencies,...tools]);
   
+  aa.mk.manifest();
   aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
-  aa.view = aa.mk.l('main',{id:'view'});
+  aa.view.l = aa.mk.l('main',{id:'view'});
   aa.mod_l = aa.mk.l('div',{id:'mods'});
+
   aa.mods_load(mods);
 
   // media observer for lazy cache fetching
@@ -211,71 +198,29 @@ aa.log =(con='',l=false,is_new=true)=>
 };
 
 
-// get meta data from manifest
-aa.mk.manifest =()=>
-{
-  document.head.append(aa.mk.l('link',{rel:'manifest',ref:'/site.webmanifest'}));
-  fetch('/site.webmanifest').then(dis=>dis.json())
-  .then(manifest=>
-  {
-    for (const icon of manifest.icons)
-    {
-      let link = aa.mk.l('link');
-      if (icon.src.includes('apple-touch-icon'))
-      {
-        link.rel = 'apple-touch-icon';
-        link.sizes = icon.sizes;
-      }
-      else if (icon.src.includes('safari-pinned-tab'))
-      {
-        link.rel = 'mask-icon';
-        link.color = manifest.theme_color
-      }
-      else
-      {
-        link.rel = 'icon';
-        if ('sizes' in icon) link.sizes = icon.sizes;
-        if ('type' in icon) link.type = icon.type;
-      }
-      link.href = icon.src;
-      document.head.append(link);
-    }
-  });
-};
-
-
 // append mod scripts when required mods have been loaded
-aa.mods_load =a=>
+aa.mods_load =async a=>
 {
   for (const o of a)
   {
-    if (aa.is.mods_loaded(o.requires))
+    if (aa.required(o.requires))
     {
-      let l = aa.mk.l('script',{src:o.src});
-      l.addEventListener('load',e=>
-      {
-        if (aa.hasOwnProperty(o.id) && aa[o.id].hasOwnProperty('load'))
-          aa[o.id].load().then(()=>{aa[o.id].loaded = true})
-      });
-      document.head.append(l);
+      await aa.mk.scripts([o.src]);
+      
+      if (aa.hasOwnProperty(o.id) && aa[o.id].hasOwnProperty('load'))
+        await aa[o.id].load(); //.then(()=>{aa[o.id].loaded = true})
+      
+      aa[o.id].loaded = true;
     }
-    else
-    {
-      if (!o.attempts) o.attempts = 1;
-      else o.attempts++;
-      if (o.attempts < 420) setTimeout(()=>{aa.mods_load([o])},o.attempts);
-      else aa.log('could not load mod '+o.id)
-    }
+    // else
+    // {
+    //   if (!o.attempts) o.attempts = 1;
+    //   else o.attempts++;
+    //   console.log(o.id,o.attempts)
+    //   if (o.attempts < 420) setTimeout(()=>{aa.mods_load([o])},0);
+    //   else aa.log('could not load mod '+o.id)
+    // }
   }
-};
-
-
-// checks if required mods have loaded
-aa.is.mods_loaded =required=>
-{
-  for (const id of required) 
-    if (!aa.hasOwnProperty(id) || !aa[id].loaded) return false
-  return true
 };
 
 
@@ -297,12 +242,21 @@ aa.reset =async()=>
 };
 
 
+// 
+aa.required =required=>
+{
+  for (const id of required) 
+    if (!aa.hasOwnProperty(id) || !aa[id].loaded) return false
+  return true
+};
+
+
 // if no options found, run with defaults
 aa.run =(o={})=>
 {
   fastdom.mutate(()=>
   {
-    document.body.prepend(aa.mk.header(),aa.view);
+    document.body.prepend(aa.mk.header(),aa.view.l);
     let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
     u_u.append(aa.mod_l);
     document.body.insertBefore(u_u,document.body.lastChild.previousSibling);
@@ -311,7 +265,7 @@ aa.run =(o={})=>
 
   aa.log((navigator.onLine ? 'on' : 'off') + 'line at '+location.origin);
   aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
-  setTimeout(aa.state.pop,100);
+  setTimeout(aa.view.pop,100);
   setTimeout(aa.logs_read,420);
 
   aa.dialog = aa.mk.l('dialog',{id:'dialog'});
@@ -335,7 +289,7 @@ aa.mk.scripts =async a=>
       let l = aa.mk.l('script',{src});
       l.addEventListener('load',e=>
       {
-        n++; if (n===a.length) resolve(true)
+        if (n===a.length-1) resolve(true);n++
       });
       document.head.append(l);
     }
@@ -351,74 +305,3 @@ aa.mk.styles =async a=>
 };
 
 
-// pop state into view
-aa.state.pop =()=>
-{
-  let hash = location.hash;
-  let search = location.search;
-  if(hash.length) [hash,search] = location.hash.split('?');
-  if(!search) search = '';
-  let no_state = !history.state || !history.state.hasOwnProperty('view')
-  || history.state === '';
-  if(no_state) aa.state.view(hash,search);
-  else
-  {
-    aa.clear();
-    const state = history.state.view;
-    if (state.length) 
-    {
-      document.title = 'A<3 '+state;
-      aa.state.resolve(state,search);  
-    }
-    else document.title = 'alphaama';
-    fastdom.mutate(()=>{if(aa.state.l) aa.state.l.textContent = state;});
-  }
-};
-
-
-// replace state
-aa.state.replace =s=>
-{
-  history.state.view = s;
-  const hash = s.length ? s : '';
-  const path = location.origin+location.pathname+hash;
-  history.replaceState(history.state,'',path);
-};
-
-
-// resolve state view
-aa.state.resolve =(s,search)=>
-{
-  if (s.startsWith('#')) s = s.slice(1);
-  let has_view = false;
-  for (const v in aa.views)
-  {
-    if (s.startsWith(v)) 
-    {
-      has_view = true;
-      setTimeout(()=>{aa.views[v](s)},200);
-      break;
-    }
-  }
-  if (!has_view) aa.log('no view for '+s);
-};
-
-
-// view state or go back if same state
-aa.state.view =(s,search='')=>
-{
-  if (s?.length) s.trim();
-  if (search?.length) search = s.length?'?'+search:search;
-  let view = s+search;
-  let state,last;
-  if (!history.state || history.state.view !== view)
-  {
-    last = history.state?.view ?? '';
-    state = {view,last};
-    history.pushState(state,'',location.origin+location.pathname+view);
-    aa.state.pop();
-  }
-  else if (history.length) history.back();
-};
-
-window.addEventListener('popstate',aa.state.pop);

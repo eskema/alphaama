@@ -2,6 +2,7 @@
 const ass = {};
 // WebSocket
 let ws = null;
+let ls = [];
 // message handler
 onmessage =async e=>
 {
@@ -29,7 +30,7 @@ ass.boot =async a=>
     ws.onclose =e=>{postMessage(['close',e.data])};
     ws.onerror =e=>{postMessage(['erro',e.data])};
     ws.onopen =e=>{clearTimeout(abort);resolve(true)};
-    ws.onmessage =e=>{postMessage(['mess',e.data])};
+    ws.onmessage =e=>{ls.push(e.data)};
   })
 };
 

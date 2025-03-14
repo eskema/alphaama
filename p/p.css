@@ -277,8 +277,8 @@
   background: rgb(var(--color-b));
   color: rgb(var(--color-d));
   font-size: var(--font-size-s);
-  grid-area: unset;
-  grid-row: 99;
+  /*grid-area: unset;*/
+  /*grid-row: 99;*/
   justify-self: start;
   line-height: 1;
   margin: 0;

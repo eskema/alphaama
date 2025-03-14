@@ -135,7 +135,7 @@ aa.cli.dat_upd =async()=>
   const s = aa.cli.t.value;
   if (s.length)
   {
-    const reply_to = aa.viewing;    
+    const reply_to = aa.view.active;    
     if (reply_to && aa.cli.dat?.replying !== reply_to) delete aa.cli.dat;
     if (!aa.cli.hasOwnProperty('dat')) aa.cli.dat_mk(s,reply_to)
     else aa.cli.dat.event.content = s;

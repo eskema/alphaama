@@ -7,6 +7,8 @@ walLNuts
 */
 
 
+aa.mk.styles(['/w/w.css']);
+
 if (!localStorage.hasOwnProperty('zap')) localStorage.zap = '21';
 if (!localStorage.hasOwnProperty('zap_memo')) localStorage.zap_memo = 'walLNut';
 
@@ -138,7 +140,7 @@ aa.w.import =async(s='')=>
   if (mints.length) aa.w.add(mints.join(' '));
   if (privkey.length) aa.w.key(privkey);
   aa.q.run('w');
-  
+
 };
 
 

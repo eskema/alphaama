@@ -4,21 +4,17 @@ aa.load({
   // styles:[], tools:[], mods:[],
 }).then(e=>
 {
-  console.log('aa.load.then');
   window.addEventListener('load',e=>
   {
     // run with defaults
-    console.log('onload before run');
     aa.run();
-    console.log('onload after run, before on_loaded');
     on_loaded()
-    console.log('onload after on_loaded');
   });
 });
 
 const on_loaded =()=>
 {
-  if (!aa.is.mods_loaded(aa.mods.map(i=>i.id)))
+  if (!aa.required(aa.mods.map(i=>i.id)))
   {
     setTimeout(on_loaded,10);
     return
@@ -28,7 +24,9 @@ const on_loaded =()=>
   if (aa.e?.l) 
   {
     let e_section = aa.mk.section('e',false,aa.e.l);
-    setTimeout(()=>{e_section.append(aa.mk.pagination())},200);
+    // setTimeout(()=>{
+      e_section.append(aa.mk.pagination())
+    // },10);
   }
 
   let p = aa.u?.p;
@@ -43,17 +41,20 @@ const on_loaded =()=>
     if (sessionStorage.q_run) 
     {
       let run = `q run ${sessionStorage.q_run}`;
-      setTimeout(()=>{aa.log(aa.mk.butt_action(run))},200);
+      // setTimeout(()=>{
+        aa.log(aa.mk.butt_action(run))
+      // },100);
     }
     if (sessionStorage.q_out) 
     {
       let out = `q out ${sessionStorage.q_out}`;
-      setTimeout(()=>{aa.log(aa.mk.butt_action(out))},600);
+      // setTimeout(()=>{
+        aa.log(aa.mk.butt_action(out))
+      // },200);
     }
-  },600);
+  },200);
 
-  fetch('/README.adoc').then(dis=>dis?.text())
-  .then(text=>
+  fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
   {
     if (!text) return;
     let article = aa.mk.l('article',
@@ -68,7 +69,7 @@ const on_loaded =()=>
     
     let details = aa.mk.details(title,article);
     details.id = 'aa_read_me';
-    aa.view?.prepend(details);
+    aa.view.l?.prepend(details); 
   });
 
   // aa.u.worker = new Worker('/local/worker.js');

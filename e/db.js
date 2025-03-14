@@ -114,6 +114,6 @@ aa.actions.push(
     action:['db','view'],
     required:['id'],
     description:'view event',
-    exe:aa.state.view
+    exe:aa.view.state
   }
 );

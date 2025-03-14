@@ -1,11 +1,11 @@
-aa.views.naddr1 =async naddress=>
+aa.view.ls.naddr1 =async naddress=>
 {
   let data = aa.fx.decode(naddress);
   console.log(data);
 };
 
 
-aa.views.nevent1 =async nevent=>
+aa.view.ls.nevent1 =async nevent=>
 {
   let data = aa.fx.decode(nevent);
   if (data && data.id)
@@ -37,22 +37,22 @@ aa.views.nevent1 =async nevent=>
         // console.log(dat);
         let blank = aa.mk.note(dat);
         blank.classList.add('blank');
-        aa.e.append_to_notes(blank);
+        aa.e.append_as_root(blank);
         aa.r.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
       }
     }
     else 
     {
-      aa.state.replace(nid);
-      aa.state.resolve(history.state.view);
+      aa.view.replace(nid);
+      aa.view.resolve(history.state.view);
     }
   }
 };
 
 
-aa.views.note1 =async nid=>
+aa.view.ls.note1 =async nid=>
 {
-  aa.viewing = nid;
+  aa.view.active = nid;
   let l = document.getElementById(nid);
   if (l && !l.classList.contains('blank')) aa.e.view(l);
   else
@@ -63,7 +63,7 @@ aa.views.note1 =async nid=>
     else 
     {
       let blank = aa.mk.note({event:{id:x},clas:['blank','root']});
-      aa.e.append_to_notes(blank);
+      aa.e.append_as_root(blank);
       aa.e.miss_e(x);
       aa.get.missing('e');
       setTimeout(()=>{aa.e.view(blank)},500);

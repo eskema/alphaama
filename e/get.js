@@ -145,12 +145,12 @@ aa.get.tag_e_last =tags=>
 
 
 
-// gets e tag marked 'reply' or the last not marked 'mention'
+// gets a or e tag marked 'reply' or the last not marked 'mention'
 aa.get.tag_reply =tags=>
 {
-  let tag = tags.filter(t=>t[0]==='e'&&t[3]==='reply')[0];
+  let tag = tags.find(t=>t[0]==='a'&&t[3]!=='mention');
+  if (!tag) tag = tags.find(t=>t[0]==='e'&&t[3]==='reply');
   if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop();
-  if (!tag) tag = tags.find(t=>t[0]==='a');
   if (tag) return tag;
   return false
 };

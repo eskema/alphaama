@@ -31,7 +31,7 @@ aa.kinds[6] =dat=>
     }
     aa.e.append_check(dat,note,tag_reply);
   }
-  else aa.e.append_to_notes(note);
+  else aa.e.append_as_root(note);
   aa.p.from_tags(dat.event.tags);
   return note
 };
@@ -76,7 +76,7 @@ aa.kinds[20] =dat=>
 {
   aa.p.from_tags(dat.event.tags);
   let note = aa.mk.note(dat);
-  aa.e.append_to_notes(note);
+  aa.e.append_as_root(note);
   return note
 };
 
@@ -86,7 +86,7 @@ aa.kinds[1063] =dat=>
 {
   let note = aa.mk.note(dat);
   aa.p.from_tags(dat.event.tags);
-  aa.e.append_to_notes(note);
+  aa.e.append_as_root(note);
   return note
 };
 
@@ -116,7 +116,7 @@ aa.kinds[16] =dat=>
   //   }
   //   aa.e.append_check(dat,note,tag_reply);
   // }
-  // else aa.e.append_to_notes(note);
+  // else aa.e.append_as_root(note);
   aa.p.from_tags(dat.event.tags);
   return note
 };

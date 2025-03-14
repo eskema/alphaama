@@ -207,6 +207,11 @@ summary
   z-index: 1;
 }
 
+details[open] > summary
+{
+  opacity: 1;
+}
+
 summary::-webkit-details-marker 
 {
   display: none;
@@ -529,9 +534,19 @@ img:not([src]) {
   content: "[";
 }
 
+.item > details[open] > summary::before
+{
+  content: "[ ";
+}
+
 .item > details > summary::after 
 {
   content: "]";
+}
+
+.item > details[open] > summary::after 
+{
+  content: " ]";
 }
 
 .item > details.empty > summary::before

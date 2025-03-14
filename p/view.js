@@ -1,7 +1,7 @@
 // view for npub
-aa.views.npub1 =async npub=>
+aa.view.ls.npub1 =async npub=>
 {
-  aa.viewing = npub;
+  aa.view.active = npub;
   const k = 'pubkey';
   let v = aa.fx.decode(npub);
   let p = await aa.p.author(v);
@@ -13,7 +13,7 @@ aa.views.npub1 =async npub=>
   {
     profile.classList.add('in_view');
     aa.l.classList.add('viewing','view_p');
-    aa.fx.scroll(l);
+    setTimeout(()=>{aa.fx.scroll(profile)},200);
   });
 
   let ids = [];
@@ -33,7 +33,7 @@ aa.views.npub1 =async npub=>
 };
 
 // view for nprofile
-aa.views.nprofile1 =async nprofile=>
+aa.view.ls.nprofile1 =async nprofile=>
 {
 
 };

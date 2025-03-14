@@ -16,13 +16,14 @@ aa.load({
 {
   const on_loaded =()=>
   {
-    if (!aa.is.mods_loaded(['w']))
+    if (!aa.required(['w']))
     {
       setTimeout(on_loaded,100);
       return
     }
-    aa.view.append(aa.w.l);
+    aa.view.l?.append(aa.w.l);
     aa.log('walLNut');
+    
     aa.q.run('w');
   };
 

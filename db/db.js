@@ -23,15 +23,15 @@ if ('serviceWorker' in navigator)
     })
     .catch(err=>{ console.log(err)});
   }
-}
-
-
-aa.clear_cash =async()=>
-{
-  const cache = await caches.open('cash');
-  const results = await cache.matchAll();
-  for (const key of results) cache.delete(key);
 };
+
+
+// aa.clear_cash =async()=>
+// {
+//   const cache = await caches.open('cash');
+//   const results = await cache.matchAll();
+//   for (const key of results) cache.delete(key);
+// };
 
 
 // count items in db store

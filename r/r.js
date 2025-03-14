@@ -13,6 +13,8 @@ aa.r =
   def:{id:'r',ls:{},r:'read',w:'write'},
   message_type:{},
   old_id:'rel',
+  worker:'/r/worker.js',
+  workers:new Map()
 };
 
 
@@ -804,17 +806,68 @@ aa.r.ws_open =async e=>
 };
 
 
-aa.r.worker =async o=>
+// one off results,
+// aa.r.ww =async a=>
+// {
+//   return new Promise(resolve=>
+//   {
+//     const messages = [];
+//     const worker = new Worker(aa.r.worker);
+//     worker.onmessage =e=> 
+//     {
+//       messages.push(e.data);
+//       if (true)
+//       {
+//         setTimeout(()=>{worker.terminate()},8);
+//         resolve(messages);
+//       }
+//     }
+//     worker.postMessage(a);
+//   });
+// };
+
+
+aa.r.ww =a=>
 {
-  // return new Promise(resolve=>
-  // {
-    const worker = new Worker('/r/worker.js');
+  let url = a[0][1];
+  if (!aa.temp.workers) aa.temp.workers = new Map();
+  let relay = aa.temp.workers.get(url);
+  if (!relay) 
+  {
+    relay = {messages:[]};
+    relay.worker = new Worker(aa.r.worker);
+    aa.temp.workers.set(url,relay);
+    relay.worker.postMessage(['open',url]);
     worker.onmessage =e=> 
     {
-      // setTimeout(()=>{worker.terminate()},8);
-      // resolve(e.data);
-      console.log(e.data);
+      relay.messages.push(e.data);
+      console.log(opened.messages.slice(-1));
     }
-    worker.postMessage(o);
-  // });
+  }
+  relay.worker.postMessage(o);
+  return worker
 };
+
+
+aa.r.www_kill =s=>
+{
+  let ww = aa.temp.workers.get(s);
+  if (ww) 
+  {
+    ww.worker.terminate();
+    aa.temp.workers.delete(s)
+  }
+};
+
+// aa.test =async s=>
+// {
+//   let filter = s || '{"authors":["u"],"kinds":[0,3,10002,10019,17375]}';
+//   filter = aa.q.replace_filter_vars(filter)[0];
+//   if (!filter) return;
+//   let dis = await aa.r.get(
+//   [
+//     ['url','wss://r.alphaama.com'],
+//     ['REQ','yo',filter]
+//   ]);
+//   return dis
+// };

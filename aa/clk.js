@@ -6,7 +6,7 @@ aa.clk.a =e=>
   e.preventDefault();
   let dis = e.target.getAttribute('href');
   if (dis==='/') dis = '';
-  aa.state.view(dis);
+  aa.view.state(dis);
 };
 
 // adds a clicked class to show interaction

@@ -256,6 +256,41 @@ aa.mk.ls =o=>
 };
 
 
+// get meta data from manifest
+aa.mk.manifest =()=>
+{
+  const ref = '/site.webmanifest';
+  fetch(ref).then(dis=>dis.json()).then(manifest=>
+  {
+    let df = new DocumentFragment();
+    df.append(aa.mk.l('link',{rel:'manifest',ref}));
+    for (const icon of manifest.icons)
+    {
+      let link = aa.mk.l('link');
+      if (icon.src.includes('apple-touch-icon'))
+      {
+        link.rel = 'apple-touch-icon';
+        link.sizes = icon.sizes;
+      }
+      else if (icon.src.includes('safari-pinned-tab'))
+      {
+        link.rel = 'mask-icon';
+        link.color = manifest.theme_color
+      }
+      else
+      {
+        link.rel = 'icon';
+        if ('sizes' in icon) link.sizes = icon.sizes;
+        if ('type' in icon) link.type = icon.type;
+      }
+      link.href = icon.src;
+      df.append(link);
+    }
+    fastdom.mutate(()=>{document.head.append(df)})
+  });
+};
+
+
 // log a notice
 aa.mk.notice =o=>
 {
@@ -345,7 +380,7 @@ aa.mk.section =(id,expanded=false,l=false)=>
   section_header.append(aa.mk.butt_expand(id));
   section.append(section_header);
   if (l) section.append(l);
-  if (aa.view) aa.view.append(section);
+  aa.view.l?.append(section);
   return section
 };
 

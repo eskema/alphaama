@@ -6,8 +6,6 @@ author pubkey profile
 
 */
 
-aa.mk.styles(['/p/p.css']);
-
 
 aa.p =
 {
@@ -30,8 +28,12 @@ aa.p =
       verified:[], // [result,date]
       xpub:x,
     }
-  }
+  },
+  styles:['/p/p.css']
 };
+
+
+aa.mk.styles(aa.p.styles);
 
 
 // follow add x to k3
@@ -391,7 +393,7 @@ aa.p.load =async()=>
     '/p/is.js',
     '/p/kinds.js',
     '/p/mk.js',
-    '/p/views.js'
+    '/p/view.js'
   ]);
 
   aa.temp.p_link = [];
@@ -401,7 +403,7 @@ aa.p.load =async()=>
       action:['p','view'],
       required:['pubkey'],
       description:'view profile by pubkey',
-      exe:(s)=>{ aa.state.view('#'+aa.fx.encode('npub',s)) }
+      exe:(s)=>{ aa.view.state('#'+aa.fx.encode('npub',s)) }
     },
     {
       action:['p','score'],
@@ -664,19 +666,20 @@ aa.p.process_k3_tags =async(event)=>
 aa.p.profile_upd =async(p)=>
 {
   let profile = aa.mk.profile(p);
-  const pubkey = profile.querySelector('.pubkey');
+  // const pubkey = profile.querySelector('.pubkey');
   const metadata = profile.querySelector('.metadata');
   const extradata = profile.querySelector('.extradata');
   
   fastdom.mutate(()=>
   {
     profile.classList.add('upd');
-    pubkey.replaceWith(aa.mk.pubkey(p));
+    // pubkey.replaceWith(aa.mk.pubkey(p));
     metadata.replaceWith(aa.mk.metadata(p));
     extradata.replaceWith(aa.mk.extradata(p));
     profile.dataset.trust = p.score;
     profile.dataset.updated = p.updated ?? 0;
   });
+  aa.p.links_upd(p)
 };
 
 
@@ -750,7 +753,7 @@ aa.p.save = async p=>
   if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
 
   aa.db.p[p.xpub] = p;
-  if (aa.viewing === p.npub) aa.p.profile_upd(p);
+  if (aa.view.active === p.npub) aa.p.profile_upd(p);
   // let l = [...aa.p.l.childNodes].find(i=>i.dataset.xpub === p.xpub);
   // if (l) aa.p.link_data_upd(
   //   l.querySelector('.pubkey .author'),
