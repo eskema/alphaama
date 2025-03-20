@@ -763,8 +763,8 @@ a.author
 .content-img,
 .content-video
 {
-  background: rgba(var(--color-d),1);
-  /*border: 1px solid rgba(var(--color-c),.6);*/
+  /*background: rgba(var(--color-d),1);*/
+  border: 1px solid rgba(var(--color-c),.2);
   /*box-shadow: 0px 2px 8px rgba(var(--color-a),1);*/
   display: block;
   height: auto;
@@ -1478,10 +1478,11 @@ html:not(.needs_pagin) .pagination
     /*z-index: 10;*/
   }
   
-  html:not(.viewing) .note:hover > .by,
+  .note:hover > .by,
   .in_view > .replies .replies .note:hover > .by
   {
     top: 0;
+    z-index: 9;
   }
   
   .mark_read:hover
@@ -1496,8 +1497,8 @@ html:not(.needs_pagin) .pagination
     content: " mark read";
   }
   
-  html:not(.viewing) .by:hover,
-  html:not(.viewing) a.clicker:hover + .by
+  .by:hover,
+  a.clicker:hover + .by
   {
     /*top: 0;*/
     z-index: 9;
@@ -1598,6 +1599,7 @@ html:not(.needs_pagin) .pagination
   html:not(.viewing) .replies .note:hover > .by
   {
     top: 0;
+    z-index: 3;
   }
   
   .in_view > .replies  .replies .note:hover
@@ -1608,9 +1610,6 @@ html:not(.needs_pagin) .pagination
 
 @media screen and (max-width: 768px) 
 {
-/*  :root {
-    --font-size: 14px;
-  }*/
   
   html:not(.view_e) #notes
   {

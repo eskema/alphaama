@@ -842,27 +842,24 @@ aa.fx.url_from_tags =tags=>
 
 // checks if string is valid url and then checks extension for media file types.
 // returns false if no media found or array with extension,URL
-aa.fx.url_type =s=>
+aa.fx.src_type =url=>
 {
-  let url = aa.is.url(s); 
-  if (!url) return false;
-  const is_img = aa.extensions.img;
-  const is_av = aa.extensions.av;
-  const check_ext =extensions=>
+  let dis = [url.href];
+  if (aa.fx.src_ext(url,aa.extensions.img)) dis.push('img');
+  if (aa.fx.src_ext(url,aa.extensions.audio)) dis.push('audio');
+  if (aa.fx.src_ext(url,aa.extensions.video)) dis.push('video');
+  return dis
+};
+
+aa.fx.src_ext =(url,extensions)=>
+{
+  const src = (url.origin + url.pathname).toLowerCase();
+  for (const ext of extensions)
   {
-    const src = (url.origin + url.pathname).toLowerCase();
-    for (const ext of extensions)
-    {
-      if (src.endsWith('.'+ext)
-      || (url.searchParams.has('format') && url.searchParams.get('format') === ext)) 
-      return true
-    }
-    return false
-  };
-   
-  return check_ext(is_img)?['img',url]
-  :check_ext(is_av)?['av',url]
-  :['link',url]
+    if (src.endsWith('.'+ext)
+    || url.searchParams.get('format') === ext) return true
+  }
+  return false
 };
 
 

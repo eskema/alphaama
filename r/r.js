@@ -700,7 +700,7 @@ aa.r.try =(relay,dis)=>
   {
     relay.failed++;
     if (relay.failed < 21) setTimeout(()=>{aa.r.try(relay,dis)},420*relay.failed);
-    else aa.r.force_close([url]);
+    else aa.r.force_close([relay.ws.url]);
   }
   aa.r.upd_state(relay.ws.url);
 };

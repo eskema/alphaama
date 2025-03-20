@@ -31,8 +31,9 @@ const aa =
   ],
   extensions:
   {
-    img:['jpg','jpeg','gif','webp','png','heic'],
-    av:['mp3','mp4','webm','m4a'],
+    img:['gif','heic','jpeg','jpg','png','webp'],
+    video:['mp4','webm'],
+    audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
   },
   fx:{},
   get:{},

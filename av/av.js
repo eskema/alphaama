@@ -1,7 +1,7 @@
 aa.mk.styles(['/av/av.css']);
 
-// video element
-aa.mk.av =(src,poster=false)=>
+// audio/video player element
+aa.mk.av =(src,poster=false,audio=false)=>
 {
   // toggle sound
   const mute =e=>
@@ -61,11 +61,23 @@ aa.mk.av =(src,poster=false)=>
     else pause(e.target);
   };
 
-  const av = document.createElement('div');
+  const av = document.createElement('div');  
   av.classList.add('av');
-
-  const l = document.createElement('video');
-  l.classList.add('mf','content-video','muted');
+  let l;
+  if (audio)
+  {
+    l = document.createElement('audio');
+    l.classList.add('content-audio');
+    av.classList.add('audio');
+  }
+  else
+  {
+    l = document.createElement('video');
+    l.classList.add('content-video');
+    av.classList.add('video');
+  }
+  l.classList.add('mf','muted');
+  
   l.muted = true;
   l.loop = true;
   l.setAttribute('playsinline','');

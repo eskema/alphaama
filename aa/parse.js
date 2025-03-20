@@ -157,19 +157,19 @@ aa.parse.nostr =match=>
 // parse url as link or media given trust
 aa.parse.url =(match,tru)=>
 {
-  let l;
-  const type = aa.fx.url_type(match[0]);
-  if (tru && type[0] === 'img') 
+  let url = aa.is.url(match[0]);
+  if (!url) return;
+
+  const [src,type] = aa.fx.src_type(url);
+  if (!tru || !type) return aa.mk.link(src);
+  if (type === 'img') return aa.mk.img(src);
+  else if (type === 'audio' || type === 'video')
   {
-    l = aa.mk.img(type[1].href);
+    let l = aa.mk.av(src,false,type==='audio'?true:false);
+    aa.lazy_dog.observe(l.querySelector('.mf'));
+    return l
   }
-  else if (tru && type[0] === 'av') 
-  {
-    l = aa.mk.av(type[1].href);
-    aa.lazy_dog.observe(l.querySelector('video'));
-  }
-  else if (type) l = aa.mk.link(type[1].href);
-  return l
+  return
 };
 
 

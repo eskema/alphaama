@@ -31,9 +31,9 @@
   grid-area: av;
   grid-template-columns: 1fr auto;
   grid-template-areas: 
-  "progress progress progress progress"
-  "before rewind mute sticky"
-  "url url url url";
+    "progress progress progress progress"
+    "before rewind mute sticky"
+    "url url url url";
   line-height: 2;
   text-align: right;
   transform: translateY(-2rem);
@@ -46,12 +46,17 @@
   white-space: pre;
 }
 
+.av.audio .controls::before 
+{
+  content: "<audio " attr(data-duration) "s";
+}
+
 .av .controls:hover 
 {
   z-index: 2;
 }
 
-.av video:hover + .controls::before 
+.av .mf:hover + .controls::before 
 {
   content: "<play " attr(data-duration) "s";
 }
@@ -61,7 +66,7 @@
   content: "<video " attr(data-remains) "s";
 }
 
-.av video.started.playin + .controls::before
+.av .mf.started.playin + .controls::before
 {
   content: "<pause " attr(data-remains) "s";
 }
@@ -124,22 +129,22 @@
 
 @media screen and (min-width: 1025px) 
 {
-  .av video 
+  .av .mf 
   {
     opacity: .5;
   }
   
-  .av video:hover 
+  .av .mf:hover 
   {
     opacity: 1;
   }
   
-  .av video.started:hover + .controls::before 
+  .av .mf.started:hover + .controls::before 
   {
     content: "<play " attr(data-remains) "s";
   }
   
-  .av video.started.playin:hover + .controls::before 
+  .av .mf.started.playin:hover + .controls::before 
   {
     content: "<pause " attr(data-remains) "s";
   }
