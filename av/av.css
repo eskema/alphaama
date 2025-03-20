@@ -9,7 +9,7 @@
   position: relative;
 }
 
-.av video 
+.av .mf 
 {
   background: black;
   cursor: pointer;
@@ -17,7 +17,7 @@
   margin: 0;
 }
 
-.av video.playin 
+.av .mf.playin 
 {
   opacity: 1;
   z-index: 1;
@@ -64,6 +64,11 @@
 .av .started + .controls::before 
 {
   content: "<video " attr(data-remains) "s";
+}
+
+.av.audio .started + .controls::before 
+{
+  content: "<audio " attr(data-remains) "s";
 }
 
 .av .mf.started.playin + .controls::before
@@ -125,6 +130,13 @@
 .av .controls 
 {
   color: rgb(var(--color-d));
+}
+
+.av audio
+{
+/*  display: block!important;
+  min-width: 300px;
+  min-height: 500px;*/
 }
 
 @media screen and (min-width: 1025px) 

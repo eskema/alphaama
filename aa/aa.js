@@ -7,7 +7,7 @@ v3
 */
 
 
-const aa_version = 50;
+const aa_version = 51;
 
 const aa = 
 {
@@ -77,7 +77,6 @@ const aa =
     '/av/av.js?v='+aa_version,
     
   ],
-  
   view:
   {
     active:false,

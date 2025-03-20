@@ -63,21 +63,19 @@ aa.mk.av =(src,poster=false,audio=false)=>
 
   const av = document.createElement('div');  
   av.classList.add('av');
-  let l;
+  
+  let l = document.createElement('video');
   if (audio)
   {
-    l = document.createElement('audio');
     l.classList.add('content-audio');
     av.classList.add('audio');
   }
   else
   {
-    l = document.createElement('video');
     l.classList.add('content-video');
     av.classList.add('video');
   }
   l.classList.add('mf','muted');
-  
   l.muted = true;
   l.loop = true;
   l.setAttribute('playsinline','');

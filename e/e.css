@@ -14,8 +14,6 @@
   --who: attr(data-who);
   align-self: stretch;
   background: rgb(var(--color-b));
-/*  border-left: 1px dotted rgba(var(--color-c),1);
-  border-top: 1px dotted rgba(var(--color-c),1);*/
   box-sizing: border-box;
   /*contain:paint;*/
   display: grid;
@@ -31,7 +29,6 @@
   margin: 0;
   padding-top: var(--pad);;
   position: relative;
-  /*z-index: 1;*/
 }
 
 .note.root.solo,
@@ -43,40 +40,37 @@
 {
   grid-template-columns: auto 1fr 61.8vw;
   grid-template-areas: 
-  "by       by       by"
-  "content  content  replies"
-  "tags     tags     replies"
-  "after    after    replies"
-  "versions versions versions"
-  ;
+    "by       by       by"
+    "content  content  replies"
+    "tags     tags     replies"
+    "after    after    replies"
+    "versions versions versions";
 }
 
 .note.in_path.in_view
 {
   border-color: rgb(var(--color-e));
   grid-template-areas: 
-  "by      by"
-  "content content"
-  "tags    tags"
-  "after   after"
-  "replies replies"
-  "versions versions"
-  ;
+    "by      by"
+    "content content"
+    "tags    tags"
+    "after   after"
+    "replies replies"
+    "versions versions";
   grid-template-columns: 1fr 61.8vw;
   margin: 0;
 }
 
-.note.draft
+.note.draft > .clicker
 {
-/*  border-left: 1px dashed rgba(var(--color-main),1);
-  border-top: 1px dashed rgba(var(--color-main),1);*/
+  border-left: 1px dashed rgba(var(--color-main),1);
+  border-top: 1px dashed rgba(var(--color-main),1);
 }
 
 .note.root:not(.in_path) > .clicker
 {
   border-left: 1px solid rgba(var(--c),.5);
 }
-
 
 .note.root:not(.in_path):not(:first-child)
 {
@@ -88,12 +82,9 @@
   margin-top: var(--size);
 }
 
-/*.note.root:not(.in_path):first-child,*/
-/*.note.reply:nth-child(2),*/
 .note.in_path.haz_new_reply,
 .replies:not(.expanded) .note:not(.is_new).haz_new_reply,
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
-/*.note:not(.tiny) + .note.tiny*/
 {
   padding-top: 0;
 }
@@ -134,10 +125,7 @@
 
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 
-/*.in_view > .replies:not(.expanded) > .note:not(.is_new):not(.haz_new),*/
-
 .view_e .note.root:not(.in_path),
-/*.view_e .note:not(.in_path) .note,*/
 .view_p .root:not(.in_path),
 .view_e #notes > .note:not(.in_path),
 #e:not(.expanded) .note:not(.in_path)
@@ -161,7 +149,6 @@
 .clicker
 {
   align-content: end;
-  /*background: red!important;*/
   border-left: 1px dotted rgba(var(--color-c),1);
   border-top: 1px dotted rgba(var(--color-c),1);
   display: grid;
@@ -177,7 +164,6 @@
   top: -1px;
   user-select: none;
   width: 100%;
-  /*z-index: 0;*/
 }
 
 .clicker:hover
@@ -190,7 +176,6 @@
 .note.root > .clicker
 {
   pointer-events: none;
-  /*display: none;*/
 }
 
 
@@ -200,7 +185,6 @@
 
 .by
 {
-  /*background: red!important;*/
   align-content: center;
   align-items: center;
   align-self: end;
@@ -210,7 +194,6 @@
   grid-area: by;
   grid-template-areas: "author actions id created_at clas ";
   grid-template-columns: auto auto 1fr auto;
-  /*line-height: 1rem;*/
   z-index: 1;
   position: sticky;
   top: 0;
@@ -246,10 +229,6 @@
 
 .in_view > .by
 {
-/*  grid-template-areas: 
-    "id id id id"
-    "author actions created_at clas";
-  grid-template-columns: auto 1fr auto;*/
   z-index: 100;
 }
 
@@ -268,7 +247,6 @@
 
 .replies > .note:not(.in_path) > .by
 {
-  /*background: red;*/
   position: sticky;
   top: calc(2.5rem + 2px);
   z-index: 2;
@@ -282,9 +260,6 @@
 
 a.author 
 {
-  /*border-bottom: 1px dotted rgb(var(--c));*/
-  /*border-top: 1px solid transparent;*/
-  /*border-top: none!important;*/
   color: rgb(var(--color-d));
   grid-template-areas: "img name nip5 flw";
   line-height: 1rem;
@@ -315,8 +290,6 @@ a.author
 .pubkey .author::after,
 .note_quote_by .author::after
 {
-  /*align-content: center;*/
-  /*align-self: stretch;*/
   color: rgb(var(--color-d));
   content: attr(data-followers);
   display: block;
@@ -362,10 +335,13 @@ a.author
 
 .by .author
 {
-  /*line-height: 1rem;*/
-  /*align-self: stretch;*/
   grid-area: author;
-  /*border-bottom: 1px solid transparent;*/
+}
+
+.paragraph > a.author
+{
+  border-bottom: 1px dotted rgb(var(--c));
+  line-height: inherit;
 }
 
 .paragraph > a.author .name
@@ -384,46 +360,18 @@ a.author
 .in_view > .by .author
 {
   color: rgb(var(--color-d));
-/*  grid-template-areas: 
-    "img name flw" 
-    "img .    .";*/
 }
-
-/*.in_view > .by .author::before
-{
-  height: 2rem;
-  width: 2rem;
-  grid-area: img;
-}*/
-
-/*.in_view > .by .author .picture
-{
-  height: var(--line);
-  width: var(--line);
-}*/
 
 .in_view > .by .author .name
 {
   align-self: start;
   display: grid;
-/*  grid-template-areas: 
-    "name petname" 
-    "nip5 nip5";
-  grid-template-columns: auto 1fr;*/
 }
 
 .in_view > .by .author .name[data-nip05]::after
 {
   color: rgb(var(--color-d));
-  /*content: attr(data-nip05);*/
-  /*grid-area: nip5;*/
 }
-
-/*.in_view > .by .author .name::after
-{
-  display: block;
-  grid-area: petname;
-}*/
 
 /* @end */
 
