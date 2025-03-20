@@ -14,8 +14,8 @@
   --who: attr(data-who);
   align-self: stretch;
   background: rgb(var(--color-b));
-  border-left: 1px dotted rgba(var(--color-c),1);
-  border-top: 1px dotted rgba(var(--color-c),1);
+/*  border-left: 1px dotted rgba(var(--color-c),1);
+  border-top: 1px dotted rgba(var(--color-c),1);*/
   box-sizing: border-box;
   /*contain:paint;*/
   display: grid;
@@ -28,8 +28,8 @@
     "replies  replies";
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
-  margin: var(--pad) 0;
   margin: 0;
+  padding-top: var(--pad);;
   position: relative;
   /*z-index: 1;*/
 }
@@ -68,47 +68,41 @@
 
 .note.draft
 {
-  border-left: 1px dashed rgba(var(--color-main),1);
-  border-top: 1px dashed rgba(var(--color-main),1);
+/*  border-left: 1px dashed rgba(var(--color-main),1);
+  border-top: 1px dashed rgba(var(--color-main),1);*/
 }
 
-.note.root:not(.in_path):not(first-child)
+.note.root:not(.in_path) > .clicker
 {
   border-left: 1px solid rgba(var(--c),.5);
 }
 
-.note.root:not(.in_path):not(first-child)
+
+.note.root:not(.in_path):not(:first-child)
 {
   margin-top: var(--size);
 }
 
-.note.root:not(.in_path):first-child,
-.note.reply:nth-child(2),
+.note.root:not(.tiny) + .note.tiny
+{
+  margin-top: var(--size);
+}
+
+/*.note.root:not(.in_path):first-child,*/
+/*.note.reply:nth-child(2),*/
 .note.in_path.haz_new_reply,
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply
+.replies:not(.expanded) .note:not(.is_new).haz_new_reply,
+.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
+/*.note:not(.tiny) + .note.tiny*/
 {
-  margin-top: 0;
+  padding-top: 0;
 }
 
-.note.reply:last-child
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
-  margin-bottom: 0;
-}
-
-.haz_solo .note:not(.in_path),
-.note.root:not(.in_path).out,
-.note.out 
-{
-  border: none!important;
-  margin: 0;
-}
-
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
-{
+  padding-top: 0;
   border-left: 1px dotted rgba(var(--c),1);
-  border-left:  0;
   border-top: 1px dotted rgba(var(--c),1);
-  margin: 0;
 }
 
 .note.in_view::after
@@ -127,20 +121,23 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 }
 
 .root.not_yet > .replies > .note,
-.note.out::after,
-.note.out::before,
-.note.out > *:not(.replies),
+/*.note.out::after,
+.note.out::before,*/
+/*.note.out > *:not(.replies),*/
 .note:not(.in_view) > .sig,
 
 .viewing .note.in_path:not(.in_view)::after,
 
 .haz_solo .note:not(.in_path)::after,
 .haz_solo .note:not(.in_path)::before,
-.haz_solo .note:not(.in_path) > *:not(.replies),
+/*.haz_solo .note:not(.in_path) > *:not(.replies),*/
 
-.in_view > .replies:not(.expanded) > .note:not(.is_new):not(.has_new) > *:not(.replies),
+.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 
-.view_e .note:not(.in_path),
+/*.in_view > .replies:not(.expanded) > .note:not(.is_new):not(.haz_new),*/
+
+.view_e .note.root:not(.in_path),
+/*.view_e .note:not(.in_path) .note,*/
 .view_p .root:not(.in_path),
 .view_e #notes > .note:not(.in_path),
 #e:not(.expanded) .note:not(.in_path)
@@ -148,8 +145,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   display: none;
 }
 
-.view_e .note.in_view > .replies.expanded > .note,
-.view_e .note.in_view > .replies.expanded .note,
+.note.in_view > .replies.expanded > .note,
 #e:not(.expanded) .note.in_view .note
 {
   display: grid;
@@ -165,17 +161,20 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .clicker
 {
   align-content: end;
+  /*background: red!important;*/
+  border-left: 1px dotted rgba(var(--color-c),1);
+  border-top: 1px dotted rgba(var(--color-c),1);
   display: grid;
   font-size: 0;
   grid-column: 1;
   grid-row: 1;
   height: 100%;
-  left: 0;
+  left: -1px;
   margin: 0;
   padding: 0;
   position: absolute;
   text-decoration: none;
-  top: 0;
+  top: -1px;
   user-select: none;
   width: 100%;
   /*z-index: 0;*/
@@ -187,9 +186,11 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   background: rgba(var(--c),.5);
 }
 
+.note.in_view > .replies > .note > .clicker,
 .note.root > .clicker
 {
-  display: none;
+  pointer-events: none;
+  /*display: none;*/
 }
 
 
@@ -199,6 +200,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .by
 {
+  /*background: red!important;*/
   align-content: center;
   align-items: center;
   align-self: end;
@@ -208,8 +210,10 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   grid-area: by;
   grid-template-areas: "author actions id created_at clas ";
   grid-template-columns: auto auto 1fr auto;
-  line-height: 1rem;
+  /*line-height: 1rem;*/
   z-index: 1;
+  position: sticky;
+  top: 0;
 }
 
 .note.draft .by::after,
@@ -240,33 +244,36 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 }
 
 
-
-.replies > .note:not(.in_path) > .by
-{
-  position: sticky;
-  top: calc(var(--line) + var(--padm) + 2px);
-}
-
 .in_view > .by
 {
-  grid-template-areas: 
+/*  grid-template-areas: 
     "id id id id"
     "author actions created_at clas";
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto 1fr auto;*/
+  z-index: 100;
 }
 
 .in_view .replies .note .by
 {
   position: sticky;
-  top: calc(var(--line)  + var(--pad) - 2px);
+  top: calc(calc(var(--line)*2) + calc(var(--pad) - 2px));
 }
 
 .in_view > .replies > .note > .by
 {
   position: sticky;
-  top: calc(var(--line) + var(--line) - var(--padm) - 2px);
+  top: calc(1rem + 14px);
   z-index: 3;
 }
+
+.replies > .note:not(.in_path) > .by
+{
+  /*background: red;*/
+  position: sticky;
+  top: calc(2.5rem + 2px);
+  z-index: 2;
+}
+
 
 /* @end */
 
@@ -275,10 +282,12 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 a.author 
 {
-  border-bottom: 1px dotted rgb(var(--c));
-  border-top: 1px solid transparent;
+  /*border-bottom: 1px dotted rgb(var(--c));*/
+  /*border-top: 1px solid transparent;*/
+  /*border-top: none!important;*/
   color: rgb(var(--color-d));
   grid-template-areas: "img name nip5 flw";
+  line-height: 1rem;
   overflow-x: scroll;
   text-decoration: none;
   user-select: none;
@@ -306,8 +315,8 @@ a.author
 .pubkey .author::after,
 .note_quote_by .author::after
 {
-  align-content: center;
-  align-self: stretch;
+  /*align-content: center;*/
+  /*align-self: stretch;*/
   color: rgb(var(--color-d));
   content: attr(data-followers);
   display: block;
@@ -346,15 +355,17 @@ a.author
 {
   align-self: center;
   color: rgb(var(--color-c));
-  content: "(" attr(data-petname) ")";
+  content: attr(data-petname) " " attr(data-nip05);
   font-size: var(--font-size-s);
   margin-left: var(--pad);
 }
 
 .by .author
 {
+  /*line-height: 1rem;*/
+  /*align-self: stretch;*/
   grid-area: author;
-  border-bottom: 1px solid transparent;
+  /*border-bottom: 1px solid transparent;*/
 }
 
 .paragraph > a.author .name
@@ -373,46 +384,46 @@ a.author
 .in_view > .by .author
 {
   color: rgb(var(--color-d));
-  grid-template-areas: 
+/*  grid-template-areas: 
     "img name flw" 
-    "img .    .";
+    "img .    .";*/
 }
 
-.in_view > .by .author::before
+/*.in_view > .by .author::before
 {
   height: 2rem;
   width: 2rem;
   grid-area: img;
-}
+}*/
 
-.in_view > .by .author .picture
+/*.in_view > .by .author .picture
 {
   height: var(--line);
   width: var(--line);
-}
+}*/
 
 .in_view > .by .author .name
 {
   align-self: start;
   display: grid;
-  grid-template-areas: 
+/*  grid-template-areas: 
     "name petname" 
     "nip5 nip5";
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr;*/
 }
 
-.in_view > .by .author .name[data-nip05]::before
+.in_view > .by .author .name[data-nip05]::after
 {
   color: rgb(var(--color-d));
-  content: attr(data-nip05);
-  grid-area: nip5;
+  /*content: attr(data-nip05);*/
+  /*grid-area: nip5;*/
 }
 
-.in_view > .by .author .name::after
+/*.in_view > .by .author .name::after
 {
   display: block;
   grid-area: petname;
-}
+}*/
 
 /* @end */
 
@@ -522,17 +533,21 @@ a.author
   grid-template-areas: "elapsed";
   justify-items: end;
   justify-self: end;
-  line-height: 1.5;
+  line-height: 1;
   padding: 0 var(--padm);
   white-space: pre;
   word-break: keep-all;
+}
+
+.by .created_at > *
+{
+  grid-area: elapsed;
 }
 
 .by .created_at::after 
 {
   content: "~" attr(data-elapsed);
   font-size: var(--font-size-s);
-  grid-area: elapsed;
 }
 
 .in_view > .by .created_at
@@ -748,11 +763,15 @@ a.author
 .content-img,
 .content-video
 {
+  background: rgba(var(--color-d),1);
+  /*border: 1px solid rgba(var(--color-c),.6);*/
+  /*box-shadow: 0px 2px 8px rgba(var(--color-a),1);*/
   display: block;
   height: auto;
   max-height: var(--media-height);
   max-width: 100%;
-  padding: var(--pad) 0;
+  margin: var(--pad) 0;
+  /*padding: var(--pad) 0;*/
 }
 
 .content .content-img
@@ -790,8 +809,8 @@ a.author
 
 .tags_wrapper
 {
+  background: rgba(var(--color-b),1);
   align-self: end;
-  /*background: rgba(var(--color-b),1);*/
   bottom: var(--size);
   grid-area: tags;
   position: sticky;
@@ -805,13 +824,14 @@ a.author
 
 .tags_wrapper summary
 {
-  background: rgba(var(--color-b),1);
-  display: inline-block;
+  
+  display: inline-grid;
   color: rgba(var(--color-b),0);
-  /*font-size: 1px;*/
+  font-size: var(--font-size-s);
   line-height: 1.5rem;
+  grid-template-columns: auto auto auto;
   padding: 0 var(--padm);
-  position: relative;
+  /*position: relative;*/
   opacity: 1;
 }
 
@@ -819,30 +839,47 @@ a.author
 {
   background: rgba(var(--color-a),1);
   color: rgb(var(--color-e));
-  /*font-size: var(--font-size-s);*/
+  font-size: var(--font-size-s);
 }
 
 .tags_wrapper:not(.empty) summary::before,
 .tags_wrapper:not(.empty) summary::after
 {
+  background: rgba(var(--color-b),1);
   color: rgb(var(--color-d));
   font-size: var(--font-size-s);
+  white-space: pre;
+  /*line-height: 1.5rem;*/
+  /*padding: var(--padm) 0;*/
 }
 
 .tags_wrapper[open] summary::before,
 .tags_wrapper[open] summary::after
 {
+  background: rgba(var(--color-a),1);
   color: rgb(var(--color-f));
+  padding: 0;
+  
 }
+
+/*.tags_wrapper:not(.empty) summary::before
+{
+  content: "[" attr(data-count) "]";
+}*/
 
 .tags_wrapper:not(.empty) summary::before
 {
-  content: "[" attr(data-count) "] ";
+  content: "[" attr(data-count) "]";
+}
+
+.tags_wrapper[open] summary::after
+{
+  content: " ]";
 }
 
 .tags_wrapper[open] summary::before
 {
-  content: "[ " attr(data-count) " ] ";
+  content: "[ " attr(data-count) " ";
 }
 
 
@@ -872,7 +909,7 @@ a.author
 .note .tags 
 {
   position: absolute;
-  transform: scaleY(1) translateY(calc(-100% - 1.2rem));
+  transform: translateY(calc(-100% - 1.5rem));
   transform-origin: bottom;
   width: max-content;
 }
@@ -942,10 +979,11 @@ a.author
 
 .actions 
 {
-  align-self: center;
+  /*align-self: center;*/
   color: rgb(var(--color-e));
   font-size: var(--font-size-s);
   grid-area: actions;
+  line-height: inherit;
   margin: 0;
   overflow-x:  scroll;
   padding: 0 var(--pad);
@@ -1004,25 +1042,34 @@ a.author
 }
 
 
-.note:not(.in_path) .replies.expanded > .note > .replies,
-.in_view .replies.expanded,
+/*.replies:not(.expanded) .replies.expanded,*/
+.note:not(.in_path) > .replies.expanded,
+.note.in_view > .replies,
+.note.in_view .replies.expanded,
+/*.note.in_view > .replies.expanded,*/
 .note.haz_new_reply > .replies,
 .note.is_new > .replies
 {
   padding-left: var(--padm);
 }
 
-.view_e .in_path > .replies
+.replies:not(.expanded) .note:not(.haz_new_reply):not(.is_new) > .replies,
+.note.in_view .replies:not(.expanded) .note:not(.haz_new_reply) > .replies,
+.haz_new:not(.haz_new_reply):not(.haz_new_reply)[data-level="11"] .replies,
+.view_e .in_path:not(.in_view) > .replies
 {
   padding-left: 0;
 }
 
-.replies:not(.expanded) .note:not(.is_new):not(.in_path):not([data-level="1"]):not([data-level="2"])::before
+/* :not([data-level="1"]):not([data-level="2"]) */
+
+.replies:not(.expanded) .note:not(.is_new).haz_new_reply::before
 {
   box-sizing: border-box;
-  color: rgb(var(--color-maybe));
+  color: rgb(var(--color-no));
   content: "> " attr(data-level);
   font-size: var(--font-size-s);
+  /*font-size: 0;*/
   grid-area: by;
   line-height: 1rem;
   margin-bottom: 1.5rem;
@@ -1046,15 +1093,20 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   background-color: rgb(var(--color-b));
   color: rgb(var(--color-d));
   display: none;
+  font-size: var(--font-size-s);
   grid-template-columns: 1fr auto;
   line-height: 1.5rem;
-  opacity: .6;
+  /*opacity: .6;*/
   position: relative;
   /*z-index: 1; */
 }
 
-.haz_reply > .replies > summary,
-.haz_new > .replies > summary
+
+/*.haz_new_reply > .replies > summary,*/
+.root.haz_reply > .replies > summary,
+.in_view.haz_reply > .replies > summary,
+/*.in_view .replies.expanded > summary,*/
+.haz_new_reply > .replies > summary
 {
   display: grid;
 }
@@ -1062,10 +1114,12 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .in_view > .replies > summary
 {
   position: sticky;
-  top: var(--line);
+  top: 1rem;
+  z-index: 100;
 }
 
-.root:not(.in_view) > .replies > summary
+.root:not(.in_view) > .replies > summary,
+.in_view > .replies > .note > .replies > summary
 {
   position: sticky;
   top: 1rem;
@@ -1083,7 +1137,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   content: "-";
 }
 
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
+.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
 .view_e .in_path:not(.in_view) > .replies[open] > summary,
 .note.out > .replies > summary,
 .haz_solo .haz_reply:not(.in_path) > .replies[open] > summary,
@@ -1249,53 +1303,11 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /* @group tiny */
 
-.note.tiny
-{
-  margin: 0;
-}
 
-.note.tiny:last-child
+.note.root + .note.tiny
 {
-  /*margin-bottom: 3px;*/
-}
-
-.note.root:not(.in_path).tiny 
-{
-  border-bottom: none;
-}
-
-.note.root:not(.in_path).tiny + .note.root:not(.in_path).tiny 
-{
+  padding-top: 4px;
   margin-top: 0;
-}
-
-.note.tiny:not(.in_view)::after
-{
-  align-self: center;
-  color: rgb(var(--color-d));
-  content: "k" attr(data-kind) !important;
-  display: none;
-  font-size: var(--font-size-s);
-  grid-area: content;
-  padding: 0 var(--padm);
-}
-
-.note.tiny:not(.in_view) > .by .author .name
-{
-  margin-left: 0;
-}
-
-.note.in_view > .replies > .note.tiny > .content,
-.note.tiny:not(.in_view) > .content
-{
-  align-self: center;
-  border-top: none;
-  border-bottom: none;
-  font-size: var(--font-size-s);
-  padding: 0;
-  padding-left: 5px;
-  margin: 0!important;
-  min-width: calc(1rem + 1px);
 }
 
 .note.tiny:not(.in_view) .paragraph
@@ -1319,47 +1331,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   color: rgb(var(--color-no));
 }
 
-.note.tiny[data-kind="7"]
-{
-  border: none;
-}
-
-.note.tiny[data-kind="7"]:not(.in_view),
-.note.in_view .note.tiny[data-kind="7"]
-{
-  grid-template-areas: "content by";
-  grid-template-columns: auto 1fr;
-}
-
-.note.tiny[data-kind="7"]:not(.in_view) > .content
-{
-  font-family: var(--font-emoji),var(--font-main);
-  font-variant-emoji: emoji;
-  padding-left: 0;
-  padding: 1px;  
-}
-
-.note.tiny[data-kind="7"]:not(.in_view) > .content > *
-{
-  display: block;
-}
-
-.note.tiny[data-kind="7"]:not(.in_view) > .content .content-img
-{
-  max-width: 1rem;
-  padding: 0;
-}
-
-.note.tiny[data-kind="7"]:not(.in_view)::before,
-.note.tiny[data-kind="7"]:not(.in_view)::after,
-.note.tiny[data-kind="6"]:not(.in_view)::before,
-.note.tiny[data-kind="6"]:not(.in_view)::after,
-.note.tiny[data-kind="16"]:not(.in_view)::before,
-.note.tiny[data-kind="16"]:not(.in_view)::after
-{
-  display: none;
-}
-
 .note.root.tiny:not(.in_view) > .tags_wrapper
 {
   display: none;
@@ -1372,6 +1343,49 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /* @end */
 
+/* @group kind7 */
+
+
+.note[data-kind="7"] > .content
+{
+  align-self: stretch;
+  align-content: center;
+  background: rgba(var(--color-b),1);
+  font-size: var(--font-size-s);
+  left: -1px;
+  min-width: calc(1rem + 1px);
+  /*top: -1px;*/
+}
+
+.note[data-kind="7"]:not(.in_view),
+.note.in_view .note[data-kind="7"]
+{
+  grid-template-areas: "content by";
+  grid-template-columns: auto 1fr;
+}
+
+.note[data-kind="7"]:not(.in_view) > .content
+{
+  font-family: var(--font-emoji),var(--font-main);
+  font-variant-emoji: emoji;
+  padding-left: 0;
+  padding: 1px;  
+}
+
+.note[data-kind="7"]:not(.in_view) > .content > *
+{
+  display: block;
+}
+
+.note[data-kind="7"]:not(.in_view) > .content .content-img
+{
+  background: none;
+  margin: 0;
+  max-width: 1rem;
+  padding: 0;
+}
+
+/* @end */
 
 /* @group pagination */
 
@@ -1452,16 +1466,22 @@ html:not(.needs_pagin) .pagination
     margin-bottom: 3rem;
   }
   
-  .note:hover
+  html:not(.viewing) .note:hover
   {
-    border-left: 1px solid rgba(var(--c),.5);
     z-index: 10;
   }
   
-  .note:hover > .by
+  html:not(.viewing) .note:hover > .clicker
   {
-    /*position: relative!important;*/
-    top: 0!important;
+    border-left: 1px solid rgba(var(--c),.5);
+    border-top: 1px solid rgba(var(--c),.5);
+    /*z-index: 10;*/
+  }
+  
+  html:not(.viewing) .note:hover > .by,
+  .in_view > .replies .replies .note:hover > .by
+  {
+    top: 0;
   }
   
   .mark_read:hover
@@ -1476,10 +1496,11 @@ html:not(.needs_pagin) .pagination
     content: " mark read";
   }
   
-  .by:hover,
-  a.clicker:hover + .by
+  html:not(.viewing) .by:hover,
+  html:not(.viewing) a.clicker:hover + .by
   {
-    z-index: 99;
+    /*top: 0;*/
+    z-index: 9;
   }
   
   .note:not(.in_path) > .by:hover + .content
@@ -1489,7 +1510,7 @@ html:not(.needs_pagin) .pagination
   
   /*.content:hover,*/
   a.clicker:hover + .by + .content,
-  .replies .note:not(.in_path) > .by:hover + .content
+  .replies .note > .by:hover + .content
   {
     background: rgb(var(--color-a));
     position: sticky;
@@ -1498,13 +1519,16 @@ html:not(.needs_pagin) .pagination
     
   }
   
-  a.clicker:hover + .by + .content,
-  a.clicker:hover + .by + .content + .tags_wrapper
+  a.clicker:hover + .by + .content
   {
-    transform: translateX(calc(var(--padm)* 1));
+    transform: translateX(calc(var(--padm)));
+    z-index: 4;
   }
   
-
+  a.clicker:hover + .by + .content + .tags_wrapper
+  {
+    opacity: 0;
+  }
 
   .by .id:hover
   {
@@ -1560,15 +1584,26 @@ html:not(.needs_pagin) .pagination
   .viewing .root:not(.in_path) > .content,
   .root:not(.in_view):not(.in_path) > .content
   {
-    position: sticky;
+    position: sticky; 
     top: 1rem;
     z-index: 2;
   }
+  
   .in_view > .replies > .note > .content
   {
-    top: calc(var(--line) + var(--line) + var(--padm));
+    top: calc(3.5rem + 2px);
   }
-
+  
+  .in_view > .replies .replies .note:hover > .by,
+  html:not(.viewing) .replies .note:hover > .by
+  {
+    top: 0;
+  }
+  
+  .in_view > .replies  .replies .note:hover
+  {
+    z-index: 999;
+  }
 }
 
 @media screen and (max-width: 768px) 

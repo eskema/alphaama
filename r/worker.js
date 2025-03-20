@@ -1,74 +1,50 @@
-// alternative storage system
-const ass = {};
-// WebSocket
-let ws = null;
-let ls = [];
-// message handler
+importScripts('/dep/nostr-tools.js');
+
+let relay;
+const ops = {};
+
+// on worker message
 onmessage =async e=>
 {
-  let ops = e.data; // [[]]
-  for (const op of ops)
+  for (const a of e.data)
   {
-    if (!Array.isArray(op)) continue;
-    let cl = op[0];
-    if (cl in ass) await ass[cl](op);
-    else postMessage(['invalid op',cl]);
+    if (!Array.isArray(a)) 
+    {
+      postMessage(['invalid data',a]);
+      continue
+    }
+    let op = a[0];
+    if (!op in ops)
+    {
+      postMessage(['invalid operation',op]);
+      continue
+    }
+    await ops[op](a);
   }
 };
-// 
-ass.boot =async a=>
+
+// boot up connection to relay
+ops.connect =async([op,url])=>
 {
-  return new Promise(resolve=>
+  if (!relay || !relay.connected)
   {
-    const abort = setTimeout(()=>
-    {
-      postMessage(['aborted']);
-      resolve(false)
-    },10000);
+    if (!url && relay?.url) url = relay.url;
+    relay = await NostrTools.Relay.connect(url);
+  }
+  postMessage([op,relay.url,relay.connected])
+};
 
-    ws = new WebSocket(a[1]);
-    ws.onclose =e=>{postMessage(['close',e.data])};
-    ws.onerror =e=>{postMessage(['erro',e.data])};
-    ws.onopen =e=>{clearTimeout(abort);resolve(true)};
-    ws.onmessage =e=>{ls.push(e.data)};
+ops.REQ =a=>
+{
+  if (!relay) 
+  {
+    postMessage(['error','!relay']);
+    return
+  }
+  
+  const sub = relay.subscribe([a[2]],
+  {
+    onevent(event){postMessage(event)},
+    // oneose(){sub.close()}
   })
-};
-
-ass.REQ =a=>
-{
-  if (ws?.readyState === 1) ws.send(JSON.stringify(a));
-  else console.log('ass.REQ: no ws')
-};
-
-// const mess =age=>
-// {
-//   let a;
-//   try {a = JSON.parse(age.data)}
-//   catch(er) {console.error(er)}
-
-//   if (!a || !Array.isArray(a)) 
-//   {
-//     console.log(e.data)
-//     return;
-//   }
-//   messages.push(a);
-//   switch(a[0])
-//   {
-//     case 'PRISON': break;
-//     case 'AUTH': break;
-//     case 'NOTICE': break;
-//     case 'EVENT': break;
-//     case 'EOSE': postMessage(messages); break;
-//   }
-// };
-
-
-// force close relay connection
-ass.force_close =async ws=>
-{
-  if (!ws) return
-  let a = ['fc',ws.url];
-  await ws.close();
-  ws = null;
-  postMessage(a)
 };

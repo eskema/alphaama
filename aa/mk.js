@@ -55,10 +55,8 @@ aa.mk.details =(s,l=false,open=false)=>
   details.append(summary);
   if (!l) return details;
   details.append(l);
-  // let is_empty = l.classList.contains('empty'); 
-  // if (is_empty) details.classList.add('empty');
   if (open) details.open = true;
-  else if (l.classList.contains('list')) summary.dataset.after = l.childNodes.length;
+  else if (l.classList.contains('list')) summary.dataset.count = l.childNodes.length;
   return details;
 };
 
@@ -160,16 +158,17 @@ aa.mk.img_modal =(src,cla=false)=>
 aa.mk.item =(k='',v,tag_name='li')=>
 {
   let l = aa.mk.l(tag_name,{cla:'item item_'+k});
-  if (Array.isArray(v))  
+  if (Array.isArray(v))
   {
+    l.classList.add('ls_arr');
     if (!v.length) l.classList.add('empty');
-    if (typeof v[0]!=='object')
-    {
-      if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
-      l.append(aa.mk.l('span',{cla:'val',con:v.join(', ')}));
-    }
-    else 
-    {
+    // if (typeof v[0]!=='object')
+    // {
+    //   if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
+    //   l.append(aa.mk.l('span',{cla:'val',con:v.join(', ')}));
+    // }
+    // else
+    // {
       let list = aa.mk.ls({});
       if (v.length) list.classList.remove('empty');
       for (let i=0;i<v.length;i++) 
@@ -177,15 +176,19 @@ aa.mk.item =(k='',v,tag_name='li')=>
         list.append(aa.mk.item(''+i,v[i]));
       }
       l.append(aa.mk.details(k,list));
-    }
+    // }
   }
   else if (v && typeof v==='object')
   {
+    l.classList.add('ls_obj');
     if (!Object.keys(v).length) l.classList.add('empty');
     l.append(aa.mk.details(k,aa.mk.ls({ls:v})))
   }
   else
   {
+    if (typeof v === 'number') l.classList.add('ls_num')
+    else if (typeof v === 'boolean') l.classList.add('ls_bool')
+    else l.classList.add('ls_str');
     if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
     v = v+'';
     if (!v || !v.length) l.classList.add('empty');  
@@ -252,6 +255,33 @@ aa.mk.ls =o=>
     }
   }
   else l.classList.add('empty');
+  return l
+};
+
+
+// make list element from object
+aa.mk.list =dis=>
+{
+  let l = aa.mk.l('ul',{cla:'list ls'});
+  if (typeof dis !== 'object') return l;
+
+  if (Array.isArray(dis))
+  {
+    l.classList.add('ls_arr')
+    for (const i of dis)
+    {
+      l.append(aa.mk.item(0,i));
+    }
+  }
+  else
+  {
+    l.classList.add('ls_obj')
+    for (const i in dis)
+    {
+      l.append(aa.mk.item(i,dis[i]));
+    }
+  }
+  if (!l.children.length) l.classList.add('empty');
   return l
 };
 

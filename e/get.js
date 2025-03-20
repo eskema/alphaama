@@ -112,7 +112,7 @@ aa.get.note_refs =note=>
   {
     aa.e.note_refs(note.dataset.id);
     if (note.dataset.id_a) aa.e.note_refs(note.dataset.id_a);
-  },0)
+  },666)
 };
 
 
@@ -159,9 +159,10 @@ aa.get.tag_reply =tags=>
 // gets e tag marked 'root' or the first not marked 'mention'
 aa.get.tag_root =tags=>
 {
-  let tag = tags.filter(t=>t[0]==='e'&&t[3]==='root')[0];
-  if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention')[0];
+  let tag = tags.find(t=>t[0]==='e'&&t[3]==='root');
+  if (!tag) tag = tags.find(t=>t[0]==='e'&&t[3]!=='mention');
   if (tag && aa.is.tag_e(tag)) return tag;
+
   return false
 };
 
@@ -173,6 +174,7 @@ aa.get.tags_for_reply =event=>
   const tags = [];
   const seen = aa.get.seen(event.id);
   let tag = aa.get.tag_root(event.tags);
+  // if (!tag) tag = event.tags.find(t=>t[0]==='a'&&t[3]!=='mention');
   if (tag) 
   {
     let root = aa.db.e[tag[1]].event;

@@ -199,9 +199,9 @@ summary
 {
   cursor: pointer;
   display: block;
-  font-size: var(--font-size-s);
-  line-height: 1.5;
-  opacity: .5;
+  /*font-size: var(--font-size-s);*/
+  /*line-height: 1.5;*/
+  /*opacity: .5;*/
   transition: var(--trans-fast);
   user-select: none;
   z-index: 1;
@@ -209,7 +209,7 @@ summary
 
 details[open] > summary
 {
-  opacity: 1;
+  /*opacity: 1;*/
 }
 
 summary::-webkit-details-marker 
@@ -476,11 +476,13 @@ img:not([src]) {
 
 .item > .key
 {
+  color: rgb(var(--color-d));
   grid-area: k;
 }
 
 .item > .val
 {
+  color: rgb(var(--color-e));
   margin: 0 var(--pad);
   grid-area: v;
 }
@@ -514,21 +516,32 @@ img:not([src]) {
   overflow: hidden;
 }
 
-.l.item > details[open]
+.item > details > summary::after
 {
-  border-bottom: 1px dotted rgb(var(--color-c));
-  border-top: 1px dotted rgb(var(--color-c));
-  margin: var(--padm);
-  padding: var(--padm);
+  /*opacity: .6;*/
+  /*color: rgb(var(--color-e));*/
 }
 
-.l.item > details[open] > summary
+.item > details > summary
 {
-  margin-bottom: var(--padm);
-  margin-left: calc(var(--padm)* -1);
+  color: rgb(var(--color-d));
 }
 
-.item > details > summary::before,
+.item > details[open] > summary
+{
+  color: rgb(var(--color-main));
+}
+
+.item > details[open] > summary::after
+{
+  /*opacity: 1;*/
+}
+
+
+
+
+
+/*.item > details > summary::before,
 .item > details:not([open]) > summary::before
 {
   content: "[";
@@ -537,7 +550,7 @@ img:not([src]) {
 .item > details[open] > summary::before
 {
   content: "[ ";
-}
+}*/
 
 .item > details > summary::after 
 {
@@ -549,11 +562,25 @@ img:not([src]) {
   content: " ]";
 }
 
-.item > details.empty > summary::before
+
+.item.ls_arr > details > summary::after 
 {
-  content: "";
+  content: " [" attr(data-count) "]";
 }
 
+.item.ls_obj > details > summary::after 
+{
+  content: " {" attr(data-count) "}";
+}
+
+.item.ls_obj > details[open] > summary::after 
+{
+  /*content: " { " attr(data-count);*/
+  font-size: var(--font-size-s);
+}
+
+
+/*.item.empty > details > summary::after,*/
 .item > details.empty > summary::after 
 {
   content: " empty";
@@ -562,6 +589,7 @@ img:not([src]) {
 .item.empty
 {
   text-decoration: line-through;
+  pointer-events: none;
 }
 
 /* @end */
@@ -572,7 +600,8 @@ img:not([src]) {
 #mods
 {
   box-sizing: border-box;
-  grid-template-columns: 1fr var(--line);
+  display: grid;
+  grid-template-columns: 1fr;
   padding: var(--line);
   padding-left: 0;
   width: 100%;
@@ -580,16 +609,27 @@ img:not([src]) {
 
 .mod
 {
-  background: rgba(var(--color-b),.8);
-  font-size: var(--font-size-s);
-  justify-self: end;
   max-width: 100%;
   overflow-y: scroll;
-  text-align: center;
   width: auto;
 }
 
+#mods .mod
+{
+  background: rgba(var(--color-b),.8);
+  font-size: var(--font-size-s);
+  justify-self: end;
+  text-align: center;
+}
+
 .mod[open]
+{
+  border-bottom: 1px dashed rgb(var(--color-b));
+  border-top: 1px dashed rgb(var(--color-b));
+  padding-bottom: var(--line);
+}
+
+#mods .mod[open]
 {
   background: rgb(var(--color-a));
   border-bottom: 1px dashed rgb(var(--color-b));
@@ -597,14 +637,14 @@ img:not([src]) {
   padding-bottom: var(--line);
 }
 
-.mod > summary
+#mods .mod > summary
 {
   background: rgb(var(--color-a));
   font-size: var(--font-size-m);
   padding: var(--pad);
 }
 
-.mod[open] > summary
+#mods .mod[open] > summary
 {
   color: rgb(var(--color-f));
   display: grid;
@@ -999,6 +1039,7 @@ img:not([src]) {
   word-break: keep-all;
 }
 
+
 .l::before
 {
   align-content: start;
@@ -1027,6 +1068,20 @@ img:not([src]) {
 .l > details
 {
   align-self: center;
+}
+
+.l.item > details[open]
+{
+  border-bottom: 1px dotted rgb(var(--color-c));
+  border-top: 1px dotted rgb(var(--color-c));
+  margin: var(--padm);
+  padding: var(--padm);
+}
+
+.l.item > details[open] > summary
+{
+  margin-bottom: var(--padm);
+  margin-left: calc(var(--padm)* -1);
 }
 
 .l > p,
@@ -1118,6 +1173,11 @@ html:not(.cli_expanded) .l:not(.is_new),
 {
   margin-bottom: var(--pad);
   padding-left: var(--padm);
+}
+
+#aa_read_me > summary
+{
+  font-size: var(--font-size-s);
 }
 
 #aa_read_me > summary::before

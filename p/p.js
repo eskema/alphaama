@@ -666,20 +666,20 @@ aa.p.process_k3_tags =async(event)=>
 aa.p.profile_upd =async(p)=>
 {
   let profile = aa.mk.profile(p);
-  // const pubkey = profile.querySelector('.pubkey');
+  const pubkey = profile.querySelector('.pubkey');
   const metadata = profile.querySelector('.metadata');
   const extradata = profile.querySelector('.extradata');
   
   fastdom.mutate(()=>
   {
     profile.classList.add('upd');
-    // pubkey.replaceWith(aa.mk.pubkey(p));
+    pubkey.replaceWith(aa.mk.pubkey(p));
     metadata.replaceWith(aa.mk.metadata(p));
     extradata.replaceWith(aa.mk.extradata(p));
     profile.dataset.trust = p.score;
     profile.dataset.updated = p.updated ?? 0;
+    aa.p.links_upd(p)
   });
-  aa.p.links_upd(p)
 };
 
 

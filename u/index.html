@@ -16,17 +16,13 @@ aa.load({
 {
   const on_loaded =()=>
   {
-    if (!aa.required(['w']))
+    if (!aa.required(['u']))
     {
       setTimeout(on_loaded,100);
       return
     }
-    let mod_l = aa.w.l;
-    mod_l.setAttribute('open','')
-    aa.view.l?.append(mod_l);
-    aa.log('walLNut');
+    if (aa.u.p) aa.view.l?.append(aa.mk.ls({ls:aa.u.p}));
 
-    aa.q.run('w');
   };
 
 

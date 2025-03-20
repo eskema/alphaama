@@ -746,32 +746,30 @@ aa.fx.tags_values =(a,s)=>
   return a.filter(t=>t[0]===s).map(r=>r[1].trim())
 };
 
+
 // timestamp from string variable
 aa.fx.time_convert =s=>
 {
   if (s === 'now') return aa.now;
-  let sliced = s.slice(2);
-  if (s.startsWith('n_')) 
-  {
-    const d = new Date();
-    d.setDate(d.getDate() - parseInt(sliced));
-    return Math.floor(d.getTime()/1000)
-  }
+  if (!s.includes('_')) return parseInt(s);
+  
+  let t = s.slice(2);
   if (s.startsWith('d_')) 
   {
-    try { return Date.parse(sliced) / 1000 } 
+    try { return Date.parse(t) / 1000 } 
     catch (er) { return aa.now }
   }
-  return parseInt(s)
+  const d = new Date();
+  switch (s[0])
+  {
+    case 'n': d.setDate(d.getDate() - t); break;
+    case 'h': d.setHours(d.getHours() - t); break;
+    case 'm': d.setMinutes(d.getMinutes() - t); break;
+    case 'M': d.setMonth(d.getMonth() - t); break;
+    case 'y': d.setYear(d.getFullYear() - t); break;
+  }
+  return Math.floor(d.getTime()/1000)
 };
-
-
-// timestamp from date string
-// aa.fx.time_d =s=>
-// {
-//   try { return Date.parse(s) / 1000 } 
-//   catch (er) { return false }
-// };
 
 
 // for display

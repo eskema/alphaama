@@ -74,6 +74,7 @@
 
 .profile details > summary
 {
+  font-size: var(--font-size-s);
   line-height: 1.5rem;
   padding: 0 var(--padm);
 }

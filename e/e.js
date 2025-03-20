@@ -57,7 +57,7 @@ aa.e.append_as_root =l=>
     l.querySelector('.replies').removeAttribute('open');
     l.classList.add('root','not_yet');
   }
-  
+  if (!l.parentElement) aa.e.note_observer.observe(l);
 
   let roots = [...notes.children];
   let previous = roots.find(i=>l.dataset.stamp > i.dataset.stamp)||null;
@@ -65,15 +65,8 @@ aa.e.append_as_root =l=>
   if (l.classList.contains('blank')) notes.append(l);
   else notes.insertBefore(l,previous);
 
-  // aa.get.note_refs(l);
-  
-  // if ((roots.length+1) >= parseInt(localStorage.pagination))
-  // {
-  //   notes.lastChild.remove()
-  // }
-  
-  aa.e.note_observer.observe(l);
-  if (history.state?.view === '#'+l.id) setTimeout(()=>{aa.e.view(l)},100);
+  if (history.state?.view === '#'+l.id && !l.classList.contains('in_view'))
+   setTimeout(()=>{aa.e.view(l)},100);
 };
 
 
@@ -134,20 +127,13 @@ aa.e.append_check =(dat,note,tag_reply)=>
     let root_id = tag_root[1];
     if (tag_root && tag_root[1] !== reply_id)
     {
-      
-      // let root_nid = aa.fx.encode('note',root_id);
       let root = aa.temp.printed.find(i=>i.dataset.id === root_id);
-      // let root = notes.querySelector(`.note[data-id="${root_id}"`); // document.getElementById(root_nid);
       if (!root) aa.e.miss_print(tag_root);
     }
     aa.e.miss_print(tag_reply,relays);
   }
   else
   {
-    // if (reply.classList.contains('blank'))
-    // {
-    //   aa.e.reply_blank(note,reply,tag_reply);
-    // }
     aa.e.append_as_rep(note,reply.querySelector('.replies'));
   }
 };
@@ -993,7 +979,7 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
       if (summary && some > 0) sum_butt.textContent = some+(all>some?'.'+all:'')
     }
   }
-  if (root && updated && !root.classList.contains('in_viewport')) aa.e.append_as_root(root);
+  if (root && updated) aa.e.append_as_root(root);
   if (og) og.dataset.level = levels;
 }
 

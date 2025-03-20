@@ -55,26 +55,36 @@ aa.mk.k4 =async(s='')=>
 // should go to aa.e
 aa.mk.k7 =async s=>
 {
-  let [xid,reaction] = s.trim().split(' ');
-  if (!aa.is.x(xid) || !aa.is.one(reaction))
+  let [id,content] = s.trim().split(' ');
+  if (!aa.is.x(id) || !aa.is.one(content))
   {
-    aa.log('reaction failed');
+    aa.log('invalid reaction');
     return
   }
-  
-  aa.cli.fuck_off();
-    
-  const event = 
+  let dat = await aa.db.get_e(id);
+  if (!dat) 
   {
-    pubkey:aa.u.p.xpub,
-    kind:7,
-    created_at:aa.now,
-    content:reaction,
-    tags:[]
-  };
-
-  let reply_dat = await aa.db.get_e(xid);
-  if (reply_dat) event.tags.push(...aa.get.tags_for_reply(reply_dat.event));
+    aa.log('reaction failed: event id not found');
+    return
+  }
+  aa.cli.fuck_off();
+  
+  const seen = dat.seen[0];
+  let tag_e = ['e',id];
+  if (seen) tag_e.push(seen);
+  let tags = [tag_e];
+  if (dat.event.kind !== 1) tags.push(['k',`${dat.event.kind}`]);
+  if (aa.fx.kind_type(dat.event.kind) === 'parameterized')
+  {
+    let tag_a = aa.fx.tag_a(dat.event);
+    if (tag_a)
+    {
+      if (seen) tag_a.push(seen);
+      tags.push(tag_a);
+    }
+  }
+  tags.push(aa.fx.tag_p(dat.event.pubkey));
+  const event = aa.e.normalise({kind:7,content,tags});
   aa.e.finalize(event);
 };
 
