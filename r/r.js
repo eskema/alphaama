@@ -695,14 +695,18 @@ aa.r.resume =()=>
 aa.r.try =(relay,dis)=>
 {
   if (!relay || !relay.ws) return;
-  if (relay.ws.readyState === 1) relay.ws.send(dis);
+  if (relay.ws.readyState === 1) 
+  {
+    relay.ws.send(dis);
+    aa.r.upd_state(relay.ws.url);
+  }
   else 
   {
     relay.failed++;
     if (relay.failed < 21) setTimeout(()=>{aa.r.try(relay,dis)},420*relay.failed);
     else aa.r.force_close([relay.ws.url]);
   }
-  aa.r.upd_state(relay.ws.url);
+  
 };
 
 

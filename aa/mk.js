@@ -92,6 +92,26 @@ aa.mk.dialog =async o=>
 };
 
 
+// make document (ex: read_me)
+aa.mk.doc =text=>
+{
+  if (!text) return;
+  let article = aa.mk.l('article',
+  {
+    cla:'content parsed',
+    app:aa.parse.content(text,aa.is.trusted(4))
+  });
+
+  let title = text.slice(0,text.indexOf('\n'));
+  if (title.startsWith('=') || title.startsWith('#')) 
+    title = title.slice(1).trim();
+  
+  let details = aa.mk.details(title,article);
+  details.id = 'aa_read_me';
+  return details
+};
+
+
 // on load
 aa.mk.header =e=>
 {
@@ -119,7 +139,7 @@ aa.mk.img =(src)=>
   l.dataset.src = src;
   l.loading = 'lazy';
   l.addEventListener('click',e=>{aa.mk.img_modal(src)});
-  aa.lazy_dog.observe(l);
+  aa.lazy_god.observe(l);
   return l
 };
 

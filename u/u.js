@@ -53,9 +53,9 @@ aa.u.check_signer =()=>
           parent.append(aa.mk.l('p',{con:s}));
         } 
       }
-    }));
+    }),false,false);
   }
-  else aa.log(s);
+  else aa.log(s,false,false);
 };
 
 

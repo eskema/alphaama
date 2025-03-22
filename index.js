@@ -24,9 +24,7 @@ const on_loaded =()=>
   if (aa.e?.l) 
   {
     let e_section = aa.mk.section('e',false,aa.e.l);
-    // setTimeout(()=>{
-      e_section.append(aa.mk.pagination())
-    // },10);
+    e_section.append(aa.mk.pagination())
   }
 
   let p = aa.u?.p;
@@ -36,43 +34,13 @@ const on_loaded =()=>
     if (p.events.k3?.length) aa.p.load_profiles(p.follows);
   }
 
-  setTimeout(()=>
-  {
-    if (sessionStorage.q_run) 
-    {
-      let run = `q run ${sessionStorage.q_run}`;
-      // setTimeout(()=>{
-        aa.log(aa.mk.butt_action(run))
-      // },100);
-    }
-    if (sessionStorage.q_out) 
-    {
-      let out = `q out ${sessionStorage.q_out}`;
-      // setTimeout(()=>{
-        aa.log(aa.mk.butt_action(out))
-      // },200);
-    }
-  },200);
+  fetch('/README.adoc').then(dis=>dis?.text())
+  .then(text=>{aa.view.l?.prepend(aa.mk.doc(text))});
 
-  fetch('/README.adoc').then(dis=>dis?.text()).then(text=>
-  {
-    if (!text) return;
-    let article = aa.mk.l('article',
-    {
-      cla:'content parsed',
-      app:aa.parse.content(text,aa.is.trusted(4))
-    });
-
-    let title = text.slice(0,text.indexOf('\n'));
-    if (title.startsWith('=') || title.startsWith('#')) 
-      title = title.slice(1).trim();
-    
-    let details = aa.mk.details(title,article);
-    details.id = 'aa_read_me';
-    aa.view.l?.prepend(details); 
-  });
-
-  // aa.u.worker = new Worker('/local/worker.js');
-  // aa.u.worker.onmessage =e=>{console.log(e.data)}
+  if (sessionStorage.q_run)
+    aa.log(aa.mk.butt_action(`q run ${sessionStorage.q_run}`))
+  
+  if (sessionStorage.q_out)
+    aa.log(aa.mk.butt_action(`q out ${sessionStorage.q_out}`))
 
 };

@@ -86,9 +86,6 @@ const aa =
 };
 
 
-
-
-
 // make element with options
 aa.mk.l =(tag_name='div',o={})=>
 {
@@ -122,15 +119,34 @@ aa.mk.l =(tag_name='div',o={})=>
 };
 
 
+// media observer for lazy cache fetching
+aa.lazy_god = new IntersectionObserver(a=>
+{
+  for (const b of a)
+  {
+    if (b.isIntersecting) 
+    {
+      let l = b.target;
+      fastdom.mutate(()=>
+      {
+        if (l.dataset.src) l.src = l.dataset.src;
+        l.classList.add('quick_fox');
+        l.classList.remove('lazy_dog');
+      });
+      aa.lazy_god.unobserve(l);
+    }
+  }
+},{root:null,threshold:.1});
+
+
 // if no options found, load with defaults
 aa.load =async(o={})=>
 {
   // setup document
   aa.l = document.documentElement;
+  aa.bod = document.body;
+  aa.mk.styles(o.styles || aa.styles);
 
-
-  let styles = o.styles || aa.styles;
-  aa.mk.styles(styles);
   let dependencies = o.dependencies || aa.dependencies;
   let tools = o.tools || aa.tools;
   let mods = o.mods || aa.mods;
@@ -141,26 +157,10 @@ aa.load =async(o={})=>
   aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
   aa.view.l = aa.mk.l('main',{id:'view'});
   aa.mod_l = aa.mk.l('div',{id:'mods'});
+  aa.side = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
+  aa.side.append(aa.mod_l);
 
   aa.mods_load(mods);
-
-  // media observer for lazy cache fetching
-  aa.lazy_dog = new IntersectionObserver(a=>
-  {
-    for (const b of a)
-    {
-      if (b.isIntersecting) 
-      {
-        let l = b.target;
-        fastdom.mutate(()=>
-        {
-          if (l.dataset.src) l.src = l.dataset.src;
-          l.classList.add('quick_fox')
-        });
-        aa.lazy_dog.unobserve(l);
-      }
-    }
-  },{root:null,threshold:.1});
 
   aa.actions.push(
     {
@@ -175,8 +175,18 @@ aa.load =async(o={})=>
     },
   );
 
-  fetch('/stuff/nostr_kinds.json')
-  .then(dis=>dis.json()).then(kinds=> aa.k = kinds);
+  fetch('/stuff/nostr_kinds.json').then(dis=>dis.json())
+  .then(kinds=>aa.k=kinds);
+
+  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  
+  let id = 'dialog';
+  aa.dialog = aa.mk.l(id,{id});
+  aa.dialog.addEventListener('close',e=>
+  {
+    aa.dialog.removeAttribute('title');
+    aa.dialog.textContent = '';
+  });
   return true
 };
 
@@ -184,16 +194,16 @@ aa.load =async(o={})=>
 // log stuff
 aa.log =(con='',l=false,is_new=true)=>
 {
-  if (!l) l = aa.logs;
-
+  
   let cla = 'l item'+(is_new?' is_new':'');
   let clk = aa.logs_read;
-  const log = aa.mk.l('li',{cla,clk});
-  if (typeof con === 'string') s = aa.mk.l('p',{con});
-  log.append(con);
+  let app = typeof con==='string'?aa.mk.l('p',{con}):con;
+  const log = aa.mk.l('li',{cla,clk,app});
   
+  if (!l) l = aa.logs;
   if (l) fastdom.mutate(()=>{l.append(log)});
   else console.log('log:',con);
+  
   return log
 };
 
@@ -254,27 +264,18 @@ aa.required =required=>
 // if no options found, run with defaults
 aa.run =(o={})=>
 {
+  
   fastdom.mutate(()=>
   {
-    document.body.prepend(aa.mk.header(),aa.view.l);
-    let u_u = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
-    u_u.append(aa.mod_l);
-    document.body.insertBefore(u_u,document.body.lastChild.previousSibling);
+    aa.bod.prepend(aa.mk.header(),aa.view.l);
+    aa.bod.insertBefore(aa.dialog,aa.bod.lastChild.previousSibling);
+    aa.bod.insertBefore(aa.side,aa.dialog);
     if (aa.is.iframe()) aa.l.classList.add('rigged');
   });
-
-  aa.log((navigator.onLine ? 'on' : 'off') + 'line at '+location.origin);
-  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  let onoff = navigator.onLine?'on':'off';
+  let online = `${onoff}line at ${location.origin}`;
+  aa.log(online,false,false);
   setTimeout(aa.view.pop,100);
-  setTimeout(aa.logs_read,420);
-
-  aa.dialog = aa.mk.l('dialog',{id:'dialog'});
-  document.body.insertBefore(aa.dialog,document.body.lastChild.previousSibling);
-  aa.dialog.addEventListener('close',e=>
-  {
-    aa.dialog.removeAttribute('title');
-    aa.dialog.textContent = '';
-  });
 };
 
 
@@ -303,5 +304,3 @@ aa.mk.styles =async a=>
   let rel = 'stylesheet';
   for (const ref of a) document.head.append(aa.mk.l('link',{rel,ref}));
 };
-
-

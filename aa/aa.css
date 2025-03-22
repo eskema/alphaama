@@ -516,12 +516,6 @@ img:not([src]) {
   overflow: hidden;
 }
 
-.item > details > summary::after
-{
-  /*opacity: .6;*/
-  /*color: rgb(var(--color-e));*/
-}
-
 .item > details > summary
 {
   color: rgb(var(--color-d));
@@ -531,37 +525,6 @@ img:not([src]) {
 {
   color: rgb(var(--color-main));
 }
-
-.item > details[open] > summary::after
-{
-  /*opacity: 1;*/
-}
-
-
-
-
-
-/*.item > details > summary::before,
-.item > details:not([open]) > summary::before
-{
-  content: "[";
-}
-
-.item > details[open] > summary::before
-{
-  content: "[ ";
-}*/
-
-.item > details > summary::after 
-{
-  content: "]";
-}
-
-.item > details[open] > summary::after 
-{
-  content: " ]";
-}
-
 
 .item.ls_arr > details > summary::after 
 {
@@ -575,12 +538,9 @@ img:not([src]) {
 
 .item.ls_obj > details[open] > summary::after 
 {
-  /*content: " { " attr(data-count);*/
   font-size: var(--font-size-s);
 }
 
-
-/*.item.empty > details > summary::after,*/
 .item > details.empty > summary::after 
 {
   content: " empty";
@@ -1108,6 +1068,26 @@ img:not([src]) {
   grid-column: span 2;
   margin-right: var(--pad);
   white-space: pre;
+}
+
+.l.item > details > summary::before
+{
+  content: "[";
+}
+
+.l.item > details[open] > summary::before
+{
+  content: "[ ";
+}
+
+.l.item > details > summary::after 
+{
+  content: "]";
+}
+
+.l.item > details[open] > summary::after 
+{
+  content: " ]";
 }
 
 .item:not(.server)[data-sets]::after

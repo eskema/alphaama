@@ -680,24 +680,24 @@ a.author
 
 /* @group links */
 
-.content .content_link
+.paragraph .content_link
 {
   color: rgba(var(--color-sad),.6);
   margin-right: var(--padm);
 }
 
-.content .nostr_link
+.paragraph .nostr_link
 {
   color: rgba(var(--color-alt),.6);
 }
 
-.content .nostr_link::before
+.paragraph .nostr_link::before
 {
   color: rgb(var(--color-c));
   content: "#";
 }
 
-.content .nostr_link::after
+.paragraph .nostr_link::after
 {
   color: rgb(var(--color-c));
   content: "…";
@@ -992,6 +992,7 @@ a.author
 
 /*.replies:not(.expanded) .replies.expanded,*/
 .note:not(.in_path) > .replies.expanded,
+.note.root:not(.in_path) > .replies,
 .note.in_view > .replies,
 .note.in_view .replies.expanded,
 /*.note.in_view > .replies.expanded,*/
@@ -1570,21 +1571,11 @@ html:not(.needs_pagin) .pagination
   #notes > .note:not(.root):not(.in_path)
   {
     grid-template-areas: 
-    "by      by"
-    "content content"
-    "open_t  open_t"
-    "tags    actions"
-    "after   after"
-    "replies replies"
-    ;
+      "by      by"
+      "content content"
+      "tags    tags"
+      "replies replies";
     grid-template-columns: auto 1fr;
-  }
-  
-  .note.root:not(.in_path)
-  {
-    border-left: 1px solid rgb(var(--c));
-    margin-bottom: var(--size);
-    margin-top: var(--size);
   }
   
   .root:not(.in_view):not(.in_path) > .content
@@ -1597,7 +1588,7 @@ html:not(.needs_pagin) .pagination
   .replies > .note:not(.in_path) > .by
   {
     position: sticky;
-    top: calc(4rem + 2px);
+    top: 1rem;
   }
   
   .note summary
