@@ -203,7 +203,6 @@ aa.log =(con='',l=false,is_new=true)=>
   if (!l) l = aa.logs;
   if (l) fastdom.mutate(()=>{l.append(log)});
   else console.log('log:',con);
-  
   return log
 };
 

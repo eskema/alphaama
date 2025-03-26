@@ -30,7 +30,7 @@ aa.get.mentions =async s=>
       {
         mentions.push(aa.fx.tag_q(e_x));
         let dat = await aa.db.get_e(e_x);
-        if (dat && dat.event.pubkey !== aa.u.p.xpub) mentions.push(aa.fx.tag_p(dat.event.pubkey));
+        if (dat && dat.event.pubkey !== aa.u.p.pubkey) mentions.push(aa.fx.tag_p(dat.event.pubkey));
       }
     }
   }
@@ -203,8 +203,8 @@ aa.get.tags_for_reply =event=>
     tags.push(['e',event.id,seen,'root',event.pubkey],['K',''+event.kind]);
   }
 
-  const dis_p_tags = aa.fx.a_u(event.tags.filter(t=>aa.is.tag_p(t) && t[1] !== aa.u.p.xpub));
-  if (event.pubkey !== aa.u.p.xpub 
+  const dis_p_tags = aa.fx.a_u(event.tags.filter(t=>aa.is.tag_p(t) && t[1] !== aa.u.p.pubkey));
+  if (event.pubkey !== aa.u.p.pubkey 
   && !dis_p_tags.some(t=>t[1] === event.pubkey)) dis_p_tags.push(aa.fx.tag_p(event.pubkey));
   // needs to do more here...
   tags.push(...dis_p_tags);

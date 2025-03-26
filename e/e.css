@@ -72,17 +72,15 @@
   border-left: 1px solid rgba(var(--c),.5);
 }
 
+.view_p .note.root.in_path,
+.note.root:not(.tiny) + .note.tiny,
 .note.root:not(.in_path):not(:first-child)
 {
   margin-top: var(--size);
 }
 
-.note.root:not(.tiny) + .note.tiny
-{
-  margin-top: var(--size);
-}
 
-.note.in_path.haz_new_reply,
+.view_e .note.in_path.haz_new_reply,
 .replies:not(.expanded) .note:not(.is_new).haz_new_reply,
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
@@ -117,23 +115,20 @@
 /*.note.out > *:not(.replies),*/
 .note:not(.in_view) > .sig,
 
-.viewing .note.in_path:not(.in_view)::after,
-
-.haz_solo .note:not(.in_path)::after,
-.haz_solo .note:not(.in_path)::before,
 /*.haz_solo .note:not(.in_path) > *:not(.replies),*/
 
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 
 .view_e .note.root:not(.in_path),
 .view_p .root:not(.in_path),
-.view_e #notes > .note:not(.in_path),
+.view_e .note:not(.in_path),
 #e:not(.expanded) .note:not(.in_path)
 {
   display: none;
 }
 
-.note.in_view > .replies.expanded > .note,
+/*.view_e*/
+.view_e .note.in_view .note,
 #e:not(.expanded) .note.in_view .note
 {
   display: grid;
@@ -286,29 +281,28 @@ a.author
   width: 1rem;
 }
 
-.by .author::after,
-.pubkey .author::after,
-.note_quote_by .author::after
+.author::after
 {
+  align-self: center;
+  background: rgb(var(--color-b));
   color: rgb(var(--color-d));
   content: attr(data-followers);
-  display: block;
+  display: grid;
   grid-area: flw;
   padding: 0 var(--padm);
-  word-break: keep-all;
-  white-space: pre;
 }
 
-.by .author.is_mf::after,
-.pubkey .author.is_mf::after,
-.note_quote_by .author.is_mf::after
+.paragraph .author::after
+{
+  display: none;
+}
+
+.author.is_mf::after
 {
   color: rgb(var(--color-no));
 }
 
-.by .author.is_u::after,
-.pubkey .author.is_u::after,
-.note_quote_by .author.is_u::after
+.author.is_u::after
 {
   color: rgb(var(--color-yes));
 }
@@ -324,7 +318,7 @@ a.author
   content: attr(title)!important;
 }
 
-.author .name[data-petname]::after 
+.author .name::after 
 {
   align-self: center;
   color: rgb(var(--color-c));
@@ -368,7 +362,7 @@ a.author
   display: grid;
 }
 
-.in_view > .by .author .name[data-nip05]::after
+.in_view > .by .author .name::after
 {
   color: rgb(var(--color-d));
 }
@@ -881,7 +875,7 @@ a.author
 
 .tag[data-i]::before
 {
-  align-self: end;
+  align-self: start;
   content: "[" attr(data-i) "] ";
   line-height: 1rem;
 }
@@ -1012,20 +1006,20 @@ a.author
 
 /* :not([data-level="1"]):not([data-level="2"]) */
 
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply::before
+/*.replies:not(.expanded) .note:not(.is_new).haz_new_reply::before
 {
   box-sizing: border-box;
   color: rgb(var(--color-no));
   content: "> " attr(data-level);
   font-size: var(--font-size-s);
-  /*font-size: 0;*/
+  /*font-size: 0;*!/
   grid-area: by;
   line-height: 1rem;
   margin-bottom: 1.5rem;
   padding: .2rem;
   position: relative;
   z-index: 2;
-}
+}*/
 
 
 html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
@@ -1295,7 +1289,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 /* @group kind7 */
 
 
-.note[data-kind="7"] > .content
+.note.tiny[data-kind="7"] > .content
 {
   align-self: stretch;
   align-content: center;
@@ -1306,8 +1300,8 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   /*top: -1px;*/
 }
 
-.note[data-kind="7"]:not(.in_view),
-.note.in_view .note[data-kind="7"]
+.note.tiny[data-kind="7"]:not(.in_view)
+/*.note.in_view .note[data-kind="7"]*/
 {
   grid-template-areas: "content by";
   grid-template-columns: auto 1fr;
@@ -1453,12 +1447,23 @@ html:not(.needs_pagin) .pagination
     z-index: 9;
   }
   
+  .author:hover .name:after
+  {
+    color: rgb(var(--color-d));
+  }
+  
+  .tags_wrapper[open]:hover
+  {
+    z-index: 10;
+  }
+  
   .note:not(.in_path) > .by:hover + .content
   {
     background: rgb(var(--color-a));
   }
   
   /*.content:hover,*/
+  .by:hover + .content,
   a.clicker:hover + .by + .content,
   .replies .note > .by:hover + .content
   {

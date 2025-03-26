@@ -13,7 +13,7 @@ aa.mk.styles(['/u/u.css']);
 aa.u = 
 {
   def:{id:'u',ls:{}},
-  get p(){ return aa.db?.p[aa.u.o?.ls?.xpub] },
+  get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
 };
 
 
@@ -22,40 +22,13 @@ aa.u.add =(pubkey='')=>
 {
   if (aa.is.key(pubkey))
   {
-    aa.u.o.ls = {xpub:pubkey,npub:aa.fx.encode('npub',pubkey)};
+    aa.u.o.ls = {pubkey:pubkey,npub:aa.fx.encode('npub',pubkey)};
 
     aa.mod.mk(aa.u);
     aa.mod.save(aa.u).then(aa.u.start);
     aa.log('u = '+pubkey);
   }
   else return false
-};
-
-
-// check for nip7 extension (window.nostr) availability
-// and log the result
-aa.u.check_signer =()=>
-{
-  let s = 'window.nostr ok';
-  if (!window.nostr)
-  {
-    aa.log(aa.mk.l('button',
-    {
-      con:'!window.nostr: nip7 signer not found',
-      cla:'butt',
-      clk:e=>
-      {
-        aa.clk.clkd(e.target);
-        if (window.nostr)
-        {
-          let parent = e.target.parentElement;
-          parent.textContent = '';
-          parent.append(aa.mk.l('p',{con:s}));
-        } 
-      }
-    }),false,false);
-  }
-  else aa.log(s,false,false);
 };
 
 
@@ -100,7 +73,8 @@ aa.u.load =async()=>
       exe:mod.k3_del
     },
   );
-  aa.u.check_signer();
+  aa.mk.nip7_butt();
+  // aa.u.check_signer();
   await aa.mod.load(mod);
   await mod.start(mod);
 };
@@ -276,7 +250,7 @@ aa.u.k3_del =async s=>
   if (!dat_k3) return false;
   aa.cli.fuck_off();
 
-  let keys_to_unfollow = s.split(' ');
+  let keys_to_unfollow = s.split(',').map(i=>i.trim());
   let new_follows = [...dat_k3.event.tags];
   const old_len = new_follows.length;
   let ul = aa.mk.l('ul',{cla:'list removed_tags'});
@@ -422,9 +396,16 @@ aa.u.mk =(k,v)=>
 // start mod
 aa.u.start =async()=>
 {
+  let upd;
   let mod = aa.u;
   let ls = mod?.o?.ls;
-  if (!ls.xpub)
+  let pubkey = ls.pubkey;
+  if (!pubkey)
+  {
+    pubkey = ls.pubkey = ls.xpub;
+    upd = true;
+  }
+  if (!pubkey)
   {
     let login_butt = aa.mk.l('p',{id:'u_login',app:aa.mk.butt_action('u login')});
     setTimeout(()=>{aa.log(login_butt)},500);
@@ -432,10 +413,9 @@ aa.u.start =async()=>
   }
   else document.getElementById('u_login')?.parentElement.remove();
 
-  let p = await aa.db.get_p(ls.xpub);
-  if (!p) p = aa.p.p(ls.xpub);
+  let p = await aa.p.get(pubkey);
+  if (!p) p = aa.p.p(pubkey);
 
-  let upd;
   if (p.score < 9) 
   {
     p.score = 9;
@@ -445,8 +425,7 @@ aa.u.start =async()=>
   if (upd) aa.p.save(p);
   aa.u.upd_u_u();
   aa.mod.mk(mod);
-  aa.mk.profile(p)
-  // mod.l.append(aa.mk.ls({ls:p}));
+  aa.mk.profile(p);
 };
 
 
@@ -458,8 +437,8 @@ aa.u.upd_u_u =()=>
   let p = aa.u.p;
   fastdom.mutate(()=>
   {
-    aa.fx.color(p.xpub,document.getElementById('u_u'));
-    butt_u.textContent = p.xpub.slice(0,1)+'_'+p.xpub.slice(-1);
+    aa.fx.color(p.pubkey,document.getElementById('u_u'));
+    butt_u.textContent = p.pubkey.slice(0,1)+'_'+p.pubkey.slice(-1);
     if (aa.is.trusted(p.score)) aa.p.link_img(butt_u,p.metadata.picture);
   })
 };
@@ -493,7 +472,7 @@ aa.u.wot =async()=>
   if (to_get.length)
   {
     let dat = await aa.db.ops('idb',{get_a:{store:'authors',a:to_get}});
-    if (dat) for (const p of dat) aa.db.p[p.xpub] = p;
+    if (dat) for (const p of dat) aa.db.p[p.pubkey] = p;
   }
   
   aa.ff = ff;

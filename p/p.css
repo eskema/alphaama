@@ -141,7 +141,7 @@
   color: rgb(var(--c));
   display: grid;
   grid-area: pub;
-  grid-template-areas: "author xpub created_at actions";
+  grid-template-areas: "author pub created_at actions";
   grid-template-columns: 2fr 1fr auto;
   justify-items: end;
   justify-self: stretch;
@@ -189,10 +189,10 @@
   width: var(--size-s);
 }
 
-.profile > .pubkey .xpub
+.profile > .pubkey .pubkey
 {
   font-size: var(--font-size-s);
-  grid-area: xpub;
+  grid-area: pub;
   justify-self: stretch;
   overflow-x: scroll;
   padding: 0 var(--pad);
@@ -218,7 +218,7 @@
   background: rgb(var(--color-b));
   color: rgb(var(--color-d));
   font-size: var(--font-size-s);
-  grid-template-areas: "author actions xpub created_at";
+  grid-template-areas: "author actions pub created_at";
   grid-template-columns: auto auto 1fr auto;
   padding: 0;
   position: sticky;
@@ -226,7 +226,7 @@
   z-index: 3;
 }
 
-.in_view > .pubkey .xpub 
+.in_view > .pubkey .pubkey 
 {
   display: unset;
   margin-right: var(--pad);
@@ -511,7 +511,8 @@ p[data-meta="banner"]
 .list.list_grid.author_list
 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6rem,1fr));  
+  grid-template-columns: repeat(auto-fit, minmax(8rem,1fr));
+  /*grid-justify: stretch;*/
 }
 
 .item.author_list_item
@@ -522,6 +523,18 @@ p[data-meta="banner"]
   margin: var(--padm);
   overflow-x: scroll;
   padding: 0;
+  /*width: 100%;*/
+}
+
+.item.author_list_item .name
+{
+  /*max-width: 4rem;*/
+  overflow-x: scroll;
+}
+
+.item.author_list_item .name::after
+{
+  /*display: none;*/
 }
 
 .item.author_list_item a 
@@ -595,6 +608,7 @@ p[data-meta="banner"]
   .profile > * > details > summary:hover
   {
     background: rgb(var(--color-b));
+    color: rgb(var(--color-e));
   } 
 }
 

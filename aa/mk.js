@@ -47,17 +47,17 @@ aa.mk.dat =(o={})=>
 
 
 // make details element
-aa.mk.details =(s,l=false,open=false)=>
+aa.mk.details =(con,l=false,open=false)=>
 { 
   const details = aa.mk.l('details');
   if (open) details.open = true;
-  const summary = aa.mk.l('summary',{con:s});
+  const summary = aa.mk.l('summary',{con});
   details.append(summary);
   if (!l) return details;
+  if (l.classList.contains('list'))
+    summary.dataset.count = l.childNodes.length;
   details.append(l);
-  if (open) details.open = true;
-  else if (l.classList.contains('list')) summary.dataset.count = l.childNodes.length;
-  return details;
+  return details
 };
 
 
@@ -341,6 +341,37 @@ aa.mk.manifest =()=>
 };
 
 
+// check for nip7 extension (window.nostr) availability
+// and log the result
+aa.mk.nip7_butt =()=>
+{
+  let s = 'window.nostr: ok';
+  if (window.nostr)
+  {
+    aa.log(s,false,false);
+    return true
+  }
+
+  aa.log(aa.mk.l('button',
+  {
+    con:'window.nostr: not found, you need it for signing',
+    cla:'butt',
+    clk:e=>
+    {
+      aa.clk.clkd(e.target);
+      if (window.nostr)
+      {
+        let parent = e.target.parentElement;
+        parent.textContent = '';
+        parent.append(aa.mk.l('p',{con:s}));
+      }
+    }
+  }),false,false);
+
+  return false
+};
+
+
 // log a notice
 aa.mk.notice =o=>
 {
@@ -349,29 +380,24 @@ aa.mk.notice =o=>
 //   title:'',
 //   description:'',
 //   butts:
-//   {
-//    no:{title:'',exe:()=>{}},
-//    yes:{title:'',exe:()=>{}},
-//   }
+//   [
+//    {title:'',cla:'',exe:()=>{}},
+//   ]
 // }
-
-  let l = aa.mk.l('div',{cla:'notice'});
-  if (o.hasOwnProperty('id')) 
+  let cla = 'notice';
+  let l = aa.mk.l('div',{cla});
+  if (Object.hasOwn(o,'id')) l.id = o.id;
+  
+  cla = 'title';
+  if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.title}));
+  cla = 'description';
+  if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.description}));
+  for (const butt of o.butts)
   {
-    l.id = o.id;
-  }
-  if (o.hasOwnProperty('title')) 
-  {
-    l.append(aa.mk.l('p',{cla:'title',con:o.title}));
-  }
-  if (o.hasOwnProperty('description')) 
-  {
-    l.append(aa.mk.l('p',{cla:'description',con:o.description}));
-  }
-  for (const b in o.butts)
-  {
-    let bt = o.butts[b];
-    l.append(aa.mk.l('button',{con:bt.title,cla:'butt '+b,clk:bt.exe}));
+    const con = butt.title;
+    const clk = butt.exe;
+    cla = 'butt '+butt.cla;
+    l.append(aa.mk.l('button',{con,cla,clk}));
   }
   return l
 };

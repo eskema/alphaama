@@ -75,6 +75,18 @@ aa.mod.save =async mod=>
 };
 
 
+aa.mod.servers_add_log =(cla)=>
+{
+  let l = aa.temp[cla+'_add'];
+  if (!l) l = aa.temp[cla+'_add'] = 
+    aa.mk.details(cla,aa.mk.l('ul',{cla:'list'}));
+  if (!l.parentElement) aa.log(l);
+  else l.parentElement.classList.add('is_new');
+
+  return l
+};
+
+
 // add server item with sets to mod
 aa.mod.servers_add =(mod,s='',cla='server')=>
 {
@@ -83,45 +95,61 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
   const invalid = [];
   const off = [];
   let len = as.length;
-  if (len)
+  if (!len) return [valid,invalid,off];
+
+  let l = aa.mod.servers_add_log(cla);
+  let ul = l.lastElementChild;
+
+  let haz;
+  for (const i of as) 
   {
-    let pa = aa.mk.l('p');
-    let details = aa.mk.details(`${len} ${aa.fx.plural(len,cla)}`,pa);
-    let haz;
-    for (const i of as) 
+    let con;
+    let a = i.trim().split(' ');
+    let url_string = a.shift().trim();
+    const url = aa.is.url(url_string)?.href;
+    if (!url)
     {
-      let a = i.trim().split(' ');
-      let url_string = a.shift().trim();
-      const url = aa.is.url(url_string)?.href;
-      if (url)
-      {
-        if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
-        let updd = aa.fx.a_add(mod.o.ls[url].sets,a);
-        let sets = aa.r.o.ls[url].sets.join(' ');
-        if (updd)
-        {
-          haz = true;
-          aa.mod.ui(mod,url);
-          aa.fx.a_add(valid,[url]);
-          let text = `\nadded: ${url} ${sets}`;
-          if (a.includes('off')) 
-          {
-            aa.fx.a_add(off,[url]);
-            text = `\noff: ${url} ${sets}`;
-          }
-          pa.append(text)
-        }
-      }
-      else 
-      {
-        haz = true;
-        aa.fx.a_add(invalid,[url]);
-        pa.append(`\ninvalid: ${url}`)
-      }
+      haz = true;
+      aa.fx.a_add(invalid,[url_string]);
+      con = `\ninvalid: ${url_string}`;
+      ul.prepend(aa.mk.l('li',{con}));
+      continue;
     }
-    if (haz) aa.log(details);
+
+    if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
+    let updd = aa.fx.a_add(mod.o.ls[url].sets,a);
+    if (!updd) continue;
+    haz = true;
+    let sets = aa.r.o.ls[url].sets.join(' ');
+    aa.mod.ui(mod,url);
+    
+    if (a.includes('off')) 
+    {
+      aa.fx.a_add(off,[url]);
+      con = `\noff: ${url} ${sets}`;
+    }
+    else
+    {
+      aa.fx.a_add(valid,[url]);
+      con = `\nadded: ${url} ${sets}`;
+    }
+    ul.prepend(aa.mk.l('li',{con}))
   }
-  aa.mod.save(mod);
+
+  let summary = l.children[0];
+  let count = parseInt(summary.dataset.count);
+  let log = l.parentElement;
+  if (haz)
+  {
+    summary.dataset.count = count + valid.length + invalid.length;
+    l.insertBefore(ul,summary.nextElementSibling);
+    if (log) aa.logs.append(log);
+    else aa.log(l)
+  }
+  else if (!l?.lastElementChild?.children.length)
+    fastdom.mutate(()=>{log.remove()});
+
+  if (valid.length) aa.mod.save(mod);
   return [valid,invalid,off]
 };
 

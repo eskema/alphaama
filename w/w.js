@@ -121,7 +121,12 @@ aa.w.get_mint =s=> aa.w.o.ls.mints[s];
 // import wallnut from kind 17375 / 37375
 aa.w.import =async(s='')=>
 {
-  if (!s) return;
+  if (!s)
+  {
+    aa.log('w import: event not found');
+    return
+  }
+
   const id = s.trim();
   let dat = await aa.db.get_e(id);
   if (!dat) 
@@ -139,25 +144,26 @@ aa.w.import =async(s='')=>
   
   if (mints.length) aa.w.add(mints.join(' '));
   if (privkey.length) aa.w.key(privkey);
-  aa.q.run('w');
-
+  aa.q.run(aa.q.ls.w);
 };
 
 
 aa.w.import_7375 =async(id='')=>
 {
-  if (!id) return;
+  const err=s=>{aa.log('import 7375 error: '+s)};
+  
+  if (!id) {err('no id');return}
+
   let dat = await aa.db.get_e(id);
-  if (!dat) return;
+  if (!dat) {err('event not found');return}
+  
   let {mint,proofs} = await aa.fx.decrypt_parse(dat.event);
   mint = aa.is.url(mint)?.href;
-  if (!mint) return;
+  if (!mint) {err('no mint');return}
+  
   let w = aa.w.o.ls.mints[mint];
-  if (!w)
-  {
-    w = aa.w.add(mint)[0];
-    if (!w) return;
-  }
+  if (!w) w = aa.w.add(mint)[0];
+  if (!w) {err('no walLNut');return}
   if (proofs?.length) aa.w.proofs_in(proofs,mint);
   aa.w.save();
   return proofs

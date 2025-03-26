@@ -72,7 +72,7 @@ aa.r.broadcast =(event,relays=[],options={})=>
     const relay = aa.r.active[k];
     if (!relay) 
     {
-      if (!aa.r.o.ls[k]) aa.r.hint_notice(k,opts,aa.r.o.w);
+      if (!aa.r.o.ls[k]) aa.r.hint_notice(k,opts);
       else aa.r.c_on(k,opts);
     }
     else
@@ -328,6 +328,7 @@ aa.r.force_close =(a=[])=>
       r.fc = true; 
       r.ws.close(); 
       delete r.ws;
+      delete r.q;
       aa.r.upd_state(k)
     }
   }
@@ -350,61 +351,70 @@ aa.r.from_o =(o,sets=false)=>
     }
   }
   return relays
-}
+};
 
 
 // relay hint notice
-aa.r.hint_notice =(url,opts,set='hint')=>
+aa.r.hint_notice =(url,opts)=>
 {
   // needs to display info from what npub, where does the notice come from?
+  let log = aa.mod.servers_add_log('relay');
+  if (!log.hasAttribute('open')) log.setAttribute('open','');
 
   let id = 'notice_'+aa.fx.an(url);
   if (document.getElementById(id)) return;
 
   let cleanup =e=>
   {
-    e.target.closest('.is_new')?.classList.remove('is_new');
     e.target.classList.add('slap');
+    e.target.closest('.is_new')?.classList.remove('is_new');
   }
   
-  let text = `r add ${url} `;
-  let notice = {title:text};
+  let title = `r add ${url} `;
+  let notice = {title};
   notice.id = id;
-  notice.butts = {};
+  notice.butts = [];
 
-  notice.butts.yes =
+  let set_hint = 'hint';
+  notice.butts.push(
   {
-    title:set,
+    title:set_hint,
+    cal:'yes',
     exe:e=>
     {
-      aa.r.add(`${url} ${set}`);
+      aa.r.add(`${url} ${set_hint}`);
       aa.r.c_on(url,opts);
       cleanup(e);
     }
-  };
+  });
+  
   let set_off = 'off';
-  notice.butts.no =
+  notice.butts.push(
   {
     title:set_off,
+    cla:'no',
     exe:e=>
     {
       aa.r.add(`${url} ${set_off}`);
       cleanup(e);
     }
-  };
+  });
+  
   let set_other = 'other'
-  notice.butts.maybe =
+  notice.butts.push(
   {
     title:set_other,
+    cla:'maybe',
     exe:e=>
     {
       aa.r.add(url);
       aa.r.c_on(url,opts);
-      aa.cli.v(localStorage.ns+' '+text);
+      aa.cli.add(title);
       cleanup(e);
     }
-  };
-  aa.log(aa.mk.notice(notice));
+  });
+
+  log.lastChild.prepend(aa.mk.notice(notice));
 };
 
 
@@ -719,8 +729,8 @@ aa.r.upd_state =url=>
   if (l)
   {
     let state = relay?.ws?.readyState ||  '';
-    let q = Object.keys(relay.q);
-    let failed = relay.failed;
+    let q = relay?.q ? Object.keys(relay.q):[];
+    let failed = relay?.failed;
 
     fastdom.mutate(()=>
     {

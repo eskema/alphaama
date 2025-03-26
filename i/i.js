@@ -338,7 +338,7 @@ aa.clk.val =e=>
 // update pubkey item with user data
 aa.i.upd_item_pubkey =(l,p)=>
 {
-  let item = document.getElementById('i_item_'+p.xpub);
+  let item = document.getElementById('i_item_'+p.pubkey);
   if (item) 
   {
     let p_name = l?.querySelector('.name');

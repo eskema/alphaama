@@ -31,20 +31,29 @@ ops.connect =async([op,url])=>
     if (!url && relay?.url) url = relay.url;
     relay = await NostrTools.Relay.connect(url);
   }
-  postMessage([op,relay.url,relay.connected])
+  postMessage([op,relay.connected,relay.url])
 };
 
 ops.REQ =a=>
 {
-  if (!relay) 
+  // a = ['REQ',<id>'',<filter>{}]
+  if (!relay)
   {
     postMessage(['error','!relay']);
     return
   }
-  
+  let received = 0;
   const sub = relay.subscribe([a[2]],
   {
-    onevent(event){postMessage(event)},
-    // oneose(){sub.close()}
+    onevent(event)
+    {
+      postMessage(['event',event]);
+      received++;
+    },
+    oneose()
+    {
+      postMessage(['eose',received])
+      // sub.close()
+    }
   })
 };

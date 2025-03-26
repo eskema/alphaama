@@ -222,7 +222,7 @@ aa.fx.decrypt =async(s='')=>
 {
   let [text,pubkey] = s.split(aa.fx.regex.fw);
   if (text) text = text.trim();
-  if (!pubkey) pubkey = aa.u.p.xpub;
+  if (!pubkey) pubkey = aa.u.p.pubkey;
   if (aa.is.nip4(text)) return await window.nostr.nip04.decrypt(pubkey,text);
   else return await window.nostr.nip44.decrypt(pubkey,text)
 };
@@ -231,6 +231,11 @@ aa.fx.decrypt =async(s='')=>
 // decript and parse
 aa.fx.decrypt_parse =async event=>
 {
+  if (!window.nostr) 
+  {
+    aa.log('signer not found');
+    return
+  }
   let {pubkey,content} = event;
   let a = await window.nostr.nip44.decrypt(pubkey,content);
   if (!a)
@@ -261,7 +266,7 @@ aa.fx.encode =(s,x)=>
 // encrypt
 aa.fx.encrypt44 =async(text,pubkey)=>
 {
-  if (!pubkey) pubkey = aa.u.p.xpub;
+  if (!pubkey) pubkey = aa.u.p.pubkey;
   if (window.nostr) return await window.nostr.nip44.encrypt(pubkey,text)
   else 
   {

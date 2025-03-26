@@ -1,14 +1,14 @@
 // a button that will populate the input with a command text
-aa.mk.butt_action =(s,con=false,cla=false)=>
+aa.mk.butt_action =(s,con=false,cla='')=>
 {
-  const butt = aa.mk.l('button',
-  {
-    con:con?con:s,
-    cla:'butt plug',
-    clk:e=>{ aa.cli.v(localStorage.ns+' '+s) }
-  });
-  if (cla) butt.classList.add(cla);
-  return butt
+  con = con||s;
+  cla = 'butt plug'+(cla?' '+cla:'');
+  let clk =e=>{ aa.cli.add(s) };
+
+  // const butt = aa.mk.l('button',{con,cla,clk});
+  // if (cla) butt.classList.add(cla);
+  // return butt
+  return aa.mk.l('button',{con,cla,clk})
 };
 
 
@@ -115,7 +115,7 @@ aa.mk.k1 =async(s='')=>
   // {
   //   aa.log(s);
   //   let log_text = 'unable to create note';
-  //   if (!aa.u?.p?.xpub)
+  //   if (!aa.u?.p?.pubkey)
   //   {
   //     log_text += ', login first using the command: ';
   //     log_text += localStorage.ns+' u login';

@@ -24,7 +24,7 @@ aa.mk.k0 =async s=>
     {
       const event = 
       {
-        pubkey:aa.u.p.xpub,
+        pubkey:aa.u.p.pubkey,
         kind:0,
         created_at:aa.now,
         content:JSON.stringify(md),

@@ -17,6 +17,33 @@ aa.cli =
 };
 
 
+aa.cli.add =s=>
+{
+  let text = aa.cli.t.value;
+  if (!text.length) 
+  {
+    aa.cli.v(localStorage.ns+' '+s);
+    return
+  }
+  let ns = localStorage.ns;
+  if (!text.startsWith(ns)
+  && window.prompt('replace input with command?'))
+  {
+    aa.cli.v(localStorage.ns+' '+s);
+    return
+  }
+  let [act,rest] = s.split(aa.fx.regex.fw);
+  let [cmd,v] = rest.split(aa.fx.regex.fw);
+  let fw = ns+' '+act+' '+cmd+' ';
+  if (text.startsWith(fw))
+  {
+    aa.cli.v(`${text}, ${v}`);
+    return
+  }
+  aa.cli.v(localStorage.ns+' '+s);
+};
+
+
 // clear input
 aa.cli.clear =async()=>
 {

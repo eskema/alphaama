@@ -6,7 +6,7 @@ author pubkey profile
 
 */
 
-
+aa.db.p = {};
 aa.p =
 {
   p(x)
@@ -33,30 +33,32 @@ aa.p =
 };
 
 
+
+
 aa.mk.styles(aa.p.styles);
 
 
 // follow add x to k3
-aa.p.add =async x=>
-{
-  //follow
-  let new_follow = [x];
-  const p = await aa.db.get_p(x);
-  new_follow.push(aa.p.relay(p));
-  let petname;
-  if (p.metadata?.name) petname = p.metadata.name;
-  else if (p.petnames.length) petname = p.petnames[0];
-  if (petname?.length) new_follow.push(aa.fx.an(petname));
-  else new_follow.push('');
-  aa.cli.v(localStorage.ns+' p add '+new_follow.join(', '));
-};
+// aa.p.add =async x=>
+// {
+//   //follow
+//   let new_follow = [x];
+//   const p = await aa.p.get(x);
+//   new_follow.push(aa.p.relay(p));
+//   let petname;
+//   if (p.metadata?.name) petname = p.metadata.name;
+//   else if (p.petnames.length) petname = p.petnames[0];
+//   if (petname?.length) new_follow.push(aa.fx.an(petname));
+//   else new_follow.push('');
+//   aa.cli.add('p add '+new_follow.join(', '))
+//   // aa.cli.v(localStorage.ns+' p add '+new_follow.join(', '));
+// };
 
 
 // load author p from pubkey
-aa.p.author =async x=>
+aa.p.author =async pubkey=>
 {
-  let p = await aa.db.get_p(x);
-  if (!p) p = aa.p.p(x);
+  let p = await aa.p.get(pubkey) || aa.p.p(pubkey);
   aa.p.links_upd(p);
   return p
 };
@@ -72,7 +74,6 @@ aa.p.author_name =p=>
 // load author list from db into memory
 aa.p.authors =async a=>
 {
-  // return await aa.db.get_pa(a)
   const p_to_get = [];
   for (const x of a) if (!aa.db.p[x]) p_to_get.push(x);
   if (p_to_get.length)
@@ -80,7 +81,7 @@ aa.p.authors =async a=>
     let p_stored = await aa.db.ops('idb',{get_a:{store:'authors',a:p_to_get}});
     for (const p of p_stored) 
     {
-      aa.db.p[p.xpub] = p;
+      aa.db.p[p.pubkey] = p;
       aa.p.links_upd(p)
     }
   } 
@@ -88,11 +89,13 @@ aa.p.authors =async a=>
 
 
 // populate list element with authors
-aa.p.authors_list =(a,clas,sort='text_asc')=>
+aa.p.authors_list =(a,cla,sort='text_asc')=>
 {
   if (!a.length) return;
-  const l = aa.mk.l('ul',{cla:clas+' list list_grid author_list'});
-  aa.p.authors(a).then(e=>
+  cla = 'list list_grid author_list'+(cla?' '+cla:'');
+  const l = aa.mk.l('ul',{cla});
+  aa.p.authors(a)
+  .then(()=>
   {
     let items = [];
     for (const x of a)
@@ -103,8 +106,11 @@ aa.p.authors_list =(a,clas,sort='text_asc')=>
         app:aa.mk.p_link(x)
       }))
     }
-    l.append(...items);
-    setTimeout(()=>{ aa.fx.sort_l(l,sort) },500);
+    fastdom.mutate(()=>
+    {
+      l.append(...items);
+      setTimeout(()=>{ fastdom.mutate(()=>{aa.fx.sort_l(l,sort)}) },500);
+    })
   });
   return l
 };
@@ -140,10 +146,10 @@ aa.p.clear =e=>
 // data for p links, etc
 aa.p.data =(p,upd)=>
 {
-  let o = aa.temp.p_link.find(i=>i.pubkey === p.xpub);
+  let o = aa.temp.p_link.find(i=>i.pubkey === p.pubkey);
   if (!o) 
   {
-    o = {pubkey:p.xpub,a:[]};
+    o = {pubkey:p.pubkey,a:[]};
     aa.temp.p_link.push(o);
   }
   if (!o.data || upd) o.data = aa.p.link_data(p);
@@ -152,15 +158,16 @@ aa.p.data =(p,upd)=>
 
 
 // follow / unfollow
-aa.p.del =x=>
-{
+// aa.p.del =x=>
+// {
+  // aa.cli.add('p del '+x)
   // unfollow
-  let s = localStorage.ns+' p del ';
-  let sx = s+x;
-  let v = aa.cli.t.value;
-  if (v.length >= sx.length && v.startsWith(s))  sx = v+' '+x;
-  aa.cli.v(sx);
-};
+  // let s = localStorage.ns+' p del ';
+  // let sx = s+x;
+  // let v = aa.cli.t.value;
+  // if (v.length >= sx.length && v.startsWith(s))  sx = v+' '+x;
+  // aa.cli.v(sx);
+// };
 
 
 // return last stored replaceable event id from p of kind n
@@ -205,9 +212,9 @@ aa.p.follows =async(s='')=>
 {
   return new Promise(async resolve=>
   {
-    let key = aa.is.key(s) ? s : aa.u?.p?.xpub;
-    let p = await aa.p.author(key);
-    aa.log(`${p.follows.length} follows of ${key}`);
+    let pubkey = aa.is.key(s) ? s : aa.u?.p?.pubkey;
+    let p = await aa.p.author(pubkey);
+    aa.log(`${p.follows.length} follows of ${pubkey}`);
     resolve(`${p.follows}`);
   });
 };
@@ -240,16 +247,16 @@ aa.p.from_tags =async tags=>
         {
           if (p.events.k0?.length)
           {
-            delete aa.temp.pubs[p.xpub];
-            aa.db.p[p.xpub] = p;
+            delete aa.temp.pubs[p.pubkey];
+            aa.db.p[p.pubkey] = p;
             aa.p.links_upd(p);
           }
         }
-        for (const xpub in aa.temp.pubs) 
+        for (const pub in aa.temp.pubs) 
         {
-          if (!aa.miss.p[xpub]) aa.miss.p[xpub] = {nope:[],relays:[]}
-          aa.fx.a_add(aa.miss.p[xpub].relays,aa.temp.pubs[xpub]);
-          delete aa.temp.pubs[xpub];
+          if (!aa.miss.p[pub]) aa.miss.p[pub] = {nope:[],relays:[]}
+          aa.fx.a_add(aa.miss.p[pub].relays,aa.temp.pubs[pub]);
+          delete aa.temp.pubs[pub];
         }
         aa.get.missing('p');
       });
@@ -258,10 +265,25 @@ aa.p.from_tags =async tags=>
 };
 
 
+// returns profile if already loaded or get it from database
+aa.p.get =async pubkey=>
+{
+  if (!aa.is.key(pubkey)) return;
+  if (aa.db.p[pubkey]) return aa.db.p[pubkey];
+  let p = await aa.db.ops('idb',{get:{store:'authors',key:pubkey}});
+  if (p) 
+  {
+    aa.db.p[pubkey] = p;
+    aa.p.links_upd(p)
+  }
+  return p
+};
+
+
 // returns link data from p
 aa.p.link_data =p=>
 {
-  let o = {pubkey:p.xpub,class_add:[],class_rm:[],src:false};
+  let o = {pubkey:p.pubkey,class_add:[],class_rm:[],src:false};
   o.name = aa.p.author_name(p);
   let petname = p.petname.length ? p.petname 
   : p.petnames.length ? p.petnames[0] 
@@ -279,14 +301,14 @@ aa.p.link_data =p=>
   }
   else o.miss = true;
 
-  if (aa.is.u(p.xpub))
+  if (aa.is.u(p.pubkey))
   {
     aa.fx.a_add(o.class_add,['is_u']);
     aa.fx.a_add(o.class_rm,['is_mf','is_bff'])
   }
   else aa.fx.a_add(o.class_rm,['is_u']);
   
-  if (aa.is.following(p.xpub)) 
+  if (aa.is.following(p.pubkey)) 
   {
     aa.fx.a_add(o.class_rm,['is_mf']);
     aa.fx.a_add(o.class_add,['is_bff']);
@@ -367,7 +389,7 @@ aa.p.links_upd =async p=>
   let o = aa.p.data(p,1);
   for (const i of o.a) aa.p.link_data_upd(i,o.data);
 
-  // let options = aa.temp.p_link.find(i=>i.pubkey === p.xpub);
+  // let options = aa.temp.p_link.find(i=>i.pubkey === p.pubkey);
   // if (options)
   // {
   //   options.data = aa.p.link_data(p);
@@ -378,7 +400,7 @@ aa.p.links_upd =async p=>
   // }
 
   // const options = aa.p.link_data(p);
-  // const a = aa.temp.printed.filter(i=>i.dataset.pubkey === p.xpub)
+  // const a = aa.temp.printed.filter(i=>i.dataset.pubkey === p.pubkey)
   // .map(i=>i.querySelector('.by .author'));
   // for (const l of a) aa.p.link_data_upd(l,options);  
 };
@@ -389,7 +411,6 @@ aa.p.load =async()=>
 {
   await aa.mk.scripts([
     '/p/clk.js',
-    '/p/db.js',
     '/p/is.js',
     '/p/kinds.js',
     '/p/mk.js',
@@ -443,7 +464,7 @@ aa.p.load_profiles =async a=>
   let stored = await aa.db.ops('idb',{get_a:{store:'authors',a:a}});
   for (const dis of stored) 
   {
-    aa.db.p[dis.xpub] = dis;
+    aa.db.p[dis.pubkey] = dis;
     aa.mk.profile(dis);
   }
   for (const x of a)
@@ -592,7 +613,7 @@ aa.p.process_k3_tags =async(event)=>
 {
   const x = event.pubkey;
   const is_u = aa.is.u(x);
-  let ep = await aa.db.get_p(x);
+  let ep = await aa.p.get(x);
   const old_bff = [...ep.follows];
   // let new_follows = [];
       
@@ -608,15 +629,15 @@ aa.p.process_k3_tags =async(event)=>
     {
       if (!aa.is.tag_p(tag)) continue;
 
-      const xpub = tag[1];
+      const pubkey = tag[1];
       const relay = tag[2];
       const petname = tag[3];
 
       let upd;
-      let p = aa.db.p[xpub];
+      let p = aa.db.p[pubkey];
       if (!p) 
       {
-        p = aa.db.p[xpub] = aa.p.p(xpub);
+        p = aa.db.p[pubkey] = aa.p.p(pubkey);
         upd = true;
       }
 
@@ -673,7 +694,7 @@ aa.p.profile_upd =async(p)=>
   fastdom.mutate(()=>
   {
     profile.classList.add('upd');
-    pubkey.replaceWith(aa.mk.pubkey(p));
+    pubkey.replaceWith(aa.mk.profile_header(p));
     metadata.replaceWith(aa.mk.metadata(p));
     extradata.replaceWith(aa.mk.extradata(p));
     profile.dataset.trust = p.score;
@@ -731,18 +752,21 @@ aa.p.save_to =()=>
   const q_id = 'author_save';
   let pubs = [...new Set(aa.temp[q_id])];
   aa.temp[q_id] = [];
-  let a = [];
+  let all = [];
   for (const pub of pubs) 
   {
     const p = aa.db.p[pub];
-    a.push(p);
-    
+    all.push(p);
   }
-  let chunks = aa.fx.chunks(a,4444);
-  // let times = 0;
-  for (const chunk of chunks)
+  const chunks = aa.fx.chunks(all,420);
+  let times = 0;
+  for (const a of chunks)
   {
-    aa.db.idb.postMessage({put:{store:'authors',a:chunk}})
+    setTimeout(()=>
+    {
+      aa.db.idb.postMessage({put:{store:'authors',a}})
+    },times * 100);
+    times++;
   }
 };
 
@@ -751,32 +775,23 @@ aa.p.save = async p=>
 {
   const q_id = 'author_save';
   if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
-
-  aa.db.p[p.xpub] = p;
+  aa.db.p[p.pubkey] = p;
   if (aa.view.active === p.npub) aa.p.profile_upd(p);
-  // let l = [...aa.p.l.childNodes].find(i=>i.dataset.xpub === p.xpub);
-  // if (l) aa.p.link_data_upd(
-  //   l.querySelector('.pubkey .author'),
-  //   aa.p.link_data(p)
-  // );
-  
-  aa.temp[q_id].push(p.xpub);
-  
+  aa.temp[q_id].push(p.pubkey);
   aa.fx.to(aa.p.save_to,1000,q_id);
-
 };
 
 
 // give a p score
 aa.p.score =async s=>
 {
-  let [xpub,score] = s.trim().split(' ');
+  let [pubkey,score] = s.trim().split(' ');
   score = parseInt(score);
-  if (aa.is.x(xpub) && Number.isInteger(score))
+  if (aa.is.x(pubkey) && Number.isInteger(score))
   {
     aa.cli.fuck_off();
-    const p = await aa.db.get_p(xpub);
-    if (!p) p = aa.p.p(xpub);
+    const p = await aa.p.get(pubkey);
+    if (!p) p = aa.p.p(pubkey);
     p.score = score;
     aa.p.profile_upd(p);
     setTimeout(()=>{aa.p.save(p)},200)
@@ -792,8 +807,8 @@ aa.p.check_nip05 =async(s,p)=>
   let dis = await NostrTools.nip05.queryProfile(s);
   if (dis)
   {
-    if (!p) p = await aa.db.get_p(dis.pubkey);
-    if (p && dis.pubkey === p.xpub) verified = true
+    if (!p) p = await aa.p.get(dis.pubkey);
+    if (p && dis.pubkey === p.pubkey) verified = true
   }
   
   if (p)

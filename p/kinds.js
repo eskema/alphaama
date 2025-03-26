@@ -4,7 +4,7 @@ aa.kinds[0] =dat=>
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
   let x = dat.event.pubkey;
-  aa.db.get_p(x).then(p=>
+  aa.p.get(x).then(p=>
   {
     if (!p) p = aa.p.p(x);
     if (aa.p.events_newer(p,dat.event))
@@ -31,7 +31,7 @@ aa.kinds[3] =dat=>
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
   
-  aa.db.get_p(dat.event.pubkey).then(p=>
+  aa.p.get(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))

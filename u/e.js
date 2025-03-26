@@ -31,7 +31,7 @@ aa.e.finalize =async(event,relays)=>
 // event complete
 aa.e.normalise =event=>
 {
-  if (!event.pubkey) event.pubkey = aa.u.p.xpub;
+  if (!event.pubkey) event.pubkey = aa.u.p.pubkey;
   if (!event.kind) event.kind = 1;
   if (!event.created_at) event.created_at = aa.now;
   if (!event.tags) event.tags = [];
@@ -67,7 +67,7 @@ aa.e.note_decrypt =async s=>
   if (dat.event.kind === 4) 
   {
     let p_x = dat.event.tags.find(t=>t[0]==='p')[1];
-    if (aa.u.p.xpub !== p_x)
+    if (aa.u.p.pubkey !== p_x)
     {
       aa.log('content not for you');
       return

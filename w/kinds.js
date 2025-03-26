@@ -63,7 +63,7 @@ aa.kinds[10019] =dat=>
   note.classList.add('root');
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
   note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  aa.db.get_p(dat.event.pubkey).then(p=>
+  aa.p.get(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))

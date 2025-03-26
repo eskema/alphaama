@@ -343,7 +343,7 @@ aa.q.replace_filter_vars =s=>
               case 'u':
               case 'u_x':
                 o[k] = o[k].filter(dis=>dis!==val);
-                if (aa.u.p) o[k].push(aa.u.p.xpub); 
+                if (aa.u.p) o[k].push(aa.u.p.pubkey); 
                 break;
               case 'b_f':
               case 'bff':

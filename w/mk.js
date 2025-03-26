@@ -124,7 +124,7 @@ aa.mk.k9321 =async(s='')=>
   if (id && !aa.is.key(id)) { err('invalid id'); return};
   await aa.db.events([id]);
 
-  let p = await aa.db.get_p(pubkey);
+  let p = await aa.p.get(pubkey);
   let p2pk = p.p2pk?.length ? p.p2pk : pubkey;
   if (p2pk.length === 64) p2pk = '02'+p2pk;
 

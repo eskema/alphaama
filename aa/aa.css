@@ -259,7 +259,7 @@ a:not([href])
   grid-area: and;
   display: grid;
   grid-auto-flow: column;
-  pointer-events: none;
+  /*pointer-events: none;*/
   white-space: pre;
   word-break: keep-all;
 }
@@ -1080,6 +1080,16 @@ img:not([src]) {
   content: "[ ";
 }
 
+.l.item > details > summary[data-count]::before
+{
+  content: "[" attr(data-count) " ";
+}
+
+.l.item > details[open] > summary[data-count]::before
+{
+  content: "[ " attr(data-count) " ";
+}
+
 .l.item > details > summary::after 
 {
   content: "]";
@@ -1214,10 +1224,6 @@ html:not(.cli_expanded) .l:not(.is_new),
     background-color: rgba(var(--color-b),.6);
   }
   
-  .profile .item:hover
-  {
-    background-color: rgba(var(--color-c),1);
-  }
   
   #view > section.expanded > header,
   #view > details[open] > summary

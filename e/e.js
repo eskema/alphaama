@@ -676,7 +676,7 @@ aa.e.quote_a_upd =async(quote,o)=>
 {
   let id = o.id_a;
   let pub = o.pubkey;
-  let p = await aa.db.get_p(pub);
+  let p = await aa.p.get(pub);
   if (!p) p = aa.p.p(pub);
 
   let by = aa.mk.l('p',{cla:'note_quote_by'});
@@ -730,12 +730,12 @@ aa.e.quote_upd =async(quote,o)=>
   let dat = await aa.db.get_e(o.id);
   if (dat) 
   {
-    let p = await aa.db.get_p(dat.event.pubkey);
+    let p = await aa.p.get(dat.event.pubkey);
     if (!p) p = aa.p.p(dat.event.pubkey);
     if (!has_pub) 
     {
-      by.prepend(aa.mk.p_link(p.xpub));
-      aa.fx.color(p.xpub,quote);
+      by.prepend(aa.mk.p_link(p.pubkey));
+      aa.fx.color(p.pubkey,quote);
     }
     by.append(aa.mk.nostr_link(aa.fx.encode('note',o.id)));
     aa.e.render(quote,dat);
@@ -820,12 +820,7 @@ aa.e.render =async(l,options)=>
 aa.e.render_content =async(l,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
-  let score = o.hasOwnProperty('trust') ? o.trust : p.score;
-  let trust = aa.is.trusted(score)
-  // fastdom.mutate(()=>
-  // {
-    aa.parse.context(l,dat.event,trust);
-  // })
+  aa.parse.context(l,dat.event,aa.is.trusted(o.trust||p?.score));
 };
 
 
@@ -843,7 +838,7 @@ aa.e.render_encrypted =async(l,dat)=>
     l.querySelector('.actions .butt.req')?.remove();
   }
   let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
-  if (aa.u.o.ls.xpub === p_x)
+  if (aa.u.o.ls.pubkey === p_x)
   {
     l.classList.add('for_u');
     content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
@@ -855,7 +850,7 @@ aa.e.render_encrypted =async(l,dat)=>
 // renders image from tags
 aa.e.render_image =async(l,dat)=>
 {
-  let p = await aa.db.get_p(dat.event.pubkey);
+  let p = await aa.p.get(dat.event.pubkey);
   let trusted = aa.is.trusted(p?.score||0);
   aa.parse.context(l,dat.event,trusted);
   let url = aa.fx.url_from_tags(dat.event.tags);
@@ -880,7 +875,7 @@ aa.e.render_object =async(l,dat)=>
 // renders video from tags
 aa.e.render_video =async(l,dat)=>
 {
-  let p = await aa.db.get_p(dat.event.pubkey);
+  let p = await aa.p.get(dat.event.pubkey);
   let trusted = aa.is.trusted(p?.score||0);
   aa.parse.context(l,dat.event,trusted);
   let url = aa.fx.url_from_tags(dat.event.tags);

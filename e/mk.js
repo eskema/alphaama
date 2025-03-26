@@ -62,7 +62,7 @@ aa.mk.note =dat=>
     note.dataset.pubkey = x;
     let p_link = aa.mk.p_link(dat.event.pubkey);
     by.append(p_link);
-    aa.db.get_p(x).then(p=>
+    aa.p.get(x).then(p=>
     {
       if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
       if (!p) p = aa.p.p(x);
@@ -146,7 +146,7 @@ aa.mk.post =async(s='')=>
   {
     aa.log(s);
     let log_text = 'unable to create note';
-    if (!aa.u?.p?.xpub)
+    if (!aa.u?.p?.pubkey)
     {
       log_text += ', login first using the command: ';
       log_text += localStorage.ns+' u login';

@@ -1,12 +1,13 @@
 aa.db.p = {};
 // returns profile if already loaded or get it from database
-aa.db.get_p =async xpub=>
+aa.db.get_p =async pubkey=>
 {
-  if (aa.db.p[xpub]) return aa.db.p[xpub];
-  let p = await aa.db.ops('idb',{get:{store:'authors',key:xpub}});
+  if (!aa.is.key(pubkey)) return;
+  if (aa.db.p[pubkey]) return aa.db.p[pubkey];
+  let p = await aa.db.ops('idb',{get:{store:'authors',key:pubkey}});
   if (p) 
   {
-    aa.db.p[xpub] = p;
+    aa.db.p[pubkey] = p;
     aa.p.links_upd(p)
   }
   return p

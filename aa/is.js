@@ -36,9 +36,9 @@ aa.is.empty =l=>
 
 
 // true if you follow pubkey
-aa.is.following =xpub=>
+aa.is.following =pubkey=>
 {
-  if (aa.u?.p?.follows?.includes(xpub)) return true;
+  if (aa.u?.p?.follows?.includes(pubkey)) return true;
   return false
 };
 
@@ -68,7 +68,7 @@ aa.is.one =s=>
 
 
 // if hex key is your pubkey
-aa.is.u =x=> aa.u?.o?.ls?.xpub === x;
+aa.is.u =x=> aa.u?.o?.ls?.pubkey === x;
 
 
 // converts string to URL and returns it or false

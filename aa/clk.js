@@ -4,7 +4,9 @@
 aa.clk.a =e=>
 {
   e.preventDefault();
-  let dis = e.target.getAttribute('href');
+  e.stopPropagation();
+  let target = e.target.closest('a[href]');
+  let dis = target.getAttribute('href');
   if (dis==='/') dis = '';
   aa.view.state(dis);
 };
