@@ -94,24 +94,33 @@ aa.p.authors_list =(a,cla,sort='text_asc')=>
   if (!a.length) return;
   cla = 'list list_grid author_list'+(cla?' '+cla:'');
   const l = aa.mk.l('ul',{cla});
-  aa.p.authors(a)
-  .then(()=>
+  for (const x of a)
   {
-    let items = [];
-    for (const x of a)
+    l.append(aa.mk.l('li',
     {
-      items.push(aa.mk.l('li',
-      {
-        cla:'item author_list_item',
-        app:aa.mk.p_link(x)
-      }))
-    }
-    fastdom.mutate(()=>
-    {
-      l.append(...items);
-      setTimeout(()=>{ fastdom.mutate(()=>{aa.fx.sort_l(l,sort)}) },500);
-    })
-  });
+      cla:'item author_list_item',
+      app:aa.mk.p_link(x)
+    }))
+  }
+  setTimeout(()=>{fastdom.mutate(()=>{aa.fx.sort_l(l,sort)}) },500);
+  // aa.p.authors(a)
+  // .then(()=>
+  // {
+  //   let items = [];
+  //   for (const x of a)
+  //   {
+  //     items.push(aa.mk.l('li',
+  //     {
+  //       cla:'item author_list_item',
+  //       app:aa.mk.p_link(x)
+  //     }))
+  //   }
+  //   fastdom.mutate(()=>
+  //   {
+  //     l.append(...items);
+  //     setTimeout(()=>{ fastdom.mutate(()=>{aa.fx.sort_l(l,sort)}) },500);
+  //   })
+  // });
   return l
 };
 
@@ -119,7 +128,8 @@ aa.p.authors_list =(a,cla,sort='text_asc')=>
 // clear profile filter
 aa.p.clear =e=>
 {
-  if (aa.l.dataset.solo?.length)
+  
+  if (aa.e.l.dataset.solo?.length)
   {
     if (aa.p.viewing) 
     {
@@ -130,7 +140,7 @@ aa.p.clear =e=>
     }
     else 
     {
-      let solos = aa.l.dataset.solo.split(' ');
+      let solos = aa.e.l.dataset.solo.split(' ');
       for (const solo of solos)
       {
         let pub = solo.split('_')[1];
@@ -210,13 +220,11 @@ aa.p.events_newer =(p,event,param)=>
 // return follows of pubkey
 aa.p.follows =async(s='')=>
 {
-  return new Promise(async resolve=>
-  {
-    let pubkey = aa.is.key(s) ? s : aa.u?.p?.pubkey;
-    let p = await aa.p.author(pubkey);
-    aa.log(`${p.follows.length} follows of ${pubkey}`);
-    resolve(`${p.follows}`);
-  });
+  let pubkey = aa.is.key(s) ? s : aa.u?.p?.pubkey;
+  let p = aa.db.p[pubkey];//aa.p.author(pubkey);
+  let follows = p ? p.follows : [];
+  aa.log(`${follows.length} follows of ${pubkey}`);
+  return follows
 };
 
 
@@ -444,12 +452,12 @@ aa.p.load =async()=>
       description:'return metadata of pubkey',
       exe:aa.p.md
     },
-    // {
-    //   action:['p','k3'],
-    //   optional:['pubkey'], 
-    //   description:'returns k3 pubkeys of pubkey',
-    //   exe:aa.p.follows
-    // }
+    {
+      action:['p','follows'],
+      optional:['pubkey'], 
+      description:'followed by pubkey',
+      exe:aa.p.follows
+    }
   );
   aa.cli.on_upd.push(aa.p.oto);
   aa.p.l = aa.mk.l('div',{id:'authors'});
@@ -688,15 +696,19 @@ aa.p.profile_upd =async(p)=>
 {
   let profile = aa.mk.profile(p);
   const pubkey = profile.querySelector('.pubkey');
-  const metadata = profile.querySelector('.metadata');
-  const extradata = profile.querySelector('.extradata');
+  const p_data = profile.querySelector('.profile_data');
+  // const metadata = profile.querySelector('.metadata');
+  // const extradata = profile.querySelector('.extradata');
   
   fastdom.mutate(()=>
   {
     profile.classList.add('upd');
     pubkey.replaceWith(aa.mk.profile_header(p));
-    metadata.replaceWith(aa.mk.metadata(p));
-    extradata.replaceWith(aa.mk.extradata(p));
+    let profile_data = aa.mk.profile_data(p);
+    if (p_data) p_data.replaceWith(profile_data);
+    else profile.append(profile_data);
+    // metadata.replaceWith(aa.mk.metadata(p));
+    // extradata.replaceWith(aa.mk.extradata(p));
     profile.dataset.trust = p.score;
     profile.dataset.updated = p.updated ?? 0;
     aa.p.links_upd(p)

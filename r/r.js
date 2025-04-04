@@ -19,7 +19,7 @@ aa.r =
 // add relays
 aa.r.add =s=>
 {
-  let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relay');
+  let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relays');
   for (const url of off) aa.r.force_close([url]);
 };
 
@@ -69,17 +69,24 @@ aa.r.broadcast =(event,relays=[],options={})=>
 
   for (const k of relays)
   {
-    const relay = aa.r.active[k];
+    let url = aa.is.url(k)?.href;
+    if (!url) 
+    {
+      aa.log('invalid relay url: '+k);
+      return false
+    }
+
+    const relay = aa.r.active[url];
     if (!relay) 
     {
-      if (!aa.r.o.ls[k]) aa.r.hint_notice(k,opts);
-      else aa.r.c_on(k,opts);
+      if (!aa.r.o.ls[url]) aa.r.hint_notice(url,opts);
+      else aa.r.c_on(url,opts);
     }
     else
     {
       if (relay.sent.includes(event.id))
       {
-        aa.log(`event already sent to ${k}`);
+        aa.log(`event already sent to ${url}`);
         continue;
       } 
       else aa.r.try(relay,dis)
@@ -358,11 +365,12 @@ aa.r.from_o =(o,sets=false)=>
 aa.r.hint_notice =(url,opts)=>
 {
   // needs to display info from what npub, where does the notice come from?
-  let log = aa.mod.servers_add_log('relay');
-  if (!log.hasAttribute('open')) log.setAttribute('open','');
+  let l = aa.mod.servers_add_l('relays');
+  // if (!log.hasAttribute('open')) log.setAttribute('open','');
 
   let id = 'notice_'+aa.fx.an(url);
-  if (document.getElementById(id)) return;
+  if (!aa.temp.relays_add) aa.temp.relays_add = new Map();
+  if (aa.temp.relays_add.get(id)) return;
 
   let cleanup =e=>
   {
@@ -379,7 +387,7 @@ aa.r.hint_notice =(url,opts)=>
   notice.butts.push(
   {
     title:set_hint,
-    cal:'yes',
+    cla:'yes',
     exe:e=>
     {
       aa.r.add(`${url} ${set_hint}`);
@@ -413,8 +421,15 @@ aa.r.hint_notice =(url,opts)=>
       cleanup(e);
     }
   });
-
-  log.lastChild.prepend(aa.mk.notice(notice));
+  let l_notice = aa.mk.notice(notice);
+  aa.temp.relays_add.set(id,l_notice);
+  l.lastChild.prepend(l_notice);
+  let log = l.parentElement;
+  if (log) aa.logs.append(log);
+  else aa.log(l)
+  // let mom = log.parentElement;
+  // if (!mom) mom = aa.log(l);
+  
 };
 
 
@@ -491,12 +506,49 @@ aa.r.load =async()=>
   );
   aa.mod.load(mod).then(aa.mod.mk).then(e=>
   {
-    let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
-    fastdom.mutate(()=>
-    {
-      mod.l.insertBefore(add_butt,mod.l.lastChild)
-    })
+    aa.r.toggles()
   });
+};
+
+
+aa.r.toggles =()=>
+{
+  const mod = aa.r;
+  const id = mod.def.id;
+  let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
+  let sets_span = aa.mk.l('span',{cla:'sets'});
+  let sets = [];
+  for (const r of Object.values(aa.r.o.ls)) aa.fx.a_add(sets,r.sets);
+  for (const set of sets)
+  {
+    let butt = aa.mk.clk_butt([set,'active','relset']);
+    butt.dataset.k = 'sets';
+    butt.dataset.v = set;
+    sets_span.append(butt,' ');
+  }
+  let states_span = aa.mk.l('span',{cla:'states'});
+  let states = 
+  [
+    ['0','not connected'],
+    ['1','connected'],
+    ['2','connecting'],
+    ['3','closed'],
+  ];
+  for (const state of states)
+  {
+    let [id,str] = state;
+    let butt = aa.mk.clk_butt([str,'active','relstate']);
+    butt.dataset.k = 'state';
+    butt.dataset.v = id;
+    states_span.append(butt,' ');
+  }
+  let toggles = aa.mk.l('p',{cla:'toggles'});
+  toggles.append(sets_span,aa.mk.l('br'),states_span);
+  fastdom.mutate(()=>
+  {
+    mod.l.insertBefore(toggles,mod.l.lastChild);
+    mod.l.insertBefore(add_butt,toggles);
+  })
 }
 
 
@@ -660,7 +712,8 @@ aa.r.message_type.ok =async message=>
   }
   let log_l = document.getElementById('note_log_'+id);
   if (log_l) log_l.append(aa.mk.l('p',{con:log}));
-  else aa.log(log);
+  else if(aa.temp.relays_add) aa.temp.relays_add.append('\n',log);
+  else aa.log(log)
 };
 
 
@@ -671,15 +724,13 @@ aa.r.mk =(k,v)=>
   // v = {sets:[]}
 
   const l = aa.mk.server(k,v);
-  if (l)
-  {
-    l.id = aa.r.def.id+'_'+aa.fx.an(k);
-    l.dataset.state = 0;
-    aa.mod.servers_butts(aa.r,l,v);
-    aa.r.upd_state(k);
-    return l
-  }
-  else return false
+  if (!l) return false;
+  
+  l.id = aa.r.def.id+'_'+aa.fx.an(k);
+  l.dataset.state = 0;
+  aa.mod.servers_butts(aa.r,l,v);
+  aa.r.upd_state(k);
+  return l
 };
 
 
@@ -716,7 +767,6 @@ aa.r.try =(relay,dis)=>
     if (relay.failed < 21) setTimeout(()=>{aa.r.try(relay,dis)},420*relay.failed);
     else aa.r.force_close([relay.ws.url]);
   }
-  
 };
 
 
@@ -761,11 +811,11 @@ aa.r.ws_close =async e=>
       setTimeout(()=>{ aa.r.c_on(url) }, 420 * cc.length)
     }
   }
-  else
-  {
-    aa.r.add(url+' off');
+  // else
+  // {
+    // aa.r.add(url+' off');
     // aa.log(url+' closed');
-  }
+  // }
 };
 
 

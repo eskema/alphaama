@@ -141,16 +141,17 @@ aa.i.filter_out_rm =(items,k_v)=>
 
 
 // remove class 'solo' from items
-aa.i.filter_solo_rm =(items,k_v)=>
+aa.i.filter_solo_rm =(items,k_v,scope)=>
 {
+  if (!scope) scope = aa.e.l;
   // fastdom.mutate(()=>
   // {
-    let a = aa.l.dataset.solo ? aa.fx.a_rm(aa.l.dataset.solo.trim().split(' '),[k_v]) : [];
-    if (a.length) aa.l.dataset.solo = a.join(' ');
+    let a = scope.dataset.solo ? aa.fx.a_rm(scope.dataset.solo.trim().split(' '),[k_v]) : [];
+    if (a.length) scope.dataset.solo = a.join(' ');
     else
     {
-      aa.l.dataset.solo = '';
-      aa.l.classList.remove('haz_solo');
+      scope.dataset.solo = '';
+      scope.classList.remove('haz_solo');
     }
     for (const l of items)
     {
@@ -164,22 +165,30 @@ aa.i.filter_solo_rm =(items,k_v)=>
 // apply class 'out' to items
 aa.i.filter_out_apply =(items,k_v)=>
 {
-  for (const l of items) aa.i.out(l,k_v);
-}; 
+  for (const l of items)// aa.i.filter_out(l,k_v);
+  {
+    let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
+    aa.fx.a_add(a,[k_v]);
+    l.dataset.out = a.join(' ');
+    l.classList.add('out');
+  }
+};
 
 
 // apply class 'solo' to items
-aa.i.filter_solo_apply =(items,k_v)=>
+aa.i.filter_solo_apply =(items,k_v,scope)=>
 {
+  // if (!scope) scope = aa.l;
+  if (!scope) scope = aa.e.l;
   // fastdom.mutate(()=>
   // {
-    aa.l.classList.add('haz_solo');
-    if (!aa.l.dataset.solo) aa.l.dataset.solo = k_v;
+    scope.classList.add('haz_solo');
+    if (!scope.dataset.solo) scope.dataset.solo = k_v;
     else 
     {
-      let a = aa.l.dataset.solo.trim().split(' ');
+      let a = scope.dataset.solo.trim().split(' ');
       aa.fx.a_add(a,[k_v]);
-      aa.l.dataset.solo = a.join(' ')
+      scope.dataset.solo = a.join(' ')
     }
   // });
 
@@ -211,6 +220,16 @@ aa.i.filter_solo =(dis,items,k,v)=>
   if (dis.classList.contains('solo')) aa.i.filter_solo_rm(items,k_v);
   else aa.i.filter_solo_apply(items,k_v);
   dis.classList.toggle('solo')
+};
+
+
+aa.i.filter =({dis,items,k,v,cla})=>
+{
+  // let {dis,items,k,v,cla} = o;
+  // const k_v = k+'_'+aa.fx.an(v);
+  // if (dis.classList.contains(cla)) aa.i.filter_rm(items,k_v);
+  // else aa.i.filter_apply(items,k_v);
+  // dis.classList.toggle(cla)
 };
 
 
@@ -254,23 +273,6 @@ aa.i.load =async()=>
 };
 
 
-// build index
-aa.i.run =()=>
-{  
-  for (const k of aa.i.ls)
-  {
-    aa.i.l.append(aa.mk.l('li',
-    {
-      cla:'item',
-      id:'i_'+k,
-      app:aa.mk.details(k,aa.mk.ls({id:'i_list_'+k}))
-    }))
-  }
-  aa.i.l.append(aa.mk.i_at('since',0));
-  aa.i.l.append(aa.mk.i_at('until',0));
-};
-
-
 // returns all the notes that have a tag with value
 aa.get.notes_with_tag =(k,v)=>
 {
@@ -286,29 +288,6 @@ aa.get.notes_with_tag =(k,v)=>
   }
   return notes
 };
-
-
-// get elements with key:value
-// aa.get.index_items =(k,v)=>
-// { 
-//   switch (k)
-//   {
-//     // case 'clas':
-//     case 'seen':
-//     case 'subs': 
-//       let items = document.querySelectorAll('.note[data-'+k+']');
-//       return Array.from(items).filter(i=>i.dataset[k].includes(v));
-//     case 'pubkey': 
-//       return Array.from(document.querySelectorAll('.note[data-pubkey="'+v+'"]'));
-//     case 'kind': 
-//       return Array.from(document.querySelectorAll('.note[data-kind="'+v+'"]'));
-//     case 'tag_t':
-//     case 'tag_subject': 
-//     case 'tag_d': 
-//       return aa.get.notes_with_tag(k,v);
-//   }
-//   return []
-// };
 
 
 // click on key
@@ -334,21 +313,24 @@ aa.clk.val =e=>
   aa.i.filter_out(dis,items,k,v);
 }
 
-
-// update pubkey item with user data
-aa.i.upd_item_pubkey =(l,p)=>
-{
-  let item = document.getElementById('i_item_'+p.pubkey);
-  if (item) 
-  {
-    let p_name = l?.querySelector('.name');
-    let key = item.querySelector('.key');
-    if (key && p_name)
-    {
-      key.textContent = '';
-      key.append(p_name.cloneNode(true));
-    }
-  }  
-};
-
-window.addEventListener('load',aa.i.load);
+// get elements with key:value
+// aa.get.index_items =(k,v)=>
+// { 
+//   switch (k)
+//   {
+//     // case 'clas':
+//     case 'seen':
+//     case 'subs': 
+//       let items = document.querySelectorAll('.note[data-'+k+']');
+//       return Array.from(items).filter(i=>i.dataset[k].includes(v));
+//     case 'pubkey': 
+//       return Array.from(document.querySelectorAll('.note[data-pubkey="'+v+'"]'));
+//     case 'kind': 
+//       return Array.from(document.querySelectorAll('.note[data-kind="'+v+'"]'));
+//     case 'tag_t':
+//     case 'tag_subject': 
+//     case 'tag_d': 
+//       return aa.get.notes_with_tag(k,v);
+//   }
+//   return []
+// };

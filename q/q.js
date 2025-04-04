@@ -62,16 +62,15 @@ aa.q.add =str=>
 {
   let [k,s] = str.split(aa.fx.regex.fw);
   k = aa.fx.an(k);
-  
   let o = aa.parse.j(s);
   if (!o)
   {
     aa.log('invalid filter: '+s);
     return ''
-  } 
-
+  }
+  let mod = aa.q;
   let log = localStorage.ns+' q add '+k+' ';
-  let filter = aa.q.o.ls[k];
+  let filter = mod.o.ls[k];
   let is_new;
   let changed;
 
@@ -85,23 +84,23 @@ aa.q.add =str=>
       changed = true;
     }
   }
-  else 
+  else
   {
-    aa.q.o.ls[k] = {v:s};
-    log += aa.q.o.ls[k].v;
+    mod.o.ls[k] = {v:s};
+    log += mod.o.ls[k].v;
     changed = true;
     is_new = true;
   }
-  if (changed) 
+  if (changed)
   {
     if (!is_new) 
     {
-      aa.q.close(k);
+      mod.close(k);
       aa.log(log);
     }
-    aa.mod.save(aa.q).then(mod=>{aa.mod.ui(mod,k)});      
+    aa.mod.save(mod);
+    aa.mod.ui(mod,k);
   }
-   
   return k
 };
 
@@ -122,23 +121,20 @@ aa.q.close =s=>
 // remove filter
 aa.q.del =s=>
 {
+  let mod = aa.q;
   let k = s.trim();
-  if (aa.q.o.ls.hasOwnProperty(k)) 
+  if (Object.hasOwn(mod.o.ls,k))
   {
-    let old_v = aa.q.def.id+' add '+k+' '+aa.q.o.ls[k].v;
-    let undo = aa.mk.butt_action(old_v,'undo');
-    let log = aa.mk.l('p',
-    {
-      con:aa.q.def.id+' filter deleted: '+k+' ',
-      app: undo
-    });
-    aa.log(log);
+    let old_v = mod.def.id+' add '+k+' '+mod.o.ls[k].v;
+    let con = mod.def.id+' filter deleted: '+k+' ';
+    let app = aa.mk.butt_action(old_v,'undo');
+    aa.log(aa.mk.l('p',{con,app}));
 
-    delete aa.q.o.ls[k];
-    document.getElementById(aa.q.def.id+'_'+aa.fx.an(k)).remove();
-    aa.mod.save(aa.q);
+    delete mod.o.ls[k];
+    document.getElementById(mod.def.id+'_'+aa.fx.an(k))?.remove();
+    aa.mod.save(mod);
   }
-  else aa.log(aa.q.def.id+' '+k+' not found')
+  else aa.log(mod.def.id+' '+k+' not found')
 };
 
 
@@ -197,6 +193,13 @@ aa.q.load =async()=>
       action:[id,'stuff'],
       description:'sets a bunch of queries to get you started',
       exe:mod.stuff
+    },
+    {
+      action:[id,'sub'],
+      required:['fid'],
+      optional:['relset'],
+      description:'testing new relay code',
+      exe:mod.sub
     },
   );
 
@@ -306,8 +309,6 @@ aa.q.as_outbox =([filtered,options,fid])=>
       else aa.log(note_log,0,1)
     }
   }
-
-
 };
 
 
@@ -465,4 +466,23 @@ aa.q.stuff =()=>
   aa.log(queries);
 };
 
-// window.addEventListener('load',aa.q.load);
+
+aa.q.sub =(s='')=>
+{
+  aa.log(s)
+};
+
+//
+aa.r.www =url=>
+{
+  aa.r.lay(url,o).then(r=>
+  {
+    let lays;
+    if (!aa.logs.querySelector('.lays'))
+    {
+      lays = aa.log('lays');
+      lays.classList.add('lays');
+    };
+    lays.append(r.w.url)
+  });
+};

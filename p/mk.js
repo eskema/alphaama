@@ -1,50 +1,90 @@
+aa.mk.profile_data =p=>
+{
+  const l = aa.mk.l('section',{cla:'profile_data'});
+  let keys = Object.keys(p);
+  for (const k of keys)
+  {
+    let exc = 
+    [
+      'npub',
+      'petname',
+      'pubkey',
+      'relay',
+      'score',
+      'updated',
+      'verified',
+      'xpub',
+    ];
+    if (k && !exc.includes(k)) 
+    {
+      let v = p[k];
+      let item;
+      if (Object.hasOwn(aa.mk,k)) 
+      {
+        item = aa.mk.l('p',{cla:`item item_${k}`,app:aa.mk[k](k,v,p)});
+      }
+      else item = aa.mk.item(k,v,{tag:'p'});
+      if (k === 'metadata') l.prepend(item,' ');
+      else l.append(item,' ');
+    }
+  }
+  return l
+};
+
+
 // make all other profile sections after metadata
 aa.mk.extradata =p=>
 {
   const extradata = aa.mk.l('section',{cla:'extradata'});
-  const mk_item =(k)=>
+  
+  let keys = Object.keys(p);
+  for (const k of keys)
   {
-    let v = p[k];
-    if (v)
+    let exc = ['metadata','pubkey','xpub','npub','verified'];
+    if (k && !exc.includes(k)) 
     {
-      let item = aa.mk.item(k,v,'p');
-      item.classList.add('p_item');
-      extradata.append(item);
+      extradata.append(aa.mk.item(k,p[k]));
     }
-  };
+  }
 
-  if (p.petnames.length) mk_item('petnames');
+  // if (p.petnames.length) mk_item('petnames');
   
-  if (Object.keys(p.relays).length)
-  {
-    let relays = aa.mk.l('ul',{cla:'relays list'});
-    for (const url in p.relays) relays.append(aa.mk.server(url,p.relays[url]));
-    let l = aa.mk.details('relays',relays);
-    l.classList.add('p_item');
-    extradata.append(l);
-  }
-
-  if (p.follows.length)
-  {
-    let follows = aa.p.authors_list(p.follows,'follows');
-    let l = aa.mk.details('follows',follows);
-    l.classList.add('p_item');
-    extradata.append(l);
-  }
-
-  if (p.followers.length)
-  {
-    let followers = aa.p.authors_list(p.followers,'followers');
-    let l = aa.mk.details('followers',followers);
-    l.classList.add('p_item');
-    extradata.append(l);
-  }
-
-  if (p.mints?.length) mk_item('mints');
-  if (p.p2pk?.length) mk_item('p2pk');
-
-  mk_item('events');
+  // if (Object.keys(p.relays).length) 
+  // {
+  //   let item = mk_item('relays');
+  // }
   
+  // if (Object.keys(p.relays).length)
+  // {
+  //   let relays = aa.mk.l('ul',{cla:'relays list'});
+  //   for (const url in p.relays) relays.append(aa.mk.server(url,p.relays[url]));
+  //   let l = aa.mk.details('relays',relays);
+  //   l.classList.add('p_item');
+  //   extradata.append(l);
+  // }
+
+  // if (p.follows.length) mk_item('follows');
+  // if (p.follows.length)
+  // {
+  //   let follows = aa.p.authors_list(p.follows,'follows');
+  //   let l = aa.mk.details('follows',follows);
+  //   l.classList.add('p_item');
+  //   extradata.append(l);
+  // }
+  // if (p.followers.length) mk_item('followers');
+  // if (p.followers.length)
+  // {
+  //   let followers = aa.p.authors_list(p.followers,'followers');
+  //   let l = aa.mk.details('followers',followers);
+  //   l.classList.add('p_item');
+  //   extradata.append(l);
+  // }
+
+  // if (p.mints?.length) mk_item('mints');
+  // if (p.p2pk?.length) mk_item('p2pk');
+
+  // mk_item('events');
+
   // for (const k of a)
   // {
   //   let id = k.slice(2);
@@ -69,44 +109,53 @@ aa.mk.extradata =p=>
 
 
 // make metadata section
-aa.mk.metadata =p=>
+aa.mk.metadata =(key,value,p)=>
 {
-  let metadata = aa.mk.l('section',{cla:'metadata'});
-  const butt = aa.mk.butt(['refresh','p_metadata']);
-  const ul = aa.mk.l('div',{cla:'metadata_list'});
+
+  // let item = aa.mk.item(key,value,{tag:'p'});
+  // let metadata = aa.mk.l('section',{cla:'metadata'});
   
-  if (p && p.metadata && Object.keys(p.metadata).length)
+  // if(!p 
+  // || !p.metadata 
+  // || !Object.keys(p.metadata).length
+  // ) return metadata;
+
+  // const butt = aa.mk.clk_butt(['refresh','p_metadata']);
+  const ul = aa.mk.l('div',{cla:key+' list'});
+  // let k0 = p.events.k0;
+  // if (k0?.length) butt.dataset.last = aa.fx.time_display_ext(k0[0][1]);
+  for (const k in value)
   {
-    let k0 = p.events.k0;
-    if (k0?.length) butt.dataset.last = aa.fx.time_display_ext(k0[0][1]);
-    for (const k in p.metadata)
+    let l;
+    let v = value[k];
+    if (!v) v = '';
+    if (v && typeof v === 'string') v.trim();
+    let kk = key+'_'+k;
+    if (aa.mk.hasOwnProperty(kk)) 
     {
-      let l, v = p.metadata[k];
-      if (!v) v = '';
-      if (v && typeof v === 'string') v.trim();
-      if (aa.mk.hasOwnProperty('metadata_'+k)) 
-      {
-        l = aa.mk['metadata_'+k](k,v,p)
-      }
-      else 
-      {
-        let val;
-        if (Array.isArray(v)) val = v.join(', ');
-        else if (typeof v === 'object') val = JSON.stringify(v)
-        else val = v;
-        l = aa.mk.l('p',{con:val});
-      }
-      l.dataset.meta = k;
-      if (v === '') l.classList.add('empty');
-      ul.append(l);
+      l = aa.mk[kk](k,v,p)
     }
+    else 
+    {
+      let val;
+      if (Array.isArray(v)) val = v.join(', ');
+      else if (typeof v === 'object') val = JSON.stringify(v)
+      else val = v;
+      l = aa.mk.l('p',{con:val});
+    }
+    l.dataset.meta = k;
+    if (v === '') l.classList.add('empty');
+    ul.append(l);
   }
-  let len = ul.childNodes.length;
-  const details = aa.mk.details('metadata ('+len+')',butt,len?1:0);
-  details.classList.add('p_item');
-  details.append(ul);
-  metadata.append(details);
-  return metadata
+  
+  // item.querySelector('.list')?.replaceWith(ul);
+  // item.querySelector('details')?.setAttribute('open','');
+  // let len = ul.childNodes.length;
+  // const details = aa.mk.details('metadata ('+len+')',butt,len?1:0);
+  // details.append(ul);
+  // metadata.append(item);
+  let l = aa.mk.details(key,ul,1);
+  return l
 };
 
 aa.mk.metadata_about =(k,v)=> aa.mk.l('p',{app:aa.parse.content(v)});
@@ -188,13 +237,8 @@ aa.mk.profile =p=>
     profile.dataset.trust = p.score;
     profile.dataset.pubkey = p.pubkey;
     profile.dataset.updated = p.updated ?? 0;
-
-    profile.append(
-      aa.mk.profile_header(p),
-      ' ',aa.mk.l('section',{cla:'metadata'}),
-      ' ',aa.mk.l('section',{cla:'extradata'})
-    );
     aa.fx.color(p.pubkey,profile);
+    profile.append(aa.mk.profile_header(p),' ');
     aa.p.l.append(profile);
     aa.fx.count_upd(document.getElementById('butt_p'));
   }
@@ -202,15 +246,33 @@ aa.mk.profile =p=>
 };
 
 
-// make profile header
 aa.mk.profile_header =(p)=>
 {
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
   pubkey.append(
     aa.mk.p_link(p.pubkey),
-    ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt(['…','pa'])}),
+    ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.clk_butt(['…','pa'])}),
     ' ',aa.mk.l('span',{cla:'pub',con:p.pubkey}),
     ' ',aa.mk.time(p.updated)
   );
   return pubkey
 };
+
+aa.mk.relays =(k,v)=>
+{
+  // return aa.mk.ls(k,v,{tag:'p',mk:aa.mk.server});
+  // item.querySelector('details');
+  let ul = aa.mk.l('ul',{cla:k+' list'});
+  for (const url in v) ul.append(aa.mk.server(url,v[url]));
+  let l = aa.mk.details(k,ul);
+  return l
+};
+
+aa.mk.follows =(k,v,p)=>
+{
+  let l = aa.p.authors_list(v,k);
+  return aa.mk.details(k,l);
+}
+
+aa.mk.followers = aa.mk.follows;
+

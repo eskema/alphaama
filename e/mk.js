@@ -238,7 +238,7 @@ aa.mk.time =timestamp=>
 // make it
 aa.cli.def = 
 {
-  action:['post'],
+  action:['u','post'],
   required:['text'],
   description:'create a post',
   exe:aa.mk.post

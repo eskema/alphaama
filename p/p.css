@@ -29,12 +29,12 @@
 
 .profile[data-luma="light"]
 {
-  color: rgb(var(--color-dark));
+  /*color: rgb(var(--color-dark));*/
 }
 
 .profile[data-luma="dark"]
 {
-  color: rgb(var(--color-light));
+  /*color: rgb(var(--color-light));*/
 }
 
 .profile.in_view 
@@ -45,6 +45,7 @@
     "extradata extradata"
     "actions actions";
   margin-bottom: calc(var(--line) + calc(var(--pad)*2));
+  padding: var(--line) 1px!important;
 }
 
 .view_p #authors
@@ -67,7 +68,7 @@
 
 /* @group p section details */
 
-.profile details 
+/*.profile details 
 {
   border-bottom: 1px dotted rgb(var(--color-b));
 }
@@ -77,7 +78,7 @@
   font-size: var(--font-size-s);
   line-height: 1.5rem;
   padding: 0 var(--padm);
-}
+}*/
 
 .profile details > .butt
 {
@@ -97,7 +98,7 @@
   opacity: .5;
 }
 
-.profile details[open]
+/*.profile details[open]
 {
   padding-bottom: var(--pad);
 }
@@ -107,7 +108,7 @@
   background: rgb(var(--color-b));
   color: rgb(var(--color-e));
   display: inline-block;
-}
+}*/
 
 .profile details p,
 .profile details a
@@ -115,12 +116,12 @@
   overflow-x: scroll;
 }
 
-.profile details > .list
+.profile details > .list:not(.metadata)
 {
   padding: var(--pad-l) 0;
 }
 
-.metadata > details[open]
+/*.metadata > details[open]
 {
   padding-bottom: 0;
 }
@@ -128,7 +129,7 @@
 .metadata > details[open] > summary
 {
   margin-bottom: 0;
-}
+}*/
 
 /* @end */
 
@@ -189,7 +190,7 @@
   width: var(--size-s);
 }
 
-.profile > .pubkey .pubkey
+.profile > .pubkey .pub
 {
   font-size: var(--font-size-s);
   grid-area: pub;
@@ -220,13 +221,14 @@
   font-size: var(--font-size-s);
   grid-template-areas: "author actions pub created_at";
   grid-template-columns: auto auto 1fr auto;
+  width: unset;
   padding: 0;
   position: sticky;
   top: 0;
   z-index: 3;
 }
 
-.in_view > .pubkey .pubkey 
+.in_view > .pubkey .pub 
 {
   display: unset;
   margin-right: var(--pad);
@@ -238,13 +240,13 @@
 
 /* @group p metadata */
 
-.metadata
+/*.metadata
 {
   grid-area: metadata; 
   display: none;
-}
+}*/
 
-.metadata_list
+.metadata
 {
   align-items: start;
   align-self: start;
@@ -258,7 +260,7 @@
     "website";
 }
 
-.metadata_list > *
+.metadata > *
 {
   background: rgb(var(--color-b));
   box-sizing: border-box;
@@ -273,7 +275,7 @@
   white-space: nowrap;
 }
 
-.profile .metadata_list .empty 
+.profile .metadata .empty 
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-d));
@@ -289,18 +291,18 @@
 }
 
 [data-meta]::before, 
-.metadata_list .empty::before 
+.metadata .empty::before 
 {
   content: attr(data-meta) ": ";
 }
 
-.metadata_list .empty::before 
+.metadata .empty::before 
 {
   text-decoration: line-through;
 }
 
-.in_view > .metadata,
-.in_view .metadata_list > *
+/*.in_view > .metadata,*/
+.in_view .metadata > *
 {
   display: block;
 }
@@ -309,7 +311,7 @@
 
 /* @group p data-meta */
 
-.metadata_list a
+.metadata a
 {
   text-decoration: none;
 }
@@ -487,25 +489,51 @@ p[data-meta="banner"]
 /* @end */
 
 
-/* @group p extradata */
+/* @group p data */
 
-.extradata
+.profile_data
 {
   display: none;
   font-size: var(--font-size-s);
   grid-area: extradata;
+  line-height: 1.5;
 }
 
-.extradata > .item 
+.profile_data > .item > details:not([open])
+{
+  justify-self: start;
+  /*background: rgb(var(--color-b));*/
+}
+
+.profile_data > .item > details
+{
+  /*position: relative;*/
+  /*background: rgb(var(--color-b));*/
+  overflow: auto;
+}
+
+.profile_data > .item > details > summary
+{
+  /*padding: var(--padm);*/
+  background: rgb(var(--color-b));
+  /*display: inline-block;*/
+  /*position: sticky;*/
+  /*position: relative;*/
+  /*top: 3rem;*/
+}
+
+.profile_data > .item 
 {
   background: rgb(var(--color-b));
   box-sizing: border-box;
-  color: rgb(var(--color-d));
-  font-size: var(--font-size-s);
+  display: block;
+  /*color: rgb(var(--color-d));*/
+  /*font-size: var(--font-size-s);*/
   line-height: 1.5rem;
   margin: 0;
   padding: 0 var(--pad);
-  white-space: pre;
+  overflow: auto;
+  /*white-space: pre;*/
 }
 
 .list.list_grid.author_list
@@ -524,6 +552,11 @@ p[data-meta="banner"]
   overflow-x: scroll;
   padding: 0;
   /*width: 100%;*/
+}
+
+.item.author_list_item .author
+{
+  border: 1px solid rgba(var(--c),.8);
 }
 
 .item.author_list_item .name
@@ -550,7 +583,7 @@ p[data-meta="banner"]
   margin-right: var(--pad);
 }
 
-.extradata .a
+.profile_data .a
 {
   color: rgb(var(--color-d));
 }
@@ -564,9 +597,10 @@ p[data-meta="banner"]
   color: rgb(var(--color-dark));
 }
 
-.in_view > .extradata
+.in_view > .profile_data
 {
-  display: unset;
+  /*justify-content: start;*/
+  display: grid;
 }
 
 /* @end */
@@ -614,13 +648,5 @@ p[data-meta="banner"]
 
 @media screen and (max-width: 768px) 
 {
-  .profile.in_view > .actions
-  {
-    line-height: 3rem;
-  }
-  
-  .profile.in_view > .actions .butt
-  {
-    padding: 0 var(--pad-l);
-  }
+
 }

@@ -375,7 +375,7 @@ aa.e.note_actions =dat=>
     l.classList.add('empty');
     l.classList.remove('expanded');
   }
-  if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
+  if (a.length) for (const s of a) l.append(aa.mk.clk_butt(s),' ');
   return l
 };
 

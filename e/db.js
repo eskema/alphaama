@@ -10,13 +10,13 @@ aa.db.events =async ids=>
     if (!aa.db.e[x]) a.push(x);
     else events.push(aa.db.e[x])
   }
-  // if (a.length)
-  // {
-  //   let store = 'events'
-  //   let stored = await aa.db.ops('idb',{get_a:{store,a}});
-  //   for (const i of stored) aa.db.e[i.event.id] = i;
-  //   events.push(...stored);
-  // }
+  if (a.length)
+  {
+    let store = 'events'
+    let stored = await aa.db.ops('idb',{get_a:{store,a}});
+    for (const i of stored) aa.db.e[i.event.id] = i;
+    events.push(...stored);
+  }
   return events
 };
 
@@ -24,21 +24,21 @@ aa.db.events =async ids=>
 // returns event if already loaded or get it from database
 aa.db.get_a =async id_a=>
 {
-  // const store = 'events';
-  // const [kind,pubkey,identifier] = id_a.split(':');
-  // let key;
-  // try 
-  // {
-  //   let p = await aa.p.get(pubkey);
-  //   key = p.events['k'+kind][identifier][0][0]
-  // } 
-  // catch(er) {}
+  const store = 'events';
+  const [kind,pubkey,identifier] = id_a.split(':');
+  let key;
+  try 
+  {
+    let p = await aa.p.get(pubkey);
+    key = p.events['k'+kind][identifier][0][0]
+  } 
+  catch(er) {}
 
-  // if (key)
-  // {
-  //   if (aa.db.e[key]) return aa.db.e[key];
-  //   return aa.db.e[key] = await aa.db.ops('idb',{get:{store,key}});
-  // }
+  if (key)
+  {
+    if (aa.db.e[key]) return aa.db.e[key];
+    return aa.db.e[key] = await aa.db.ops('idb',{get:{store,key}});
+  }
   return false
 };
 
@@ -46,11 +46,10 @@ aa.db.get_a =async id_a=>
 // returns event if already loaded or get it from database
 aa.db.get_e =async xid=>
 {
-  return aa.db.e[xid];
-  // if (aa.db.e[xid]) return aa.db.e[xid];  
-  // let dat = await aa.db.ops('idb',{get:{store:'events',key:xid}});
-  // if (dat) aa.db.e[xid] = dat;
-  // return dat
+  if (aa.db.e[xid]) return aa.db.e[xid];  
+  let dat = await aa.db.ops('idb',{get:{store:'events',key:xid}});
+  if (dat) aa.db.e[xid] = dat;
+  return dat
 };
 
 
@@ -76,28 +75,28 @@ aa.db.some =async s=>
 // update event on database
 aa.db.upd_e =async dat=>
 {
-  // const q_id = 'upd_e';
-  // if (!aa.temp[q_id]) aa.temp[q_id] = {};
-  // aa.temp[q_id][dat.event.id] = dat;
+  const q_id = 'upd_e';
+  if (!aa.temp[q_id]) aa.temp[q_id] = {};
+  aa.temp[q_id][dat.event.id] = dat;
   
-  // aa.fx.to(()=>
-  // {
-  //   const q = Object.values(aa.temp[q_id]);
-  //   aa.temp[q_id] = {};
-  //   if (q.length) 
-  //   {
-  //     let chunks = aa.fx.chunks(q,420);
-  //     let times = 0;
-  //     for (const a of chunks)
-  //     {
-  //       setTimeout(()=>
-  //       {
-  //         aa.db.idb.postMessage({put:{store:'events',a}});
-  //       },times * 100);
-  //       times++;
-  //     }
-  //   }
-  // },500,q_id);
+  aa.fx.to(()=>
+  {
+    const q = Object.values(aa.temp[q_id]);
+    aa.temp[q_id] = {};
+    if (q.length) 
+    {
+      let chunks = aa.fx.chunks(q,420);
+      let times = 0;
+      for (const a of chunks)
+      {
+        setTimeout(()=>
+        {
+          aa.db.idb.postMessage({put:{store:'events',a}});
+        },times * 100);
+        times++;
+      }
+    }
+  },500,q_id);
 };
 
 

@@ -1,62 +1,72 @@
 // relay worker
-aa.r.worker = '/r/worker.js';
+aa.r.worker_src = '/r/worker.js';
 
 
 // relay workers working
-aa.r.ww = new Map();
+aa.r.lays = new Map();
 
 
 // instantiate relay worker
-aa.r.w =async(url,o)=>
+aa.r.lay =async(url,o={})=>
 {
-  let op = 'connect';
   url = aa.is.url(url)?.href;
-  let rw = aa.r.ww.get(url);
-  if (!rw)
+  let r = aa.r.lays.get(url);
+  if (r) return r;
+  r =
   {
-    rw = 
-    {
-      a:[],
-      messages:[],
-      worker:new Worker(aa.r.worker)
-    };
-    aa.r.ww.set(url,rw);
-    if (Object.hasOwn(o,'a') && o.a.length) rw.a.push(...o.a);
-    const exe =
-    rw.worker.onmessage =e=>
-    {
-      let data = e.data;
-      let origin = e.target;
-      rw.messages.push(data);
-      for (const process of rw.a) setTimeout(()=>
-      {
-        let [title,exe] = process;
-        exe(data,origin);
-      },0);
-    };
-    // if (Object.hasOwn('fun') && o.fun.length)
-    // {
-    //   for (const l of o.fun)
-    //   {
-    //     let listener = rw.worker.addEventListener('message',l[1]);
-    //   }
-    //   rw.push([l[0],rw.worker.addEventListener('message',l[1])])
-    // }
+    a:[aa.r.lay_m,aa.r.lay_switch],
+    w:new Worker(aa.r.worker_src),
+    s:new Map(),
+    m:[],
+  };
+  r.w.url = url;
+  aa.r.lays.set(url,r);
+  if (Object.hasOwn(o,'a') && o.a.length) r.a.push(...o.a);
+  r.w.onmessage =e=>
+  {
+    const mess =i=>{i.exe(r,e.data)};
+    for (const i of r.a) setTimeout(mess(i),0)
+  };
+  r.w.postMessage([['connect',url]]);
+  return r
+};
 
-    
-    rw.worker.postMessage([[op,url]]);
+
+//
+aa.r.lay_m =
+{
+  name:'m',
+  exe:(v,r)=>{r.m.push(v)}
+};
+
+
+//
+aa.r.lay_switch =
+{
+  name:'switch',
+  exe:(v,r)=>
+  {
+    switch(v[0])
+    {
+      case 'info':
+      case 'connect':
+      case 'sub':
+      case 'event': //aa.mk.dat(v[1])
+      case 'eose':
+      case 'notice':
+      default: console.log(v,r)
+    }
   }
-  return rw
 };
 
 
 // terminate relay worker
-aa.r.wt =s=>
+aa.r.lay_term =s=>
 {
-  let ww = aa.temp.workers.get(s);
-  if (ww)
+  let relay = aa.r.lays.get(s);
+  if (relay)
   {
-    ww.worker.terminate();
-    aa.temp.workers.delete(s)
+    relay.w.terminate();
+    aa.r.lays.delete(s)
   }
 };

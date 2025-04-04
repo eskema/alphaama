@@ -36,7 +36,8 @@ ops.connect =async([op,url])=>
 
 ops.REQ =a=>
 {
-  // a = ['REQ',<id>'',<filter>{}]
+  // a = ['REQ',<id>'',<filter>{},<options>{}]
+  let [type,id,filter,options] = a;
   if (!relay)
   {
     postMessage(['error','!relay']);
@@ -47,13 +48,35 @@ ops.REQ =a=>
   {
     onevent(event)
     {
-      postMessage(['event',event]);
+      postMessage(['event',event,sub.id]);
       received++;
     },
     oneose()
     {
-      postMessage(['eose',received])
-      // sub.close()
+      postMessage(['eose',sub.id]);
+      if(options?.eose === 'close') sub.close()
     }
-  })
+  });
+  postMessage(['sub',a[1],sub.id]);
+};
+
+ops.CLOSE =a=>
+{
+  // a = ['CLOSE',<id>'']
+  if (!relay)
+  {
+    postMessage(['error','!relay']);
+    return
+  }
+};
+
+ops.ping =a=>
+{
+  // a = ['ping']
+  if (!relay)
+  {
+    postMessage(['error','!relay']);
+    return
+  }
+  postMessage(['pong',relay]);
 };

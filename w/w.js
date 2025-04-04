@@ -267,28 +267,28 @@ aa.w.load =async()=>
       exe:mod.import_7375
     },
     {
-      action:['cashu','quote'],
+      action:[id,'quote'],
       required:['amount'],
       optional:['wid'],
       description:'mint quote',
       exe:mod.quote
     },
     {
-      action:['cashu','check'],
+      action:[id,'check'],
       required:['quote'],
       optional:['wid'],
       description:'keeps checking quote state',
       exe:mod.quote_check
     },
     {
-      action:['cashu','mint'],
+      action:[id,'mint'],
       required:['quote_id'],
       optional:['wid'],
       description:'mint proofs from quote',
       exe:mod.mint
     },
     {
-      action:['cashu','melt'],
+      action:[id,'melt'],
       required:['invoice'],
       optional:['wid'],
       description:'pay ln invoice from wallet proofs',

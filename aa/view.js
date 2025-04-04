@@ -16,7 +16,7 @@ aa.view.clear =()=>
   }
   aa.view.active = false;
   if (aa.state.l) aa.state.l.textContent = '';
-  aa.l.classList.remove('viewing','view_e','view_p') 
+  aa.l.classList.remove('viewing','view_e','view_p');
   for (const c of aa.clears) c();
 };
 

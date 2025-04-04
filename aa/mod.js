@@ -38,16 +38,19 @@ aa.mod.load =async mod=>
 // make mod
 aa.mod.mk =mod=>
 {
-  let o = {id:mod.def.id,ls:mod.o.ls,sort:'a'};
+  let o = {id:mod.def.id,ls:mod.o.ls,sort:'a',fun:[]};
   if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
-  let mod_l = aa.mk.details(mod.def.id,aa.mk.ls(o));
+  mod.li = new Map();
+  o.fun.push((k,v,l)=>{mod.li.set(k,l)});
+  mod.ul = aa.mk.ls(o);
+  let mod_l = aa.mk.details(mod.def.id,mod.ul);
   mod_l.classList.add('mod');
   if (mod.l)
   {
     mod.l.replaceWith(mod_l);
     mod.l = mod_l;
   }
-  else 
+  else
   {
     mod.l = mod_l;
     if (aa.mod_l) 
@@ -75,14 +78,18 @@ aa.mod.save =async mod=>
 };
 
 
-aa.mod.servers_add_log =(cla)=>
+aa.mod.servers_add_l =cla=>
 {
-  let l = aa.temp[cla+'_add'];
-  if (!l) l = aa.temp[cla+'_add'] = 
-    aa.mk.details(cla,aa.mk.l('ul',{cla:'list'}));
-  if (!l.parentElement) aa.log(l);
-  else l.parentElement.classList.add('is_new');
-
+  let id = 'servers_add_'+cla;
+  let l = aa.temp[id];
+  if (!l) l = aa.temp[id] = aa.mk.details(cla,aa.mk.l('ul',{cla:'list'}));
+  // let mom = l.parentElement;
+  // if (!mom) aa.log(l);
+  else fastdom.mutate(()=>
+  {
+    // mom?.classList.add('is_new');
+    if (!l.hasAttribute('open')) mom?.parentElement?.append(mom);
+  });
   return l
 };
 
@@ -97,9 +104,8 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
   let len = as.length;
   if (!len) return [valid,invalid,off];
 
-  let l = aa.mod.servers_add_log(cla);
+  let l = aa.mod.servers_add_l(cla);
   let ul = l.lastElementChild;
-
   let haz;
   for (const i of as) 
   {
@@ -119,6 +125,7 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
     if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
     let updd = aa.fx.a_add(mod.o.ls[url].sets,a);
     if (!updd) continue;
+    
     haz = true;
     let sets = aa.r.o.ls[url].sets.join(' ');
     aa.mod.ui(mod,url);
@@ -146,9 +153,7 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
     if (log) aa.logs.append(log);
     else aa.log(l)
   }
-  else if (!l?.lastElementChild?.children.length)
-    fastdom.mutate(()=>{log.remove()});
-
+  
   if (valid.length) aa.mod.save(mod);
   return [valid,invalid,off]
 };
@@ -168,8 +173,7 @@ aa.mod.servers_butts =(mod,l,o)=>
       sets.append(aa.mk.butt_action(mod.def.id+' setrm '+url+' '+set,set),' ')
     }
   }
-  l.append(' ',sets,
-  ' ',aa.mk.butt_action(mod.def.id+' add '+url+' off','+','add'));
+  l.append(' ',sets,' ',aa.mk.butt_action(mod.def.id+' add '+url+' off','+','add'));
 };
 
 

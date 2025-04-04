@@ -70,14 +70,10 @@ aa.parse.j =son=>
 {
   let o;
   son = son.trim();
-  if (son.length > 2)
+  if(son.length > 2)
   {
-    try { o = JSON.parse(son) }
-    catch (er) 
-    { 
-      console.log('aa.parse.j',son); 
-      console.error(er) 
-    }
+    try{ o =JSON.parse(son) }
+    catch(er){ console.log('aa.parse.j error',son) }
   }
   return o
 };

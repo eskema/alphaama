@@ -1,6 +1,6 @@
 aa.log_parse =(s='')=>
 {
-  aa.log(aa.mk.item('parse',aa.parse.j(s),'p'))
+  aa.log(aa.mk.item('parse',aa.parse.j(s),{tag:'p'}))
 }
 
 

@@ -1,23 +1,3 @@
-// make button
-aa.mk.butt =sa=> 
-{
-  let con,cla,clk;
-  if (Array.isArray(sa))
-  {
-    con = sa[0];
-    if (sa[1]) 
-    {
-      cla = sa[1];
-      if (sa[2]) clk = sa[2];
-      else clk = cla;
-    }
-    else clk = cla = con;      
-  }
-  else clk = cla = con = sa;
-  return aa.mk.l('button',{con:con,cla:'butt '+cla,clk:aa.clk[clk]});
-};
-
-
 // button that toggles the class 'expanded'
 aa.mk.butt_expand =(id,con=false)=>
 {
@@ -30,6 +10,28 @@ aa.mk.butt_expand =(id,con=false)=>
   });
   butt.dataset.controls = id
   return butt
+};
+
+
+// make button with a clk
+aa.mk.clk_butt =sa=>
+{
+  let con,cla,clk;
+  if (Array.isArray(sa))
+  {
+    con = sa[0];
+    if (sa[1])
+    {
+      cla = sa[1];
+      if (sa[2]) clk = sa[2];
+      else clk = cla;
+    }
+    else clk = cla = con;
+  }
+  else clk = cla = con = sa;
+  cla = 'butt '+cla;
+  clk = aa.clk[clk];
+  return aa.mk.l('button',{con,cla,clk});
 };
 
 
@@ -54,8 +56,8 @@ aa.mk.details =(con,l=false,open=false)=>
   const summary = aa.mk.l('summary',{con});
   details.append(summary);
   if (!l) return details;
-  if (l.classList.contains('list'))
-    summary.dataset.count = l.childNodes.length;
+  // if (l.classList.contains('list'))
+  summary.dataset.count = l.children.length;
   details.append(l);
   return details
 };
@@ -175,50 +177,69 @@ aa.mk.img_modal =(src,cla=false)=>
 
 
 // make generic list item from key : value
-aa.mk.item =(k='',v,tag_name='li')=>
+aa.mk.item =(k='',v,o)=>
 {
-  let l = aa.mk.l(tag_name,{cla:'item item_'+k});
-  if (Array.isArray(v))
+  let tag = o?.tag || 'li';
+  let cla = `item item_${k}`;
+
+  let l = aa.mk.l(tag,{cla});
+  if (!v)
   {
-    l.classList.add('ls_arr');
-    if (!v.length) l.classList.add('empty');
-    // if (typeof v[0]!=='object')
-    // {
-    //   if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
-    //   l.append(aa.mk.l('span',{cla:'val',con:v.join(', ')}));
-    // }
-    // else
-    // {
-      let list = aa.mk.ls({});
-      if (v.length) list.classList.remove('empty');
-      for (let i=0;i<v.length;i++) 
-      {
-        list.append(aa.mk.item(''+i,v[i]));
-      }
-      l.append(aa.mk.details(k,list));
-    // }
+    l.classList.add('empty');
+    return l
   }
-  else if (v && typeof v==='object')
+
+  let item;
+  // if (Object.hasOwn(o,'mk')) item = o.mk(k,v);
+  // else 
+  if (Array.isArray(v)) 
   {
+    item = aa.mk.item_arr(k,v);
+    l.classList.add('ls_arr');
+  }
+  else if (typeof v==='object')
+  {
+    let dis = {ls:v}; 
+    item = aa.mk.details(k,aa.mk.ls(dis));
     l.classList.add('ls_obj');
-    if (!Object.keys(v).length) l.classList.add('empty');
-    l.append(aa.mk.details(k,aa.mk.ls({ls:v})))
   }
   else
   {
     if (typeof v === 'number') l.classList.add('ls_num')
     else if (typeof v === 'boolean') l.classList.add('ls_bool')
     else l.classList.add('ls_str');
-    if (k) l.append(aa.mk.l('span',{cla:'key',con:k}),' ');
+    
+    if (k) item = aa.mk.l('span',{cla:'key',con:k});
+    
     v = v+'';
-    if (!v || !v.length) l.classList.add('empty');  
+    if (!v.length) l.classList.add('empty');
     if (v === null) v = 'null';
-    let vl = aa.mk.l('span',{cla:'val',con:v})
-    l.append(vl);
+    l.append(aa.mk.l('span',{cla:'val',con:v}));
+  }
+  if (item) 
+  {
+    if (item.classList.contains('empty')) l.classList.add('empty');
+    l.prepend(item);
   }
   return l
 };
 
+
+aa.fx.a_red =a=> a.reduce((b,c)=>
+{
+  b[c]=(b[c]||0)+1;
+  return b;
+},{});
+
+
+aa.mk.item_arr =(k,v)=>
+{
+  let list = aa.mk.ls({});
+  if (!v.length) list.classList.add('empty');
+  else list.classList.remove('empty');
+  for (let i=0;i<v.length;i++) list.append(aa.mk.item(''+i,v[i]));
+  return aa.mk.details(k,list);
+}
 
 // make a regular link
 aa.mk.link =(url,text=false,title=false)=>
@@ -249,7 +270,8 @@ aa.mk.ls =o=>
   //   l:element,
   //   ls:object,
   //   sort:string,
-  //   mk:function 
+  //   mk:function to make element
+  //   exes:[...(k,v,l)=>{})] 
   // }
 
   let l = o.l;
@@ -270,7 +292,11 @@ aa.mk.ls =o=>
       for (const k of keys)
       {
         const v = o.ls[k];
-        l.append( o.hasOwnProperty('mk') ? o.mk(k,v) : aa.mk.item(k,v));
+        const item = o.hasOwnProperty('mk') 
+        ? o.mk(k,v) 
+        : aa.mk.item(k,v);
+        l.append(item);
+        if (Object.hasOwn(o,'fun')) for (const exe of o.fun) exe(k,v,item);
       }
     }
   }
@@ -390,6 +416,7 @@ aa.mk.notice =o=>
   
   cla = 'title';
   if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.title}));
+  
   cla = 'description';
   if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.description}));
   for (const butt of o.butts)

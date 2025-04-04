@@ -90,13 +90,13 @@ aa.clk.na =e=>
   let l = e.target.closest('.actions');
   if (l.classList.contains('empty'))
   {
-    for (const s of aa.e.butts_for.na) l.append(' ',aa.mk.butt(s));
+    for (const s of aa.e.butts_for.na) l.append(' ',aa.mk.clk_butt(s));
     l.classList.remove('empty');
   }
   l.classList.toggle('expanded');
   // e.target.remove();
   // let a = aa.e.butts_for.na;
-  // if (a.length) for (const s of a) l.append(aa.mk.butt(s),' ');
+  // if (a.length) for (const s of a) l.append(aa.mk.clk_butt(s),' ');
 };
 
 

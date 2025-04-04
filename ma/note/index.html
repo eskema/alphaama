@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>make a (nostr) note</title>
   <script src="/dep/nostr-tools.js"></script>
+  <!-- Core build with no theme, formatting, non-essential modules -->
+  <!-- <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.core.css" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.core.js"></script> -->
+
+
   <link rel="stylesheet" href="/aa/aa.css">
   <style>
     header
@@ -99,6 +104,11 @@
       word-break: break-word;
     }
   </style>
+  <!-- Include Quill stylesheet -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css"
+    rel="stylesheet"
+  />
 </head>
 <body>
   <header>
@@ -125,6 +135,11 @@
     <section id="content_wrapper">
       <label for="content">content:</label> 
       <textarea id="content" placeholder="yo"></textarea>
+
+
+      <!-- Create the editor container -->
+      <!-- <div id="editor"></div> -->
+      
     </section>
     <section id="tags_wrapper" data-alt="key,value,etc…">
       tags: 
@@ -134,8 +149,32 @@
     <button id="butt">make note</button>
   </main>
   <textarea id="output">{}</textarea>
-  
+
+
+
+
+
+<!-- Include the Quill library -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script> -->
+
+<!-- Initialize Quill editor -->
 <script>
+  // const quill = new Quill("#editor", 
+  // {
+  //   placeholder: 'whatever the fuck u want',
+  //   theme: "snow",
+  //   modules:
+  //   {
+  //     toolbar:[['bold', 'italic'], ['link', 'image']]
+  //   }
+  // });
+</script>
+
+<script>
+
+if (window.self !== window.top) 
+  document.documentElement.classList.add('framed');
+
 const f_s = parseFloat(getComputedStyle(document.documentElement).fontSize);
 let note = document.getElementById('content');
 
@@ -248,9 +287,13 @@ const created_at_change =e=>
 
 const resize_textarea =e=>
 {
-  e.target.style.width = 'unset';
-  e.target.style.height = 'unset';
-  e.target.style.height = e.target.scrollHeight+'px';
+  let ta = document.querySelectorAll('textarea');
+  for (const l of ta)
+  {
+    l.style.width = 'unset';
+    l.style.height = 'unset';
+    l.style.height = l.scrollHeight+'px';
+  }
 };
 
 const dis_theme =theme=>

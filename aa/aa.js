@@ -113,6 +113,7 @@ aa.mk.l =(tag_name='div',o={})=>
       case 'tit': l.title = v; break;
       case 'typ': l.type = v; break;
       case 'val': l.value = v; break;
+      case 'for': l.setAttribute('for',v); break;
     }
   }
   return l
@@ -146,7 +147,8 @@ aa.load =async(o={})=>
   aa.l = document.documentElement;
   aa.bod = document.body;
   aa.mk.styles(o.styles || aa.styles);
-
+  aa.framed = window.self !== window.top;
+  if (aa.framed) aa.l.classList.add('framed');
   let dependencies = o.dependencies || aa.dependencies;
   let tools = o.tools || aa.tools;
   let mods = o.mods || aa.mods;
@@ -269,7 +271,6 @@ aa.run =(o={})=>
     aa.bod.prepend(aa.mk.header(),aa.view.l);
     aa.bod.insertBefore(aa.dialog,aa.bod.lastChild.previousSibling);
     aa.bod.insertBefore(aa.side,aa.dialog);
-    if (aa.is.iframe()) aa.l.classList.add('rigged');
   });
   let onoff = navigator.onLine?'on':'off';
   let online = `${onoff}line at ${location.origin}`;

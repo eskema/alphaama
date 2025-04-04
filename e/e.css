@@ -72,6 +72,7 @@
   border-left: 1px solid rgba(var(--c),.5);
 }
 
+
 .view_p .note.root.in_path,
 .note.root:not(.tiny) + .note.tiny,
 .note.root:not(.in_path):not(:first-child)
@@ -81,6 +82,7 @@
 
 
 .view_e .note.in_path.haz_new_reply,
+.replies:not(.expanded) > .note:not(.is_new),
 .replies:not(.expanded) .note:not(.is_new).haz_new_reply,
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
@@ -93,6 +95,13 @@
   border-left: 1px dotted rgba(var(--c),1);
   border-top: 1px dotted rgba(var(--c),1);
 }
+
+.replies:not(.expanded) > .note.haz_new_reply:not(.is_new)
+{
+  padding-top: var(--pad);
+  margin-bottom: var(--padm);
+}
+
 
 .note.in_view::after
 {
@@ -161,11 +170,6 @@
   width: 100%;
 }
 
-.clicker:hover
-{
-  background: rgba(var(--color-c),.5);
-  background: rgba(var(--c),.5);
-}
 
 .note.in_view > .replies > .note > .clicker,
 .note.root > .clicker
@@ -243,7 +247,7 @@
 .replies > .note:not(.in_path) > .by
 {
   position: sticky;
-  top: calc(2.5rem + 2px);
+  top: calc(2.5rem);
   z-index: 2;
 }
 
@@ -878,6 +882,10 @@ a.author
   align-self: start;
   content: "[" attr(data-i) "] ";
   line-height: 1rem;
+
+  min-width: 2rem;
+  text-align: right;
+  /*user-select: none;*/
 }
 
 .tag[data-i]::before,
@@ -1002,6 +1010,7 @@ a.author
 .view_e .in_path:not(.in_view) > .replies
 {
   padding-left: 0;
+  margin-bottom: 0;
 }
 
 /* :not([data-level="1"]):not([data-level="2"]) */
@@ -1066,6 +1075,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   position: sticky;
   top: 1rem;
+  transform: translateX(-1px);
   z-index: 3;
 }
 
@@ -1087,6 +1097,11 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .haz_solo .root:not(.in_view):not(.in_path) > .replies > summary
 {
   display: none;
+}
+
+.replies.expanded
+{
+  margin-bottom: var(--padm);
 }
 
 .replies.expanded > summary .mark_read::before
@@ -1462,6 +1477,12 @@ html:not(.needs_pagin) .pagination
     background: rgb(var(--color-a));
   }
   
+  .clicker:hover
+  {
+    background: rgba(var(--color-c),.5);
+    background: rgba(var(--c),.5);
+  }
+  
   /*.content:hover,*/
   .by:hover + .content,
   a.clicker:hover + .by + .content,
@@ -1471,7 +1492,11 @@ html:not(.needs_pagin) .pagination
     position: sticky;
     top: 1rem;
     z-index: 2;
-    
+  }
+  
+  .in_view > .by:hover + .content
+  {
+    z-index: 9;
   }
   
   a.clicker:hover + .by + .content
@@ -1537,6 +1562,7 @@ html:not(.needs_pagin) .pagination
   
   .in_view > .replies > .note > .content,
   .viewing .root:not(.in_path) > .content,
+  .view_p .root.in_path > .content,
   .root:not(.in_view):not(.in_path) > .content
   {
     position: sticky; 
@@ -1572,8 +1598,7 @@ html:not(.needs_pagin) .pagination
   
   .note,
   .note.root:not(.in_path),
-  .note.in_view > .replies > .note,
-  #notes > .note:not(.root):not(.in_path)
+  .note.in_view > .replies > .note
   {
     grid-template-areas: 
       "by      by"
