@@ -80,16 +80,13 @@ aa.mod.save =async mod=>
 
 aa.mod.servers_add_l =cla=>
 {
-  let id = 'servers_add_'+cla;
-  let l = aa.temp[id];
-  if (!l) l = aa.temp[id] = aa.mk.details(cla,aa.mk.l('ul',{cla:'list'}));
-  // let mom = l.parentElement;
-  // if (!mom) aa.log(l);
-  else fastdom.mutate(()=>
+  // let id = 'servers_add_'+cla;
+  let l = aa.el.get(cla);
+  if (!l) 
   {
-    // mom?.classList.add('is_new');
-    if (!l.hasAttribute('open')) mom?.parentElement?.append(mom);
-  });
+    l = aa.mk.details(cla,0,0,'base'); // ,aa.mk.l('div',{cla:'list'})
+    aa.el.set(cla,l)
+  }
   return l
 };
 
@@ -97,19 +94,18 @@ aa.mod.servers_add_l =cla=>
 // add server item with sets to mod
 aa.mod.servers_add =(mod,s='',cla='server')=>
 {
-  const as = s.split(',');
   const valid = [];
   const invalid = [];
   const off = [];
-  let len = as.length;
-  if (!len) return [valid,invalid,off];
+  const all = [valid,invalid,off];
+  const as = s.split(',');
+  if (!as.length) return all;
 
-  let l = aa.mod.servers_add_l(cla);
-  let ul = l.lastElementChild;
+  
+  // let ul = l.lastElementChild;
   let haz;
   for (const i of as) 
   {
-    let con;
     let a = i.trim().split(' ');
     let url_string = a.shift().trim();
     const url = aa.is.url(url_string)?.href;
@@ -117,8 +113,8 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
     {
       haz = true;
       aa.fx.a_add(invalid,[url_string]);
-      con = `\ninvalid: ${url_string}`;
-      ul.prepend(aa.mk.l('li',{con}));
+      // con = `\ninvalid: ${url_string}`;
+      // ul.prepend(aa.mk.l('li',{con}));
       continue;
     }
 
@@ -127,34 +123,39 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
     if (!updd) continue;
     
     haz = true;
-    let sets = aa.r.o.ls[url].sets.join(' ');
+    // let sets = aa.r.o.ls[url].sets.join(' ');
     aa.mod.ui(mod,url);
     
     if (a.includes('off')) 
     {
       aa.fx.a_add(off,[url]);
-      con = `\noff: ${url} ${sets}`;
+      // con = `\noff: ${url} ${sets}`;
     }
     else
     {
       aa.fx.a_add(valid,[url]);
-      con = `\nadded: ${url} ${sets}`;
+      // con = `\nadded: ${url} ${sets}`;
     }
-    ul.prepend(aa.mk.l('li',{con}))
-  }
-
-  let summary = l.children[0];
-  let count = parseInt(summary.dataset.count);
-  let log = l.parentElement;
-  if (haz)
-  {
-    summary.dataset.count = count + valid.length + invalid.length;
-    l.insertBefore(ul,summary.nextElementSibling);
-    if (log) aa.logs.append(log);
-    else aa.log(l)
+    // ul.prepend(aa.mk.l('li',{con}))
   }
   
-  if (valid.length) aa.mod.save(mod);
+  if (invalid.length) aa.log(`invalid urls: ${invalid}`);
+  
+  if (haz)
+  {
+    let l = aa.mod.servers_add_l(cla);
+    let log = l.parentElement;
+    if (log) aa.logs.append(log);
+    else aa.log(l)
+
+    for (const url of [...off,...valid])
+    {
+      let li = l.querySelector(`[data-id="${url}"]`);
+      if (!li) li = aa.mk.l('p',{con:`${url} ${mod.o.ls[url].sets.join(' ')}`})
+      l.append(li);
+    }
+    aa.mod.save(mod);
+  }
   return [valid,invalid,off]
 };
 

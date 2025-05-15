@@ -157,9 +157,9 @@ aa.cli.draft =(dat)=>
 
 
 // creates / updates / deletes dat event from input
-aa.cli.dat_upd =async()=>
+aa.cli.dat_upd =async(s='')=>
 {
-  const s = aa.cli.t.value;
+  if (!s) s = aa.cli.t.value;
   if (s.length)
   {
     const reply_to = aa.view.active;    
@@ -266,19 +266,20 @@ aa.cli.keydown =async e=>
   if (e.key === 'Enter' && e.shiftKey === false) 
   {
     e.preventDefault();
-    if (aa.cli.t.value.length) aa.cli.run(aa.cli.t.value);
+    if (aa.cli.t.value.length) 
+    setTimeout(()=>{aa.cli.run(aa.cli.t.value)},0);
   }
   if (e.key === 'ArrowUp' && aa.cli.t.selectionStart === 0) 
   {
     e.preventDefault();
-    aa.cli.history_previous();
+    setTimeout(()=>{aa.cli.history_previous()},0);
   }
   if (e.key === 'ArrowDown' && aa.cli.t.selectionStart === 0) 
   {
     e.preventDefault();
-    aa.cli.history_next();
+    setTimeout(()=>{aa.cli.history_next()},0);
   }
-  if (e.key === 'Escape') aa.cli.collapse();
+  if (e.key === 'Escape') setTimeout(()=>{aa.cli.collapse()},0);
 };
 
 
@@ -286,7 +287,6 @@ aa.cli.keydown =async e=>
 aa.cli.load =async e=>
 {
   await aa.mk.scripts([
-    '/c/fx.js',
     '/c/mk.js',
   ]);
   fastdom.mutate(()=>
@@ -317,18 +317,31 @@ aa.cli.mk =()=>
   aa.cli.t.onkeydown = aa.cli.keydown;
   aa.cli.t.onselectionchange = aa.cli.selection;
   aa.cli.t.rows = 1;
-  aa.cli.l.append(
+  const butts = aa.mk.l('p',{cla:'butts'});
+  butts.append(
     aa.mk.l('button',
     {
-      id:'cli_collapse',
+      cla:'cli_collapse',
       con:'-',
       tit:'hide input',
       clk:aa.cli.collapse,
       tab:2
     }),
+    aa.mk.l('button',
+    {
+      cla:'cli_expand',
+      con:'T',
+      tit:'expand toggle',
+      dat:{controls:'cli'},
+      clk:aa.clk.expand,
+      tab:3
+    })
+  );
+  aa.cli.l.append(
     aa.cli.t,
     aa.mk.section('l',1,aa.logs),
-    aa.cli.oto
+    aa.cli.oto,
+    butts,
   );
   return aa.cli.l
 };

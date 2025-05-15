@@ -12,7 +12,7 @@ aa.clk.pa =e=>
       ['refresh','p_refresh']
     ];
     if (!aa.is.u(x)) butts.push([aa.is.following(x)?'del':'add','k3']);
-    for (const s of butts) l.append(' ',aa.mk.clk_butt(s));
+    for (const s of butts) l.append(' ',aa.mk.butt_clk(s));
     l.classList.remove('empty');
   }
   l.classList.toggle('expanded');

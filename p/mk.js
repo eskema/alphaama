@@ -4,7 +4,7 @@ aa.mk.profile_data =p=>
   let keys = Object.keys(p);
   for (const k of keys)
   {
-    let exc = 
+    let excl = 
     [
       'npub',
       'petname',
@@ -15,7 +15,7 @@ aa.mk.profile_data =p=>
       'verified',
       'xpub',
     ];
-    if (k && !exc.includes(k)) 
+    if (k && !excl.includes(k)) 
     {
       let v = p[k];
       let item;
@@ -35,75 +35,10 @@ aa.mk.profile_data =p=>
 // make all other profile sections after metadata
 aa.mk.extradata =p=>
 {
+  const exc = ['metadata','pubkey','xpub','npub','verified'];
+  const keys = Object.keys(p).filter(i=>!exc.includes(i))
   const extradata = aa.mk.l('section',{cla:'extradata'});
-  
-  let keys = Object.keys(p);
-  for (const k of keys)
-  {
-    let exc = ['metadata','pubkey','xpub','npub','verified'];
-    if (k && !exc.includes(k)) 
-    {
-      extradata.append(aa.mk.item(k,p[k]));
-    }
-  }
-
-  // if (p.petnames.length) mk_item('petnames');
-  
-  // if (Object.keys(p.relays).length) 
-  // {
-  //   let item = mk_item('relays');
-  // }
-  
-  // if (Object.keys(p.relays).length)
-  // {
-  //   let relays = aa.mk.l('ul',{cla:'relays list'});
-  //   for (const url in p.relays) relays.append(aa.mk.server(url,p.relays[url]));
-  //   let l = aa.mk.details('relays',relays);
-  //   l.classList.add('p_item');
-  //   extradata.append(l);
-  // }
-
-  // if (p.follows.length) mk_item('follows');
-  // if (p.follows.length)
-  // {
-  //   let follows = aa.p.authors_list(p.follows,'follows');
-  //   let l = aa.mk.details('follows',follows);
-  //   l.classList.add('p_item');
-  //   extradata.append(l);
-  // }
-  // if (p.followers.length) mk_item('followers');
-  // if (p.followers.length)
-  // {
-  //   let followers = aa.p.authors_list(p.followers,'followers');
-  //   let l = aa.mk.details('followers',followers);
-  //   l.classList.add('p_item');
-  //   extradata.append(l);
-  // }
-
-  // if (p.mints?.length) mk_item('mints');
-  // if (p.p2pk?.length) mk_item('p2pk');
-
-  // mk_item('events');
-
-  // for (const k of a)
-  // {
-  //   let id = k.slice(2);
-  //   const v = p[id];
-  //   // if (aa.mk.hasOwnProperty(k)) extradata.append(aa.mk[k](v,p));
-  //   // else if (v) 
-  //   // {
-  //   //   let item = aa.mk.details(id,item)
-  //   //   let item = aa.mk.item(id,v,'p');
-  //   //   item.classList.add('p_item');
-  //   //   extradata.append(item);
-  //   // }
-  //   if (v) 
-  //   {
-  //     let item = aa.mk.item(id,v,'p');
-  //     item.classList.add('p_item');
-  //     extradata.append(item);
-  //   }
-  // }
+  for (const k of keys) extradata.append(aa.mk.item(k,p[k]));
   return extradata
 };
 
@@ -111,26 +46,16 @@ aa.mk.extradata =p=>
 // make metadata section
 aa.mk.metadata =(key,value,p)=>
 {
-
-  // let item = aa.mk.item(key,value,{tag:'p'});
-  // let metadata = aa.mk.l('section',{cla:'metadata'});
-  
-  // if(!p 
-  // || !p.metadata 
-  // || !Object.keys(p.metadata).length
-  // ) return metadata;
-
-  // const butt = aa.mk.clk_butt(['refresh','p_metadata']);
   const ul = aa.mk.l('div',{cla:key+' list'});
-  // let k0 = p.events.k0;
-  // if (k0?.length) butt.dataset.last = aa.fx.time_display_ext(k0[0][1]);
+
   for (const k in value)
   {
-    let l;
     let v = value[k];
     if (!v) v = '';
     if (v && typeof v === 'string') v.trim();
     let kk = key+'_'+k;
+    
+    let l;
     if (aa.mk.hasOwnProperty(kk)) 
     {
       l = aa.mk[kk](k,v,p)
@@ -148,23 +73,22 @@ aa.mk.metadata =(key,value,p)=>
     ul.append(l);
   }
   
-  // item.querySelector('.list')?.replaceWith(ul);
-  // item.querySelector('details')?.setAttribute('open','');
-  // let len = ul.childNodes.length;
-  // const details = aa.mk.details('metadata ('+len+')',butt,len?1:0);
-  // details.append(ul);
-  // metadata.append(item);
-  let l = aa.mk.details(key,ul,1);
-  return l
+  let metadata = aa.mk.details(key,ul,1);
+  return metadata
 };
+
 
 aa.mk.metadata_about =(k,v)=> aa.mk.l('p',{app:aa.parse.content(v)});
 
+
 aa.mk.metadata_banner =(k,v,p)=> aa.mk.metadata_picture(k,v,p);
+
 
 aa.mk.metadata_lud16 =(k,v)=> aa.mk.l('a',{ref:'lightning:'+v,con:v});
 
+
 aa.mk.metadata_lud06 =(k,v)=> aa.mk.metadata_lud16(k,v);
+
 
 aa.mk.metadata_nip05 =(k,v,p)=>
 {
@@ -188,15 +112,16 @@ aa.mk.metadata_nip05 =(k,v,p)=>
   return l
 };
 
-aa.mk.metadata_picture =(k,v,p)=>
+aa.mk.metadata_picture =(cla,src,p)=>
 {
-  if (aa.is.trusted(p.score) && v)
+  if (aa.is.trusted(p.score) && src)
   {
-    let img = aa.mk.l('img',{src:v});
-    img.addEventListener('click',e=>{e.target.classList.toggle('expanded')});
+    let img = aa.mk.l('img',{src});
+    img.addEventListener('click',e=>
+    {e.target.classList.toggle('expanded')});
     return img;
   }
-  else return aa.mk.l('p',{cla:k,con:v});
+  else return aa.mk.l('p',{cla,con:src});
 };
 
 aa.mk.metadata_website =(k,v)=> aa.mk.link(v);
@@ -251,7 +176,7 @@ aa.mk.profile_header =(p)=>
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
   pubkey.append(
     aa.mk.p_link(p.pubkey),
-    ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.clk_butt(['…','pa'])}),
+    ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt_clk(['…','pa'])}),
     ' ',aa.mk.l('span',{cla:'pub',con:p.pubkey}),
     ' ',aa.mk.time(p.updated)
   );
@@ -260,8 +185,6 @@ aa.mk.profile_header =(p)=>
 
 aa.mk.relays =(k,v)=>
 {
-  // return aa.mk.ls(k,v,{tag:'p',mk:aa.mk.server});
-  // item.querySelector('details');
   let ul = aa.mk.l('ul',{cla:k+' list'});
   for (const url in v) ul.append(aa.mk.server(url,v[url]));
   let l = aa.mk.details(k,ul);
@@ -275,4 +198,3 @@ aa.mk.follows =(k,v,p)=>
 }
 
 aa.mk.followers = aa.mk.follows;
-

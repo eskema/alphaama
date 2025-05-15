@@ -6,6 +6,21 @@ fun stuff
 */
 
 
+// return array with items in both arrays
+// and array with items that don't
+aa.fx.a_ab =(a,b)=>
+{
+  let inc = [];
+  let exc = [];
+  for (const i of b)
+  {
+    if (a.includes(i)) inc.push(i);
+    else exc.push(i)
+  }
+  return {inc,exc}
+};
+
+
 // checks if array includes items
 // adds them if not and returns if anything was added
 aa.fx.a_add =(a,items_to_add)=>
@@ -13,20 +28,6 @@ aa.fx.a_add =(a,items_to_add)=>
   let b = 0;
   for (const item of items_to_add) if (!a.includes(item)){a.push(item);b=1}
   return b
-};
-
-
-// return array with items in both arrays
-// and array with items that don't
-aa.fx.a_ab =(a,b)=>
-{
-  let o = {inc:[],exc:[]};
-  for (const i of b)
-  {
-    if (a.includes(i)) o.inc.push(i);
-    else o.exc.push(i)
-  }
-  return o
 };
 
 
@@ -39,7 +40,7 @@ aa.fx.a_rm =(a,items_to_rm)=>
 };
 
 
-// return object from array of strings
+// object from array of strings
 aa.fx.a_o =a=>
 {
   const o = {};
@@ -51,6 +52,7 @@ aa.fx.a_o =a=>
   return o
 };
 
+// array of unique arrays 
 aa.fx.a_u =a=>
 {
   let ar = [...new Set(a.map(i=>JSON.stringify(i)))];
@@ -277,7 +279,7 @@ aa.fx.encrypt44 =async(text,pubkey)=>
 
 
 // hash event
-aa.fx.hash =o=> NostrTools.getEventHash(o);
+aa.fx.hash =ish=> NostrTools.getEventHash(ish);
 
 
 // generate keypair
@@ -353,7 +355,7 @@ aa.fx.in_sets_all =(o,sets)=>
   let a = [];
   
   for (const k in o)
-  { 
+  {
     let i = o[k];
     if (!i.sets.includes('off') && sets.every(set=>i.sets.includes(set))) a.push(k);
   }
@@ -373,11 +375,11 @@ aa.fx.intersect =(o={},a=[],n=2)=>
     for (const item of items)
     {
       const [k,v] = item;
-      if (v.includes(x)) 
+      if (v.includes(x))
       {
         if (!dis[k]) dis[k] = [];
         aa.fx.a_add(dis[k],[x]);
-        i++; 
+        i++;
         if (i>=n) break;
       }
     }
@@ -547,7 +549,7 @@ aa.fx.qr =s=>
 aa.fx.random_s =(length)=> 
 {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  return Array(length + 1).join('').split('').sort(() => Math.random() - 0.5).join('');
+  return Array(length + 1).join('').split('').sort(()=>Math.random()-0.5).join('');
 };
 
 
@@ -560,7 +562,8 @@ aa.fx.regex =
   get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
   get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
   get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
-  get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu },
+  // get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu },
+  get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
   get str(){ return /"([^"]+)"/ }, // text in quotes ""
   get fw(){ return /(?<=^\S+)\s/ }, // first word
 };
@@ -658,7 +661,16 @@ aa.fx.sort_l =(l,by)=>
 };
 
 
+// split and trim
+aa.fx.splitr =(string,at=' ')=>
+{
+  return string.trim().split(at).map(dis=>dis.trim())
+};
+
+
+// split at given index
 aa.fx.split_at =(i,a)=> [a.slice(0,i),a.slice(i)];
+
 
 // splits string, given '"quoted text" and something else'
 // returns ['quoted text','and something else']
@@ -672,15 +684,13 @@ aa.fx.split_str =(s='')=>
 };
 
 
-
-
+// split addressable id string
 aa.fx.split_ida =ida=>
 {
-  let ind =string=> string.indexOf(':');
   let a = ida.split(':');
   let kind = a.shift();
   let pubkey = a.shift();
-  let identifier = a.join(':');
+  let identifier = a.length > 1 ? a.join(':') : a[0];
   return [kind,pubkey,identifier]
 };
 
@@ -745,6 +755,16 @@ aa.fx.tag_value =(a,s)=>
   if (tag && tag.length > 1) value = tag[1].trim();
   return value;
 }
+
+
+aa.fx.tags_add =(a,b)=>
+{
+  for (const i of b)
+  {
+    if (!a.some(t=>t[0] === i[0] && t[1] === i[1])) a.push(i)
+  }
+};
+
 
 aa.fx.tags_values =(a,s)=>
 {
@@ -882,32 +902,39 @@ aa.fx.verify_event =o=>
 // verify request filter object
 aa.fx.verify_req_filter =o=>
 {
+  if (!aa.is.o(o)) return;
+  if (!Object.keys(o).length) return;
+  let ints = ['since','until','limit'];
+  let hexs = ['ids','authors','#p','#e'];
   for (const k in o)
   {
     const v = o[k];
-    if (k==='since'||k==='until'||k==='limit')
+    
+    if (ints.includes(k))
     {
-      if (!Number.isInteger(v)||v===0) return false
+      if (!Number.isInteger(v) || v === 0) return
     }
-    else if (k==='ids'||k==='authors'||k==='#p'||k==='#e')
+    else
     {
-      if (Array.isArray(v)) 
-      { for (const val of v) if (!aa.is.x(val)) return false }
-      else return false
+      if (!Array.isArray(v)) return;
+
+      if (k==='kinds')
+      {
+        if (v.some(val=>!Number.isInteger(val))) return;
+      }
+      else
+      {
+        if (hexs.includes(k)) 
+        {
+          if (v.some(val=>!aa.is.x(val))) return;
+        }
+        else if (k.startsWith('#')) 
+        {
+          if (v.some(val=>typeof val!='string')) return;
+        }
+        else return
+      }
     }
-    else if (k.startsWith('#'))
-    {
-      if (Array.isArray(v)) 
-      { for (const val of v) if (typeof val!=='string') return false }
-      else return false
-    }
-    else if (k==='kinds')
-    {
-      if (Array.isArray(v)) 
-      { for (const val of v) if (!Number.isInteger(val)) return false }
-      else return false
-    }
-    else return false
   }
   return true
 };

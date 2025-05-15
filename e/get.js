@@ -38,7 +38,7 @@ aa.get.mentions =async s=>
 };
 
 
-// get missing e or p from def relays
+// get missing a, e or p
 aa.get.missing =async type=>
 {
   aa.fx.to(()=>
@@ -59,8 +59,10 @@ aa.get.missing =async type=>
       let filter;
       let req;
     
-      let [url,ids] = Object.entries(miss).sort((a,b)=>a.length - b.length)[0];
-      for (const id of ids) aa.fx.a_add(aa.miss[type][id].nope,[url]);
+      let [url,ids] = Object.entries(miss)
+        .sort((a,b)=>a.length - b.length)[0];
+      let relays = [url];
+      for (const id of ids) aa.fx.a_add(aa.miss[type][id].nope,relays);
       
       if (type === 'e' || type === 'p')
       {
@@ -83,22 +85,26 @@ aa.get.missing =async type=>
         {
           let item = [key];
           let i = filter[key];
-          if (Array.isArray(i)) item.push(...i.map(b=>typeof b==='string'?b:b.toString()).sort());
+          if (Array.isArray(i)) 
+            item.push(...i.map(b=>typeof b==='string'?b:b.toString())
+              .sort());
           else item.push(i);
           tags.push(item);
         }
         
-        let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(32);
+        let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(12);
 
-        req = ['REQ',req_id,filter];
+        request = ['REQ',req_id,filter];
         setTimeout(()=>
         {
-          aa.r.demand(req,[url],options);
+          aa.r.demand(request,relays,options);
           setTimeout(()=>
           {
             if (Object.keys(aa.miss[type]).length) aa.get.missing(type);
-          },500)
-        },0);
+          },
+          500);
+        },
+        0);
       }
     }
   },200,'miss_'+type);
@@ -148,22 +154,21 @@ aa.get.tag_e_last =tags=>
 // gets a or e tag marked 'reply' or the last not marked 'mention'
 aa.get.tag_reply =tags=>
 {
-  let tag = tags.find(t=>t[0]==='a'&&t[3]!=='mention');
-  if (!tag) tag = tags.find(t=>t[0]==='e'&&t[3]==='reply');
-  if (!tag) tag = tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop();
-  if (tag) return tag;
-  return false
+  let tag = tags.find(t=>t[0]==='e'&&t[3]==='reply')
+  || tags.find(t=>t[0]==='a'&&t[3]==='reply')
+  || tags.find(t=>t[0]==='a'&&t[3]!=='mention')
+  || tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop();
+  return tag
 };
 
 
 // gets e tag marked 'root' or the first not marked 'mention'
 aa.get.tag_root =tags=>
 {
-  let tag = tags.find(t=>t[0]==='e'&&t[3]==='root');
-  if (!tag) tag = tags.find(t=>t[0]==='e'&&t[3]!=='mention');
-  if (tag && aa.is.tag_e(tag)) return tag;
-
-  return false
+  let tag = tags.find(t=>t[0]==='e'&&t[3]==='root')
+  || tags.find(t=>t[0]==='a'&&t[3]!=='root')
+  || tags.find(t=>t[0]==='e'&&t[3]!=='mention');
+  return tag
 };
 
 
@@ -177,17 +182,20 @@ aa.get.tags_for_reply =event=>
   // if (!tag) tag = event.tags.find(t=>t[0]==='a'&&t[3]!=='mention');
   if (tag) 
   {
-    let root = aa.db.e[tag[1]].event;
-    tag[2] = aa.is.url(tag[2])?.href || seen;
+    let root = aa.db.e[tag[1]]?.event;
+    tag[2] = aa.get.seen(tag[1]) || aa.is.url(tag[2])?.href || seen;
     tag[3] = 'root';
     if (root) tag[4] = root.pubkey
     tag.splice(4);
     tags.push(tag);
-    if (root && aa.fx.kind_type(event.kind) !== 'parameterized') 
+    if (root 
+    && aa.fx.kind_type(event.kind) !== 'parameterized'
+    && event.kind !== 1)
     {
       tags.push(['K',''+root.kind]);
     }
-    tags.push(['e',event.id,seen,'reply',event.pubkey],['k',''+event.kind]);
+    tags.push(['e',event.id,seen,'reply',event.pubkey]);
+    if (event.kind !== 1) tags.push(['k',`${event.kind}`]);
   }
   else 
   {
@@ -200,7 +208,8 @@ aa.get.tags_for_reply =event=>
         tags.push(tag_a);
       }
     }
-    tags.push(['e',event.id,seen,'root',event.pubkey],['K',''+event.kind]);
+    tags.push(['e',event.id,seen,'root',event.pubkey]);
+    if (event.kind !== 1) tags.push(['K',`${event.kind}`]);
   }
 
   const dis_p_tags = aa.fx.a_u(event.tags.filter(t=>aa.is.tag_p(t) && t[1] !== aa.u.p.pubkey));

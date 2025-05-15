@@ -102,7 +102,7 @@ aa.parse.nip19 =s=>
     if (d.kind && d.pubkey && d.identifier)
     {
       d.s = s;
-      d.id_a = `${d.kind}:${d.pubkey}:${d.identifier}`;
+      d.id_a = aa.fx.id_a(d);
       l = aa.e.quote_a(d);
     }
     else l = aa.mk.l('span',{con:s+':'+JSON.stringify(d)})

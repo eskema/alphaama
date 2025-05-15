@@ -45,7 +45,7 @@ aa.clk.post =e=>
   if (dat) 
   {
     let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).filter(r=>!dat.seen.includes(r));
-    aa.r.broadcast(dat.event,relays);
+    aa.r.send({event:dat.event,relays}); //aa.r.broadcast(dat.event,relays);
   }
 };
 
@@ -109,15 +109,22 @@ aa.clk.yolo =async e=>
       dat.clas = aa.fx.a_rm(dat.clas,['draft']);
       aa.fx.a_add(dat.clas,['not_sent']);
       let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
-      let pubs = dat.event.tags.filter(aa.is.tag_p).map(i=>i[1]);
-      for (const x of pubs)
-      {
-        let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
-        let ab = aa.fx.a_ab(relays,read_relays);
-        if (!ab.inc.length < 3) relays.push(...ab.exc.slice(0,3 - ab.inc.length))
-      }
-      relays = new Set(relays);
-      aa.r.broadcast(dat.event,relays);
+      relays = aa.r.tagged(dat.event,relays);
+      aa.r.send({event:dat.event,relays}); //aa.r.broadcast(dat.event,relays);
     }
   })
+};
+
+
+// add relays from p tagged users 10002 'read'
+aa.r.tagged =(event,relays=[])=>
+{
+  let pubs = event.tags.filter(aa.is.tag_p).map(i=>i[1]);
+  for (const x of pubs)
+  {
+    let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
+    let ab = aa.fx.a_ab(relays,read_relays);
+    if (!ab.inc.length < 3) relays.push(...ab.exc.slice(0,3 - ab.inc.length))
+  }
+  return new Set(relays);
 };

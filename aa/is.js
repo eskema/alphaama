@@ -35,14 +35,6 @@ aa.is.empty =l=>
 };
 
 
-// true if you follow pubkey
-aa.is.following =pubkey=>
-{
-  if (aa.u?.p?.follows?.includes(pubkey)) return true;
-  return false
-};
-
-
 // checks if page is loading from iframe
 aa.is.iframe =()=>
 {
@@ -53,6 +45,10 @@ aa.is.iframe =()=>
 
 // is a valid nostr key
 aa.is.key =x=> aa.is.x(x) && x.length === 64;
+
+
+// is object object
+aa.is.o =o=> o && typeof o === 'object' && o.constructor === Object;
 
 
 // checks if string is only one character long

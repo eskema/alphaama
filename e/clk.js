@@ -5,17 +5,15 @@ aa.clk.bro =e=>
   aa.cli.v(`${localStorage.ns} e bro ${note.dataset.id}`);
 };
 
+
 // fetch note
 aa.clk.fetch =e=>
 {
   const note = e.target.closest('.note');
-  
+
   let filter = '{';
   const id = note.dataset.id;
-  if (id)
-  {
-    filter += `"ids":["${id}"],`;
-  } 
+  if (id) filter += `"ids":["${id}"],`;
   else
   {
     const [kind,pubkey,ds] = note.dataset.id_a.split(':');
@@ -48,7 +46,6 @@ aa.clk.mark_read =e=>
   const rid = note.dataset.id+'_replies';
   const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
   note.classList.remove(...classes);
-  
   
   if (new_stuff.length)
   {
@@ -85,18 +82,16 @@ aa.clk.mark_read =e=>
 };
 
 
+// note actions
 aa.clk.na =e=>
 {
   let l = e.target.closest('.actions');
   if (l.classList.contains('empty'))
   {
-    for (const s of aa.e.butts_for.na) l.append(' ',aa.mk.clk_butt(s));
+    for (const s of aa.e.butts.na) l.append(' ',aa.mk.butt_clk(s));
     l.classList.remove('empty');
   }
   l.classList.toggle('expanded');
-  // e.target.remove();
-  // let a = aa.e.butts_for.na;
-  // if (a.length) for (const s of a) l.append(aa.mk.clk_butt(s),' ');
 };
 
 
@@ -104,10 +99,7 @@ aa.clk.na =e=>
 aa.clk.render =e=>
 {
   const note = e.target.closest('.note');
-  // const xid = note.dataset.id;
-  // const event = aa.db.e[xid].event;
   aa.e.render(note,{trust:localStorage.trust});
-  // aa.parse.context(note,event,true);
 };
 
 

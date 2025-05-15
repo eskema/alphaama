@@ -28,12 +28,13 @@
   align-self: start;
   cursor: pointer;
   display: grid;
+  font-size: var(--font-size-s);
   grid-area: av;
   grid-template-columns: 1fr auto;
   grid-template-areas: 
-    "progress progress progress progress"
-    "before rewind mute sticky"
-    "url url url url";
+    "progress progress progress progress progress"
+    "before   rewind   mute     grab     pip"
+    "url      url      url      url      url";
   line-height: 2;
   text-align: right;
   transform: translateY(-2rem);

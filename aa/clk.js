@@ -1,5 +1,3 @@
-
-
 // internal links
 aa.clk.a =e=>
 {
@@ -10,6 +8,16 @@ aa.clk.a =e=>
   if (dis==='/') dis = '';
   aa.view.state(dis);
 };
+
+
+// clears view (home)
+aa.clk.clear =e=>
+{
+  e.preventDefault();
+  aa.view.clear();
+  aa.view.force({view:''});
+};
+
 
 // adds a clicked class to show interaction
 aa.clk.clkd =l=>
@@ -43,24 +51,26 @@ aa.clk.expand =e=>
       sessionStorage[id] = 'expanded';
       block = 'start';
     }
-    aa.fx.scroll(l,{behavior:'smooth',block:block});
+    aa.fx.scroll(l,{behavior:'smooth',block});
   });
 };
+
+aa.clk.lp_rm =e=>{e.target.parentElement.remove()};
 
 
 // wip
-aa.clk.list_filter_input =e=>
-{
-  let ls = e.target.nextElementSibling;
-  let lf = aa.mk.l('div',{cla:'lf'});
-  let inp = aa.mk.l('input');
-  lf.append(inp);
-  inp.addEventListener('change',e=>
-  {
-    console.log(inp.value);
-    console.log(ls.childElementCount);
-  });
-  e.target.parentElement.insertBefore(lf,e.target);
-  e.target.remove();
-  // lf.prepend(e.target);
-};
+// aa.clk.list_filter_input =e=>
+// {
+//   let ls = e.target.nextElementSibling;
+//   let lf = aa.mk.l('div',{cla:'lf'});
+//   let inp = aa.mk.l('input');
+//   lf.append(inp);
+//   inp.addEventListener('change',e=>
+//   {
+//     console.log(inp.value);
+//     console.log(ls.childElementCount);
+//   });
+//   e.target.parentElement.insertBefore(lf,e.target);
+//   e.target.remove();
+//   // lf.prepend(e.target);
+// };

@@ -129,6 +129,7 @@ aa.mk.note =dat=>
 // make a note from text input
 aa.mk.post =async(s='')=>
 {
+  if (!aa.cli.dat) aa.cli.dat_upd(s);
   if (aa.cli.dat)
   {
     aa.cli.dat.event.created_at = aa.now;
@@ -233,15 +234,3 @@ aa.mk.time =timestamp=>
   l.dataset.elapsed = aa.fx.time_elapsed(d);
   return l
 };
-
-
-// make it
-aa.cli.def = 
-{
-  action:['u','post'],
-  required:['text'],
-  description:'create a post',
-  exe:aa.mk.post
-};
-
-aa.actions.push(aa.cli.def);

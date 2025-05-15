@@ -18,16 +18,17 @@
   /*contain:paint;*/
   display: grid;
   grid-template-areas: 
+    "after    after"
     "by       by"
     "content  content"
+    /*"after    after"*/
     "tags     tags"
-    "after    after"
     "versions versions"
     "replies  replies";
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr auto;
   margin: 0;
-  padding-top: var(--pad);;
+  padding-top: var(--pad);
   position: relative;
 }
 
@@ -40,10 +41,10 @@
 {
   grid-template-columns: auto 1fr 61.8vw;
   grid-template-areas: 
+    "after    after    after"
     "by       by       by"
     "content  content  replies"
     "tags     tags     replies"
-    "after    after    replies"
     "versions versions versions";
 }
 
@@ -58,7 +59,7 @@
     "replies replies"
     "versions versions";
   grid-template-columns: 1fr 61.8vw;
-  margin: 0;
+  margin: 0!important;
 }
 
 .note.draft > .clicker
@@ -72,14 +73,12 @@
   border-left: 1px solid rgba(var(--c),.5);
 }
 
-
 .view_p .note.root.in_path,
 .note.root:not(.tiny) + .note.tiny,
 .note.root:not(.in_path):not(:first-child)
 {
   margin-top: var(--size);
 }
-
 
 .view_e .note.in_path.haz_new_reply,
 .replies:not(.expanded) > .note:not(.is_new),
@@ -102,29 +101,42 @@
   margin-bottom: var(--padm);
 }
 
-
-.note.in_view::after
+.note::after
 {
-  align-self: center;
-  background: rgb(var(--color-b));
+  align-self: end;
+  background: rgb(var(--c));
+  border: 1px dotted rgb(var(--color-b));
   color: rgb(var(--color-c));
-  content: attr(data-subs) "\A" attr(data-seen);
+  content: "" attr(data-subs) " " attr(data-seen);
   font-size: var(--font-size-s);
   grid-area: after;
   line-height: 1.5;
-  padding: 0 var(--pad);
-  position: relative;
-  text-align: right;
+  opacity: 0;
+  padding: 0 var(--padm);
+  pointer-events: none;
+  position: absolute;
+  transform: translateY(100%);
+  right: 0;
   white-space: pre-wrap;
+  z-index: -1;
+}
+
+.note.in_view::after
+{
+  background: rgba(var(--color-b),.4);
+  color: rgb(var(--color-d))!important;
+  content: "subs: " attr(data-subs) "\Aseen: " attr(data-seen);
+  margin: 0 var(--padm);
+  opacity: 1;
+  padding: 0;
+  pointer-events: auto;
+  position: relative;
+  transform: translateY(0);
+  z-index: 0;
 }
 
 .root.not_yet > .replies > .note,
-/*.note.out::after,
-.note.out::before,*/
-/*.note.out > *:not(.replies),*/
 .note:not(.in_view) > .sig,
-
-/*.haz_solo .note:not(.in_path) > *:not(.replies),*/
 
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 
@@ -136,7 +148,6 @@
   display: none;
 }
 
-/*.view_e*/
 .view_e .note.in_view .note,
 #e:not(.expanded) .note.in_view .note
 {
@@ -170,15 +181,14 @@
   width: 100%;
 }
 
-
 .note.in_view > .replies > .note > .clicker,
 .note.root > .clicker
 {
   pointer-events: none;
 }
 
-
 /* @end */
+
 
 /* @group by */
 
@@ -193,9 +203,9 @@
   grid-area: by;
   grid-template-areas: "author actions id created_at clas ";
   grid-template-columns: auto auto 1fr auto;
-  z-index: 1;
   position: sticky;
   top: 0;
+  z-index: 1;
 }
 
 .note.draft .by::after,
@@ -225,10 +235,9 @@
   z-index: 10;
 }
 
-
 .in_view > .by
 {
-  z-index: 100;
+  z-index: 101;
 }
 
 .in_view .replies .note .by
@@ -250,7 +259,6 @@
   top: calc(2.5rem);
   z-index: 2;
 }
-
 
 /* @end */
 
@@ -301,15 +309,26 @@ a.author
   display: none;
 }
 
+.author.is_u::after
+{
+  color: rgb(var(--color-yes));
+}
+
 .author.is_mf::after
 {
   color: rgb(var(--color-no));
 }
 
-.author.is_u::after
+.author.fu::after
 {
-  color: rgb(var(--color-yes));
+  color: rgb(var(--color-main));
 }
+
+.author.is_bff.fu::after
+{
+  display: none;
+}
+
 
 .author .name 
 {
@@ -417,15 +436,15 @@ a.author
 .draft[data-luma="light"] > .by .id *,
 .in_view[data-luma="light"] > .by .id *,
 .tiny[data-luma="light"] > .by .nid,
-.note:not([data-kind="1"])[data-luma="light"] > .by .nid
+.note[data-luma="light"]:not([data-kind="1"]) > .by .nid
 {
   color: rgb(var(--color-dark));
 }
 
-.draft[data-luma="dark"] > .by .id *,,
+.draft[data-luma="dark"] > .by .id *,
 .in_view[data-luma="dark"] > .by .id *,
 .tiny[data-luma="dark"] > .by .nid,
-.note:not([data-kind="1"])[data-luma="dark"] > .by .nid
+.note[data-luma="dark"]:not([data-kind="1"]) > .by .nid
 {
   color: rgb(var(--color-light));
 }
@@ -599,14 +618,12 @@ a.author
   font-size: var(--font-size-xs);
   line-height: 1.5rem;
   margin-left: var(--pad);
-  
 }
 
 .content > .butt
 {
   margin: var(--pad);
 }
-
 
 /* @end */
 
@@ -625,9 +642,6 @@ a.author
 {
   hyphens: auto;
   word-break: break-word;
-/*  font-family: Georgia;
-  font-size: 22px;
-  letter-spacing: 0.05rem;*/
 }
 
 .paragraph.cypher,
@@ -709,18 +723,15 @@ a.author
 .content-img,
 .content-video
 {
-  /*background: rgba(var(--color-d),1);*/
   border: 1px solid rgba(var(--color-c),.2);
-  /*box-shadow: 0px 2px 8px rgba(var(--color-a),1);*/
   display: block;
   height: auto;
+  margin: var(--pad) 0;
   max-height: var(--media-height);
   max-width: 100%;
-  margin: var(--pad) 0;
-  /*padding: var(--pad) 0;*/
 }
 
-.content .content-img
+.content-img
 {
   cursor: zoom-in;
 }
@@ -764,21 +775,18 @@ a.author
 
 .tags_wrapper[open]
 {
-  /*background: rgba(var(--color-a),0);*/
   z-index: 2;
 }
 
 .tags_wrapper summary
 {
-  
   display: inline-grid;
-  color: rgba(var(--color-b),0);
+  color: rgba(var(--color-f),.2);
   font-size: var(--font-size-s);
-  line-height: 1.5rem;
   grid-template-columns: auto auto auto;
-  padding: 0 var(--padm);
-  /*position: relative;*/
+  line-height: 1.5rem;
   opacity: 1;
+  padding: 0 var(--padm);
 }
 
 .tags_wrapper[open] summary
@@ -795,8 +803,6 @@ a.author
   color: rgb(var(--color-d));
   font-size: var(--font-size-s);
   white-space: pre;
-  /*line-height: 1.5rem;*/
-  /*padding: var(--padm) 0;*/
 }
 
 .tags_wrapper[open] summary::before,
@@ -805,17 +811,11 @@ a.author
   background: rgba(var(--color-a),1);
   color: rgb(var(--color-f));
   padding: 0;
-  
 }
-
-/*.tags_wrapper:not(.empty) summary::before
-{
-  content: "[" attr(data-count) "]";
-}*/
 
 .tags_wrapper:not(.empty) summary::before
 {
-  content: "[" attr(data-count) "]";
+  content: "[" attr(data-count) "] ";
 }
 
 .tags_wrapper[open] summary::after
@@ -827,7 +827,6 @@ a.author
 {
   content: "[ " attr(data-count) " ";
 }
-
 
 .view_e .in_path:not(.in_view) > .tags_wrapper,
 .replies:not(.expanded) .note:not(.in_view):not(.is_new).haz_new_reply > .tags_wrapper
@@ -860,11 +859,14 @@ a.author
   width: max-content;
 }
 
-.tags_wrapper[open] .tags
+[open] > .tags
 {
   background: rgba(var(--color-a),.82);
   box-shadow: 0px 0px var(--pad) rgb(var(--color-b));
+  max-height: 80vh;
+  overflow-y: scroll;
 }
+
 
 .tag
 {
@@ -872,9 +874,19 @@ a.author
   grid-auto-flow: column;
   grid-gap: var(--pad);
   grid-template-columns: auto 1fr auto;
-  overflow-x: scroll;
   transition: all 1s ease-in-out;
+  width: 100%;
   white-space: pre;
+}
+
+.tags_wrapper .tag
+{
+  overflow-x: scroll;
+}
+
+#dialog .tag
+{
+  color: rgb(var(--color-d));
 }
 
 .tag[data-i]::before
@@ -913,13 +925,22 @@ a.author
 
 .in_view > .tags_wrapper[open]
 {
-  max-height: unset;
+  position: relative;
+  bottom: unset;
+}
+
+.in_view > .tags_wrapper[open] summary
+{
+  position: sticky;
+  top: 1rem;
 }
 
 .in_view > .tags_wrapper[open] .tags
 {
+  max-height: unset;
   position: relative;
   transform: translateY(0);
+  width: auto;
 }
 
 /* @end */
@@ -929,11 +950,10 @@ a.author
 
 .actions 
 {
-  /*align-self: center;*/
   color: rgb(var(--color-e));
   font-size: var(--font-size-s);
   grid-area: actions;
-  line-height: inherit;
+  line-height: 1.5;
   margin: 0;
   overflow-x:  scroll;
   padding: 0 var(--pad);
@@ -951,7 +971,6 @@ a.author
 .actions:not(.expanded) :first-child
 {
   font-size: var(--font-size-s);
-  
 }
 
 .actions:not(.expanded) > *:not(:first-child)
@@ -980,7 +999,6 @@ a.author
   z-index: 3;
 }
 
-
 /* @end */
 
 
@@ -991,13 +1009,10 @@ a.author
   grid-area: replies;
 }
 
-
-/*.replies:not(.expanded) .replies.expanded,*/
 .note:not(.in_path) > .replies.expanded,
 .note.root:not(.in_path) > .replies,
 .note.in_view > .replies,
 .note.in_view .replies.expanded,
-/*.note.in_view > .replies.expanded,*/
 .note.haz_new_reply > .replies,
 .note.is_new > .replies
 {
@@ -1013,29 +1028,10 @@ a.author
   margin-bottom: 0;
 }
 
-/* :not([data-level="1"]):not([data-level="2"]) */
-
-/*.replies:not(.expanded) .note:not(.is_new).haz_new_reply::before
-{
-  box-sizing: border-box;
-  color: rgb(var(--color-no));
-  content: "> " attr(data-level);
-  font-size: var(--font-size-s);
-  /*font-size: 0;*!/
-  grid-area: by;
-  line-height: 1rem;
-  margin-bottom: 1.5rem;
-  padding: .2rem;
-  position: relative;
-  z-index: 2;
-}*/
-
-
+/*.haz_solo .note:not(.in_path) > .replies::after,*/
 html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after,
-.note.out > .replies::after,
-.haz_solo .note:not(.in_path) > .replies::after
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
 {
   display: none;
 }
@@ -1048,16 +1044,11 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   font-size: var(--font-size-s);
   grid-template-columns: 1fr auto;
   line-height: 1.5rem;
-  /*opacity: .6;*/
   position: relative;
-  /*z-index: 1; */
 }
 
-
-/*.haz_new_reply > .replies > summary,*/
 .root.haz_reply > .replies > summary,
 .in_view.haz_reply > .replies > summary,
-/*.in_view .replies.expanded > summary,*/
 .haz_new_reply > .replies > summary
 {
   display: grid;
@@ -1092,7 +1083,6 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
 .view_e .in_path:not(.in_view) > .replies[open] > summary,
-.note.out > .replies > summary,
 .haz_solo .haz_reply:not(.in_path) > .replies[open] > summary,
 .haz_solo .root:not(.in_view):not(.in_path) > .replies > summary
 {
@@ -1145,12 +1135,10 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   text-align: left;
 }
 
-
 /* @end */
 
 
 /* @group blank */
-
 
 .note.blank
 {
@@ -1194,17 +1182,12 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   border: 1px dashed rgba(var(--color-c),1);
   display: grid;
-  margin: var(--padm);
-  margin-bottom: var(--line);
+  margin: var(--font-size) var(--padm);
+  /*margin-bottom: var(--line);*/
   max-height: var(--media-height);
   max-width: 960px;
   overflow: hidden;
   position: relative;
-}
-
-.note_quote:last-child
-{
-  margin-bottom: var(--padm);
 }
 
 .note_quote_by
@@ -1261,11 +1244,10 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /* @group tiny */
 
-
 .note.root + .note.tiny
 {
-  padding-top: 4px;
   margin-top: 0;
+  padding-top: 4px;
 }
 
 .note.tiny:not(.in_view) .paragraph
@@ -1301,8 +1283,13 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /* @end */
 
+
 /* @group kind7 */
 
+.note.tiny[data-kind="7"] > .clicker
+{
+  border-left: 1px dotted rgba(var(--color-b));
+}
 
 .note.tiny[data-kind="7"] > .content
 {
@@ -1310,15 +1297,12 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   align-content: center;
   background: rgba(var(--color-b),1);
   font-size: var(--font-size-s);
-  left: -1px;
   min-width: calc(1rem + 1px);
-  /*top: -1px;*/
 }
 
 .note.tiny[data-kind="7"]:not(.in_view)
-/*.note.in_view .note[data-kind="7"]*/
 {
-  grid-template-areas: "content by";
+  grid-template-areas: "after after" "content by";
   grid-template-columns: auto 1fr;
 }
 
@@ -1362,6 +1346,7 @@ html:not(.needs_pagin) .pagination
 }
 
 /* @end */
+
 
 /* @group versions */
 
@@ -1433,7 +1418,24 @@ html:not(.needs_pagin) .pagination
   {
     border-left: 1px solid rgba(var(--c),.5);
     border-top: 1px solid rgba(var(--c),.5);
-    /*z-index: 10;*/
+  }
+  
+  /*.note::after,*/
+  .note:hover::after
+  {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all .3s var(--cb-io) 2s;
+    /*display: block;*/
+  }
+    
+  [data-luma="light"].note:after
+  {
+    color: rgba(var(--color-dark));
+  }
+  [data-luma="dark"].note:after
+  {
+    color: rgba(var(--color-light));
   }
   
   .note:hover > .by,
@@ -1441,6 +1443,11 @@ html:not(.needs_pagin) .pagination
   {
     top: 0;
     z-index: 9;
+  }
+
+  .replies .note:hover > .replies .by
+  {
+    top: 0;
   }
   
   .mark_read:hover
@@ -1458,7 +1465,6 @@ html:not(.needs_pagin) .pagination
   .by:hover,
   a.clicker:hover + .by
   {
-    /*top: 0;*/
     z-index: 9;
   }
   
@@ -1472,6 +1478,11 @@ html:not(.needs_pagin) .pagination
     z-index: 10;
   }
   
+  .tags_wrapper[open]:hover > summary
+  {
+    top: 0;
+  }
+  
   .note:not(.in_path) > .by:hover + .content
   {
     background: rgb(var(--color-a));
@@ -1479,11 +1490,9 @@ html:not(.needs_pagin) .pagination
   
   .clicker:hover
   {
-    background: rgba(var(--color-c),.5);
     background: rgba(var(--c),.5);
   }
   
-  /*.content:hover,*/
   .by:hover + .content,
   a.clicker:hover + .by + .content,
   .replies .note > .by:hover + .content
@@ -1491,12 +1500,17 @@ html:not(.needs_pagin) .pagination
     background: rgb(var(--color-a));
     position: sticky;
     top: 1rem;
-    z-index: 2;
+    z-index: 11;
+  }
+  
+  .in_view > .by:hover
+  {
+    z-index: 1000;
   }
   
   .in_view > .by:hover + .content
   {
-    z-index: 9;
+    z-index: 101;
   }
   
   a.clicker:hover + .by + .content
@@ -1585,6 +1599,16 @@ html:not(.needs_pagin) .pagination
   .in_view > .replies  .replies .note:hover
   {
     z-index: 999;
+  }
+  
+  .content-img 
+  {
+    opacity: .5;
+  }
+  
+  .note > .content:hover .content-img 
+  {
+    opacity: 1;
   }
 }
 

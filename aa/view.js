@@ -3,15 +3,16 @@ aa.view.clear =()=>
 {
   if (aa.view.active)
   {
-    const in_view = aa.in_view;
+    const in_view = aa.view.in_view;
     if (in_view) 
     {
       in_view.classList.remove('in_view');
       if (in_view.classList.contains('note'))
       {
-        if (aa.in_path?.length) for (const l of aa.in_path) aa.fx.path_rm(l);
+        if (aa.view.in_path?.length) 
+          for (const l of aa.view.in_path) aa.fx.path_rm(l);
       }
-      delete aa.in_view;
+      delete aa.view.in_view;
     }
   }
   aa.view.active = false;
@@ -21,8 +22,17 @@ aa.view.clear =()=>
 };
 
 
+// view force state
+aa.view.force =state=>
+{
+  if (!Object.hasOwn(state,'last')) state.last = history.state?.view || '';
+  history.pushState(state,'',location.origin+location.pathname+state.view);
+  aa.view.pop();
+};
+
+
 // view pop state
-aa.view.pop =e=>
+aa.view.pop =()=>
 {
   let hash = location.hash;
   let search = location.search;
@@ -82,16 +92,14 @@ aa.view.state =(s,search='')=>
   if (s?.length) s.trim();
   if (search?.length) search = s.length?'?'+search:search;
   let view = s+search;
-  let state;
   let last;
   if (!history.state || history.state.view !== view)
   {
     last = history.state?.view || '';
-    state = {view,last};
-    history.pushState(state,'',location.origin+location.pathname+view);
-    aa.view.pop();
+    aa.view.force({view,last});
   }
   else if (history.length) history.back();
 };
+
 
 window.addEventListener('popstate',aa.view.pop);

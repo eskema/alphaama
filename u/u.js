@@ -45,12 +45,21 @@ aa.u.load =async()=>
 
   let id = 'u';
   const mod = aa[id];
+  
+  aa.cli.def = 
+  {
+    action:['u','post'],
+    required:['text'],
+    description:'create a post',
+    exe:aa.mk.post
+  };
+
   aa.actions.push(
     {
-      action:[id,'login'],
-      optional:['mode','pubkey','relay'],
-      description:'login as pubkey, leave blank to load from extension (nip-7)',
-      exe:mod.login
+      action:[id,'setup'],
+      optional:['<hex_pubkey || nip05 || nprofile || npub>'],
+      description:'setup public key, leave blank for nip07',
+      exe:mod.setup
     },
     {
       action:['fx','pow'],
@@ -72,123 +81,61 @@ aa.u.load =async()=>
       description:'unfollow account (hex or npub)',
       exe:mod.k3_del
     },
+    aa.cli.def
   );
+  aa.side = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
+  aa.side.append(aa.mod_l);
+  aa.bod.insertBefore(aa.side,aa.bod.lastChild.previousSibling);
+
   aa.mk.nip7_butt();
   // aa.u.check_signer();
   await aa.mod.load(mod);
+
   await mod.start(mod);
 };
 
 
-// u login
-aa.u.login =async(s='')=>
+// u setup
+aa.u.setup =async(s='')=>
 {
-  aa.log('attempting to login…');
+  s = s.trim();
   let pubkey = '';
   let relays = [];
-  let [mode,pub,relay] = s.split(' ').map(i=>i.trim());
-  
-  if (!mode) mode = 'easy';
-  else mode = aa.fx.an(mode);
-  aa.log(`setting options with: .aa o add mode ${mode},trust 4`)
-  aa.o.add(`mode ${mode},trust 4`);
-  
-  relay = aa.is.url(relay)?.href;
-  if (relay) relays.push(relay);
-  
-  if (pub)
+
+  if (!s && !window.nostr)
   {
-    if (aa.is.key(pub)) pubkey = pub;
-    else
-    {
-      if (pub.includes('@'))
-      {
-        let dis = await NostrTools.nip05.queryProfile(pub);
-        if (dis?.pubkey?.length) pubkey = dis.pubkey;
-        if (dis.relays?.length) relays.push(...dis.relays);
-      }
-      else if (pub.startsWith('np'))
-      {
-        if (pub.startsWith('npub1'))
-        {
-          pubkey = aa.fx.decode(pub);
-        }
-        else if (pub.startsWith('nprofile1'))
-        {
-          let dis = aa.fx.decode(pub);
-          if (dis?.pubkey?.length) pubkey = dis.pubkey;
-          if (dis.relays?.length) relays.push(...dis.relays);
-        }
-      }
-    }
+    aa.log('nip-7 extension not found');
+    aa.log('make sure it is active and try again');
+    return
+  }
+  else if (!s && window.nostr) pubkey = await window.nostr.getPublicKey();
+  else if (aa.is.key(s)) pubkey = s;
+  else if (s.startsWith('npub1')) pubkey = aa.fx.decode(s);
+  else
+  {
+    let dis;
+    if (s.includes('@')) dis = await NostrTools.nip05.queryProfile(s);
+    else if (s.startsWith('nprofile1')) dis = aa.fx.decode(s);
+
+    if (dis?.pubkey?.length) pubkey = dis.pubkey;
+    if (dis?.relays?.length) relays.push(...dis.relays);
   }
 
-  if (!pubkey && window.nostr)
+  if (!pubkey)
   {
-    // login via extension
-    aa.log('no pubkey, trying nip-7 extension…');
-    pubkey = await window.nostr.getPublicKey();
-    if (!pubkey)
-    {
-      aa.log('unable to get public key from extension');
-      return
-    }
+    aa.log('unable to get public key');
+    return
   }
 
   aa.u.add(pubkey);
   await aa.u.start();
-  aa.log('adding some useful queries to fetch stuff')
-  aa.q.stuff();
   
-  if (!relays.length) relays = await aa.r.ext();
-  else if (relay) aa.r.add(relay+' read write');
-  if (!relays.length)
-  {
-    relay = window.prompt('provide a relay');
-    if (!relay) return
-    // aa.log(aa.mk.butt_action('r add wss://url.com read write'));
-  }
-  aa.u.jump()
-};
+  // aa.o.stuff();
+  await aa.r.stuff(relays);
 
-
-// fetch basic stuff to get things started
-aa.u.jump =()=>
-{
-  aa.log('fetching basic stuff to get things started');
-  aa.log('querying for your metadata:\n.aa q run a');
-  aa.q.run('a');
-  setTimeout(()=>
-  {
-    aa.log('running it again to include newly found relays');
-    aa.q.run('a');
-    
-    setTimeout(()=>
-    {
-      // get data from pubkeys found on your follow list  
-      if (aa.u.p.follows.length)
-      {
-        const follows_details = aa.mk.details(aa.u.p.follows.length,0);
-        follows_details.append('k3 = '+aa.u.p.follows.join(', '));
-        aa.log(follows_details);
-        // aa.log(`found ${aa.u.p.follows.length} ${aa.fx.plural(aa.u.p.follows.length,'follow')}`);
-      }
-      // aa.log('k3 = '+aa.u.p.follows.join(', '));
-      aa.log('querying for your follows data on your relays:\n.aa q run b');
-      aa.q.run('b');
-      setTimeout(()=>
-      {
-        aa.log('querying for your follows data as outbox:\n.aa q out b');
-        setTimeout(()=>{aa.q.outbox('b')},0);
-        setTimeout(()=>
-        {
-          sessionStorage.q_out = 'f';
-          sessionStorage.q_run = 'n';
-          aa.log('login done. reload page when things stop moving.')
-        },1000);
-      },5000);
-    },3000);
-  },1000);
+  // aa.log(`setting options with: .aa o add mode ${mode},trust 4`)
+  // aa.o.add(`mode ${mode},trust 4`);
+  await aa.q.stuff();
 };
 
 
@@ -197,7 +144,7 @@ aa.u.k3_add =async s=>
 {
   if (!aa.u.p) 
   {
-    aa.log('login')
+    aa.log('login first')
     return
   }
   let a = s.split(',');
@@ -238,7 +185,7 @@ aa.u.k3_add =async s=>
 // delete keys from follow list
 aa.u.k3_del =async s=>
 {
-  if (!aa.u.p) 
+  if (!aa.u.p)
   {
     aa.log('no u found, set one first');
     return false
@@ -302,18 +249,6 @@ aa.u.k3_del =async s=>
 //   && s[l - 26] == 'v'
 //   && s[l - 25] == '='
 // };
-
-
-// return sorted relay list for outbox
-aa.u.outbox =(a=[],sets=[])=>
-{
-  if (!sets.length) sets = [aa.r.o.w,'k10002'];
-  if (!a?.length) return [];
-  let relays = aa.r.common(a,sets);
-  let outbox = aa.fx.intersect(relays,a);
-  let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
-  return sorted_outbox;
-};
 
 
 // action to add proof-of-work (pow) to a note
@@ -396,10 +331,19 @@ aa.u.mk =(k,v)=>
 // start mod
 aa.u.start =async()=>
 {
+  let u_p = await aa.u.load_u();
+  if (!u_p) return;
+  aa.u.upd_u_u();
+  aa.mod.mk(aa.u);
+  aa.mk.profile(u_p);
+};
+
+
+aa.u.load_u =async()=>
+{
+  let ls = aa.u.o?.ls;
   let upd;
-  let mod = aa.u;
-  let ls = mod?.o?.ls;
-  let pubkey = ls.pubkey;
+  let pubkey = aa.u.o.ls.pubkey;
   if (!pubkey)
   {
     pubkey = ls.pubkey = ls.xpub;
@@ -407,11 +351,10 @@ aa.u.start =async()=>
   }
   if (!pubkey)
   {
-    let login_butt = aa.mk.l('p',{id:'u_login',app:aa.mk.butt_action('u login')});
-    setTimeout(()=>{aa.log(login_butt)},500);
+    aa.mk.setup_butt();
     return
   }
-  else document.getElementById('u_login')?.parentElement.remove();
+  else document.getElementById('u_setup')?.parentElement.remove();
 
   let p = await aa.p.get(pubkey);
   if (!p) p = aa.p.p(pubkey);
@@ -423,9 +366,7 @@ aa.u.start =async()=>
   }
   if (aa.fx.a_add(p.sets,['u'])) upd = true;
   if (upd) aa.p.save(p);
-  aa.u.upd_u_u();
-  aa.mod.mk(mod);
-  aa.mk.profile(p);
+  return p
 };
 
 

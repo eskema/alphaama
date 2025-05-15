@@ -7,7 +7,7 @@ aa.view.ls.npub1 =async npub=>
   let p = await aa.p.author(v);
   let profile = aa.mk.profile(p);
   if (!profile.classList.contains('upd')) aa.p.profile_upd(p);
-  aa.in_view = profile;
+  aa.view.in_view = profile;
   
   fastdom.mutate(()=>
   {

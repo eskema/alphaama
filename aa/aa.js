@@ -1,14 +1,14 @@
 /*
 
 alphaama
-A<3   aa   
-v3
+A<3   aa
 
 */
 
 
-const aa_version = 51;
-
+// a version to change
+const aa_version = 52;
+// a
 const aa = 
 {
   actions:[],
@@ -17,18 +17,19 @@ const aa =
   clk:{},
   dependencies:
   [
-    '/dep/asciidoctor.min.js?v=3.0.4',
+    // '/dep/asciidoctor.min.js?v=3.0.4',
     '/dep/bolt11.js',
     '/dep/cashuts.js?v=2.0.0',
     '/dep/fastdom.js?v=1.0.4',
     // '/dep/fastdom-strict.js?v=1.0.4',
-    '/dep/math.js?v=14.0.1',
+    // '/dep/math.js?v=14.0.1',
     '/dep/nostr-tools.js?v=2.10.4',
     '/dep/qrcode.js',
     // '/dep/webtorrent.min.js',
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
   ],
+  el:new Map(),
   extensions:
   {
     img:['gif','heic','jpeg','jpg','png','webp'],
@@ -37,7 +38,6 @@ const aa =
   },
   fx:{},
   get:{},
-  in_path:[],
   is:{},
   kinds:{},
   miss:{e:{},p:{},a:{}},
@@ -82,7 +82,28 @@ const aa =
     active:false,
     l:false,
     ls:{},
+    in_path:[],
+  },
+  // dev:true
+  get dev(){ return Object.hasOwn(sessionStorage,'dev')}
+};
+
+
+// toggle aa.dev on current tab
+aa.dev_set =force=>
+{
+  if (force !== undefined)
+  {
+    if (force) sessionStorage.dev = true;
+    else sessionStorage.removeItem(dev);
   }
+  else
+  {
+    if (aa.dev) sessionStorage.removeItem(dev);
+    else sessionStorage.dev = true
+  }
+  
+  aa.log(`aa.dev = ${aa.dev}`);
 };
 
 
@@ -93,16 +114,15 @@ aa.mk.l =(tag_name='div',o={})=>
   for (const k in o)
   {
     const v = o[k];
+    if (!v) continue;
     switch (k)
     {
-      case 'aft': l.dataset.after = v; break;
       case 'app': l.append(v); break;
-      case 'bef': l.dataset.before = v; break;
       case 'cla': l.className = v; break;
       case 'clk': l.addEventListener('click',v); break;
       case 'con': l.textContent = v; break;
+      case 'dat': for(const i in v) l.dataset[i] = v[i]; break;
       case  'id': l.id = v; break;
-      case 'lab': l.dataset.label = v; break;
       case 'nam': l.name = v; break;
       case 'pla': l.placeholder = v; break;
       case 'ref': l.href = v; break;
@@ -113,7 +133,8 @@ aa.mk.l =(tag_name='div',o={})=>
       case 'tit': l.title = v; break;
       case 'typ': l.type = v; break;
       case 'val': l.value = v; break;
-      case 'for': l.setAttribute('for',v); break;
+      // case 'for': l.setAttribute('for',v); break;
+      default: console.log(o)
     }
   }
   return l
@@ -159,9 +180,7 @@ aa.load =async(o={})=>
   aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
   aa.view.l = aa.mk.l('main',{id:'view'});
   aa.mod_l = aa.mk.l('div',{id:'mods'});
-  aa.side = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
-  aa.side.append(aa.mod_l);
-
+  
   aa.mods_load(mods);
 
   aa.actions.push(
@@ -171,16 +190,21 @@ aa.load =async(o={})=>
       exe:aa.reset
     },
     {
-      action:['fx','math'],
-      description:'do math with strings',
-      exe:(s='')=> math.evaluate(s)
+      action:['o','dev'],
+      description:'toggle dev for this tab',
+      exe:aa.dev_set
     },
+    // {
+    //   action:['fx','math'],
+    //   description:'do math with strings',
+    //   exe:(s='')=> math.evaluate(s)
+    // },
   );
 
   fetch('/stuff/nostr_kinds.json').then(dis=>dis.json())
   .then(kinds=>aa.k=kinds);
 
-  aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
+  // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   
   let id = 'dialog';
   aa.dialog = aa.mk.l(id,{id});
@@ -210,27 +234,18 @@ aa.log =(con='',l=false,is_new=true)=>
 
 
 // append mod scripts when required mods have been loaded
-aa.mods_load =async a=>
+aa.mods_load =async mods=>
 {
-  for (const o of a)
+  for (const o of mods)
   {
     if (aa.required(o.requires))
     {
       await aa.mk.scripts([o.src]);
-      
-      if (aa.hasOwnProperty(o.id) && aa[o.id].hasOwnProperty('load'))
-        await aa[o.id].load(); //.then(()=>{aa[o.id].loaded = true})
-      
+      if (Object.hasOwn(aa,o.id) 
+      && Object.hasOwn(aa[o.id],'load')) 
+        await aa[o.id].load();
       aa[o.id].loaded = true;
     }
-    // else
-    // {
-    //   if (!o.attempts) o.attempts = 1;
-    //   else o.attempts++;
-    //   console.log(o.id,o.attempts)
-    //   if (o.attempts < 420) setTimeout(()=>{aa.mods_load([o])},0);
-    //   else aa.log('could not load mod '+o.id)
-    // }
   }
 };
 
@@ -257,7 +272,7 @@ aa.reset =async()=>
 aa.required =required=>
 {
   for (const id of required) 
-    if (!aa.hasOwnProperty(id) || !aa[id].loaded) return false
+    if (!Object.hasOwn(aa,id) || !aa[id].loaded) return false
   return true
 };
 
@@ -265,13 +280,12 @@ aa.required =required=>
 // if no options found, run with defaults
 aa.run =(o={})=>
 {
-  
-  fastdom.mutate(()=>
-  {
+  // fastdom.mutate(()=>
+  // {
     aa.bod.prepend(aa.mk.header(),aa.view.l);
     aa.bod.insertBefore(aa.dialog,aa.bod.lastChild.previousSibling);
-    aa.bod.insertBefore(aa.side,aa.dialog);
-  });
+    // aa.bod.insertBefore(aa.side,aa.dialog);
+  // });
   let onoff = navigator.onLine?'on':'off';
   let online = `${onoff}line at ${location.origin}`;
   aa.log(online,false,false);

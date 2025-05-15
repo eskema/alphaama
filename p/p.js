@@ -94,33 +94,32 @@ aa.p.authors_list =(a,cla,sort='text_asc')=>
   if (!a.length) return;
   cla = 'list list_grid author_list'+(cla?' '+cla:'');
   const l = aa.mk.l('ul',{cla});
-  for (const x of a)
+
+  fastdom.mutate(()=>
   {
-    l.append(aa.mk.l('li',
+    for (const x of a)
     {
-      cla:'item author_list_item',
-      app:aa.mk.p_link(x)
-    }))
-  }
-  setTimeout(()=>{fastdom.mutate(()=>{aa.fx.sort_l(l,sort)}) },500);
-  // aa.p.authors(a)
-  // .then(()=>
-  // {
-  //   let items = [];
-  //   for (const x of a)
-  //   {
-  //     items.push(aa.mk.l('li',
-  //     {
-  //       cla:'item author_list_item',
-  //       app:aa.mk.p_link(x)
-  //     }))
-  //   }
-  //   fastdom.mutate(()=>
-  //   {
-  //     l.append(...items);
-  //     setTimeout(()=>{ fastdom.mutate(()=>{aa.fx.sort_l(l,sort)}) },500);
-  //   })
-  // });
+      l.append(aa.mk.l('li',
+      {
+        cla:'item author_list_item',
+        app:aa.mk.p_link(x)
+      }))
+    }
+  });
+
+  setTimeout(()=>
+  {
+    fastdom.mutate(()=>
+    {
+      let summ = l.previousElementSibling;
+      if (summ?.tagName === 'SUMMARY')
+      {
+        summ.dataset.count = a.length;
+      }
+      aa.fx.sort_l(l,sort)
+    })
+  },618);
+
   return l
 };
 
@@ -128,7 +127,6 @@ aa.p.authors_list =(a,cla,sort='text_asc')=>
 // clear profile filter
 aa.p.clear =e=>
 {
-  
   if (aa.e.l.dataset.solo?.length)
   {
     if (aa.p.viewing) 
@@ -150,6 +148,28 @@ aa.p.clear =e=>
       }
     }
   }
+};
+
+
+// verify nip05
+aa.p.check_nip05 =async(s,p)=>
+{
+  let verified = false;
+  let dis = await NostrTools.nip05.queryProfile(s);
+  if (dis)
+  {
+    if (!p) p = await aa.p.get(dis.pubkey);
+    if (p && dis.pubkey === p.pubkey) verified = true
+  }
+  
+  if (p)
+  {
+    p.verified.unshift([verified,aa.now]);
+    aa.p.save(p);
+  }
+
+  // aa.log('nip5 '+verified+' for '+s);
+  return verified
 };
 
 
@@ -209,8 +229,8 @@ aa.p.events_newer =(p,event,param)=>
   
   if (!kn.length || kn[0][1] < event.created_at) 
   {
-    kn.unshift([event.id,event.created_at]);
-    if (event.created_at > p.updated) p.updated = event.created_at;
+    kn.unshift([event.id,event.created_at]); //,JSON.stringify(event)
+    aa.p.updated(p,event.created_at);
     upd = true
   }
   return upd
@@ -314,7 +334,15 @@ aa.p.link_data =p=>
     aa.fx.a_add(o.class_add,['is_u']);
     aa.fx.a_add(o.class_rm,['is_mf','is_bff'])
   }
-  else aa.fx.a_add(o.class_rm,['is_u']);
+  else 
+  {
+    aa.fx.a_add(o.class_rm,['is_u']);
+    // follows u
+    if (aa.is.following(aa.u.p.pubkey,p))
+    {
+      aa.fx.a_add(o.class_add,['fu']);
+    }
+  }
   
   if (aa.is.following(p.pubkey)) 
   {
@@ -326,6 +354,7 @@ aa.p.link_data =p=>
     aa.fx.a_add(o.class_rm,['is_bff']);
     aa.fx.a_add(o.class_add,['is_mf']);
   }
+  
   // followed by those you follow
   let common = 0;
   for (const k of p.followers) { if (aa.is.following(k)) common++ }
@@ -606,12 +635,28 @@ aa.p.oto =text=>
       && p.metadata.nip05.toLowerCase().includes(s)) 
         return true;
     }
-    if (p.petname?.length
-    && p.petname.toLowerCase().includes(s)) 
-      return true;
+    for (const petname of [p.petname,...p.petnames])
+    {
+      if (petname?.toLowerCase().includes(s)) return true
+    }
   };
   // 
-  const a = Object.values(aa.db.p).filter(for_mentions);
+  const a = Object.values(aa.db.p).filter(for_mentions)
+  .sort((c,d)=>
+  {
+    let a_name = c.metadata.name || '';
+    let b_name = d.metadata.name || '';
+    
+    if (a_name === s) return -1;
+    if (b_name === s) return 1;
+
+    if (a_name.startsWith(s) && !b_name.startsWith(s)) return -1;
+    if (b_name.startsWith(s) && !a_name.startsWith(s)) return 1;
+
+    if (a_name < b_name) return -1;
+    if (a_name > b_name) return 1;
+    return 0
+  });
   for (const p of a) aa.cli.oto.append(aa.mk.mention_item(p,w));
 };
 
@@ -746,14 +791,13 @@ aa.p.relay =(p,set='write')=>
 };
 
 
-// add relays to profile
-aa.p.relays_add =(o,p)=>
+// add relays to p
+aa.p.relays_add =(relays={},p={})=>
 {
-  if (!p.relays) p.relays = {};
-  for (const relay in o)
+  for (const k in relays)
   {
-    if (!p.relays[relay]) p.relays[relay] = o[relay];
-    else aa.fx.a_add(p.relays[relay].sets,o[relay].sets);
+    if (!p.relays[k]) p.relays[k] = relays[k];
+    else aa.fx.a_add(p.relays[k].sets,relays[k].sets);
   }
 };
 
@@ -812,26 +856,12 @@ aa.p.score =async s=>
 };
 
 
-// verify nip05
-aa.p.check_nip05 =async(s,p)=>
+// most recent timestamp of p.events 
+aa.p.updated =(p,t)=>
 {
-  let verified = false;
-  let dis = await NostrTools.nip05.queryProfile(s);
-  if (dis)
-  {
-    if (!p) p = await aa.p.get(dis.pubkey);
-    if (p && dis.pubkey === p.pubkey) verified = true
-  }
-  
-  if (p)
-  {
-    p.verified.unshift([verified,aa.now]);
-    aa.p.save(p);
-  }
-
-  // aa.log('nip5 '+verified+' for '+s);
-  return verified
+  if (t > p.updated) p.updated = t;
 };
+
 
 
 // window.addEventListener('hashchange',aa.p.clear);

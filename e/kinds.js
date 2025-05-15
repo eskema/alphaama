@@ -21,10 +21,15 @@ aa.kinds[6] =dat=>
     {
       aa.db.get_e(repost_id).then(dat_e=>
       {
-        if (!dat_e) 
+        if (!dat_e)
         {
-          let repost = aa.parse.j(dat.event.content);
-          if (repost) aa.r.message_type.event({data:['EVENT','k6',repost],origin:dat.seen[0]});
+          let event = aa.parse.j(dat.event.content);
+          
+          if (event&& aa.fx.verify_event(event))
+          {
+            let subs = ['k6'];
+            aa.r.dat(['',aa.mk.dat({event,subs})]);
+          }
         }
         else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
       });
@@ -97,26 +102,6 @@ aa.kinds[16] =dat=>
   let note = aa.mk.note(dat);
   note.classList.add('tiny'); // 'is_new',
   aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
-  // let tag_reply = aa.get.tag_reply(dat.event.tags);
-  // if (tag_reply && tag_reply.length)
-  // {    
-  //   let repost_id = tag_reply[1];
-  //   if (repost_id) 
-  //   {
-  //     aa.db.get_e(repost_id).then(dat_e=>
-  //     {
-  //       if (!dat_e) 
-  //       {
-  //         let repost = aa.parse.j(dat.event.content);
-  //         if (repost) aa.r.message_type.event({data:['EVENT','k6',repost],origin:dat.seen[0]});
-  //       }
-  //       else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
-  //     });
-      
-  //   }
-  //   aa.e.append_check(dat,note,tag_reply);
-  // }
-  // else aa.e.append_as_root(note);
   aa.p.from_tags(dat.event.tags);
   return note
 };
@@ -142,17 +127,20 @@ aa.kinds[10002] =dat=>
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
-      let sets = ['k10002'];
+      let sets = ['k10002','auth'];
       let tags = dat.event.tags.filter(i=>i[0]==='r');
       for (const tag of tags)
       {
-        const [type,url,permission] = tag;
-        const href = aa.is.url(url)?.href;
-        if (!href) continue;
-        let relay = relays[href] = {sets:[]};
-        if (permission === 'read') aa.fx.a_add(relay.sets,['read',...sets]);
-        else if (permission === 'write') aa.fx.a_add(relay.sets,['write',...sets]);
-        else aa.fx.a_add(relay.sets,['read','write',...sets]);
+        let [type,url,permission] = tag;
+        url = aa.is.url(url)?.href;
+        if (!url) continue;
+        
+        let relay = relays[url] = {sets};
+        if (permission === 'read') 
+          aa.fx.a_add(relay.sets,['read']);
+        else if (permission === 'write') 
+          aa.fx.a_add(relay.sets,['write']);
+        else aa.fx.a_add(relay.sets,['read','write']);
       }
       // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
       aa.p.relays_add(relays,p);

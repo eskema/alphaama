@@ -7,28 +7,18 @@ events notes
 */
 
 
-aa.e = 
-{
-  renders:
-  {
-    content:[1,9802,30023],
-    encrypted:[4],
-    image:[20],
-    object:[0],
-    video:[21,22,1063,34235,34236],
-  },
-  requires:['o'],
-  // root_count:0,
-  butts_for:
-  {
-    na:[[localStorage.reaction,'react'],'req','bro','render','tiny'],
-    // k4:['encrypt'],
-    draft:['yolo','sign','pow','edit','cancel'],
-    not_sent:['post','cancel'],
-    blank:['fetch']
-  }
-};
+aa.e = {};
 
+
+// buttons
+aa.e.butts =
+{
+  na:[[localStorage.reaction,'react'],'req','bro','render','tiny'],
+  // k4:['encrypt'],
+  draft:['yolo','sign','pow','edit','cancel'],
+  not_sent:['post','cancel'],
+  blank:['fetch']
+};
 
 // append stashed orphans from refs 
 aa.e.append_from_refs =()=>
@@ -41,10 +31,10 @@ aa.e.append_from_refs =()=>
 
 
 // decides where to append a note
-aa.e.append_to =async(dat,l,tag)=>
+aa.e.append_to =async(dat,note,tag)=>
 {
-  if (tag && tag.length) aa.e.append_check(dat,l,tag);
-  else aa.e.append_as_root(l);
+  if (tag?.length) aa.e.append_check(dat,note,tag);
+  else aa.e.append_as_root(note);
 };
 
 
@@ -100,20 +90,20 @@ aa.e.append_as_rep =(note,rep)=>
 
 
 // decides where to append a reply
-aa.e.append_check =(dat,note,tag_reply)=>
+aa.e.append_check =(dat,note,tag)=>
 {
-  const reply_id = tag_reply[1];
+  const reply_id = tag[1];
   let p = aa.db.p[dat.event.pubkey];
   let relays = aa.fx.in_set(p?.relays,'write');
   let reply;
 
-  if (tag_reply[0] === 'a')
+  if (tag[0] === 'a')
   {
     reply = aa.temp.printed.find(i=>i.dataset.id_a === reply_id);
     if (!reply)
     {
-      aa.e.orphan(dat,note,tag_reply);
-      aa.e.miss_print_a(tag_reply,relays);
+      aa.e.orphan(dat,note,tag);
+      aa.e.miss_print_a(tag,relays);
     }
     else aa.e.append_as_rep(note,reply.querySelector('.replies'));
     return;
@@ -122,15 +112,14 @@ aa.e.append_check =(dat,note,tag_reply)=>
   reply = aa.temp.printed.find(i=>i.dataset.id === reply_id);
   if (!reply)
   {
-    aa.e.orphan(dat,note,tag_reply);
+    aa.e.orphan(dat,note,tag);
     let tag_root = aa.get.tag_root(dat.event.tags);
-    let root_id = tag_root[1];
     if (tag_root && tag_root[1] !== reply_id)
     {
-      let root = aa.temp.printed.find(i=>i.dataset.id === root_id);
+      let root = aa.temp.printed.find(i=>i.dataset.id === tag_root[1]);
       if (!root) aa.e.miss_print(tag_root);
     }
-    aa.e.miss_print(tag_reply,relays);
+    aa.e.miss_print(tag,relays);
   }
   else
   {
@@ -162,6 +151,16 @@ aa.e.events =async a=>
     let stored = await aa.db.ops('idb',{get_a:{store:'events',a:a_to_get}});
     for (const dat of stored) aa.db.e[dat.event.id] = dat;
   }
+};
+
+
+aa.e.get =async(key)=>
+{
+  if (!aa.is.key(key)) return;
+  if (aa.db.e[key]) return aa.db.e[key];
+  let e = await aa.db.ops('idb',{get:{store:'events',key}});
+  if (e) aa.db.e[key] = e;
+  return e
 };
 
 
@@ -229,6 +228,11 @@ aa.e.load =async()=>
 // add event id to missing event list
 aa.e.miss_e =(id,relays=[])=>
 {
+  if (!aa.is.x(id))
+  {
+    console.log(id);
+    return
+  }
   if (!aa.miss.e[id]) aa.miss.e[id] = {nope:[],relays:[]}
   aa.fx.a_add(relays,aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
   aa.fx.a_add(aa.miss.e[id].relays,relays);
@@ -359,23 +363,23 @@ aa.e.note_actions =dat=>
       case 4: 
         if (!dat.clas.includes('encrypted'))
         {
-          aa.fx.a_add(a,aa.e.butts_for.k4);
+          aa.fx.a_add(a,aa.e.butts.k4);
           break;
         }
       default: 
-        aa.fx.a_add(a,aa.e.butts_for.draft);
+        aa.fx.a_add(a,aa.e.butts.draft);
     }
     l.setAttribute('open','')
   }
-  else if (dat.clas.includes('not_sent')) aa.fx.a_add(a,aa.e.butts_for.not_sent);
-  else if (dat.clas.includes('blank')) aa.fx.a_add(a,aa.e.butts_for.blank);
+  else if (dat.clas.includes('not_sent')) aa.fx.a_add(a,aa.e.butts.not_sent);
+  else if (dat.clas.includes('blank')) aa.fx.a_add(a,aa.e.butts.blank);
   else
   {
     aa.fx.a_add(a,[['…','na']]);
     l.classList.add('empty');
     l.classList.remove('expanded');
   }
-  if (a.length) for (const s of a) l.append(aa.mk.clk_butt(s),' ');
+  if (a.length) for (const s of a) l.append(aa.mk.butt_clk(s),' ');
   return l
 };
 
@@ -461,7 +465,7 @@ aa.e.note_replace =(l,dat)=>
   console.log('note replaced');
   dat.clas = aa.fx.a_rm(dat.clas,['draft']);
   let b = aa.e.note_by_kind(dat);
-  l.id = 'temp-'+dat.event.id;
+  // l.id = 'temp-'+dat.event.id;
   let b_rep = b.querySelector('.replies');
   // let l_rep = l.querySelector('.replies');
   let childs = l.querySelector('.replies').childNodes;
@@ -573,14 +577,21 @@ aa.e.printer =()=>
   let to_print = Object.values(aa.temp.print);
   aa.temp.print = {};
   to_print.sort(aa.fx.sorts.ca_asc);
+  
 
   for (const dat of to_print) setTimeout(()=>{aa.e.print(dat)},0);
-  setTimeout(()=>
+  aa.fx.to(()=>
   {
     aa.get.missing('p');
     aa.get.missing('e');
     aa.get.missing('a');
-  },500);
+  },500,'missing')
+  // setTimeout(()=>
+  // {
+  //   aa.get.missing('p');
+  //   aa.get.missing('e');
+  //   aa.get.missing('a');
+  // },500);
 };
 
 
@@ -620,7 +631,7 @@ aa.e.print =dat=>
     if (l.classList.contains('blank') 
     || l.classList.contains('draft')) 
     {
-      l = aa.e.note_replace(l,dat);
+      // l = aa.e.note_replace(l,dat);
     }
     else
     {
@@ -799,15 +810,26 @@ aa.e.quotes_to =async q_id=>
 };
 
 
-// if the event is in the viewport
-// do additional ui enhancements
+// render event type kinds
+aa.e.rnd =
+{
+  content:[1,9802,30023],
+  encrypted:[4],
+  image:[20],
+  object:[0],
+  video:[21,22,1063,34235,34236],
+};
+
+
+// do additional ui enhancements  to event element
+// based on kind
 aa.e.render =async(l,options)=>
 {
   let dat = aa.db.e[l?.dataset.id];
   if (!dat) return;
-  for (const key in aa.e.renders)
+  for (const key in aa.e.rnd)
   {
-    if (aa.e.renders[key].includes(dat.event.kind))
+    if (aa.e.rnd[key].includes(dat.event.kind))
     {
       let fid = 'render_'+key;
       if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat,options);
@@ -913,11 +935,18 @@ aa.e.search =async s=>
 {
   s = s.toLowerCase();
   let contents = document.getElementsByClassName('content');
-  for (const con of contents)
+  for (const content of contents)
   {
-    let text = con.textContent.toLowerCase();
+    let text = content.textContent.toLowerCase();
     let has = text.search(s);
-    if (has !== -1) aa.log(aa.mk.nostr_link(con.parentElement.id))
+    if (has !== -1) 
+    {
+      let con = text.slice(0,21);
+      let app = aa.mk.nostr_link(content.parentElement.id);
+      let log = aa.mk.l('p',{con,app})
+      
+      aa.log()
+    }
   }
 };
 
@@ -930,17 +959,33 @@ aa.e.section_mutated =a=>
   {
     let count  = mutation.target.children.length;
     const needs = count > threshold;
+    const has_class = aa.l.classList.contains('needs_pagin');
     
-    if (needs && !aa.l.classList.contains('needs_pagin'))
+    if (needs && !has_class)
     {
       fastdom.mutate(()=>{aa.l.classList.add('needs_pagin')})
     }
-    else if (!needs && aa.l.classList.contains('needs_pagin'))
+    else if (!needs && has_class)
     {
       fastdom.mutate(()=>{aa.l.classList.remove('needs_pagin')})
     }
   }
 };
+
+// 
+// | Partido | Orientação Ideológica | Nível de Intervenção Estatal | Grau de Liberdade Individual |
+// |----------------------------------------|---------------------------------------------------------------------------------------|------------------------------|------------------------------|
+// | **AD – Aliança Democrática (PSD/CDS)** | Centro-direita democrática (baixo autoritarismo / equilíbrio intervenção–mercado) | Médio | Médio |
+// | **PS – Partido Socialista** | Centro-esquerda social-democrata (moderado autoritarismo / intervenção estatal) | Alto | Médio |
+// | **CDU – Coligação Democrática Unitária (PCP/PEV)** | Esquerda comunista/eco-marxista (mais autoritário / forte intervenção) | Muito alto | Baixo |
+// | **IL – Iniciativa Liberal** | Liberalismo clássico (muito baixa intervenção / alta liberdade) | Baixo | Muito alto |
+// | **Chega** | Nacionalismo autoritário (controlo social elevado / mercado regulado com foco interno)| Médio | Baixo |
+// | **Livre** | Esquerda progressista verde (baixa hierarquia / intervenção social) | Alto | Médio |
+// | **BE – Bloco de Esquerda** | Esquerda democrática radical (moderado autoritarismo / intervenção forte) | Alto | Médio |
+// | **PAN – Pessoas-Animais-Natureza** | Ambientalismo progressista (intervenção pragmática / foco em direitos e sustentabilidade) | Médio | Alto |
+// | **Ergue-te** | Nacionalismo soberanista (autoritarismo elevado / intervenção seletiva com foco nacional) | Médio | Baixo |
+// | **ADN – Alternativa Democrática Nacional** | Nacionalismo conservador (autoritarismo elevado / intervenção seletiva com foco nacional) | Médio | Baixo |
+// 
 
 
 // update note path when appending
@@ -976,7 +1021,7 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
   }
   if (root && updated) aa.e.append_as_root(root);
   if (og) og.dataset.level = levels;
-}
+};
 
 
 // view event
@@ -987,7 +1032,7 @@ aa.e.view =l=>
     if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
     aa.l.classList.add('viewing','view_e');
     l.classList.add('in_view');
-    aa.in_view = l;
+    aa.view.in_view = l;
     aa.clk.time({target:l.querySelector('.by .created_at')});
     aa.fx.path(l);
     setTimeout(()=>{aa.fx.scroll(l)},200);

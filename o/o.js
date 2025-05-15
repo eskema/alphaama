@@ -73,10 +73,9 @@ aa.o.add =(s='')=>
   const as = s.split(',');
   if (as.length)
   {
-    for (const i of as) 
+    for (const i of as)
     {
-      let a = i.trim().split(' ');
-      let [key,newValue] = a;
+      let [key,newValue] = i.split(aa.fx.regex.fw);
       if (key && newValue)
       {
         let oldValue = localStorage[key];

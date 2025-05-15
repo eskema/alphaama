@@ -14,7 +14,7 @@ aa.mk.butt_expand =(id,con=false)=>
 
 
 // make button with a clk
-aa.mk.clk_butt =sa=>
+aa.mk.butt_clk =sa=>
 {
   let con,cla,clk;
   if (Array.isArray(sa))
@@ -35,24 +35,38 @@ aa.mk.clk_butt =sa=>
 };
 
 
+// buttons from sessionStorage state
+aa.mk.butts_session =(id,s)=>
+{
+  let dis = `${id}_${s}`;
+  if (sessionStorage.getItem(dis))
+  {
+    let butt = aa.mk.butt_action(`${id} ${s} ${sessionStorage[dis]}`);
+    butt.addEventListener('click',aa.clk.lp_rm);
+    aa.log(butt)
+  }
+};
+
+
 // make event wrapper object
 aa.mk.dat =(o={})=>
 {
-  const dat ={};
-  dat.event = o.event ?? {};
-  dat.seen = o.seen ?? [];
-  dat.subs = o.subs ?? [];
-  dat.clas = o.clas ?? [];
-  dat.refs = o.refs ?? [];
+  const dat = {};
+  if (o.event) dat.event = o.event;
+  dat.seen = o.seen || [];
+  dat.subs = o.subs || [];
+  dat.clas = o.clas || [];
+  dat.refs = o.refs || [];
   return dat
 };
 
 
 // make details element
-aa.mk.details =(con,l=false,open=false)=>
+aa.mk.details =(con,l=false,open=false,cla='')=>
 { 
-  const details = aa.mk.l('details');
+  const details = aa.mk.l('details',{cla});
   if (open) details.open = true;
+  // cla = 'base' + cla?' '+cla:'';
   const summary = aa.mk.l('summary',{con});
   details.append(summary);
   if (!l) return details;
@@ -124,7 +138,7 @@ aa.mk.header =e=>
     ref:'/',
     con:'A<3',
     tit:'vai pró caralho',
-    clk:aa.clk.a
+    clk:aa.clk.clear,//aa.clk.a
   });
   const state = aa.mk.l('h1',{id:'state',con:'dickbutt'});
   state.dataset.pathname = location.pathname;
@@ -152,26 +166,23 @@ aa.mk.img_modal =(src,cla=false)=>
   const dialog = aa.dialog;
   const img = aa.mk.l('img',
   {
-    cla:'modal-img contained'+(cla?' '+cla:''),
+    cla:'img_modal contained'+(cla?' '+cla:''),
     src:src,
-    clk:e=>{dialog.close()}
+    clk:()=>{dialog.close()}
   });
-  dialog.append(
-    aa.mk.l('button',
+  const butt = aa.mk.l('button',
+  {
+    con:'bigger',
+    cla:'butt modal',
+    clk:e=>
     {
-      con:'full',
-      cla:'butt modal',
-      clk:e=>
-      {
-        let text = e.target.textContent;
-        e.target.textContent = e.target.textContent === 'full' 
-        ? 'contained' 
-        : 'full';
-        img.classList.toggle('contained')
-      }
-    }),
-    img
-  );
+      let text = e.target.textContent;
+      if (text === 'bigger') e.target.textContent = 'smaller';
+      else e.target.textContent = 'bigger';
+      img.classList.toggle('contained');
+    }
+  });
+  dialog.append(butt,' ',img);
   dialog.showModal();
 };
 
@@ -183,16 +194,10 @@ aa.mk.item =(k='',v,o)=>
   let cla = `item item_${k}`;
 
   let l = aa.mk.l(tag,{cla});
-  if (!v)
-  {
-    l.classList.add('empty');
-    return l
-  }
-
   let item;
   // if (Object.hasOwn(o,'mk')) item = o.mk(k,v);
   // else 
-  if (Array.isArray(v)) 
+  if (Array.isArray(v))
   {
     item = aa.mk.item_arr(k,v);
     l.classList.add('ls_arr');
@@ -399,33 +404,43 @@ aa.mk.nip7_butt =()=>
 
 
 // log a notice
-aa.mk.notice =o=>
+aa.mk.notice =(o,inverted)=>
 {
 // o =
 // {
+//   id:'',
 //   title:'',
-//   description:'',
 //   butts:
 //   [
-//    {title:'',cla:'',exe:()=>{}},
+//    {tit:'',cla:'',exe:()=>{}},
 //   ]
 // }
+  // console.log(o);
   let cla = 'notice';
   let l = aa.mk.l('div',{cla});
   if (Object.hasOwn(o,'id')) l.id = o.id;
   
-  cla = 'title';
-  if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.title}));
   
-  cla = 'description';
-  if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.description}));
+  
+  // cla = 'description';
+  // if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.description}));
   for (const butt of o.butts)
   {
-    const con = butt.title;
+    cla = 'butt'+(' '+butt.cla||'');
+    const con = butt.con;
     const clk = butt.exe;
-    cla = 'butt '+butt.cla;
-    l.append(aa.mk.l('button',{con,cla,clk}));
+    l.append(aa.mk.l('button',{cla,con,clk}));
   }
+
+  cla = 'title';
+  con = o.title;
+  if (Object.hasOwn(o,cla)) 
+  {
+    const dis = aa.mk.l('p',{cla,con});
+    if (!inverted) l.prepend(dis);
+    else l.append(dis);
+  }
+
   return l
 };
 

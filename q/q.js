@@ -31,7 +31,7 @@ aa.q =
     f:
     {
       "authors":["u","k3"],
-      "kinds":[0,1,3,6,7,16,20,21,22,10002,30023,30818],
+      "kinds":[0,1,3,6,7,16,20,21,22,9802,10002,30023,30818],
       "since":"h_12",
     },
     id:{"ids":["x"],"eose":"close"},
@@ -53,7 +53,6 @@ aa.q =
     tag:{"#t":["s"],"limit":200},
     u:{"authors":["u"],"since":"n_7","limit":500},
   },
-  old_id:'q_e',
 };
 
 
@@ -69,7 +68,7 @@ aa.q.add =str=>
     return ''
   }
   let mod = aa.q;
-  let log = localStorage.ns+' q add '+k+' ';
+  let log = k+' ';
   let filter = mod.o.ls[k];
   let is_new;
   let changed;
@@ -93,14 +92,16 @@ aa.q.add =str=>
   }
   if (changed)
   {
-    if (!is_new) 
-    {
-      mod.close(k);
-      aa.log(log);
-    }
     aa.mod.save(mod);
     aa.mod.ui(mod,k);
+  } 
+  let q_add = aa.temp.q_add;
+  if (!q_add) 
+  {
+    q_add = aa.temp.q_add = aa.mk.details('q add …');
+    aa.log(q_add);
   }
+  q_add.append(aa.mk.l('p',{con:log}))
   return k
 };
 
@@ -108,13 +109,7 @@ aa.q.add =str=>
 // close one or all active queries
 aa.q.close =s=>
 {
-  let fids = s.trim().split(' ');
-  for (const k in aa.r.active)
-  {
-    const a = fids.length ? fids : Object.keys(aa.r.active[k].q);
-    if (a.length) for (const fid of a)  aa.r.close(k,fid);
-  }
-  aa.log(aa.q.def.id+' closed: '+fids);
+  for (const id of aa.fx.splitr(s)) aa.r.close(id);
 };
 
 
@@ -144,6 +139,12 @@ aa.q.del =s=>
 //   let [k,p,d] = s.split(':');
 //   return {kinds:[parseInt(k)],authors:[p],'#d':[d]}
 // };
+
+aa.q.last_butts =()=>
+{
+  aa.mk.butts_session('q','run');
+  aa.mk.butts_session('q','out');
+};
 
 
 // on load
@@ -175,7 +176,7 @@ aa.q.load =async()=>
       action:[id,'out'],
       required:['fid'],
       description:'run filter with outbox',
-      exe:mod.outbox
+      exe:mod.out
     },
     {
       action:[id,'req'],
@@ -190,8 +191,13 @@ aa.q.load =async()=>
       exe:mod.close
     },
     {
+      action:[id,'reset'],
+      description:'reset/add default query filters',
+      exe:mod.reset
+    },
+    {
       action:[id,'stuff'],
-      description:'sets a bunch of queries to get you started',
+      description:'run base queries to get things started',
       exe:mod.stuff
     },
     {
@@ -203,7 +209,7 @@ aa.q.load =async()=>
     },
   );
 
-  // add shortcut buttons with last queries executed
+
   aa.mod.load(mod).then(aa.mod.mk).then(e=>
   {
     let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
@@ -229,8 +235,6 @@ aa.q.mk =(k,v) =>
   );
   let key = aa.mk.l('span',{cla:'key',app:aa.mk.butt_action(`${id} add ${k} ${v.v}`,k,'add')});
   let val = aa.mk.l('span',{cla:'val',con:v.v});
-  
-  
   l.append(
     key,' ',val,' ',butts
   );
@@ -239,74 +243,65 @@ aa.q.mk =(k,v) =>
 
 
 // run filter with outbox
-aa.q.outbox =async s=>
+aa.q.out =async s=>
 {
   const tasks = s.split(',');
+  if (!aa.q.active.out) aa.q.active.out = [];
   for (const task of tasks)
   {
     const a = task.trim().split(' ');
     let fid = a.shift();
-    if (fid && aa.q.o.ls.hasOwnProperty(fid)) 
-    { 
-      if (!aa.q.active.out) aa.q.active.out = [];
-      if (!aa.q.active.out.includes(fid)) aa.q.active.out.push(fid);
-      sessionStorage.q_out = aa.q.active.out;
-
-      let dis = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
-      dis.push(fid);
-      aa.q.as_outbox(dis)
-    } 
-    else aa.log(aa.q.def.id+' run: filter not found');
+    if (!Object.hasOwn(aa.q.o.ls,fid))
+    {
+      aa.log(aa.q.def.id+' run: filter not found '+fid);
+      continue
+    }
+    
+    aa.fx.a_add(aa.q.active.out,[fid]);
+    sessionStorage.q_out = aa.q.active.out;
+    let request = aa.q.filter(aa.q.o.ls[fid].v);
+    request.unshift('REQ',fid);
+    aa.q.outbox(request);
   }
 };
 
 
 // demand request as outbox
-aa.q.as_outbox =([filtered,options,fid])=>
+aa.q.outbox =(request)=>
 {
+  let [type,fid,filter,options] = request;
   let outbox;
   let authors_len = 0;
-  if (filtered.authors?.length)
+  if (filter.authors?.length)
   {
-    authors_len = filtered.authors.length;
-    outbox = aa.u.outbox(filtered.authors);
-    delete filtered.authors;
+    authors_len = filter.authors.length;
+    outbox = aa.r.outbox(filter.authors);
+    delete filter.authors;
   }
 
   if (outbox?.length)
   {
-    aa.mod.servers_add(aa.r,outbox.map(i=>i[0]+' out').join(','),'relay');
-    let relays = [];
+    let relays = outbox.map(i=>i[0]);
+    aa.r.add(relays.join(' out,')+' out');
+    let log_relays = [];
     for (const r of outbox)
     {
       let url = r[0];
-
-      // if (!aa.r.o.ls[url] || !aa.r.o.ls[url].sets.includes('out'))
-      //   aa.r.add(url+' out');
-
-      let filter = {...filtered};
-      filter.authors = r[1];
-      // console.log(['REQ',fid,filter],[url],options);
-      aa.r.demand(['REQ',fid,filter],[url],options);
-      relays.push(url+' '+filter.authors.length);
+      let f = {...filter};
+      f.authors = r[1];
+      
+      let request = ['REQ',fid,f];
+      let relays = [url];
+      aa.r.demand(request,relays,options);
+      log_relays.push(url+' '+f.authors.length);
     }
-    // aa.log(relays.join(', '));
-    // aa.log(aa.mk.butt_action(aa.q.def.id+' close '+fid));
+    // note log
     if (!options.eose || options.eose !== 'close')
     {
-      let note_log = aa.mk.details('q out '+fid);
-      note_log.id = 'q_out_'+fid;
-      note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+fid));
-      note_log.append(aa.mk.l('p',{con:'outbox for '+authors_len+' authors'}));
-      note_log.append(aa.mk.l('p',{con:'using '+outbox.length+' relays:'}));
-      note_log.append(aa.mk.l('p',{con:relays.join(', ')}));
-      let l = document.getElementById(note_log.id);
-      if (l) 
-      {
-        l.replaceWith(note_log);
-        aa.logs.append(note_log.parentElement);
-      }
-      else aa.log(note_log,0,1)
+      let txt = `outbox for ${authors_len} authors`;
+      txt += `\nusing ${outbox.length} relays:\n`;
+      txt += log_relays.join(', ');
+      aa.q.log('out',request,txt);
     }
   }
 };
@@ -314,91 +309,101 @@ aa.q.as_outbox =([filtered,options,fid])=>
 
 // takes a string and
 // returns an array with a request filter and options
-aa.q.replace_filter_vars =s=>
+aa.q.filter =(s,x)=>
 {
-  const o = aa.parse.j(s);
-  let options = {};  
-  if (!aa.u.p) aa.log('vars: no u');
+  const filter = typeof s === 'string' ? aa.parse.j(s) : s;
+  if (!filter) return [];
 
-  if (o) for (const k in o) 
+  let options = {};
+  let p;
+  if (!x) x = aa.u.p.pubkey;
+  if (!x) aa.log('vars: no u');
+  else p = aa.db.p[x];
+
+  for (const k in filter)
   {
-    const v = o[k];
+    const v = filter[k];
     switch (k)
     {
       case 'eose':
         options.eose = v;
-        delete o[k];
+        delete filter[k];
         break;
       case 'since':
       case 'until':
-        if (typeof v === 'string') o[k] = aa.fx.time_convert(v);
+        if (typeof v === 'string') filter[k] = aa.fx.time_convert(v);
         break;
       default:
-        if (Array.isArray(v)) for (let i=0;i<v.length;i++)
+        if (Array.isArray(v)) for (const val of v)
         {
-          const val = v[i];
-          if (typeof val === 'string') 
-          { 
-            switch (val) 
+          if (typeof val === 'string')
+          {
+            switch (val)
             {
               case 'u':
-              case 'u_x':
-                o[k] = o[k].filter(dis=>dis!==val);
-                if (aa.u.p) o[k].push(aa.u.p.pubkey); 
+              case 'x':
+                filter[k] = filter[k].filter(dis=>dis!==val);
+                if (x) filter[k].push(x);
                 break;
-              case 'b_f':
-              case 'bff':
               case 'k3':
-                o[k] = o[k].filter(dis=>dis!==val);
-                if (aa.u.p) o[k].push(...aa.u.p.follows);                    
+                filter[k] = filter[k].filter(dis=>dis!==val);
+                if (p) filter[k].push(...p.follows);
                 break;
             }
           }
-          if (!o[k].length) return []
+          if (!filter[k].length) 
+          {
+            aa.log('vars: invalid filter');
+            return []
+          }
         }
     }
   }
-  if (!Object.keys(options).length) options = false
-  return [o,options]
+  if (!Object.keys(options).length) options = false;
+  return [filter,options]
 };
 
 
 // raw req
 aa.q.req =(s='')=>
 {
+  let [rels,f] = s.split(aa.fx.regex.fw);
+
   let a = s.split(' ');
-  let rels = a.shift();
+  // let rels = a.shift();
   let relays = aa.r.rel(rels);
-  let rid = 'req_'+aa.now;
-  
-  const filt = a.join('').replace(' ','');
-  let [filtered,options] = aa.q.replace_filter_vars(filt);
-  if (!filtered)
+  let fid = 'req_'+aa.now;
+
+  // const f = a.join('').replace(' ','');
+  let [filter,options] = aa.q.filter(f.replace(' ',''));
+  if (!filter)
   {
     aa.log('invalid filter:'+filt);
     return false
   }
-  
+  let request = ['REQ',fid,filter];
   if (!relays.length)
   {
-    aa.q.as_outbox([filtered,options,rid])
+    request.push(options);
+    aa.q.outbox(request)
   }
   else
   {
-    aa.r.demand(['REQ',rid,filtered],relays,options);
-    
-    let note_log = aa.mk.details('q req '+rid);
-    note_log.id = rid;
-    note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+rid));
-    note_log.append(aa.mk.l('p',{con:'to: '+relays}));
-    note_log.append(aa.mk.l('p',{app:aa.mk.ls({ls:{filter:filtered,options:options}})}));
-    let l = document.getElementById(note_log.id);
-    if (l) 
-    {
-      l.replaceWith(note_log);
-      aa.logs.append(note_log.parentElement);
-    }
-    else aa.log(note_log,0,1)
+    aa.r.demand(request,relays,options);
+    request.push(options);
+    aa.q.log('req',request,`to: ${relays}`);
+  }
+};
+
+
+// reset / add default query filters
+aa.q.reset =()=>
+{
+  let keys = Object.keys(aa.q.ls);
+  for (const key of keys)
+  {
+    const string_filter = JSON.stringify(aa.q.ls[key]);
+    aa.q.add(`${key} ${string_filter}`);
   }
 };
 
@@ -410,7 +415,6 @@ aa.q.run =async s=>
   let delay = 0;
   for (const task of tasks)
   {
-    
     const a = task.trim().split(' ');
     let fid,rels,request;
     if (a.length) fid = a.shift();
@@ -420,69 +424,141 @@ aa.q.run =async s=>
       if (!aa.q.active.run.includes(fid)) aa.q.active.run.push(fid);
       sessionStorage.q_run = aa.q.active.run;
 
-      let [filtered,options] = aa.q.replace_filter_vars(aa.q.o.ls[fid].v);
+      let [filtered,options] = aa.q.filter(aa.q.o.ls[fid].v);
       if (filtered) request = ['REQ',fid,filtered];
       
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
       if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-      setTimeout(e=>{aa.r.demand(request,relays,options)},delay);
+      setTimeout(e=>
+      {
+        aa.r.demand(request,relays,options);
+      },delay);
       delay = delay + 1000;
       
-      let note_log = aa.mk.details('q run '+fid);
-      note_log.id = 'q_run_'+fid;
-      note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+fid));
-      note_log.append(aa.mk.l('p',{con:'to: '+relays}));
-      note_log.append(aa.mk.l('p',{app:aa.mk.ls({ls:{filter:filtered,options:options}})}));
-      let l = document.getElementById(note_log.id);
-      if (l) 
-      {
-        l.replaceWith(note_log);
-        aa.logs.append(note_log.parentElement);
-      }
-      else aa.log(note_log,0,1);
+      aa.q.log('run',request,`to: ${relays}`);
 
-      // if (!options?.eose || options.eose !== 'close') 
-      //   aa.log(aa.mk.butt_action(aa.q.def.id+' close '+request[1]));
+      // let note_log = aa.mk.details('q run '+fid);
+      // note_log.id = 'q_run_'+fid;
+      // note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+fid));
+      // note_log.append(aa.mk.l('p',{con:'to: '+relays}));
+      // note_log.append(aa.mk.l('p',{app:aa.mk.ls({ls:{filter:filtered,options:options}})}));
+      // let l = document.getElementById(note_log.id);
+      // if (l) 
+      // {
+      //   l.replaceWith(note_log);
+      //   aa.logs.append(note_log.parentElement);
+      // }
+      // else aa.log(note_log,0,1);
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
   }
 };
 
-
-// add useful queries
-aa.q.stuff =()=>
+aa.clk.q_stuff_run_a =e=>
 {
-  let id = aa.q.def.id;
-  let keys = Object.keys(aa.q.ls);
-  let queries = aa.mk.details(keys.length +' default queries');
-  for (const key of keys)
+  e.target.closest('.l').remove();
+
+  aa.q.run('a');
+  setTimeout(()=>
   {
-    let filter = JSON.stringify(aa.q.ls[key]);
-    let s = `${key} ${filter}`;
-    aa.q.add(s);
-    queries.append(aa.mk.l('p',{con:s}))
+    aa.q.run('a');
+    aa.log(aa.mk.butt_clk(['-> query k3 stuff','plug','q_stuff_run_b']));
+  },1000);
+};
+
+
+aa.clk.q_stuff_run_b =e=>
+{
+  e.target.closest('.l').remove();
+  // get data from pubkeys found on your follow list  
+  if (!aa.u.p.follows.length)
+  {
+    aa.log('could not find your follows (k3)')
+    return;
   }
-  aa.log(queries);
-};
-
-
-aa.q.sub =(s='')=>
-{
-  aa.log(s)
-};
-
-//
-aa.r.www =url=>
-{
-  aa.r.lay(url,o).then(r=>
+  // {
+  //   const follows_details = aa.mk.details('new var available: k3');
+  //   follows_details.append(aa.u.p.follows.join(', '));
+  //   aa.log(follows_details);
+  //   // aa.log(`found ${aa.u.p.follows.length} ${aa.fx.plural(aa.u.p.follows.length,'follow')}`);
+  // }
+  aa.log('k3 = '+aa.u.p.follows.join(' '),0,0);
+  aa.q.run('b');
+  setTimeout(()=>
   {
-    let lays;
-    if (!aa.logs.querySelector('.lays'))
+    aa.q.out('b');
+    setTimeout(()=>
     {
-      lays = aa.log('lays');
-      lays.classList.add('lays');
-    };
-    lays.append(r.w.url)
-  });
+      sessionStorage.q_out = 'f';
+      sessionStorage.q_run = 'n';
+      aa.q.last_butts();
+    },1000);
+  },3000);
+};
+
+
+// fetch basic stuff to get things started
+aa.q.stuff =async()=>
+{
+  aa.q.reset();  
+  aa.log(aa.mk.butt_clk(['-> query u stuff','plug','q_stuff_run_a']));
+};
+
+
+// sub filter
+aa.q.sub =async s=>
+{
+  let txt = `${aa.q.def.id} run:`;
+  let ls = aa.q.o.ls;
+  const tasks = s.split(',');
+  for (const task of tasks)
+  {
+    let [fid,rels] = task.trim().split(' ');
+    if (!Object.hasOwn(ls,fid))
+    {
+      aa.log(`${txt} filter not found ${fid}`);
+      continue
+    }
+    txt += ` ${fid}`;
+    let relays = aa.r.rel(rels);
+    if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
+    if (!relays.length)
+    {
+      aa.log(`${txt} no relays provided`);
+      continue
+    }
+
+    let [filter,options] = aa.q.filter(ls[fid].v);
+    let request = ['REQ',fid,filter,options];
+        
+    aa.r.w.postMessage([['req',request,relays]]);
+    // let a = [aa.r.a.ms];
+    // for (const url of relays) aa.r.lay(url,{a,request});
+    aa.q.log('sub',request,`to: ${relays}`);
+  }
+};
+
+
+aa.q.log =(s,request,con)=>
+{
+  let [type,fid,filter,options] = request;
+  let id = `q ${fid}`;
+  let l = aa.el.get(id);
+  if (!l)
+  {
+    l = aa.mk.details(id,0,0,'base');
+    let close_butt = aa.mk.butt_action(`${aa.q.def.id} close ${fid}`);
+    close_butt.addEventListener('click',aa.clk.lp_rm);
+    l.append(close_butt);
+    aa.el.set(id,l);
+    aa.log(l);
+  }
+  else aa.logs.append(l.parentElement);
+  let dis = aa.mk.details(s,0,0,'base');
+  dis.append(
+    aa.mk.l('p',{con}),' ',
+    aa.mk.l('p',{app:aa.mk.ls({ls:{filter,options}})})
+  );
+  l.append(' ',dis);
 };

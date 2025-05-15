@@ -77,8 +77,23 @@ aa.db.upd_e =async dat=>
 {
   const q_id = 'upd_e';
   if (!aa.temp[q_id]) aa.temp[q_id] = {};
-  aa.temp[q_id][dat.event.id] = dat;
+  // define which events are to be stored
+  let is_allowed;
+  let kinds = [0,3,10002,10019,17375];
+
+  if (aa.is.u(dat.event.pubkey)) allowed = true;
+  else if (aa.is.following(dat.event.pubkey))
+  {
+    if (kinds.includes(dat.event.kind)) is_allowed = true;
+  }
+  // else
+  // {
+  //   // 
+  // }
+
+  if (!is_allowed) return;
   
+  aa.temp[q_id][dat.event.id] = dat;
   aa.fx.to(()=>
   {
     const q = Object.values(aa.temp[q_id]);

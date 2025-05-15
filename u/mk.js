@@ -89,6 +89,17 @@ aa.mk.k7 =async s=>
 };
 
 
+aa.mk.setup_butt =()=>
+{
+  let setup_butt = aa.mk.l('p',
+  {
+    id:'u_setup',
+    app:aa.mk.butt_action('u setup')
+  });
+  setTimeout(()=>{aa.log(setup_butt)},500);
+};
+
+
 aa.actions.push(
   {
     action:['mk','e'],

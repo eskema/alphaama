@@ -42,6 +42,6 @@ aa.parse.hashtag =match=>
   {
     cla:'hashtag',
     con:match[0],
-    lab:match[0].slice(1).toLowerCase()
+    dat:{label:match[0].slice(1).toLowerCase()}
   })
 };

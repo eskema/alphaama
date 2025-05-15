@@ -1,7 +1,7 @@
 aa.view.ls.naddr1 =async naddress=>
 {
   let data = aa.fx.decode(naddress);
-  console.log(data);
+  aa.log('naddr '+JSON.stringify(data));
 };
 
 
@@ -34,11 +34,9 @@ aa.view.ls.nevent1 =async nevent=>
             if (url) aa.fx.a_add(dat.seen,[url]);
           }
         }
-        // console.log(dat);
-        let blank = aa.mk.note(dat);
-        blank.classList.add('blank');
-        aa.e.append_as_root(blank);
-        aa.r.demand(['REQ','ids',{ids:[dat.event.id]}],dat.seen,{eose:'done'});
+        let request = ['REQ','ids',{ids:[dat.event.id]}];
+        let options = {eose:'close'};
+        aa.r.demand(request,dat.seen,options);
       }
     }
     else 
@@ -62,11 +60,12 @@ aa.view.ls.note1 =async nid=>
     if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
     else 
     {
-      let blank = aa.mk.note({event:{id:x},clas:['blank','root']});
-      aa.e.append_as_root(blank);
+      // let blank = aa.mk.note({event:{id:x},clas:['blank','root']});
+      // aa.e.append_as_root(blank);
       aa.e.miss_e(x);
       aa.get.missing('e');
-      setTimeout(()=>{aa.e.view(blank)},500);
+      aa.log('trying to find event.. '+x);
+      // setTimeout(()=>{aa.e.view(blank)},500);
     }
   }
 };

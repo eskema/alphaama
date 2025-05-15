@@ -37,10 +37,6 @@ const on_loaded =()=>
   fetch('/README.adoc').then(dis=>dis?.text())
   .then(text=>{aa.view.l?.prepend(aa.mk.doc(text))});
 
-  if (sessionStorage.q_run)
-    aa.log(aa.mk.butt_action(`q run ${sessionStorage.q_run}`))
-  
-  if (sessionStorage.q_out)
-    aa.log(aa.mk.butt_action(`q out ${sessionStorage.q_out}`))
-
+  aa.q.last_butts();
 };
+

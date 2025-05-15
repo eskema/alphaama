@@ -9,8 +9,8 @@ walLNuts
 
 aa.mk.styles(['/w/w.css']);
 
-if (!localStorage.hasOwnProperty('zap')) localStorage.zap = '21';
-if (!localStorage.hasOwnProperty('zap_memo')) localStorage.zap_memo = 'walLNut';
+if (!Object.hasOwn(localStorage,'zap')) localStorage.zap = '21';
+if (!Object.hasOwn(localStorage,'zap_memo')) localStorage.zap_memo = 'walLNut';
 
 
 aa.w =
@@ -61,7 +61,6 @@ aa.w.add =(s='')=>
 };
 
 
-
 aa.w.balance =()=>
 {
   let balance = aa.fx.sum_amounts(Object.values(aa.w.o.ls.mints));
@@ -69,6 +68,7 @@ aa.w.balance =()=>
   aa.mod.mk(aa.w);
   return balance
 }
+
 
 // get active wallet from mint
 // if no mint is provided
@@ -148,6 +148,7 @@ aa.w.import =async(s='')=>
 };
 
 
+//
 aa.w.import_7375 =async(id='')=>
 {
   const err=s=>{aa.log('import 7375 error: '+s)};
@@ -174,7 +175,7 @@ aa.w.import_7375 =async(id='')=>
 aa.w.is_redeemed =id=>
 {
   if (aa.w.o.ls.redeemed.includes(id)) return true;
-  else 
+  else
   {
     let event = aa.db.e[id].event;
     let amount = aa.fx.tag_value(event.tags,'amount');
@@ -201,8 +202,6 @@ aa.w.key =(privkey='',confirm=true)=>
     w.privkey = keys[2];
     w.pubkey = keys[1];
     aa.w.save();
-    // aa.mk.k10019();
-    // aa.mk.k17375();
   }
   return keys
 };
@@ -233,7 +232,7 @@ aa.w.load =async()=>
     if (aa.q.ls.n) aa.fx.a_add(aa.q.ls.n.kinds,[9321,9735]);
   }
   // extend renders
-  aa.fx.a_add(aa.e.renders.encrypted,[7374,7375,7376,17375,37375]);
+  aa.fx.a_add(aa.e.rnd.encrypted,[7374,7375,7376,17375,37375]);
   // extend actions
   aa.actions.push(
     {
@@ -316,7 +315,7 @@ aa.w.load =async()=>
     },
   );
   // extend butt actions
-  aa.e.butts_for?.na?.push('nzap');
+  aa.e.butts?.na?.push('nzap');
   // load
   await aa.mod.load(mod);
   await mod.start(mod);
@@ -681,8 +680,25 @@ aa.w.tx_out =(proofs,mint)=>
 };
 
 
+// 
 aa.w.upg =(k,v)=>
 {
   let upd;
   if (upd) setTimeout(()=>{aa.w.save()},200);
+};
+
+
+// zap pubkey
+aa.w.zap_pub =async(amount,pubkey)=>
+{
+  let p = await aa.p.get(pubkey);
+  let id = aa.p.events_last(p,'k0');
+  let dat = await aa.e.get(id);
+  if (!dat) 
+  {
+    aa.log('unable to zap, no metadata found for pubkey: '+pubkey);
+    return
+  }
+  let endpoint = await NostrTools.nip57.getZapEndpoint(dat.event);
+  return `${endpoint}?amount=${amount}`;
 };

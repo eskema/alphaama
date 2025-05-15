@@ -1,3 +1,5 @@
+if (!aa) aa = {};
+
 /*
 
 alphaama
@@ -11,8 +13,8 @@ aa.r =
 {
   active:{},
   def:{id:'r',ls:{},r:'read',w:'write'},
-  message_type:{},
-  old_id:'rel',
+  // message_type:{},
+  // old_id:'rel',
 };
 
 
@@ -21,6 +23,7 @@ aa.r.add =s=>
 {
   let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relays');
   for (const url of off) aa.r.force_close([url]);
+  aa.r.w.postMessage(['relays',aa.r.o.ls]);
 };
 
 
@@ -34,13 +37,22 @@ aa.r.add_from_o =relays=>
 };
 
 
+// authenticate to relay with main keys
+aa.r.auth =async([auth,event,relay])=> 
+{
+  event.id = aa.fx.hash(event);
+  signed = await aa.u.sign(event);
+  if (signed) aa.r.w.postMessage(['q',{relays:[relay],request:['AUTH',event]}]);
+};
+
+
 // broadcast event from id to relays
 // s = 'id relay relay relay'
 aa.r.bro =async(s='')=>
 {
   let [id,...relays] = s.split(' ');
   let dat = await aa.db.e[id];
-  if (dat) aa.r.broadcast(dat.event,relays);
+  if (dat) aa.r.send({event:dat.event,relays}); //aa.r.broadcast(dat.event,relays);
   else aa.log('r bro: event not found')
 };
 
@@ -48,125 +60,7 @@ aa.r.bro =async(s='')=>
 // post event to relays
 aa.r.broadcast =(event,relays=[],options={})=>
 {
-  if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
-  if (!relays.length) 
-  {
-    aa.log('aa.r.broadcast: no relays');
-    return false
-  }
-
-  if (options.log !== false)
-  {
-    let note_log = aa.mk.details('k'+event.kind+' sent '+event.id);
-    note_log.id = 'note_log_'+event.id;
-    note_log.append(aa.mk.l('p',{con:'to: '+relays}));
-    aa.log(note_log,0,1);
-  }
-
-  const opts = {send:{}};
-  const dis = JSON.stringify(['EVENT',event]);
-  opts.send[event.id] = dis;
-
-  for (const k of relays)
-  {
-    let url = aa.is.url(k)?.href;
-    if (!url) 
-    {
-      aa.log('invalid relay url: '+k);
-      return false
-    }
-
-    const relay = aa.r.active[url];
-    if (!relay) 
-    {
-      if (!aa.r.o.ls[url]) aa.r.hint_notice(url,opts);
-      else aa.r.c_on(url,opts);
-    }
-    else
-    {
-      if (relay.sent.includes(event.id))
-      {
-        aa.log(`event already sent to ${url}`);
-        continue;
-      } 
-      else aa.r.try(relay,dis)
-    }
-  }
-};
-
-
-// make relay connection
-aa.r.c_on =async(url,o=false)=> 
-{
-  if (localStorage.mode === 'hard') 
-  {
-    aa.log('aa.r.c_on: mode=hard');
-    return
-  }
-  
-  if (aa.r.o.ls[url]?.sets.includes('off')) 
-  {
-    aa.r.force_close([url]);
-    return
-  }
-
-  let relay = aa.r.active[url] ? aa.r.active[url] 
-  : aa.r.active[url] = {q:{},send:{},sent:[],cc:[],err:[],failed:0};
-  
-  if (relay.fc) return;
-  // {
-  //   aa.log(url+' is force closed')
-  //   return;
-  // }
-  if (relay.ws?.readyState !== 1)
-  {
-    if (relay.fc) delete relay.fc;
-    if (o)
-    {
-      if (o.req?.length) relay.q[o.req[1]] = o;
-      for (const ev in o.send) 
-      {
-        relay.send[ev] = o.send[ev];
-      }
-    }
-    
-    relay.ws = new WebSocket(url);
-    
-    const relay_to = setTimeout(()=>
-    {
-      // aa.log(relay?.ws?.readyState);
-      if (relay?.ws?.readyState === 0) 
-      {
-        relay.failed = relay.failed++;
-        if (relay.failed > 21) aa.r.force_close([url]);
-      }
-    },10000);
-
-    relay.ws.onopen =e=>
-    {
-      clearTimeout(relay_to);
-      aa.r.ws_open(e);
-    }
-    
-    relay.ws.onclose = aa.r.ws_close;
-    relay.ws.onerror = aa.r.ws_error;
-    relay.ws.onmessage = aa.r.ws_message;
-  }
-};
-
-
-// close relay connection
-aa.r.close =(k,id)=>
-{
-  let r = aa.r.active[k];
-  if (r && r.q[id])
-  {
-    if (r.ws?.readyState === 1) r.ws.send(JSON.stringify(['CLOSE',id]));
-    else console.log('close rs',r.ws?.readyState);
-    delete r.q[id];
-  }
-  else console.log('no close ',k,id);
-  aa.r.upd_state(k);
+  aa.r.send({relays,event,options});
 };
 
 
@@ -190,11 +84,11 @@ aa.r.common =(a=[],sets=[])=>
     for (const r of relays)
     {
       if (offed.includes(r)) continue;
-      if (!common[r]) common[r] = [];      
+      if (!common[r]) common[r] = [];
       if (!common[r].includes(x)) common[r].push(x)
     }
 
-    if (!has_set) 
+    if (!has_set)
     {
       for (const r of aa.fx.in_set(aa.r.o.ls,aa.r.o.r))
       {
@@ -204,6 +98,42 @@ aa.r.common =(a=[],sets=[])=>
     }
   }
   return common
+};
+
+
+// close relay connection
+aa.r.close =id=>
+{
+  aa.r.w.postMessage(['close',id]);
+};
+
+
+// 
+aa.r.dat =([s,dat])=>
+{
+  let event = dat.event;
+  if (aa.miss.e[event.id]) 
+  {
+    delete aa.miss.e[event.id];
+    dat.clas.push('miss');
+  }
+  else if (aa.fx.kind_type(event.kind) === 'parameterized')
+  {
+    let id_a = aa.fx.id_a({
+      kind:event.kind,
+      pubkey:event.pubkey,
+      identifier:event.tags.find(t=>t[0]==='d')[1],
+    }); //`${event.kind}:${event.pubkey}:${identifier}`;
+    
+    dat.id_a = id_a;
+    if (aa.miss.a[id_a])
+    {
+      delete aa.miss.a[id_a];
+      dat.clas.push('miss');
+    }
+  }
+  aa.e.to_printer(dat);
+  aa.db.upd_e(dat);
 };
 
 
@@ -218,6 +148,7 @@ aa.r.del =s=>
     const url = aa.is.url(i.trim())?.href;
     if (url && aa.r.o.ls[url])
     {
+      //todo
       if (aa.r.active[url])
       {
         aa.r.force_close([url]);
@@ -233,72 +164,8 @@ aa.r.del =s=>
 
 // send REQ to relays
 aa.r.demand =(request,relays,options)=>
-{
-  if (!request || !Array.isArray(request)) 
-  {
-    aa.log('aa.r.demand: no request');
-    return false
-  }
-
-  let filters = request.slice(2);
-
-  if (!aa.fx.verify_req_filters(filters))
-  {
-    aa.log('aa.r.demand: invalid filter '+JSON.stringify(filters));
-    return false
-  }
-
-  if (!relays?.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-  if (!relays.length) 
-  {
-    aa.log('aa.r.demand: no relays');
-    return false
-  }
-
-  let opts = {req:request};
-  for (const opt in options) opts[opt] = options[opt];
-
-  for (const k of relays)
-  {
-    let url = aa.is.url(k)?.href;
-    if (!url) 
-    {
-      aa.log('invalid relay url: '+k);
-      return false
-    }
-
-    const rel_active = aa.r.active[url];
-    if (!rel_active)
-    {
-      if (!aa.r.o.ls[url]) aa.r.hint_notice(url,opts)
-      else 
-      {
-        if (!aa.r.o.ls[url].sets.includes('off')) aa.r.c_on(url,opts);
-        else console.log('relay '+url+' is off');
-      } 
-    }
-    else 
-    {
-      let no_active_connection = !rel_active.ws || !rel_active.ws?.readyState === 3;
-      if (no_active_connection) aa.r.c_on(url,opts);
-      else 
-      {
-        let requestr = JSON.stringify(request);
-        if (opts)
-        {
-          if (opts.req?.length) 
-          {
-            let q_id = opts.req[1];
-            let q = rel_active.q[q_id];
-            if (!q) q = rel_active.q[q_id] = opts;
-            else if (JSON.stringify(q.req) === requestr) continue;
-          }
-          if (opts.send?.length) rel_active.send = opts.send;
-        }
-        aa.r.try(rel_active,requestr);
-      }
-    }
-  }
+{ 
+  aa.r.req({relays,request,options}) 
 };
 
 
@@ -324,21 +191,81 @@ aa.r.ext =async()=>
 };
 
 
+
+// relay notice
+aa.r.found =async({url,request,options,reason})=>
+{
+  if (!url) return;
+  let id = 'notice_'+aa.fx.an(url);
+  if (!aa.temp.relays_add) aa.temp.relays_add = new Map();
+  if (aa.temp.relays_add.get(id)) return;
+
+  let cleanup =e=>
+  {
+    e.target.closest('.notice').remove();
+    // e.target.classList.add('slap');
+    // e.target.closest('.is_new')?.classList.remove('is_new');
+  }
+  
+  let title = url;
+  let cla = 'r_notice';
+  let butts = [];
+  let notice = {id,cla,title,butts};
+  let dis = ['request',{relays:[url],request,options}];
+  // console.log(dis);
+
+  let hint ={con:'hint',cla:'yes',exe:e=>
+    {
+      aa.r.add(`${url} hint`);
+      if (request) aa.r.w.postMessage(dis);
+      // aa.r.c_on(url,opts);
+      cleanup(e);
+    }
+  };
+
+  let off ={con:'off',cla:'no',exe:e=>
+    {
+      aa.r.add(`${url} off`);
+      cleanup(e);
+    }
+  };
+
+  let other ={con:'other',cla:'maybe',exe:e=>
+    {
+      aa.r.add(url);
+      if (request) aa.r.w.postMessage(dis);
+      // aa.r.c_on(url,opts);
+      aa.cli.add(title);
+      cleanup(e);
+    }
+  };
+  
+  butts.push(off,other,hint);
+  let l_notice = aa.mk.notice(notice,1);
+  aa.temp.relays_add.set(id,l_notice);
+
+  let l = aa.el.get('r.add');
+  if (!l)
+  {
+    l = aa.mk.details('r add …',0,0,'base');
+    aa.el.set('r.add',l);
+  }
+  
+  l.append(l_notice);
+  // aa.log(l);
+
+  // let l = aa.mod.servers_add_l('relays');
+  // l.lastChild.prepend(l_notice);
+  let log = l.parentElement;
+  if (log) aa.logs.append(log);
+  else aa.log(l);
+};
+
+
 // force close relay connection
 aa.r.force_close =(a=[])=>
 {
-  for (const k of a)
-  {
-    let r = aa.r.active[k];
-    if (r && r.ws)
-    {
-      r.fc = true; 
-      r.ws.close(); 
-      delete r.ws;
-      delete r.q;
-      aa.r.upd_state(k)
-    }
-  }
+  aa.r.w.postMessage(['terminate',a])
 };
 
 
@@ -358,78 +285,6 @@ aa.r.from_o =(o,sets=false)=>
     }
   }
   return relays
-};
-
-
-// relay hint notice
-aa.r.hint_notice =(url,opts)=>
-{
-  // needs to display info from what npub, where does the notice come from?
-  let l = aa.mod.servers_add_l('relays');
-  // if (!log.hasAttribute('open')) log.setAttribute('open','');
-
-  let id = 'notice_'+aa.fx.an(url);
-  if (!aa.temp.relays_add) aa.temp.relays_add = new Map();
-  if (aa.temp.relays_add.get(id)) return;
-
-  let cleanup =e=>
-  {
-    e.target.classList.add('slap');
-    e.target.closest('.is_new')?.classList.remove('is_new');
-  }
-  
-  let title = `r add ${url} `;
-  let notice = {title};
-  notice.id = id;
-  notice.butts = [];
-
-  let set_hint = 'hint';
-  notice.butts.push(
-  {
-    title:set_hint,
-    cla:'yes',
-    exe:e=>
-    {
-      aa.r.add(`${url} ${set_hint}`);
-      aa.r.c_on(url,opts);
-      cleanup(e);
-    }
-  });
-  
-  let set_off = 'off';
-  notice.butts.push(
-  {
-    title:set_off,
-    cla:'no',
-    exe:e=>
-    {
-      aa.r.add(`${url} ${set_off}`);
-      cleanup(e);
-    }
-  });
-  
-  let set_other = 'other'
-  notice.butts.push(
-  {
-    title:set_other,
-    cla:'maybe',
-    exe:e=>
-    {
-      aa.r.add(url);
-      aa.r.c_on(url,opts);
-      aa.cli.add(title);
-      cleanup(e);
-    }
-  });
-  let l_notice = aa.mk.notice(notice);
-  aa.temp.relays_add.set(id,l_notice);
-  l.lastChild.prepend(l_notice);
-  let log = l.parentElement;
-  if (log) aa.logs.append(log);
-  else aa.log(l)
-  // let mom = log.parentElement;
-  // if (!mom) mom = aa.log(l);
-  
 };
 
 
@@ -454,7 +309,7 @@ aa.r.load =async()=>
   ([
     '/r/clk.js',
     '/r/mk.js',
-    '/r/wip.js',
+    // '/r/wip.js',
   ]);
 
   const mod = aa.r;
@@ -497,6 +352,11 @@ aa.r.load =async()=>
       exe:mod.resume
     },
     {
+      action:[id,'stuff'],
+      description:'attempt to set some relays',
+      exe:mod.stuff
+    },
+    {
       action:['e','bro'],
       required:['id'],
       optional:['<url || set>...'],
@@ -504,13 +364,114 @@ aa.r.load =async()=>
       exe:mod.bro
     },
   );
-  aa.mod.load(mod).then(aa.mod.mk).then(e=>
+  aa.mod.load(mod)
+  .then(aa.mod.mk)
+  .then(e=>
   {
-    aa.r.toggles()
+    aa.r.toggles();
+    aa.r.w.postMessage(['relays',mod.o.ls]);
   });
 };
 
 
+// make r mod item
+aa.r.mk =(k,v)=>
+{
+  // k = url
+  // v = {sets:[]}
+
+  const l = aa.mk.server(k,v);
+  if (!l) return false;
+  l.id = aa.r.def.id+'_'+aa.fx.an(k);
+  l.dataset.state = 0;
+  aa.mod.servers_butts(aa.r,l,v);
+  // aa.r.state_upd(k);
+  return l
+};
+
+
+// returns a list of relays given either a relay set or single url
+aa.r.rel =(s='')=>
+{
+  s = s.trim();
+  const a = [];
+  let relay = aa.is.url(s)?.href;
+  if (relay) a.push(relay);
+  else a.push(...aa.fx.in_set(aa.r.o.ls,s));
+  return a
+};
+
+
+// request from relays
+aa.r.req =({relays,request,options})=>
+{
+  if (!Array.isArray(request) || !request.length)
+  {
+    aa.log('aa.r.req: invalid request');
+    return
+  }
+  relays = aa.r.validate({relays,request,options});
+  if (relays.length) aa.r.w.postMessage(['request',{relays,request,options}]);
+};
+
+
+// todo
+// resume subscriptions
+aa.r.resume =s=>
+{
+  let ids = aa.fx.splitr(s);
+  // for (const url in aa.r.active) { aa.r.c_on(url) } 
+};
+
+
+// send event to relays
+aa.r.send =({relays,event,options})=>
+{
+  if (!event)
+  {
+    aa.log('aa.r.send: no event');
+    return
+  }
+
+  if (!aa.fx.verify_event(event))
+  {
+    aa.log('aa.r.send: invalid event');
+    return
+  }
+
+  relays = relays?.length ? aa.r.validate({relays}) : [];
+
+  if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
+  if (!relays.length)
+  {
+    aa.log('aa.r.send: no relays');
+    return false
+  }
+
+  aa.r.w.postMessage(['request',{relays,request:['EVENT',event],options}]);
+};
+
+
+// 
+aa.r.stuff =async(relays=[])=>
+{
+  if (!relays.length) relays = await aa.r.ext();
+  if (!relays.length)
+  {
+    let prompt = window.prompt('add some relays','wss://nos.lol wss://relay.damus.io wss://relay.primal.net');
+    if (prompt) relays = aa.fx.splitr(prompt);
+    else aa.log(aa.mk.butt_action('r add wss://url.com read write','add relays'));
+  }
+  if (!relays.length) return
+
+  let rels = relays.filter(i=>aa.is.url(i))
+  .map(i=>`${aa.is.url(i).href} read write auth`);
+  if (rels.length) aa.r.add(rels.join(','));
+  else aa.log('r stuff: no relays given')
+};
+
+
+// toggles for relay mod l
 aa.r.toggles =()=>
 {
   const mod = aa.r;
@@ -521,7 +482,7 @@ aa.r.toggles =()=>
   for (const r of Object.values(aa.r.o.ls)) aa.fx.a_add(sets,r.sets);
   for (const set of sets)
   {
-    let butt = aa.mk.clk_butt([set,'active','relset']);
+    let butt = aa.mk.butt_clk([set,'active','relset']);
     butt.dataset.k = 'sets';
     butt.dataset.v = set;
     sets_span.append(butt,' ');
@@ -537,7 +498,7 @@ aa.r.toggles =()=>
   for (const state of states)
   {
     let [id,str] = state;
-    let butt = aa.mk.clk_butt([str,'active','relstate']);
+    let butt = aa.mk.butt_clk([str,'active','relstate']);
     butt.dataset.k = 'state';
     butt.dataset.v = id;
     states_span.append(butt,' ');
@@ -549,323 +510,142 @@ aa.r.toggles =()=>
     mod.l.insertBefore(toggles,mod.l.lastChild);
     mod.l.insertBefore(add_butt,toggles);
   })
-}
+};
 
 
-// ["AUTH", <challenge-string>]
-aa.r.message_type.auth =async message=> 
+// validate relays are ok to use
+aa.r.validate =({relays,request,options})=>
 {
-  console.log(message);
-  let url = message.origin;
-  let challenge = message.data[1];
-  if (!url || !challenge) return;
-  
-  let active = aa.r.active[url];
-  if (!active) return;
-  active.challenge = challenge;
-
-  let event = {kind:22242,tags:[['relay',url],['challenge',challenge]]};
-
-  let relay = aa.r.o.ls[url];
-  let signed;
-  if (!relay?.sets.includes('auth'))
+  // filter invalid urls
+  relays = relays.map(i=>aa.is.url(i)?.href).filter(i=>i);
+  // check for new relays not already added
+  let found = relays.filter(i=>!aa.r.o.ls[i]);
+  if (found.length)
   {
-    if (!relay.keys) relay.keys = aa.fx.keypair();
-    event.pubkey = relay.keys[1];
-    aa.e.normalise(event);
-    console.log(event);
-    signed = NostrTools.finalizeEvent(event,relay.keys[0]);
-    console.log(event);
-  }
-  else
-  {
-    aa.e.normalise(event);
-    event.id = aa.fx.hash(event);
-    signed = await aa.u.sign(event);
+    // filter those out
+    relays = relays.filter(i=>aa.r.o.ls[i]);
+    // send found notices
+    for (const url of found) aa.r.found({url,request,options});
   }
 
-  if (signed) aa.r.broadcast(signed,[url],{log:false});
+  return relays.filter(i=>!aa.r.o.ls[i].sets.includes('off'));
 };
 
 
-// ["CLOSED",<sub_id>,<message>]
-aa.r.message_type.closed =async dis=> 
+// relay union worker reunion
+aa.r.w = new Worker('/r/manager.js');//,{type:'module'});
+
+
+// relay union worker message
+aa.r.w.onmessage =async e=>
 {
-  console.log('aa.r.message_type.closed',dis)
-};
-
-
-// ["EOSE",<sub_id>]
-aa.r.message_type.eose =message=>
-{
-  // console.log(message);
-  const id = message.data[1];
-  let sub = aa.r.active[message.origin].q[id];
-  if (!sub) return;
-  if (sub.eose && sub.eose === 'close') 
-    aa.r.close(message.origin,id);
-  sub.eose = 'done';
-};
-
-
-// ["EVENT",<sub_id>,<event_data>]
-aa.r.message_type.event =message=>
-{ 
-  const sub_id = message.data[1];
-  const event = message.data[2];
-
-  let dat = aa.db.e[event.id],is_new;
-  if (dat)
-  {
-    is_new = aa.fx.a_add(dat.seen,[message.origin]);
-  }
-  else if (aa.fx.verify_event(event)) 
-  {
-    dat = aa.db.e[event.id] = 
-    {
-      event:event,
-      seen:[message.origin],
-      subs:[sub_id],
-      clas:[],
-      refs:[]
-    };
-
-    if (aa.miss.e[event.id]) 
-    {
-      delete aa.miss.e[event.id];
-      dat.clas.push('miss');
-    }
-    else if (aa.fx.kind_type(event.kind) === 'parameterized')
-    {
-      let identifier = event.tags.find(t=>t[0]==='d')[1];
-      let id = `${event.kind}:${event.pubkey}:${identifier}`;
-      dat.id_a = id;
-      if (aa.miss.a[id])
-      {
-        delete aa.miss.a[id];
-        dat.clas.push('miss');
-      }
-    }
-  }
-  else console.log('invalid event',message);
-
-  if (dat)
-  { 
-    let sub = aa.r.active[message.origin]?.q[sub_id];
-    if (sub && (!sub?.stamp 
-    || sub?.stamp < dat.event.created_at)) 
-    sub.stamp = dat.event.created_at;
-
-    aa.db.upd_e(dat);
-    aa.e.to_printer(dat);
-  }
-};
-
-
-// ["NOTICE",<message>]
-aa.r.message_type.notice =async message=> 
-{
-  let s = 'NOTICE from '+message.origin+': '+message.data;
-  aa.log(s)
-};
-
-
-// ["OK",<event_id>,<true|false>,<message>]
-aa.r.message_type.ok =async message=>
-{
-  const [type,id,is_ok,reason] = message.data;
-  let log = 'not ok: '+reason+' '+id+' '+message.origin;
-  let r = aa.r.active[message.origin];
-  if (is_ok) 
-  {
-    if (id in r.send) 
-    {
-      aa.fx.a_add(r.sent,[id]);
-      delete r.send[id];
-    }
-
-    let dat = aa.db.e[id];
-    if (dat)
-    {
-      dat.clas = aa.fx.a_rm(dat.clas,['not_sent','draft']);
-      aa.fx.a_add(dat.seen,[message.origin]);
-      aa.db.upd_e(dat);
-
-      const l = document.getElementById(aa.fx.encode('note',id));
-      if (l) 
-      {
-        l.classList.remove('not_sent','draft');
-        aa.fx.dataset_add(l,'seen',[message.origin]);
-        let actions = l.querySelector('.actions');
-        actions.replaceWith(aa.e.note_actions(dat))
-      }
-    }
-    log = 'ok: '+id+(reason?' '+reason:'')+' '+message.origin;
-  }
-  else
-  {
-    if (reason.startsWith('auth-required:') 
-    || reason.startsWith('blocked:'))
-    {
-      aa.r.force_close([message.origin])
-    }
-  }
-  let log_l = document.getElementById('note_log_'+id);
-  if (log_l) log_l.append(aa.mk.l('p',{con:log}));
-  else if(aa.temp.relays_add) aa.temp.relays_add.append('\n',log);
-  else aa.log(log)
-};
-
-
-// make r mod item
-aa.r.mk =(k,v)=>
-{
-  // k = url
-  // v = {sets:[]}
-
-  const l = aa.mk.server(k,v);
-  if (!l) return false;
-  
-  l.id = aa.r.def.id+'_'+aa.fx.an(k);
-  l.dataset.state = 0;
-  aa.mod.servers_butts(aa.r,l,v);
-  aa.r.upd_state(k);
-  return l
-};
-
-
-// returns a list of relays given either a relay set or single url
-aa.r.rel =s=>
-{
-  const a = [];
-  let relay = aa.is.url(s)?.href;
-  if (relay) a.push(relay);
-  else a.push(...aa.fx.in_set(aa.r.o.ls,s));
-  return a
-};
-
-
-// resume subscriptions
-aa.r.resume =()=>
-{
-  for (const url in aa.r.active) { aa.r.c_on(url) } 
-};
-
-
-// try to send and retry if fails
-aa.r.try =(relay,dis)=>
-{
-  if (!relay || !relay.ws) return;
-  if (relay.ws.readyState === 1) 
-  {
-    relay.ws.send(dis);
-    aa.r.upd_state(relay.ws.url);
-  }
-  else 
-  {
-    relay.failed++;
-    if (relay.failed < 21) setTimeout(()=>{aa.r.try(relay,dis)},420*relay.failed);
-    else aa.r.force_close([relay.ws.url]);
-  }
+  let mess = e.data;
+  let dis = mess[0]?.toLowerCase();
+  if (dis && Object.hasOwn(aa.r,dis)) aa.r[dis](mess);
+  else console.log('aa.r.w.onmessage',dis,mess);
 };
 
 
 // update relay state in ui
-aa.r.upd_state =url=>
+aa.r.state =([s,relay])=>
 {
-  const relay = aa.r.active[url];
-  if (!relay) return
+  let url = relay.url;
+  aa.r.active[url] = relay;
   let l = aa.r.l.querySelector('#'+aa.r.def.id+'_'+aa.fx.an(url));
   if (l)
   {
-    let state = relay?.ws?.readyState ||  '';
-    let q = relay?.q ? Object.keys(relay.q):[];
-    let failed = relay?.failed;
-
     fastdom.mutate(()=>
     {
-      l.dataset.state = state;
-      l.dataset.q = q;
-      l.dataset.failed = failed;
-      l.parentElement?.prepend(l);
+      l.dataset.state = relay.state;
+      l.dataset.ratio = relay.failures - relay.successes;
+      l.dataset.subs = aa.r.subs_open(relay.subs);
+      // l.parentElement?.prepend(l);
     })
   }
-  else console.log('aa.r.upd_state '+url,'no element found')
+  else console.log('aa.r.state: no element found',relay)
 };
 
 
-// on websocket close
-aa.r.ws_close =async e=>
+// return opened subscriptions 
+aa.r.subs_open =subs=>
 {
-  const url = e.target.url;
-  let relay = aa.r.active[url];
-  aa.r.upd_state(e.target.url);
-  
-  if (relay && !relay.fc)
-  {
-    let cc = relay.cc;
-    cc.unshift(Math.floor(e.timeStamp));
-    // reconnect if somewhat stable
-    if (cc[1] && cc[0] - cc[1] > 99999 || cc.length < 21) 
-    {  
-      setTimeout(()=>{ aa.r.c_on(url) }, 420 * cc.length)
-    }
-  }
-  // else
-  // {
-    // aa.r.add(url+' off');
-    // aa.log(url+' closed');
-  // }
+  return [...new Set([...subs.values()]
+  .filter(i=>!i.closed)
+  .map(i=>i?.id))];
 };
 
 
-// on websocket error
-aa.r.ws_error =e=>
-{ 
-  console.log('ws error:',e);
-  aa.r.ws_close(e);
-  // aa.r.force_close([e.target.url])
-};
-
-
-// on websocket message
-aa.r.ws_message =async e=>
+// ["OK",<event_id>,<true|false>,<message>]
+aa.r.ok =async a=>
 {
-  let origin = e.target.url;
-  const err = async e=> 
+  const [s,id,is_ok,reason,origin] = a;
+  if (is_ok) 
   {
-    if (!aa.r.active[origin].err) aa.r.active[origin].err = [];
-    aa.r.active[origin].err.push(e);
-    aa.log('unknown data from '+origin);
-    console.log('unknown data from '+origin,e);
-  };
-
-  if (e.data.length > 200000) console.log(e.data.length,e.data);
-
-  let data = aa.parse.j(e.data);
-  if (data && Array.isArray(data))
-  {
-    let type = data[0].toLowerCase();
-    if (Object.hasOwn(aa.r.message_type,type))
+    let dat = aa.db.e[id];
+    if (dat)
     {
-      aa.r.message_type[type]({data,origin})
+      dat.clas = aa.fx.a_rm(dat.clas,['not_sent','draft']);
+      aa.fx.a_add(dat.seen,[origin]);
+      aa.db.upd_e(dat);
+
+      const l = aa.temp.printed.find(i=>i.dataset.id === id);
+      if (l) 
+      {
+        l.classList.remove('not_sent','draft');
+        aa.fx.dataset_add(l,'seen',[origin]);
+        l.querySelector('.actions')?.replaceWith(aa.e.note_actions(dat))
+      }
     }
-    else err(e);
   }
-  else err(e);
-};
-
-
-// on websocket open
-aa.r.ws_open =async e=>
-{
-  let relay = aa.r.active[e.target.url];
-  for (const sub_id in relay.q)
+  else if (reason)
   {
-    let sub = relay.q[sub_id];
-    aa.r.try(relay,JSON.stringify(sub.req));
+    let [type,txt] = reason.split(':');
+    switch (type)
+    {
+      case 'blocked':
+      case 'auth-required':
+        aa.r.w.postMessage(['fc',origin]);
+        break;
+      // case 'pow':
+      // case 'duplicate':
+      // case 'rate-limited':
+      // case 'invalid':
+      // case 'restricted':
+      // case 'error':
+      // default:
+    }
   }
 
-  for (const ev in relay.send) aa.r.try(relay,relay.send[ev]);
-  aa.r.upd_state(e.target.url);
+  let l = aa.el.get('r.ok');
+  if (!l)
+  {
+    l = aa.mk.details('ok …',0,0,'base');
+    aa.el.set('r.ok',l);
+    aa.log(l);
+  }
+  let con = `${id} ${is_ok} ${origin} — ${reason}`;
+  l.append(aa.mk.l('p',{con}));
 };
+
+
+// return sorted relay list for outbox
+aa.r.outbox =(a=[],sets=[])=>
+{
+  if (!sets.length) sets = [aa.r.o.w,'k10002'];
+  if (!a?.length) return [];
+  let relays = aa.r.common(a,sets);
+  let outbox = aa.fx.intersect(relays,a);
+  let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
+  return sorted_outbox;
+};
+
+
+
+
+
+
+
+
+
+
+

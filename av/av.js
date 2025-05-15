@@ -3,6 +3,18 @@ aa.mk.styles(['/av/av.css']);
 // audio/video player element
 aa.mk.av =(src,poster=false,audio=false)=>
 {
+  // save screenshot
+  const grab =e=>
+  {
+    var canvas = document.createElement("canvas");
+    const l = e.target.closest('.av').querySelector('.mf');
+    canvas.width = l.videoWidth;
+    canvas.height = l.videoHeight;
+    var canvasContext = canvas.getContext("2d");
+    canvasContext.drawImage(l, 0, 0);
+    let src = canvas.toDataURL('image/png');
+    aa.log(aa.mk.l('p',{con:`${src} `,app:aa.mk.img(src)}));
+  };
   // toggle sound
   const mute =e=>
   {
@@ -60,10 +72,10 @@ aa.mk.av =(src,poster=false,audio=false)=>
     if (e.target.paused) play(e.target);
     else pause(e.target);
   };
-
+  // make av wrapper
   const av = document.createElement('div');  
   av.classList.add('av');
-  
+  // make av element
   let l = document.createElement('video');
   if (audio)
   {
@@ -80,6 +92,7 @@ aa.mk.av =(src,poster=false,audio=false)=>
   l.loop = true;
   l.setAttribute('playsinline','');
   l.setAttribute('preload','metadata');
+  l.setAttribute('crossorigin','anonymous');
   l.dataset.src = src;
   // l.setAttribute('src',src);
   if (poster) l.setAttribute('poster',poster);
@@ -122,8 +135,13 @@ aa.mk.av =(src,poster=false,audio=false)=>
   pip_butt.classList.add('pip');
   pip_butt.textContent = 'pip';
   pip_butt.onclick = pip;
+
+  const grab_butt = document.createElement('button');
+  grab_butt.classList.add('grab');
+  grab_butt.textContent = 'grab';
+  grab_butt.onclick = grab;
   
-  trols.append(rewind_butt,mute_butt,pip_butt,url,progressbar);
+  trols.append(rewind_butt,mute_butt,pip_butt,grab_butt,url,progressbar);
   av.append(l,trols);
   return av
 };

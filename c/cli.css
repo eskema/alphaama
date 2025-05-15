@@ -5,7 +5,7 @@
   box-shadow: 0px -1rem 2rem 0 rgb(var(--color-b));
   display: grid;
   grid-template-areas: 
-  "collapse"
+  "butts"
   "l"
   "oto"
   "cli_t";
@@ -18,12 +18,33 @@
   z-index: 9;
 }
 
+.cli_expanded #cli.expanded
+{
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  max-height: 100vh;
+}
+
 #cli_t > strong
 {
   color: red;
 }
 
-#cli_collapse
+#cli > .butts
+{
+  grid-area: butts;
+  display: none;
+  grid-template-areas: "collapse expand";
+  grid-template-columns: 1fr var(--line);
+  margin: 0;
+}
+
+#cli > .butts button
+{
+  text-align: center;
+}
+
+.cli_collapse
 {
   align-self: stretch;
   background: rgb(var(--color-f));
@@ -31,7 +52,6 @@
   border: none;
   color: rgb(var(--color-a));
   cursor: pointer;
-  display:  none;
   font-family: inherit;
   font-size: var(--font-size);
   grid-area: collapse;
@@ -53,9 +73,9 @@
   z-index: 11;
 }
 
-.cli_expanded #cli_collapse
+.cli_expanded #cli > .butts
 {
-  display: block;
+  display: grid;
 }
 
 #cli_t
@@ -96,10 +116,15 @@
   padding: var(--line);
 }
 
+.cli_expanded #cli.expanded #cli_t
+{
+  max-height: unset;
+}
+
 
 @media screen and (min-width: 1025px) 
 {
-  #cli_collapse:hover 
+  .cli_collapse:hover 
   {
     background: rgb(var(--color-no));
   }

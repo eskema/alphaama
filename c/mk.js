@@ -4,10 +4,6 @@ aa.mk.butt_action =(s,con=false,cla='')=>
   con = con||s;
   cla = 'butt plug'+(cla?' '+cla:'');
   let clk =e=>{ aa.cli.add(s) };
-
-  // const butt = aa.mk.l('button',{con,cla,clk});
-  // if (cla) butt.classList.add(cla);
-  // return butt
   return aa.mk.l('button',{con,cla,clk})
 };
 
@@ -23,7 +19,7 @@ aa.mk.item_action =(k,v,s)=>
 
 aa.mk.mention_item =(p,w)=>
 {
-  const l = aa.mk.l('li',{cla:'item mention',bef:p.metadata.name??''});
+  const l = aa.mk.l('li',{cla:'item mention',dat:{before:p.metadata.name??''}});
   let after = (p.petname?p.petname:p.petnames[0])+' '+(p.metadata.nip05??'');
   l.append(
     aa.mk.l('span',{cla:'description',con:after,}),
@@ -52,7 +48,7 @@ aa.mk.mention_item =(p,w)=>
 // makes an action item for otocomplete
 aa.mk.oto_act_item =(o,s)=>
 {
-  const l = aa.mk.l('li',{cla:'item',bef:localStorage.ns});
+  const l = aa.mk.l('li',{cla:'item',dat:{before:localStorage.ns}});
   l.append(aa.mk.l('span',{cla:'val',con:o.action.join(' ')}));
   l.tabIndex = '1';
   if (o.required) l.append(' ',aa.mk.l('span',{cla:'required',con:o.required.join(' ')}));

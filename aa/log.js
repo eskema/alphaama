@@ -23,6 +23,8 @@ aa.log_read =async l=>
 aa.logs_read =async e=>
 {
   let ls = [];
+  let j_a = aa.logs.querySelectorAll('.just_added');
+  for (const i of j_a) i.classList.remove('just_added');
   if (e) 
   {
     let dis = e.target?.classList.contains('is_new') ? e.target 
