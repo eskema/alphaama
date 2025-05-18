@@ -220,10 +220,9 @@ aa.load =async(o={})=>
 // log stuff
 aa.log =(con='',l=false,is_new=true)=>
 {
-  
-  let cla = 'l item'+(is_new?' is_new':'');
-  let clk = aa.logs_read;
-  let app = typeof con==='string'?aa.mk.l('p',{con}):con;
+  const cla = 'l item'+(is_new?' is_new':'');
+  const clk = aa.logs_read;
+  const app = typeof con==='string'?aa.mk.l('p',{con}):con;
   const log = aa.mk.l('li',{cla,clk,app});
   
   if (!l) l = aa.logs;
@@ -268,10 +267,10 @@ aa.reset =async()=>
 };
 
 
-// 
-aa.required =required=>
+// checks if required mods already loaded
+aa.required =mods=>
 {
-  for (const id of required) 
+  for (const id of mods) 
     if (!Object.hasOwn(aa,id) || !aa[id].loaded) return false
   return true
 };

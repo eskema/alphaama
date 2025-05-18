@@ -6,6 +6,7 @@ events notes
 
 */
 
+aa.mk.styles(['/e/e.css']);
 
 aa.e = {};
 
@@ -41,29 +42,30 @@ aa.e.append_to =async(dat,note,tag)=>
 // append note to notes section
 aa.e.append_as_root =l=>
 {
-  const notes = aa.e.l;
   if (!l.classList.contains('rendered'))
   {
     l.querySelector('.replies').removeAttribute('open');
     l.classList.add('root','not_yet');
   }
-  if (!l.parentElement) aa.e.note_observer.observe(l);
 
-  let roots = [...notes.children];
-  let previous = roots.find(i=>l.dataset.stamp > i.dataset.stamp)||null;
+  if (!l.parentElement) aa.e.note_observer.observe(l);
+  
+  const notes = aa.e.l;
+  let previous = [...notes.children]
+  .find(i=>l.dataset.stamp > i.dataset.stamp)||null;
   
   if (l.classList.contains('blank')) notes.append(l);
   else notes.insertBefore(l,previous);
 
-  if (history.state?.view === '#'+l.id && !l.classList.contains('in_view'))
-   setTimeout(()=>{aa.e.view(l)},100);
+  aa.e.view_check(l);
 };
 
 
 // append note to another note as reply
 aa.e.append_as_rep =(note,rep)=>
 {
-  const previous = [...rep.children].find(i=>i.tagName==='ARTICLE' 
+  const previous = [...rep.children]
+  .find(i=>i.tagName==='ARTICLE' 
     && i.dataset.created_at > note.dataset.created_at)||null;
 
   // fastdom.mutate(()=>
@@ -814,6 +816,7 @@ aa.e.quotes_to =async q_id=>
 aa.e.rnd =
 {
   content:[1,9802,30023],
+  emojii:[7],
   encrypted:[4],
   image:[20],
   object:[0],
@@ -827,22 +830,40 @@ aa.e.render =async(l,options)=>
 {
   let dat = aa.db.e[l?.dataset.id];
   if (!dat) return;
-  for (const key in aa.e.rnd)
+  if (l.classList.contains('e_render'))
   {
-    if (aa.e.rnd[key].includes(dat.event.kind))
+    l.classList.remove('e_render');
+    let content = l.querySelector('.content');
+    content.textContent = dat.event.content;
+  }
+  else
+  {
+    for (const key in aa.e.rnd)
     {
-      let fid = 'render_'+key;
-      if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat,options);
+      if (aa.e.rnd[key].includes(dat.event.kind))
+      {
+        let fid = 'render_'+key;
+        if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat,options);
+      }
     }
+    l.classList.add('e_render');
   }
 };
 
 
 // render content as rich text
-aa.e.render_content =async(l,dat,o={})=>
+aa.e.render_content =async(note,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
-  aa.parse.context(l,dat.event,aa.is.trusted(o.trust||p?.score));
+  aa.parse.context(note,dat.event,aa.is.trusted(o.trust||p?.score));
+};
+
+
+// render content as rich text
+aa.e.render_emojii =async(note,dat)=>
+{
+  // let p = await aa.p.author(dat.event.pubkey);
+  aa.parse.emojii(note,dat.event);
 };
 
 
@@ -1039,4 +1060,10 @@ aa.e.view =l=>
   });
 };
 
-aa.mk.styles(['/e/e.css']);
+
+// checks if added element should be in_view
+aa.e.view_check =l=>
+{
+  if (history.state?.view === '#'+l.id && !l.classList.contains('in_view'))
+  setTimeout(()=>{aa.e.view(l)},100);
+}

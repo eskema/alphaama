@@ -1,34 +1,34 @@
 // alphaama websocket worker
 const worker =
 {
+  id:Math.floor(100000+Math.random()*900000),
   requests:[],
   sent:[],
   failures:[],
-  successes:[]
+  successes:[],
 };
+
+
+const wut = 
+{
+  // now in seconds
+  get now(){return Math.floor(Date.now()/1000)},
+  // timeout exponential delay
+  get ils(){return 420*(worker.failures.length+1)}
+}
 
 
 // websocket
 let ws;
 
 
-// now in seconds
-const now =()=> Math.floor(Date.now()/1000);
 
-
-// checks if websocket is ready,
-// if not, add to failures
-// retry and terminate if too many failures
-const check_state =()=>
+// terminate worker
+const aborted =()=>
 {
-  if (ws?.readyState === 1) return true;
-  worker.failures.push(now());
-  if (worker.failures.length > 21)
-  {
-    terminate();
-    return
-  }
-  return true
+  ws = null;
+  worker.terminated = wut.now;
+  postMessage(['aborted',worker])
 };
 
 
@@ -43,6 +43,11 @@ const close_request =request=>
 const connect =async url=>
 {
   if (worker.terminated)
+  {
+    console.log('terminated',worker,url);
+    return
+  }
+
   if (ws?.readyState === 1) return;
 
   if (!worker.url && url) 
@@ -54,49 +59,38 @@ const connect =async url=>
     }
     catch(er)
     {
-      err('invalid url',url);
+      console.log('invalid url',url);
       return
     }
   }
 
   if (!worker.url)
   {
-    err('no url');
+    console.log('no url');
     return
   }
 
-  const abort = setTimeout(check_state,6942);
+  const abort_connect = setTimeout(()=>
+  {aborted()},6999);
 
   ws = new WebSocket(worker.url);
-  ws.onclose = on_close;
-  ws.onerror = on_error;
-  ws.onmessage = on_message;
-  ws.onopen =e=>
+  ws.onerror =e=>{ console.log('error',e) };
+  ws.onclose =e=>
   {
-    clearTimeout(abort);
-    on_open();
+    if (worker.failures.length < 21)
+    {
+      worker.failures.push(wut.now);
+      setTimeout(()=>{connect(url)},wut.times)
+    }
   };
-};
-
-
-// default worker error
-const err =(msg='error',err)=>
-{
-  console.error(`ws ${worker.url}: ${msg}`,err)
-};
-
-
-// on websocket close
-const on_close =e=>
-{
-  retry(connect) 
-};
-
-
-// on websocket error
-const on_error =e=>
-{
-  err('',e) 
+  ws.onmessage = on_message;
+  ws.onopen =()=>
+  {
+    clearTimeout(abort_connect);
+    worker.successes.push(wut.now);
+    process_requests();
+    post_state();
+  }
 };
 
 
@@ -107,20 +101,11 @@ const on_message =e=>
   try { data = JSON.parse(e.data) }
   catch(er)
   { 
-    err('unknown data',er);
+    console.log('unknown data',er);
     return
   }
   if (Array.isArray(data)) postMessage(data);
-  else err('bad data',e.data);
-};
-
-
-// on websocket open
-const on_open =()=>
-{
-  worker.successes.push(now());
-  process_requests();
-  post_state();
+  else console.log('bad data',e.data);
 };
 
 
@@ -131,7 +116,7 @@ onmessage =async e=>
   if (!Array.isArray(data)
   || !data?.length)
   {
-    err('invalid data',data);
+    console.log('invalid data',data);
     return
   }
   switch (data[0].toLowerCase())
@@ -139,7 +124,7 @@ onmessage =async e=>
     case 'open' : await connect(data[1]); break;
     case 'request': process_requests(data[1]); break;
     case 'close' : close_request(data); break;
-    default: err('invalid operation',data)
+    default: console.log('invalid operation',data)
   }
 };
 
@@ -159,27 +144,21 @@ const process_requests =request=>
 };
 
 
-// retry running a function if relay is good
-const retry =(f,dis)=>
-{
-  if (check_state()) setTimeout(()=>{ f(dis) },420*worker.failures.length);
-};
-
-
 // send websocket request 
 const send_request =request=>
 {
   if (ws?.readyState === 1) 
   {
-    try 
-    { 
-      ws.send(request);
-      worker.sent.push(request);
-    }
-    catch(er) {err('could not send',request)}
+    ws.send(request);
+    worker.sent.push(request);
+    post_state()
   }
-  else retry(send_request,request);
-  post_state()
+  else if (!Object.hasOwn(worker,'terminated')
+  && worker.failures < 21)
+  {
+    // try again later
+    setTimeout(()=>{send_request(request)},wut.ils)
+  }
 };
 
 
@@ -187,6 +166,6 @@ const send_request =request=>
 const terminate =()=>
 {
   ws = null;
-  worker.terminated = now();
+  worker.terminated = wut.now;
   postMessage(['terminated',worker])
 };

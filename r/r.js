@@ -411,7 +411,10 @@ aa.r.req =({relays,request,options})=>
     return
   }
   relays = aa.r.validate({relays,request,options});
-  if (relays.length) aa.r.w.postMessage(['request',{relays,request,options}]);
+  if (relays.length)
+  {
+    aa.r.w.postMessage(['request',{relays,request,options}]);
+  }
 };
 
 

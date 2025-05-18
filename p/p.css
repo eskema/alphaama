@@ -98,12 +98,13 @@
 .profile_data > .item 
 {
   background: rgb(var(--color-b));
-  border-bottom: none;
+  /*border-bottom: none;*/
   border-top: 1px solid rgba(var(--color-b),0);
   box-sizing: border-box;
   display: block;
   line-height: 1.5rem;
   margin: 0;
+  overflow-x: unset;
   padding: 0;
 }
 
@@ -111,6 +112,12 @@
 {
   border-bottom: 1px solid rgba(var(--color-b),1);
   border-top: 1px solid rgba(var(--color-b),1);
+}
+
+.profile_data > .item > details
+{
+  overflow: unset;
+  box-sizing: border-box;
 }
 
 .profile_data > .item > details:not([open])
@@ -129,6 +136,9 @@
   padding: 0 var(--padm);
   background: rgb(var(--color-b));
   border-bottom: 1px dotted rgba(var(--color-d),1);
+  position: sticky;
+  top: var(--line);
+  z-index: 2;
 }
 
 .profile_data > .item > details[open] > summary
@@ -332,6 +342,7 @@
     "nip05"
     "luds"
     "website";
+  /*justify-items: stretch;*/
 }
 
 .metadata > *
@@ -435,7 +446,7 @@ img[data-meta="banner"]
   object-fit: cover;
   object-position: 50% 50%;
   padding: 0;
-  width: 100vw;
+  width: 100%;
 }
 
 img[data-meta="picture"] 
@@ -462,6 +473,11 @@ img[data-meta="picture"].expanded
   max-width: unset;
   object-fit: contain;
   z-index: 2;
+}
+
+img[data-meta="picture"].expanded
+{
+  justify-self: left;
 }
 
 p[data-meta="banner"]
@@ -507,8 +523,8 @@ p[data-meta="banner"]
   z-index: 1;
 }
 
-[data-meta="display_name"],
-[data-meta="displayName"]
+[data-meta="display_name"]:not(.empty),
+[data-meta="displayName"]:not(.empty)
 {
   background: rgb(var(--c));
   font-size: var(--font-size-l);
@@ -529,14 +545,14 @@ p[data-meta="banner"]
   align-self: end;
 }
 
-[data-luma="light"] [data-meta="display_name"],
-[data-luma="light"] [data-meta="displayName"]
+[data-luma="light"] [data-meta="display_name"]:not(.empty),
+[data-luma="light"] [data-meta="displayName"]:not(.empty)
 {
   color: rgb(var(--color-dark));
 }
 
-[data-luma="dark"] [data-meta="display_name"],
-[data-luma="dark"] [data-meta="displayName"]
+[data-luma="dark"] [data-meta="display_name"]:not(.empty),
+[data-luma="dark"] [data-meta="displayName"]:not(.empty)
 {
   color: rgb(var(--color-light));
 }

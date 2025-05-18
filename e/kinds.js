@@ -48,25 +48,8 @@ aa.kinds[7] =dat=>
   let note = aa.mk.note(dat);
   aa.p.from_tags(dat.event.tags);
   note.classList.add('tiny');
-  let content = note.querySelector('.content');
-  // let con_t = content.textContent;
 
-  let emoji = dat.event.tags.filter(t=>t[0]==='emoji')[0];
-  if (emoji) 
-  {
-    emoji = aa.is.url(emoji[2])?.href;
-    if (emoji) 
-    {
-      aa.p.get(dat.event.pubkey).then(p=>
-      {
-        if (p && aa.is.trust_x(dat.event.pubkey))
-        {
-          content.textContent = '';
-          content.append(aa.mk.img(emoji));
-        }
-      });
-    }
-  }
+  // aa.parse.emojii(dat,note);
 
   let tag_reply = aa.get.tag_e_last(dat.event.tags);
   if (!tag_reply) tag_reply = aa.get.tag_reply(dat.event.tags);

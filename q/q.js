@@ -140,10 +140,28 @@ aa.q.del =s=>
 //   return {kinds:[parseInt(k)],authors:[p],'#d':[d]}
 // };
 
+
+aa.q.last =(fid,filter)=>
+{
+  if (aa.q.o.ls[fid])
+  {
+    let q_last = aa.parse.j(sessionStorage.q_last);
+    if (!q_last) q_last = {};
+    if (!q_last[fid]) q_last[fid] = [];
+    q_last[fid] = [...q_last[fid].slice(-10),filter];
+    sessionStorage.q_last = JSON.stringify(q_last);
+  }
+};
+
+
 aa.q.last_butts =()=>
 {
   aa.mk.butts_session('q','run');
   aa.mk.butts_session('q','out');
+  
+  if (!sessionStorage.q_last) return;
+  let q_last = aa.parse.j(sessionStorage.q_last);
+  console.log(q_last);
 };
 
 
@@ -282,8 +300,9 @@ aa.q.outbox =(request)=>
   if (outbox?.length)
   {
     let relays = outbox.map(i=>i[0]);
+
     aa.r.add(relays.join(' out,')+' out');
-    let log_relays = [];
+    let relays_list = [];
     for (const r of outbox)
     {
       let url = r[0];
@@ -293,14 +312,14 @@ aa.q.outbox =(request)=>
       let request = ['REQ',fid,f];
       let relays = [url];
       aa.r.demand(request,relays,options);
-      log_relays.push(url+' '+f.authors.length);
+      relays_list.push(url+' '+f.authors.length);
     }
     // note log
     if (!options.eose || options.eose !== 'close')
     {
       let txt = `outbox for ${authors_len} authors`;
       txt += `\nusing ${outbox.length} relays:\n`;
-      txt += log_relays.join(', ');
+      txt += relays_list.join(', ');
       aa.q.log('out',request,txt);
     }
   }
@@ -418,8 +437,8 @@ aa.q.run =async s=>
     const a = task.trim().split(' ');
     let fid,rels,request;
     if (a.length) fid = a.shift();
-    if (fid && aa.q.o.ls.hasOwnProperty(fid)) 
-    { 
+    if (fid && aa.q.o.ls.hasOwnProperty(fid))
+    {
       if (!aa.q.active.run) aa.q.active.run = [];
       if (!aa.q.active.run.includes(fid)) aa.q.active.run.push(fid);
       sessionStorage.q_run = aa.q.active.run;
@@ -543,6 +562,18 @@ aa.q.sub =async s=>
 aa.q.log =(s,request,con)=>
 {
   let [type,fid,filter,options] = request;
+
+  aa.q.last(fid,filter);
+  if (aa.q.o.ls[fid])
+  {
+    let q_last = aa.parse.j(sessionStorage.q_last);
+    if (!q_last) q_last = {};
+    if (!q_last[fid]) q_last[fid] = [];
+    q_last[fid] = [...q_last[fid].slice(-10),filter];
+    sessionStorage.q_last = JSON.stringify(q_last);
+  }
+  
+  
   let id = `q ${fid}`;
   let l = aa.el.get(id);
   if (!l)

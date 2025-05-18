@@ -25,13 +25,6 @@ const a_add =(a=[],b=[])=>
 };
 
 
-// error message
-const err =(msg='error',dis)=>
-{
-  console.error(`relay manager: ${msg}`,dis)
-};
-
-
 // is verifies event cryptographically
 const is_valid_event =event=>
 {
@@ -59,7 +52,7 @@ onmessage =e=>
   if (!Array.isArray(data)
   || !data?.length)
   {
-    err('invalid data',data);
+    console.log('invalid data',data);
     return
   }
   switch (data[0].toLowerCase())
@@ -68,7 +61,7 @@ onmessage =e=>
     case 'relays': manager.relays = data[1]; break;
     case 'request': check_request(data[1]); break;
     case 'close' : close_sub(data[1]); break;
-    default: err('invalid operation',data)
+    default: console.log('invalid operation',data)
   }
 };
 
@@ -79,10 +72,11 @@ const close_sub =id=>
   if (!manager.subs.has(id)) return;
   
   let sub_map = manager.subs.get(id);
+  console.log(sub_map);
   for (const url of sub_map.keys())
   {
     let ids = sub_map.get(url);
-    let relay = hire(url);
+    let relay = hires(url);
     for (const id of ids)
     {
       let sub = relay.subs.get(id);
@@ -100,7 +94,7 @@ const check_request =data=>
   let {relays,request,options} = data;
   if (!relays?.length)
   {
-    err('no relays in request',o)
+    console.log('no relays in request',o)
     return
   }
   for (const url of relays) relay_request({url,request,options});
@@ -110,37 +104,49 @@ const check_request =data=>
 // order to terminate workers
 const terminate =async(worker,url)=>
 {
-  let relay = hire(url);
-  if (!relay) return;
+  let relay = hires(url);
+  if (!relay) 
+  {
+    console.error('!relay',worker,url)
+    return;
+  }
   
-  relay.terminated = true;
+  relay.terminated = worker;
   relay.worker.terminate();
-  console.log(['state',4,url]);
+  console.log(['state',worker,url]);
 };
 
 
 // instantiate relay with worker
-const hire =url=>
+const hires =url=>
 {
   url = is_valid_url(url);
   if (!url)
   {
-    err(`url is invalid`,url);
+    console.log(`url is invalid`,url);
     return
   }
-  let relay = manager.workers.get(url);
-  if (relay) return relay;
-  relay =
+
+  let relay;
+  if (manager.workers.has(url))
   {
-    url,
-    worker:new Worker(manager.worker_src),
-    subs:new Map(),
-    key:NostrTools.generateSecretKey(),
-  };
-  manager.workers.set(url,relay);
-  relay.worker.onerror =e=>{ err(url,e) };
-  relay.worker.onmessage =e=>{ on_message(e.data,url) };
-  relay.worker.postMessage(['open',url]);
+    relay = manager.workers.get(url);
+    if (relay?.terminated) return
+  }
+  else
+  {
+    relay =
+    {
+      url,
+      worker:new Worker(manager.worker_src),
+      subs:new Map(),
+      key:NostrTools.generateSecretKey(),
+    };
+    manager.workers.set(url,relay);
+    relay.worker.onerror =e=>{ console.log(url,e) };
+    relay.worker.onmessage =e=>{ on_message(e.data,url) };
+    relay.worker.postMessage(['open',url]);
+  }
   return relay
 };
 
@@ -168,6 +174,7 @@ const on_message =(a,url)=>
     case 'event': on_event(a,url); break;
     case 'ok': on_ok(a,url); break;
     case 'state': on_state(a,url); break;
+    case 'aborted':
     case 'terminated': terminate(a[1],url); break;
     default:postMessage([...a,url])
   }
@@ -177,7 +184,7 @@ const on_message =(a,url)=>
 // relay worker eose
 const on_eose =async(id,url)=>
 {
-  let relay = hire(url);
+  let relay = hires(url);
   
   let sub = relay.subs.get(id);
   if (!sub) return;
@@ -203,7 +210,7 @@ const submap =(id,url)=>
   let sub_map = manager.subs.get(id);
 
     let ids = sub_map.get(url);
-    let relay = hire(url);
+    let relay = hires(url);
     for (const id of ids)
     {
       let sub = relay.subs.get(id);
@@ -217,7 +224,7 @@ const submap =(id,url)=>
 // relay worker event
 const on_event =async(a,url)=>
 {
-  let relay = hire(url);
+  let relay = hires(url);
   let [s,sub_id,event] = a;
   
   let new_data;
@@ -278,11 +285,11 @@ const on_auth =async(challenge,url)=>
 {
   if (!challenge)
   {
-    err('auth: no challenge')
+    console.log('auth: no challenge')
     return;
   }
   
-  let relay = hire(url);
+  let relay = hires(url);
   if (!relay) return;
   relay.challenge = challenge;
 
@@ -298,7 +305,7 @@ const on_auth =async(challenge,url)=>
 
 const on_state =async([s,state,worker],url)=>
 {
-  let subs = hire(url)?.subs;
+  let subs = hires(url)?.subs;
   postMessage([s,{state,...worker,subs,url}]);
 };
 
@@ -306,16 +313,16 @@ const on_state =async([s,state,worker],url)=>
 // post request to relay workers
 const relay_request =({url,request,options})=>
 {
-  let relay = hire(url);
+  let relay = hires(url);
   if (!relay)
   {
-    err('relay is invalid',url);
+    console.log('relay is invalid',url);
     return
   }
 
   if (!request?.length)
   {
-    err('invalid request');
+    console.log('invalid request');
     return
   }
 

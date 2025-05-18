@@ -67,7 +67,12 @@ aa.p.author =async pubkey=>
 // get a name for display
 aa.p.author_name =p=>
 {
-  return p.metadata?.name || p.metadata?.display_name || p.metadata?.displayName || p.npub.slice(0,12);
+  return p.metadata?.name 
+  || p.petname
+  || p.petnames[0]
+  || p.metadata?.display_name 
+  || p.metadata?.nip05 
+  || p.npub.slice(0,12);
 };
 
 
@@ -366,10 +371,10 @@ aa.p.link_data =p=>
 // update link
 aa.p.link_data_upd =async(l,o)=>
 {
+  let name = l.querySelector('.name');
   fastdom.mutate(()=>
   {
     // name
-    let name = l.querySelector('.name');
     if (name.textContent !== o.name) name.textContent = o.name;
     if (!name.childNodes.length) name.classList.add('empty');
     else name.classList.remove('empty');
@@ -378,16 +383,16 @@ aa.p.link_data_upd =async(l,o)=>
     // picture
     aa.p.link_img(l,o.src);
     // nip05
-    if (o.nip05) 
+    if (o.nip05)
     {
-      l.dataset.nip05 = o.nip05;
-      name.dataset.nip05 = o.nip05;
-      if (o.verified) 
+      for (const dis of [l,name])
       {
-        l.dataset.verified = o.verified[0];
-        l.dataset.verified_on = o.verified[1];
-        name.dataset.verified = o.verified[0];
-        name.dataset.verified_on = o.verified[1];
+        dis.dataset.nip05 = o.nip05;
+        if (o.verified)
+        {
+          dis.dataset.verified = o.verified[0];
+          dis.dataset.verified_on = o.verified[1];
+        }
       }
     }
     l.classList.add(...o.class_add);
@@ -403,7 +408,7 @@ aa.p.link_img =(l,src=false)=>
   let pic = l.querySelector('img');
   if (src)
   {
-    if (!pic) 
+    if (!pic)
     {
       pic = aa.mk.l('img',{cla:'picture'});
       pic.setAttribute('loading','lazy');
@@ -411,8 +416,8 @@ aa.p.link_img =(l,src=false)=>
       l.classList.add('has-picture');
     }
     if (!pic.src||pic.src!==src) pic.src = src;
-  } 
-  else if (pic) 
+  }
+  else if (pic)
   {
     l.removeChild(pic);
     l.classList.remove('has-picture');
@@ -425,21 +430,6 @@ aa.p.links_upd =async p=>
 {
   let o = aa.p.data(p,1);
   for (const i of o.a) aa.p.link_data_upd(i,o.data);
-
-  // let options = aa.temp.p_link.find(i=>i.pubkey === p.pubkey);
-  // if (options)
-  // {
-  //   options.data = aa.p.link_data(p);
-  //   setTimeout(()=>
-  //   {
-  //     for (const i of options.a) aa.p.link_data_upd(i,options.data);
-  //   },200);
-  // }
-
-  // const options = aa.p.link_data(p);
-  // const a = aa.temp.printed.filter(i=>i.dataset.pubkey === p.pubkey)
-  // .map(i=>i.querySelector('.by .author'));
-  // for (const l of a) aa.p.link_data_upd(l,options);  
 };
 
 

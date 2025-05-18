@@ -45,3 +45,27 @@ aa.parse.hashtag =match=>
     dat:{label:match[0].slice(1).toLowerCase()}
   })
 };
+
+
+aa.parse.emojii =async(note,event)=>
+{
+  let content = note.querySelector('.content');
+  let emoji = event.tags.find(t=>t[0]==='emoji');
+  if (emoji) 
+  {
+    emoji = aa.is.url(emoji[2])?.href;
+    if (emoji) 
+    {
+      aa.p.get(event.pubkey).then(p=>
+      {
+        if (p && aa.is.trust_x(event.pubkey))
+        {
+          let emojii = aa.mk.img(emoji);
+          emojii.classList.add('emojii');
+          content.textContent = '';
+          content.append(emojii);
+        }
+      });
+    }
+  }
+};

@@ -66,13 +66,13 @@ aa.parse.content =(s,trusted)=>
 
 
 // parse JSON
-aa.parse.j =son=>
+aa.parse.j =(son='')=>
 {
   let o;
   son = son.trim();
   if(son.length > 2)
   {
-    try{ o =JSON.parse(son) }
+    try{ o = JSON.parse(son) }
     catch(er){ console.log('aa.parse.j error',son) }
   }
   return o
