@@ -197,6 +197,7 @@ aa.r.found =async({url,request,options,reason})=>
 {
   if (!url) return;
   let id = 'notice_'+aa.fx.an(url);
+  if (!aa.el.has('relays_add')) aa.el.set('relays_add',new Map());
   if (!aa.temp.relays_add) aa.temp.relays_add = new Map();
   if (aa.temp.relays_add.get(id)) return;
 
@@ -252,10 +253,7 @@ aa.r.found =async({url,request,options,reason})=>
   }
   
   l.append(l_notice);
-  // aa.log(l);
 
-  // let l = aa.mod.servers_add_l('relays');
-  // l.lastChild.prepend(l_notice);
   let log = l.parentElement;
   if (log) aa.logs.append(log);
   else aa.log(l);
@@ -265,7 +263,7 @@ aa.r.found =async({url,request,options,reason})=>
 // force close relay connection
 aa.r.force_close =(a=[])=>
 {
-  aa.r.w.postMessage(['terminate',a])
+  for (const url of a) aa.r.w.postMessage(['terminate',{url}])
 };
 
 
@@ -560,7 +558,7 @@ aa.r.state =([s,relay])=>
     fastdom.mutate(()=>
     {
       l.dataset.state = relay.state;
-      l.dataset.ratio = relay.failures - relay.successes;
+      l.dataset.ratio = relay.failures.length - relay.successes.length;
       l.dataset.subs = aa.r.subs_open(relay.subs);
       // l.parentElement?.prepend(l);
     })

@@ -110,7 +110,7 @@ aa.kinds[10002] =dat=>
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
-      let sets = ['k10002','auth'];
+      let sets = ['k10002'];
       let tags = dat.event.tags.filter(i=>i[0]==='r');
       for (const tag of tags)
       {
@@ -124,6 +124,7 @@ aa.kinds[10002] =dat=>
         else if (permission === 'write') 
           aa.fx.a_add(relay.sets,['write']);
         else aa.fx.a_add(relay.sets,['read','write']);
+        if (aa.is.u(dat.event.pubkey)) aa.fx.a_add(relay.sets,['auth']);
       }
       // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
       aa.p.relays_add(relays,p);

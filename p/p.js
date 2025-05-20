@@ -318,9 +318,7 @@ aa.p.link_data =p=>
 {
   let o = {pubkey:p.pubkey,class_add:[],class_rm:[],src:false};
   o.name = aa.p.author_name(p);
-  let petname = p.petname.length ? p.petname 
-  : p.petnames.length ? p.petnames[0] 
-  : false;
+  let petname = p.petname || p.petnames[0];
   if (petname) o.petname = petname;
   if (p.metadata)
   {
@@ -330,7 +328,7 @@ aa.p.link_data =p=>
     {
       let url = aa.is.url(p.metadata.picture.trim())?.href;
       if (url) o.src = url;
-    } 
+    }
   }
   else o.miss = true;
 

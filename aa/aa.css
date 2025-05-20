@@ -970,7 +970,7 @@ html:not(.cli_expanded) .l:not(.is_new),
 
 #mods .mod > summary
 {
-  background: rgb(var(--color-a));
+  background: rgba(var(--color-a),.8);
   font-size: var(--font-size-m);
   padding: var(--pad);
 }
@@ -1301,9 +1301,8 @@ html:not(.cli_expanded) .l:not(.is_new),
   display: grid;
   grid-gap: 0 var(--pad);
   grid-auto-flow: column;
-  /*grid-template-columns: auto;*/
   justify-content: start;
-  /*justify-items: start;*/
+  padding: 0 var(--padm);
 }
 
 .notice .title

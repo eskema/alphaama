@@ -36,8 +36,9 @@ const is_valid_event =event=>
 
 
 // converts string to URL and returns it or false
-const is_valid_url =s=>
+const is_valid_url =(s='')=>
 {
+  if (!s) return;
   let url;
   try { url = new URL(s) }
   catch(er) { console.error(s) }
@@ -102,18 +103,18 @@ const check_request =data=>
 
 
 // order to terminate workers
-const terminate =async(worker,url)=>
+const terminate =async o=>
 {
-  let relay = hires(url);
+  let relay = hires(o.url);
   if (!relay) 
   {
-    console.error('!relay',worker,url)
+    console.error('!relay',o)
     return;
   }
   
-  relay.terminated = worker;
+  relay.terminated = o;
   relay.worker.terminate();
-  console.log(['state',worker,url]);
+  console.log(['state',o]);
 };
 
 
