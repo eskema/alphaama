@@ -144,7 +144,7 @@ const hires =url=>
       key:NostrTools.generateSecretKey(),
     };
     manager.workers.set(url,relay);
-    relay.worker.onerror =e=>{ console.log(url,e) };
+    relay.worker.onerror =e=>{ console.log('manager: error',url,e) };
     relay.worker.onmessage =e=>{ on_message(e.data,url) };
     relay.worker.postMessage(['open',url]);
   }

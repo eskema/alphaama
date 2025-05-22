@@ -129,6 +129,8 @@
 {
   background: rgb(var(--color-b));
   border: var(--padm) solid rgba(var(--c));
+  border: var(--padm) solid rgba(var(--c));
+  border-width: 1px 1px var(--padm) var(--padm);
 }
 
 .profile_data > .item > details > summary
@@ -429,7 +431,6 @@
 [data-meta="banner"]
 {
   grid-area: picture;
-  user-select: none;
 }
 
 [data-meta="picture"] 
@@ -446,6 +447,7 @@ img[data-meta="banner"]
   object-fit: cover;
   object-position: 50% 50%;
   padding: 0;
+  user-select: none;
   width: 100%;
 }
 
@@ -461,6 +463,7 @@ img[data-meta="picture"]
   object-fit: contain;
   object-position: 0% 0%;
   padding: var(--pad);
+  user-select: none;
   z-index: 1;
 }
 

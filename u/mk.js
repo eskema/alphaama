@@ -93,6 +93,7 @@ aa.mk.setup_butt =()=>
 {
   let setup_butt = aa.mk.l('p',
   {
+    con:"let's get ",
     id:'u_setup',
     app:aa.mk.butt_action('u setup')
   });

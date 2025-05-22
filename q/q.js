@@ -57,7 +57,7 @@ aa.q =
 
 
 // add filter
-aa.q.add =str=>
+aa.q.add =(str='',silent)=>
 {
   let [k,s] = str.split(aa.fx.regex.fw);
   k = aa.fx.an(k);
@@ -68,17 +68,17 @@ aa.q.add =str=>
     return ''
   }
   let mod = aa.q;
-  let log = k+' ';
+  let con = `${localStorage.ns} ${mod.def.id} add ${k} `;
   let filter = mod.o.ls[k];
   let is_new;
   let changed;
 
   if (filter)
   {
-    if (filter.v === s) log += '=== is the same';
+    if (filter.v === s) con += '=== is the same';
     else
     {
-      log += filter.v+' > '+s;
+      con += filter.v+' > '+s;
       filter.v = s;
       changed = true;
     }
@@ -86,7 +86,7 @@ aa.q.add =str=>
   else
   {
     mod.o.ls[k] = {v:s};
-    log += mod.o.ls[k].v;
+    con += mod.o.ls[k].v;
     changed = true;
     is_new = true;
   }
@@ -94,14 +94,20 @@ aa.q.add =str=>
   {
     aa.mod.save(mod);
     aa.mod.ui(mod,k);
-  } 
-  let q_add = aa.temp.q_add;
-  if (!q_add) 
-  {
-    q_add = aa.temp.q_add = aa.mk.details('q add …');
-    aa.log(q_add);
   }
-  q_add.append(aa.mk.l('p',{con:log}))
+  // let q_add = aa.temp.q_add;
+  // if (!q_add) 
+  // {
+  //   q_add = aa.temp.q_add = aa.mk.details('q add …');
+  //   aa.log(q_add);
+  // }
+  // q_add.append(aa.mk.l('p',{con}))
+  if (!silent)
+  {
+    let l = aa.mk.l('p',{con});
+    aa.log(l);
+    aa.fx.scroll(l);
+  }
   return k
 };
 
@@ -422,7 +428,7 @@ aa.q.reset =()=>
   for (const key of keys)
   {
     const string_filter = JSON.stringify(aa.q.ls[key]);
-    aa.q.add(`${key} ${string_filter}`);
+    aa.q.add(`${key} ${string_filter}`,1);
   }
 };
 
@@ -520,7 +526,7 @@ aa.clk.q_stuff_run_b =e=>
 // fetch basic stuff to get things started
 aa.q.stuff =async()=>
 {
-  aa.q.reset();  
+  aa.q.reset();
   aa.log(aa.mk.butt_clk(['-> query u stuff','plug','q_stuff_run_a']));
 };
 
@@ -572,13 +578,12 @@ aa.q.log =(s,request,con)=>
     q_last[fid] = [...q_last[fid].slice(-10),filter];
     sessionStorage.q_last = JSON.stringify(q_last);
   }
-  
-  
-  let id = `q ${fid}`;
+
+  let id = `["${type.toUpperCase()}","${fid}"]`;
   let l = aa.el.get(id);
   if (!l)
   {
-    l = aa.mk.details(id,0,0,'base');
+    l = aa.mk.details(id,0,1,'base');
     let close_butt = aa.mk.butt_action(`${aa.q.def.id} close ${fid}`);
     close_butt.addEventListener('click',aa.clk.lp_rm);
     l.append(close_butt);
@@ -586,7 +591,8 @@ aa.q.log =(s,request,con)=>
     aa.log(l);
   }
   else aa.logs.append(l.parentElement);
-  let dis = aa.mk.details(s,0,0,'base');
+  
+  let dis = aa.mk.details(s,0,1,'base');
   dis.append(
     aa.mk.l('p',{con}),' ',
     aa.mk.l('p',{app:aa.mk.ls({ls:{filter,options}})})

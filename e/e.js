@@ -112,6 +112,7 @@ aa.e.append_check =(dat,note,tag)=>
   }
   
   reply = aa.temp.printed.find(i=>i.dataset.id === reply_id);
+  
   if (!reply)
   {
     aa.e.orphan(dat,note,tag);

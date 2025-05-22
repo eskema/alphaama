@@ -1,21 +1,23 @@
 // alphaama websocket worker
 const worker =
 {
-  id:Math.floor(100000+Math.random()*900000),
   requests:[],
   sent:[],
   successes:[],
   failures:[],
-  aborted:0,
+  errors:[],
+  aborts:[],
+  messages:[],
 };
 
 
-const wut = 
+// get stuff
+const get = 
 {
   // now in seconds
   get now(){return Math.floor(Date.now()/1000)},
   // timeout exponential delay
-  get ils(){return 420*(worker.failures.length+1)}
+  get times(){return 420*(worker.failures.length+1)}
 }
 
 
@@ -28,7 +30,7 @@ let ws;
 const abort =()=>
 {
   console.log('aborted',worker);
-  worker.aborted++;
+  worker.aborted.push(get.now);
   if (worker.aborted > 3) terminate('aborted')
   else setTimeout(connect,500)
 };
@@ -42,7 +44,7 @@ const close_request =request=>
 
 
 // open websocket connection
-const connect =async url=>
+const connect =url=>
 {
   if (worker.terminated)
   {
@@ -58,10 +60,11 @@ const connect =async url=>
     { 
       url = new URL(url)?.href;
       worker.url = url;
+      worker.id = `${url}/${Math.floor(100000+Math.random()*900000)}`;
     }
     catch(er)
     {
-      console.log('invalid url',url);
+      console.log('ws invalid url',url);
       return
     }
   }
@@ -77,23 +80,23 @@ const connect =async url=>
   ws = new WebSocket(worker.url);
   ws.onerror =e=>
   {
-    worker.failures.push(wut.now);
-    console.log('error',e)
+    worker.errors.push(get.now);
+    // console.log('error',worker)
   };
   ws.onclose =e=>
   {
-    console.log('ws closed',worker.url);
+    // console.log('ws closed',worker);
     if (worker.failures.length < 21)
     {
-      worker.failures.push(wut.now);
-      setTimeout(connect,wut.times)
+      worker.failures.push(get.now);
+      setTimeout(connect,get.times)
     }
   };
   ws.onmessage = on_message;
   ws.onopen =()=>
   {
     // clearTimeout(abort_connect);
-    worker.successes.push(wut.now);
+    worker.successes.push(get.now);
     // delay to give time for auth
     setTimeout(process_requests,500);
     post_state();
@@ -104,6 +107,7 @@ const connect =async url=>
 // on websocket message
 const on_message =e=>
 {
+  worker.messages.push(e.data);
   let data;
   try { data = JSON.parse(e.data) }
   catch(er)
@@ -112,7 +116,7 @@ const on_message =e=>
     return
   }
   if (Array.isArray(data)) postMessage(data);
-  else console.log('bad data',e.data);
+  else console.log('bad data from ws',e.data);
 };
 
 
@@ -146,7 +150,11 @@ const post_state =()=>
 // add request to requests and processes them all
 const process_requests =request=>
 {
-  if (request) worker.requests.push(request);
+  if (request) 
+  {
+    // console.log(worker.requests);
+    worker.requests.push(request);
+  }
   while (worker.requests.length) send_request(worker.requests.shift())
 };
 
@@ -164,7 +172,7 @@ const send_request =request=>
   && worker.failures < 21)
   {
     // try again later
-    setTimeout(()=>{send_request(request)},wut.ils)
+    setTimeout(()=>{send_request(request)},get.times)
     return
   }
 };
@@ -174,6 +182,6 @@ const send_request =request=>
 const terminate =(s='terminated')=>
 {
   ws = null;
-  worker.terminated = wut.now;
+  worker.terminated = get.now;
   postMessage([s,worker])
 };

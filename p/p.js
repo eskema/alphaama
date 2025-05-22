@@ -79,17 +79,13 @@ aa.p.author_name =p=>
 // load author list from db into memory
 aa.p.authors =async a=>
 {
-  const p_to_get = [];
-  for (const x of a) if (!aa.db.p[x]) p_to_get.push(x);
-  if (p_to_get.length)
+
+  let p_stored = await aa.p.get_authors(a);
+  for (const p of p_stored)
   {
-    let p_stored = await aa.db.ops('idb',{get_a:{store:'authors',a:p_to_get}});
-    for (const p of p_stored) 
-    {
-      aa.db.p[p.pubkey] = p;
-      aa.p.links_upd(p)
-    }
-  } 
+    aa.db.p[p.pubkey] = p;
+    aa.p.links_upd(p)
+  }
 };
 
 
@@ -253,6 +249,59 @@ aa.p.follows =async(s='')=>
 };
 
 
+aa.p.follows_upd =event=>
+{
+  const is_u = aa.is.u(event.pubkey);
+  const a_p = [];
+  for (const tag of event.tags)
+  {
+    if (!aa.is.tag_p(tag)) continue;
+
+    const [type,pubkey,relay,petname] = tag;
+
+    let upd;
+    let p = aa.db.p[pubkey];
+    if (!p)
+    {
+      p = aa.db.p[pubkey] = aa.p.p(pubkey);
+      upd = true;
+    }
+
+    if (relay)
+    {
+      let url = aa.is.url(relay)?.href;
+      if (url && is_u)
+      {
+        if (!p.relays[url]) p.relays[url] = {sets:[]};
+        if (aa.fx.a_add(p.relays[url].sets,['hint'])) upd = true;
+      }
+      // if (is_u && p.relay !== relay) { p.relay = relay; upd = true; }
+    }
+
+    if (petname)
+    {
+      if (!p.petnames) p.petnames = [];
+      if (aa.fx.a_add(p.petnames,[petname])) upd = true;
+      if (is_u && p.petname !== petname) { p.petname = petname; upd = true; }
+    }
+
+    if (aa.fx.a_add(p.followers,[event.pubkey])) upd = true;
+    
+    if (is_u)
+    {
+      if (p.score === 0) 
+      { 
+        p.score = 5; 
+        upd = true 
+      }
+      if (aa.fx.a_add(p.sets,['k3'])) upd = true;
+    }
+    if (upd) a_p.push(p);
+  }
+  return a_p
+};
+
+
 // gets all p tags from array 
 // and checks if metadata is available or if it needs to fetch it
 aa.p.from_tags =async tags=>
@@ -313,6 +362,22 @@ aa.p.get =async pubkey=>
 };
 
 
+// load author list from db into memory
+aa.p.get_authors =async pubkeys=>
+{
+  const p_to_get = new Set();
+  for (const x of pubkeys) if (!aa.db.p[x]) p_to_get.add(x);
+  if (p_to_get.size)
+  {
+    const store = 'authors';
+    const a = [...p_to_get.values()];
+    let p_ls = await aa.db.ops('idb',{get_a:{store,a}});
+    return p_ls
+  }
+  return []
+};
+
+
 // returns link data from p
 aa.p.link_data =p=>
 {
@@ -370,19 +435,26 @@ aa.p.link_data =p=>
 aa.p.link_data_upd =async(l,o)=>
 {
   let name = l.querySelector('.name');
+  let title = `\n${o.pubkey}\n${l.href.split('#')[1]}\n`;
   fastdom.mutate(()=>
   {
     // name
     if (name.textContent !== o.name) name.textContent = o.name;
     if (!name.childNodes.length) name.classList.add('empty');
     else name.classList.remove('empty');
+    title += o.name;
     // petname
-    if (o.petname) name.dataset.petname = o.petname;
+    if (o.petname) 
+    {
+      name.dataset.petname = o.petname;
+      title += ` (${o.petname})`
+    }
     // picture
     aa.p.link_img(l,o.src);
     // nip05
     if (o.nip05)
     {
+      title += `\n${o.nip05} (${o.verified})`;
       for (const dis of [l,name])
       {
         dis.dataset.nip05 = o.nip05;
@@ -392,7 +464,10 @@ aa.p.link_data_upd =async(l,o)=>
           dis.dataset.verified_on = o.verified[1];
         }
       }
+      
     }
+
+    name.title = title;
     l.classList.add(...o.class_add);
     l.classList.remove(...o.class_rm);
     l.dataset.followers = o.followers;
@@ -408,7 +483,7 @@ aa.p.link_img =(l,src=false)=>
   {
     if (!pic)
     {
-      pic = aa.mk.l('img',{cla:'picture'});
+      pic = aa.mk.l('img',{cla:'img'});
       pic.setAttribute('loading','lazy');
       l.append(pic);
       l.classList.add('has-picture');
@@ -650,75 +725,18 @@ aa.p.oto =text=>
 
 
 // process all p tags from kind-3 event
-aa.p.process_k3_tags =async(event)=>
+aa.p.process_k3_tags =async event=>
 {
   const x = event.pubkey;
   const is_u = aa.is.u(x);
   let ep = await aa.p.get(x);
-  const old_bff = [...ep.follows];
-  // let new_follows = [];
-      
+  let old_follows;
+  if (ep?.follows?.length) old_follows = [...ep.follows];
   ep.follows = event.tags.filter(aa.is.tag_p).map(i=>i[1]);
-  await aa.p.authors(ep.follows);
-
-  // const to_upd = [];
-  follows_to_upd =event=>
-  {
-    const is_u = aa.is.u(event.pubkey);
-    const a_upd = [];
-    for (const tag of event.tags)
-    {
-      if (!aa.is.tag_p(tag)) continue;
-
-      const pubkey = tag[1];
-      const relay = tag[2];
-      const petname = tag[3];
-
-      let upd;
-      let p = aa.db.p[pubkey];
-      if (!p) 
-      {
-        p = aa.db.p[pubkey] = aa.p.p(pubkey);
-        upd = true;
-      }
-
-      if (relay)
-      {
-        let url = aa.is.url(relay)?.href;
-        if (url)
-        {
-          if (!p.relays[url]) p.relays[url] = {sets:[]};
-          if (aa.fx.a_add(p.relays[url].sets,['hint'])) upd = true;
-        }
-        if (is_u && p.relay !== relay) { p.relay = relay; upd = true; }
-      }
-
-      if (petname)
-      {
-        if (!p.petnames) p.petnames = [];
-        if (aa.fx.a_add(p.petnames,[petname])) upd = true;
-        if (is_u && p.petname !== petname) { p.petname = petname; upd = true; }
-      }
-
-      if (aa.fx.a_add(p.followers,[event.pubkey])) upd = true;
-      
-      if (is_u)
-      {
-        if (p.score === 0) 
-        { 
-          p.score = 5; 
-          upd = true 
-        }
-        if (aa.fx.a_add(p.sets,['k3'])) upd = true;
-      }
-      if (upd) a_upd.push(p);
-    }
-    return a_upd
-  };
-
-  let to_upd = follows_to_upd(event);
+  let p_ls = await aa.p.get_authors(ep.follows);
+  for (const p of p_ls) aa.db.p[p.pubkey] = p;
+  let to_upd = aa.p.follows_upd(event);
   to_upd.push(ep);
-
   setTimeout(()=>{for (const p of to_upd) aa.p.save(p)},200);
   if (is_u) aa.p.load_profiles(ep.follows);
 };

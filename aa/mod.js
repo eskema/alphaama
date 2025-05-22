@@ -78,7 +78,7 @@ aa.mod.save =async mod=>
 };
 
 
-aa.mod.servers_add_l =cla=>
+aa.mod.servers_add_details =cla=>
 {
   // let id = 'servers_add_'+cla;
   let l = aa.el.get(cla);
@@ -106,8 +106,8 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
   let haz;
   for (const i of as) 
   {
-    let a = i.trim().split(' ');
-    let url_string = a.shift().trim();
+    let a = i.trim().split(' ').map(n=>n.trim());
+    let url_string = a.shift();
     const url = aa.is.url(url_string)?.href;
     if (!url)
     {
@@ -136,6 +136,10 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
       aa.fx.a_add(valid,[url]);
       // con = `\nadded: ${url} ${sets}`;
     }
+    
+    let con = `${localStorage.ns} ${mod.def.id} add ${url} ${a.join(' ')}`;
+    dis = aa.mk.l('p',{con});
+    aa.log(dis)
     // ul.prepend(aa.mk.l('li',{con}))
   }
   
@@ -143,18 +147,23 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
   
   if (haz)
   {
-    let l = aa.mod.servers_add_l(cla);
-    let log = l.parentElement;
-    if (log) aa.logs.append(log);
-    else aa.log(l)
-
-    for (const url of [...off,...valid])
-    {
-      let li = l.querySelector(`[data-id="${url}"]`);
-      if (!li) li = aa.mk.l('p',{con:`${url} ${mod.o.ls[url].sets.join(' ')}`})
-      l.append(li);
-    }
+    // let l = aa.mod.servers_add_details(cla);
+    // let log = l.parentElement;
+    // if (log) aa.logs.append(log);
+    // else aa.log(l)
     aa.mod.save(mod);
+    // let dis;
+    // for (const url of [...off,...valid])
+    // {
+    //   let sets = mod.o.ls[url].sets.join(' ');
+    //   let con = `${localStorage.ns} ${mod.def.id} add ${url} ${sets}`;
+    //   dis = aa.mk.l('p',{con});
+    //   aa.log(dis)
+    //   let li = l.querySelector(`[data-id="${url}"]`);
+    //   if (!li) li = aa.mk.l('p',{con:`${url} ${mod.o.ls[url].sets.join(' ')}`})
+    //   l.append(li);
+    // }
+    // aa.fx.scroll(dis)
   }
   return [valid,invalid,off]
 };
@@ -186,8 +195,8 @@ aa.mod.setrm =(mod,s)=>
   {
     for (const i of as) 
     {
-      let a = i.trim().split(' ');
-      let url_string = a.shift().trim();
+      let a = i.trim().split(' ').map(n=>n.trim());
+      let url_string = a.shift();
       const url = aa.is.url(url_string)?.href;
       const server = mod.o.ls[url];
       if (!server) return;

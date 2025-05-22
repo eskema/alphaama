@@ -441,7 +441,7 @@ img:not([src]) {
   background-repeat: no-repeat;
 }
 
-.picture
+.img
 {
   height: var(--size);
   object-fit: cover;
@@ -766,9 +766,11 @@ img:not([src]) {
 .l::before
 {
   align-content: start;
-  content: counter(log) "";
+  content: counter(log) "·";
   counter-increment: log;
   display: grid;
+  font-size: var(--font-size-s);
+  line-height: 1.32rem;
   margin-left: var(--pad);
   margin-right: var(--padm);
   opacity: .6;
@@ -805,7 +807,7 @@ img:not([src]) {
 {
   background: rgb(var(--color-b));
   border: var(--padm) solid rgba(var(--color-d));
-  /*padding-bottom: var(--padm);*/
+  border-width: 1px 1px var(--padm) var(--padm);
 }
 
 /*.l details[open]::after
@@ -840,7 +842,7 @@ img:not([src]) {
 .l details[open] > p,
 .l details[open] > button
 {
-  margin: 0 var(--padm);
+  margin: var(--padm);
 }
 
 .l > .list > li
@@ -892,10 +894,16 @@ img:not([src]) {
 html:not(.cli_expanded) .l.is_new
 {
   margin-left: 0;
-  max-height: var(--line);
+  max-height: calc(var(--font-size)*1.5);
+  overflow-y: scroll;
   padding-left: 0;
   position: absolute;
   transform: translateX(var(--pad-l)) translateY(calc(var(--line)*-1));
+}
+
+html:not(.cli_expanded) .l.is_new summary
+{
+  top: 0;
 }
 
 html:not(.cli_expanded) .l.is_new::before

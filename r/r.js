@@ -9,7 +9,7 @@ relays
 */
 
 
-aa.r = 
+aa.r =
 {
   active:{},
   def:{id:'r',ls:{},r:'read',w:'write'},
@@ -23,7 +23,7 @@ aa.r.add =s=>
 {
   let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relays');
   for (const url of off) aa.r.force_close([url]);
-  aa.r.w.postMessage(['relays',aa.r.o.ls]);
+  aa.r.manager.postMessage(['relays',aa.r.o.ls]);
 };
 
 
@@ -38,11 +38,13 @@ aa.r.add_from_o =relays=>
 
 
 // authenticate to relay with main keys
-aa.r.auth =async([auth,event,relay])=> 
+aa.r.auth =async a=> 
 {
+  console.log(a);
+  let [auth,event,relay] = a;
   event.id = aa.fx.hash(event);
   signed = await aa.u.sign(event);
-  if (signed) aa.r.w.postMessage(['q',{relays:[relay],request:['AUTH',event]}]);
+  if (signed) aa.r.manager.postMessage(['q',{relays:[relay],request:['AUTH',event]}]);
 };
 
 
@@ -104,7 +106,7 @@ aa.r.common =(a=[],sets=[])=>
 // close relay connection
 aa.r.close =id=>
 {
-  aa.r.w.postMessage(['close',id]);
+  aa.r.manager.postMessage(['close',id]);
 };
 
 
@@ -169,26 +171,27 @@ aa.r.demand =(request,relays,options)=>
 };
 
 
+// deprecated
 // add relays from extension (nip7)
-aa.r.ext =async()=>
-{
-  return new Promise(resolve=>
-  {
-    if (window.nostr) 
-    {
-      window.nostr.getRelays().then(r=>
-      {
-        aa.r.add_from_o(aa.r.from_o(r,['ext']));
-        resolve(Object.keys(r));
-      });
-    }
-    else 
-    {
-      aa.log('no extension found, make sure it is enabled.');
-      resolve([]);
-    }
-  });
-};
+// aa.r.ext =async()=>
+// {
+//   return new Promise(resolve=>
+//   {
+//     if (window.nostr) 
+//     {
+//       window.nostr.getRelays().then(r=>
+//       {
+//         aa.r.add_from_o(aa.r.from_o(r,['ext']));
+//         resolve(Object.keys(r));
+//       });
+//     }
+//     else 
+//     {
+//       aa.log('no extension found, make sure it is enabled.');
+//       resolve([]);
+//     }
+//   });
+// };
 
 
 
@@ -218,7 +221,7 @@ aa.r.found =async({url,request,options,reason})=>
   let hint ={con:'hint',cla:'yes',exe:e=>
     {
       aa.r.add(`${url} hint`);
-      if (request) aa.r.w.postMessage(dis);
+      if (request) aa.r.manager.postMessage(dis);
       // aa.r.c_on(url,opts);
       cleanup(e);
     }
@@ -234,7 +237,7 @@ aa.r.found =async({url,request,options,reason})=>
   let other ={con:'other',cla:'maybe',exe:e=>
     {
       aa.r.add(url);
-      if (request) aa.r.w.postMessage(dis);
+      if (request) aa.r.manager.postMessage(dis);
       // aa.r.c_on(url,opts);
       aa.cli.add(title);
       cleanup(e);
@@ -263,7 +266,7 @@ aa.r.found =async({url,request,options,reason})=>
 // force close relay connection
 aa.r.force_close =(a=[])=>
 {
-  for (const url of a) aa.r.w.postMessage(['terminate',{url}])
+  for (const url of a) aa.r.manager.postMessage(['terminate',{url}])
 };
 
 
@@ -312,6 +315,7 @@ aa.r.load =async()=>
 
   const mod = aa.r;
   const id = mod.def.id;
+
   aa.actions.push(
     {
       action:[id,'add'],
@@ -367,7 +371,8 @@ aa.r.load =async()=>
   .then(e=>
   {
     aa.r.toggles();
-    aa.r.w.postMessage(['relays',mod.o.ls]);
+    
+    aa.r.manager.postMessage(['relays',mod.o.ls]);
   });
 };
 
@@ -411,7 +416,7 @@ aa.r.req =({relays,request,options})=>
   relays = aa.r.validate({relays,request,options});
   if (relays.length)
   {
-    aa.r.w.postMessage(['request',{relays,request,options}]);
+    aa.r.manager.postMessage(['request',{relays,request,options}]);
   }
 };
 
@@ -449,19 +454,19 @@ aa.r.send =({relays,event,options})=>
     return false
   }
 
-  aa.r.w.postMessage(['request',{relays,request:['EVENT',event],options}]);
+  aa.r.manager.postMessage(['request',{relays,request:['EVENT',event],options}]);
 };
 
 
 // 
 aa.r.stuff =async(relays=[])=>
 {
-  if (!relays.length) relays = await aa.r.ext();
+  // if (!relays.length) relays = await aa.r.ext();
   if (!relays.length)
   {
     let prompt = window.prompt('add some relays','wss://nos.lol wss://relay.damus.io wss://relay.primal.net');
     if (prompt) relays = aa.fx.splitr(prompt);
-    else aa.log(aa.mk.butt_action('r add wss://url.com read write','add relays'));
+    else aa.log(aa.mk.butt_action('r add wss://url.com read write','add some relays'));
   }
   if (!relays.length) return
 
@@ -533,17 +538,17 @@ aa.r.validate =({relays,request,options})=>
 };
 
 
-// relay union worker reunion
-aa.r.w = new Worker('/r/manager.js');//,{type:'module'});
+// relay manager
+aa.r.manager = new Worker('/r/manager.js');//,{type:'module'});
 
 
 // relay union worker message
-aa.r.w.onmessage =async e=>
+aa.r.manager.onmessage =async e=>
 {
   let mess = e.data;
   let dis = mess[0]?.toLowerCase();
   if (dis && Object.hasOwn(aa.r,dis)) aa.r[dis](mess);
-  else console.log('aa.r.w.onmessage',dis,mess);
+  else console.log('aa.r.manager.onmessage',dis,mess);
 };
 
 
@@ -568,6 +573,7 @@ aa.r.state =([s,relay])=>
 
 
 // return opened subscriptions 
+// given map from r.active[url].subs
 aa.r.subs_open =subs=>
 {
   return [...new Set([...subs.values()]
@@ -605,7 +611,7 @@ aa.r.ok =async a=>
     {
       case 'blocked':
       case 'auth-required':
-        aa.r.w.postMessage(['fc',origin]);
+        aa.r.force_close([origin]);
         break;
       // case 'pow':
       // case 'duplicate':
@@ -616,16 +622,27 @@ aa.r.ok =async a=>
       // default:
     }
   }
-
-  let l = aa.el.get('r.ok');
+  // ok details container element
+  let l_id = 'r.ok';
+  let l = aa.el.get(l_id);
   if (!l)
   {
-    l = aa.mk.details('ok …',0,0,'base');
-    aa.el.set('r.ok',l);
+    l = aa.mk.details('["OK","…"]',0,1,'base');
+    aa.el.set(l_id,l);
     aa.log(l);
   }
-  let con = `${id} ${is_ok} ${origin} — ${reason}`;
-  l.append(aa.mk.l('p',{con}));
+  else aa.logs.lastChild.after(l.parentElement);
+
+  let l_r = l.querySelector(`[data-origin="${origin}"]`);
+  if (!l_r)
+  {
+    l_r = aa.mk.details(origin,0,1,'base');
+    l_r.dataset.origin = origin;
+    l.append(l_r);
+  }
+  let con = `${id} ${is_ok} ${reason}`;
+  l_r.append(aa.mk.l('p',{con}));
+  l_r.classList.add('has_new');
 };
 
 
