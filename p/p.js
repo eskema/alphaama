@@ -435,7 +435,7 @@ aa.p.link_data =p=>
 aa.p.link_data_upd =async(l,o)=>
 {
   let name = l.querySelector('.name');
-  let title = `\n${o.pubkey}\n${l.href.split('#')[1]}\n`;
+  let title = `${o.pubkey}\n${l.href.split('#')[1]}\n`;
   fastdom.mutate(()=>
   {
     // name
@@ -510,11 +510,11 @@ aa.p.links_upd =async p=>
 aa.p.load =async()=>
 {
   await aa.mk.scripts([
-    '/p/clk.js',
-    '/p/is.js',
-    '/p/kinds.js',
-    '/p/mk.js',
-    '/p/view.js'
+    '/p/clk.js?v='+aa.version,
+    '/p/is.js?v='+aa.version,
+    '/p/kinds.js?v='+aa.version,
+    '/p/mk.js?v='+aa.version,
+    '/p/view.js?v='+aa.version,
   ]);
 
   aa.temp.p_link = [];

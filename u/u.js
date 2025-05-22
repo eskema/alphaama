@@ -36,11 +36,11 @@ aa.u.add =(pubkey='')=>
 aa.u.load =async()=>
 {
   await aa.mk.scripts([
-    '/u/clk.js',
-    '/u/e.js',
-    '/u/fx.js',
-    '/u/is.js',
-    '/u/mk.js',
+    '/u/clk.js?v='+aa.version,
+    '/u/e.js?v='+aa.version,
+    '/u/fx.js?v='+aa.version,
+    '/u/is.js?v='+aa.version,
+    '/u/mk.js?v='+aa.version,
   ]);
 
   let id = 'u';
@@ -334,7 +334,7 @@ aa.u.start =async()=>
   let u_p = await aa.u.load_u();
   if (!u_p) return;
   aa.u.upd_u_u();
-  aa.mod.mk(aa.u);
+  // aa.mod.mk(aa.u);
   aa.mk.profile(u_p);
 };
 

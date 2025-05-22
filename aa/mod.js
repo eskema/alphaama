@@ -165,7 +165,7 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
     // }
     // aa.fx.scroll(dis)
   }
-  return [valid,invalid,off]
+  return all
 };
 
 

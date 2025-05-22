@@ -57,19 +57,19 @@ aa.q =
 
 
 // add filter
-aa.q.add =(str='',silent)=>
+aa.q.add =(s='',silent)=>
 {
-  let [k,s] = str.split(aa.fx.regex.fw);
-  k = aa.fx.an(k);
-  let o = aa.parse.j(s);
+  let [fid,s_filter] = s.split(aa.fx.regex.fw);
+  fid = aa.fx.an(fid);
+  let o = aa.parse.j(s_filter);
   if (!o)
   {
-    aa.log('invalid filter: '+s);
+    aa.log('invalid filter: '+s_filter);
     return ''
   }
   let mod = aa.q;
-  let con = `${localStorage.ns} ${mod.def.id} add ${k} `;
-  let filter = mod.o.ls[k];
+  let con = `${localStorage.ns} ${mod.def.id} add ${fid} `;
+  let filter = mod.o.ls[fid];
   let is_new;
   let changed;
 
@@ -78,22 +78,22 @@ aa.q.add =(str='',silent)=>
     if (filter.v === s) con += '=== is the same';
     else
     {
-      con += filter.v+' > '+s;
-      filter.v = s;
+      con += filter.v+' > '+s_filter;
+      filter.v = s_filter;
       changed = true;
     }
   }
   else
   {
-    mod.o.ls[k] = {v:s};
-    con += mod.o.ls[k].v;
+    mod.o.ls[fid] = {v:s_filter};
+    con += mod.o.ls[fid].v;
     changed = true;
     is_new = true;
   }
   if (changed)
   {
     aa.mod.save(mod);
-    aa.mod.ui(mod,k);
+    aa.mod.ui(mod,fid);
   }
   // let q_add = aa.temp.q_add;
   // if (!q_add) 
@@ -108,7 +108,7 @@ aa.q.add =(str='',silent)=>
     aa.log(l);
     aa.fx.scroll(l);
   }
-  return k
+  return fid
 };
 
 

@@ -904,11 +904,12 @@ html:not(.cli_expanded) .l.is_new
 html:not(.cli_expanded) .l.is_new summary
 {
   top: 0;
+  position: relative;
 }
 
 html:not(.cli_expanded) .l.is_new::before
 {
-  padding-left: 0;
+  /*padding-left: 0;*/
   width: auto;
 }
 
