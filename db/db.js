@@ -1,7 +1,9 @@
 aa.db.worker.cash = '/db/cash.js';
-aa.db.cash = new Worker(aa.db.worker.cash);
 aa.db.worker.idb = '/db/idb.js';
+aa.db.worker.sdb = '/db/sdb.js';
+aa.db.cash = new Worker(aa.db.worker.cash);
 aa.db.idb = new Worker(aa.db.worker.idb);
+aa.db.sdb = new SharedWorker(aa.db.worker.sdb).port;
 
 // web cache navigation for offline use
 if ('serviceWorker' in navigator)
@@ -68,3 +70,12 @@ aa.actions.push(
     exe:aa.db.count
   }
 );
+
+
+// shared db
+aa.db.sdb.addEventListener('message',e=>
+{
+  console.log('sdb',e.data)
+});
+
+aa.db.sdb.start();

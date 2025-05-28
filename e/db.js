@@ -107,7 +107,7 @@ aa.db.upd_e =async dat=>
         setTimeout(()=>
         {
           aa.db.idb.postMessage({put:{store:'events',a}});
-        },times * 100);
+        },times * 50);
         times++;
       }
     }

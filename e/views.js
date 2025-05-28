@@ -34,9 +34,12 @@ aa.view.ls.nevent1 =async nevent=>
             if (url) aa.fx.a_add(dat.seen,[url]);
           }
         }
-        let request = ['REQ','ids',{ids:[dat.event.id]}];
-        let options = {eose:'close'};
-        aa.r.demand(request,dat.seen,options);
+        aa.r.def_req('ids',{ids:[dat.event.id]},[...dat.seen]);
+        // const req_id = 'ids';
+        // let request = ['REQ',req_id,];
+        // let options = {eose:'close'};
+        // aa.r.ucks.set(req_id,aa.r.dat);
+        // aa.r.send_req({request,relays:[...dat.seen],options});
       }
     }
     else 

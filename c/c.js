@@ -263,18 +263,25 @@ aa.cli.history_upd =s=>
 // on cli keydown events
 aa.cli.keydown =async e=>
 { 
-  if (e.key === 'Enter' && e.shiftKey === false) 
+  if (e.key === 'Enter' 
+  && e.shiftKey === false) 
   {
     e.preventDefault();
     if (aa.cli.t.value.length) 
     setTimeout(()=>{aa.cli.run(aa.cli.t.value)},0);
   }
-  if (e.key === 'ArrowUp' && aa.cli.t.selectionStart === 0) 
+  if (e.key === 'ArrowUp' 
+  && e.shiftKey === true 
+  // && aa.cli.t.selectionStart === 0
+  && e.ctrlKey === true)
   {
     e.preventDefault();
     setTimeout(()=>{aa.cli.history_previous()},0);
   }
-  if (e.key === 'ArrowDown' && aa.cli.t.selectionStart === 0) 
+  if (e.key === 'ArrowDown' 
+  && e.shiftKey === true 
+  // && aa.cli.t.selectionStart === 0
+  && e.ctrlKey === true)
   {
     e.preventDefault();
     setTimeout(()=>{aa.cli.history_next()},0);
@@ -402,10 +409,6 @@ aa.cli.run =async s=>
   if (aa.is.act(s)) aa.cli.exe(s);
   else if (aa.cli.def) aa.cli.def.exe(s)
   else aa.log(s)
-  // {
-  //   let l = aa.cli.def.exe(s);
-  //   if (aa.cli.on_run?.length) for (const f of aa.cli.on_run) f(s,l);
-  // }
 };
 
 

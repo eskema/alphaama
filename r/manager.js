@@ -56,12 +56,14 @@ onmessage =e=>
     console.log('invalid data',data);
     return
   }
-  switch (data[0].toLowerCase())
+  const [type,dis] = data;
+  switch (type.toLowerCase())
   {
-    case 'terminate': terminate(data[1]); break;
-    case 'relays': manager.relays = data[1]; break;
-    case 'request': check_request(data[1]); break;
-    case 'close' : close_sub(data[1]); break;
+    case 'terminate': terminate(dis); break;
+    case 'relays': manager.relays = dis; break;
+    case 'request': process_request(dis); break;
+    // case 'get': process_get(dis); break;
+    case 'close' : close_sub(dis); break;
     default: console.log('invalid operation',data)
   }
 };
@@ -82,23 +84,10 @@ const close_sub =id=>
     {
       let sub = relay.subs.get(id);
       sub.closed = Math.floor(Date.now()/1000);
-      relay.worker.postMessage(['CLOSE',id]);
+      relay.worker.postMessage(['request',JSON.stringify(['CLOSE',id])]);
     }
   }
   manager.subs.delete(id);
-};
-
-
-// check where to send request
-const check_request =data=>
-{
-  let {relays,request,options} = data;
-  if (!relays?.length)
-  {
-    console.log('no relays in request',o)
-    return
-  }
-  for (const url of relays) relay_request({url,request,options});
 };
 
 
@@ -119,7 +108,7 @@ const terminate =async o=>
 
 
 // instantiate relay with worker
-const hires =url=>
+const hires =(url)=>
 {
   url = is_valid_url(url);
   if (!url)
@@ -200,26 +189,9 @@ const on_eose =async(id,url)=>
       if (subscription.has(url)) subscription.delete(url);
       if (subscription.size === 0) manager.subs.delete(sub.id);
     }
-    relay.worker.postMessage(['CLOSE',id]);
+    relay.worker.postMessage(['request',JSON.stringify(['CLOSE',id])]);
   }
 };
-
-
-const submap =(id,url)=>
-{
-  if (!manager.subs.has(id)) return;
-  let sub_map = manager.subs.get(id);
-
-    let ids = sub_map.get(url);
-    let relay = hires(url);
-    for (const id of ids)
-    {
-      let sub = relay.subs.get(id);
-      sub.closed = Math.floor(Date.now()/1000);
-      relay.worker.postMessage(['CLOSE',id]);
-    }
-};
-
 
 
 // relay worker event
@@ -234,16 +206,19 @@ const on_event =async(a,url)=>
   const subs = [sub.id];
   
   let dat = manager.events.get(event.id);
-  if (dat) new_data = a_add(dat.seen,seen) 
-  || a_add(dat.subs,subs);
+  if (dat)
+  {
+    const new_seen = a_add(dat.seen,seen);
+    const new_subs = a_add(dat.subs,subs);
+    new_data = new_seen || new_subs;
+  }
   else if (is_valid_event(event))
   {
     new_data = true;
-
     dat = mk_dat({event,seen,subs});
     manager.events.set(event.id,dat);
   }
-  if (new_data) postMessage(['dat',dat,url]);
+  if (new_data) postMessage(['event',dat,url]);
 };
 
 
@@ -298,7 +273,12 @@ const on_auth =async(challenge,url)=>
   if (!manager.relays[url]?.sets.includes('auth'))
   {
     let signed = NostrTools.finalizeEvent(unsigned,relay.key);
-    if (signed) relay_request({url,request:['AUTH',signed]});
+    if (signed) 
+    {
+      let request = ['AUTH',signed];
+      relay.worker.postMessage(['auth',JSON.stringify(request)]);
+      // relay_request({url,request:['AUTH',signed]});
+    }
   }
   else postMessage(['auth',unsigned]);
 };
@@ -308,6 +288,43 @@ const on_state =async([s,state,worker],url)=>
 {
   let subs = hires(url)?.subs;
   postMessage([s,{state,...worker,subs,url}]);
+};
+
+
+// check where to send get
+// const process_get =data=>
+// {
+//   let {relays,request} = data;
+//   if (!relays?.length)
+//   {
+//     console.log('no relays in get',o)
+//     return
+//   }
+//   let combined = [];
+//   const job =e=>
+//   {
+//     combined.push(e.data);
+//   };
+//   for (const url of relays)
+//   {
+//     w = (new SharedWorker(manager.shared_worker_src)).port;
+//     w.start();
+//     w.onmessage=e=>{job(e,url)};
+//     w.postMessage(['request',JSON.stringify(request)]);
+//   }
+// };
+
+
+// check where to send request
+const process_request =data=>
+{
+  let {relays,request,options} = data;
+  // if (!relays?.length)
+  // {
+  //   console.log('no relays in request',data)
+  //   return
+  // }
+  for (const url of relays) relay_request({url,request,options});
 };
 
 
@@ -347,4 +364,18 @@ const relay_request =({url,request,options})=>
       break;
   }
   relay.worker.postMessage(['request',JSON.stringify(request)]);
+};
+
+
+const subs_map =(id,url)=>
+{
+  if (!manager.subs.has(id)) return;
+  let sub_map = manager.subs.get(id);
+
+  let ids = sub_map.get(url);
+  let relay = hires(url);
+  for (const id of ids)
+  {
+    //
+  }
 };

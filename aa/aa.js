@@ -106,6 +106,23 @@ aa.dev_set =force=>
   aa.log(`aa.dev = ${aa.dev}`);
 };
 
+aa.help =(s="")=>
+{
+  if (s?.length)
+  {
+    if (!Object.hasOwn(aa,s))
+    {
+      aa.log('cannot help :/ '+s)
+      return
+    }
+    aa[s].help()
+  }
+  else
+  {
+    aa.log('help yourself')
+  }
+};
+
 
 // make element with options
 aa.mk.l =(tag_name='div',o={})=>
@@ -117,7 +134,10 @@ aa.mk.l =(tag_name='div',o={})=>
     if (!v) continue;
     switch (k)
     {
-      case 'app': l.append(v); break;
+      case 'app':
+        if (Array.isArray(v)) l.append(...v);
+        else l.append(v); 
+        break;
       case 'cla': l.className = v; break;
       case 'clk': l.addEventListener('click',v); break;
       case 'con': l.textContent = v; break;
@@ -184,6 +204,12 @@ aa.load =async(o={})=>
   aa.mods_load(mods);
 
   aa.actions.push(
+    {
+      action:['help'],
+      optional:['stuff'],
+      description:'logs some help',
+      exe:aa.help
+    },
     {
       action:['zzz'],
       description:'resets everything',

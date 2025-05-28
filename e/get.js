@@ -93,16 +93,17 @@ aa.get.missing =async type=>
         }
         
         let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(12);
-
-        request = ['REQ',req_id,filter];
+        // aa.r.ucks.set(req_id,aa.r.dat);
+        // request = ['REQ',req_id,filter];
         setTimeout(()=>
         {
-          aa.r.demand(request,relays,options);
+          
+          aa.r.def_req(req_id,filter,relays);
           setTimeout(()=>
           {
             if (Object.keys(aa.miss[type]).length) aa.get.missing(type);
           },
-          500);
+          1000);
         },
         0);
       }

@@ -368,7 +368,7 @@ a.author.fu .name
   content: attr(data-petname);
 }*/
 
-.by .author .name::after
+/*.by .author .name::after
 {
   background: rgb(var(--c));
   content: attr(data-nip05) "\A " attr(data-petname);
@@ -394,7 +394,7 @@ a.author.fu .name
 [data-luma="dark"].author .name::after
 {
   color: rgb(var(--color-light));
-}
+}*/
 
 .by .author
 {
@@ -413,9 +413,9 @@ a.author.fu .name
   margin: 0;
 }
 
+/*.paragraph > a.author .name:not(.empty)::after,*/
 .paragraph > a.author .img,
-.paragraph > a.author::before,
-.paragraph > a.author .name:not(.empty)::after
+.paragraph > a.author::before
 {
   display: none;
 }
@@ -431,10 +431,10 @@ a.author.fu .name
   display: grid;
 }
 
-.in_view > .by .author .name::after
+/*.in_view > .by .author .name::after
 {
   color: rgb(var(--color-d));
-}
+}*/
 
 /* @end */
 
@@ -1509,10 +1509,10 @@ html:not(.needs_pagin) .pagination
     z-index: 9;
   }
   
-  .by .author:hover .name::after
+/*  .by .author:hover .name::after
   {
     opacity: 1;
-  }
+  }*/
   
   .tags_wrapper[open]:hover
   {

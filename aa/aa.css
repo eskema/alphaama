@@ -596,6 +596,12 @@ img:not([src]) {
   content: " [" attr(data-count) "]";
 }
 
+.item.ls_arr > details,
+.item.ls_obj > details
+{
+  grid-column: 1 / -1;
+}
+
 .item.ls_obj > details > summary[data-count]::after 
 {
   content: " {" attr(data-count) "}";
@@ -627,36 +633,6 @@ img:not([src]) {
   display: none;
 }
 
-
-/*.l.item > details > summary::before
-{
-  content: "[";
-}
-
-.l.item > details[open] > summary::before
-{
-  content: "[ ";
-}
-
-.l.item > details > summary[data-count]::before
-{
-  content: "[" attr(data-count) " ";
-}
-
-.l.item > details[open] > summary[data-count]::before
-{
-  content: "[ " attr(data-count) " ";
-}
-
-.l.item > details > summary::after 
-{
-  content: "]";
-}
-
-.l.item > details[open] > summary::after 
-{
-  content: " ]";
-}*/
 
 .item:not(.server)[data-sets]::after
 {
@@ -731,38 +707,6 @@ img:not([src]) {
   padding: 0;
 }
 
-.l .item
-{
-  overflow-x: unset;
-}
-
-.l p
-{
-  border-bottom: 1px solid rgba(var(--color-b),1);
-  border-top: 1px solid rgba(var(--color-b),1);
-}
-
-.l a
-{
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.l .list
-{
-  position: relative;
-}
-
-.l .list .item
-{
-  box-sizing: border-box;
-  /*overflow-y: scroll;*/
-  white-space: pre;
-  /*width: calc(100vw - calc(var(--pad-l)*2));*/
-  word-break: keep-all;
-}
-
-
 .l::before
 {
   align-content: start;
@@ -795,19 +739,61 @@ img:not([src]) {
   content: "*/";
 }
 
+.l .item
+{
+  overflow-x: unset;
+}
+
+.l p
+{
+  border-bottom: 1px solid rgba(var(--color-b),1);
+  border-top: 1px solid rgba(var(--color-b),1);
+}
+
+.l a
+{
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.l > .butt.plug
+{
+  justify-self: start
+}
+
+.l .list
+{
+  position: relative;
+}
+
+.l .list .item
+{
+  box-sizing: border-box;
+  /*overflow-y: scroll;*/
+  white-space: pre;
+  /*width: calc(100vw - calc(var(--pad-l)*2));*/
+  word-break: keep-all;
+}
+
 .l details
 {
   box-sizing: border-box;
+  border-left: 1px solid rgba(var(--color-c));
   overflow: unset;
   position: relative;
+  
   /*width: 100%;*/
 }
 
 .l details[open]
 {
   background: rgb(var(--color-b));
-  border: var(--padm) solid rgba(var(--color-d));
-  border-width: 1px 1px var(--padm) var(--padm);
+  border-left: 1px solid rgba(var(--color-d));
+/*  border: var(--padm) solid rgba(var(--color-d));
+  border-width: 1px 1px var(--padm) var(--padm);*/
+  /*padding: 1px 1px var(--padm) var(--padm);*/
+  padding-left: var(--padm);
+  padding-bottom: var(--padm);
 }
 
 /*.l details[open]::after

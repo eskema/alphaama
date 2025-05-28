@@ -48,8 +48,7 @@ aa.clk.k3 =async e=>
 aa.clk.p_follows =e=>
 {
   const pubkey = e.target.closest('.profile').dataset.pubkey;
-  const request = ['REQ','p_follows',{authors:[pubkey],kinds:[3],limit:1}];
-  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
+  aa.r.def_req('p_follows',{authors:[pubkey],kinds:[3],limit:1});
 };
 
 
@@ -57,8 +56,7 @@ aa.clk.p_follows =e=>
 aa.clk.p_metadata =e=>
 {
   const pubkey = e.target.closest('.profile').dataset.pubkey;
-  const request = ['REQ','p_metadata',{authors:[pubkey],kinds:[0],limit:1}];
-  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
+  aa.r.def_req('p_metadata',{authors:[pubkey],kinds:[0],limit:1});
 };
 
 
@@ -66,8 +64,7 @@ aa.clk.p_metadata =e=>
 aa.clk.p_refresh =e=>
 {
   const pubkey = e.target.closest('.profile').dataset.pubkey;
-  const request = ['REQ','p_refresh',{authors:[pubkey],kinds:[0,3,10002,10019]}];
-  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
+  aa.r.def_req('p_refresh',{authors:[pubkey],kinds:[0,3,10002,10019]})
 };
 
 
@@ -75,8 +72,7 @@ aa.clk.p_refresh =e=>
 aa.clk.p_relays =e=>
 {
   const pubkey = e.target.closest('.profile').dataset.pubkey;
-  const request = ['REQ','p_relays',{authors:[pubkey],kinds:[10002],limit:1}];
-  aa.r.demand(request,aa.fx.in_set(aa.r.o.ls,aa.r.o.r),{eose:'close'});
+  aa.r.def_req('p_relays',{authors:[pubkey],kinds:[10002],limit:1})
 };
 
 

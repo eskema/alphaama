@@ -42,11 +42,15 @@ aa.clk.encrypt =async e=>
 aa.clk.post =e=>
 {
   let dat = aa.db.e[e.target.closest('.note').dataset.id];
-  if (dat) 
+  if (!dat) 
   {
-    let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).filter(r=>!dat.seen.includes(r));
-    aa.r.send({event:dat.event,relays}); //aa.r.broadcast(dat.event,relays);
+    console.log('event not found in local db');
+    return
   }
+
+  const event = dat.event;
+  let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).filter(r=>!dat.seen.includes(r));
+  aa.r.send_event({event,relays});
 };
 
 
@@ -110,7 +114,7 @@ aa.clk.yolo =async e=>
       aa.fx.a_add(dat.clas,['not_sent']);
       let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
       relays = aa.r.tagged(dat.event,relays);
-      aa.r.send({event:dat.event,relays}); //aa.r.broadcast(dat.event,relays);
+      aa.r.send_event({event:dat.event,relays}); //aa.r.broadcast(dat.event,relays);
     }
   })
 };

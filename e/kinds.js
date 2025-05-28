@@ -28,7 +28,7 @@ aa.kinds[6] =dat=>
           if (event&& aa.fx.verify_event(event))
           {
             let subs = ['k6'];
-            aa.r.dat(['',aa.mk.dat({event,subs})]);
+            aa.r.dat(aa.mk.dat({event,subs}));
           }
         }
         else aa.e.to_printer(dat_e);//aa.e.print(dat_e);

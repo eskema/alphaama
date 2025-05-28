@@ -719,7 +719,8 @@ aa.fx.tag_p =x=>
   let p = aa.db.p[x];
   if (p)
   {
-    if (p.relay.length) tag.push(p.relay);
+    let relay = aa.fx.in_sets_all(p.relays,['k10002','write']).sort((a,b)=>{})[0];
+    if (relay) tag.push(relay);
     if (p.petname.length) 
     {
       if (tag.length === 2) tag.push('');

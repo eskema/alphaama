@@ -36,11 +36,11 @@ const abort =()=>
 };
 
 
-// send websocket a request to close subscription
-const close_request =request=>
-{
-  send_request(JSON.stringify(request))
-};
+// // send websocket a request to close subscription
+// const close_request =request=>
+// {
+//   send_request(JSON.stringify(request))
+// };
 
 
 // open websocket connection
@@ -98,7 +98,7 @@ const connect =url=>
     // clearTimeout(abort_connect);
     worker.successes.push(get.now);
     // delay to give time for auth
-    setTimeout(process_requests,500);
+    setTimeout(process_requests,1111);
     post_state();
   }
 };
@@ -133,8 +133,9 @@ onmessage =async e=>
   switch (data[0].toLowerCase())
   {
     case 'open' : connect(data[1]); break;
+    case 'auth': send_request(data[1]); break;
     case 'request': process_requests(data[1]); break;
-    case 'close' : close_request(data); break;
+    // case 'close' : close_request(data); break;
     default: console.log('invalid operation',data)
   }
 };

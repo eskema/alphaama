@@ -10,6 +10,7 @@ queries
 aa.q =
 {
   active:{},
+  com: new Map(),
   def:{id:'q',ls:{}},
   ls:
   {
@@ -139,6 +140,81 @@ aa.q.del =s=>
 };
 
 
+aa.q.get =(s='')=>
+{
+  let [rels,s_filter] = s.split(aa.fx.regex.fw);
+  let id = 'get_'+aa.now;
+
+  // const f = a.join('').replace(' ','');
+  let [filter,options] = aa.q.filter(s_filter.replace(' ',''));
+  if (!filter)
+  {
+    aa.log('invalid filter:'+s_filter);
+    return false
+  }
+  let request = ['REQ',id,filter];
+  let relays = aa.r.rel(rels);
+  if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
+  if (!relays.length) return;
+  aa.r.get({id,request,relays}).then(dis=>console.log(dis))
+};
+
+
+aa.q.help =()=>
+{
+  let summary = 'q help';
+  let con = `==q = query = req = requests
+  to receive events from relays, you send them requests containing your queries
+
+* relays will start sending events one by one that match the queries
+* relays will keep relaying new events as they receive them until the request is closed
+* by default events will be printed to the view
+
+to send a raw request, type: .aa q req <relset> <query>
+
+* <relset> is either a single relay URL or a relay set id
+* <query> is a nostr request filter (JSON)
+* "eose":"close" can be added to the query (this will close the request after all stored events have been returned)
+
+example of a raw request that will be performed on relays that have the set "read": 
+.aa q req read {"kinds":[1],"limit":10,"eose":"close"}
+
+the following variables can be used in queries as values:
+
+* "n_number": converts to a timestamp from 'number' of days ago. ex: "n_1" converts to 1 day ago
+* "d_date_string": converts to a timestamp of 'date_string'. ex: "d_2024-08-21"
+* "now": converts to the timestamp of now
+* "u": converts to your pubkey (if logged in)
+* "k3": converts to a list of pubkeys you follow (if logged in)
+
+example of query with variables: {"kinds":[1],"authors":["u"],"since":"n_7"}
+
+you can store queries so it's easier to run them
+to store a query, type: .aa q add <fid> <query>
+
+* <fid> is a filter identifier with the following allowed characters: a-z_0-9
+* <query> is explained above
+
+to run a query on specific relays, type: .aa q run <fid> <relset>
+
+* <fid> is explained above
+* <relset> is a single relay url or a relay set; by leaving it empty, it defaults relset "read"
+
+to run a query as outbox, type: .aa q out <fid>
+
+to close a query, type: .aa q close <fid>
+
+* if <fid> is omitted all opened queries will be closed instead
+
+
+video::https://v.nostr.build/hzQufBzjStD8L8j6.mp4["example of running the query: a"]
+
+example: .aa q run f, u, n`;
+
+  aa.log(aa.mk.details(summary,aa.mk.l('p',{con})))
+};
+
+
 // request filter from id_a
 // aa.fx.ida_filter =s=>
 // {
@@ -154,7 +230,7 @@ aa.q.last =(fid,filter)=>
     let q_last = aa.parse.j(sessionStorage.q_last);
     if (!q_last) q_last = {};
     if (!q_last[fid]) q_last[fid] = [];
-    q_last[fid] = [...q_last[fid].slice(-10),filter];
+    q_last[fid] = [...q_last[fid].slice(-100),filter];
     sessionStorage.q_last = JSON.stringify(q_last);
   }
 };
@@ -165,9 +241,9 @@ aa.q.last_butts =()=>
   aa.mk.butts_session('q','run');
   aa.mk.butts_session('q','out');
   
-  if (!sessionStorage.q_last) return;
-  let q_last = aa.parse.j(sessionStorage.q_last);
-  console.log(q_last);
+  // if (!sessionStorage.q_last) return;
+  // let q_last = aa.parse.j(sessionStorage.q_last);
+  // console.log(q_last);
 };
 
 
@@ -317,7 +393,8 @@ aa.q.outbox =(request)=>
       
       let request = ['REQ',fid,f];
       let relays = [url];
-      aa.r.demand(request,relays,options);
+      aa.r.ucks.set(fid,aa.r.dat);
+      aa.r.send_req({request,relays,options});
       relays_list.push(url+' '+f.authors.length);
     }
     // note log
@@ -414,22 +491,22 @@ aa.q.req =(s='')=>
   }
   else
   {
-    aa.r.demand(request,relays,options);
-    request.push(options);
+    aa.r.ucks.set(fid,aa.r.dat);
+    aa.r.send_req({request,relays,options});
+    // request.push(options);
     aa.q.log('req',request,`to: ${relays}`);
   }
 };
 
 
 // reset / add default query filters
-aa.q.reset =()=>
+aa.q.reset =(keys=[])=>
 {
-  let keys = Object.keys(aa.q.ls);
-  for (const key of keys)
-  {
-    const string_filter = JSON.stringify(aa.q.ls[key]);
-    aa.q.add(`${key} ${string_filter}`,1);
-  }
+  if (!keys.length) keys = Object.keys(aa.q.ls);
+  else keys = keys.filter(key=>Object.hasOwn(aa.q.ls,key));
+  
+  for (const key of keys) aa.q.add(`${key} ${JSON.stringify(aa.q.ls[key])}`,1);
+  // aa.log(`${localStorage.ns} ${aa.q.def.id} reset ${keys.join(', ')}`);
 };
 
 
@@ -455,79 +532,50 @@ aa.q.run =async s=>
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
       if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-      setTimeout(e=>
-      {
-        aa.r.demand(request,relays,options);
-      },delay);
+      aa.r.ucks.set(fid,aa.r.dat);
+      setTimeout(e=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
       
       aa.q.log('run',request,`to: ${relays}`);
 
-      // let note_log = aa.mk.details('q run '+fid);
-      // note_log.id = 'q_run_'+fid;
-      // note_log.append(aa.mk.butt_action(aa.q.def.id+' close '+fid));
-      // note_log.append(aa.mk.l('p',{con:'to: '+relays}));
-      // note_log.append(aa.mk.l('p',{app:aa.mk.ls({ls:{filter:filtered,options:options}})}));
-      // let l = document.getElementById(note_log.id);
-      // if (l) 
-      // {
-      //   l.replaceWith(note_log);
-      //   aa.logs.append(note_log.parentElement);
-      // }
-      // else aa.log(note_log,0,1);
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
   }
 };
 
-aa.clk.q_stuff_run_a =e=>
-{
-  e.target.closest('.l').remove();
-
-  aa.q.run('a');
-  setTimeout(()=>
-  {
-    aa.q.run('a');
-    aa.log(aa.mk.butt_clk(['-> query k3 stuff','plug','q_stuff_run_b']));
-  },1000);
-};
-
-
-aa.clk.q_stuff_run_b =e=>
-{
-  e.target.closest('.l').remove();
-  // get data from pubkeys found on your follow list  
-  if (!aa.u.p.follows.length)
-  {
-    aa.log('could not find your follows (k3)')
-    return;
-  }
-  // {
-  //   const follows_details = aa.mk.details('new var available: k3');
-  //   follows_details.append(aa.u.p.follows.join(', '));
-  //   aa.log(follows_details);
-  //   // aa.log(`found ${aa.u.p.follows.length} ${aa.fx.plural(aa.u.p.follows.length,'follow')}`);
-  // }
-  aa.log('k3 = '+aa.u.p.follows.join(' '),0,0);
-  aa.q.run('b');
-  setTimeout(()=>
-  {
-    aa.q.out('b');
-    setTimeout(()=>
-    {
-      sessionStorage.q_out = 'f';
-      sessionStorage.q_run = 'n';
-      aa.q.last_butts();
-    },1000);
-  },3000);
-};
 
 
 // fetch basic stuff to get things started
 aa.q.stuff =async()=>
 {
-  aa.q.reset();
-  aa.log(aa.mk.butt_clk(['-> query u stuff','plug','q_stuff_run_a']));
+  aa.q.run('a');
+  setTimeout(()=>{ aa.q.run('a') },1000);
+  setTimeout(()=>{ aa.q.run('b') },2000);
+  setTimeout(()=>
+  {
+    aa.q.out('b');
+    sessionStorage.q_out = 'f';
+    sessionStorage.q_run = 'n';
+  },3000);
+  // setTimeout(()=>
+  // {
+  //   sessionStorage.q_out = 'f';
+  //   sessionStorage.q_run = 'n';
+    
+  //   // aa.q.last_butts();
+  // },4000);
+  
+  // let con = 'q stuff:\n';
+  // let butt_a = ['req your data (relays,metadata,follows,mints,walLNuts)','plug','q_stuff_run_a'];
+  // let butt_b = ['req basic data from your follows','plug','q_stuff_run_b']
+  // const app = 
+  // [
+  //   aa.mk.butt_clk(butt_a),
+  //   ' then ',
+  //   aa.mk.butt_clk(butt_b)
+  // ];
+  // let text = aa.mk.l('p',{con,app})
+  // aa.log(text);
 };
 
 
@@ -583,7 +631,7 @@ aa.q.log =(s,request,con)=>
   let l = aa.el.get(id);
   if (!l)
   {
-    l = aa.mk.details(id,0,1,'base');
+    l = aa.mk.details(id,0,0,'base');
     let close_butt = aa.mk.butt_action(`${aa.q.def.id} close ${fid}`);
     close_butt.addEventListener('click',aa.clk.lp_rm);
     l.append(close_butt);

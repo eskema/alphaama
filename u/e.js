@@ -20,10 +20,11 @@ aa.e.finalize =async(event,relays)=>
   const signed = await aa.u.sign(event);
   if (signed)
   {
-    let dat = aa.db.e[event.id] = aa.mk.dat({event:signed});
+    event = signed;
+    let dat = aa.db.e[event.id] = aa.mk.dat({event});
     aa.db.upd_e(dat);
     aa.e.print(dat);
-    aa.r.broadcast(signed,relays);
+    aa.r.send_event({event,relays});
   }
 };
 
