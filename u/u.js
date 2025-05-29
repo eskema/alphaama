@@ -36,11 +36,11 @@ aa.u.add =(pubkey='')=>
 aa.u.load =async()=>
 {
   await aa.mk.scripts([
-    '/u/clk.js?v='+aa.version,
-    '/u/e.js?v='+aa.version,
-    '/u/fx.js?v='+aa.version,
-    '/u/is.js?v='+aa.version,
-    '/u/mk.js?v='+aa.version,
+    '/u/clk.js?v='+aa_version,
+    '/u/e.js?v='+aa_version,
+    '/u/fx.js?v='+aa_version,
+    '/u/is.js?v='+aa_version,
+    '/u/mk.js?v='+aa_version,
   ]);
 
   let id = 'u';
@@ -162,7 +162,7 @@ aa.u.setup =async(s='')=>
       //   }
       // });
       log.lastChild.append(req_butt);
-      
+
       log = aa.log('after that, ');
       const reload_butt = aa.mk.l('button',{con:'reload the page',cla:'butt plug',clk:e=>{location.reload()}});
       log.lastChild.append(reload_butt,' to finish setup');

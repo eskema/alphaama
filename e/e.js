@@ -634,7 +634,7 @@ aa.e.print =dat=>
     if (l.classList.contains('blank') 
     || l.classList.contains('draft')) 
     {
-      // l = aa.e.note_replace(l,dat);
+      l = aa.e.note_replace(l,dat);
     }
     else
     {

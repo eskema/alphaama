@@ -92,7 +92,7 @@ aa.get.missing =async type=>
           tags.push(item);
         }
         
-        let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(12);
+        let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(0,12);
         // aa.r.ucks.set(req_id,aa.r.dat);
         // request = ['REQ',req_id,filter];
         setTimeout(()=>

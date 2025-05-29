@@ -300,8 +300,8 @@ aa.r.load =async()=>
 {
   await aa.mk.scripts
   ([
-    '/r/clk.js?v='+aa.version,
-    '/r/mk.js?v='+aa.version,
+    '/r/clk.js?v='+aa_version,
+    '/r/mk.js?v='+aa_version,
     // '/r/wip.js',
   ]);
 

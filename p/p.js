@@ -510,11 +510,11 @@ aa.p.links_upd =async p=>
 aa.p.load =async()=>
 {
   await aa.mk.scripts([
-    '/p/clk.js?v='+aa.version,
-    '/p/is.js?v='+aa.version,
-    '/p/kinds.js?v='+aa.version,
-    '/p/mk.js?v='+aa.version,
-    '/p/view.js?v='+aa.version,
+    '/p/clk.js?v='+aa_version,
+    '/p/is.js?v='+aa_version,
+    '/p/kinds.js?v='+aa_version,
+    '/p/mk.js?v='+aa_version,
+    '/p/view.js?v='+aa_version,
   ]);
 
   aa.temp.p_link = [];
