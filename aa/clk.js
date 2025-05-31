@@ -55,8 +55,6 @@ aa.clk.expand =e=>
   });
 };
 
-aa.clk.lp_rm =e=>{e.target.parentElement.remove()};
-
 
 // wip
 // aa.clk.list_filter_input =e=>

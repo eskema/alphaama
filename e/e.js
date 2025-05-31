@@ -17,7 +17,7 @@ aa.e.butts =
   na:[[localStorage.reaction,'react'],'req','bro','render','tiny'],
   // k4:['encrypt'],
   draft:['yolo','sign','pow','edit','cancel'],
-  not_sent:['post','cancel'],
+  not_sent:['post','bro','cancel'],
   blank:['fetch']
 };
 
@@ -967,7 +967,7 @@ aa.e.search =async s=>
       let app = aa.mk.nostr_link(content.parentElement.id);
       let log = aa.mk.l('p',{con,app})
       
-      aa.log()
+      aa.log(log)
     }
   }
 };
@@ -993,21 +993,6 @@ aa.e.section_mutated =a=>
     }
   }
 };
-
-// 
-// | Partido | Orientação Ideológica | Nível de Intervenção Estatal | Grau de Liberdade Individual |
-// |----------------------------------------|---------------------------------------------------------------------------------------|------------------------------|------------------------------|
-// | **AD – Aliança Democrática (PSD/CDS)** | Centro-direita democrática (baixo autoritarismo / equilíbrio intervenção–mercado) | Médio | Médio |
-// | **PS – Partido Socialista** | Centro-esquerda social-democrata (moderado autoritarismo / intervenção estatal) | Alto | Médio |
-// | **CDU – Coligação Democrática Unitária (PCP/PEV)** | Esquerda comunista/eco-marxista (mais autoritário / forte intervenção) | Muito alto | Baixo |
-// | **IL – Iniciativa Liberal** | Liberalismo clássico (muito baixa intervenção / alta liberdade) | Baixo | Muito alto |
-// | **Chega** | Nacionalismo autoritário (controlo social elevado / mercado regulado com foco interno)| Médio | Baixo |
-// | **Livre** | Esquerda progressista verde (baixa hierarquia / intervenção social) | Alto | Médio |
-// | **BE – Bloco de Esquerda** | Esquerda democrática radical (moderado autoritarismo / intervenção forte) | Alto | Médio |
-// | **PAN – Pessoas-Animais-Natureza** | Ambientalismo progressista (intervenção pragmática / foco em direitos e sustentabilidade) | Médio | Alto |
-// | **Ergue-te** | Nacionalismo soberanista (autoritarismo elevado / intervenção seletiva com foco nacional) | Médio | Baixo |
-// | **ADN – Alternativa Democrática Nacional** | Nacionalismo conservador (autoritarismo elevado / intervenção seletiva com foco nacional) | Médio | Baixo |
-// 
 
 
 // update note path when appending

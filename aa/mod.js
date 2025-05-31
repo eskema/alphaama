@@ -64,6 +64,32 @@ aa.mod.mk =mod=>
 };
 
 
+aa.mod.modal =(s='')=>
+{
+  let mod = aa[s]?.l;
+  if (!mod) 
+  {
+    aa.log('aa.mod.modal: mod not found')
+    return
+  }
+  let mom = mod.parentElement;
+  
+  const dialog = aa.dialog;
+  const butt = aa.mk.l('button',
+  {
+    con:'close',
+    cla:'butt modal',
+    clk:()=>
+    {
+      mom?.append(mod);
+      dialog.close();
+    }
+  });
+  dialog.append(butt,' ',mod);
+  dialog.showModal();
+};
+
+
 // save mod
 aa.mod.save =async mod=>
 {
@@ -212,14 +238,31 @@ aa.mod.setrm =(mod,s)=>
 aa.mod.ui =(mod,k)=>
 {
   let v = mod.o.ls[k];
-  let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));
+  let cur = mod.li.get(k);
+  // let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));
   let l = mod.hasOwnProperty('mk') ? mod.mk(k,v) : aa.mk.item(k,v);
   let mod_l = document.getElementById(mod.def.id);
-  if (!cur) mod_l.append(l);
-  else cur.replaceWith(l);
+  if (!cur)
+  {
+    mod_l.append(l);
+  }
+  else 
+  {
+    cur.replaceWith(l);
+  }
+  mod.li.set(k,l)
   if (mod_l.classList.contains('empty'))
   {
     mod_l.classList.remove('empty');
     mod_l.parentElement.classList.remove('empty');
   }
 };
+
+aa.actions.push(
+  {
+    action:['mod','modal'],
+    required:['<mod_id>'],
+    description:'view mod in a modal',
+    exe:aa.mod.modal
+  }
+);

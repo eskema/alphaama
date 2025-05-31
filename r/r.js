@@ -565,6 +565,7 @@ aa.r.toggles =()=>
   const mod = aa.r;
   const id = mod.def.id;
   let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
+  let modal_butt = aa.mk.butt_action(`mod modal ${id}`,'popup');
   let sets_span = aa.mk.l('span',{cla:'sets'});
   let sets = [];
   for (const r of Object.values(aa.r.o.ls)) aa.fx.a_add(sets,r.sets);
@@ -597,6 +598,7 @@ aa.r.toggles =()=>
   {
     mod.l.insertBefore(toggles,mod.l.lastChild);
     mod.l.insertBefore(add_butt,toggles);
+    mod.l.insertBefore(modal_butt,toggles);
   })
 };
 

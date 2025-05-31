@@ -42,7 +42,7 @@ aa.mk.butts_session =(id,s)=>
   if (sessionStorage.getItem(dis))
   {
     let butt = aa.mk.butt_action(`${id} ${s} ${sessionStorage[dis]}`);
-    butt.addEventListener('click',aa.clk.lp_rm);
+    butt.addEventListener('click',e=>{e.target.closest('.l')?.remove()});
     aa.log(butt)
   }
 };
@@ -377,11 +377,11 @@ aa.mk.manifest =()=>
 aa.mk.nip7_butt =()=>
 {
   let s = 'window.nostr: ok';
-  if (window.nostr)
-  {
-    aa.log(s,false,false);
-    return true
-  }
+  if (window.nostr) return true
+  // {
+  //   aa.log(s,false,false);
+  //   return true
+  // }
 
   aa.log(aa.mk.l('button',
   {
@@ -397,7 +397,7 @@ aa.mk.nip7_butt =()=>
         parent.append(aa.mk.l('p',{con:s}));
       }
     }
-  }),false,false);
+  }),0,0);
 
   return false
 };

@@ -75,11 +75,8 @@ to add a relay, type: `.aa r add <url> <set_1> <set_2>`
 == (u) USER
 
 * you can use alphaama without logging in because you can read from Nostr without having to sign anything
-* to sign notes, you need a signer already configured with a key (NIP7 enabled browser extension)
-* make sure your signer extension is active on the current tab
-* you have the option to set a mode on login, either easy or hard
-* easy mode adds useful filter queries
-* hard mode prevents any external connections
+* to sign notes, you need a signer already configured with a key (NIP7 browser extension)
+* to setup a user, type: `.aa u setup`
 
 
 

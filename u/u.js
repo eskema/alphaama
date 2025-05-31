@@ -145,7 +145,7 @@ aa.u.setup =async(s='')=>
       ];
       let add_def_rels = 'r add '+def_rels.join(', ');
       let rel_butt = aa.mk.butt_action(add_def_rels,'add some relays');
-      // rel_butt.addEventListener('click',aa.clk.lp_rm);
+      // rel_butt.addEventListener('click',e=>{e.closest('.l')?.remove()});
       log.lastChild.append(rel_butt);
 
 
