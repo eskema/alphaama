@@ -467,9 +467,9 @@ aa.e.note_replace =(l,dat)=>
 {
   console.log('note replaced');
   dat.clas = aa.fx.a_rm(dat.clas,['draft']);
-  let b = aa.e.note_by_kind(dat);
+  let note = aa.e.note_by_kind(dat);
   // l.id = 'temp-'+dat.event.id;
-  let b_rep = b.querySelector('.replies');
+  let note_replies = note.querySelector('.replies');
   // let l_rep = l.querySelector('.replies');
   let childs = l.querySelector('.replies').childNodes;
   let in_path;
@@ -477,36 +477,39 @@ aa.e.note_replace =(l,dat)=>
   {
     for (const c of childs) 
     {
-      if (c.tagName === 'ARTICLE') 
+      if (c.tagName === 'ARTICLE')
       {
-        aa.e.append_as_rep(c,b_rep);
+        aa.e.append_as_rep(c,note_replies);
         if (c.classList.contains('in_path')) in_path = true;
       }
     }
   }
-  let is_root = b.classList.contains('root');
-  let is_reply = b.classList.contains('reply');
-  b.className = l.className;
+  let is_root = note.classList.contains('root');
+  let is_reply = note.classList.contains('reply');
+  note.className = l.className;
+  aa.temp.printed = aa.temp.printed.filter(i=>i.dataset.id!==dat.event.id);
   l.remove();
-  b.classList.remove('blank','tiny','draft','not_sent');
-  if (in_path) b.classList.add('in_path');
-  if (!sessionStorage.getItem(dat.event.id)) b.classList.add('is_new');
-  else b.classList.remove('is_new');
-  if (dat.clas) b.classList.add(...dat.clas);
-  if (!is_root && b.parentElement?.closest('.note')) 
+  aa.temp.printed.push(note);
+  note.classList.remove('blank','tiny','draft','not_sent');
+  if (in_path) note.classList.add('in_path');
+  if (!sessionStorage.getItem(dat.event.id)) note.classList.add('is_new');
+  else note.classList.remove('is_new');
+  if (dat.clas) note.classList.add(...dat.clas);
+  if (!is_root && note.parentElement?.closest('.note')) 
   {
-    b.classList.remove('root','not_yet');
+    note.classList.remove('root','not_yet');
   }
-  else if (is_root) b.classList.add('root');
-  if (!is_reply && !b.parentElement?.closest('.note')) b.classList.remove('reply');
-  else if (is_reply) b.classList.add('reply');
-  b.classList.add('replaced');
-  if (b.classList.contains('not_yet')) 
+  else if (is_root) note.classList.add('root');
+  if (!is_reply && !note.parentElement?.closest('.note')) note.classList.remove('reply');
+  else if (is_reply) note.classList.add('reply');
+  note.classList.add('replaced');
+  if (note.classList.contains('not_yet')) 
   {
-    b_rep.removeAttribute('open');
+    note_replies.removeAttribute('open');
     aa.e.note_observer.observe(b);
   }
-  return b
+  aa.e.render(note);
+  return note
 };
 
 
@@ -698,7 +701,8 @@ aa.e.quote_a_upd =async(quote,o)=>
   by.append(aa.mk.p_link(pub));
   aa.fx.color(pub,quote);
 
-  let a_note = document.querySelector('.note[data-id_a="'+o.id_a+'"]');
+  let a_note = aa.temp.printed.find(i=>i.dataset.id_a === o.id_a);
+  // let a_note = document.querySelector('.note[data-id_a="'+o.id_a+'"]');
   let content = new DocumentFragment();
   let quote_classes = [];
   if (a_note)
@@ -816,9 +820,10 @@ aa.e.quotes_to =async q_id=>
 // render event type kinds
 aa.e.rnd =
 {
-  content:[1,9802,30023],
+  content:[1,30023],
   emojii:[7],
   encrypted:[4],
+  highlight:[9802],
   image:[20],
   object:[0],
   video:[21,22,1063,34235,34236],
@@ -856,7 +861,8 @@ aa.e.render =async(l,options)=>
 aa.e.render_content =async(note,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
-  aa.parse.context(note,dat.event,aa.is.trusted(o.trust||p?.score));
+  let is_trusted = aa.is.trusted(o.trust||p?.score);
+  aa.parse.context(note,dat.event,is_trusted);
 };
 
 
@@ -888,6 +894,77 @@ aa.e.render_encrypted =async(l,dat)=>
     content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
   }
   return p_x
+};
+
+
+// render content as rich text
+aa.e.render_highlight =async(note,dat,o={})=>
+{
+  let p = await aa.p.author(dat.event.pubkey);
+  let is_trusted = aa.is.trusted(o.trust||p?.score);
+  
+    // highlighted stuff
+  let h_s = dat.event.tags.find(i=>i[0]==='a');
+  if (!h_s) h_s = dat.event.tags.find(i=>i[0]==='e');
+  if (!h_s) h_s = dat.event.tags.find(i=>i[0]==='r');
+  let source = aa.mk.l('p',{con:'source ',cla:'source'});
+  // let from = aa.mk.details('source');
+  // from.classList.add('base');
+  if (h_s)
+  {
+    let app;
+    // con += h_s[0]
+    switch(h_s[0])
+    {
+      case 'a':
+        let [kind,pubkey,identifier] = aa.fx.split_ida(h_s[1]);
+        let data = {kind,pubkey,identifier};
+        let relay = aa.is.url(h_s[2])?.href;
+        if (relay) data.relays = [relay];
+        let naddr = aa.fx.encode('naddr',data);
+        // let l = aa.mk.l('p');
+        // l.append(aa.mk.nostr_link(naddr));
+        // for (const key in data) l.append(`\n${key} ${data[key]}`);
+        // l.append('\n',naddr);
+        // from.append(l)
+        let p_hi = await aa.p.author(pubkey);
+        source.append(aa.mk.nostr_link(naddr));
+        break;
+      case 'e':
+
+        // app = aa.mk.nostr_link(aa.fx.encode('note',h_s[1]));
+        // from.append(aa.mk.l('p',{app}));
+        source.append(aa.mk.nostr_link(aa.fx.encode('note',h_s[1])));
+        let event = aa.db.e[h_s[1]];
+        if (event)
+        {
+          let name = aa.p.author_name(aa.db.p[event.pubkey]);
+          source.append(`from ${name}`);
+        }
+        
+        break;
+      case 'r':
+        // app = aa.mk.link(h_s[1])
+        // from.append(aa.mk.l('p',{app}));
+        source.append(aa.mk.link(h_s[1]));
+        break;
+    }
+  }
+
+  let comment = aa.fx.tag_value(dat.event.tags,'comment');
+  if (comment) comment = aa.parse.content(comment,is_trusted);
+  let note_content = note.querySelector('.content');
+  let highlight = aa.mk.l('div',{cla:'highlight',app:aa.parse.content(dat.event.content,is_trusted)});
+  if (highlight.childNodes.length) 
+  {
+    fastdom.mutate(()=>
+    {
+      note_content.classList.toggle('parsed');
+      note_content.textContent = '';
+      note_content.append(highlight,source);
+      if (comment) note_content.prepend(comment);
+    });
+  }
 };
 
 
@@ -956,6 +1033,7 @@ aa.e.render_video =async(l,dat)=>
 aa.e.search =async s=>
 {
   s = s.toLowerCase();
+  let df = new DocumentFragment();
   let contents = document.getElementsByClassName('content');
   for (const content of contents)
   {
@@ -963,13 +1041,14 @@ aa.e.search =async s=>
     let has = text.search(s);
     if (has !== -1) 
     {
-      let con = text.slice(0,21);
-      let app = aa.mk.nostr_link(content.parentElement.id);
-      let log = aa.mk.l('p',{con,app})
-      
-      aa.log(log)
+      let l_event = content.parentElement;
+      let name = l_event.querySelector('.by .name').textContent;
+      let con = `${name}: ${text.slice(has,has+21)}… `;
+      let app = aa.mk.nostr_link(l_event.id);
+      df.append(aa.mk.l('p',{con,app}),' ');
     }
   }
+  aa.log(aa.mk.details(`e (s)earch results for ${s}`,df,1))
 };
 
 

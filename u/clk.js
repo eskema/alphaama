@@ -47,7 +47,8 @@ aa.clk.post =e=>
     console.log('event not found in local db');
     return
   }
-
+  // dat.clas = aa.fx.a_rm(dat.clas,['draft']);
+  // aa.fx.a_add(dat.clas,['not_sent']);
   const event = dat.event;
   let relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).filter(r=>!dat.seen.includes(r));
   aa.r.send_event({event,relays});

@@ -151,13 +151,13 @@ aa.parse.nostr =match=>
 
 
 // parse url as link or media given trust
-aa.parse.url =(match,tru)=>
+aa.parse.url =(match,is_trusted)=>
 {
   let url = aa.is.url(match[0]);
   if (!url) return;
 
   const [src,type] = aa.fx.src_type(url);
-  if (!tru || !type) return aa.mk.link(src);
+  if (!is_trusted || !type) return aa.mk.link(src);
   if (type === 'img') return aa.mk.img(src);
   else if (type === 'audio' || type === 'video')
   {
@@ -170,7 +170,7 @@ aa.parse.url =(match,tru)=>
 
 
 // wrapper for aa.parse functions
-aa.parser =(parse_id,s,trust,regex_id)=>
+aa.parser =(parse_id,s,is_trusted,regex_id)=>
 {
   const df = new DocumentFragment();
   if (!regex_id) regex_id = parse_id;
@@ -179,7 +179,7 @@ aa.parser =(parse_id,s,trust,regex_id)=>
   for (const match of matches) 
   {
     df.append(match.input.slice(index,match.index));
-    let parsed = aa.parse[parse_id](match,trust);
+    let parsed = aa.parse[parse_id](match,is_trusted);
     let childs = parsed.childNodes.length;
     if (childs > 2) index = match.index + match.input.length;
     else index = match.index + match[0].length;

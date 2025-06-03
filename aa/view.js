@@ -102,4 +102,11 @@ aa.view.state =(s,search='')=>
 };
 
 
+aa.view.upd =s=>
+{
+  aa.view.replace(s);
+  aa.view.resolve(history.state.view);
+};
+
+
 window.addEventListener('popstate',aa.view.pop);

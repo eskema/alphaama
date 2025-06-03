@@ -70,13 +70,7 @@ aa.kinds[20] =dat=>
 
 
 // video template
-aa.kinds[1063] =dat=>
-{
-  let note = aa.mk.note(dat);
-  aa.p.from_tags(dat.event.tags);
-  aa.e.append_as_root(note);
-  return note
-};
+aa.kinds[1063] = aa.kinds[20];
 
 
 // repost of generic note
@@ -95,7 +89,7 @@ aa.kinds[9735] = aa.kinds[1];
 
 
 // highlight template
-aa.kinds[9802] = aa.kinds[1];
+aa.kinds[9802] = aa.kinds[20];
 
 
 // event template for relay list

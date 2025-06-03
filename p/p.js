@@ -59,7 +59,7 @@ aa.mk.styles(aa.p.styles);
 aa.p.author =async pubkey=>
 {
   let p = await aa.p.get(pubkey) || aa.p.p(pubkey);
-  aa.p.links_upd(p);
+  // aa.p.links_upd(p);
   return p
 };
 

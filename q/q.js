@@ -633,7 +633,7 @@ aa.q.log =(s,request,con)=>
   {
     l = aa.mk.details(id,0,0,'base');
     let close_butt = aa.mk.butt_action(`${aa.q.def.id} close ${fid}`);
-    close_butt.addEventListener('click',e=>{e.closest('.l')?.remove()});
+    close_butt.addEventListener('click',e=>{('.l')?.remove()});
     l.append(close_butt);
     aa.el.set(id,l);
     aa.log(l);

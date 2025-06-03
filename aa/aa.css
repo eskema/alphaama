@@ -775,16 +775,18 @@ img:not([src]) {
   word-break: keep-all;
 }
 
+details.base,
 .l details
 {
   box-sizing: border-box;
-  border-left: 1px solid rgba(var(--color-c));
+  /*border-left: 1px solid rgba(var(--color-c));*/
   overflow: unset;
   position: relative;
   
   /*width: 100%;*/
 }
 
+details.base[open],
 .l details[open]
 {
   background: rgb(var(--color-b));
@@ -801,6 +803,7 @@ img:not([src]) {
   content: "_";
 }*/
 
+
 .l details > summary
 {
   padding: 0 var(--padm);
@@ -808,6 +811,7 @@ img:not([src]) {
   border-bottom: 1px dotted rgba(var(--color-d),1);
 }
 
+details.base[open] > summary,
 .l details[open] > summary
 {
   border-bottom: 1px dotted rgba(var(--color-c),1);
@@ -947,7 +951,7 @@ html:not(.cli_expanded) .l:not(.is_new),
   border-top: 1px dashed rgb(var(--color-b));
   justify-stretch: end;
   padding-bottom: var(--line);
-  width: 61.8vw;
+  /*width: 61.8vw;*/
 }
 
 #mods .mod:not([open])

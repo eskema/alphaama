@@ -25,7 +25,7 @@ aa.db.events =async ids=>
 aa.db.get_a =async id_a=>
 {
   const store = 'events';
-  const [kind,pubkey,identifier] = id_a.split(':');
+  const [kind,pubkey,identifier] = aa.fx.split_ida(id_a);
   let key;
   try 
   {
@@ -46,7 +46,7 @@ aa.db.get_a =async id_a=>
 // returns event if already loaded or get it from database
 aa.db.get_e =async xid=>
 {
-  if (aa.db.e[xid]) return aa.db.e[xid];  
+  if (aa.db.e[xid]) return aa.db.e[xid];
   let dat = await aa.db.ops('idb',{get:{store:'events',key:xid}});
   if (dat) aa.db.e[xid] = dat;
   return dat

@@ -385,8 +385,9 @@ aa.r.mk =(k,v)=>
 
 
 // OK true
-aa.r.ok_ok =id=>
+aa.r.ok_ok =a=>
 {
+  const [s,id,is_ok,reason,origin] = a;
   let dat = aa.db.e[id];
   if (!dat) return;
 
@@ -431,7 +432,7 @@ aa.r.ok_not_ok =a=>
 aa.r.ok =async a=>
 {
   const [s,id,is_ok,reason,origin] = a;
-  if (is_ok) aa.r.ok_ok(id);
+  if (is_ok) aa.r.ok_ok(a);
   else if (reason) aa.r.ok_not_ok(a);
 
   // ok details container element
