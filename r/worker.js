@@ -44,8 +44,9 @@ const abort =()=>
 
 
 // open websocket connection
-const connect =url=>
+const connect =(a=[])=>
 {
+  let [s,url,has_auth] = a;
   if (worker.terminated)
   {
     console.log('terminated',worker,url);
@@ -61,6 +62,7 @@ const connect =url=>
       url = new URL(url)?.href;
       worker.url = url;
       worker.id = `${url}/${Math.floor(100000+Math.random()*900000)}`;
+      if (has_auth) worker.has_auth = true;
     }
     catch(er)
     {
@@ -132,9 +134,15 @@ onmessage =async e=>
   }
   switch (data[0].toLowerCase())
   {
-    case 'open' : connect(data[1]); break;
-    case 'auth': send_request(data[1]); break;
+    case 'open' : connect(data); break;
+    case 'auth':
+      worker.authed = true;
+      if (Object.hasOwn(worker,'waiting')) delete worker.waiting;
+      send_request(data[1]);
+      setTimeout(()=>{process_requests()},500);
+      break;
     case 'request': process_requests(data[1]); break;
+    case 'waiting': worker.waiting = data[1]; break;
     // case 'close' : close_request(data); break;
     default: console.log('invalid operation',data)
   }
@@ -151,12 +159,21 @@ const post_state =()=>
 // add request to requests and processes them all
 const process_requests =request=>
 {
-  if (request) 
+  if (request)
   {
     // console.log(worker.requests);
     worker.requests.push(request);
   }
-  while (worker.requests.length) send_request(worker.requests.shift())
+  let is_ready = worker.has_auth ? worker.authed : true;
+  if (is_ready) 
+  {
+    while (worker.requests.length)
+    send_request(worker.requests.shift())
+  }
+  else if (worker.has_auth && worker.waiting)
+  {
+    setTimeout(process_requests,1000)
+  }
 };
 
 

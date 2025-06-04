@@ -40,13 +40,15 @@ aa.r.add_from_o =relays=>
 
 
 // authenticate to relay with main keys
-aa.r.auth =async a=> 
+aa.r.auth =async a=>
 {
   console.log(a);
-  let [auth,event,relay] = a;
-  event.id = aa.fx.hash(event);
-  signed = await aa.u.sign(event);
-  if (signed) aa.r.manager.postMessage(['q',{relays:[relay],request:['AUTH',event]}]);
+  let [s,event,relay] = a;
+  event = aa.e.normalise(event);
+  event.tags = aa.fx.a_u(event.tags);
+  if (!event.id) event.id = aa.fx.hash(event);
+  let signed = await aa.u.sign(event);
+  if (signed) aa.r.manager.postMessage(['auth',{relays:[relay],request:['AUTH',signed]}]);
 };
 
 
@@ -465,7 +467,7 @@ aa.r.outbox =(a=[],sets=[])=>
   if (!sets.length) sets = [aa.r.o.w,'k10002'];
   if (!a?.length) return [];
   let relays = aa.r.common(a,sets);
-  let outbox = aa.fx.intersect(relays,a);
+  let outbox = aa.fx.intersect(relays,a,3);
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
   return sorted_outbox;
 };

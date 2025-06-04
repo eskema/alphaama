@@ -62,7 +62,7 @@ onmessage =e=>
     case 'terminate': terminate(dis); break;
     case 'relays': manager.relays = dis; break;
     case 'request': process_request(dis); break;
-    // case 'get': process_get(dis); break;
+    case 'auth': auth(dis); break;
     case 'close' : close_sub(dis); break;
     default: console.log('invalid operation',data)
   }
@@ -132,10 +132,11 @@ const hires =(url)=>
       subs:new Map(),
       key:NostrTools.generateSecretKey(),
     };
+    let has_auth = manager.relays[url]?.sets.includes('auth');
     manager.workers.set(url,relay);
     relay.worker.onerror =e=>{ console.log('manager: error',url,e) };
     relay.worker.onmessage =e=>{ on_message(e.data,url) };
-    relay.worker.postMessage(['open',url]);
+    relay.worker.postMessage(['open',url,has_auth]);
   }
   return relay
 };
@@ -280,7 +281,11 @@ const on_auth =async(challenge,url)=>
       // relay_request({url,request:['AUTH',signed]});
     }
   }
-  else postMessage(['auth',unsigned]);
+  else 
+  {
+    relay.worker.postMessage(['waiting',challenge]);
+    postMessage(['auth',unsigned,url]);
+  }
 };
 
 
@@ -313,6 +318,19 @@ const on_state =async([s,state,worker],url)=>
 //     w.postMessage(['request',JSON.stringify(request)]);
 //   }
 // };
+
+
+const auth =data=>
+{
+  let {relays,request} = data;
+  let relay = hires(relays[0]);
+  if (!relay)
+  {
+    console.log('manager auth: relay is invalid',url);
+    return
+  }
+  relay.worker.postMessage(['auth',JSON.stringify(request)]);
+};
 
 
 // check where to send request
