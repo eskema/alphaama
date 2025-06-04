@@ -10,7 +10,7 @@ const manager =
   relays:null,
   subs:new Map(),
   events:new Map(),
-  worker_src:'/r/worker.js?v=2',
+  worker_src:'/r/worker.js?v=3',
   workers:new Map(),
 };
 

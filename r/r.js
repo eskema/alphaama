@@ -630,7 +630,7 @@ aa.r.manager_setup =()=>
 {
   let mod = aa.r;
   // relay manager
-  mod.manager = new Worker('/r/manager.js');//,{type:'module'});
+  mod.manager = new Worker('/r/manager.js?v='+aa_version);//,{type:'module'});
 
   // relay union worker message
   mod.manager.onmessage =async e=>
