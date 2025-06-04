@@ -1129,6 +1129,8 @@ aa.e.view =l=>
 // checks if added element should be in_view
 aa.e.view_check =l=>
 {
-  if (history.state?.view === '#'+l.id && !l.classList.contains('in_view'))
-  setTimeout(()=>{aa.e.view(l)},100);
+  if ((history.state?.view === '#'+l.id 
+    || aa.view.id_a && aa.view.id_a === l.dataset.id_a)
+  && !l.classList.contains('in_view'))
+    setTimeout(()=>{aa.e.view(l)},100);
 }

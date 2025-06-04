@@ -40,14 +40,17 @@ const chunker =(a,n)=>
 
 indexed_db.ops.dex =async(db,o)=>
 { 
-  const odb = db.transaction(o.store).objectStore(o.store).index(o.index);
+  const dex = db.transaction(o.store)
+  .objectStore(o.store)
+  .index(o.index);
+
   const a = [];
   let done = 0;
   for (const item of o.a)
   {
-    odb.get(item).onsuccess=e=>
+    dex.get(item).onsuccess=e=>
     {
-      a.push(e.target.result); 
+      const result = e.target.result; 
       done++; 
       if (done === o.a.length) postMessage(a);
     };
@@ -57,18 +60,16 @@ indexed_db.ops.dex =async(db,o)=>
 
 indexed_db.ops.dex_all =async(db,o)=>
 {
-  console.log(o);
-  const odb = db.transaction(o.store).objectStore(o.store);
-  const idx = odb.index(o.index);
-  let done = 0;
+  const dex = db.transaction(o.store)
+  .objectStore(o.store)
+  .index(o.index);
+
   const a = [];
-  
-  idx.openCursor(o.key).onsuccess=e=>
+  dex.openCursor(o.key).onsuccess=e=>
   {
     const cursor = e.target.result; 
     if (cursor) 
     { 
-      done++;
       a.push(cursor.value);
       cursor.continue();
     }

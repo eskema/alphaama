@@ -111,7 +111,8 @@ aa.mod.servers_add_details =cla=>
   if (!l) 
   {
     l = aa.mk.details(cla,0,0,'base'); // ,aa.mk.l('div',{cla:'list'})
-    aa.el.set(cla,l)
+    aa.el.set(cla,l);
+    aa.log(l);
   }
   return l
 };
@@ -127,7 +128,7 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
   const as = s.split(',');
   if (!as.length) return all;
 
-  
+  let l = aa.mod.servers_add_details('r add …');
   // let ul = l.lastElementChild;
   let haz;
   for (const i of as) 
@@ -163,34 +164,15 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
       // con = `\nadded: ${url} ${sets}`;
     }
     
-    let con = `${localStorage.ns} ${mod.def.id} add ${url} ${a.join(' ')}`;
+    let con = `${mod.def.id} add ${url} ${a.join(' ')}`;
     dis = aa.mk.l('p',{con});
-    aa.log(dis)
-    // ul.prepend(aa.mk.l('li',{con}))
+    l.append(dis);
+    // aa.log(dis)
   }
   
   if (invalid.length) aa.log(`invalid urls: ${invalid}`);
   
-  if (haz)
-  {
-    // let l = aa.mod.servers_add_details(cla);
-    // let log = l.parentElement;
-    // if (log) aa.logs.append(log);
-    // else aa.log(l)
-    aa.mod.save(mod);
-    // let dis;
-    // for (const url of [...off,...valid])
-    // {
-    //   let sets = mod.o.ls[url].sets.join(' ');
-    //   let con = `${localStorage.ns} ${mod.def.id} add ${url} ${sets}`;
-    //   dis = aa.mk.l('p',{con});
-    //   aa.log(dis)
-    //   let li = l.querySelector(`[data-id="${url}"]`);
-    //   if (!li) li = aa.mk.l('p',{con:`${url} ${mod.o.ls[url].sets.join(' ')}`})
-    //   l.append(li);
-    // }
-    // aa.fx.scroll(dis)
-  }
+  if (haz) aa.mod.save(mod);
   return all
 };
 

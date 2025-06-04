@@ -95,110 +95,6 @@ aa.u.load =async()=>
 };
 
 
-// u setup
-aa.u.setup =async(s='')=>
-{
-  let [pubkey,mode] = s.split(aa.fx.regex.fw).map(i=>i.trim());
-  let relays = [];
-
-  if (!s && !window.nostr)
-  {
-    aa.log('nip-7 extension not found');
-    aa.log('make sure it is active and try again');
-    aa.log('(tip)=> press control + shift + (arrow_up (↑) or arrow_down (↓)) to access prompt history')
-    return
-  }
-  else if (!s && window.nostr) pubkey = await window.nostr.getPublicKey();
-  else if (aa.is.key(s)) pubkey = s;
-  else if (s.startsWith('npub1')) pubkey = aa.fx.decode(s);
-  else
-  {
-    let dis;
-    if (s.includes('@')) dis = await NostrTools.nip05.queryProfile(s);
-    else if (s.startsWith('nprofile1')) dis = aa.fx.decode(s);
-
-    if (dis?.pubkey?.length) pubkey = dis.pubkey;
-    if (dis?.relays?.length) relays.push(...dis.relays);
-  }
-
-  if (!pubkey)
-  {
-    aa.log('unable to get public key');
-    return
-  }
-
-  // aa.log(`setting ${pubkey} as "u"`);
-  aa.u.add(pubkey);
-  await aa.u.start();
-
-  if (!mode)
-  {
-    aa.q.reset();
-    if (!Object.keys(aa.u.p.relays).length)
-    {
-      let log = aa.log('first, ');
-      let def_rels = 
-      [
-        'wss://nos.lol read write',
-        'wss://relay.damus.io read write',
-        'wss://relay.primal.net read write',
-      ];
-      let add_def_rels = 'r add '+def_rels.join(', ');
-      let rel_butt = aa.mk.butt_action(add_def_rels,'add some relays');
-      // rel_butt.addEventListener('click',e=>{e.closest('.l')?.remove()});
-      log.lastChild.append(rel_butt);
-
-
-      log = aa.log('then, ');
-      let req_butt = aa.mk.butt_action('q stuff','request basic stuff');
-      // let req_butt = aa.mk.l('button',
-      // {
-      //   con:'req stuff',
-      //   cla:'butt plug',
-      //   clk:e=>
-      //   {
-      //     aa.q.stuff();
-      //     // aa.clk.lp_rm(e);
-      //   }
-      // });
-      log.lastChild.append(req_butt);
-
-      log = aa.log('after that, ');
-      const reload_butt = aa.mk.l('button',{con:'reload the page',cla:'butt plug',clk:e=>{location.reload()}});
-      log.lastChild.append(reload_butt,' to finish setup');
-
-      // log = aa.log('or, ');
-      // aa.mk.butt_action('q stuff','request basic stuff');
-      // let req_butt = aa.mk.l('button',
-      // {
-      //   con:'req stuff',
-      //   cla:'butt plug',
-      //   clk:e=>
-      //   {
-      //     aa.q.stuff();
-      //     // aa.clk.lp_rm(e);
-      //   }
-      // });
-      // log.lastChild.append(req_butt);
-      // log = aa.log('after that, ');
-      // const reload_butt = aa.mk.l('button',{con:'reload the page',cla:'butt plug',clk:e=>{location.reload()}});
-      // log.lastChild.append(reload_butt,' to finish setup');
-      // setTimeout(()=>aa.fx.scroll(log),100);
-    }
-    
-
-    // await aa.r.stuff(relays);
-    // await aa.q.stuff();
-  }
-  else aa.o.add(`mode ${mode}`)
-
-  // aa.o.stuff();
-
-  // aa.log(`setting options with: .aa o add mode ${mode},trust 4`)
-  // aa.o.add(`mode ${mode},trust 4`);
-};
-
-
 // u add to s
 aa.u.k3_add =async s=>
 {
@@ -385,6 +281,91 @@ aa.u.mk =(k,v)=>
     default: l = aa.mk.item(k,v);
   }
   return l
+};
+
+
+// u setup
+aa.u.setup =async(s='')=>
+{
+  let [pubkey,mode] = s.split(aa.fx.regex.fw).map(i=>i.trim());
+  let relays = [];
+
+  if (!s && !window.nostr)
+  {
+    aa.log('nip-7 extension not found');
+    aa.log('make sure it is active and try again');
+    aa.log('(tip)=> press control + shift + (arrow_up (↑) or arrow_down (↓)) to access prompt history')
+    return
+  }
+  else if (!s && window.nostr) pubkey = await window.nostr.getPublicKey();
+  else if (aa.is.key(s)) pubkey = s;
+  else if (s.startsWith('npub1')) pubkey = aa.fx.decode(s);
+  else
+  {
+    let dis;
+    if (s.includes('@')) dis = await NostrTools.nip05.queryProfile(s);
+    else if (s.startsWith('nprofile1')) dis = aa.fx.decode(s);
+
+    if (dis?.pubkey?.length) pubkey = dis.pubkey;
+    if (dis?.relays?.length) relays.push(...dis.relays);
+  }
+
+  if (!pubkey)
+  {
+    aa.log('unable to get public key');
+    return
+  }
+
+  // aa.log(`setting ${pubkey} as "u"`);
+  aa.u.add(pubkey);
+  await aa.u.start();
+
+  if (!mode)
+  {
+    aa.q.reset();
+    if (!Object.keys(aa.u.p.relays).length)
+    {
+      let log = aa.log('first, ');
+      let def_rels = 
+      [
+        'wss://nos.lol read write',
+        'wss://relay.damus.io read write',
+        'wss://relay.primal.net read write',
+      ];
+      let add_def_rels = 'r add '+def_rels.join(', ');
+      let rel_butt = aa.mk.butt_action(add_def_rels,'add some relays');
+      log.lastChild.append(rel_butt);
+
+      log = aa.log('then, ');
+      let req_butt = aa.mk.butt_action('q stuff','request basic stuff');
+      log.lastChild.append(req_butt);
+
+      log = aa.log('after that, ');
+      const options_butt = aa.mk.butt_action('o add trust 4, theme light','adjust options');
+      // aa.mk.l('button',
+      // {
+      //   con:'adjust options',
+      //   cla:'butt plug',
+      //   clk:e=>{location.reload()}
+      // });
+      log.lastChild.append(options_butt,' like theme or trust so it loads images');
+      
+      log = aa.log('finally, ');
+      const reload_butt = aa.mk.l('button',
+      {
+        con:'reload the page',
+        cla:'butt plug',
+        clk:e=>{location.reload()}
+      });
+      log.lastChild.append(reload_butt,' to finish setup');
+    }
+  }
+  else aa.o.add(`mode ${mode}`)
+
+  // aa.o.stuff();
+
+  // aa.log(`setting options with: .aa o add mode ${mode},trust 4`)
+  // aa.o.add(`mode ${mode},trust 4`);
 };
 
 

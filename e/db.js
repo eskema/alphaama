@@ -24,21 +24,13 @@ aa.db.events =async ids=>
 // returns event if already loaded or get it from database
 aa.db.get_a =async id_a=>
 {
-  const store = 'events';
-  const [kind,pubkey,identifier] = aa.fx.split_ida(id_a);
-  let key;
-  try 
-  {
-    let p = await aa.p.get(pubkey);
-    key = p.events['k'+kind][identifier][0][0]
-  } 
-  catch(er) {}
-
-  if (key)
-  {
-    if (aa.db.e[key]) return aa.db.e[key];
-    return aa.db.e[key] = await aa.db.ops('idb',{get:{store,key}});
-  }
+  let version = Object.values(aa.db.e)
+    .filter(i=>i.id_a === id_a)
+    .sort(aa.fx.sorts.ca_desc)[0];
+  if (version) return version;
+  
+  let versions = await aa.db.ops('idb',{dex:{index:'id_a',store:'events',a:[id_a]}});
+  if (versions.length) return version[0];
   return false
 };
 

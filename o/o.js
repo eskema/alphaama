@@ -70,7 +70,7 @@ aa.o.defaults =
 // add key as value
 aa.o.add =(s='')=>
 {
-  const as = s.split(',');
+  const as = s.split(',').map(i=>i.trim());
   if (as.length)
   {
     for (const i of as)

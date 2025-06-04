@@ -13,6 +13,7 @@ aa.view.clear =()=>
           for (const l of aa.view.in_path) aa.fx.path_rm(l);
       }
       delete aa.view.in_view;
+      delete aa.view.id_a;
     }
   }
   aa.view.active = false;
@@ -51,9 +52,7 @@ aa.view.pop =()=>
       title += state;
       aa.view.resolve(state,search);
     }
-    // else title += 'alphaama';
-    document.title = title;
-    fastdom.mutate(()=>{if(aa.state.l) aa.state.l.textContent = state;});
+    aa.view.tits(title,state);
   }
 };
 
@@ -99,6 +98,14 @@ aa.view.state =(s,search='')=>
     aa.view.force({view,last});
   }
   else if (history.length) history.back();
+};
+
+
+// update title and state ui
+aa.view.tits =(title,state)=>
+{
+  if (title) document.title = title;
+  if (state && aa.state.l) fastdom.mutate(()=>{aa.state.l.textContent = state});
 };
 
 

@@ -7,38 +7,25 @@ aa.view.ls.naddr1 =async naddr=>
     return;
   }
   aa.log('naddr '+JSON.stringify(data));
-  // let {kind,pubkey,identifier,relays} = data;
-  let id_a = aa.fx.id_a(data);  
+  let id_a = aa.view.id_a = aa.fx.id_a(data);
+  
+  // aa.view.replace(`#${id_a}`);
+  // aa.view.tits(data.identifier,id_a);
   let l = aa.temp.printed.find(i=>i.dataset.id_a === id_a);
   // let l = document.getElementById(nid);
-  if (l) 
+  if (l)
   {
-    aa.view.upd(aa.fx.encode('note',l.dataset.id));
+    aa.view.upd(`#${aa.fx.encode('note',l.dataset.id)}`);
     return
   }
 
-  // let dat = await aa.db.get_e(data.id);
-  // if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
-  // else 
-  // {
-  //   dat = aa.mk.dat(
-  //   {
-  //     event:{id:data.id,created_at:aa.now - 10},
-  //     seen:[aa.fx.in_set(aa.r.o.ls,aa.r.o.r)]
-  //   });
-
-  //   if (data.author) dat.event.pubkey = data.author;
-  //   if (data.kind) dat.event.kind = data.kind;
-  //   if (data.relays)
-  //   {
-  //     for (let url of data.relays)
-  //     {
-  //       url = aa.is.url(url)?.href;
-  //       if (url) aa.fx.a_add(dat.seen,[url]);
-  //     }
-  //   }
-  //   aa.r.def_req('ids',{ids:[dat.event.id]},[...dat.seen]);
-  // }
+  let dat = await aa.db.get_a(id_a);
+  if (dat) aa.e.to_printer(dat);
+  else
+  {
+    aa.e.miss_a(id_a,data.relays);
+    aa.get.missing('a');
+  }
 };
 
 
