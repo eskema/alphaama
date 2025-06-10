@@ -119,7 +119,7 @@ aa.mod.servers_add_details =cla=>
 
 
 // add server item with sets to mod
-aa.mod.servers_add =(mod,s='',id='server')=>
+aa.mod.servers_add =(mod,s='',cla='server')=>
 {
   const valid = [];
   const invalid = [];
