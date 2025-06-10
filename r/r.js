@@ -1,5 +1,3 @@
-if (!aa) aa = {};
-
 /*
 
 alphaama
@@ -7,6 +5,9 @@ mod    r
 relays
 
 */
+
+
+if (!Object.hasOwn(localStorage,'outnum')) localStorage.outnum = '3';
 
 
 aa.r =
@@ -23,7 +24,7 @@ aa.r =
 // add relays
 aa.r.add =s=>
 {
-  let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relays');
+  let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relays added');
   for (const url of off) aa.r.force_close([url]);
   aa.r.manager.postMessage(['relays',aa.r.o.ls]);
 };
@@ -467,7 +468,7 @@ aa.r.outbox =(a=[],sets=[])=>
   if (!sets.length) sets = [aa.r.o.w,'k10002'];
   if (!a?.length) return [];
   let relays = aa.r.common(a,sets);
-  let outbox = aa.fx.intersect(relays,a,3);
+  let outbox = aa.fx.intersect(relays,a,parseInt(localStorage.outnum));
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
   return sorted_outbox;
 };

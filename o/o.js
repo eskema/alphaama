@@ -20,7 +20,7 @@ aa.o =
       'pow':'0', // proof of work difficulty
       'reaction':'\uD83E\uDD18', // '🤘' default reaction emoji
       'theme':'dark', // 'light'
-      'trust':'11', // user score needed for loading media
+      'score':'11', // user score needed for loading media
     },
 // todo
 //     'nav_keys':
@@ -38,7 +38,7 @@ aa.o =
   },
 };
 
-// given a theme, returns the other one for quick input
+// given a value, returns the other one for quick input
 aa.o.defaults =
 {
   cash:
@@ -81,7 +81,7 @@ aa.o.add =(s='')=>
         let oldValue = localStorage[key];
         localStorage[key] = newValue;
         aa.mod.ui(aa.o,key);
-        aa.o.on_storage({key,newValue,oldValue})
+        aa.o.on_upd({key,newValue,oldValue})
       }
     }
   }
@@ -172,9 +172,31 @@ aa.o.load =async()=>
 
 aa.o.on_storage =async o=>
 {
-  let log = aa.mk.l('p',{con:o.key+' '+o.newValue});
-  if (o.oldValue?.length) log.append(' ',aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo'));
+  // aa.o.on_upd(o);
+  let con = `options changed in another tab: ${o.key} ${o.newValue}`;
+  let log = aa.mk.l('p',{con});
+  let clk =e=>
+  {
+    aa.mod.ui(aa.o,o.key);
+    let mom = e.target.parentElement;
+    e.target.remove();
+    // mom.textContent = '';
+    mom.append(aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo'))
+  };
+  con = 'apply on this tab';
+  let apply_butt = aa.mk.l('button',{cla:'butt plug',con,clk});
+  if (o.oldValue?.length) log.append(' ',apply_butt);
   aa.log(log);
+};
+
+
+aa.o.on_upd =async o=>
+{
+  let log = aa.mk.l('p',{con:o.key+' '+o.newValue});
+  let undo_butt = aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo');
+  if (o.oldValue?.length) log.append(' ',undo_butt);
+  log = aa.log(log);
+  return log
 };
 
 

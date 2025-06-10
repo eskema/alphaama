@@ -51,6 +51,12 @@ aa.q =
       "limit":500
     },
     ref:{"#e":["x"],"limit":200},
+    replies:
+    {
+      "authors":["u","k3"],
+      "kinds":[11,1111],
+      "since":"n_6"
+    },
     tag:{"#t":["s"],"limit":200},
     u:{"authors":["u"],"since":"n_7","limit":500},
   },

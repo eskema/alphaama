@@ -107,6 +107,53 @@ aa.e.append_check =(dat,note,tag)=>
       aa.e.orphan(dat,note,tag);
       aa.e.miss_print_a(tag,relays);
     }
+    else 
+    {
+      aa.e.append_as_rep(note,reply.querySelector('.replies'));
+      if (note.classList.contains('orphan')) note.classList.remove('orphan');
+    }
+    return;
+  }
+  
+  reply = aa.temp.printed.find(i=>i.dataset.id === reply_id);
+  
+  if (!reply)
+  {
+    aa.e.orphan(dat,note,tag);
+    // let tag_root = aa.get.tag_root(dat.event.tags);
+    // if (tag_root && tag_root[1] !== reply_id)
+    // {
+    //   let root = aa.temp.printed.find(i=>i.dataset.id === tag_root[1]);
+    //   if (!root) aa.e.miss_print(tag_root);
+    // }
+    aa.e.miss_print(tag,relays);
+    setTimeout(()=>{aa.e.append_as_orphan(dat,note,reply_id)},6666)
+  }
+  else
+  {
+    aa.e.append_as_rep(note,reply.querySelector('.replies'));
+    if (note.classList.contains('orphan')) note.classList.remove('orphan');
+  }
+};
+
+
+// append a note comment
+aa.e.append_as_comment =(dat,note)=>
+{
+  let tag = aa.get.tag_comment_reply(dat.event.tags);
+  const reply_id = tag[1];
+  let p = aa.db.p[dat.event.pubkey];
+  let relays = aa.fx.in_set(p?.relays,'write');
+  let reply;
+
+  if (tag[0] === 'a')
+  {
+    reply = aa.temp.printed.find(i=>i.dataset.id_a === reply_id);
+    if (!reply)
+    {
+      aa.e.orphan(dat,note,tag);
+      aa.e.miss_print_a(tag,relays);
+    }
     else aa.e.append_as_rep(note,reply.querySelector('.replies'));
     return;
   }
@@ -116,18 +163,39 @@ aa.e.append_check =(dat,note,tag)=>
   if (!reply)
   {
     aa.e.orphan(dat,note,tag);
-    let tag_root = aa.get.tag_root(dat.event.tags);
-    if (tag_root && tag_root[1] !== reply_id)
-    {
-      let root = aa.temp.printed.find(i=>i.dataset.id === tag_root[1]);
-      if (!root) aa.e.miss_print(tag_root);
-    }
     aa.e.miss_print(tag,relays);
+    setTimeout(()=>{aa.e.find_parents(dat,note,reply_id)},6666)
   }
   else
   {
     aa.e.append_as_rep(note,reply.querySelector('.replies'));
   }
+};
+
+
+aa.e.append_as_orphan =(dat,note,reply_id)=>
+{
+  if (note.parentElement) return;
+  let root;
+  let tag_root = aa.get.tag_comment_root(dat.event.tags);
+  if (tag_root && tag_root[1] !== reply_id)
+  {
+    let root_kind = tag_root[0];
+    if (root_kind === 'e')
+    {
+      root = aa.temp.printed.find(i=>i.dataset.id === tag_root[1]);
+      if (!root) aa.e.miss_print(tag_root);
+    }
+    else if (root_kind === 'a')
+    {
+      root = aa.temp.printed.find(i=>i.dataset.id_a === tag_root[1]);
+      if (!root) aa.e.miss_print_a(tag_root);
+    }
+  }
+
+  note.classList.add('orphan');
+  if (root) aa.e.append_as_rep(note,root.querySelector('.replies'));
+  else aa.e.append_as_root(note);
 };
 
 
@@ -820,7 +888,7 @@ aa.e.quotes_to =async q_id=>
 // render event type kinds
 aa.e.rnd =
 {
-  content:[1,30023],
+  content:[1,11,1111,30023],
   emojii:[7],
   encrypted:[4],
   highlight:[9802],
@@ -953,14 +1021,25 @@ aa.e.render_highlight =async(note,dat,o={})=>
 
   let comment = aa.fx.tag_value(dat.event.tags,'comment');
   if (comment) comment = aa.parse.content(comment,is_trusted);
-  let note_content = note.querySelector('.content');
   let highlight = aa.mk.l('div',{cla:'highlight',app:aa.parse.content(dat.event.content,is_trusted)});
   if (highlight.childNodes.length) 
   {
     fastdom.mutate(()=>
     {
-      note_content.classList.toggle('parsed');
-      note_content.textContent = '';
+      let note_content = note.querySelector('.content');
+      if (!note_content) 
+      {
+        note_content = new DocumentFragment();
+        // console.trace('no content',note,dat);
+        // note_content = note;
+      }
+      else
+      {
+        // console.log('fine');
+        // note_content.classList.add('parsed');
+        note_content.textContent = '';
+      }
+      note_content.classList.add('parsed');
       note_content.append(highlight,source);
       if (comment) note_content.prepend(comment);
     });
@@ -1008,6 +1087,31 @@ aa.e.render_video =async(l,dat)=>
     if (content) content.prepend(av);
     else l.insertBefore(av,l.children[1])
   }
+};
+
+
+aa.e.kinda_reply =async(dat,reply_dat)=>
+{
+  // let notes = new Set([1]);
+  let tags;
+  if (reply_dat.event.kind === 1)
+  {
+    tags = aa.get.tags_for_reply(reply_dat.event)
+  }
+  else
+  {
+    switch (reply_dat.event.kind)
+    {
+      case 11:
+      case 1111:
+        dat.event.kind = reply_dat.event.kind;
+        break;
+      default:
+        dat.event.kind = 1111;
+    }
+    tags = await aa.get.tags_for_comment(reply_dat.event);
+  }
+  dat.event.tags.push(...tags);
 };
 
 

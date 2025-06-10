@@ -119,17 +119,15 @@ aa.mod.servers_add_details =cla=>
 
 
 // add server item with sets to mod
-aa.mod.servers_add =(mod,s='',cla='server')=>
+aa.mod.servers_add =(mod,s='',id='server')=>
 {
   const valid = [];
   const invalid = [];
   const off = [];
   const all = [valid,invalid,off];
   const as = s.split(',');
-  if (!as.length) return all;
-
-  let l = aa.mod.servers_add_details('r add …');
-  // let ul = l.lastElementChild;
+  if (!as.length) return all;  
+  let df = new DocumentFragment();
   let haz;
   for (const i of as) 
   {
@@ -165,14 +163,17 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
     }
     
     let con = `${mod.def.id} add ${url} ${a.join(' ')}`;
-    dis = aa.mk.l('p',{con});
-    l.append(dis);
+    df.append(aa.mk.l('p',{con}));
     // aa.log(dis)
   }
   
   if (invalid.length) aa.log(`invalid urls: ${invalid}`);
   
-  if (haz) aa.mod.save(mod);
+  if (haz) 
+  {
+    aa.mod.save(mod);
+    aa.mod.servers_add_details(cla).append(df);
+  }
   return all
 };
 

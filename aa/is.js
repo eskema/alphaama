@@ -80,8 +80,8 @@ aa.is.url =s=>
 aa.is.trusted =trust=>
 {
   let trust_needed;
-  try { trust_needed = parseInt(localStorage.trust) } 
-  catch (er) { console.error('!trust',localStorage.trust) }
+  try { trust_needed = parseInt(localStorage.score) } 
+  catch (er) { console.error('!trust',localStorage.score) }
   if (Number.isInteger(trust_needed) && trust >= trust_needed) return true;
   return false
 };

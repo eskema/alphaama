@@ -84,6 +84,18 @@ aa.kinds[16] =dat=>
 };
 
 
+// generic comment
+aa.kinds[1111] =dat=>
+{
+  let note = aa.mk.note(dat);
+  aa.p.from_tags(dat.event.tags);
+  aa.e.append_as_comment(dat,note);
+  return note
+};
+
+aa.kinds[11] = aa.kinds[1111];
+
+
 // zap template
 aa.kinds[9735] = aa.kinds[1];
 

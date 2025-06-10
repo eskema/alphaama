@@ -386,10 +386,10 @@ aa.mk.nip7_butt =()=>
   aa.log(aa.mk.l('button',
   {
     con:'window.nostr: not found, you need it for signing',
-    cla:'butt',
+    cla:'butt nip07_check',
     clk:e=>
     {
-      aa.clk.clkd(e.target);
+      aa.clk.clkd(e);
       if (window.nostr)
       {
         let parent = e.target.parentElement;

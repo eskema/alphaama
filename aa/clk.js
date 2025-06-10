@@ -20,10 +20,17 @@ aa.clk.clear =e=>
 
 
 // adds a clicked class to show interaction
-aa.clk.clkd =l=>
+aa.clk.clkd =e=>
 {
+  let l = e.target;
   l.classList.remove('clkd');
   setTimeout(()=>{l.classList.add('clkd')},100);
+};
+
+
+aa.clk.done =e=>
+{
+  e.target.classList.add('done')
 };
 
 

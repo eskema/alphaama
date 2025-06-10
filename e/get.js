@@ -151,7 +151,6 @@ aa.get.tag_e_last =tags=>
 };
 
 
-
 // gets a or e tag marked 'reply' or the last not marked 'mention'
 aa.get.tag_reply =tags=>
 {
@@ -173,10 +172,26 @@ aa.get.tag_root =tags=>
 };
 
 
+aa.get.tag_comment_reply =tags=>
+{
+  return tags.find(t=>t[0]==='a') 
+  || tags.find(t=>t[0]==='e')
+  || tags.find(t=>t[0]==='i');
+};
+
+
+aa.get.tag_comment_root =tags=>
+{
+  let tag = tags.find(t=>t[0]==='A')
+  || tags.find(t=>t[0]==='E')
+  || tags.find(t=>t[0]==='I');
+  return tag
+};
+
+
 // returns tags for building a reply
 aa.get.tags_for_reply =event=>
 {  
-  // wip... needs to account for "a" tag
   const tags = [];
   const seen = aa.get.seen(event.id);
   let tag = aa.get.tag_root(event.tags);
@@ -198,7 +213,7 @@ aa.get.tags_for_reply =event=>
     tags.push(['e',event.id,seen,'reply',event.pubkey]);
     if (event.kind !== 1) tags.push(['k',`${event.kind}`]);
   }
-  else 
+  else
   {
     if (aa.fx.kind_type(event.kind) === 'parameterized')
     {
@@ -218,5 +233,70 @@ aa.get.tags_for_reply =event=>
   && !dis_p_tags.some(t=>t[1] === event.pubkey)) dis_p_tags.push(aa.fx.tag_p(event.pubkey));
   // needs to do more here...
   tags.push(...dis_p_tags);
+  return tags
+};
+
+
+// returns tags for building a reply
+aa.get.tags_for_comment =async event=>
+{
+  
+  const seen = aa.get.seen(event.id);
+  const is_reply =kind=>[11,1111].includes(kind);
+ 
+  let reply_tag = ['e',event.id,seen,event.pubkey];
+  let reply_kind = ['k',event.kind];
+
+  let root_tag = aa.get.tag_comment_root(event.tags);
+  let root_kind = ['K',event.kind];
+
+  
+  const p_tags = [];
+  
+  if (is_reply(event.kind))
+  {
+    let og_root_tag = aa.get.tag_comment_root(event.tags);
+    if (!og_root_tag)
+    {
+      aa.log('error');
+      return
+    }
+    // should rebuild root tag but for now it just copies
+    // from replied event
+    root_tag = og_root_tag;
+    let og_root_kind = event.tags.find(i=>i[0]==='K');
+    if (og_root_kind) root_kind = og_root_kind;
+    p_tags.push(...aa.get.p_tags(event));
+  }
+  else
+  {
+    if (aa.fx.kind_type(event.kind) === 'parameterized')
+    {
+      reply_tag = aa.fx.tag_a(event);
+      if (!reply_tag)
+      {
+        aa.log('error')
+        return
+      }
+      reply_tag.push(seen);
+      root_tag = ['A',...reply_tag.slice(1)];
+
+    }
+    p_tags.push(aa.fx.tag_p(event.pubkey));
+  }
+  return [root_tag,root_kind,reply_tag,reply_kind,...p_tags];
+  //return tags_for_comment
+};
+
+
+aa.get.p_tags =(event)=>
+{
+  let condition =t=> t[1]!==aa.u.p.pubkey && aa.is.tag_p(t);
+  const tags = aa.fx.a_u(event.tags.filter(condition));
+  
+  const not_u = event.pubkey !== aa.u.p.pubkey;
+  const not_in_tags = !tags.some(t=> t[0]==='p' && t[1]===event.pubkey);
+  
+  if (not_u && not_in_tags) tags.push(aa.fx.tag_p(event.pubkey));
   return tags
 };

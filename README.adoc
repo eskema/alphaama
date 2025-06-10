@@ -40,7 +40,7 @@ image::https://i.nostr.build/XyflANm8pOEQUHI6.jpg["screenshot of alphaama"]
 * can be used to create any event type and autofills the missing required fields (raw JSON)
 * you can use multiple tabs with different requests
 * to reset everything, type: `.aa zzz`
-* some commands can be repeated using `,` as a separator (ex: `.aa o add trust 4, theme light, pagination 500, ns gm`)
+* some commands accept multiple entries using `,` as a separator (ex: `.aa o add score 4, theme light, pagination 500, ns gm`)
 * some commands may be piped using ` | `
 
 
@@ -51,7 +51,7 @@ image::https://i.nostr.build/XyflANm8pOEQUHI6.jpg["screenshot of alphaama"]
 
 
 
-video::https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4["example of how to switch theme from dark to light and then setting `trust` to `4` so it loads stuff from your fellas:"]
+video::https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4["example of how to switch theme from dark to light and then setting `score` to `4` so it loads stuff from your fellas:"]
 
 
 == (r) RELAYS
@@ -137,7 +137,7 @@ soon™
 
 the WoT score system used here is very primitive and consists of 2 integer values:
 
-* a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc). this value relates to the `trust` option
+* a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc). this value relates to the `score` option
 * a generated value from the number of followers a pubkey has that you also follow. this is only used as a visual hint
 
 

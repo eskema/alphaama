@@ -99,7 +99,7 @@ aa.clk.na =e=>
 aa.clk.render =e=>
 {
   const note = e.target.closest('.note');
-  aa.e.render(note,{trust:localStorage.trust});
+  aa.e.render(note,{trust:localStorage.score});
 };
 
 

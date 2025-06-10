@@ -471,6 +471,11 @@ img:not([src]) {
   line-height: 1rem;
 }
 
+.butt.plug.done
+{
+  text-decoration: line-through;
+}
+
 .butt.decrypt,
 .butt.confirm,
 .butt.yes

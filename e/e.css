@@ -44,7 +44,7 @@
     "after    after    after"
     "by       by       by"
     "content  content  replies"
-    "tags     tags     replies"
+    "tags     tags     tags"
     "versions versions versions";
 }
 
@@ -327,7 +327,7 @@ a.author.fu .name
 
 .author.fu::after
 {
-  color: rgb(var(--color-main));
+  color: rgb(var(--color-sad));
 }
 
 .author.is_bff.fu::after
@@ -1230,6 +1230,25 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /* @end */
 
+/* @group orphan */
+
+.note.orphan
+{
+  border-top: dashed;
+  border-left: dashed;
+  padding-top: var(--line);
+  padding-left: var(--pad);
+}
+
+.note.orphan::before
+{
+  content: "parent event not found";
+  font-size: var(--font-size-s);
+  position: absolute;
+  /*transform: translateY(-150%);*/
+}
+
+/* @end */
 
 /* @group quote */
 
@@ -1456,7 +1475,7 @@ html:not(.needs_pagin) .pagination
 
 .highlight
 {
-  border: 1px dotted rgba(var(--color-maybe),.4);
+  border: 1px dotted rgba(var(--color-main),.6);
   display: block;
   max-width: 80vw;
   margin: var(--pad);
@@ -1468,8 +1487,8 @@ html:not(.needs_pagin) .pagination
 {
   background: linear-gradient(to bottom, 
     rgba(var(--color-b),1) 6%, 
-    rgba(var(--color-maybe),.21) 6%, 
-    rgba(var(--color-maybe),.21) 94%, 
+    rgba(var(--color-main),.21) 6%, 
+    rgba(var(--color-main),.21) 94%, 
     rgba(var(--color-b),1) 94%);
   color: rgba(var(--color-e),1);
   display: inline;
@@ -1482,7 +1501,7 @@ html:not(.needs_pagin) .pagination
 
 .source
 {
-  border: 1px dotted rgba(var(--color-maybe),.4);
+  border: 1px dotted rgba(var(--color-main),.6);
   border-top: none;
   display: block;
   font-size: var(--font-size-s);

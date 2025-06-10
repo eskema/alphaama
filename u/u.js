@@ -287,12 +287,14 @@ aa.u.mk =(k,v)=>
 // u setup
 aa.u.setup =async(s='')=>
 {
+  aa.u.setup_sheet = {s};
+  aa.log('u re beeing set up… '+(aa.u.setup_sheet.s||'via nip07 extension using window.nostr'));
   let [pubkey,mode] = s.split(aa.fx.regex.fw).map(i=>i.trim());
   let relays = [];
 
   if (!s && !window.nostr)
   {
-    aa.log('nip-7 extension not found');
+    aa.log('nip07 extension not found');
     aa.log('make sure it is active and try again');
     aa.log('(tip)=> press control + shift + (arrow_up (↑) or arrow_down (↓)) to access prompt history')
     return
@@ -316,11 +318,15 @@ aa.u.setup =async(s='')=>
     return
   }
 
-  // aa.log(`setting ${pubkey} as "u"`);
+  aa.u.setup_sheet.pubkey = pubkey;
+  aa.u.setup_sheet.relays = relays;
+  aa.u.setup_sheet.mode = mode;
+
   aa.u.add(pubkey);
   await aa.u.start();
 
-  if (!mode)
+  if (mode) aa.o.add(`mode ${mode}`);
+  else
   {
     aa.q.reset();
     if (!Object.keys(aa.u.p.relays).length)
@@ -333,22 +339,19 @@ aa.u.setup =async(s='')=>
         'wss://relay.primal.net read write',
       ];
       let add_def_rels = 'r add '+def_rels.join(', ');
-      let rel_butt = aa.mk.butt_action(add_def_rels,'add some relays');
+      const rel_butt = aa.mk.butt_action(add_def_rels,'add some relays');
+      rel_butt.addEventListener('click',aa.clk.done);
       log.lastChild.append(rel_butt);
 
       log = aa.log('then, ');
-      let req_butt = aa.mk.butt_action('q stuff','request basic stuff');
+      const req_butt = aa.mk.butt_action('q stuff','request basic stuff');
+      req_butt.addEventListener('click',aa.clk.done);
       log.lastChild.append(req_butt);
 
-      log = aa.log('after that, ');
+      log = aa.log('if needed ');
       const options_butt = aa.mk.butt_action('o add trust 4, theme light','adjust options');
-      // aa.mk.l('button',
-      // {
-      //   con:'adjust options',
-      //   cla:'butt plug',
-      //   clk:e=>{location.reload()}
-      // });
-      log.lastChild.append(options_butt,' like theme or trust so it loads images');
+      options_butt.addEventListener('click',aa.clk.done);
+      log.lastChild.append(options_butt,' like: theme light, trust 4 so it loads images');
       
       log = aa.log('finally, ');
       const reload_butt = aa.mk.l('button',
@@ -357,10 +360,9 @@ aa.u.setup =async(s='')=>
         cla:'butt plug',
         clk:e=>{location.reload()}
       });
-      log.lastChild.append(reload_butt,' to finish setup');
+      log.lastChild.append(reload_butt,' to clean things up and start fresh');
     }
   }
-  else aa.o.add(`mode ${mode}`)
 
   // aa.o.stuff();
 

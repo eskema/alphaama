@@ -120,28 +120,33 @@ aa.cli.dat_mk =async(s,reply_to)=>
     event: aa.e.normalise({content:s}),
     clas:['draft']
   });
-  
-  if (reply_to)
+
+  aa.fx.reply(aa.cli.dat,reply_to);
+};
+
+
+aa.fx.reply =async(dat,reply_s)=>
+{
+  if (!reply_s) return;
+
+  let x = aa.fx.decode(reply_s);
+  if (reply_s.startsWith('note'))
   {
-    let x = aa.fx.decode(reply_to);
-    if (reply_to.startsWith('note'))
+    let reply_dat = await aa.db.get_e(x);
+    if (!reply_dat) 
     {
-      let reply_dat = aa.db.e[x];
-      if (!reply_dat) reply_dat = await aa.db.get_e(x);
-      if (reply_dat)
-      {
-        const reply_e = aa.db.e[x].event;
-        aa.cli.dat.event.tags.push(...aa.get.tags_for_reply(reply_e));
-        aa.cli.dat.replying = reply_to;
-      }
+      console.log('reply not found')
+      return
     }
-    else if (reply_to.startsWith('npub'))
-    {
-      aa.cli.dat.event.kind = 4;
-      aa.cli.dat.event.tags = [['p',x]];
-    }
+    dat.replying = reply_s;
+    aa.e.kinda_reply(dat,reply_dat);
   }
-  // aa.cli.draft(aa.cli.dat);
+  else if (reply_s.startsWith('npub'))
+  {
+    aa.log('the dm feature has been disabled for now');
+    // dat.event.kind = 4;
+    // dat.event.tags = [['p',x]];
+  }
 };
 
 
@@ -162,17 +167,14 @@ aa.cli.dat_upd =async(s='')=>
   if (!s) s = aa.cli.t.value;
   if (s.length)
   {
-    const reply_to = aa.view.active;    
+    const reply_to = aa.view.active;
     if (reply_to && aa.cli.dat?.replying !== reply_to) delete aa.cli.dat;
-    if (!aa.cli.hasOwnProperty('dat')) aa.cli.dat_mk(s,reply_to)
+    if (!Object.hasOwn(aa.cli,'dat')) aa.cli.dat_mk(s,reply_to)
     else aa.cli.dat.event.content = s;
-    // aa.cli.draft(aa.cli.dat);
   }
-  else if (aa.cli.hasOwnProperty('dat')) 
+  else if (Object.hasOwn(aa.cli,'dat'))
   {
     delete aa.cli.dat;
-    let draft = aa.cli.l.querySelector('.note.draft');
-    if (draft) draft.parentElement.remove();
   }
 };
 
