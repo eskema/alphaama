@@ -331,7 +331,7 @@ aa.u.setup =async(s='')=>
     aa.q.reset();
     if (!Object.keys(aa.u.p.relays).length)
     {
-      let log = aa.log('first, ');
+      let log = aa.log('now, ');
       let def_rels = 
       [
         'wss://nos.lol read write',
@@ -349,9 +349,9 @@ aa.u.setup =async(s='')=>
       log.lastChild.append(req_butt);
 
       log = aa.log('if needed ');
-      const options_butt = aa.mk.butt_action('o add trust 4, theme light','adjust options');
+      const options_butt = aa.mk.butt_action('o add score 4, theme light, pow 17','adjust options');
       options_butt.addEventListener('click',aa.clk.done);
-      log.lastChild.append(options_butt,' like: theme light, trust 4 so it loads images');
+      log.lastChild.append(options_butt);
       
       log = aa.log('finally, ');
       const reload_butt = aa.mk.l('button',
