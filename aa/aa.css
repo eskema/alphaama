@@ -925,6 +925,8 @@ html:not(.cli_expanded) .l:not(.is_new),
   grid-template-columns: 1fr;
   padding: var(--line);
   padding-left: 0;
+  /*padding-right: var(--size);*/
+  padding-top: calc(var(--line) + var(--font-size));
   width: 100%;
 }
 
@@ -977,17 +979,25 @@ html:not(.cli_expanded) .l:not(.is_new),
   background: rgba(var(--color-a),.8);
   font-size: var(--font-size-m);
   padding: var(--pad);
+  user-select: none;
 }
 
 #mods .mod[open] > summary
 {
   color: rgb(var(--color-f));
   display: grid;
+  grid-template-columns: 1fr auto;
   justify-self: stretch;
   margin-bottom: var(--pad);
   position: sticky;
+  /*text-align: right;*/
   top: 0;
 }
+
+/*#mods .mod[open] > summary::before
+{
+  text-align: center;
+}*/
 
 .mod .item 
 {
@@ -1022,6 +1032,9 @@ html:not(.cli_expanded) .l:not(.is_new),
 {
   content: "(" attr(data-state) ") " attr(data-subs);
   margin-right: var(--pad);
+  max-width: 12rem;
+  overflow-x: scroll;
+  white-space: pre;
 }
 
 .mod .server[data-state="1"]::after

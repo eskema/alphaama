@@ -409,9 +409,9 @@ aa.cli.oto_act =(s)=>
 aa.cli.run =async s=>
 {
   aa.cli.history_upd(s);
+  aa.log(s);
   if (aa.is.act(s)) aa.cli.exe(s);
   else if (aa.cli.def) aa.cli.def.exe(s)
-  else aa.log(s)
 };
 
 

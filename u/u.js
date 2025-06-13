@@ -341,7 +341,7 @@ aa.u.setup =async(s='')=>
       let add_def_rels = 'r add '+def_rels.join(', ');
       const rel_butt = aa.mk.butt_action(add_def_rels,'add some relays');
       rel_butt.addEventListener('click',aa.clk.done);
-      log.lastChild.append(rel_butt);
+      log.lastChild.append(rel_butt, ' so you can find your stuff');
 
       log = aa.log('then, ');
       const req_butt = aa.mk.butt_action('q stuff','request basic stuff');
@@ -349,7 +349,7 @@ aa.u.setup =async(s='')=>
       log.lastChild.append(req_butt);
 
       log = aa.log('if needed ');
-      const options_butt = aa.mk.butt_action('o add score 4, theme light, pow 17','adjust options');
+      const options_butt = aa.mk.butt_action('o add score 4, pow 17, theme light','adjust options');
       options_butt.addEventListener('click',aa.clk.done);
       log.lastChild.append(options_butt);
       
@@ -360,7 +360,7 @@ aa.u.setup =async(s='')=>
         cla:'butt plug',
         clk:e=>{location.reload()}
       });
-      log.lastChild.append(reload_butt,' to clean things up and start fresh');
+      log.lastChild.append(reload_butt,' to clean things up');
     }
   }
 

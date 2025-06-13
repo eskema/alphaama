@@ -140,7 +140,7 @@
 .cli_expanded #butt_u_u
 {
   bottom: unset;
-  top: 0;
+  top: var(--font-size);
 
 }
 

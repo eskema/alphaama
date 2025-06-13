@@ -1242,7 +1242,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .note.orphan::before
 {
-  content: "parent event not found";
+  content: "reply still not found";
   font-size: var(--font-size-s);
   padding: var(--padm);
   position: absolute;
@@ -1723,7 +1723,7 @@ html:not(.needs_pagin) .pagination
     z-index: 999;
   }
   
-  .content-img 
+/*  .content-img 
   {
     opacity: .5;
   }
@@ -1732,7 +1732,7 @@ html:not(.needs_pagin) .pagination
   .content-img.emojii
   {
     opacity: 1;
-  }
+  }*/
 }
 
 @media screen and (max-width: 768px) 
