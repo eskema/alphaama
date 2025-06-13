@@ -93,6 +93,7 @@ const connect =(a=[])=>
       worker.failures.push(get.now);
       setTimeout(connect,get.times)
     }
+    else terminate();
   };
   ws.onmessage = on_message;
   ws.onopen =()=>

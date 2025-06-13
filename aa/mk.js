@@ -508,16 +508,14 @@ aa.mk.server =(k,v)=>
 {
   k = aa.is.url(k);
   if (!k) return false;
-
-  const l = aa.mk.l('li',{cla:'item server'});
-  const url_l = aa.mk.l('p',{cla:'url'});
-  url_l.append(
+  let app = aa.mk.l('p',{cla:'url'});
+  const l = aa.mk.l('li',{cla:'item server',app});
+  app.append(
     aa.mk.l('span',{cla:'protocol',con:k.protocol+'//'}),
     aa.mk.l('span',{cla:'host',con:k.host}),
     aa.mk.l('span',{cla:'pathname',con:k.pathname}),
     aa.mk.l('span',{cla:'hashsearch',con:k.hash+k.search})
   ); 
-  l.append(url_l); 
-  if (v.sets && v.sets.length) l.dataset.sets = v.sets;   
+  if (v.sets && v.sets.length) l.dataset.sets = v.sets;
   return l
 };

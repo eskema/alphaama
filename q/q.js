@@ -517,7 +517,7 @@ aa.q.reset =(keys=[])=>
 
 
 // run filter
-aa.q.run =async s=>
+aa.q.run =async(s='')=>
 {
   const tasks = s.split(',');
   let delay = 0;

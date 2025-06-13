@@ -185,10 +185,11 @@ aa.cli.expand =e=>
   fastdom.mutate(()=>
   {
     aa.l.classList.add('cli_expanded');
-    aa.cli.foc();
+    
     aa.cli.upd();
     // aa.logs_read();
-    aa.fx.scroll(aa.logs.lastChild)
+    aa.fx.scroll(aa.logs.lastChild);
+    aa.cli.foc();
   });
 };
 

@@ -330,7 +330,7 @@ aa.r.load =async()=>
       action:[id,'setrm'],
       required:['url','set...'],
       description:'remove set from relays',
-      exe:s=>aa.mod.setrm(mod,s)
+      exe:mod.setrm
     },
     {
       action:[id,'ext'],
@@ -379,9 +379,21 @@ aa.r.mk =(k,v)=>
 
   const l = aa.mk.server(k,v);
   if (!l) return false;
-  l.id = aa.r.def.id+'_'+aa.fx.an(k);
+  let id = aa.r.def.id;
+  l.id = id+'_'+aa.fx.an(k);
   l.dataset.state = 0;
-  aa.mod.servers_butts(aa.r,l,v);
+  // aa.mod.servers_butts(aa.r,l,v);
+  l.append(' ',aa.mk.butt_action(id+' del '+k,'del','del'));
+  
+  let sets = aa.mk.l('span',{cla:'sets'});
+  if (v.sets && v.sets.length)
+  {
+    for (const set of v.sets)
+    {
+      sets.append(aa.mk.butt_action(id+' setrm '+k+' '+set,set),' ')
+    }
+  }
+  l.append(' ',sets,' ',aa.mk.butt_action(id+' add '+k+' off','+','add'));
   // aa.r.state_upd(k);
   return l
 };
@@ -539,7 +551,30 @@ aa.r.send_req =(dis)=>
 aa.r.resume =s=>
 {
   let ids = aa.fx.splitr(s);
+  console.log(ids);
   // for (const url in aa.r.active) { aa.r.c_on(url) } 
+};
+
+
+// remove set from server
+aa.r.setrm =(s="")=>
+{
+  let mod = aa.r;
+  const as = s.split(',');
+  if (as.length)
+  {
+    for (const i of as) 
+    {
+      let a = i.trim().split(' ').map(n=>n.trim());
+      let url_string = a.shift();
+      const url = aa.is.url(url_string)?.href;
+      const server = mod.o.ls[url];
+      if (!server) return;
+      server.sets = aa.fx.a_rm(server.sets,a);
+      aa.mod.ui(mod,url);
+    }
+  }
+  aa.mod.save(mod);
 };
 
 

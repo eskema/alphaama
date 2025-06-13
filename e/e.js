@@ -164,7 +164,7 @@ aa.e.append_as_comment =(dat,note)=>
   {
     aa.e.orphan(dat,note,tag);
     aa.e.miss_print(tag,relays);
-    setTimeout(()=>{aa.e.find_parents(dat,note,reply_id)},6666)
+    setTimeout(()=>{aa.e.append_as_orphan(dat,note,reply_id)},6666)
   }
   else
   {
@@ -320,7 +320,7 @@ aa.e.miss_e =(id,relays=[])=>
 // add event id to missing event list
 aa.e.miss_a =(id,relays=[])=>
 {
-  const [kind,pubkey,identifier] = id.split(':');
+  const [kind,pubkey,identifier] = aa.fx.split_ida(id);
   // let ur = aa.fx.in_set(aa.db.p[pubkey]?.relays,'write');
   relays.push(...aa.fx.in_set(aa.db.p[pubkey]?.relays,'write'));
   // let p = aa.db.p[pubkey];
@@ -332,7 +332,6 @@ aa.e.miss_a =(id,relays=[])=>
   {
     const r = aa.is.url(rel)?.href;
     if (r) aa.fx.a_add(aa.miss.a[id].relays,[r]);
-    // if (r && !aa.miss.a[id].relays.includes(r)) aa.miss.a[id].relays.push(r);
   }
   aa.miss.a[id].relays = [...new Set(aa.miss.a[id].relays)]
 };
@@ -651,7 +650,6 @@ aa.e.printer =()=>
   let to_print = Object.values(aa.temp.print);
   aa.temp.print = {};
   to_print.sort(aa.fx.sorts.ca_asc);
-  
 
   for (const dat of to_print) setTimeout(()=>{aa.e.print(dat)},0);
   aa.fx.to(()=>
@@ -659,7 +657,7 @@ aa.e.printer =()=>
     aa.get.missing('p');
     aa.get.missing('e');
     aa.get.missing('a');
-  },500,'missing')
+  },420,'missing')
   // setTimeout(()=>
   // {
   //   aa.get.missing('p');
@@ -719,7 +717,7 @@ aa.e.print =dat=>
   
   if (dat.clas.includes('miss')) dat.clas = aa.fx.a_rm(dat.clas,['miss']);
    //.split(':').join('_')
-  setTimeout(()=>{aa.get.quotes(id_a)},100);
+  setTimeout(()=>{aa.get.quotes(id_a)},200);
   // if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},1000);
 };
 

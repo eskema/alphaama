@@ -144,7 +144,8 @@ aa.w.import =async(s='')=>
   
   if (mints.length) aa.w.add(mints.join(' '));
   if (privkey.length) aa.w.key(privkey);
-  aa.q.run(aa.q.ls.w);
+  aa.r.def_req('w_import',aa.q.ls.w);
+  // aa.q.run(aa.q.ls.w);
 };
 
 

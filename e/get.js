@@ -95,20 +95,14 @@ aa.get.missing =async type=>
         let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(0,12);
         // aa.r.ucks.set(req_id,aa.r.dat);
         // request = ['REQ',req_id,filter];
+        aa.r.def_req(req_id,filter,relays);
         setTimeout(()=>
         {
-          
-          aa.r.def_req(req_id,filter,relays);
-          setTimeout(()=>
-          {
-            if (Object.keys(aa.miss[type]).length) aa.get.missing(type);
-          },
-          1000);
-        },
-        0);
+          if (Object.keys(aa.miss[type]).length) aa.get.missing(type);
+        },420);
       }
     }
-  },200,'miss_'+type);
+  },420,'miss_'+type);
 };
 
 
@@ -119,7 +113,7 @@ aa.get.note_refs =note=>
   {
     aa.e.note_refs(note.dataset.id);
     if (note.dataset.id_a) aa.e.note_refs(note.dataset.id_a);
-  },666)
+  },210)
 };
 
 

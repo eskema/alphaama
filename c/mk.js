@@ -3,7 +3,7 @@ aa.mk.butt_action =(s,con=false,cla='')=>
 {
   con = con||s;
   cla = 'butt plug'+(cla?' '+cla:'');
-  let clk =e=>{ aa.cli.add(s) };
+  let clk =e=>{ aa.cli.add(s);aa.cli.foc() };
   return aa.mk.l('button',{con,cla,clk})
 };
 

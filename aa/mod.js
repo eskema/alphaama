@@ -162,7 +162,7 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
       // con = `\nadded: ${url} ${sets}`;
     }
     
-    let con = `${mod.def.id} add ${url} ${a.join(' ')}`;
+    let con = `${url} ${a.join(' ')}`;
     df.append(aa.mk.l('p',{con}));
     // aa.log(dis)
   }
@@ -179,42 +179,21 @@ aa.mod.servers_add =(mod,s='',cla='server')=>
 
 
 // append buttons to server item
-aa.mod.servers_butts =(mod,l,o)=>
-{
-  let url = l.querySelector('.url').innerText;
-  l.append(' ',aa.mk.butt_action(mod.def.id+' del '+url,'del','del'));
+// aa.mod.servers_butts =(mod,l,o)=>
+// {
+//   let url = l.querySelector('.url').innerText;
+//   l.append(' ',aa.mk.butt_action(mod.def.id+' del '+url,'del','del'));
   
-  let sets = aa.mk.l('span',{cla:'sets'});
-  if (o.sets && o.sets.length)
-  {
-    for (const set of o.sets)
-    {
-      sets.append(aa.mk.butt_action(mod.def.id+' setrm '+url+' '+set,set),' ')
-    }
-  }
-  l.append(' ',sets,' ',aa.mk.butt_action(mod.def.id+' add '+url+' off','+','add'));
-};
-
-
-// remove set from server
-aa.mod.setrm =(mod,s)=>
-{
-  const as = s.split(',');
-  if (as.length)
-  {
-    for (const i of as) 
-    {
-      let a = i.trim().split(' ').map(n=>n.trim());
-      let url_string = a.shift();
-      const url = aa.is.url(url_string)?.href;
-      const server = mod.o.ls[url];
-      if (!server) return;
-      server.sets = aa.fx.a_rm(server.sets,a);
-      aa.mod.ui(mod,url);
-    }
-  }
-  aa.mod.save(mod)
-};
+//   let sets = aa.mk.l('span',{cla:'sets'});
+//   if (o.sets && o.sets.length)
+//   {
+//     for (const set of o.sets)
+//     {
+//       sets.append(aa.mk.butt_action(mod.def.id+' setrm '+url+' '+set,set),' ')
+//     }
+//   }
+//   l.append(' ',sets,' ',aa.mk.butt_action(mod.def.id+' add '+url+' off','+','add'));
+// };
 
 
 // update mod item element

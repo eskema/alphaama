@@ -1232,7 +1232,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 /* @group orphan */
 
-.note.orphan
+#notes .note.orphan
 {
   border-top: dashed;
   border-left: dashed;
@@ -1244,6 +1244,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   content: "parent event not found";
   font-size: var(--font-size-s);
+  padding: var(--padm);
   position: absolute;
   /*transform: translateY(-150%);*/
 }
@@ -1300,6 +1301,12 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   max-height: var(--size-l);
 }
+
+.in_view > .content .note_quote
+{
+  margin: var(--line) auto;
+}
+
 
 .in_view > .content .note_quote,
 .content .note_quote .note_quote
