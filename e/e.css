@@ -1064,6 +1064,7 @@ a.author.fu .name
 .note.in_view > .replies,
 .note.in_view .replies.expanded,
 .note.haz_new_reply > .replies,
+.note.haz_reply > .replies,
 .note.is_new > .replies
 {
   padding-left: var(--padm);
@@ -1097,11 +1098,17 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   position: relative;
 }
 
+.haz_reply > .replies > summary,
 .root.haz_reply > .replies > summary,
 .in_view.haz_reply > .replies > summary,
 .haz_new_reply > .replies > summary
 {
   display: grid;
+}
+
+.replies:not(.expanded) .note:not(.haz_new) > .replies > summary
+{
+  display: none;
 }
 
 .in_view > .replies > summary

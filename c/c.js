@@ -130,8 +130,8 @@ aa.fx.reply =async(dat,reply_s)=>
   if (!reply_s) return;
 
   let x = aa.fx.decode(reply_s);
-  if (reply_s.startsWith('note'))
-  {
+  // if (reply_s.startsWith('note'))
+  // {
     let reply_dat = await aa.db.get_e(x);
     if (!reply_dat) 
     {
@@ -140,13 +140,13 @@ aa.fx.reply =async(dat,reply_s)=>
     }
     dat.replying = reply_s;
     aa.e.kinda_reply(dat,reply_dat);
-  }
-  else if (reply_s.startsWith('npub'))
-  {
-    aa.log('the dm feature has been disabled for now');
-    // dat.event.kind = 4;
-    // dat.event.tags = [['p',x]];
-  }
+  // }
+  // else if (reply_s.startsWith('npub'))
+  // {
+  //   aa.log('the dm feature has been disabled for now');
+  //   // dat.event.kind = 4;
+  //   // dat.event.tags = [['p',x]];
+  // }
 };
 
 

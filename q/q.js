@@ -9,8 +9,9 @@ queries
 
 aa.q =
 {
+  name:'queries',
+  desc:'manage and make nostr requests (REQ)',
   active:{},
-  com: new Map(),
   def:{id:'q',ls:{}},
   ls:
   {
@@ -168,56 +169,16 @@ aa.q.get =(s='')=>
 
 aa.q.help =()=>
 {
-  let summary = 'q help';
-  let con = `==q = query = req = requests
-  to receive events from relays, you send them requests containing your queries
+  let mod = aa.q;
+//   let summary = 'q help';
+//   let text = 
+// `${mod.name}
+// ${mod.desc}
+// ${mod.readme}
+// `;
+ 
 
-* relays will start sending events one by one that match the queries
-* relays will keep relaying new events as they receive them until the request is closed
-* by default events will be printed to the view
-
-to send a raw request, type: .aa q req <relset> <query>
-
-* <relset> is either a single relay URL or a relay set id
-* <query> is a nostr request filter (JSON)
-* "eose":"close" can be added to the query (this will close the request after all stored events have been returned)
-
-example of a raw request that will be performed on relays that have the set "read": 
-.aa q req read {"kinds":[1],"limit":10,"eose":"close"}
-
-the following variables can be used in queries as values:
-
-* "n_number": converts to a timestamp from 'number' of days ago. ex: "n_1" converts to 1 day ago
-* "d_date_string": converts to a timestamp of 'date_string'. ex: "d_2024-08-21"
-* "now": converts to the timestamp of now
-* "u": converts to your pubkey (if logged in)
-* "k3": converts to a list of pubkeys you follow (if logged in)
-
-example of query with variables: {"kinds":[1],"authors":["u"],"since":"n_7"}
-
-you can store queries so it's easier to run them
-to store a query, type: .aa q add <fid> <query>
-
-* <fid> is a filter identifier with the following allowed characters: a-z_0-9
-* <query> is explained above
-
-to run a query on specific relays, type: .aa q run <fid> <relset>
-
-* <fid> is explained above
-* <relset> is a single relay url or a relay set; by leaving it empty, it defaults relset "read"
-
-to run a query as outbox, type: .aa q out <fid>
-
-to close a query, type: .aa q close <fid>
-
-* if <fid> is omitted all opened queries will be closed instead
-
-
-video::https://v.nostr.build/hzQufBzjStD8L8j6.mp4["example of running the query: a"]
-
-example: .aa q run f, u, n`;
-
-  aa.log(aa.mk.details(summary,aa.mk.l('p',{con})))
+  aa.log(aa.mk.doc(mod.readme))
 };
 
 
@@ -313,7 +274,20 @@ aa.q.load =async()=>
       description:'testing new relay code',
       exe:mod.sub
     },
+    {
+      action:[id,'help'],
+      description:'testing new relay code',
+      exe:mod.help
+    },
   );
+
+  fetch('/q/README.adoc')
+  .then(dis=>dis?.text())
+  .then(text=>
+  {
+    mod.readme = text
+    
+  });
 
 
   aa.mod.load(mod).then(aa.mod.mk).then(e=>
@@ -469,6 +443,63 @@ aa.q.filter =(s,x)=>
   }
   if (!Object.keys(options).length) options = false;
   return [filter,options]
+};
+
+
+aa.q.readme =async()=>
+{
+  fetch('./README.adoc')
+  .then(dis=>dis?.text())
+  .then(text=>
+  {
+    aa.mk.doc(text)
+  });
+  return `to receive events from relays, you send them requests containing your queries
+
+* relays will start sending events one by one that match the queries
+* relays will keep relaying new events as they receive them until the request is closed
+* by default events will be printed to the view
+
+to send a raw request, type: .aa q req <relset> <query>
+
+* <relset> is either a single relay URL or a relay set id
+* <query> is a nostr request filter (JSON)
+* "eose":"close" can be added to the query (this will close the request after all stored events have been returned)
+
+example of a raw request that will be performed on relays that have the set "read":
+.aa q req read {"kinds":[1],"limit":10,"eose":"close"}
+
+the following variables can be used in queries as values:
+
+* "n_number": converts to a timestamp from 'number' of days ago. ex: "n_1" converts to 1 day ago
+* "d_date_string": converts to a timestamp of 'date_string'. ex: "d_2024-08-21"
+* "now": converts to the timestamp of now
+* "u": converts to your pubkey (if logged in)
+* "k3": converts to a list of pubkeys you follow (if logged in)
+
+example of query with variables: {"kinds":[1],"authors":["u"],"since":"n_7"}
+
+you can store queries so it's easier to run them
+to store a query, type: .aa q add <fid> <query>
+
+* <fid> is a filter identifier with the following allowed characters: a-z_0-9
+* <query> is explained above
+
+to run a query on specific relays, type: .aa q run <fid> <relset>
+
+* <fid> is explained above
+* <relset> is a single relay url or a relay set; by leaving it empty, it defaults relset "read"
+
+to run a query as outbox, type: .aa q out <fid>
+
+to close a query, type: .aa q close <fid>
+
+* if <fid> is omitted all opened queries will be closed instead
+
+
+video::https://v.nostr.build/hzQufBzjStD8L8j6.mp4["example of running the query: a"]
+
+example: .aa q run f, u, n`
 };
 
 

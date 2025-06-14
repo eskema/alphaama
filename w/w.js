@@ -7,16 +7,20 @@ walLNuts
 */
 
 
+// w css styles
 aa.mk.styles(['/w/w.css']);
 
+
+// w default options
 if (!Object.hasOwn(localStorage,'zap')) localStorage.zap = '21';
-if (!Object.hasOwn(localStorage,'zap_memo')) localStorage.zap_memo = 'walLNut';
+if (!Object.hasOwn(localStorage,'zap_memo')) localStorage.zap_memo = '<3';
 
 
+// w
 aa.w =
 {
-  name:'walLNuts',
-  desc:'the best kind of nuts',
+  name:'walLNut',
+  desc:'nip60/61 cashu',
   def:
   {
     id:'w',
@@ -136,11 +140,11 @@ aa.w.import =async(s='')=>
   }
 
   let w = aa.w.o.ls;
-  let a = await aa.fx.decrypt_parse(dat.event);
-  a.push(...dat.event.tags);
+  let decrypted_tags = await aa.fx.decrypt_parse(dat.event);
+  decrypted_tags.push(...dat.event.tags);
 
-  let mints = aa.fx.tags_values(a,'mint');
-  let privkey = aa.fx.tag_value(a,'privkey');
+  let mints = aa.fx.tags_values(decrypted_tags,'mint');
+  let privkey = aa.fx.tag_value(decrypted_tags,'privkey');
   
   if (mints.length) aa.w.add(mints.join(' '));
   if (privkey.length) aa.w.key(privkey);

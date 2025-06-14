@@ -162,7 +162,7 @@ aa.parse.url =(match,is_trusted)=>
   else if (type === 'audio' || type === 'video')
   {
     let l = aa.mk.av(src,false,type==='audio'?true:false);
-    setTimeout(()=>{aa.lazy_god.observe(l.querySelector('.mf'))},200);
+    // setTimeout(()=>{aa.lazy_god.observe(l.querySelector('.mf'))},200);
     return l
   }
   return

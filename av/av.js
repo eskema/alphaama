@@ -93,8 +93,8 @@ aa.mk.av =(src,poster=false,audio=false)=>
   l.setAttribute('playsinline','');
   l.setAttribute('preload','metadata');
   l.setAttribute('crossorigin','anonymous');
-  l.dataset.src = src;
-  // l.setAttribute('src',src);
+  // l.dataset.src = src;
+  l.setAttribute('src',src);
   if (poster) l.setAttribute('poster',poster);
   l.onclick = vip;
 

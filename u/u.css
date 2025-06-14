@@ -89,6 +89,11 @@
   transform-origin: center center;
 }
 
+#butt_u_u.has-picture
+{
+  font-size: 0;
+}
+
 #butt_u_u.has-picture img[src]
 {
   opacity: 1;

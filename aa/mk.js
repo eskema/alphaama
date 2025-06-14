@@ -152,10 +152,11 @@ aa.mk.header =e=>
 aa.mk.img =(src)=>
 {
   const l = aa.mk.l('img',{cla:'content-img'});
-  l.dataset.src = src;
+  // l.dataset.src = src;
+  l.src = src;
   l.loading = 'lazy';
   l.addEventListener('click',e=>{aa.mk.img_modal(src)});
-  aa.lazy_god.observe(l);
+  // aa.lazy_god.observe(l);
   return l
 };
 

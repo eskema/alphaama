@@ -329,39 +329,39 @@ aa.u.setup =async(s='')=>
   else
   {
     aa.q.reset();
+    let log = aa.log('almost there…');
     if (!Object.keys(aa.u.p.relays).length)
     {
-      let log = aa.log('now, ');
+      log = aa.log('first ');
       let def_rels = 
       [
         'wss://nos.lol read write',
         'wss://relay.damus.io read write',
         'wss://relay.primal.net read write',
       ];
-      let add_def_rels = 'r add '+def_rels.join(', ');
-      const rel_butt = aa.mk.butt_action(add_def_rels,'add some relays');
+      const rel_butt = aa.mk.butt_action(`r add ${def_rels.join(', ')}`,'add some relays');
       rel_butt.addEventListener('click',aa.clk.done);
-      log.lastChild.append(rel_butt, ' so you can find your stuff');
-
-      log = aa.log('then, ');
-      const req_butt = aa.mk.butt_action('q stuff','request basic stuff');
-      req_butt.addEventListener('click',aa.clk.done);
-      log.lastChild.append(req_butt);
-
-      log = aa.log('if needed ');
-      const options_butt = aa.mk.butt_action('o add score 4, pow 17, theme light','adjust options');
-      options_butt.addEventListener('click',aa.clk.done);
-      log.lastChild.append(options_butt);
-      
-      log = aa.log('finally, ');
-      const reload_butt = aa.mk.l('button',
-      {
-        con:'reload the page',
-        cla:'butt plug',
-        clk:e=>{location.reload()}
-      });
-      log.lastChild.append(reload_butt,' to clean things up');
+      log.lastChild.append(rel_butt,);
     }
+
+    log = aa.log('if needed ');
+    const options_butt = aa.mk.butt_action('o add score 4, pow 17, theme light','adjust options');
+    options_butt.addEventListener('click',aa.clk.done);
+    log.lastChild.append(options_butt,' (load media, switch theme, etc…)');
+
+    log = aa.log('when ready, ');
+    const req_butt = aa.mk.butt_action('q stuff','request your stuff');
+    req_butt.addEventListener('click',aa.clk.done);
+    log.lastChild.append(req_butt,' like profile, follows, etc..');
+    
+    log = aa.log('finally, ');
+    const reload_butt = aa.mk.l('button',
+    {
+      con:'reload the page',
+      cla:'butt plug',
+      clk:e=>{location.reload()}
+    });
+    log.lastChild.append(reload_butt,' for a clean start');
   }
 
   // aa.o.stuff();

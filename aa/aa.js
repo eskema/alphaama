@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 58;
+const aa_version = 59;
 // a
 const aa = 
 {
@@ -52,7 +52,7 @@ const aa =
     {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
     {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
     {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
-    {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
+    // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
   ],
   get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
@@ -169,13 +169,14 @@ aa.lazy_god = new IntersectionObserver(a=>
     if (b.isIntersecting) 
     {
       let l = b.target;
+      aa.lazy_god.unobserve(l);
       fastdom.mutate(()=>
       {
         if (l.dataset.src) l.src = l.dataset.src;
         l.classList.add('quick_fox');
         l.classList.remove('lazy_dog');
       });
-      aa.lazy_god.unobserve(l);
+      
     }
   }
 },{root:null,threshold:.1});

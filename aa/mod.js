@@ -72,6 +72,12 @@ aa.mod.modal =(s='')=>
     aa.log('aa.mod.modal: mod not found')
     return
   }
+  let was_closed;
+  if (!mod.hasAttribute('open')) 
+  {
+    was_closed = true;
+    mod.toggleAttribute('open');
+  }
   let mom = mod.parentElement;
   
   const dialog = aa.dialog;
@@ -81,6 +87,7 @@ aa.mod.modal =(s='')=>
     cla:'butt modal',
     clk:()=>
     {
+      if (was_closed) mod.toggleAttribute('open',false);
       mom?.append(mod);
       dialog.close();
     }
