@@ -6,9 +6,24 @@ events notes
 
 */
 
-aa.mk.styles(['/e/e.css']);
-
-aa.e = {};
+aa.e = 
+{
+  name:'events',
+  def:{id:'e'},
+  styles:['/e/e.css'],
+  tools:
+  [
+    '/e/clk.js',
+    '/e/db.js',
+    '/e/fx.js',
+    '/e/get.js',
+    '/e/is.js',
+    '/e/kinds.js',
+    '/e/mk.js',
+    '/e/parse.js',
+    '/e/views.js'
+  ]
+};
 
 
 // buttons
@@ -247,17 +262,7 @@ aa.e.json =async(s='')=>
 // on load
 aa.e.load =async()=>
 {
-  await aa.mk.scripts([
-    '/e/clk.js',
-    '/e/db.js',
-    '/e/fx.js',
-    '/e/get.js',
-    '/e/is.js',
-    '/e/kinds.js',
-    '/e/mk.js',
-    '/e/parse.js',
-    '/e/views.js'
-  ]);
+  await aa.mk.scripts(aa.e.tools);
 
   let mod = aa.e;
   aa.temp.orphan = {};
@@ -293,6 +298,7 @@ aa.e.load =async()=>
   mod.l = aa.mk.l('div',{id:'notes'});
   mod.section_observer = new MutationObserver(mod.section_mutated);
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
+  aa.help_setup(aa.e,'/e/README.adoc');
 };
 
 
@@ -1235,4 +1241,6 @@ aa.e.view_check =l=>
     || aa.view.id_a && aa.view.id_a === l.dataset.id_a)
   && !l.classList.contains('in_view'))
     setTimeout(()=>{aa.e.view(l)},100);
-}
+};
+
+aa.mk.styles(aa.e.styles);

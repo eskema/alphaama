@@ -12,6 +12,7 @@ if (!Object.hasOwn(localStorage,'outnum')) localStorage.outnum = '3';
 
 aa.r =
 {
+  name:'relays',
   active:{},
   def:{id:'r',ls:{},r:'read',w:'write'},
   temp: new Map(),

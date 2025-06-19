@@ -10,10 +10,18 @@ user you
 aa.mk.styles(['/u/u.css']);
 
 
-aa.u = 
+aa.u =
 {
+  name:'user',
   def:{id:'u',ls:{}},
   get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
+  tools:
+  [
+    '/u/clk.js?v='+aa_version,
+    '/u/e.js?v='+aa_version,
+    '/u/is.js?v='+aa_version,
+    '/u/mk.js?v='+aa_version,
+  ]
 };
 
 
@@ -35,17 +43,10 @@ aa.u.add =(pubkey='')=>
 // on load
 aa.u.load =async()=>
 {
-  await aa.mk.scripts([
-    '/u/clk.js?v='+aa_version,
-    '/u/e.js?v='+aa_version,
-    '/u/fx.js?v='+aa_version,
-    '/u/is.js?v='+aa_version,
-    '/u/mk.js?v='+aa_version,
-  ]);
-
   let id = 'u';
   const mod = aa[id];
-  
+  await aa.mk.scripts(mod.tools);
+
   aa.cli.def = 
   {
     action:['mk','note'],
@@ -94,6 +95,44 @@ aa.u.load =async()=>
   await mod.start(mod);
 };
 
+// make p tag array from array
+// aa.fx.tag_k3 =a=>
+// {
+//   let tag = ['p'];
+//   let k,relay,petname;
+  
+//   if (a.length) k = a.shift().trim();
+//   if (!k) return false;
+//   if (k.startsWith('npub')) k = aa.fx.decode(k);
+//   if (!aa.is.key(k)) 
+//   {
+//     aa.log('invalid key to follow '+k);
+//     return false
+//   }
+//   if (aa.is.following(k)) 
+//   {
+//     aa.log('already following '+k);
+//     return false
+//   }
+//   tag.push(k);
+
+//   if (a.length) 
+//   {
+//     relay = a.shift().trim();
+//     let url = aa.is.url(relay);
+//     if (url) tag.push(url.href);
+//     else tag.push('')
+//   }
+
+//   if (a.length) 
+//   {
+//     petname = a.shift().trim();
+//     tag.push(aa.fx.an(petname));
+//   }
+//   while (tag[tag.length - 1].trim() === '') tag.pop();
+//   return tag
+// };
+
 
 // u add to s
 aa.u.k3_add =async s=>
@@ -103,9 +142,33 @@ aa.u.k3_add =async s=>
     aa.log('login first')
     return
   }
-  let a = s.split(',');
-  let tag = aa.fx.tag_k3(a);
-  if (!tag) return;
+  let tag = ['p'];
+
+  let [key,rest] = s.split(aa.fx.regex.fw);
+
+  if (key.startsWith('npub')) key = aa.fx.decode(key);
+  if (!aa.is.key(key)) 
+  {
+    aa.log('invalid key to follow '+key);
+    return false
+  }
+  if (aa.is.following(key)) 
+  {
+    aa.log('already following '+key);
+    return false
+  }
+  tag.push(key);
+  
+  let [relay,petname] = rest.trim().split(aa.fx.regex.fw);
+  relay = aa.is.url(relay)?.href || '';
+  petname = aa.fx.an(petname);
+
+  if (relay) tag.push(relay);
+  if (petname)
+  {
+    if (!relay) tag.push('');
+    tag.push(petname)
+  }
   
   let dat = await aa.p.events_last(aa.u.p,'k3');
   if (!dat) return false;

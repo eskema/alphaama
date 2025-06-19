@@ -1,0 +1,7 @@
+= o => options
+
+* to add an option, type: `.aa o add` followed by `key` and `value`
+* to delete options, type `.aa o del` followed by `key`, if left empty deletes all and defaults are reset
+
+
+video::https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4["example of how to switch theme from dark to light and then setting `score` to `4` so it loads stuff from your fellas:"]

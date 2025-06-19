@@ -215,22 +215,3 @@ aa.mk.tag_list =tags=>
   }
   return l
 };
-
-
-
-// make time element from timestamp
-aa.mk.time =timestamp=>
-{
-  const d = new Date(timestamp*1000);//aa.fx.time_to_date(timestamp);
-  const title = aa.fx.time_display(timestamp);
-  const l = aa.mk.l('time',
-  {
-    cla:'created_at',
-    con:timestamp,
-    clk:aa.clk.time
-  });
-  l.setAttribute('datetime', d.toISOString());
-  l.title = title;
-  l.dataset.elapsed = aa.fx.time_elapsed(d);
-  return l
-};

@@ -1,0 +1,12 @@
+
+= alphaama
+
+* alphaama doesn't do much on it's own, it takes commands given by the user and executes them
+* it has a single input field for interaction like a Command Line Interface (CLI) wrapped in a Graphical User Interface (GUI) that can be interacted with
+* commands are given by prefixing the input with a value (default is ".aa")
+* this value also acts as a delimiter for running multiple commands (similar to &&)
+* can be used to create any event type and autofills the missing required fields (raw JSON)
+* you can use multiple tabs with different requests
+* to reset everything, type: `.aa zzz`
+* some commands accept multiple entries using `,` as a separator (ex: `.aa o add score 4, theme light, pagination 500, ns gm`)
+* some commands may be piped using ` | `

@@ -7,53 +7,106 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 59;
+const aa_version = 60;
 // a
 const aa = 
 {
+  name:'alphaama',
+  aka:'A<3',
+  desc:'just .aa nostr fucking client',
   actions:[],
   db:{worker:{}},
   clears:[],
   clk:{},
-  dependencies:
-  [
-    // '/dep/asciidoctor.min.js?v=3.0.4',
-    '/dep/bolt11.js',
-    '/dep/cashuts.js?v=2.0.0',
-    '/dep/fastdom.js?v=1.0.4',
-    // '/dep/fastdom-strict.js?v=1.0.4',
-    // '/dep/math.js?v=14.0.1',
-    '/dep/nostr-tools.js?v=2.10.4',
-    '/dep/qrcode.js',
-    // '/dep/webtorrent.min.js',
-    // '/dep/hls.js?v=1',
-    // '/dep/blurhash.js?v=10000',
-  ],
-  el:new Map(),
-  extensions:
+  def:
   {
-    img:['gif','heic','jpeg','jpg','png','webp'],
-    video:['mp4','webm'],
-    audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
+    id:'aa',
+    dependencies:
+    [
+      // '/dep/asciidoctor.min.js?v=3.0.4',
+      '/dep/bolt11.js',
+      '/dep/cashuts.js?v=2.0.0',
+      '/dep/fastdom.js?v=1.0.4',
+      // '/dep/fastdom-strict.js?v=1.0.4',
+      // '/dep/math.js?v=14.0.1',
+      '/dep/nostr-tools.js?v=2.10.4',
+      '/dep/qrcode.js',
+      // '/dep/webtorrent.min.js',
+      // '/dep/hls.js?v=1',
+      // '/dep/blurhash.js?v=10000',
+    ],
+    extensions:
+    {
+      img:['gif','heic','jpeg','jpg','png','webp'],
+      video:['mp4','webm'],
+      audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
+    },
+    mods:
+    [
+      {id:'cli',src:'/c/c.js?v='+aa_version,requires:[]},
+      {id:'o',src:'/o/o.js?v='+aa_version,requires:['cli']},
+      {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
+      {id:'e',src:'/e/e.js?v='+aa_version,requires:['p']},
+      {id:'r',src:'/r/r.js?v='+aa_version,requires:['e']},
+      {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
+      {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
+      {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
+      // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
+    ],
+    tools:
+    [
+      '/aa/mod.js?v='+aa_version,
+      '/aa/view.js?v='+aa_version,
+      '/db/db.js?v='+aa_version,
+      '/aa/clk.js?v='+aa_version,
+      '/aa/is.js?v='+aa_version,
+      '/aa/fx.js?v='+aa_version,
+      '/aa/log.js?v='+aa_version,
+      '/aa/mk.js?v='+aa_version,
+      '/aa/parse.js?v='+aa_version,
+      '/aa/wl.js?v='+aa_version,
+      '/av/av.js?v='+aa_version,
+    ],
   },
+  // dependencies:
+  // [
+  //   // '/dep/asciidoctor.min.js?v=3.0.4',
+  //   '/dep/bolt11.js',
+  //   '/dep/cashuts.js?v=2.0.0',
+  //   '/dep/fastdom.js?v=1.0.4',
+  //   // '/dep/fastdom-strict.js?v=1.0.4',
+  //   // '/dep/math.js?v=14.0.1',
+  //   '/dep/nostr-tools.js?v=2.10.4',
+  //   '/dep/qrcode.js',
+  //   // '/dep/webtorrent.min.js',
+  //   // '/dep/hls.js?v=1',
+  //   // '/dep/blurhash.js?v=10000',
+  // ],
+  el:new Map(),
+  // extensions:
+  // {
+  //   img:['gif','heic','jpeg','jpg','png','webp'],
+  //   video:['mp4','webm'],
+  //   audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
+  // },
   fx:{},
   get:{},
   is:{},
   kinds:{},
   miss:{e:{},p:{},a:{}},
   mk:{},
-  mods:
-  [
-    {id:'cli',src:'/c/c.js?v='+aa_version,requires:[]},
-    {id:'o',src:'/o/o.js?v='+aa_version,requires:['cli']},
-    {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
-    {id:'e',src:'/e/e.js?v='+aa_version,requires:['p']},
-    {id:'r',src:'/r/r.js?v='+aa_version,requires:['e']},
-    {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
-    {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
-    {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
-    // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
-  ],
+  // mods:
+  // [
+  //   {id:'cli',src:'/c/c.js?v='+aa_version,requires:[]},
+  //   {id:'o',src:'/o/o.js?v='+aa_version,requires:['cli']},
+  //   {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
+  //   {id:'e',src:'/e/e.js?v='+aa_version,requires:['p']},
+  //   {id:'r',src:'/r/r.js?v='+aa_version,requires:['e']},
+  //   {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
+  //   {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
+  //   {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
+  //   // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
+  // ],
   get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
   state:{},
@@ -62,21 +115,21 @@ const aa =
     '/aa/aa.css?v='+aa_version,
   ],
   temp:{},
-  tools:
-  [
-    '/aa/view.js?v='+aa_version,
-    '/db/db.js?v='+aa_version,
-    '/aa/clk.js?v='+aa_version,
-    '/aa/is.js?v='+aa_version,
-    '/aa/fx.js?v='+aa_version,
-    '/aa/log.js?v='+aa_version,
-    '/aa/mk.js?v='+aa_version,
-    '/aa/mod.js?v='+aa_version,
-    '/aa/parse.js?v='+aa_version,
-    '/aa/wl.js?v='+aa_version,
-    '/av/av.js?v='+aa_version,
+  // tools:
+  // [
+  //   '/aa/mod.js?v='+aa_version,
+  //   '/aa/view.js?v='+aa_version,
+  //   '/db/db.js?v='+aa_version,
+  //   '/aa/clk.js?v='+aa_version,
+  //   '/aa/is.js?v='+aa_version,
+  //   '/aa/fx.js?v='+aa_version,
+  //   '/aa/log.js?v='+aa_version,
+  //   '/aa/mk.js?v='+aa_version,
+  //   '/aa/parse.js?v='+aa_version,
+  //   '/aa/wl.js?v='+aa_version,
+  //   '/av/av.js?v='+aa_version,
     
-  ],
+  // ],
   view:
   {
     active:false,
@@ -102,26 +155,30 @@ aa.dev_set =force=>
     if (aa.dev) sessionStorage.removeItem(dev);
     else sessionStorage.dev = true
   }
-  
   aa.log(`aa.dev = ${aa.dev}`);
 };
 
-aa.help =(s="")=>
-{
-  if (s?.length)
-  {
-    if (!Object.hasOwn(aa,s))
-    {
-      aa.log('cannot help :/ '+s)
-      return
-    }
-    aa[s].help()
-  }
-  else
-  {
-    aa.log('help yourself')
-  }
-};
+
+// aa.help =id=>
+// {
+//   if (id?.length) aa.mk.help(id);
+//   else //aa.mk.help('aa');
+//   {
+//     if (!aa.readme)
+//     {
+//       fetch('/aa/README.adoc')
+//       .then(dis=>dis?.text())
+//       .then(text=>
+//       { 
+//         if (!text) return;
+//         aa.readme = text;
+//         aa.mk.help('aa')
+//       });
+//     } else aa.mk.help('aa')
+    
+//     // aa.log('help yourself')
+//   }
+// };
 
 
 // make element with options
@@ -191,9 +248,9 @@ aa.load =async(o={})=>
   aa.mk.styles(o.styles || aa.styles);
   aa.framed = window.self !== window.top;
   if (aa.framed) aa.l.classList.add('framed');
-  let dependencies = o.dependencies || aa.dependencies;
-  let tools = o.tools || aa.tools;
-  let mods = o.mods || aa.mods;
+  let dependencies = o.dependencies || aa.def.dependencies;
+  let tools = o.tools || aa.def.tools;
+  let mods = o.mods || aa.def.mods;
   
   await aa.mk.scripts([...dependencies,...tools]);
   
@@ -206,10 +263,19 @@ aa.load =async(o={})=>
 
   aa.actions.push(
     {
-      action:['help'],
-      optional:['stuff'],
-      description:'logs some help',
-      exe:aa.help
+      action:['help','aa'],
+      description:'alphaama help',
+      exe:()=>{aa.mk.help()}
+    },
+    {
+      action:['help','db'],
+      description:'database help',
+      exe:()=>{aa.mk.help('db')}
+    },
+    {
+      action:['db','help'],
+      description:'database help',
+      exe:()=>{aa.mk.help('db')}
     },
     {
       action:['zzz'],
@@ -276,6 +342,40 @@ aa.mods_load =async mods=>
 };
 
 
+// fetch readme from path and append to object
+aa.readme_setup =async(o,path)=>
+{
+  if (!o.readme)
+  {
+    let dis = await fetch(path);
+    let text = await dis?.text();
+    if (text) o.readme = text;
+  }
+  return o.readme
+};
+
+
+aa.help_setup =async(mod,path)=>
+{
+  let readme = aa.readme_setup(mod,path);
+  if (!readme) return;
+  let exe = ()=>{aa.mk.help(mod.def.id)};
+  let description = `help with ${mod.name} (${mod.def.id})`;
+  aa.actions.push(
+    {
+      action:['help',mod.name],
+      description,
+      exe
+    },
+    {
+      action:[mod.def.id,'help'],
+      description,
+      exe
+    }
+  );
+};
+
+
 // tries to delete everything saved locally 
 // and then reload clean
 aa.reset =async()=>
@@ -313,8 +413,9 @@ aa.run =(o={})=>
     // aa.bod.insertBefore(aa.side,aa.dialog);
   // });
   let onoff = navigator.onLine?'on':'off';
-  let online = `${onoff}line at ${location.origin}`;
-  aa.log(online,false,false);
+  let con = `${onoff}line at ${location.origin} since `;
+  let app = aa.mk.time(aa.now);
+  aa.log(aa.mk.l('p',{con,app}),0,0);
   setTimeout(aa.view.pop,100);
 };
 

@@ -1,4 +1,4 @@
-== queries (q) 
+= q => queries
 to receive events from relays, you send them requests containing your queries
 
 * relays will start sending events one by one that match the queries

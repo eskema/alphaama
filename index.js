@@ -14,7 +14,7 @@ aa.load({
 
 const on_loaded =()=>
 {
-  if (!aa.required(aa.mods.map(i=>i.id)))
+  if (!aa.required(aa.def.mods.map(i=>i.id)))
   {
     setTimeout(on_loaded,10);
     return

@@ -1,0 +1,16 @@
+= r => relays
+
+* relays are kept locally and are separate from your published relays
+* relays can be added to sets
+* default relay set for reading is `read`
+* default relay set for writing is `write`
+* default relay set for disabled is `off`
+* relay sets (relset) can be used in requests or to create lists
+* depending from where relays were imported, some sets are added automatically (`ext`, `k3`, `k10002`, `out`, `hint`)
+
+to add a relay, type: `.aa r add <url> <set_1> <set_2>`
+
+* `url` is a valid full URL
+* `set` is a relay set (a-z_0-9) 
+* example command for adding multiple relays: `.aa r add wss://relay1.com read write, wss://relay2.org read, wss://relay3.net write`
+* to remove a set from a relay, type: `.aa r setrm <url> <set>`

@@ -112,20 +112,6 @@ aa.clk.req =e=>
 };
 
 
-// update elapsed time of note and parents up to root
-aa.clk.time =e=> 
-{
-  if (!e.target) return;
-  const all = e.target.closest('.root')?.querySelectorAll('time');
-  if (all) for (const t of all)
-  {
-    const timestamp = parseInt(t.textContent);
-    const date = aa.fx.time_to_date(timestamp);
-    t.dataset.elapsed = aa.fx.time_elapsed(date);
-  }
-};
-
-
 // toggle tiny note 
 aa.clk.tiny =e=>
 {

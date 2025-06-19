@@ -1,0 +1,8 @@
+= p => pubkey / profile
+
+soon™
+
+the WoT score system used here is very primitive and consists of 2 integer values:
+
+* a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc). this value relates to the `score` option
+* a generated value from the number of followers a pubkey has that you also follow. this is only used as a visual hint

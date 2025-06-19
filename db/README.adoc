@@ -1,0 +1,22 @@
+= db => database
+
+the database in alphaama is a local indexedDB instance using multiple stores.
+
+* the "events" store is for all events from the user and also of certain kinds.
+* the "authors" store is for user profiles data.
+* the "stuff" store is for general modules data.
+
+
+you can view a stored event or author with the command: `.aa db view <note1||npub1>`
+
+* if the data cannot be found in the db, alphaama will try to find it on your relays.
+
+
+to view more than one event, use the command: `.aa db some <number> asc`
+
+* <number> is how many notes you want to load
+* `asc` is an option to return notes in ascending order (instead of descending)
+
+
+to know how many things are stored in a given store, use the command: `.aa db count <store>`
+

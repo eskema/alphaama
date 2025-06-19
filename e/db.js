@@ -46,8 +46,8 @@ aa.db.get_e =async xid=>
 
 
 // get n events from database
-// default direction: newest
-// other direction: oldest
+// default order is descending (newest),
+// use the option 'asc' for ascending order (oldest)
 aa.db.some =async s=>
 {
   const a = s.split(' ');
@@ -55,8 +55,8 @@ aa.db.some =async s=>
   const d = a.shift();
   const some = 
   {
-    n:n?parseInt(n):1,
-    direction:d&&d==='oldest'?'next':'prev'
+    n: n ? parseInt(n) : 1,
+    direction: (d && d==='asc') ? 'next' : 'prev'
   };
   const events = await aa.db.ops('idb',{some});
   for (const dat of events) aa.e.to_printer(dat); 
@@ -112,8 +112,8 @@ aa.actions.push(
   {
     action:['db','some'],
     required:['number'],
-    optional:['oldest'],
-    description:'request n events from db',
+    optional:['asc'],
+    description:'request a number of events from db',
     exe:aa.db.some
   },
   {

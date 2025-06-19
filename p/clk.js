@@ -37,9 +37,8 @@ aa.clk.k3 =async e=>
     let petname;
     if (p.metadata?.name) petname = p.metadata.name;
     else if (p.petnames.length) petname = p.petnames[0];
-    if (petname?.length) new_follow.push(aa.fx.an(petname));
-    else new_follow.push('');
-    aa.cli.v(localStorage.ns+' p add '+new_follow.join(', '))
+    if (petname) new_follow.push(aa.fx.an(petname));
+    aa.cli.v(localStorage.ns+' p add '+new_follow.join(' '))
   }
 };
 

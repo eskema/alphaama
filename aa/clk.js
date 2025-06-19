@@ -63,6 +63,14 @@ aa.clk.expand =e=>
 };
 
 
+// update elapsed time of time element note and parents up to root
+aa.clk.time =e=> 
+{
+  if (!e.target) return;
+  let all = e.target.closest('.root')?.querySelectorAll('time') || [e.target];
+  for (const l of all) aa.fx.time_upd(l)
+};
+
 // wip
 // aa.clk.list_filter_input =e=>
 // {

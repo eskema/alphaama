@@ -9,6 +9,9 @@ author pubkey profile
 aa.db.p = {};
 aa.p =
 {
+  def:{id:'p'},
+  name:'profiles',
+  desc:'',
   p(x)
   {
     return {
@@ -509,6 +512,8 @@ aa.p.links_upd =async p=>
 // on load
 aa.p.load =async()=>
 {
+  let mod = aa.p;
+  let id = mod.def.id;
   await aa.mk.scripts([
     '/p/clk.js?v='+aa_version,
     '/p/is.js?v='+aa_version,
@@ -521,38 +526,40 @@ aa.p.load =async()=>
   aa.clears.push(aa.p.clear);
   aa.actions.push(
     {
-      action:['p','view'],
+      action:[id,'view'],
       required:['pubkey'],
       description:'view profile by pubkey',
       exe:(s)=>{ aa.view.state('#'+aa.fx.encode('npub',s)) }
     },
     {
-      action:['p','score'],
+      action:[id,'score'],
       required:['id','number'], 
       description:'set user score (for auto parsing and stuff)',
       exe:aa.p.score
     },
     {
-      action:['p','check'],
+      action:[id,'check'],
       required:['name@domain'], 
       description:'check nip5 validity',
       exe:aa.p.check_nip05
     },
     {
-      action:['p','md'],
+      action:[id,'md'],
       optional:['pubkey'], 
       description:'return metadata of pubkey',
       exe:aa.p.md
     },
     {
-      action:['p','follows'],
+      action:[id,'follows'],
       optional:['pubkey'], 
       description:'followed by pubkey',
       exe:aa.p.follows
-    }
+    },
   );
+  // oto complete profiles
   aa.cli.on_upd.push(aa.p.oto);
   aa.p.l = aa.mk.l('div',{id:'authors'});
+  aa.help_setup(aa.p,'/p/README.adoc');
 };
 
 

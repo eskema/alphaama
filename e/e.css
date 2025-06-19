@@ -534,32 +534,48 @@ a.author.fu .name
 
 /* @group created_at */
 
-.by .created_at 
+.created_at 
 {
-  color: rgb(var(--color-d));
   cursor: pointer;
-  display: grid;
-  font-size: 0;
-  grid-area: created_at;
-  grid-template-areas: "elapsed";
+  display: inline-grid;
+  grid-gap: 0 var(--pad);
+  grid-template-areas: "timestamp title elapsed";
   justify-items: end;
-  justify-self: end;
-  line-height: 1;
-  padding: 0 var(--padm);
   white-space: pre;
   word-break: keep-all;
 }
 
-.by .created_at > *
+.created_at::before
+{
+  content: attr(title);
+  grid-area: title;
+}
+
+.created_at::after 
+{
+  content: "~" attr(data-elapsed);
+  font-size: var(--font-size-s);
+  grid-area: elapsed;
+}
+
+.by .created_at
+{
+  color: rgb(var(--color-d));
+  font-size: 0;
+  grid-area: created_at;
+  grid-gap: 0;
+  grid-template-areas: "elapsed";
+  justify-self: end;
+  line-height: 1;
+  padding: 0 var(--padm);
+}
+
+.created_at > *
 {
   grid-area: elapsed;
 }
 
-.by .created_at::after 
-{
-  content: "~" attr(data-elapsed);
-  font-size: var(--font-size-s);
-}
+
 
 .in_view > .by .created_at
 {
@@ -1106,7 +1122,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   display: grid;
 }
 
-.replies:not(.expanded) .note:not(.haz_new) > .replies > summary
+.replies:not(.expanded) .note:not(.haz_new_reply) > .replies > summary
 {
   display: none;
 }
@@ -1249,7 +1265,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 .note.orphan::before
 {
-  content: "reply still not found";
+  content: "context still missing";
   font-size: var(--font-size-s);
   padding: var(--padm);
   position: absolute;

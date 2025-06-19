@@ -9,6 +9,7 @@ options using localStorage key:value
 
 aa.o =
 {
+  name:'options',
   def:
   {
     id:'o',
@@ -142,7 +143,7 @@ aa.o.load =async()=>
       optional:['key'], 
       description:'delete option',
       exe:mod.del
-    }
+    },
   );
   mod.o = {id:id,ls:localStorage};
 

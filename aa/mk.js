@@ -82,13 +82,13 @@ aa.mk.dialog =async o=>
   const dialog = aa.dialog;
   if (!dialog || dialog.open) return false;
   if (o.title) dialog.title = o.title;
-  if (o.hasOwnProperty('l')) dialog.append(o.l);
+  if (Object.hasOwn(o,'l')) dialog.append(o.l);
   
   const dialog_options = aa.mk.l('p',{id:'dialog_options'});
   
   const dialog_no = aa.mk.l('button',
   {
-    con:o.no.title ?? 'cancel',
+    con:o.no.title || 'cancel',
     cla:'butt cancel',
     clk:e=>{ o.no.exe(); dialog.close()}
   });
@@ -96,7 +96,7 @@ aa.mk.dialog =async o=>
   
   const dialog_yes = aa.mk.l('button',
   {
-    con:o.yes.title ?? 'confirm',
+    con:o.yes.title || 'confirm',
     cla:'butt confirm',
     clk:e=>{ o.yes.exe(); dialog.close()}
   });
@@ -104,7 +104,7 @@ aa.mk.dialog =async o=>
   dialog_options.append(dialog_no,dialog_yes);
   dialog.append(dialog_options);
   dialog.showModal();
-  if (o.scroll) dialog.scrollTop = dialog.scrollHeight;
+  if (o.scroll) aa.fx.scroll(dialog.lastChild,{behaviour:'smooth',block:'end'});
 };
 
 
@@ -145,6 +145,57 @@ aa.mk.header =e=>
   aa.state.l = state;
   header.append(caralho,state);
   return header
+};
+
+
+aa.mk.help =async(s='')=>
+{
+  let o;
+  if (!s?.length) 
+  {
+    s = 'aa';
+    o = aa;
+    await aa.readme_setup(aa,'/aa/README.adoc');
+  }
+  else o = aa[s];
+
+  let id = `help ${s}`;
+  if (aa.el.has(id))
+  {
+    fastdom.mutate(()=>
+    {
+      let l = aa.el.get(id);
+      l.toggleAttribute('open',true);
+      aa.logs.append(l.parentElement);
+      aa.fx.scroll(l)
+    })
+    return
+  }
+  // let mod = s==='aa'?aa:aa[s];
+  // if (!mod) mod = aa;
+  if (!o?.readme)
+  {
+    aa.log('cannot help with that :/ '+s)
+    return
+  }
+
+  // if (!text) return;
+
+  let article = aa.mk.l('article',
+  {
+    cla:'content parsed',
+    app:aa.parse.content(o.readme,1)
+  });
+
+  // let title = text.slice(0,text.indexOf('\n'));
+  // if (title.startsWith('=') || title.startsWith('#')) 
+  //   title = title.slice(1).trim();
+  
+  let details = aa.mk.details(id,article,1);
+  aa.el.set(id,details);
+  let log = aa.log(details);
+  setTimeout(()=>{aa.fx.scroll(log)},200);
+  // return details
 };
 
 
@@ -518,5 +569,23 @@ aa.mk.server =(k,v)=>
     aa.mk.l('span',{cla:'hashsearch',con:k.hash+k.search})
   ); 
   if (v.sets && v.sets.length) l.dataset.sets = v.sets;
+  return l
+};
+
+
+// make time element from timestamp
+aa.mk.time =timestamp=>
+{
+  const d = new Date(timestamp*1000);
+  const title = aa.fx.time_display(timestamp);
+  const l = aa.mk.l('time',
+  {
+    cla:'created_at',
+    con:timestamp,
+    clk:aa.clk.time
+  });
+  l.setAttribute('datetime', d.toISOString());
+  l.title = title;
+  l.dataset.elapsed = aa.fx.time_elapsed(d);
   return l
 };

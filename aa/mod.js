@@ -1,8 +1,8 @@
 /*
 
 alphaama
-mod
-// plugin expansion modules 
+aa . mod
+modules
 
 */
 
@@ -15,13 +15,16 @@ aa.mod.load =async mod=>
 {
   if (!mod.o)
   {
-    mod.o = await aa.db.ops('idb',{get:{store:'stuff',key:mod.def.id}});
+    let store = 'stuff';
+    let key = mod.def.id;
+    mod.o = await aa.db.ops('idb',{get:{store,key}});
     if (mod.o) mod.used = true;
     if (!mod.o && mod.old_id)
     {
       // in case the db key path changes
       // load mod from old_id and upgrade it
-      mod.o = await aa.db.ops('idb',{get:{store:'stuff',key:mod.old_id}});
+      key = mod.old_id;
+      mod.o = await aa.db.ops('idb',{get:{store,key}});
       if (mod.o)
       {
         mod.o.id = mod.def.id;
@@ -31,6 +34,23 @@ aa.mod.load =async mod=>
     if (!mod.o && mod.def) mod.o = mod.def;
   }
   if (mod.o && !mod.o.ls) mod.o.ls = {};
+
+  // add mod readme
+  let path = `/${mod.def.id}/README.adoc`;
+  aa.help_setup(mod,path);
+  // aa.actions.push(
+  //   {
+  //     action:['help',mod.name],
+  //     description:`help with ${mod.name} (${mod.def.id})`,
+  //     exe:()=>{aa.mk.help(mod.def.id)}
+  //   },
+  //   {
+  //     action:[mod.def.id,'help'],
+  //     description:`help with ${mod.name} (${mod.def.id})`,
+  //     exe:()=>{aa.mk.help(mod.def.id)}
+  //   }
+  // );
+  // aa.mod.help(mod.def.id);
   return mod
 };
 

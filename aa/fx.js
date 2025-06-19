@@ -278,6 +278,20 @@ aa.fx.encrypt44 =async(text,pubkey)=>
 };
 
 
+aa.fx.format_bytes =(bytes,decimals=2)=>
+{
+  if (!+bytes) return '0 Bytes';
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes','KiB','MiB','GiB','TiB','PiB','EiB','ZiB','YiB'];
+
+  const i = Math.floor(Math.log(bytes)/Math.log(k))
+
+  return `${parseFloat((bytes/Math.pow(k,i)).toFixed(dm))} ${sizes[i]}`
+};
+
+
 // hash event
 aa.fx.hash =ish=> NostrTools.getEventHash(ish);
 
@@ -850,6 +864,15 @@ aa.fx.time_nice =d=>
 aa.fx.time_to_date =s=> new Date(s*1000);
 
 
+// update time element
+aa.fx.time_upd =l=>
+{
+  const timestamp = parseInt(l.textContent);
+  const date = aa.fx.time_to_date(timestamp);
+  l.dataset.elapsed = aa.fx.time_elapsed(date);
+};
+
+
 // timeout with delay if called again before for some time
 aa.fx.to =async(f,t,s)=>
 {
@@ -883,9 +906,9 @@ aa.fx.url_from_tags =tags=>
 aa.fx.src_type =url=>
 {
   let dis = [url.href];
-  if (aa.fx.src_ext(url,aa.extensions.img)) dis.push('img');
-  if (aa.fx.src_ext(url,aa.extensions.audio)) dis.push('audio');
-  if (aa.fx.src_ext(url,aa.extensions.video)) dis.push('video');
+  if (aa.fx.src_ext(url,aa.def.extensions.img)) dis.push('img');
+  if (aa.fx.src_ext(url,aa.def.extensions.audio)) dis.push('audio');
+  if (aa.fx.src_ext(url,aa.def.extensions.video)) dis.push('video');
   return dis
 };
 

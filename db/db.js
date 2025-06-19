@@ -10,11 +10,13 @@ if ('serviceWorker' in navigator)
 {
   if (localStorage.cash === 'on')
   {
-    navigator.serviceWorker.register(aa.db.worker.cash,{scope:'/'});
+    navigator.serviceWorker
+    .register(aa.db.worker.cash,{scope:'/'});
   }
   else
   {
-    navigator.serviceWorker.getRegistrations()
+    navigator.serviceWorker
+    .getRegistrations()
     .then(async a=> 
     {
       if (a.length && localStorage.cash === 'off')
@@ -25,6 +27,19 @@ if ('serviceWorker' in navigator)
     })
     .catch(err=>{ console.log(err)});
   }
+};
+
+
+// on load
+aa.db.load =()=>
+{
+  let mod = aa.db;
+  fetch('/db/README.adoc')
+  .then(dis=>dis?.text())
+  .then(text=>
+  { 
+    if (text) mod.readme = text;
+  });
 };
 
 
@@ -60,7 +75,6 @@ aa.db.ops =async(s,o)=>
   });
 };
 
-
 aa.actions.push(
   {
     action:['db','count'],
@@ -79,3 +93,6 @@ aa.db.sdb.addEventListener('message',e=>
 });
 
 aa.db.sdb.start();
+
+// wen loaded
+window.addEventListener('load',aa.db.load);
