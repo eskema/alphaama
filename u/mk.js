@@ -1,5 +1,5 @@
 // make event from JSON string, autocompletes missing fields
-aa.mk.e =s=>
+aa.mk.e =(s='')=>
 {
   let event = aa.parse.j(s);
   if (event)
@@ -11,7 +11,7 @@ aa.mk.e =s=>
 
 
 // set your metadata (kind-0)
-aa.mk.k0 =async s=>
+aa.mk.k0 =async(s='')=>
 {
   let md = aa.parse.j(s);
   if (!md) return;
@@ -53,7 +53,7 @@ aa.mk.k4 =async(s='')=>
 
 // new reaction event (kind-7)
 // should go to aa.e
-aa.mk.k7 =async s=>
+aa.mk.k7 =async(s='')=>
 {
   let [id,content] = s.trim().split(' ');
   if (!aa.is.x(id) || !aa.is.one(content))
@@ -104,25 +104,25 @@ aa.mk.setup_butt =()=>
 aa.actions.push(
   {
     action:['mk','e'],
-    required:['JSON'],
-    description:'mk event from JSON',
+    required:['<JSON>'],
+    description:'mk event from JSON, auto-completes missing fields',
     exe:aa.mk.e
   },
   {
     action:['mk','0'],
-    required:['{JSON}'], 
+    required:['<JSON>'], 
     description:'set metadata (kind-0)',
     exe:aa.mk.k0
   },
   {
     action:['mk','7'],
-    required:['id','reaction'], 
+    required:['<id>','<reaction>'], 
     description:'react to a note',
     exe:aa.mk.k7
   },
   {
     action:['mk','4'],
-    required:['pubkey','text'],
+    required:['<pubkey>','<text>'],
     description:'encrypt text to pubkey',
     exe:aa.mk.k4
   },

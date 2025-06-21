@@ -249,7 +249,7 @@ aa.mod.ui =(mod,k)=>
 
 aa.actions.push(
   {
-    action:['mod','modal'],
+    action:['fx','modal'],
     required:['<mod_id>'],
     description:'view mod in a modal',
     exe:aa.mod.modal

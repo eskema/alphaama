@@ -709,7 +709,7 @@ img:not([src]) {
   grid-template-columns: auto 1fr auto;
   line-height: 1.2rem;
   overflow-x: unset;
-  padding: 0;
+  padding: 0 var(--pad);
 }
 
 .l::before
@@ -832,6 +832,7 @@ details.base[open] > summary,
   margin: 0;
   white-space: pre-wrap;
   line-height: inherit;
+  word-break: break-word;
 }
 
 .l details[open] > p,

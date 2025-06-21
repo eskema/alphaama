@@ -128,19 +128,19 @@ aa.o.load =async()=>
   aa.actions.push(
     {
       action:[id,'add'],
-      required:['key','value'],
+      required:['<key>','<value>'],
       description:'add key:value to options',
       exe:mod.add
     },
     {
       action:[id,'reset'],
-      optional:['key'], 
+      optional:['<key>'], 
       description:'reset all or just a single option',
       exe:mod.reset
     },
     {
       action:[id,'del'],
-      optional:['key'], 
+      optional:['<key>'], 
       description:'delete option',
       exe:mod.del
     },

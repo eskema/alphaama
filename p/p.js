@@ -12,26 +12,14 @@ aa.p =
   def:{id:'p'},
   name:'profiles',
   desc:'',
-  p(x)
-  {
-    return {
-      events:{}, // n:[[id,created_at],...]
-      follows:[],
-      followers:[],
-      metadata:{},
-      npub: aa.fx.encode('npub',x),
-      petname:'',
-      petnames:[],
-      pubkey:x,
-      relay:'',
-      relays:{},
-      sets:[],
-      score:0,
-      updated:0,    
-      verified:[], // [result,date]
-      xpub:x,
-    }
-  },
+  scripts:
+  [
+    '/p/clk.js?v='+aa_version,
+    '/p/is.js?v='+aa_version,
+    '/p/kinds.js?v='+aa_version,
+    '/p/mk.js?v='+aa_version,
+    '/p/view.js?v='+aa_version,
+  ],
   styles:['/p/p.css']
 };
 
@@ -75,16 +63,15 @@ aa.p.author_name =p=>
   || p.petnames[0]
   || p.metadata?.display_name 
   || p.metadata?.nip05 
-  || p.npub.slice(0,12);
+  || p.pubkey.slice(0,12);
 };
 
 
 // load author list from db into memory
 aa.p.authors =async a=>
 {
-
-  let p_stored = await aa.p.get_authors(a);
-  for (const p of p_stored)
+  let stored = await aa.p.get_authors(a);
+  for (const p of stored)
   {
     aa.db.p[p.pubkey] = p;
     aa.p.links_upd(p)
@@ -514,44 +501,38 @@ aa.p.load =async()=>
 {
   let mod = aa.p;
   let id = mod.def.id;
-  await aa.mk.scripts([
-    '/p/clk.js?v='+aa_version,
-    '/p/is.js?v='+aa_version,
-    '/p/kinds.js?v='+aa_version,
-    '/p/mk.js?v='+aa_version,
-    '/p/view.js?v='+aa_version,
-  ]);
+  await aa.mk.scripts(mod.scripts);
 
   aa.temp.p_link = [];
   aa.clears.push(aa.p.clear);
   aa.actions.push(
     {
       action:[id,'view'],
-      required:['pubkey'],
+      required:['<pubkey>'],
       description:'view profile by pubkey',
       exe:(s)=>{ aa.view.state('#'+aa.fx.encode('npub',s)) }
     },
     {
       action:[id,'score'],
-      required:['id','number'], 
+      required:['<id>','<number>'], 
       description:'set user score (for auto parsing and stuff)',
       exe:aa.p.score
     },
     {
       action:[id,'check'],
-      required:['name@domain'], 
+      required:['<name@domain>'], 
       description:'check nip5 validity',
       exe:aa.p.check_nip05
     },
     {
       action:[id,'md'],
-      optional:['pubkey'], 
+      optional:['<pubkey>'], 
       description:'return metadata of pubkey',
       exe:aa.p.md
     },
     {
       action:[id,'follows'],
-      optional:['pubkey'], 
+      optional:['<pubkey>'], 
       description:'followed by pubkey',
       exe:aa.p.follows
     },
@@ -639,7 +620,7 @@ aa.p.migrate_p_fields =p=>
     upd = 1;
   }
 
-  if (p.hasOwnProperty('extradata'))
+  if (p.extradata)
   {
     delete p.extradata;
     upd = 1;
@@ -653,29 +634,12 @@ aa.p.migrate_p_fields =p=>
     upd = 1;
   }
 
-  if (upd) setTimeout(()=>{aa.p.save(p)},200);
+  if (upd)
+  {
+    if (!p.nprofiles) p.nprofiles = [aa.fx.encode('nprofile',{pubkey:p.pubkey})];
+    setTimeout(()=>{aa.p.save(p)},200);
+  }
 };
-
-
-// get profile from tag and prints it,
-// otherwise add to missing list
-// aa.p.miss_print =(tag,relays=[])=>
-// {
-//   const id = tag[1];
-//   if (tag[2]) relays.push(tag[2]);
-
-//   if (!aa.temp.profiles) aa.temp.profiles = {};
-//   let dis = aa.temp.profiles[id];
-//   if (!dis) dis = aa.temp.profiles[id] = [];
-//   aa.fx.a_add(dis,relays);
-//   aa.fx.to(aa.db.miss_profiles,500,'profiles');
-
-//   // aa.db.get_e(id).then(dat=>
-//   // {
-//   //   if (dat) aa.e.to_printer(dat);
-//   //   else aa.e.miss_e(id,relays);
-//   // });
-// };
 
 
 // add event id to missing event list
@@ -686,7 +650,7 @@ aa.p.miss_p =(id,relays=[])=>
 };
 
 
-// creates a mention on cli
+// creates a mention when composing a note
 aa.p.oto =text=>
 {
   const w = text.split(' ').pop();
@@ -726,8 +690,34 @@ aa.p.oto =text=>
     if (a_name < b_name) return -1;
     if (a_name > b_name) return 1;
     return 0
-  });
-  for (const p of a) aa.cli.oto.append(aa.mk.mention_item(p,w));
+  }).map(p=>aa.mk.mention_item(p,w));
+  // for (const p of a) aa.cli.oto.append(...a);
+  aa.cli.oto.append(...a);
+};
+
+
+// profile data
+aa.p.p =pubkey=>
+{
+  if (!pubkey || !aa.is.key(pubkey)) return;
+  return {
+    events:{}, // kind:[[id,created_at],...],kind:{identifier:[[id,created_at],...]}
+    follows:[], // [pubkey1,pubkey2,...]
+    followers:[], // [pubkey1,pubkey2,...]
+    metadata:{}, // kind-0 content
+    npub: aa.fx.encode('npub',pubkey), // npub encoded
+    nprofiles:[aa.fx.encode('nprofile',{pubkey})], // [nprofile1a,nprofile1b]
+    petname:'', // petname in kind:3 p tag
+    petnames:[], // [petname1,petname2,...]
+    pubkey, // hex pubkey
+    relay:'', // relay in kind:3 p tag
+    relays:{}, // url:{sets:[]}
+    sets:[], // ['u','k3']
+    score:0, // score
+    updated:0, // last updated timestamp
+    verified:[], // nip05 verification result [result,date]
+    xpub:pubkey, // hex pubkey — to be deprecated
+  }
 };
 
 

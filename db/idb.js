@@ -154,7 +154,11 @@ indexed_db.ops.put =async(db,o)=>
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
   
   // for (const chunk of chunks) for (const item of chunk) odb.put(item)
-  for (const item of o.a) odb.put(item)
+  for (const item of o.a) 
+  {
+    const put = odb.put(item);
+    put.onerror =e=>{console.log(e.target.error,item)};
+  }
 };
 
 

@@ -43,7 +43,7 @@ const aa =
     },
     mods:
     [
-      {id:'cli',src:'/c/c.js?v='+aa_version,requires:[]},
+      {id:'cli',src:'/cli/cli.js?v='+aa_version,requires:[]},
       {id:'o',src:'/o/o.js?v='+aa_version,requires:['cli']},
       {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
       {id:'e',src:'/e/e.js?v='+aa_version,requires:['p']},
@@ -67,69 +67,19 @@ const aa =
       '/aa/wl.js?v='+aa_version,
       '/av/av.js?v='+aa_version,
     ],
+    styles:['/aa/aa.css?v='+aa_version],
   },
-  // dependencies:
-  // [
-  //   // '/dep/asciidoctor.min.js?v=3.0.4',
-  //   '/dep/bolt11.js',
-  //   '/dep/cashuts.js?v=2.0.0',
-  //   '/dep/fastdom.js?v=1.0.4',
-  //   // '/dep/fastdom-strict.js?v=1.0.4',
-  //   // '/dep/math.js?v=14.0.1',
-  //   '/dep/nostr-tools.js?v=2.10.4',
-  //   '/dep/qrcode.js',
-  //   // '/dep/webtorrent.min.js',
-  //   // '/dep/hls.js?v=1',
-  //   // '/dep/blurhash.js?v=10000',
-  // ],
   el:new Map(),
-  // extensions:
-  // {
-  //   img:['gif','heic','jpeg','jpg','png','webp'],
-  //   video:['mp4','webm'],
-  //   audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
-  // },
   fx:{},
   get:{},
   is:{},
   kinds:{},
   miss:{e:{},p:{},a:{}},
   mk:{},
-  // mods:
-  // [
-  //   {id:'cli',src:'/c/c.js?v='+aa_version,requires:[]},
-  //   {id:'o',src:'/o/o.js?v='+aa_version,requires:['cli']},
-  //   {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
-  //   {id:'e',src:'/e/e.js?v='+aa_version,requires:['p']},
-  //   {id:'r',src:'/r/r.js?v='+aa_version,requires:['e']},
-  //   {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
-  //   {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
-  //   {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
-  //   // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
-  // ],
   get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
   state:{},
-  styles:
-  [
-    '/aa/aa.css?v='+aa_version,
-  ],
   temp:{},
-  // tools:
-  // [
-  //   '/aa/mod.js?v='+aa_version,
-  //   '/aa/view.js?v='+aa_version,
-  //   '/db/db.js?v='+aa_version,
-  //   '/aa/clk.js?v='+aa_version,
-  //   '/aa/is.js?v='+aa_version,
-  //   '/aa/fx.js?v='+aa_version,
-  //   '/aa/log.js?v='+aa_version,
-  //   '/aa/mk.js?v='+aa_version,
-  //   '/aa/parse.js?v='+aa_version,
-  //   '/aa/wl.js?v='+aa_version,
-  //   '/av/av.js?v='+aa_version,
-    
-  // ],
   view:
   {
     active:false,
@@ -157,28 +107,6 @@ aa.dev_set =force=>
   }
   aa.log(`aa.dev = ${aa.dev}`);
 };
-
-
-// aa.help =id=>
-// {
-//   if (id?.length) aa.mk.help(id);
-//   else //aa.mk.help('aa');
-//   {
-//     if (!aa.readme)
-//     {
-//       fetch('/aa/README.adoc')
-//       .then(dis=>dis?.text())
-//       .then(text=>
-//       { 
-//         if (!text) return;
-//         aa.readme = text;
-//         aa.mk.help('aa')
-//       });
-//     } else aa.mk.help('aa')
-    
-//     // aa.log('help yourself')
-//   }
-// };
 
 
 // make element with options
@@ -245,7 +173,7 @@ aa.load =async(o={})=>
   // setup document
   aa.l = document.documentElement;
   aa.bod = document.body;
-  aa.mk.styles(o.styles || aa.styles);
+  aa.mk.styles(o.styles || aa.def.styles);
   aa.framed = window.self !== window.top;
   if (aa.framed) aa.l.classList.add('framed');
   let dependencies = o.dependencies || aa.def.dependencies;

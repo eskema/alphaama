@@ -111,15 +111,9 @@ aa.db.upd_e =async dat=>
 aa.actions.push(
   {
     action:['db','some'],
-    required:['number'],
+    required:['<number>'],
     optional:['asc'],
     description:'request a number of events from db',
     exe:aa.db.some
-  },
-  {
-    action:['db','view'],
-    required:['id'],
-    description:'view event',
-    exe:aa.view.state
   }
 );

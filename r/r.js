@@ -7,7 +7,7 @@ relays
 */
 
 
-if (!Object.hasOwn(localStorage,'outnum')) localStorage.outnum = '3';
+if (!Object.hasOwn(localStorage,'outbox_max')) localStorage.outbox_max = '3';
 
 
 aa.r =
@@ -15,6 +15,12 @@ aa.r =
   name:'relays',
   active:{},
   def:{id:'r',ls:{},r:'read',w:'write'},
+  scripts:
+  [
+    '/r/clk.js?v='+aa_version,
+    '/r/mk.js?v='+aa_version,
+    // '/r/wip.js',
+  ],
   temp: new Map(),
   ucks:new Map(),
   // message_type:{},
@@ -302,53 +308,42 @@ aa.r.ls =(s='')=>
 // on load
 aa.r.load =async()=>
 {
-  await aa.mk.scripts
-  ([
-    '/r/clk.js?v='+aa_version,
-    '/r/mk.js?v='+aa_version,
-    // '/r/wip.js',
-  ]);
-
   const mod = aa.r;
   const id = mod.def.id;
-
+  await aa.mk.scripts(mod.scripts);
   aa.actions.push(
     {
       action:[id,'add'],
-      required:['url'], 
-      optional:['set...'],
+      required:['<url>'], 
+      optional:['<set>','<set>'],
       repeat:',',
-      description:'add or replace relays',
+      description:'add / update relay with sets',
       exe:mod.add
     },
     {
       action:[id,'del'],
-      required:['url'],
+      required:['<url>'],
       description:'remove relay',
       exe:mod.del
     },
     {
       action:[id,'setrm'],
-      required:['url','set...'],
-      description:'remove set from relays',
+      required:['<url>','<set>'],
+      optional:['<set>'],
+      description:'remove set(s) from relay',
       exe:mod.setrm
     },
     {
-      action:[id,'ext'],
-      description:'get relays from extension',
-      exe:mod.ext
-    },
-    {
       action:[id,'ls'],
-      optional:['relset...'],
+      optional:['<set>'],
       description:'loads relay list from sets',
       exe:mod.ls
     },
-    {
-      action:[id,'resume'],
-      description:'resume open queries',
-      exe:mod.resume
-    },
+    // {
+    //   action:[id,'resume'],
+    //   description:'resume open queries',
+    //   exe:mod.resume
+    // },
     {
       action:[id,'stuff'],
       description:'attempt to set some relays',
@@ -356,15 +351,16 @@ aa.r.load =async()=>
     },
     {
       action:['e','bro'],
-      required:['id'],
-      optional:['<url || set>...'],
-      description:'broadcast note to relays',
+      required:['<id>'],
+      optional:['<url||set>'],
+      description:'broadcast note to relay(s)',
       exe:mod.bro
     },
   );
+
   aa.mod.load(mod)
   .then(aa.mod.mk)
-  .then(e=>
+  .then(()=>
   {
     aa.r.toggles();
     aa.r.manager_setup();
@@ -481,7 +477,7 @@ aa.r.outbox =(a=[],sets=[])=>
   if (!sets.length) sets = [aa.r.o.w,'k10002'];
   if (!a?.length) return [];
   let relays = aa.r.common(a,sets);
-  let outbox = aa.fx.intersect(relays,a,parseInt(localStorage.outnum));
+  let outbox = aa.fx.intersect(relays,a,parseInt(localStorage.outbox_max));
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
   return sorted_outbox;
 };

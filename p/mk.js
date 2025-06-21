@@ -23,7 +23,7 @@ aa.mk.profile_data =p=>
       {
         item = aa.mk.l('p',{cla:`item item_${k}`,app:aa.mk[k](k,v,p)});
       }
-      else item = aa.mk.item(k,v,{tag:'p'});
+      else item = aa.mk.item(k,v,{tag_name:'p'});
       if (k === 'metadata') l.prepend(item,' ');
       else l.append(item,' ');
     }

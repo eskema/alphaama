@@ -419,31 +419,32 @@ aa.fx.load =async()=>
   aa.actions.push(
     {
       action:[id,'qr'],
-      required:['text'],
+      required:['<text>'],
       description:'create qr code',
       exe:mod.qr
     },
     {
       action:[id,'decode'],
-      required:['text'],
+      required:['<text>'],
       description:'decode nip19 (bech32) to hex',
       exe:mod.decode
     },
     {
       action:[id,'decrypt'],
-      required:['pubkey','text'],
+      required:['<pubkey>','<text>'],
       description:'decrypt cyphertext',
       exe:mod.decrypt
     },
     {
       action:[id,'kind'],
-      required:['kind_number:n'],
-      description:'what is kind',
+      required:['<number>'],
+      description:'check if it is known',
       exe:mod.kinds_type
     },
     {
       action:[id,'keypair'],
-      description:'generate a new keypair',
+      optional:['<xsec>'],
+      description:'generate nostr keys (secret_bytes,public,xsec,nsec)',
       exe:mod.keypair
     },
   )

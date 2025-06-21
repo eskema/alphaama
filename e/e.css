@@ -925,14 +925,13 @@ a.author.fu .name
   width: max-content;
 }
 
-[open] > .tags
+.note [open] > .tags
 {
   background: rgba(var(--color-a),.82);
   box-shadow: 0px 0px var(--pad) rgb(var(--color-b));
   max-height: 80vh;
   overflow-y: scroll;
 }
-
 
 .tag
 {

@@ -7,7 +7,7 @@ user you
 */
 
 
-aa.mk.styles(['/u/u.css']);
+
 
 
 aa.u =
@@ -15,14 +15,16 @@ aa.u =
   name:'user',
   def:{id:'u',ls:{}},
   get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
-  tools:
+  styles:['/u/u.css'],
+  scripts:
   [
     '/u/clk.js?v='+aa_version,
     '/u/e.js?v='+aa_version,
-    '/u/is.js?v='+aa_version,
     '/u/mk.js?v='+aa_version,
   ]
 };
+
+aa.mk.styles(aa.u.styles);
 
 
 // add user
@@ -45,12 +47,12 @@ aa.u.load =async()=>
 {
   let id = 'u';
   const mod = aa[id];
-  await aa.mk.scripts(mod.tools);
+  await aa.mk.scripts(mod.scripts);
 
-  aa.cli.def = 
+  aa.cli.def.action = 
   {
     action:['mk','note'],
-    required:['text'],
+    required:['<text>'],
     description:'make a nostr note',
     exe:aa.mk.post
   };
@@ -58,80 +60,41 @@ aa.u.load =async()=>
   aa.actions.push(
     {
       action:[id,'setup'],
-      optional:['<hex_pubkey || nip05 || nprofile || npub>'],
-      description:'setup public key, leave blank for nip07',
+      optional:['<pubkey || nip05 || nprofile || npub>'],
+      description:'setup pubkey, leave blank to use extension (nip07)',
       exe:mod.setup
     },
     {
-      action:['fx','pow'],
-      required:['hex_id','difficulty'],
+      action:['e','pow'],
+      required:['<hex_id>','<difficulty>'],
       description:'add proof-of-work to note',
       exe:mod.pow
     },
     {
       action:['p','add'],
-      required:['id'], 
-      optional:['relay','petname'], 
-      description:'follow account (hex or npub)',
+      required:['<pubkey>'], 
+      optional:['<relay>','<petname>'], 
+      description:'follow profile (pubkey or npub)',
       exe:mod.k3_add
     },
     {
       action:['p','del'],
-      required:['id'], 
-      optional:['more ids..'], 
-      description:'unfollow account (hex or npub)',
+      required:['<pubkey>'], 
+      description:'unfollow account (pubkey or npub)',
       exe:mod.k3_del
     },
-    aa.cli.def
+    aa.cli.def.action
   );
+
   aa.side = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
   aa.side.append(aa.mod_l);
   aa.bod.insertBefore(aa.side,aa.bod.lastChild.previousSibling);
 
   aa.mk.nip7_butt();
-  // aa.u.check_signer();
+  
   await aa.mod.load(mod);
-
   await mod.start(mod);
 };
-
-// make p tag array from array
-// aa.fx.tag_k3 =a=>
-// {
-//   let tag = ['p'];
-//   let k,relay,petname;
-  
-//   if (a.length) k = a.shift().trim();
-//   if (!k) return false;
-//   if (k.startsWith('npub')) k = aa.fx.decode(k);
-//   if (!aa.is.key(k)) 
-//   {
-//     aa.log('invalid key to follow '+k);
-//     return false
-//   }
-//   if (aa.is.following(k)) 
-//   {
-//     aa.log('already following '+k);
-//     return false
-//   }
-//   tag.push(k);
-
-//   if (a.length) 
-//   {
-//     relay = a.shift().trim();
-//     let url = aa.is.url(relay);
-//     if (url) tag.push(url.href);
-//     else tag.push('')
-//   }
-
-//   if (a.length) 
-//   {
-//     petname = a.shift().trim();
-//     tag.push(aa.fx.an(petname));
-//   }
-//   while (tag[tag.length - 1].trim() === '') tag.pop();
-//   return tag
-// };
 
 
 // u add to s
@@ -255,19 +218,6 @@ aa.u.k3_del =async s=>
     });
   }
 };
-
-
-// is nip4 cyphertext
-// aa.is.nip4 =s=> 
-// {
-//   let l = s.length;
-//   if (l < 28) return false;
-
-//   return s[l - 28] == '?' 
-//   && s[l - 27] == 'i'
-//   && s[l - 26] == 'v'
-//   && s[l - 25] == '='
-// };
 
 
 // action to add proof-of-work (pow) to a note
@@ -437,23 +387,29 @@ aa.u.setup =async(s='')=>
 // start mod
 aa.u.start =async()=>
 {
-  let u_p = await aa.u.load_u();
-  if (!u_p) return;
+  let p = await aa.u.load_u();
+  if (!p) return;
   aa.u.upd_u_u();
   aa.mod.mk(aa.u);
-  aa.mk.profile(u_p);
+  aa.mk.profile(p);
 };
 
 
 aa.u.load_u =async()=>
 {
+  let needs_saving;
   let ls = aa.u.o?.ls;
-  let upd;
-  let pubkey = aa.u.o.ls.pubkey;
-  if (!pubkey)
+  if (!ls) 
+  {
+    aa.mk.setup_butt();
+    return
+  }
+
+  let pubkey = ls.pubkey;
+  if (!pubkey && ls.xpub)
   {
     pubkey = ls.pubkey = ls.xpub;
-    upd = true;
+    needs_saving = true;
   }
   if (!pubkey)
   {
@@ -462,16 +418,14 @@ aa.u.load_u =async()=>
   }
   else document.getElementById('u_setup')?.parentElement.remove();
 
-  let p = await aa.p.get(pubkey);
-  if (!p) p = aa.p.p(pubkey);
-
+  let p = await aa.p.author(pubkey);
   if (p.score < 9) 
   {
     p.score = 9;
-    upd = true;
+    needs_saving = true;
   }
-  if (aa.fx.a_add(p.sets,['u'])) upd = true;
-  if (upd) aa.p.save(p);
+  if (aa.fx.a_add(p.sets,['u'])) needs_saving = true;
+  if (needs_saving) aa.p.save(p);
   return p
 };
 

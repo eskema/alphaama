@@ -10,10 +10,21 @@ cli
 
 aa.cli = 
 {
-  o:{id:'cli',history:[],index:0},
-  def:false,
+  def:
+  {
+    id:'cli',
+    history:[],
+    index:0,
+    scripts:['/cli/mk.js'],
+    styles:
+    [
+      '/cli/cli.css',
+      '/cli/oto.css'
+    ],
+  },
   // on_run:[],
-  on_upd:[]
+  on_upd:[],
+  
 };
 
 
@@ -227,7 +238,7 @@ aa.cli.h =()=>
 aa.cli.history_goto =index=>
 {
   let v = aa.cli.t.value;
-  aa.cli.t.value = aa.cli.o.history[index] || v;
+  aa.cli.t.value = aa.cli.def.history[index] || v;
   aa.cli.t.setSelectionRange(0,0);
   aa.cli.upd();
 };
@@ -236,10 +247,10 @@ aa.cli.history_goto =index=>
 // go to next on cli history
 aa.cli.history_next =()=>
 {
-  if (aa.cli.o.index < aa.cli.o.history.length)
+  if (aa.cli.def.index < aa.cli.def.history.length)
   {
-    aa.cli.o.index++;
-    aa.cli.history_goto(aa.cli.o.index);
+    aa.cli.def.index++;
+    aa.cli.history_goto(aa.cli.def.index);
   }
 };
 
@@ -247,10 +258,10 @@ aa.cli.history_next =()=>
 // go to previous on cli history
 aa.cli.history_previous =()=>
 {
-  if (aa.cli.o.index > 0) 
+  if (aa.cli.def.index > 0) 
   {
-    aa.cli.o.index--;
-    aa.cli.history_goto(aa.cli.o.index);
+    aa.cli.def.index--;
+    aa.cli.history_goto(aa.cli.def.index);
   }
 };
 
@@ -258,8 +269,8 @@ aa.cli.history_previous =()=>
 // add input value to history
 aa.cli.history_upd =s=>
 {
-  aa.fx.a_add(aa.cli.o.history,[s]);
-  aa.cli.o.index = aa.cli.o.history.length;
+  aa.fx.a_add(aa.cli.def.history,[s]);
+  aa.cli.def.index = aa.cli.def.history.length;
 };
 
 
@@ -296,9 +307,7 @@ aa.cli.keydown =async e=>
 // on load
 aa.cli.load =async e=>
 {
-  await aa.mk.scripts([
-    '/c/mk.js',
-  ]);
+  await aa.mk.scripts(aa.cli.def.scripts);
   fastdom.mutate(()=>
   {
     document.body.insertBefore(aa.cli.mk(),document.body.lastChild.previousSibling);
@@ -411,7 +420,7 @@ aa.cli.run =async s=>
   aa.cli.history_upd(s);
   aa.log(s);
   if (aa.is.act(s)) aa.cli.exe(s);
-  else if (aa.cli.def) aa.cli.def.exe(s)
+  else if (aa.cli.def.action) aa.cli.def.action.exe(s)
 };
 
 
@@ -445,7 +454,7 @@ aa.cli.upd =e=>
     }
     else
     {
-      if (aa.cli.def) aa.cli.oto.append(aa.mk.oto_act_item(aa.cli.def,'pinned'));
+      if (aa.cli.def.action) aa.cli.oto.append(aa.mk.oto_act_item(aa.cli.def.action,'pinned'));
       aa.cli.oto.dataset.s = '';
       aa.cli.dat_upd();
     }
@@ -472,4 +481,4 @@ aa.cli.v =async s=>
 };
 
 
-aa.mk.styles(['/c/cli.css','/c/oto.css']);
+aa.mk.styles(aa.cli.def.styles);

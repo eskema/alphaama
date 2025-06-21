@@ -34,6 +34,16 @@ if ('serviceWorker' in navigator)
 aa.db.load =()=>
 {
   let mod = aa.db;
+  let id = 'db';
+  aa.actions.push(
+    {
+      action:[id,'count'],
+      required:['<store>'],
+      // optional:['key_range'],
+      description:'get a count of items in a given store. (events,authors,stuff)',
+      exe:mod.count
+    }
+  );
   fetch('/db/README.adoc')
   .then(dis=>dis?.text())
   .then(text=>
@@ -74,16 +84,6 @@ aa.db.ops =async(s,o)=>
     db.postMessage(o);
   });
 };
-
-aa.actions.push(
-  {
-    action:['db','count'],
-    required:['store'],
-    optional:['key_range'],
-    description:'',
-    exe:aa.db.count
-  }
-);
 
 
 // shared db

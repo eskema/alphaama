@@ -10,8 +10,7 @@ aa.e =
 {
   name:'events',
   def:{id:'e'},
-  styles:['/e/e.css'],
-  tools:
+  scripts:
   [
     '/e/clk.js',
     '/e/db.js',
@@ -22,7 +21,8 @@ aa.e =
     '/e/mk.js',
     '/e/parse.js',
     '/e/views.js'
-  ]
+  ],
+  styles:['/e/e.css'],
 };
 
 
@@ -262,9 +262,10 @@ aa.e.json =async(s='')=>
 // on load
 aa.e.load =async()=>
 {
-  await aa.mk.scripts(aa.e.tools);
-
   let mod = aa.e;
+  let id = mod.def.id;
+  await aa.mk.scripts(mod.scripts);
+
   aa.temp.orphan = {};
   aa.temp.print = {};
   aa.temp.printed = [];
@@ -272,26 +273,26 @@ aa.e.load =async()=>
 
   aa.actions.push(
     {
-      action:['e','clear'],
-      description:'clear e section',
+      action:[id,'clear'],
+      description:'clear events section',
       exe:mod.clear
     },
     {
-      action:['e','s'],
-      required:['value'],
+      action:[id,'s'],
+      required:['<value>'],
       description:'search notes content for value',
       exe:mod.search
     },
     {
-      action:['e','json'],
-      required:['hex_id'],
-      description:'return event JSON',
+      action:[id,'json'],
+      required:['<id>'],
+      description:'return event JSON by id (hex)',
       exe:mod.json
     },
     {
-      action:['e','view'],
-      required:['hex_id'],
-      description:'view event by hex_id',
+      action:[id,'view'],
+      required:['<id>'],
+      description:'view event by id (hex)',
       exe:(s)=>{ aa.view.state('#'+aa.fx.encode('note',s)) }
     },
   );
@@ -999,19 +1000,23 @@ aa.e.render_highlight =async(note,dat,o={})=>
         // for (const key in data) l.append(`\n${key} ${data[key]}`);
         // l.append('\n',naddr);
         // from.append(l)
-        let p_hi = await aa.p.author(pubkey);
+        // let p_hi = await aa.p.author(pubkey);
         source.append(aa.mk.nostr_link(naddr));
+        let source_p = await aa.p.author(pubkey);//aa.db.p[event.pubkey]
+        let name = aa.p.author_name(source_p);
+        source.append(` from ${name}`);
         break;
       case 'e':
-
+        let event_id = h_s[1];
         // app = aa.mk.nostr_link(aa.fx.encode('note',h_s[1]));
         // from.append(aa.mk.l('p',{app}));
-        source.append(aa.mk.nostr_link(aa.fx.encode('note',h_s[1])));
-        let event = aa.db.e[h_s[1]];
-        if (event)
+        source.append(aa.mk.nostr_link(aa.fx.encode('note',event_id)));
+        let dat = await aa.db.get_e(event_id);
+        if (dat)
         {
-          let name = aa.p.author_name(aa.db.p[event.pubkey]);
-          source.append(`from ${name}`);
+          let source_p = await aa.p.author(dat.event.pubkey);//aa.db.p[event.pubkey]
+          let name = aa.p.author_name(source_p);
+          source.append(` from ${name}`);
         }
         
         break;
@@ -1033,19 +1038,19 @@ aa.e.render_highlight =async(note,dat,o={})=>
       let note_content = note.querySelector('.content');
       if (!note_content) 
       {
-        note_content = new DocumentFragment();
+        note_content = note;
         // console.trace('no content',note,dat);
         // note_content = note;
       }
       else
       {
         // console.log('fine');
-        // note_content.classList.add('parsed');
+        
         note_content.textContent = '';
       }
       note_content.classList.add('parsed');
       note_content.append(highlight,source);
-      if (comment) note_content.prepend(comment);
+      if (comment) note_content.insertBefore(comment,highlight);
     });
   }
 };

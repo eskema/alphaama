@@ -116,4 +116,14 @@ aa.view.upd =s=>
 };
 
 
+aa.actions.push(
+  {
+    action:['view'],
+    required:['<entity>'],
+    description:'load into view note1…, npub1…, nprofile1…',
+    exe:aa.view.state
+  }
+);
+
+
 window.addEventListener('popstate',aa.view.pop);

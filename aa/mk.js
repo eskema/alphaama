@@ -242,13 +242,12 @@ aa.mk.img_modal =(src,cla=false)=>
 // make generic list item from key : value
 aa.mk.item =(k='',v,o)=>
 {
-  let tag = o?.tag || 'li';
+  let tag_name = o?.tag_name || 'li';
   let cla = `item item_${k}`;
 
-  let l = aa.mk.l(tag,{cla});
+  let l = aa.mk.l(tag_name,{cla});
   let item;
-  // if (Object.hasOwn(o,'mk')) item = o.mk(k,v);
-  // else 
+
   if (Array.isArray(v))
   {
     item = aa.mk.item_arr(k,v);

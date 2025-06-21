@@ -1,9 +1,6 @@
 // make relay list
 aa.mk.k10002 =(s='')=>
 {
-  let log = aa.r.def.id+' ls: ';
-  const err = (er)=>{aa.log(log+er)};
-
   let ls = aa.r.o.ls;
   let relay_list = [];
   let a = s ? s.split(',') : Object.keys(ls);
@@ -18,14 +15,14 @@ aa.mk.k10002 =(s='')=>
     {
       if (read && !write) tag.push('read');
       if (!read && write) tag.push('write');
-      relay_list.push(tag.join(' '))
+      relay_list.push(tag.join(' ').trim())
     }
   }
 
   const relays = [];
   for (const r of relay_list) 
   {
-    let relay = r.trim().split(' ');
+    let relay = r.split(' ');
     relay.unshift('r');
     relays.push(relay);
   }
@@ -48,7 +45,8 @@ aa.mk.k10002 =(s='')=>
 aa.actions.push(
   {
     action:['mk','10002'],
-    optional:['<url set1 set2>,<url>'],
+    required:['<url>'],
+    optional:['<url>'],
     description:'create a relay list (kind-10002)',
     exe:aa.mk.k10002
   },

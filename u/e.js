@@ -42,7 +42,7 @@ aa.e.normalise =event=>
 
 
 // decrypt kind-4 from id
-aa.e.note_decrypt =async s=>
+aa.e.note_decrypt =async id=>
 { 
   if (!window.nostr) 
   {
@@ -50,14 +50,13 @@ aa.e.note_decrypt =async s=>
     return
   }
 
-  let x = s.trim();
-  if (!aa.is.x(x))
+  if (!aa.is.x(id))
   {
     aa.log('invalid id');
     return
   }
   
-  let dat = await aa.db.get_e(x);
+  let dat = await aa.db.get_e(id);
   if (!dat) 
   {
     aa.log('event not found');
@@ -82,7 +81,7 @@ aa.e.note_decrypt =async s=>
     return
   }
   
-  aa.e.note_decrypted_content(x,decrypted);
+  aa.e.note_decrypted_content(id,decrypted);
   return decrypted
 };
 
@@ -108,7 +107,7 @@ aa.e.note_decrypted_content =async(x,decrypted)=>
 aa.actions.push(
   {
     action:['e','decrypt'],
-    required:['nid'],
+    required:['<id>'],
     description:'decrypt note',
     exe:aa.e.note_decrypt
   },

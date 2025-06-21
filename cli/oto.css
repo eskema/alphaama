@@ -117,8 +117,8 @@
 
 #oto .item .optional 
 {
-  border-bottom: 1px dashed rgb(var(--color-d));
-  color: rgb(var(--color-d));
+  border-bottom: 1px dashed rgba(var(--color-d),.6);
+  color: rgba(var(--color-d),.6);
   grid-area: required;
 }
 

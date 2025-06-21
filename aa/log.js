@@ -1,9 +1,3 @@
-aa.log_parse =(s='')=>
-{
-  aa.log(aa.mk.item('parse',aa.parse.j(s),{tag:'p'}))
-}
-
-
 // mark log as read
 aa.log_read =async l=>
 {
@@ -47,19 +41,22 @@ aa.logs_clear =async s=>
 
 aa.actions.push(
   {
-    action:['l','l'],
-    required:['text'],
+    action:['logs','log'],
+    required:['<text>'],
     description:'log text to logs',
-    exe:s=>{aa.log(s)}
+    exe:aa.log
   },
   {
-    action:['l','parse'],
-    required:['stringified_object'],
-    description:'parse stringified object as structured element',
-    exe:aa.log_parse
+    action:['logs','parse'],
+    required:['<JSON>'],
+    description:'JSON parse',
+    exe:(s='')=>
+    {
+      aa.log(aa.mk.item('parse',aa.parse.j(s),{tag_name:'p'}))
+    }
   },
   {
-    action:['l','x'],
+    action:['logs','clear'],
     description:'clear logs',
     exe:aa.logs_clear
   },

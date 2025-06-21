@@ -214,44 +214,44 @@ aa.q.load =async()=>
   aa.actions.push(
     {
       action:[id,'add'],
-      required:['fid','JSON_filter'],
-      description:'add new filter',
+      required:['<query_id>','<JSON_filter>'],
+      description:'add new query (request filter)',
       exe:mod.add
     },
     {
       action:[id,'del'],
-      required:['fid'],
+      required:['<query_id>'],
       description:'remove one or more filters',
       exe:mod.del
     },
     {
       action:[id,'run'],
-      required:['fid'],
-      optional:['relset'],
-      description:'run filter on relay set (relset), if no relset given default will be used',
+      required:['<query_id>'],
+      optional:['<url||set>'],
+      description:'run filter on relay or set',
       exe:mod.run
     },
     {
       action:[id,'out'],
-      required:['fid'],
-      description:'run filter with outbox',
+      required:['<query_id>'],
+      description:'run filter in outbox mode (authors relays)',
       exe:mod.out
     },
     {
       action:[id,'req'],
-      required:['relset','json_filter'],
-      description:'run raw filter on relay set',
+      required:['<url||set>','<JSON_filter>'],
+      description:'run raw request filter on relay or set',
       exe:mod.req
     },
     {
       action:[id,'close'],
-      optional:['fid'],
+      optional:['<query_id>'],
       description:'close one or all running queries',
       exe:mod.close
     },
     {
       action:[id,'reset'],
-      description:'reset/add default query filters',
+      description:'reset/add default queries',
       exe:mod.reset
     },
     {
@@ -268,12 +268,9 @@ aa.q.load =async()=>
     // },
   );
 
-  
-
-
   aa.mod.load(mod).then(aa.mod.mk).then(e=>
   {
-    let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
+    let add_butt = aa.mk.butt_action(`${id} add `,'+');
     fastdom.mutate(()=>
     {
       mod.l.insertBefore(add_butt,mod.l.lastChild)
