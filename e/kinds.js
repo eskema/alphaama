@@ -130,7 +130,7 @@ aa.kinds[10002] =dat=>
         else if (permission === 'write') 
           aa.fx.a_add(relay.sets,['write']);
         else aa.fx.a_add(relay.sets,['read','write']);
-        if (aa.is.u(dat.event.pubkey)) aa.fx.a_add(relay.sets,['auth']);
+        // if (aa.is.u(dat.event.pubkey)) aa.fx.a_add(relay.sets,['auth']);
       }
       // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
       aa.p.relays_add(relays,p);
