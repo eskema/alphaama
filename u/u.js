@@ -358,7 +358,14 @@ aa.u.setup =async(s='')=>
     }
 
     log = aa.log('if needed ');
-    const options_butt = aa.mk.butt_action('o add score 4, pow 17, theme light','adjust options');
+    const options_a = 
+    [
+      'o add score 4',
+      'pow 17',
+      'relays_ask off',
+      'theme light'
+    ];
+    const options_butt = aa.mk.butt_action(options_a.join(', '),'adjust options');
     options_butt.addEventListener('click',aa.clk.done);
     log.lastChild.append(options_butt,' (load media, switch theme, etc…)');
 
@@ -376,11 +383,6 @@ aa.u.setup =async(s='')=>
     });
     log.lastChild.append(reload_butt,' for a clean start');
   }
-
-  // aa.o.stuff();
-
-  // aa.log(`setting options with: .aa o add mode ${mode},trust 4`)
-  // aa.o.add(`mode ${mode},trust 4`);
 };
 
 
@@ -446,47 +448,47 @@ aa.u.upd_u_u =()=>
 
 
 // web of trust 
-aa.u.wot =async()=>
-{
-  let ff = {};
-  let to_get = [];
-  let follows = aa.u.p.follows;
-  if (!follows?.length) return false;  
-  for (const x of follows)
-  {
-    let p = aa.db.p[x];
-    let p_follows = p?.follows;
-    if (p_follows?.length)
-    {      
-      for (const xid of p_follows)
-      {
-        if (!aa.is.following(xid))
-        {
-          if (!ff[xid]) ff[xid] = [];
-          aa.fx.a_add(ff[xid],[x]);
-          if (!aa.db.p[xid]) aa.fx.a_add(to_get,[xid]);
-        }
-      }
-    }
-  }
+// aa.u.wot =async()=>
+// {
+//   let ff = {};
+//   let to_get = [];
+//   let follows = aa.u.p.follows;
+//   if (!follows?.length) return false;  
+//   for (const x of follows)
+//   {
+//     let p = aa.db.p[x];
+//     let p_follows = p?.follows;
+//     if (p_follows?.length)
+//     {      
+//       for (const xid of p_follows)
+//       {
+//         if (!aa.is.following(xid))
+//         {
+//           if (!ff[xid]) ff[xid] = [];
+//           aa.fx.a_add(ff[xid],[x]);
+//           if (!aa.db.p[xid]) aa.fx.a_add(to_get,[xid]);
+//         }
+//       }
+//     }
+//   }
 
-  if (to_get.length)
-  {
-    let dat = await aa.db.ops('idb',{get_a:{store:'authors',a:to_get}});
-    if (dat) for (const p of dat) aa.db.p[p.pubkey] = p;
-  }
+//   if (to_get.length)
+//   {
+//     let dat = await aa.db.ops('idb',{get_a:{store:'authors',a:to_get}});
+//     if (dat) for (const p of dat) aa.db.p[p.pubkey] = p;
+//   }
   
-  aa.ff = ff;
-  let wot = {};
-  let sorted = Object.entries(aa.ff).sort((a,b)=>b[1].length - a[1].length);
-  return sorted
-  for (const f of sorted)
-  {
-    let x = f[0];
-    let n = f[1].length;
-    let id = aa.db.p[x]?.petnames[0] || aa.db.p[x]?.metadata?.name || x;
-    wot[id] = n;
-  }
+//   aa.ff = ff;
+//   let wot = {};
+//   let sorted = Object.entries(aa.ff).sort((a,b)=>b[1].length - a[1].length);
+//   return sorted
+//   for (const f of sorted)
+//   {
+//     let x = f[0];
+//     let n = f[1].length;
+//     let id = aa.db.p[x]?.petnames[0] || aa.db.p[x]?.metadata?.name || x;
+//     wot[id] = n;
+//   }
 
-  return wot
-};
+//   return wot
+// };

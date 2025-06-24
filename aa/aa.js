@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 61;
+const aa_version = 63;
 // a
 const aa = 
 {
@@ -161,7 +161,6 @@ aa.lazy_god = new IntersectionObserver(a=>
         l.classList.add('quick_fox');
         l.classList.remove('lazy_dog');
       });
-      
     }
   }
 },{root:null,threshold:.1});
@@ -256,6 +255,7 @@ aa.log =(con='',l=false,is_new=true)=>
 // append mod scripts when required mods have been loaded
 aa.mods_load =async mods=>
 {
+  aa.temp.mods_after_load = [];
   for (const o of mods)
   {
     if (aa.required(o.requires))
@@ -267,6 +267,12 @@ aa.mods_load =async mods=>
       aa[o.id].loaded = true;
     }
   }
+  while (aa.temp.mods_after_load.length)
+  {
+    let dis = aa.temp.mods_after_load.shift();
+    setTimeout(dis,0)
+  }
+  delete aa.temp.mods_after_load;
 };
 
 

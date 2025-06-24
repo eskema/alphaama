@@ -6,8 +6,12 @@ relays
 
 */
 
-
-if (!Object.hasOwn(localStorage,'outbox_max')) localStorage.outbox_max = '3';
+// relay options
+aa.o.defaults.relays_ask = 
+{
+  options:['on','off'],
+  fx:s=> aa.fx.pick_other(s,aa.o.defaults.relays_ask.options)
+};
 
 
 aa.r =
@@ -208,7 +212,7 @@ aa.r.found =async({url,request,options,reason})=>
 
   let cleanup =e=>
   {
-    e.target.closest('.notice').remove();
+    e?.target.closest('.notice')?.remove();
     // e.target.classList.add('slap');
     // e.target.closest('.is_new')?.classList.remove('is_new');
   }
@@ -218,16 +222,22 @@ aa.r.found =async({url,request,options,reason})=>
   let butts = [];
   let notice = {id,cla,title,butts};
   let dis = ['request',{relays:[url],request,options}];
-  // console.log(dis);
 
-  let hint ={con:'hint',cla:'yes',exe:e=>
-    {
-      aa.r.add(`${url} hint`);
-      if (request) aa.r.manager.postMessage(dis);
-      // aa.r.c_on(url,opts);
-      cleanup(e);
-    }
-  };
+  let add_relay_and_request =e=>
+  {
+    aa.r.add(`${url} hint`);
+    if (request) aa.r.manager.postMessage(dis);
+    // aa.r.c_on(url,opts);
+    cleanup(e);
+  }
+
+  if (localStorage.relays_ask==='off')
+  {
+    add_relay_and_request()
+    return
+  }
+
+  let hint ={con:'hint',cla:'yes',exe:add_relay_and_request};
 
   let off ={con:'off',cla:'no',exe:e=>
     {
@@ -365,6 +375,17 @@ aa.r.load =async()=>
     aa.r.toggles();
     aa.r.manager_setup();
   });
+
+  if (!Object.hasOwn(localStorage,'outbox_max'))
+  {
+    localStorage.outbox_max = '3';
+    // aa.mod.ui(aa.o,'outbox_max');
+  }
+  if (!Object.hasOwn(localStorage,'relays_ask')) 
+  {
+    localStorage.relays_ask = 'on';
+    // aa.mod.ui(aa.o,'relays_ask');
+  }
 };
 
 

@@ -33,11 +33,16 @@ aa.clk.k3 =async e=>
     // aa.p.add(x);
     let new_follow = [x];
     const p = await aa.p.get(x);
-    new_follow.push(aa.p.relay(p));
+    let relay = aa.p.relay(p);
+    if (relay) new_follow.push(relay);
     let petname;
     if (p.metadata?.name) petname = p.metadata.name;
     else if (p.petnames.length) petname = p.petnames[0];
-    if (petname) new_follow.push(aa.fx.an(petname));
+    if (petname) 
+    {
+      if (!relay) new_follow.push('.')
+      new_follow.push(aa.fx.an(petname));
+    }
     aa.cli.v(localStorage.ns+' p add '+new_follow.join(' '))
   }
 };

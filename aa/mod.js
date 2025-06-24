@@ -56,7 +56,7 @@ aa.mod.load =async mod=>
 
 
 // make mod
-aa.mod.mk =mod=>
+aa.mod.mk =async mod=>
 {
   let o = {id:mod.def.id,ls:mod.o.ls,sort:'a',fun:[]};
   if (mod.hasOwnProperty('mk')) o.mk = mod.mk;

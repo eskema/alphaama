@@ -39,7 +39,7 @@ aa.o =
   },
 };
 
-// given a value, returns the other one for quick input
+// options actions
 aa.o.defaults =
 {
   cash:
@@ -152,16 +152,30 @@ aa.o.load =async()=>
     mod.o.ls.theme = mod.o.ls.team;
     aa.o.del('team');
   }
-
-  aa.mod.load(mod).then(aa.mod.mk).then(e=>
-  {
-    let add_butt = aa.mk.butt_action(`${id} add `,'add');
-    fastdom.mutate(()=>
+  aa.mod.load(mod);
+  aa.temp.mods_after_load?.push(
+    ()=>
     {
-      // mod.l.append(add_butt)
-      mod.l.insertBefore(add_butt,mod.l.firstChild.nextSibling);
-    })
-  });
+      aa.mod.mk(mod).then(e=>
+      {
+        let add_butt = aa.mk.butt_action(`${id} add `,'add');
+        fastdom.mutate(()=>
+        {
+          // mod.l.append(add_butt)
+          mod.l.insertBefore(add_butt,mod.l.firstChild.nextSibling);
+        })
+      });
+    }
+  );
+  // aa.mod.load(mod).then(aa.mod.mk).then(e=>
+  // {
+  //   let add_butt = aa.mk.butt_action(`${id} add `,'add');
+  //   fastdom.mutate(()=>
+  //   {
+  //     // mod.l.append(add_butt)
+  //     mod.l.insertBefore(add_butt,mod.l.firstChild.nextSibling);
+  //   })
+  // });
   // detect when changes happen on other tabs
   window.onstorage = aa.o.on_storage;
   // window.addEventListener('storage',e=> 
