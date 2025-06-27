@@ -23,7 +23,7 @@ aa.parse.context =(l,event,trust)=>
     content.classList.toggle('parsed');
   }
   let parsed;
-  if (event.tags.length < 21 && content.classList.contains('parsed'))
+  if (content.classList.contains('parsed')) //event.tags.length < 21 && 
   {
     parsed = aa.parse.content(event.content,trust);
   }
