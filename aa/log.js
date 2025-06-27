@@ -13,6 +13,13 @@ aa.log_read =async l=>
 };
 
 
+// log a stringified object as item
+aa.log_parse =(s='')=>
+{
+  aa.log(aa.mk.item('parse',aa.parse.j(s),{tag_name:'p'}))
+};
+
+
 // mark logs as read
 aa.logs_read =async e=>
 {
@@ -50,10 +57,7 @@ aa.actions.push(
     action:['logs','parse'],
     required:['<JSON>'],
     description:'JSON parse',
-    exe:(s='')=>
-    {
-      aa.log(aa.mk.item('parse',aa.parse.j(s),{tag_name:'p'}))
-    }
+    exe:aa.log_parse
   },
   {
     action:['logs','clear'],

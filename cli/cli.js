@@ -77,8 +77,12 @@ aa.cli.collapse =e=>
 
 
 // parses string as action and executes it
-aa.cli.exe =async s=>
+aa.cli.exe =async(s='')=>
 {
+  if (s.trim() === '.aa nostr fucking client') 
+  {
+    aa.nfc(); return
+  }
   let a = s.split(localStorage.ns+' ');
   let output;
   for (const action of a)

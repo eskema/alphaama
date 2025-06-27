@@ -1,5 +1,5 @@
 
-= alphaama
+= aa => alphaama
 
 * alphaama doesn't do much on it's own, it takes commands given by the user and executes them
 * it has a single input field for interaction like a Command Line Interface (CLI) wrapped in a Graphical User Interface (GUI) that can be interacted with

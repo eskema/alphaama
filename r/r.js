@@ -227,15 +227,14 @@ aa.r.found =async({url,request,options,reason})=>
   {
     aa.r.add(`${url} hint`);
     if (request) aa.r.manager.postMessage(dis);
-    // aa.r.c_on(url,opts);
     cleanup(e);
   }
 
-  if (localStorage.relays_ask==='off')
-  {
-    add_relay_and_request()
-    return
-  }
+  // if (localStorage.relays_ask==='off')
+  // {
+  //   add_relay_and_request()
+  //   return
+  // }
 
   let hint ={con:'hint',cla:'yes',exe:add_relay_and_request};
 
@@ -669,13 +668,28 @@ aa.r.validate =({relays,request,options})=>
   let found = relays.filter(i=>!aa.r.o.ls[i]);
   if (found.length)
   {
-    // filter those out
-    relays = relays.filter(i=>aa.r.o.ls[i]);
-    // send found notices
-    for (const url of found) aa.r.found({url,request,options});
+    // let add_relay_and_request =e=>
+    // {
+    //   aa.r.add(`${url} hint`);
+    //   if (request) aa.r.manager.postMessage(dis);
+    //   // aa.r.c_on(url,opts);
+    //   cleanup(e);
+    // }
+
+    if (localStorage.relays_ask==='off')
+    {
+      aa.r.add(found.map(i=>`${i} hint`).join());
+    }
+    else
+    {
+      // filter those out
+      relays = relays.filter(i=>aa.r.o.ls[i]);
+      // send found notices
+      for (const url of found) aa.r.found({url,request,options});
+    }
   }
 
-  return relays.filter(i=>!aa.r.o.ls[i].sets.includes('off'));
+  return relays.filter(i=>aa.r.o.ls[i] && !aa.r.o.ls[i].sets.includes('off'));
 };
 
 

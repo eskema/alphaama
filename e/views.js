@@ -32,6 +32,7 @@ aa.view.ls.naddr1 =async naddr=>
 aa.view.ls.nevent1 =async nevent=>
 {
   let data = aa.fx.decode(nevent);
+  aa.log(aa.parse.j());
   if (!data || !data.id) return;
   let l = aa.temp.printed.find(i=>i.dataset.id === data.id);
   // let l = document.getElementById(nid);

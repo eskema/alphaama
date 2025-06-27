@@ -7,13 +7,26 @@ user you
 */
 
 
-
-
-
 aa.u =
 {
   name:'user',
-  def:{id:'u',ls:{}},
+  def:
+  {
+    id:'u',
+    ls:{},
+    relays:
+    [
+      'wss://nos.lol',
+      'wss://relay.damus.io',
+      'wss://relay.primal.net',
+    ],
+    options:
+    [
+      'score 0',
+      'pow 17',
+      'relays_ask off',
+    ]
+  },
   get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
   styles:['/u/u.css'],
   scripts:
@@ -220,6 +233,55 @@ aa.u.k3_del =async s=>
 };
 
 
+// make u mod item
+aa.u.mk =(k,v)=>
+{
+  let l;
+  switch (k)
+  {
+    case 'npub':
+      let link = aa.mk.nostr_link(v,'view');
+      link.classList.add('key');
+      link.title = 'view u';
+      l = aa.mk.l('li',{id:aa.u.def.id+'_'+k,cla:'item'});
+      l.append(link,' ',aa.mk.l('span',{cla:'val',con:v}));
+      break;
+      
+    default: l = aa.mk.item(k,v);
+  }
+  return l
+};
+
+
+// nostr fucking client
+aa.nfc =async()=>
+{
+  let pubkey = await window.nostr.getPublicKey();
+  if (!pubkey)
+  {
+    aa.log('unable to get public key');
+    return
+  }
+  aa.u.add(pubkey);
+  await aa.u.start();
+
+  aa.r.add(aa.u.def.relays.map(i=>`${i} read write`).join());
+  const options_a = 
+  [
+    'score 0',
+    'pow 17',
+    'relays_ask off',
+  ];
+  aa.o.add(options_a.join(', '));
+  aa.q.reset();
+  let l = aa.mk.l('p',{con:'wait a bit then ',app:aa.mk.reload_butt()});
+  aa.log(l);
+  setTimeout(()=>{aa.q.stuff()},1000);
+  // aa.fx.countdown('the page will reload in',21,1000)
+  // .then(dis=>{if (dis) location.reload()});
+};
+
+
 // action to add proof-of-work (pow) to a note
 aa.u.pow =async(s='')=>
 {
@@ -274,26 +336,6 @@ aa.u.sign =async event=>
     }
     window.nostr.signEvent(event).then(resolve);
   });
-};
-
-
-// make u mod item
-aa.u.mk =(k,v)=>
-{
-  let l;
-  switch (k)
-  {
-    case 'npub':
-      let link = aa.mk.nostr_link(v,'view');
-      link.classList.add('key');
-      link.title = 'view u';
-      l = aa.mk.l('li',{id:aa.u.def.id+'_'+k,cla:'item'});
-      l.append(link,' ',aa.mk.l('span',{cla:'val',con:v}));
-      break;
-      
-    default: l = aa.mk.item(k,v);
-  }
-  return l
 };
 
 
@@ -375,13 +417,7 @@ aa.u.setup =async(s='')=>
     log.lastChild.append(req_butt,' like profile, follows, etc..');
     
     log = aa.log('finally, ');
-    const reload_butt = aa.mk.l('button',
-    {
-      con:'reload the page',
-      cla:'butt plug',
-      clk:e=>{location.reload()}
-    });
-    log.lastChild.append(reload_butt,' for a clean start');
+    log.lastChild.append(aa.mk.reload_butt(),' for a clean start');
   }
 };
 

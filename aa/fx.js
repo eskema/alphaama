@@ -181,22 +181,39 @@ aa.fx.count_upd =(l,pos=true)=>
 };
 
 
-// countdown to something in seconds
-aa.fx.countdown =async(s,seconds)=>
+// countdown to something in intervals
+aa.fx.countdown =async(con,total,n)=>
 {
   return new Promise(resolve=>
   {
-    setTimeout(()=>
+    let interval;
+    const done =dis=>{clearInterval(interval);resolve(dis)};
+    let times = 0;
+    let counter = aa.mk.l('span',{con:total,cla:'counter'});
+    let l = aa.mk.l('p',{con,cla:'countdown'});
+    l.append(' ',counter,'…',' ',aa.mk.l('button',
     {
-      aa.log(`${s}: done!`);
-      resolve(true)
-    },seconds*1000);
-
-    for (let i=0;i<seconds;i++)
+      cla:'butt no',
+      con:'abort',
+      clk:e=>
+      {
+        done(false);
+        fastdom.mutate(()=>
+        {
+          e.target.remove();
+          l.append('aborted!')
+        });
+      }
+    }));
+    aa.log(l);
+    
+    const count_down =()=>
     {
-      let num = seconds - i;
-      setTimeout(()=>{aa.log(`${s}${num}s...`)},i*1000)
-    }
+      times++;
+      fastdom.mutate(()=>{counter.textContent = total - times});
+      if (times === total) done(true);
+    };
+    interval = setInterval(count_down,n);
   })
 };
 

@@ -67,15 +67,29 @@ aa.p.author_name =p=>
 };
 
 
-// load author list from db into memory
-aa.p.authors =async a=>
+// load missing authors from db into memory
+aa.p.authors_load =async a=>
 {
-  let stored = await aa.p.get_authors(a);
-  for (const p of stored)
-  {
-    aa.db.p[p.pubkey] = p;
-    aa.p.links_upd(p)
-  }
+  if (!a?.length) return [];
+  let not_loaded = [...new Set(a.filter(i=>!Object.hasOwn(aa.db.p,i)))];
+  if (!not_loaded.length) return [];
+
+  let stored = await aa.p.get_authors(not_loaded);
+  if (!stored?.length) return [];
+  for (const p of stored) aa.db.p[p.pubkey] = p;
+  
+  let stored_ids = stored.map(i=>i.pubkey);
+  return not_loaded.filter(i=>!stored_ids.includes(i));
+  console.log(missing)
+  return missing
+  // for (const x of missing)
+  // {
+  //   if (!Object.hasOwn(aa.db.p,x))
+  //   {
+  //     if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
+  //     aa.db.p[x] = aa.p.p(x);
+  //   }
+  // }
 };
 
 
@@ -491,6 +505,12 @@ aa.p.link_img =(l,src=false)=>
 // updates all links from p
 aa.p.links_upd =async p=>
 {
+  // if (!aa.temp.links_upd_log) aa.temp.links_upd_log = new Map();
+  // let dis = aa.temp.links_upd_log 
+  // if (!dis.has(p.pubkey)) dis.set(p.pubkey,0);
+  // let dis_p = dis.get(p.pubkey);
+  // dis_p++;
+  // console.trace(dis_p);
   let o = aa.p.data(p,1);
   for (const i of o.a) aa.p.link_data_upd(i,o.data);
 };
@@ -553,7 +573,7 @@ aa.p.load_profiles =async a=>
   for (const dis of stored) 
   {
     aa.db.p[dis.pubkey] = dis;
-    aa.mk.profile(dis);
+    // aa.mk.profile(dis);
   }
   for (const x of a)
   {
@@ -730,12 +750,24 @@ aa.p.process_k3_tags =async event=>
   let old_follows;
   if (ep?.follows?.length) old_follows = [...ep.follows];
   ep.follows = event.tags.filter(aa.is.tag_p).map(i=>i[1]);
-  let p_ls = await aa.p.get_authors(ep.follows);
-  for (const p of p_ls) aa.db.p[p.pubkey] = p;
+  let missing = await aa.p.authors_load(ep.follows);
+  for (const x of missing)
+  {
+    if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
+    aa.db.p[x] = aa.p.p(x);
+  }
+  // for (const p of p_ls) aa.db.p[p.pubkey] = p;
   let to_upd = aa.p.follows_upd(event);
   to_upd.push(ep);
-  setTimeout(()=>{for (const p of to_upd) aa.p.save(p)},200);
   if (is_u) aa.p.load_profiles(ep.follows);
+  setTimeout(()=>
+  {
+    for (const p of to_upd) 
+    {
+      aa.p.save(p);
+      aa.p.links_upd(p);
+    }
+  },200);
 };
 
 
@@ -812,19 +844,16 @@ aa.p.save_to =()=>
   let pubs = [...new Set(aa.temp[q_id])];
   aa.temp[q_id] = [];
   let all = [];
-  for (const pub of pubs) 
-  {
-    const p = aa.db.p[pub];
-    all.push(p);
-  }
+  for (const pub of pubs) all.push(aa.db.p[pub]);
   const chunks = aa.fx.chunks(all,420);
   let times = 0;
   for (const a of chunks)
   {
     setTimeout(()=>
     {
-      aa.db.idb.postMessage({put:{store:'authors',a}})
-    },times * 100);
+      aa.db.idb.postMessage({put:{store:'authors',a}});
+      // for (const p of a) aa.p.links_upd(p)
+    },times * 300);
     times++;
   }
 };
@@ -837,7 +866,7 @@ aa.p.save = async p=>
   aa.db.p[p.pubkey] = p;
   if (aa.view.active === p.npub) aa.p.profile_upd(p);
   aa.temp[q_id].push(p.pubkey);
-  aa.fx.to(aa.p.save_to,1000,q_id);
+  aa.fx.to(aa.p.save_to,4444,q_id);
 };
 
 

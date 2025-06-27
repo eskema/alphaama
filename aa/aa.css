@@ -460,7 +460,8 @@ img:not([src]) {
   
 }
 
-.butt.plug
+.butt.plug,
+.butt.exe
 {
   align-self: center;
   background: rgb(var(--color-c));
@@ -469,6 +470,12 @@ img:not([src]) {
   color: rgb(var(--color-e));
   padding: 0 var(--padm);
   line-height: 1rem;
+}
+
+.butt.exe
+{
+  background: rgb(var(--color-main));
+  color: rgb(var(--color-b));
 }
 
 .butt.plug.done
@@ -835,6 +842,13 @@ details.base[open] > summary,
   word-break: break-word;
 }
 
+.l > details > article.content.parsed
+{
+  font-size: var(--font-size);
+  line-height: calc(var(--font-size-m));
+  max-width: 80vw;
+}
+
 .l details[open] > p,
 .l details[open] > button
 {
@@ -881,11 +895,12 @@ details.base[open] > summary,
   font-size: var(--font-size-s);
 }
 
-/*.cli_expanded .l.is_new
+.cli_expanded .l.is_new
 {
   position: sticky;
   bottom: 0;
-}*/
+  /*opacity: .2;*/
+}
 
 html:not(.cli_expanded) .l.is_new
 {
@@ -1430,6 +1445,11 @@ html:not(.cli_expanded) .l:not(.is_new),
   #view > section.expanded > header:hover
   {
     z-index: 2;
+  }
+  
+  #view > section > header > .butt:hover
+  {
+    background: rgba(var(--color-a));
   }
   
   #l > header .butt:hover

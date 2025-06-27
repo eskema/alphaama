@@ -465,7 +465,6 @@ aa.q.reset =(keys=[])=>
   else keys = keys.filter(key=>Object.hasOwn(aa.q.ls,key));
   
   for (const key of keys) aa.q.add(`${key} ${JSON.stringify(aa.q.ls[key])}`,1);
-  // aa.log(`${localStorage.ns} ${aa.q.def.id} reset ${keys.join(', ')}`);
 };
 
 

@@ -911,21 +911,34 @@ aa.e.render =async(l,options)=>
   if (!dat) return;
   if (l.classList.contains('e_render'))
   {
-    l.classList.remove('e_render');
-    let content = l.querySelector('.content');
-    content.textContent = dat.event.content;
+    fastdom.mutate(()=>
+    {
+      l.classList.remove('e_render');
+      let content = l.querySelector('.content');
+      content.textContent = dat.event.content;
+    })
   }
   else
   {
+    let times = 0;
     for (const key in aa.e.rnd)
     {
       if (aa.e.rnd[key].includes(dat.event.kind))
       {
+        times++;
         let fid = 'render_'+key;
         if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat,options);
       }
     }
-    l.classList.add('e_render');
+    fastdom.mutate(()=>
+    {
+      if (!times && !dat.event.content.trim().length)
+      {
+        l.classList.add('no_content');
+        l.querySelector('.tags_wrapper')?.toggleAttribute('open',true);
+      }
+      l.classList.add('e_render');
+    })
   }
 };
 

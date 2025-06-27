@@ -62,6 +62,19 @@
   margin: 0!important;
 }
 
+
+.note.root.no_content
+{
+  grid-template-columns: auto 1fr 61.8vw;
+  grid-template-areas: 
+    "after    after    after"
+    "by       by       by"
+    
+    "tags     tags     replies"
+    "content  content  replies"
+    "versions versions versions";
+}
+
 .note.draft > .clicker
 {
   border-left: 1px dashed rgba(var(--color-main),1);
@@ -687,6 +700,16 @@ a.author.fu .name
   margin: var(--pad);
 }
 
+.note.no_content > .content > *
+{
+  display: none;
+}
+
+.note.root.no_content:not(.tiny):not(.in_path) > .content:after
+{
+  margin-bottom: 0;
+}
+
 /* @end */
 
 
@@ -721,7 +744,8 @@ a.author.fu .name
   word-break: break-all;
 }
 
-.in_view > .content > .paragraph
+.in_view > .content > .paragraph,
+.in_view > .content > .list
 {
   color: rgb(var(--color-d));
   font-size: var(--font-size-m);
@@ -917,7 +941,7 @@ a.author.fu .name
   padding: var(--pad);
 }
 
-.note .tags 
+.note > .tags_wrapper > .tags 
 {
   position: absolute;
   transform: translateY(calc(-100% - 1.5rem));
@@ -988,6 +1012,7 @@ a.author.fu .name
   font-size: var(--font-size-s);
 }
 
+.note.no_content > .tags_wrapper,
 .in_view > .tags_wrapper[open]
 {
   position: relative;
@@ -1000,6 +1025,7 @@ a.author.fu .name
   top: 1rem;
 }
 
+.note.no_content > .tags_wrapper > .tags,
 .in_view > .tags_wrapper[open] .tags
 {
   max-height: unset;
@@ -1563,7 +1589,7 @@ html:not(.needs_pagin) .pagination
   
   html:not(.viewing) .note:hover
   {
-    z-index: 10;
+    z-index: 12;
   }
   
   html:not(.viewing) .note:hover > .clicker

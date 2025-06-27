@@ -89,6 +89,15 @@ aa.mk.k7 =async(s='')=>
 };
 
 
+// a reload button
+aa.mk.reload_butt =()=> aa.mk.l('button',
+{
+  con:'reload the page',
+  cla:'butt exe',
+  clk:e=>{location.reload()}
+});
+
+
 aa.mk.setup_butt =()=>
 {
   let setup_butt = aa.mk.l('p',
@@ -97,6 +106,7 @@ aa.mk.setup_butt =()=>
     id:'u_setup',
     app:aa.mk.butt_action('u setup')
   });
+  setup_butt.append(' or ',aa.mk.l('button',{cla:'butt exe', con:'else',clk:aa.nfc}));
   setTimeout(()=>{aa.log(setup_butt)},500);
 };
 

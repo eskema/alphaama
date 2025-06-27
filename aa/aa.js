@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 63;
+const aa_version = 64;
 // a
 const aa = 
 {
@@ -76,6 +76,7 @@ const aa =
   kinds:{},
   miss:{e:{},p:{},a:{}},
   mk:{},
+  nfc(){alert('yo')},
   get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
   state:{},

@@ -14,14 +14,18 @@ dat:
 * is public domain, free and open-source.
 * you can do whatever the fuck you want with it.
 
+
 source code:  
 https://github.com/eskema/alphaama
+
 
 nostr:
 https://github.com/nostr-protocol/nostr
 
+
 stable deployment:
 https://alphaama.com
+
 
 work in progress dev deployment:
 https://wip.alphaama.com
