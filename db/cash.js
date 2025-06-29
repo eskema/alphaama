@@ -13,8 +13,6 @@ const cash =
     id:'cash',
     ls:
     [
-      '/',
-      '/index.html',
       '/site.webmanifest',
       '/stuff/420.html',
       '/stuff/font.otf',
@@ -25,7 +23,6 @@ const cash =
       '/stuff/android-chrome-192x192.png',
       '/stuff/android-chrome-512x512.png',
       '/stuff/apple-touch-icon.png',
-      '/aa/aa.js'
     ]
   }
 };

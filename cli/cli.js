@@ -24,7 +24,6 @@ aa.cli =
   },
   // on_run:[],
   on_upd:[],
-  
 };
 
 
@@ -38,7 +37,7 @@ aa.cli.add =s=>
   }
   let ns = localStorage.ns;
   if (!text.startsWith(ns)
-  && window.prompt('replace input with command?'))
+  && window.confirm('replace input with command?'))
   {
     aa.cli.v(localStorage.ns+' '+s);
     return

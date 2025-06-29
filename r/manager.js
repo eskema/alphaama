@@ -94,8 +94,9 @@ const close_sub =id=>
 // order to terminate workers
 const terminate =async o=>
 {
-  let relay = hires(o.url);
-  if (!relay) 
+  let url = o.url;
+  let relay = hires(url);
+  if (!relay)
   {
     console.error('!relay',o)
     return;
@@ -103,7 +104,11 @@ const terminate =async o=>
   
   relay.terminated = o;
   relay.worker.terminate();
-  console.log(['state',o]);
+  let state = 3;
+  let worker = relay.w;
+  let subs = relay.subs;
+  postMessage(['state',{state,...worker,subs,url}]);
+  console.log(['terminated',o]);
 };
 
 
@@ -291,33 +296,12 @@ const on_auth =async(challenge,url)=>
 
 const on_state =async([s,state,worker],url)=>
 {
-  let subs = hires(url)?.subs;
+  let relay = hires(url);
+  relay.state = state;
+  relay.o = worker;
+  let subs = relay?.subs;
   postMessage([s,{state,...worker,subs,url}]);
 };
-
-
-// check where to send get
-// const process_get =data=>
-// {
-//   let {relays,request} = data;
-//   if (!relays?.length)
-//   {
-//     console.log('no relays in get',o)
-//     return
-//   }
-//   let combined = [];
-//   const job =e=>
-//   {
-//     combined.push(e.data);
-//   };
-//   for (const url of relays)
-//   {
-//     w = (new SharedWorker(manager.shared_worker_src)).port;
-//     w.start();
-//     w.onmessage=e=>{job(e,url)};
-//     w.postMessage(['request',JSON.stringify(request)]);
-//   }
-// };
 
 
 const auth =data=>
@@ -337,11 +321,6 @@ const auth =data=>
 const process_request =data=>
 {
   let {relays,request,options} = data;
-  // if (!relays?.length)
-  // {
-  //   console.log('no relays in request',data)
-  //   return
-  // }
   for (const url of relays) relay_request({url,request,options});
 };
 
@@ -385,15 +364,15 @@ const relay_request =({url,request,options})=>
 };
 
 
-const subs_map =(id,url)=>
-{
-  if (!manager.subs.has(id)) return;
-  let sub_map = manager.subs.get(id);
+// const subs_map =(id,url)=>
+// {
+//   if (!manager.subs.has(id)) return;
+//   let sub_map = manager.subs.get(id);
 
-  let ids = sub_map.get(url);
-  let relay = hires(url);
-  for (const id of ids)
-  {
-    //
-  }
-};
+//   let ids = sub_map.get(url);
+//   let relay = hires(url);
+//   for (const id of ids)
+//   {
+//     //
+//   }
+// };

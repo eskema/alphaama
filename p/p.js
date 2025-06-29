@@ -801,7 +801,7 @@ aa.p.profile_upd =async(p)=>
 aa.p.relay =(p,set='write')=>
 {
   let p_relays = Object.entries(p.relays);
-  if (!p_relays.length) return ' ';
+  if (!p_relays.length) return;
   const u_relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r).sort();
 
   let relays = p_relays
@@ -821,8 +821,8 @@ aa.p.relay =(p,set='write')=>
   {
     const url = aa.is.url(r[0])?.href;
     if (url) return url
-  }    
-  return u_relays[0]
+  }
+  return
 };
 
 

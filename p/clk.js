@@ -40,7 +40,7 @@ aa.clk.k3 =async e=>
     else if (p.petnames.length) petname = p.petnames[0];
     if (petname) 
     {
-      if (!relay) new_follow.push('.')
+      if (!relay) new_follow.push('-')
       new_follow.push(aa.fx.an(petname));
     }
     aa.cli.v(localStorage.ns+' p add '+new_follow.join(' '))

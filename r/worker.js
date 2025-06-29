@@ -88,7 +88,7 @@ const connect =(a=[])=>
   ws.onclose =e=>
   {
     // console.log('ws closed',worker);
-    if (worker.failures.length < 21)
+    if ((worker.failures.length - worker.successes.length) < 21)
     {
       worker.failures.push(get.now);
       setTimeout(connect,get.times)
