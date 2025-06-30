@@ -102,13 +102,11 @@ const terminate =async o=>
     return;
   }
   
-  relay.terminated = o;
+  relay.o = o;
   relay.worker.terminate();
   let state = 3;
-  let worker = relay.w;
   let subs = relay.subs;
-  postMessage(['state',{state,...worker,subs,url}]);
-  console.log(['terminated',o]);
+  postMessage(['state',{state,...o,subs}]);
 };
 
 
@@ -300,7 +298,8 @@ const on_state =async([s,state,worker],url)=>
   relay.state = state;
   relay.o = worker;
   let subs = relay?.subs;
-  postMessage([s,{state,...worker,subs,url}]);
+  let dis = {state,...worker,subs,url};
+  postMessage([s,dis]);
 };
 
 

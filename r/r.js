@@ -397,7 +397,7 @@ aa.r.mk =(k,v)=>
   const l = aa.mk.server(k,v);
   if (!l) return false;
   let id = aa.r.def.id;
-  l.id = id+'_'+aa.fx.an(k);
+  // l.id = id+'_'+aa.fx.an(k);
   l.dataset.state = 0;
   // aa.mod.servers_butts(aa.r,l,v);
   l.append(' ',aa.mk.butt_action(id+' del '+k,'del','del'));
@@ -411,6 +411,7 @@ aa.r.mk =(k,v)=>
     }
   }
   l.append(' ',sets,' ',aa.mk.butt_action(id+' add '+k+' off','+','add'));
+  if (!aa.el.has(k)) aa.el.set(k,l);
   // aa.r.state_upd(k);
   return l
 };
@@ -725,15 +726,20 @@ aa.r.state =([s,relay])=>
 {
   let url = relay.url;
   aa.r.active[url] = relay;
-  let l = aa.r.l.querySelector('#'+aa.r.def.id+'_'+aa.fx.an(url));
+  let l = aa.el.get(url);
   if (l)
   {
+    if (!relay.failures)
+    {
+      console.log(relay);
+      return
+    }
+
     fastdom.mutate(()=>
     {
       l.dataset.state = relay.state;
       l.dataset.ratio = relay.failures.length - relay.successes.length;
       l.dataset.subs = aa.r.subs_open(relay.subs);
-      // l.parentElement?.prepend(l);
     })
   }
   else console.log('aa.r.state: no element found',relay)
