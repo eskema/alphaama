@@ -166,7 +166,7 @@ aa.u.k3_add =async s=>
   {
     title:'new follow list',
     l:aa.mk.tag_list(event.tags),
-    scroll:true,
+    scroll:{behaviour:'smooth',block:'end'},
     no:{exe:()=>{}},
     yes:{exe:()=>
     { 
@@ -216,7 +216,7 @@ aa.u.k3_del =async s=>
     {
       title:'new follow list:'+old_len+'->'+new_follows.length,
       l:l,
-      scroll:true,
+      scroll:{behaviour:'smooth',block:'end'},
       no:{ exe:()=>{} },
       yes:{ exe:()=>
       {

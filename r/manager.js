@@ -61,6 +61,7 @@ onmessage =e=>
   {
     case 'terminate': terminate(dis); break;
     case 'relays': manager.relays = dis; break;
+    case 'info': relay_info(dis); break;
     case 'request': process_request(dis); break;
     case 'auth': auth(dis); break;
     case 'close' : close_sub(dis); break;
@@ -195,6 +196,7 @@ const on_eose =async(id,url)=>
     }
     relay.worker.postMessage(['request',JSON.stringify(['CLOSE',id])]);
   }
+  postMessage(['eose',sub.id,url]);
 };
 
 
@@ -324,6 +326,21 @@ const process_request =data=>
 };
 
 
+const relay_info =async(relays={})=>
+{
+  for (const relay in relays)
+  {
+    manager.relays[relay] = relays[relay];
+    NostrTools.nip11.fetchRelayInformation(relay)
+    .then(info=>
+    {
+      manager.relays[relay].info = info;
+      postMessage(['info',[relay,manager.relays[relay]]])
+    });
+  }
+};
+
+
 // post request to relay workers
 const relay_request =({url,request,options})=>
 {
@@ -346,13 +363,13 @@ const relay_request =({url,request,options})=>
     case 'req':
       let id = request[1];
       let sub_id = 'sub:'+(relay.subs.size+1);
+      postMessage(['sub',url,id,sub_id]);
       request[1] = sub_id;
       relay.subs.set(sub_id,{id,request,options});
       if (!manager.subs.has(id)) manager.subs.set(id,new Map());
       let r_sub = manager.subs.get(id);
       if (!r_sub.has(url)) r_sub.set(url,new Set());
-      let r_sub_r = r_sub.get(url);
-      r_sub_r.add(sub_id);
+      r_sub.get(url).add(sub_id);
       break;
     case 'event':
       let dat = manager.events.get(request[1].id);

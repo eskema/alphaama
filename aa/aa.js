@@ -228,12 +228,14 @@ aa.load =async(o={})=>
   // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   
   let id = 'dialog';
-  aa.dialog = aa.mk.l(id,{id});
-  aa.dialog.addEventListener('close',e=>
+  dialog = aa.mk.l(id,{id});
+  dialog.addEventListener('close',e=>
   {
-    aa.dialog.removeAttribute('title');
-    aa.dialog.textContent = '';
+    dialog.removeAttribute('title');
+    dialog.textContent = '';
   });
+  aa.el.set('dialog',dialog);
+
   return true
 };
 
@@ -339,14 +341,12 @@ aa.required =mods=>
 
 
 // if no options found, run with defaults
-aa.run =(o={})=>
+aa.mk.page =(o={})=>
 {
-  // fastdom.mutate(()=>
-  // {
-    aa.bod.prepend(aa.mk.header(),aa.view.l);
-    aa.bod.insertBefore(aa.dialog,aa.bod.lastChild.previousSibling);
-    // aa.bod.insertBefore(aa.side,aa.dialog);
-  // });
+  let df = new DocumentFragment();
+  df.append(aa.mk.header(),aa.view.l,aa.cli.l,aa.el.get('dialog'));
+  aa.bod.prepend(df);
+
   let onoff = navigator.onLine?'on':'off';
   let con = `${onoff}line at ${location.origin} since `;
   let app = aa.mk.time(aa.now);

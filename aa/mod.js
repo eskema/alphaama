@@ -100,7 +100,7 @@ aa.mod.modal =(s='')=>
   }
   let mom = mod.parentElement;
   
-  const dialog = aa.dialog;
+  const dialog = aa.el.get('dialog');
   const butt = aa.mk.l('button',
   {
     con:'close',

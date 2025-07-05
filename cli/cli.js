@@ -311,10 +311,7 @@ aa.cli.keydown =async e=>
 aa.cli.load =async e=>
 {
   await aa.mk.scripts(aa.cli.def.scripts);
-  fastdom.mutate(()=>
-  {
-    document.body.insertBefore(aa.cli.mk(),document.body.lastChild.previousSibling);
-  });
+  aa.cli.mk();
 };
 
 

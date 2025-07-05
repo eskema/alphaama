@@ -4,16 +4,18 @@ aa.load({
   // styles:[], tools:[], mods:[],
 }).then(e=>
 {
-  window.addEventListener('load',e=>
+  window.addEventListener('load',()=>
   {
-    // run with defaults
-    aa.run();
+    // build page layout elements
+    aa.mk.page();
     on_loaded()
-  });
+  })
 });
 
+// page script
 const on_loaded =()=>
 {
+  // make sure all mods have 
   if (!aa.required(aa.def.mods.map(i=>i.id)))
   {
     setTimeout(on_loaded,10);
@@ -39,4 +41,3 @@ const on_loaded =()=>
 
   aa.q.last_butts();
 };
-

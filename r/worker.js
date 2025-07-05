@@ -6,7 +6,6 @@ const worker =
   successes:[],
   failures:[],
   errors:[],
-  aborts:[],
   messages:[],
 };
 
@@ -17,30 +16,12 @@ const get =
   // now in seconds
   get now(){return Math.floor(Date.now()/1000)},
   // timeout exponential delay
-  get times(){return 420*(worker.failures.length+1)}
+  get delay(){return 420*(worker.failures.length+1)}
 }
 
 
 // websocket
 let ws;
-
-
-
-// terminate worker
-const abort =()=>
-{
-  console.log('aborted',worker);
-  worker.aborted.push(get.now);
-  if (worker.aborted > 3) terminate('aborted')
-  else setTimeout(connect,500)
-};
-
-
-// // send websocket a request to close subscription
-// const close_request =request=>
-// {
-//   send_request(JSON.stringify(request))
-// };
 
 
 // open websocket connection
@@ -77,7 +58,6 @@ const connect =(a=[])=>
     return
   }
 
-  // const abort_connect = setTimeout(()=>{abort()},6999);
 
   ws = new WebSocket(worker.url);
   ws.onerror =e=>
@@ -91,14 +71,13 @@ const connect =(a=[])=>
     if ((worker.failures.length - worker.successes.length) < 21)
     {
       worker.failures.push(get.now);
-      setTimeout(connect,get.times)
+      setTimeout(connect,get.delay)
     }
     else terminate();
   };
   ws.onmessage = on_message;
   ws.onopen =()=>
   {
-    // clearTimeout(abort_connect);
     worker.successes.push(get.now);
     // delay to give time for auth
     setTimeout(process_requests,1111);
@@ -144,7 +123,6 @@ onmessage =async e=>
       break;
     case 'request': process_requests(data[1]); break;
     case 'waiting': worker.waiting = data[1]; break;
-    // case 'close' : close_request(data); break;
     default: console.log('invalid operation',data)
   }
 };
@@ -191,7 +169,7 @@ const send_request =request=>
   && worker.failures < 21)
   {
     // try again later
-    setTimeout(()=>{send_request(request)},get.times)
+    setTimeout(()=>{send_request(request)},get.delay)
     return
   }
 };

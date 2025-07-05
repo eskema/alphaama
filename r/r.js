@@ -23,12 +23,9 @@ aa.r =
   [
     '/r/clk.js?v='+aa_version,
     '/r/mk.js?v='+aa_version,
-    // '/r/wip.js',
   ],
   temp: new Map(),
-  ucks:new Map(),
-  // message_type:{},
-  // old_id:'rel',
+  on_sub:new Map(),
 };
 
 
@@ -126,7 +123,7 @@ aa.r.def_req =(id,filter,relays)=>
   const request = ['REQ',id,filter];
   const options = {eose:'close'};
   if (!relays?.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-  aa.r.ucks.set(id,aa.r.dat);
+  if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.r.dat);
   aa.r.send_req({request,relays,options});
 };
 
@@ -135,9 +132,9 @@ aa.r.event =([s,dat])=>
 {
   for (const sub of dat.subs)
   {
-    if (aa.r.ucks.has(sub))
+    if (aa.r.on_sub.has(sub))
     {
-      aa.r.ucks.get(sub)(dat);
+      aa.r.on_sub.get(sub)(dat);
       return
     }
   }
@@ -194,10 +191,18 @@ aa.r.del =s=>
         delete aa.r.active[url];
       }
       delete aa.r.o.ls[url];
-      document.getElementById(aa.r.def.id+'_'+aa.fx.an(url))?.remove();
+      let l = aa.el.get(url);
+      l.remove();
+      aa.el.delete(url);
     }
   }
   aa.mod.save(aa.r);
+};
+
+
+aa.r.eose =async data=>
+{
+
 };
 
 
@@ -622,7 +627,7 @@ aa.r.toggles =()=>
   const mod = aa.r;
   const id = mod.def.id;
   let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
-  let modal_butt = aa.mk.butt_action(`mod modal ${id}`,'popup');
+  let modal_butt = aa.mk.butt_action(`fx modal ${id}`,'popup');
   let sets_span = aa.mk.l('span',{cla:'sets'});
   let sets = [];
   for (const r of Object.values(aa.r.o.ls)) aa.fx.a_add(sets,r.sets);
@@ -636,9 +641,9 @@ aa.r.toggles =()=>
   let states_span = aa.mk.l('span',{cla:'states'});
   let states = 
   [
-    ['0','not connected'],
-    ['1','connected'],
-    ['2','connecting'],
+    ['0','unused'],
+    ['1','open'],
+    // ['2','connecting'],
     ['3','closed'],
   ];
   for (const state of states)
@@ -653,9 +658,9 @@ aa.r.toggles =()=>
   toggles.append(sets_span,aa.mk.l('br'),states_span);
   fastdom.mutate(()=>
   {
-    mod.l.insertBefore(toggles,mod.l.lastChild);
-    mod.l.insertBefore(add_butt,toggles);
-    mod.l.insertBefore(modal_butt,toggles);
+    let df = new DocumentFragment();
+    df.append(add_butt,' ',modal_butt,' ',toggles);
+    mod.l.insertBefore(df,mod.l.lastChild);
   })
 };
 
@@ -704,15 +709,19 @@ aa.r.manager_setup =()=>
   // relay union worker message
   mod.manager.onmessage =async e=>
   {
-    let mess = e.data;
-    let dis = mess[0]?.toLowerCase();
+    const type = e.data[0]?.toLowerCase();
+    if (!type) return;
 
-    if (dis)
-    {
-      if (mod.temp.has(dis)) mod.temp.get(dis)(mess);
-      else if (Object.hasOwn(mod,dis)) mod[dis](mess);
-    }
-    else console.log(`${mod}.manager.onmessage`,dis,mess);
+    let fun = mod.temp.has(type) ? mod.temp.get(type) 
+    : Object.hasOwn(mod,type) ? mod[type] : false;
+  
+    if (fun) fun(e.data);
+    else console.log(`aa.r.manager.onmessage`,e.data);
+
+    // if (mod.temp.has(dis)) setTimeout(()=>{mod.temp.get(dis)(type)},0);
+    // else if (Object.hasOwn(mod,dis)) setTimeout(()=>{mod[dis](type)},0);
+    // else console.log(`${mod}.manager.onmessage`,dis,type);
+
   };
 
   mod.manager.postMessage(['relays',mod.o.ls]);
@@ -743,6 +752,17 @@ aa.r.state =([s,relay])=>
     })
   }
   else console.log('aa.r.state: no element found',relay)
+};
+
+
+// on sub message
+aa.r.sub =async data=>
+{
+  // let [type,url,sub_id,sub_mapped] = data;
+  // let relay = aa.r.active[url];
+  // if (!relay.subs) relay.subs = new Map();
+  // relay.subs.set(sub_mapped,sub_id);
+  // console.log(relay);
 };
 
 

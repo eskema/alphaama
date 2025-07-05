@@ -351,7 +351,7 @@ aa.q.outbox =(request)=>
       
       let request = ['REQ',fid,f];
       let relays = [url];
-      aa.r.ucks.set(fid,aa.r.dat);
+      aa.r.on_sub.set(fid,aa.r.dat);
       aa.r.send_req({request,relays,options});
       relays_list.push(url+' '+f.authors.length);
     }
@@ -450,7 +450,7 @@ aa.q.req =(s='')=>
   }
   else
   {
-    aa.r.ucks.set(fid,aa.r.dat);
+    aa.r.on_sub.set(fid,aa.r.dat);
     aa.r.send_req({request,relays,options});
     // request.push(options);
     aa.q.log('req',request,`to: ${relays}`);
@@ -490,7 +490,7 @@ aa.q.run =async(s='')=>
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
       if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-      aa.r.ucks.set(fid,aa.r.dat);
+      aa.r.on_sub.set(fid,aa.r.dat);
       setTimeout(e=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
       

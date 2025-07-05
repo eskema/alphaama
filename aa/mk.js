@@ -79,7 +79,7 @@ aa.mk.details =(con,l=false,open=false,cla='')=>
 
 aa.mk.dialog =async o=>
 {
-  const dialog = aa.dialog;
+  const dialog = aa.el.get('dialog');
   if (!dialog || dialog.open) return false;
   if (o.title) dialog.title = o.title;
   if (Object.hasOwn(o,'l')) dialog.append(o.l);
@@ -215,7 +215,7 @@ aa.mk.img =(src)=>
 // show image in modal on click
 aa.mk.img_modal =(src,cla=false)=>
 {
-  const dialog = aa.dialog;
+  const dialog = aa.el.get('dialog');
   const img = aa.mk.l('img',
   {
     cla:'img_modal contained'+(cla?' '+cla:''),
