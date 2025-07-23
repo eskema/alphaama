@@ -95,6 +95,31 @@ aa.clk.na =e=>
 };
 
 
+aa.clk.quote =async e=>
+{
+  const note = e.target.closest('.note');
+  let id = note.dataset.id;
+  let dat = await aa.e.get(id);
+  let data = 
+  {
+    id:dat.event.id,
+    author:dat.event.pubkey,
+    relays: dat.seen.slice(0,3)
+  };
+  let encoded;
+  if (dat.id_a) 
+  {
+    data.identifier = aa.fx.tag_value(dat.event.tags,'d');
+    encoded = aa.fx.encode('naddr',data);
+  }
+  else encoded = aa.fx.encode('nevent',data);
+
+  let result = aa.cli.t.value.length ? `${aa.cli.t.value} nostr:${encoded}` 
+  : `nostr:${encoded}`;
+  aa.cli.v(result);
+};
+
+
 // toggle parsed content
 aa.clk.render =e=>
 {

@@ -64,12 +64,9 @@ aa.db.some =async s=>
 };
 
 
-// update event on database
-aa.db.upd_e =async dat=>
+// define which events are to be stored
+aa.db.event_is_allowed =dat=>
 {
-  const q_id = 'upd_e';
-  if (!aa.temp[q_id]) aa.temp[q_id] = {};
-  // define which events are to be stored
   let is_allowed;
   let kinds = [0,3,10002,10019,17375];
 
@@ -83,7 +80,17 @@ aa.db.upd_e =async dat=>
   //   // 
   // }
 
-  if (!is_allowed) return;
+  return is_allowed
+};
+
+
+// update event on database
+aa.db.upd_e =async dat=>
+{
+  const q_id = 'upd_e';
+  if (!aa.temp[q_id]) aa.temp[q_id] = {};
+
+  // if (!aa.db.e_is_allowed(dat)) return;
   
   aa.temp[q_id][dat.event.id] = dat;
   aa.fx.to(()=>

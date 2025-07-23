@@ -10,6 +10,7 @@ options using localStorage key:value
 aa.o =
 {
   name:'options',
+  about:'manage options',
   def:
   {
     id:'o',
@@ -37,6 +38,11 @@ aa.o =
 //       'exit':'Escape'
 //     }
   },
+  butts:
+  {
+    mod:[]
+  },
+  used:true
 };
 
 // options actions
@@ -152,21 +158,14 @@ aa.o.load =async()=>
     mod.o.ls.theme = mod.o.ls.team;
     aa.o.del('team');
   }
-  aa.mod.load(mod);
-  aa.temp.mods_after_load?.push(
-    ()=>
-    {
-      aa.mod.mk(mod).then(e=>
-      {
-        let add_butt = aa.mk.butt_action(`${id} add `,'add');
-        fastdom.mutate(()=>
-        {
-          // mod.l.append(add_butt)
-          mod.l.insertBefore(add_butt,mod.l.firstChild.nextSibling);
-        })
-      });
-    }
-  );
+  await aa.mod.load(mod);
+  await aa.mod.mk(mod);
+  // aa.temp.mods_after_load?.push(
+  //   ()=>
+  //   {
+  //     aa.mod.mk(mod);
+  //   }
+  // );
   // aa.mod.load(mod).then(aa.mod.mk).then(e=>
   // {
   //   let add_butt = aa.mk.butt_action(`${id} add `,'add');

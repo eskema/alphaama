@@ -132,7 +132,7 @@ aa.mk.p_link =pubkey=>
 {
   let p = aa.db.p[pubkey];
   if (!p) p = aa.p.p(pubkey);
-  
+
   const l = aa.mk.l('a',
   {
     cla:'a author',
@@ -144,9 +144,22 @@ aa.mk.p_link =pubkey=>
   
   aa.fx.color(pubkey,l);
 
-  let o = aa.p.data(p);
-  aa.p.link_data_upd(l,o.data);
-  o.a.push(l);
+  // aa.p.link_data(p).then(data=>
+  // {
+  //   aa.p.link_data_upd(p_link.querySelector('.author'),data)
+  // })
+  aa.p.data(p).then(o=>
+    {
+      aa.p.link_data_upd(l,o.data);
+      o.a.push(l);
+    }
+  );
+  // setTimeout(()=>
+  // {
+  //   aa.p.link_data_upd(l,o.data);
+  //   o.a.push(l);
+  // },200);
+  
   return l
 };
 
@@ -170,13 +183,28 @@ aa.mk.profile =p=>
   return profile
 };
 
+aa.mk.author_link =pubkey=>
+{
+  const p_link = aa.mk.l('div',{cla:'p_link'});
+  p_link.append(
+    aa.mk.p_link(pubkey),
+    ' ',
+    aa.mk.l('span',
+    {
+      cla:'actions empty',
+      app:aa.mk.butt_clk(['…','pa'])
+    }
+  ));
+  return p_link
+};
+
 
 aa.mk.profile_header =(p)=>
 {
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
   pubkey.append(
-    aa.mk.p_link(p.pubkey),
-    ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt_clk(['…','pa'])}),
+    aa.mk.author_link(p.pubkey),
+    // ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt_clk(['…','pa'])}),
     ' ',aa.mk.l('span',{cla:'pub',con:p.pubkey}),
     ' ',aa.mk.time(p.updated)
   );

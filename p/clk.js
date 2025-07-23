@@ -1,17 +1,13 @@
 aa.clk.pa =e=>
 {
   let l = e.target.closest('.actions');
-  let profile = l.closest('article');
+  let profile = l.closest('[data-pubkey]');
   let x = profile.dataset.pubkey;
   if (l.classList.contains('empty'))
   {
-    let butts = 
-    [
-      [`${profile.dataset.trust}`,'p_score'],
-      ['get_notes','p_req'],
-      ['refresh','p_refresh']
-    ];
-    if (!aa.is.u(x)) butts.push([aa.is.following(x)?'del':'add','k3']);
+    let butts = [...aa.p.butts.pa];
+    if (!aa.is.u(x)) butts.unshift([aa.is.following(x)?'del':'add','k3']);
+    butts.unshift([`${profile.dataset.trust}`,'p_score']);
     for (const s of butts) l.append(' ',aa.mk.butt_clk(s));
     l.classList.remove('empty');
   }
@@ -21,7 +17,7 @@ aa.clk.pa =e=>
 // follow / unfollow
 aa.clk.k3 =async e=>
 {
-  const x = e.target.closest('.profile').dataset.pubkey;
+  const x = e.target.closest('[data-pubkey]').dataset.pubkey;
   const dis = e.target.textContent;
   if (dis === 'del') 
   {
@@ -47,11 +43,27 @@ aa.clk.k3 =async e=>
   }
 };
 
+aa.clk.mention =async e=>
+{
+  const pubkey = e.target.closest('[data-pubkey]')?.dataset.pubkey;
+  if (!pubkey) return;
+
+  let p = await aa.p.get(pubkey);
+  let encoded = aa.fx.encode('nprofile',{
+    pubkey,
+    relays: aa.p.relays(p).slice(0,3)
+  });
+
+  let result = aa.cli.t.value.length ? `${aa.cli.t.value} nostr:${encoded}` 
+  : `nostr:${encoded}`;
+  aa.cli.v(result);
+};
+
 
 // refresh follows
 aa.clk.p_follows =e=>
 {
-  const pubkey = e.target.closest('.profile').dataset.pubkey;
+  const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   aa.r.def_req('p_follows',{authors:[pubkey],kinds:[3],limit:1});
 };
 
@@ -59,7 +71,7 @@ aa.clk.p_follows =e=>
 // refresh metadata
 aa.clk.p_metadata =e=>
 {
-  const pubkey = e.target.closest('.profile').dataset.pubkey;
+  const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   aa.r.def_req('p_metadata',{authors:[pubkey],kinds:[0],limit:1});
 };
 
@@ -67,7 +79,7 @@ aa.clk.p_metadata =e=>
 // refresh all profile data (metadata,relays,follows)
 aa.clk.p_refresh =e=>
 {
-  const pubkey = e.target.closest('.profile').dataset.pubkey;
+  const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   aa.r.def_req('p_refresh',{authors:[pubkey],kinds:[0,3,10002,10019]})
 };
 
@@ -75,7 +87,7 @@ aa.clk.p_refresh =e=>
 // refresh relays
 aa.clk.p_relays =e=>
 {
-  const pubkey = e.target.closest('.profile').dataset.pubkey;
+  const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   aa.r.def_req('p_relays',{authors:[pubkey],kinds:[10002],limit:1})
 };
 
@@ -83,7 +95,7 @@ aa.clk.p_relays =e=>
 // score profile
 aa.clk.p_score =async e=>
 {
-  const pubkey = e.target.closest('.profile').dataset.pubkey;
+  const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   const p = await aa.p.get(pubkey);
   if (p) aa.cli.v(localStorage.ns+' p score '+pubkey+' '+p.score);
 };
@@ -92,7 +104,7 @@ aa.clk.p_score =async e=>
 // request notes from profile
 aa.clk.p_req =e=>
 {
-  const profile = e.target.closest('.profile');
+  const profile = e.target.closest('[data-pubkey]');
   const xid = profile?.dataset.pubkey;
   const p = aa.db.p[xid];
   const filter = `{"authors":["${p.pubkey}"],"kinds":[1],"limit":100}`;

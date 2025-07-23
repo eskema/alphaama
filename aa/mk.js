@@ -104,7 +104,8 @@ aa.mk.dialog =async o=>
   dialog_options.append(dialog_no,dialog_yes);
   dialog.append(dialog_options);
   dialog.showModal();
-  if (o.scroll) aa.fx.scroll(dialog.lastChild,{behaviour:'smooth',block:'end'});
+  if (o.scroll) setTimeout(()=>
+  { aa.fx.scroll(dialog.lastChild,{behaviour:'smooth',block:'end'}) });
 };
 
 
@@ -155,7 +156,7 @@ aa.mk.help =async(s='')=>
   {
     s = 'aa';
     o = aa;
-    await aa.readme_setup(aa,'/aa/README.adoc');
+    await aa.readme_setup('/aa/README.adoc',aa);
   }
   else o = aa[s];
 

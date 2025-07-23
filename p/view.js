@@ -18,8 +18,8 @@ aa.view.ls.npub1 =async npub=>
 
   let ids = [];
   let items = [];
-  let refs = [...aa.temp.p_link].find(i=>i.pubkey===v)?.a;
-  for (const i of refs)
+  let refs = aa.temp.p_link.get(v)?.a;
+  if (refs) for (const i of refs)
   {
     let note = i.closest('.note');
     if (note && !ids.includes(note.dataset.id)) items.push(note);

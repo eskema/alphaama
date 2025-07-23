@@ -1,13 +1,23 @@
-
-
-
 // nutzap butt clk event
 aa.clk.nzap =e=>
 {
-  const note = e.target.closest('.note');
-  const pub = note.dataset.pubkey;
-  const xid = note.dataset.id;
+  console.log(e);
+  const note = e.target.closest('[data-pubkey]');
+  const pubkey = note.dataset.pubkey;
+ 
   let t = `${localStorage.ns} mk 9321 ${localStorage.zap}`;
-  t = `${t} ${pub} "${localStorage.zap_memo}" ${xid}`;
+  t = `${t} ${pubkey} "${localStorage.zap_memo}"`;
+  if (note.dataset.id) t += ` ${note.dataset.id}`;
   aa.cli.v(t);
 };
+
+
+// nutzap butt clk event
+// aa.clk.nutzap_pub =e=>
+// {
+//   const note = e.target.closest('[data-pubkey]');
+//   const pub = note.dataset.pubkey;
+//   let t = `${localStorage.ns} mk 9321 ${localStorage.zap}`;
+//   t = `${t} ${pub} "${localStorage.zap_memo}"`;
+//   aa.cli.v(t);
+// };

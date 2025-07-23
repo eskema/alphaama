@@ -1,9 +1,11 @@
 // returns array of tags with all #hashtags in string
-aa.get.hashtag =s=>
+aa.get.hashtag =(string='')=>
 {
   const tags = [];
-  const hashtags = s.match(aa.fx.regex.hashtag);
-  if (hashtags) for (const h of hashtags) tags.push(['t',h.slice(1).toLowerCase()])
+  const hashtags = string.match(aa.fx.regex.hashtag);
+  if (hashtags) 
+    for (const h of [...new Set(hashtags)]) 
+      tags.push(['t',h.slice(1).toLowerCase()])
   return tags
 };
 
@@ -11,13 +13,13 @@ aa.get.hashtag =s=>
 // gets all nostr:stuff from string 
 // and returns array of tags
 // to use when creating a new note
-aa.get.mentions =async s=>
+aa.get.mentions =async(string='')=>
 {
   const mentions = [];
-  const matches = [...s.matchAll(aa.fx.regex.nostr)];
-  for (const m of matches)
+  const matches = [...string.matchAll(aa.fx.regex.nostr)];
+  for (const match of matches)
   {
-    let dis = m[0].slice(6);
+    let dis = match[0].slice(6);
     if (dis.startsWith('npub')) 
     {
       let p_x = aa.fx.decode(dis);
@@ -30,7 +32,8 @@ aa.get.mentions =async s=>
       {
         mentions.push(aa.fx.tag_q(e_x));
         let dat = await aa.db.get_e(e_x);
-        if (dat && dat.event.pubkey !== aa.u.p.pubkey) mentions.push(aa.fx.tag_p(dat.event.pubkey));
+        if (dat && dat.event.pubkey !== aa.u.p.pubkey) 
+          mentions.push(aa.fx.tag_p(dat.event.pubkey));
       }
     }
   }
@@ -49,15 +52,20 @@ aa.get.missing =async type=>
     for (const xid in aa.miss[type])
     {
       let v = aa.miss[type][xid];
-      aa.e.nope(xid,def_relays,v.nope,miss);
-      aa.e.nope(xid,v.relays,v.nope,miss);
+
+      for (const url of [...def_relays,...v.relays]) 
+      {
+        if (!v.nope.includes(url))
+        {
+          if (!Object.hasOwn(miss,url)) miss[url] = [];
+          aa.fx.a_add(miss[url],[xid]);
+        }
+      }
     }
 
     if (Object.keys(miss).length)
     {
-      let options = {eose:'close'};
       let filter;
-      let req;
     
       let [url,ids] = Object.entries(miss)
         .sort((a,b)=>a.length - b.length)[0];
@@ -92,9 +100,9 @@ aa.get.missing =async type=>
           tags.push(item);
         }
         
-        let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1})).slice(0,12);
-        // aa.r.on_sub.set(req_id,aa.r.dat);
-        // request = ['REQ',req_id,filter];
+        let req_id = type+'_'+aa.fx.hash(aa.e.normalise({tags,created_at:1}))
+        .slice(0,12);
+        aa.r.on_eose.set(req_id,()=>{aa.r.on_eose.delete(req_id)});
         aa.r.def_req(req_id,filter,relays);
         setTimeout(()=>
         {
@@ -102,7 +110,7 @@ aa.get.missing =async type=>
         },420);
       }
     }
-  },420,'miss_'+type);
+  },1420,'miss_'+type);
 };
 
 

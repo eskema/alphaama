@@ -10,6 +10,49 @@ modules
 aa.mod = {}
 
 
+aa.mod.butts =mod=>
+{
+  if (!mod?.butts) return;
+
+  let butts = aa.mk.l('p',{cla:'mod_butts'});
+  if (mod.used)
+  {
+    if (mod.butts.mod)
+    {
+      if (Object.hasOwn(mod,'add')) butts.append(aa.mk.butt_action(`${mod.def.id} add`,'add'),' ');
+      for (const i of mod.butts.mod) butts.append(aa.mk.butt_action(...i),' ') 
+    }
+  }
+  else if (mod.butts.init)
+  {
+    for (const i of mod.butts.init) butts.append(aa.mk.butt_action(...i),' ')
+  }
+  return butts
+};
+
+
+aa.mod.help_setup =async(mod,path)=>
+{
+  if (!path) path = mod.readme_src || `/${mod.def.id}/README.adoc`;
+  let readme = aa.readme_setup(path,mod);
+  if (!readme) return;
+  let exe = ()=>{aa.mk.help(mod.def.id)};
+  let description = `help with ${mod.name} (${mod.def.id})`;
+  aa.actions.push(
+    {
+      action:['help',mod.name],
+      description,
+      exe
+    },
+    {
+      action:[mod.def.id,'help'],
+      description,
+      exe
+    }
+  );
+};
+
+
 // load mod
 aa.mod.load =async mod=>
 {
@@ -36,21 +79,7 @@ aa.mod.load =async mod=>
   if (mod.o && !mod.o.ls) mod.o.ls = {};
 
   // add mod readme
-  let path = `/${mod.def.id}/README.adoc`;
-  aa.help_setup(mod,path);
-  // aa.actions.push(
-  //   {
-  //     action:['help',mod.name],
-  //     description:`help with ${mod.name} (${mod.def.id})`,
-  //     exe:()=>{aa.mk.help(mod.def.id)}
-  //   },
-  //   {
-  //     action:[mod.def.id,'help'],
-  //     description:`help with ${mod.name} (${mod.def.id})`,
-  //     exe:()=>{aa.mk.help(mod.def.id)}
-  //   }
-  // );
-  // aa.mod.help(mod.def.id);
+  aa.mod.help_setup(mod);
   return mod
 };
 
@@ -58,63 +87,83 @@ aa.mod.load =async mod=>
 // make mod
 aa.mod.mk =async mod=>
 {
-  let o = {id:mod.def.id,ls:mod.o.ls,sort:'a',fun:[]};
-  if (mod.hasOwnProperty('mk')) o.mk = mod.mk;
+  let options = {ls:mod.o.ls,sort:'a',fun:[]};
+  if (mod.hasOwnProperty('mk')) options.mk = mod.mk;
+
   mod.li = new Map();
-  o.fun.push((k,v,l)=>{mod.li.set(k,l)});
-  mod.ul = aa.mk.ls(o);
-  let mod_l = aa.mk.details(mod.def.id,mod.ul);
+  options.fun.push((k,v,l)=>{mod.li.set(k,l)});
+  mod.ul = aa.mk.ls(options);
+
+  let mod_header = aa.mk.l('header',{cla:'mod_header'});
+  // let name = aa.mk.l('h2',{con:mod.name,cla:'mod_name'});
+  let about = aa.mk.l('p',{con:mod.about,cla:'mod_about'});
+  let butts = aa.mod.butts(mod);
+  mod_header.append(about,' ',butts);
+  
+  let mod_layout = new DocumentFragment();
+  mod_layout.append(mod_header,mod.ul);
+  
+  let mod_l = aa.mk.details(mod.name,mod_layout);
   mod_l.classList.add('mod');
-  if (mod.l)
+  let summary = mod_l.querySelector('summary');
+  summary.dataset.id = mod.def.id;
+  
+  let pop = aa.mk.l('button',{cla:'butt exe',con:'pop',clk:e=>
   {
-    mod.l.replaceWith(mod_l);
-    mod.l = mod_l;
-  }
-  else
+    e.preventDefault();
+    let dialog = e.target.closest('dialog');
+    if (dialog) dialog.close();
+    else aa.mod.dialog(mod.def.id)
+  }});
+  pop.setAttribute('autofocus',true)
+  summary.append(pop,' ');
+  
+  if (mod.l) mod.l.replaceWith(mod_l);
+  else aa.mod.append(mod_l);
+  mod.l = mod_l;
+};
+
+aa.mod.append =mod_l=>
+{
+  if (aa.mod_l) 
   {
-    mod.l = mod_l;
-    if (aa.mod_l) 
-    {
-      const last = [...aa.mod_l.children]
-      .filter(i=> o.id < i.querySelector('summary').textContent)[0];
-      fastdom.mutate(()=>{aa.mod_l.insertBefore(mod_l,last)});
-    }
-    else aa.log(mod_l)
+    let name = mod_l.querySelector('summary').textContent;
+    // insert alphabetically
+    const last = [...aa.mod_l.children]
+    .find(i=> name < i.querySelector('summary').textContent);
+    fastdom.mutate(()=>{aa.mod_l.insertBefore(mod_l,last||null)});
   }
+  else aa.log(mod_l)
 };
 
 
-aa.mod.modal =(s='')=>
+aa.mod.dialog =(id='')=>
 {
-  let mod = aa[s]?.l;
-  if (!mod) 
+  let mod_l = aa[id]?.l;
+  if (!mod_l) 
   {
-    aa.log('aa.mod.modal: mod not found')
+    aa.log('aa.mod.pop: mod not found')
     return
   }
-  let was_closed;
-  if (!mod.hasAttribute('open')) 
+  if (!mod_l.hasAttribute('open')) 
   {
-    was_closed = true;
-    mod.toggleAttribute('open');
+    mod_l.toggleAttribute('open');
+    mod_l.dataset.was = 'closed';
   }
-  let mom = mod.parentElement;
-  
   const dialog = aa.el.get('dialog');
-  const butt = aa.mk.l('button',
-  {
-    con:'close',
-    cla:'butt modal',
-    clk:()=>
-    {
-      if (was_closed) mod.toggleAttribute('open',false);
-      mom?.append(mod);
-      dialog.close();
-    }
-  });
-  dialog.append(butt,' ',mod);
+  dialog.append(mod_l);
   dialog.showModal();
 };
+
+
+// aa.mod.modal_close =e=>
+// {
+//   const dialog = aa.el.get('dialog');
+//   const mod_l = dialog.querySelector('.mod');
+//   if (mod_l.dataset.was==='closed') mod_l.toggleAttribute('open',false);
+//   aa.mod.append(mod_l);
+//   dialog.close();
+// };
 
 
 // save mod
@@ -131,115 +180,25 @@ aa.mod.save =async mod=>
 };
 
 
-aa.mod.servers_add_details =cla=>
-{
-  // let id = 'servers_add_'+cla;
-  let l = aa.el.get(cla);
-  if (!l) 
-  {
-    l = aa.mk.details(cla,0,0,'base'); // ,aa.mk.l('div',{cla:'list'})
-    aa.el.set(cla,l);
-    aa.log(l);
-  }
-  return l
-};
-
-
-// add server item with sets to mod
-aa.mod.servers_add =(mod,s='',cla='server')=>
-{
-  const valid = [];
-  const invalid = [];
-  const off = [];
-  const all = [valid,invalid,off];
-  const as = s.split(',');
-  if (!as.length) return all;  
-  let df = new DocumentFragment();
-  let haz;
-  for (const i of as) 
-  {
-    let a = i.trim().split(' ').map(n=>n.trim());
-    let url_string = a.shift();
-    const url = aa.is.url(url_string)?.href;
-    if (!url)
-    {
-      haz = true;
-      aa.fx.a_add(invalid,[url_string]);
-      // con = `\ninvalid: ${url_string}`;
-      // ul.prepend(aa.mk.l('li',{con}));
-      continue;
-    }
-
-    if (!mod.o.ls[url]) mod.o.ls[url] = {sets:[]};
-    let updd = aa.fx.a_add(mod.o.ls[url].sets,a);
-    if (!updd) continue;
-    
-    haz = true;
-    // let sets = aa.r.o.ls[url].sets.join(' ');
-    aa.mod.ui(mod,url);
-    
-    if (a.includes('off')) 
-    {
-      aa.fx.a_add(off,[url]);
-      // con = `\noff: ${url} ${sets}`;
-    }
-    else
-    {
-      aa.fx.a_add(valid,[url]);
-      // con = `\nadded: ${url} ${sets}`;
-    }
-    
-    let con = `${url} ${a.join(' ')}`;
-    df.append(aa.mk.l('p',{con}));
-    // aa.log(dis)
-  }
-  
-  if (invalid.length) aa.log(`invalid urls: ${invalid}`);
-  
-  if (haz) 
-  {
-    aa.mod.save(mod);
-    aa.mod.servers_add_details(cla).append(df);
-  }
-  return all
-};
-
-
-// append buttons to server item
-// aa.mod.servers_butts =(mod,l,o)=>
-// {
-//   let url = l.querySelector('.url').innerText;
-//   l.append(' ',aa.mk.butt_action(mod.def.id+' del '+url,'del','del'));
-  
-//   let sets = aa.mk.l('span',{cla:'sets'});
-//   if (o.sets && o.sets.length)
-//   {
-//     for (const set of o.sets)
-//     {
-//       sets.append(aa.mk.butt_action(mod.def.id+' setrm '+url+' '+set,set),' ')
-//     }
-//   }
-//   l.append(' ',sets,' ',aa.mk.butt_action(mod.def.id+' add '+url+' off','+','add'));
-// };
-
-
 // update mod item element
-aa.mod.ui =(mod,k)=>
+aa.mod.ui =(mod,keys)=>
 {
-  let v = mod.o.ls[k];
-  let cur = mod.li.get(k);
-  // let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));
-  let l = mod.hasOwnProperty('mk') ? mod.mk(k,v) : aa.mk.item(k,v);
-  let mod_l = document.getElementById(mod.def.id);
-  if (!cur)
+  let mod_l = mod.l; //document.getElementById(mod.def.id);
+  if (keys && !Array.isArray(keys)) keys = [keys];
+  for (const k of keys)
   {
-    mod_l.append(l);
+    let v = mod.o.ls[k];
+    let cur = mod.li.get(k);
+    // let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));
+    let l = mod.hasOwnProperty('mk') ? mod.mk(k,v) : aa.mk.item(k,v);
+    mod.li.set(k,l);
+    fastdom.mutate(()=>
+    {
+      if (!cur) mod_l.append(l);
+      else  cur.replaceWith(l);
+    })
   }
-  else 
-  {
-    cur.replaceWith(l);
-  }
-  mod.li.set(k,l)
+  
   if (mod_l.classList.contains('empty'))
   {
     mod_l.classList.remove('empty');
@@ -249,9 +208,9 @@ aa.mod.ui =(mod,k)=>
 
 aa.actions.push(
   {
-    action:['fx','modal'],
+    action:['fx','pop'],
     required:['<mod_id>'],
     description:'view mod in a modal',
-    exe:aa.mod.modal
+    exe:aa.mod.dialog
   }
 );

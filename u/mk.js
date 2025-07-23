@@ -10,6 +10,7 @@ aa.mk.e =(s='')=>
 };
 
 
+
 // set your metadata (kind-0)
 aa.mk.k0 =async(s='')=>
 {
@@ -48,6 +49,40 @@ aa.mk.k4 =async(s='')=>
     event:aa.e.normalise(event),
     clas:['encrypted']
   }));
+};
+
+
+aa.mk.k5 =(s='')=>
+{
+  let [reason,rest] = aa.fx.split_str(s);
+  if (!rest) return;
+  
+  const event = {kind:5,content:reason,tags:[]};
+  const relays = [];
+  
+  let ids = [...new Set(aa.fx.splitr(rest))];
+  for (const id of ids)
+  {
+    let tag = [id];
+    let kind;
+    if (aa.is.key(id)) 
+    {
+      tag.unshift('e');
+      let dat = aa.db.e[id];
+      if (dat)
+      {
+        kind = dat.event.kind+'';
+        aa.fx.a_add(relays,dat.seen);
+        // dat.clas.push('k5');
+        // aa.db.upd_e(dat);
+      }
+    }
+    else tag.unshift('a');
+    event.tags.push(tag);
+    if (kind) event.tags.push(['k',kind])
+  }
+  if (window.confirm('confirm delete request for these events:\n'+ids))
+    aa.e.finalize(aa.e.normalise(event),relays);
 };
 
 
@@ -104,9 +139,18 @@ aa.mk.setup_butt =()=>
   {
     con:"let's get ",
     id:'u_setup',
-    app:aa.mk.butt_action('u setup')
+    app:
+    [
+      aa.mk.butt_action('u setup'),
+      ' or ',
+      aa.mk.l('button',
+      {
+        cla:'butt exe',
+        con:'else',
+        clk:aa.u.setup_quick
+      })
+    ]
   });
-  setup_butt.append(' or ',aa.mk.l('button',{cla:'butt exe', con:'else',clk:aa.nfc}));
   setTimeout(()=>{aa.log(setup_butt)},500);
 };
 
@@ -125,15 +169,22 @@ aa.actions.push(
     exe:aa.mk.k0
   },
   {
-    action:['mk','7'],
-    required:['<id>','<reaction>'], 
-    description:'react to a note',
-    exe:aa.mk.k7
-  },
-  {
     action:['mk','4'],
     required:['<pubkey>','<text>'],
     description:'encrypt text to pubkey',
     exe:aa.mk.k4
+  },
+  {
+    action:['mk','5'],
+    required:['<reason>','<id>'],
+    optional:['<id>'],
+    description:'request note(s) to be deleted',
+    exe:aa.mk.k5
+  },
+  {
+    action:['mk','7'],
+    required:['<id>','<reaction>'], 
+    description:'react to a note',
+    exe:aa.mk.k7
   },
 );

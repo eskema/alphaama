@@ -12,7 +12,11 @@ aa.mk.butt_action =(s,con=false,cla='')=>
 aa.mk.item_action =(k,v,s)=>
 {
   const df = new DocumentFragment();
-  df.append(aa.mk.butt_action(s,k,'key'),' ',aa.mk.l('span',{cla:'val',con:v}))
+  df.append(
+    aa.mk.butt_action(s,k,'key'),
+    ' ',
+    aa.mk.l('span',{cla:'val',con:v})
+  )
   return df
 };
 

@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 64;
+const aa_version = 67;
 // a
 const aa = 
 {
@@ -23,13 +23,15 @@ const aa =
     id:'aa',
     dependencies:
     [
+      // '/dep/deps.js', // bundled dependencies 
       // '/dep/asciidoctor.min.js?v=3.0.4',
       '/dep/bolt11.js',
       '/dep/cashuts.js?v=2.0.0',
+
       '/dep/fastdom.js?v=1.0.4',
       // '/dep/fastdom-strict.js?v=1.0.4',
       // '/dep/math.js?v=14.0.1',
-      '/dep/nostr-tools.js?v=2.10.4',
+      '/dep/nostr-tools.js?v=2.15.0',
       '/dep/qrcode.js',
       // '/dep/webtorrent.min.js',
       // '/dep/hls.js?v=1',
@@ -51,7 +53,7 @@ const aa =
       {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
       {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
       {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
-      // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
+      {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
     ],
     tools:
     [
@@ -232,6 +234,13 @@ aa.load =async(o={})=>
   dialog.addEventListener('close',e=>
   {
     dialog.removeAttribute('title');
+    const mod_l = dialog.querySelector('.mod');
+    if (mod_l)
+    {
+      if (mod_l.dataset.was==='closed') mod_l.toggleAttribute('open',false);
+      aa.mod.append(mod_l);
+    }
+    
     dialog.textContent = '';
   });
   aa.el.set('dialog',dialog);
@@ -279,37 +288,23 @@ aa.mods_load =async mods=>
 };
 
 
-// fetch readme from path and append to object
-aa.readme_setup =async(o,path)=>
+// fetch file from path, append text to object and return text
+aa.readme_setup =async(path,o={})=>
 {
-  if (!o.readme)
+  if (!Object.hasOwn(o,'readme'))
   {
-    let dis = await fetch(path);
-    let text = await dis?.text();
+    let response;
+    try 
+    { 
+      response = await fetch(path) 
+    }
+    catch {}
+    if (!response) return;
+
+    let text = await response.text();
     if (text) o.readme = text;
   }
   return o.readme
-};
-
-
-aa.help_setup =async(mod,path)=>
-{
-  let readme = aa.readme_setup(mod,path);
-  if (!readme) return;
-  let exe = ()=>{aa.mk.help(mod.def.id)};
-  let description = `help with ${mod.name} (${mod.def.id})`;
-  aa.actions.push(
-    {
-      action:['help',mod.name],
-      description,
-      exe
-    },
-    {
-      action:[mod.def.id,'help'],
-      description,
-      exe
-    }
-  );
 };
 
 

@@ -74,13 +74,6 @@ aa.fx.an =s=>
 };
 
 
-// bytes to hex
-aa.fx.bytes_to_x =a=>
-{
-  return Array.from(a,b=>('0'+(b&0xFF).toString(16)).slice(-2)).join('');
-};
-
-
 // splits array into chunks of n items
 // returns array of chunks
 aa.fx.chunks =(a,n)=>
@@ -218,14 +211,6 @@ aa.fx.countdown =async(con,total,n)=>
 };
 
 
-// add items to a dataset
-aa.fx.dataset_add =async(l,s,items)=>
-{
-  let a = l.dataset[s] ? l.dataset[s].trim().split(' ') : [];
-  if (aa.fx.a_add(a,items)) l.dataset[s] = a.join(' ')
-};
-
-
 // decodes nip19 (bech32)
 aa.fx.decode =s=> 
 {
@@ -273,11 +258,11 @@ aa.fx.decrypt_parse =async event=>
 
 
 // encodes to bech32 (nip19)
-aa.fx.encode =(s,x)=>
+aa.fx.encode =(s,data)=>
 {
   let encoded;
-  try {encoded = NostrTools.nip19[s+'Encode'](x)}
-  catch (er) {console.error('aa.fx.encode',s,x,er)};
+  try {encoded = NostrTools.nip19[s+'Encode'](data)}
+  catch (er) {console.error('aa.fx.encode',s,data,er)};
   return encoded
 };
 
@@ -326,9 +311,9 @@ aa.fx.keypair =(xsec='')=>
   if (!xsec?.length)
   {
     secret = NostrTools.generateSecretKey();
-    xsec = aa.fx.bytes_to_x(secret)
+    xsec = NostrTools.utils.bytesToHex(secret)
   }
-  else secret = aa.fx.x_to_bytes(xsec);
+  else secret = NostrTools.utils.hexToBytes(xsec);
   if (secret)
   {
     public = NostrTools.getPublicKey(secret);
@@ -442,8 +427,8 @@ aa.fx.load =async()=>
     },
     {
       action:[id,'decode'],
-      required:['<text>'],
-      description:'decode nip19 (bech32) to hex',
+      required:['<nip19>'],
+      description:'decode nip19 (bech32) entity',
       exe:mod.decode
     },
     {
@@ -943,6 +928,10 @@ aa.fx.src_ext =(url,extensions)=>
 };
 
 
+// (21,'sat') => 21sats
+aa.fx.units =(num,unit='sat')=> num+aa.fx.plural(num,unit);
+
+
 // verify event object
 aa.fx.verify_event =o=>
 {
@@ -1002,17 +991,6 @@ aa.fx.verify_req_filters =a=>
     if (!aa.fx.verify_req_filter(f)) return false;
   }
   return true
-};
-
-
-// bytes to hex
-aa.fx.x_to_bytes =x=>
-{
-  if (x.length % 2 !== 0) return;
-  const n = x.length / 2;
-  const a = new Uint8Array(n);
-  for (let i=0;i<n;i++) a[i] = parseInt(x.substr(i*2,2),16);
-  return a
 };
 
 

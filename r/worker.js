@@ -123,9 +123,17 @@ onmessage =async e=>
       break;
     case 'request': process_requests(data[1]); break;
     case 'waiting': worker.waiting = data[1]; break;
+    case 'ping': pong(); break;
     default: console.log('invalid operation',data)
   }
 };
+
+
+// respond to ping from manager
+const pong =()=>
+{
+  postMessage(['pong']);
+}
 
 
 // post websocket connection state

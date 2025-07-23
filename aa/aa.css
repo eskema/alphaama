@@ -38,6 +38,7 @@
   --logo-light: url(/stuff/aa_alphaama_logo_light.svg);
   --logo-dark: url(/stuff/aa_alphaama_logo_dark.svg);
   --shadow: var(--pad) 0px var(--pad) rgb(var(--color-b));
+  color-scheme: light dark;
 }
 
 
@@ -61,6 +62,7 @@ html[data-theme="dark"]
   --color-dark: var(--color-a);
   --color-light: var(--color-f);
   --logo: url(/stuff/aa_alphaama_logo_dark.svg);
+  color-scheme: dark;
 }
 
 html[data-theme="light"] 
@@ -81,6 +83,7 @@ html[data-theme="light"]
   --color-dark: var(--color-f);
   --color-light: var(--color-a);
   --logo: url(/stuff/aa_alphaama_logo_light.svg);
+  color-scheme: light;
 }
 
 /* @end */
@@ -955,7 +958,7 @@ html:not(.cli_expanded) .l:not(.is_new),
   
 }
 
-#mods .mod
+.mod
 {
   background: rgba(var(--color-b),.8);
   font-size: var(--font-size-s);
@@ -974,15 +977,15 @@ html:not(.cli_expanded) .l:not(.is_new),
   border-top: 1px dashed rgb(var(--color-b));
   justify-stretch: end;
   padding-bottom: var(--line);
-  /*width: 61.8vw;*/
+  width: 61.8vw;
 }
 
-#mods .mod:not([open])
+.mod:not([open])
 {
   justify-self: end;
 }
 
-#mods .mod[open]
+.mod[open]
 {
   background: rgb(var(--color-a));
   border-bottom: 1px dashed rgb(var(--color-b));
@@ -990,24 +993,105 @@ html:not(.cli_expanded) .l:not(.is_new),
   padding-bottom: var(--line);
 }
 
-#mods .mod > summary
+#dialog .mod
 {
+  font-size: var(--font-size);
+  width: unset;
+  min-width: 60vw;
+}
+
+.mod > summary
+{  
   background: rgba(var(--color-a),.8);
+  display: grid;
   font-size: var(--font-size-m);
+  grid-template-areas: "pop . .";
+  grid-template-columns: auto 1fr auto;
   padding: var(--pad);
   user-select: none;
 }
 
-#mods .mod[open] > summary
+#dialog .mod > summary
+{
+  grid-template-areas: ". . pop";
+  pointer-events: none;
+  /*text-align: right;*/
+}
+
+
+.mod[open] > summary
 {
   color: rgb(var(--color-f));
-  display: grid;
-  grid-template-columns: 1fr auto;
+
   justify-self: stretch;
   margin-bottom: var(--pad);
   position: sticky;
   /*text-align: right;*/
   top: 0;
+}
+
+.mod:not([open]) > summary
+{
+  font-size: 0;
+}
+
+.mod > summary .butt
+{
+  font-size: var(--font-size-s);
+  grid-area:pop;
+  margin-left: var(--pad);
+  pointer-events: auto;
+}
+
+.mod:not([open]) > summary .butt
+{
+  display: none;
+}
+
+.mod:not([open]) > summary::before
+{
+  content: "- " attr(data-id);
+  font-size: var(--font-size-m);
+}
+
+/*#mods .mod:not([open]) > summary::after
+{
+  content: attr(data-id);
+  font-size: var(--font-size-m);
+}*/
+
+.mod_header
+{
+  padding: 0 var(--pad);
+}
+
+.mod_name
+{
+  color: rgb(var(--color-f));
+  font-size: var(--font-size-m);
+  margin: 0;
+  text-align: right;
+  position: sticky;
+  top: 0;
+}
+
+.mod_name::first-letter
+{
+  
+  transform: translateX(8px);
+}
+
+.mod_about
+{
+  font-size: var(--font-size);
+  text-align: right;
+  /*margin: 0;*/
+}
+
+.mod_butts
+{
+  
+  text-align: right;
 }
 
 /*#mods .mod[open] > summary::before

@@ -10,7 +10,7 @@ queries
 aa.q =
 {
   name:'queries',
-  desc:'manage and make nostr requests (REQ)',
+  about:'manage and make nostr requests (REQ)',
   active:{},
   def:{id:'q',ls:{}},
   ls:
@@ -61,6 +61,14 @@ aa.q =
     tag:{"#t":["s"],"limit":200},
     u:{"authors":["u"],"since":"n_7","limit":500},
   },
+  butts:
+  {
+    mod:[],
+    init:
+    [
+      ['q stuff','stuff']
+    ]
+  }
 };
 
 
@@ -159,11 +167,8 @@ aa.q.get =(s='')=>
     aa.log('invalid filter:'+s_filter);
     return false
   }
-  let request = ['REQ',id,filter];
   let relays = aa.r.rel(rels);
-  if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-  if (!relays.length) return;
-  aa.r.get({id,request,relays}).then(dis=>console.log(dis))
+  aa.r.get({id,filter,relays,options}).then(dis=>console.log(dis))
 };
 
 
@@ -268,14 +273,8 @@ aa.q.load =async()=>
     // },
   );
 
-  aa.mod.load(mod).then(aa.mod.mk).then(e=>
-  {
-    let add_butt = aa.mk.butt_action(`${id} add `,'+');
-    fastdom.mutate(()=>
-    {
-      mod.l.insertBefore(add_butt,mod.l.lastChild)
-    })
-  });
+  await aa.mod.load(mod);
+  aa.mod.mk(mod);
 };
 
 
@@ -491,7 +490,7 @@ aa.q.run =async(s='')=>
       let relays = aa.r.rel(rels);
       if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
       aa.r.on_sub.set(fid,aa.r.dat);
-      setTimeout(e=>{ aa.r.send_req({request,relays,options}) },delay);
+      setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
       
       aa.q.log('run',request,`to: ${relays}`);

@@ -228,7 +228,7 @@
   color: rgb(var(--c));
   display: grid;
   grid-area: pub;
-  grid-template-areas: "author pub created_at actions";
+  grid-template-areas: "author pub created_at";
   grid-template-columns: 2fr 1fr auto;
   justify-items: end;
   justify-self: stretch;
@@ -238,10 +238,19 @@
   padding-left: 1px;
 }
 
-.profile > .pubkey .author
+.p_link
+{
+  align-items: center;
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-template-areas: "author actions";
+  grid-template-columns: 1fr auto;
+  grid-area: author;
+}
+
+.profile > .pubkey > .p_link
 {
   font-size: var(--font-size);
-  grid-area: author;
   justify-self: stretch;
   z-index: 1;
 }

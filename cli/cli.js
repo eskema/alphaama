@@ -10,18 +10,20 @@ cli
 
 aa.cli = 
 {
+  name:'cli',
+  about:'command line interface module',
   def:
   {
     id:'cli',
     history:[],
     index:0,
-    scripts:['/cli/mk.js'],
-    styles:
-    [
-      '/cli/cli.css',
-      '/cli/oto.css'
-    ],
   },
+  scripts:['/cli/mk.js'],
+  styles:
+  [
+    '/cli/cli.css',
+    '/cli/oto.css'
+  ],
   // on_run:[],
   on_upd:[],
 };
@@ -310,7 +312,7 @@ aa.cli.keydown =async e=>
 // on load
 aa.cli.load =async e=>
 {
-  await aa.mk.scripts(aa.cli.def.scripts);
+  await aa.mk.scripts(aa.cli.scripts);
   aa.cli.mk();
 };
 
@@ -481,4 +483,4 @@ aa.cli.v =async s=>
 };
 
 
-aa.mk.styles(aa.cli.def.styles);
+aa.mk.styles(aa.cli.styles);

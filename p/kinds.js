@@ -3,20 +3,19 @@ aa.kinds[0] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
-  let x = dat.event.pubkey;
-  aa.p.get(x).then(p=>
+  aa.p.get(dat.event.pubkey).then(p=>
   {
-    if (!p) p = aa.p.p(x);
+    if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))
     {
-      if (aa.miss.p[x]) delete aa.miss.p[x];
+      if (aa.miss.p[dat.event.pubkey]) delete aa.miss.p[dat.event.pubkey];
       let metadata = aa.parse.j(dat.event.content);
       if (metadata)
       {
         p.metadata = metadata;
         aa.p.save(p);
         aa.p.links_upd(p);
-        if (aa.is.u(x) && aa.u) aa.u.upd_u_u();
+        if (aa.is.u(dat.event.pubkey) && aa.u) aa.u.upd_u_u();
       }
     }
   });

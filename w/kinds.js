@@ -1,14 +1,5 @@
-// event template for event deletion requests
-aa.kinds[5] =dat=>
-{
-  const note = aa.e.note_regular(dat);
-  note.classList.add('tiny');
-  return note
-};
-
-
 // event template for walLNut proofs
-aa.kinds[7375] =dat=>
+aa.kinds[7374] =dat=>
 {
   const note = aa.mk.note(dat);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
@@ -16,22 +7,22 @@ aa.kinds[7375] =dat=>
   if (aa.is.u(dat.event.pubkey))
   {
     let p = aa.u.p;
-    if (aa.p.events_newer(p,dat.event))
-    {
-      aa.p.save(p);
-    }
-  }
-  if (dat.event.kind === 7375)
-  {
-    let butt = aa.mk.butt_action(aa.w.def.id+' proofs '+dat.event.id,'import');
-    note.querySelector('.content').append(butt)
+    if (aa.p.events_newer(p,dat.event)) aa.p.save(p);
   }
   aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
   return note
 };
 
-aa.kinds[7374] = aa.kinds[7375];
-aa.kinds[7376] = aa.kinds[7375];
+aa.kinds[7375] =dat=>
+{
+  let note = aa.kinds[7374](dat);
+  let butt = aa.mk.butt_action(aa.w.def.id+' proofs '+dat.event.id,'import');
+  note.querySelector('.content').append(butt);
+  return note
+};
+
+
+aa.kinds[7376] = aa.kinds[7374];
 
 
 // event template for nutzap

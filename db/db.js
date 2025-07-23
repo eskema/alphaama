@@ -13,20 +13,22 @@ if ('serviceWorker' in navigator)
     navigator.serviceWorker
     .register(aa.db.worker.cash,{scope:'/'});
   }
-  else
-  {
-    navigator.serviceWorker
-    .getRegistrations()
-    .then(async a=> 
-    {
-      if (a.length && localStorage.cash === 'off')
-      {
-        await aa.db.ops('cash',{clear:'ALL'});
-        for (let r of a) r.unregister();
-      }
-    })
-    .catch(err=>{ console.log(err)});
-  }
+  // else
+  // {
+  //   navigator.serviceWorker
+  //   .getRegistrations()
+  //   .then(
+  //     async a=> 
+  //     {
+  //       if (a.length && localStorage.cash === 'off')
+  //       {
+  //         await aa.db.ops('cash',{clear:'ALL'});
+  //         for (let r of a) r.unregister();
+  //       }
+  //     }
+  //   )
+  //   .catch(err=>{ console.log(err)});
+  // }
 };
 
 

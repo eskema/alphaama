@@ -8,6 +8,15 @@ aa.kinds[1] =dat=>
 };
 
 
+// event template for event deletion requests
+aa.kinds[5] =dat=>
+{
+  const note = aa.e.note_regular(dat);
+  note.classList.add('tiny');
+  return note
+};
+
+
 // repost of kind-1 note
 aa.kinds[6] =dat=>
 {
@@ -48,8 +57,6 @@ aa.kinds[7] =dat=>
   let note = aa.mk.note(dat);
   aa.p.from_tags(dat.event.tags);
   note.classList.add('tiny');
-
-  // aa.parse.emojii(dat,note);
 
   let tag_reply = aa.get.tag_e_last(dat.event.tags);
   if (!tag_reply) tag_reply = aa.get.tag_reply(dat.event.tags);

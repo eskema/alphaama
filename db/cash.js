@@ -6,54 +6,70 @@ cash
 
 */
 
-const cash = 
+const cash = {id:'cash'};
+
+
+// add items to cache
+cash.add =async(keys=[])=>
 {
-  def:
+  const cache = await caches.open(cash.id);
+  try { await cache.addAll(keys) }
+  catch{}
+  postMessage(true);
+};
+
+// cash add all with options
+cash.all =async(keys=[])=>
+{
+  const cache = await caches.open(cash.id);
+  for (const key of keys)
   {
-    id:'cash',
-    ls:
-    [
-      '/site.webmanifest',
-      '/stuff/420.html',
-      '/stuff/font.otf',
-      '/stuff/font.otf.woff2',
-      '/stuff/favicon-32x32.png',
-      '/stuff/favicon-16x16.png',
-      '/stuff/safari-pinned-tab.svg',
-      '/stuff/android-chrome-192x192.png',
-      '/stuff/android-chrome-512x512.png',
-      '/stuff/apple-touch-icon.png',
-    ]
+    const request = new Request(key,{mode:'no-cors'});
+    let response;
+    try { response = await fetch(request) }
+    catch{}
+    if (response)
+    {
+      // let clone = new Response(response.clone(),{headers:{'Access-Control-Allow-Origin':'*'}});
+      // console.log(clone);
+      // clone.headers.set('Access-Control-Allow-Origin', '*');
+      cache.put(request,response);
+    }
+    
   }
 };
 
 
-addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});
-
-
-cash.add =async a=> 
+// delete key from cache or clear all
+cash.clear =async key=>
 {
-  const cache = await caches.open(cash.def.id);
-  await cache.addAll(a);
-  postMessage(true);
-};
-
-
-cash.clear =async(key)=>
-{
-  const cache = await caches.open(cash.def.id);
+  const cache = await caches.open(cash.id);
   let results;
-  if (key === 'ALL') results = await cache.matchAll();
+  if (key === 'ALL') 
+  {
+    results = await cache.matchAll();
+  }
+  else if (Array.isArray(key))
+  {
+    results = [];
+    for (const k of key) 
+    {
+      const result = await cache.matchAll(k);
+      results.push(...result)
+    }
+  }
   else results = await cache.matchAll(key);
-  for (const key of results) await cache.delete(key);
+  // console.log(results);
+  for (const result of results) await cache.delete(result);
   postMessage(true);
 };
 
 
-cash.del =async key=>
+// enable navigationPreload
+cash.enable =async()=>
 {
-  const cache = await caches.open(cash.def.id);
-  cache.delete(key)
+  if (registration.navigationPreload)
+    await registration.navigationPreload.enable()
 };
 
 
@@ -61,51 +77,72 @@ cash.del =async key=>
 // if not, then fetch, cache and serve it
 cash.flow =async e=>
 {
-  let cache = await caches.open(cash.def.id);
-  let res = await cache.match(e.request);
-  if (res) return res;
+  console.log('cash');
+  const cache = await caches.open(cash.id);
+  let response = await cache.match(e.request);
+  if (response) return response;
   
-  res = await e.preloadResponse;
-  if (res && res.ok) 
+  response = await e.preloadResponse;
+  if (response && response.ok)
   {
-    cash.put(e.request,res.clone());
-    return res
+    cache.put(e.request,response.clone());
+    return response
   }
-
-  try 
-	{
-    res = await fetch(e.request);
-	  cash.put(e.request,res.clone());
-    return res
-  }
-  catch (er) 
+  try
   {
-    res = await cache.match('/');
-    if (res) return res;
+    response = await fetch(e.request);
+    cache.put(e.request,response.clone());
+    return response
+  }
+  catch (error)
+  {
+    response = await cache.match('/');
+    if (response) return response;
     return new Response('wut?',{status:408,headers:{'Content-Type':'text/plain'}});
   }
 };
 
 
-cash.get =async a=> 
+// put in cache
+cash.in =async o=>
 {
-  const cache = await caches.open(cash.def.id);
+  const cache = await caches.open(cash.id);
+  for (const key in o)
+  {
+    if (typeof key === 'object' 
+    && key.url 
+    && key.url.startsWith('chrome')) continue;
+    let response = o[key].response;
+    if (!response) continue;
+    let options = o[key].options || {};
+    await cache.put(key,new Response(response,options));
+  }
+};
+
+
+// get from cache
+cash.out =async a=> 
+{
+  const cache = await caches.open(cash.id);
   const results = [];
   if (!Array.isArray(a)) a = [a];
-  for (const s of a)
+  for (const item of a)
   {
     let result;
-    const res = await cache.match(s);
-    if (res) 
+    const response = await cache.match(item);
+    if (response) 
     {
-      let ct = res.headers.get('content-type');
-      switch (ct)
+      let content_type = response.headers.get('Content-Type');
+      switch (content_type)
       {
         case 'text/html':
-          result = await res.text();break;
+          result = await response.text();
+          break;
         case 'application/json':
-          result = await res.json();break;
-        default: result = await res.blob();
+          result = await response.json();
+          break;
+        default: 
+          result = await response.blob();
       }
     }
     if (result) results.push(result);
@@ -114,40 +151,39 @@ cash.get =async a=>
 };
 
 
+cash.put =async(key,response)=>
+{
+  if (typeof key === 'object' 
+  && key.url?.startsWith('chrome')) return;
+
+  const cache = await caches.open(cash.id);
+  await cache.put(key,response);
+};
+
+
 onactivate =e=>
+{
+  e.waitUntil(cash.enable)
+};
+
+
+oninstall =e=>
 {
   e.waitUntil(async()=>
   {
-    if (registration.navigationPreload) 
-      await registration.navigationPreload.enable()
+    await cash.add(['/','/index.html'])
+    // const cache = await caches.open(cash.id);
+    // await cache.addAll(['/','/index.html']);
   })
 };
 
 
-oninstall =e=>{e.waitUntil(cash.add(cash.def.ls))};
-
-
 onmessage =e=>
 {
-  const ops = e.data;
-  for (const k in ops) if (cash.hasOwnProperty(k)) cash[k](ops[k])
+  for (const key in e.data)
+    if (Object.hasOwn(cash,key))
+      cash[key](e.data[key])
 };
 
 
-cash.put =async(k,res)=>
-{
-  if (typeof k === 'object' && k.url && k.url.startsWith('chrome')) return;
-  const cache = await caches.open(cash.def.id);
-  await cache.put(k,res);
-};
-
-
-cash.put_a =async(o)=>
-{
-  console.log('cash_put_a',);
-  const cache = await caches.open(cash.def.id);
-  for (const k in o) 
-  {
-    await cache.put(k,new Response(o[k],{headers:{'Content-Type':'application/json'}}));
-  }
-};
+addEventListener('fetch',e=>{e.respondWith(cash.flow(e))});

@@ -38,6 +38,7 @@ var NostrTools = (() => {
     nip10: () => nip10_exports,
     nip11: () => nip11_exports,
     nip13: () => nip13_exports,
+    nip17: () => nip17_exports,
     nip18: () => nip18_exports,
     nip19: () => nip19_exports,
     nip21: () => nip21_exports,
@@ -49,6 +50,7 @@ var NostrTools = (() => {
     nip42: () => nip42_exports,
     nip44: () => nip44_exports,
     nip47: () => nip47_exports,
+    nip54: () => nip54_exports,
     nip57: () => nip57_exports,
     nip59: () => nip59_exports,
     nip98: () => nip98_exports,
@@ -2038,7 +2040,7 @@ var NostrTools = (() => {
       if (!Array.isArray(tag))
         return false;
       for (let j = 0; j < tag.length; j++) {
-        if (typeof tag[j] === "object")
+        if (typeof tag[j] !== "string")
           return false;
       }
     }
@@ -2369,6 +2371,8 @@ var NostrTools = (() => {
     Queue: () => Queue,
     QueueNode: () => QueueNode,
     binarySearch: () => binarySearch,
+    bytesToHex: () => bytesToHex2,
+    hexToBytes: () => hexToBytes2,
     insertEventIntoAscendingList: () => insertEventIntoAscendingList,
     insertEventIntoDescendingList: () => insertEventIntoDescendingList,
     normalizeURL: () => normalizeURL,
@@ -2378,17 +2382,21 @@ var NostrTools = (() => {
   var utf8Decoder = new TextDecoder("utf-8");
   var utf8Encoder = new TextEncoder();
   function normalizeURL(url) {
-    if (url.indexOf("://") === -1)
-      url = "wss://" + url;
-    let p = new URL(url);
-    p.pathname = p.pathname.replace(/\/+/g, "/");
-    if (p.pathname.endsWith("/"))
-      p.pathname = p.pathname.slice(0, -1);
-    if (p.port === "80" && p.protocol === "ws:" || p.port === "443" && p.protocol === "wss:")
-      p.port = "";
-    p.searchParams.sort();
-    p.hash = "";
-    return p.toString();
+    try {
+      if (url.indexOf("://") === -1)
+        url = "wss://" + url;
+      let p = new URL(url);
+      p.pathname = p.pathname.replace(/\/+/g, "/");
+      if (p.pathname.endsWith("/"))
+        p.pathname = p.pathname.slice(0, -1);
+      if (p.port === "80" && p.protocol === "ws:" || p.port === "443" && p.protocol === "wss:")
+        p.port = "";
+      p.searchParams.sort();
+      p.hash = "";
+      return p.toString();
+    } catch (e) {
+      throw new Error(`Invalid URL: ${url}`);
+    }
   }
   function insertEventIntoDescendingList(sortedArray, event) {
     const [idx, found] = binarySearch(sortedArray, (b) => {
@@ -2475,6 +2483,9 @@ var NostrTools = (() => {
       }
       const target = this.first;
       this.first = target.next;
+      if (this.first) {
+        this.first.prev = null;
+      }
       return target.value;
     }
   };
@@ -2609,9 +2620,9 @@ var NostrTools = (() => {
     ZapGoal: () => ZapGoal,
     ZapRequest: () => ZapRequest,
     classifyKind: () => classifyKind,
+    isAddressableKind: () => isAddressableKind,
     isEphemeralKind: () => isEphemeralKind,
     isKind: () => isKind,
-    isParameterizedReplaceableKind: () => isParameterizedReplaceableKind,
     isRegularKind: () => isRegularKind,
     isReplaceableKind: () => isReplaceableKind
   });
@@ -2624,7 +2635,7 @@ var NostrTools = (() => {
   function isEphemeralKind(kind) {
     return 2e4 <= kind && kind < 3e4;
   }
-  function isParameterizedReplaceableKind(kind) {
+  function isAddressableKind(kind) {
     return 3e4 <= kind && kind < 4e4;
   }
   function classifyKind(kind) {
@@ -2634,7 +2645,7 @@ var NostrTools = (() => {
       return "replaceable";
     if (isEphemeralKind(kind))
       return "ephemeral";
-    if (isParameterizedReplaceableKind(kind))
+    if (isAddressableKind(kind))
       return "parameterized";
     return "unknown";
   }
@@ -2791,7 +2802,7 @@ var NostrTools = (() => {
       Math.max(0, filter.limit ?? Infinity),
       filter.ids?.length ?? Infinity,
       filter.authors?.length && filter.kinds?.every((kind) => isReplaceableKind(kind)) ? filter.authors.length * filter.kinds.length : Infinity,
-      filter.authors?.length && filter.kinds?.every((kind) => isParameterizedReplaceableKind(kind)) && filter["#d"]?.length ? filter.authors.length * filter.kinds.length * filter["#d"].length : Infinity
+      filter.authors?.length && filter.kinds?.every((kind) => isAddressableKind(kind)) && filter["#d"]?.length ? filter.authors.length * filter.kinds.length * filter["#d"].length : Infinity
     );
   }
 
@@ -2878,12 +2889,17 @@ var NostrTools = (() => {
   };
 
   // abstract-relay.ts
+  var SendingOnClosedConnection = class extends Error {
+    constructor(message, relay) {
+      super(`Tried to send message '${message} on a closed connection to ${relay}.`);
+      this.name = "SendingOnClosedConnection";
+    }
+  };
   var AbstractRelay = class {
     url;
     _connected = false;
     onclose = null;
     onnotice = (msg) => console.debug(`NOTICE from ${this.url}: ${msg}`);
-    _onauth = null;
     baseEoseTimeout = 4400;
     connectionTimeout = 4400;
     publishTimeout = 4400;
@@ -2896,6 +2912,7 @@ var NostrTools = (() => {
     incomingMessageQueue = new Queue();
     queueRunning = false;
     challenge;
+    authPromise;
     serial = 0;
     verifyEvent;
     _WebSocket;
@@ -2930,6 +2947,7 @@ var NostrTools = (() => {
       if (this.connectionPromise)
         return this.connectionPromise;
       this.challenge = void 0;
+      this.authPromise = void 0;
       this.connectionPromise = new Promise((resolve, reject) => {
         this.connectionTimeoutHandle = setTimeout(() => {
           reject("connection timed out");
@@ -2940,6 +2958,7 @@ var NostrTools = (() => {
         try {
           this.ws = new this._WebSocket(this.url);
         } catch (err) {
+          clearTimeout(this.connectionTimeoutHandle);
           reject(err);
           return;
         }
@@ -2949,6 +2968,7 @@ var NostrTools = (() => {
           resolve();
         };
         this.ws.onerror = (ev) => {
+          clearTimeout(this.connectionTimeoutHandle);
           reject(ev.message || "websocket error");
           if (this._connected) {
             this._connected = false;
@@ -2957,7 +2977,9 @@ var NostrTools = (() => {
             this.closeAllSubscriptions("relay connection errored");
           }
         };
-        this.ws.onclose = async () => {
+        this.ws.onclose = (ev) => {
+          clearTimeout(this.connectionTimeoutHandle);
+          reject(ev.message || "websocket closed");
           if (this._connected) {
             this._connected = false;
             this.connectionPromise = void 0;
@@ -3031,6 +3053,7 @@ var NostrTools = (() => {
             const reason = data[3];
             const ep = this.openEventPublishes.get(id);
             if (ep) {
+              clearTimeout(ep.timeout);
               if (ok)
                 ep.resolve(reason);
               else
@@ -3053,7 +3076,6 @@ var NostrTools = (() => {
             return;
           case "AUTH": {
             this.challenge = data[1];
-            this._onauth?.(data[1]);
             return;
           }
         }
@@ -3063,33 +3085,47 @@ var NostrTools = (() => {
     }
     async send(message) {
       if (!this.connectionPromise)
-        throw new Error("sending on closed connection");
+        throw new SendingOnClosedConnection(message, this.url);
       this.connectionPromise.then(() => {
         this.ws?.send(message);
       });
     }
     async auth(signAuthEvent) {
-      if (!this.challenge)
+      const challenge2 = this.challenge;
+      if (!challenge2)
         throw new Error("can't perform auth, no challenge was received");
-      const evt = await signAuthEvent(makeAuthEvent(this.url, this.challenge));
-      const ret = new Promise((resolve, reject) => {
-        this.openEventPublishes.set(evt.id, { resolve, reject });
+      if (this.authPromise)
+        return this.authPromise;
+      this.authPromise = new Promise(async (resolve, reject) => {
+        try {
+          let evt = await signAuthEvent(makeAuthEvent(this.url, challenge2));
+          let timeout = setTimeout(() => {
+            let ep = this.openEventPublishes.get(evt.id);
+            if (ep) {
+              ep.reject(new Error("auth timed out"));
+              this.openEventPublishes.delete(evt.id);
+            }
+          }, this.publishTimeout);
+          this.openEventPublishes.set(evt.id, { resolve, reject, timeout });
+          this.send('["AUTH",' + JSON.stringify(evt) + "]");
+        } catch (err) {
+          console.warn("subscribe auth function failed:", err);
+        }
       });
-      this.send('["AUTH",' + JSON.stringify(evt) + "]");
-      return ret;
+      return this.authPromise;
     }
     async publish(event) {
       const ret = new Promise((resolve, reject) => {
-        this.openEventPublishes.set(event.id, { resolve, reject });
+        const timeout = setTimeout(() => {
+          const ep = this.openEventPublishes.get(event.id);
+          if (ep) {
+            ep.reject(new Error("publish timed out"));
+            this.openEventPublishes.delete(event.id);
+          }
+        }, this.publishTimeout);
+        this.openEventPublishes.set(event.id, { resolve, reject, timeout });
       });
       this.send('["EVENT",' + JSON.stringify(event) + "]");
-      setTimeout(() => {
-        const ep = this.openEventPublishes.get(event.id);
-        if (ep) {
-          ep.reject(new Error("publish timed out"));
-          this.openEventPublishes.delete(event.id);
-        }
-      }, this.publishTimeout);
       return ret;
     }
     async count(filters, params) {
@@ -3108,7 +3144,7 @@ var NostrTools = (() => {
     }
     prepareSubscription(filters, params) {
       this.serial++;
-      const id = params.id || "sub:" + this.serial;
+      const id = params.id || (params.label ? params.label + ":" : "sub:") + this.serial;
       const subscription = new Subscription(this, id, filters, params);
       this.openSubs.set(id, subscription);
       return subscription;
@@ -3167,7 +3203,14 @@ var NostrTools = (() => {
     }
     close(reason = "closed by caller") {
       if (!this.closed && this.relay.connected) {
-        this.relay.send('["CLOSE",' + JSON.stringify(this.id) + "]");
+        try {
+          this.relay.send('["CLOSE",' + JSON.stringify(this.id) + "]");
+        } catch (err) {
+          if (err instanceof SendingOnClosedConnection) {
+          } else {
+            throw err;
+          }
+        }
         this.closed = true;
       }
       this.relay.openSubs.delete(this.id);
@@ -3224,10 +3267,22 @@ var NostrTools = (() => {
         this.relays.get(url)?.close();
       });
     }
-    subscribeMany(relays, filters, params) {
-      return this.subscribeManyMap(Object.fromEntries(relays.map((url) => [url, filters])), params);
+    subscribe(relays, filter, params) {
+      params.onauth = params.onauth || params.doauth;
+      return this.subscribeMap(
+        relays.map((url) => ({ url, filter })),
+        params
+      );
     }
-    subscribeManyMap(requests, params) {
+    subscribeMany(relays, filters, params) {
+      params.onauth = params.onauth || params.doauth;
+      return this.subscribeMap(
+        relays.flatMap((url) => filters.map((filter) => ({ url, filter }))),
+        params
+      );
+    }
+    subscribeMap(requests, params) {
+      params.onauth = params.onauth || params.doauth;
       if (this.trackRelays) {
         params.receivedEvent = (relay, id) => {
           let set = this.seenOn.get(id);
@@ -3240,11 +3295,12 @@ var NostrTools = (() => {
       }
       const _knownIds = /* @__PURE__ */ new Set();
       const subs = [];
-      const relaysLength = Object.keys(requests).length;
       const eosesReceived = [];
       let handleEose = (i2) => {
+        if (eosesReceived[i2])
+          return;
         eosesReceived[i2] = true;
-        if (eosesReceived.filter((a) => a).length === relaysLength) {
+        if (eosesReceived.filter((a) => a).length === requests.length) {
           params.oneose?.();
           handleEose = () => {
           };
@@ -3252,9 +3308,11 @@ var NostrTools = (() => {
       };
       const closesReceived = [];
       let handleClose = (i2, reason) => {
+        if (closesReceived[i2])
+          return;
         handleEose(i2);
         closesReceived[i2] = reason;
-        if (closesReceived.filter((a) => a).length === relaysLength) {
+        if (closesReceived.filter((a) => a).length === requests.length) {
           params.onclose?.(closesReceived);
           handleClose = () => {
           };
@@ -3269,12 +3327,7 @@ var NostrTools = (() => {
         return have;
       };
       const allOpened = Promise.all(
-        Object.entries(requests).map(async (req, i2, arr) => {
-          if (arr.indexOf(req) !== i2) {
-            handleClose(i2, "duplicate url");
-            return;
-          }
-          let [url, filters] = req;
+        requests.map(async ({ url, filter }, i2) => {
           url = normalizeURL(url);
           let relay;
           try {
@@ -3285,10 +3338,28 @@ var NostrTools = (() => {
             handleClose(i2, err?.message || String(err));
             return;
           }
-          let subscription = relay.subscribe(filters, {
+          let subscription = relay.subscribe([filter], {
             ...params,
             oneose: () => handleEose(i2),
-            onclose: (reason) => handleClose(i2, reason),
+            onclose: (reason) => {
+              if (reason.startsWith("auth-required: ") && params.onauth) {
+                relay.auth(params.onauth).then(() => {
+                  relay.subscribe([filter], {
+                    ...params,
+                    oneose: () => handleEose(i2),
+                    onclose: (reason2) => {
+                      handleClose(i2, reason2);
+                    },
+                    alreadyHaveEvent: localAlreadyHaveEventHandler,
+                    eoseTimeout: params.maxWait
+                  });
+                }).catch((err) => {
+                  handleClose(i2, `auth was required and attempted, but failed with: ${err}`);
+                });
+              } else {
+                handleClose(i2, reason);
+              }
+            },
             alreadyHaveEvent: localAlreadyHaveEventHandler,
             eoseTimeout: params.maxWait
           });
@@ -3296,19 +3367,30 @@ var NostrTools = (() => {
         })
       );
       return {
-        async close() {
+        async close(reason) {
           await allOpened;
           subs.forEach((sub) => {
-            sub.close();
+            sub.close(reason);
           });
         }
       };
     }
+    subscribeEose(relays, filter, params) {
+      params.onauth = params.onauth || params.doauth;
+      const subcloser = this.subscribe(relays, filter, {
+        ...params,
+        oneose() {
+          subcloser.close("closed automatically on eose");
+        }
+      });
+      return subcloser;
+    }
     subscribeManyEose(relays, filters, params) {
+      params.onauth = params.onauth || params.doauth;
       const subcloser = this.subscribeMany(relays, filters, {
         ...params,
         oneose() {
-          subcloser.close();
+          subcloser.close("closed automatically on eose");
         }
       });
       return subcloser;
@@ -3316,7 +3398,7 @@ var NostrTools = (() => {
     async querySync(relays, filter, params) {
       return new Promise(async (resolve) => {
         const events = [];
-        this.subscribeManyEose(relays, [filter], {
+        this.subscribeEose(relays, filter, {
           ...params,
           onevent(event) {
             events.push(event);
@@ -3333,13 +3415,19 @@ var NostrTools = (() => {
       events.sort((a, b) => b.created_at - a.created_at);
       return events[0] || null;
     }
-    publish(relays, event) {
+    publish(relays, event, options) {
       return relays.map(normalizeURL).map(async (url, i2, arr) => {
         if (arr.indexOf(url) !== i2) {
           return Promise.reject("duplicate url");
         }
         let r = await this.ensureRelay(url);
-        return r.publish(event).then((reason) => {
+        return r.publish(event).catch(async (err) => {
+          if (err instanceof Error && err.message.startsWith("auth-required: ") && options?.onauth) {
+            await r.auth(options.onauth);
+            return r.publish(event);
+          }
+          throw err;
+        }).then((reason) => {
           if (this.trackRelays) {
             let set = this.seenOn.get(event.id);
             if (!set) {
@@ -3382,6 +3470,7 @@ var NostrTools = (() => {
     Bech32MaxSize: () => Bech32MaxSize,
     NostrTypeGuard: () => NostrTypeGuard,
     decode: () => decode,
+    decodeNostrURI: () => decodeNostrURI,
     encodeBytes: () => encodeBytes,
     naddrEncode: () => naddrEncode,
     neventEncode: () => neventEncode,
@@ -3764,8 +3853,17 @@ var NostrTools = (() => {
     uint8Array[3] = number4 & 255;
     return uint8Array;
   }
-  function decode(nip19) {
-    let { prefix, words } = bech32.decode(nip19, Bech32MaxSize);
+  function decodeNostrURI(nip19code) {
+    try {
+      if (nip19code.startsWith("nostr:"))
+        nip19code = nip19code.substring(6);
+      return decode(nip19code);
+    } catch (_err) {
+      return { type: "invalid", data: null };
+    }
+  }
+  function decode(code) {
+    let { prefix, words } = bech32.decode(code, Bech32MaxSize);
     let data = new Uint8Array(bech32.fromWords(words));
     switch (prefix) {
       case "nprofile": {
@@ -4784,7 +4882,7 @@ var NostrTools = (() => {
   });
 
   // nip04.ts
-  async function encrypt2(secretKey, pubkey, text) {
+  function encrypt2(secretKey, pubkey, text) {
     const privkey = secretKey instanceof Uint8Array ? bytesToHex2(secretKey) : secretKey;
     const key = secp256k1.getSharedSecret(privkey, "02" + pubkey);
     const normalizedKey = getNormalizedX(key);
@@ -4795,7 +4893,7 @@ var NostrTools = (() => {
     let ivb64 = base64.encode(new Uint8Array(iv.buffer));
     return `${ctb64}?iv=${ivb64}`;
   }
-  async function decrypt2(secretKey, pubkey, data) {
+  function decrypt2(secretKey, pubkey, data) {
     const privkey = secretKey instanceof Uint8Array ? bytesToHex2(secretKey) : secretKey;
     let [ctb64, ivb64] = data.split("?iv=");
     let key = secp256k1.getSharedSecret(privkey, "02" + pubkey);
@@ -5036,326 +5134,26 @@ var NostrTools = (() => {
     );
   }
 
-  // nip18.ts
-  var nip18_exports = {};
-  __export(nip18_exports, {
-    finishRepostEvent: () => finishRepostEvent,
-    getRepostedEvent: () => getRepostedEvent,
-    getRepostedEventPointer: () => getRepostedEventPointer
+  // nip17.ts
+  var nip17_exports = {};
+  __export(nip17_exports, {
+    unwrapEvent: () => unwrapEvent2,
+    unwrapManyEvents: () => unwrapManyEvents2,
+    wrapEvent: () => wrapEvent2,
+    wrapManyEvents: () => wrapManyEvents2
   });
-  function finishRepostEvent(t, reposted, relayUrl, privateKey) {
-    return finalizeEvent(
-      {
-        kind: Repost,
-        tags: [...t.tags ?? [], ["e", reposted.id, relayUrl], ["p", reposted.pubkey]],
-        content: t.content === "" ? "" : JSON.stringify(reposted),
-        created_at: t.created_at
-      },
-      privateKey
-    );
-  }
-  function getRepostedEventPointer(event) {
-    if (event.kind !== Repost) {
-      return void 0;
-    }
-    let lastETag;
-    let lastPTag;
-    for (let i2 = event.tags.length - 1; i2 >= 0 && (lastETag === void 0 || lastPTag === void 0); i2--) {
-      const tag = event.tags[i2];
-      if (tag.length >= 2) {
-        if (tag[0] === "e" && lastETag === void 0) {
-          lastETag = tag;
-        } else if (tag[0] === "p" && lastPTag === void 0) {
-          lastPTag = tag;
-        }
-      }
-    }
-    if (lastETag === void 0) {
-      return void 0;
-    }
-    return {
-      id: lastETag[1],
-      relays: [lastETag[2], lastPTag?.[2]].filter((x) => typeof x === "string"),
-      author: lastPTag?.[1]
-    };
-  }
-  function getRepostedEvent(event, { skipVerification } = {}) {
-    const pointer = getRepostedEventPointer(event);
-    if (pointer === void 0 || event.content === "") {
-      return void 0;
-    }
-    let repostedEvent;
-    try {
-      repostedEvent = JSON.parse(event.content);
-    } catch (error) {
-      return void 0;
-    }
-    if (repostedEvent.id !== pointer.id) {
-      return void 0;
-    }
-    if (!skipVerification && !verifyEvent(repostedEvent)) {
-      return void 0;
-    }
-    return repostedEvent;
-  }
 
-  // nip21.ts
-  var nip21_exports = {};
-  __export(nip21_exports, {
-    NOSTR_URI_REGEX: () => NOSTR_URI_REGEX,
-    parse: () => parse2,
-    test: () => test
+  // nip59.ts
+  var nip59_exports = {};
+  __export(nip59_exports, {
+    createRumor: () => createRumor,
+    createSeal: () => createSeal,
+    createWrap: () => createWrap,
+    unwrapEvent: () => unwrapEvent,
+    unwrapManyEvents: () => unwrapManyEvents,
+    wrapEvent: () => wrapEvent,
+    wrapManyEvents: () => wrapManyEvents
   });
-  var NOSTR_URI_REGEX = new RegExp(`nostr:(${BECH32_REGEX.source})`);
-  function test(value) {
-    return typeof value === "string" && new RegExp(`^${NOSTR_URI_REGEX.source}$`).test(value);
-  }
-  function parse2(uri) {
-    const match = uri.match(new RegExp(`^${NOSTR_URI_REGEX.source}$`));
-    if (!match)
-      throw new Error(`Invalid Nostr URI: ${uri}`);
-    return {
-      uri: match[0],
-      value: match[1],
-      decoded: decode(match[1])
-    };
-  }
-
-  // nip25.ts
-  var nip25_exports = {};
-  __export(nip25_exports, {
-    finishReactionEvent: () => finishReactionEvent,
-    getReactedEventPointer: () => getReactedEventPointer
-  });
-  function finishReactionEvent(t, reacted, privateKey) {
-    const inheritedTags = reacted.tags.filter((tag) => tag.length >= 2 && (tag[0] === "e" || tag[0] === "p"));
-    return finalizeEvent(
-      {
-        ...t,
-        kind: Reaction,
-        tags: [...t.tags ?? [], ...inheritedTags, ["e", reacted.id], ["p", reacted.pubkey]],
-        content: t.content ?? "+"
-      },
-      privateKey
-    );
-  }
-  function getReactedEventPointer(event) {
-    if (event.kind !== Reaction) {
-      return void 0;
-    }
-    let lastETag;
-    let lastPTag;
-    for (let i2 = event.tags.length - 1; i2 >= 0 && (lastETag === void 0 || lastPTag === void 0); i2--) {
-      const tag = event.tags[i2];
-      if (tag.length >= 2) {
-        if (tag[0] === "e" && lastETag === void 0) {
-          lastETag = tag;
-        } else if (tag[0] === "p" && lastPTag === void 0) {
-          lastPTag = tag;
-        }
-      }
-    }
-    if (lastETag === void 0 || lastPTag === void 0) {
-      return void 0;
-    }
-    return {
-      id: lastETag[1],
-      relays: [lastETag[2], lastPTag[2]].filter((x) => x !== void 0),
-      author: lastPTag[1]
-    };
-  }
-
-  // nip27.ts
-  var nip27_exports = {};
-  __export(nip27_exports, {
-    matchAll: () => matchAll,
-    regex: () => regex,
-    replaceAll: () => replaceAll
-  });
-  var regex = () => new RegExp(`\\b${NOSTR_URI_REGEX.source}\\b`, "g");
-  function* matchAll(content) {
-    const matches = content.matchAll(regex());
-    for (const match of matches) {
-      try {
-        const [uri, value] = match;
-        yield {
-          uri,
-          value,
-          decoded: decode(value),
-          start: match.index,
-          end: match.index + uri.length
-        };
-      } catch (_e) {
-      }
-    }
-  }
-  function replaceAll(content, replacer) {
-    return content.replaceAll(regex(), (uri, value) => {
-      return replacer({
-        uri,
-        value,
-        decoded: decode(value)
-      });
-    });
-  }
-
-  // nip28.ts
-  var nip28_exports = {};
-  __export(nip28_exports, {
-    channelCreateEvent: () => channelCreateEvent,
-    channelHideMessageEvent: () => channelHideMessageEvent,
-    channelMessageEvent: () => channelMessageEvent,
-    channelMetadataEvent: () => channelMetadataEvent,
-    channelMuteUserEvent: () => channelMuteUserEvent
-  });
-  var channelCreateEvent = (t, privateKey) => {
-    let content;
-    if (typeof t.content === "object") {
-      content = JSON.stringify(t.content);
-    } else if (typeof t.content === "string") {
-      content = t.content;
-    } else {
-      return void 0;
-    }
-    return finalizeEvent(
-      {
-        kind: ChannelCreation,
-        tags: [...t.tags ?? []],
-        content,
-        created_at: t.created_at
-      },
-      privateKey
-    );
-  };
-  var channelMetadataEvent = (t, privateKey) => {
-    let content;
-    if (typeof t.content === "object") {
-      content = JSON.stringify(t.content);
-    } else if (typeof t.content === "string") {
-      content = t.content;
-    } else {
-      return void 0;
-    }
-    return finalizeEvent(
-      {
-        kind: ChannelMetadata,
-        tags: [["e", t.channel_create_event_id], ...t.tags ?? []],
-        content,
-        created_at: t.created_at
-      },
-      privateKey
-    );
-  };
-  var channelMessageEvent = (t, privateKey) => {
-    const tags = [["e", t.channel_create_event_id, t.relay_url, "root"]];
-    if (t.reply_to_channel_message_event_id) {
-      tags.push(["e", t.reply_to_channel_message_event_id, t.relay_url, "reply"]);
-    }
-    return finalizeEvent(
-      {
-        kind: ChannelMessage,
-        tags: [...tags, ...t.tags ?? []],
-        content: t.content,
-        created_at: t.created_at
-      },
-      privateKey
-    );
-  };
-  var channelHideMessageEvent = (t, privateKey) => {
-    let content;
-    if (typeof t.content === "object") {
-      content = JSON.stringify(t.content);
-    } else if (typeof t.content === "string") {
-      content = t.content;
-    } else {
-      return void 0;
-    }
-    return finalizeEvent(
-      {
-        kind: ChannelHideMessage,
-        tags: [["e", t.channel_message_event_id], ...t.tags ?? []],
-        content,
-        created_at: t.created_at
-      },
-      privateKey
-    );
-  };
-  var channelMuteUserEvent = (t, privateKey) => {
-    let content;
-    if (typeof t.content === "object") {
-      content = JSON.stringify(t.content);
-    } else if (typeof t.content === "string") {
-      content = t.content;
-    } else {
-      return void 0;
-    }
-    return finalizeEvent(
-      {
-        kind: ChannelMuteUser,
-        tags: [["p", t.pubkey_to_mute], ...t.tags ?? []],
-        content,
-        created_at: t.created_at
-      },
-      privateKey
-    );
-  };
-
-  // nip30.ts
-  var nip30_exports = {};
-  __export(nip30_exports, {
-    EMOJI_SHORTCODE_REGEX: () => EMOJI_SHORTCODE_REGEX,
-    matchAll: () => matchAll2,
-    regex: () => regex2,
-    replaceAll: () => replaceAll2
-  });
-  var EMOJI_SHORTCODE_REGEX = /:(\w+):/;
-  var regex2 = () => new RegExp(`\\B${EMOJI_SHORTCODE_REGEX.source}\\B`, "g");
-  function* matchAll2(content) {
-    const matches = content.matchAll(regex2());
-    for (const match of matches) {
-      try {
-        const [shortcode, name] = match;
-        yield {
-          shortcode,
-          name,
-          start: match.index,
-          end: match.index + shortcode.length
-        };
-      } catch (_e) {
-      }
-    }
-  }
-  function replaceAll2(content, replacer) {
-    return content.replaceAll(regex2(), (shortcode, name) => {
-      return replacer({
-        shortcode,
-        name
-      });
-    });
-  }
-
-  // nip39.ts
-  var nip39_exports = {};
-  __export(nip39_exports, {
-    useFetchImplementation: () => useFetchImplementation3,
-    validateGithub: () => validateGithub
-  });
-  var _fetch3;
-  try {
-    _fetch3 = fetch;
-  } catch {
-  }
-  function useFetchImplementation3(fetchImplementation) {
-    _fetch3 = fetchImplementation;
-  }
-  async function validateGithub(pubkey, username, proof) {
-    try {
-      let res = await (await _fetch3(`https://gist.github.com/${username}/${proof}/raw`)).text();
-      return res === `Verifying that I control the following Nostr public key: ${pubkey}`;
-    } catch (_) {
-      return false;
-    }
-  }
 
   // nip44.ts
   var nip44_exports = {};
@@ -6173,160 +5971,7 @@ var NostrTools = (() => {
     decrypt: decrypt3
   };
 
-  // nip47.ts
-  var nip47_exports = {};
-  __export(nip47_exports, {
-    makeNwcRequestEvent: () => makeNwcRequestEvent,
-    parseConnectionString: () => parseConnectionString
-  });
-  function parseConnectionString(connectionString) {
-    const { pathname, searchParams } = new URL(connectionString);
-    const pubkey = pathname;
-    const relay = searchParams.get("relay");
-    const secret = searchParams.get("secret");
-    if (!pubkey || !relay || !secret) {
-      throw new Error("invalid connection string");
-    }
-    return { pubkey, relay, secret };
-  }
-  async function makeNwcRequestEvent(pubkey, secretKey, invoice) {
-    const content = {
-      method: "pay_invoice",
-      params: {
-        invoice
-      }
-    };
-    const encryptedContent = await encrypt2(secretKey, pubkey, JSON.stringify(content));
-    const eventTemplate = {
-      kind: NWCWalletRequest,
-      created_at: Math.round(Date.now() / 1e3),
-      content: encryptedContent,
-      tags: [["p", pubkey]]
-    };
-    return finalizeEvent(eventTemplate, secretKey);
-  }
-
-  // nip57.ts
-  var nip57_exports = {};
-  __export(nip57_exports, {
-    getZapEndpoint: () => getZapEndpoint,
-    makeZapReceipt: () => makeZapReceipt,
-    makeZapRequest: () => makeZapRequest,
-    useFetchImplementation: () => useFetchImplementation4,
-    validateZapRequest: () => validateZapRequest
-  });
-  var _fetch4;
-  try {
-    _fetch4 = fetch;
-  } catch {
-  }
-  function useFetchImplementation4(fetchImplementation) {
-    _fetch4 = fetchImplementation;
-  }
-  async function getZapEndpoint(metadata) {
-    try {
-      let lnurl = "";
-      let { lud06, lud16 } = JSON.parse(metadata.content);
-      if (lud06) {
-        let { words } = bech32.decode(lud06, 1e3);
-        let data = bech32.fromWords(words);
-        lnurl = utf8Decoder.decode(data);
-      } else if (lud16) {
-        let [name, domain] = lud16.split("@");
-        lnurl = new URL(`/.well-known/lnurlp/${name}`, `https://${domain}`).toString();
-      } else {
-        return null;
-      }
-      let res = await _fetch4(lnurl);
-      let body = await res.json();
-      if (body.allowsNostr && body.nostrPubkey) {
-        return body.callback;
-      }
-    } catch (err) {
-    }
-    return null;
-  }
-  function makeZapRequest({
-    profile,
-    event,
-    amount,
-    relays,
-    comment = ""
-  }) {
-    if (!amount)
-      throw new Error("amount not given");
-    if (!profile)
-      throw new Error("profile not given");
-    let zr = {
-      kind: 9734,
-      created_at: Math.round(Date.now() / 1e3),
-      content: comment,
-      tags: [
-        ["p", profile],
-        ["amount", amount.toString()],
-        ["relays", ...relays]
-      ]
-    };
-    if (event) {
-      zr.tags.push(["e", event]);
-    }
-    return zr;
-  }
-  function validateZapRequest(zapRequestString) {
-    let zapRequest;
-    try {
-      zapRequest = JSON.parse(zapRequestString);
-    } catch (err) {
-      return "Invalid zap request JSON.";
-    }
-    if (!validateEvent(zapRequest))
-      return "Zap request is not a valid Nostr event.";
-    if (!verifyEvent(zapRequest))
-      return "Invalid signature on zap request.";
-    let p = zapRequest.tags.find(([t, v]) => t === "p" && v);
-    if (!p)
-      return "Zap request doesn't have a 'p' tag.";
-    if (!p[1].match(/^[a-f0-9]{64}$/))
-      return "Zap request 'p' tag is not valid hex.";
-    let e = zapRequest.tags.find(([t, v]) => t === "e" && v);
-    if (e && !e[1].match(/^[a-f0-9]{64}$/))
-      return "Zap request 'e' tag is not valid hex.";
-    let relays = zapRequest.tags.find(([t, v]) => t === "relays" && v);
-    if (!relays)
-      return "Zap request doesn't have a 'relays' tag.";
-    return null;
-  }
-  function makeZapReceipt({
-    zapRequest,
-    preimage,
-    bolt11,
-    paidAt
-  }) {
-    let zr = JSON.parse(zapRequest);
-    let tagsFromZapRequest = zr.tags.filter(([t]) => t === "e" || t === "p" || t === "a");
-    let zap = {
-      kind: 9735,
-      created_at: Math.round(paidAt.getTime() / 1e3),
-      content: "",
-      tags: [...tagsFromZapRequest, ["P", zr.pubkey], ["bolt11", bolt11], ["description", zapRequest]]
-    };
-    if (preimage) {
-      zap.tags.push(["preimage", preimage]);
-    }
-    return zap;
-  }
-
   // nip59.ts
-  var nip59_exports = {};
-  __export(nip59_exports, {
-    createRumor: () => createRumor,
-    createSeal: () => createSeal,
-    createWrap: () => createWrap,
-    unwrapEvent: () => unwrapEvent,
-    unwrapManyEvents: () => unwrapManyEvents,
-    wrapEvent: () => wrapEvent,
-    wrapManyEvents: () => wrapManyEvents
-  });
   var TWO_DAYS = 2 * 24 * 60 * 60;
   var now = () => Math.round(Date.now() / 1e3);
   var randomNow = () => Math.round(now() - Math.random() * TWO_DAYS);
@@ -6394,6 +6039,662 @@ var NostrTools = (() => {
     });
     unwrappedEvents.sort((a, b) => a.created_at - b.created_at);
     return unwrappedEvents;
+  }
+
+  // nip17.ts
+  function createEvent(recipients, message, conversationTitle, replyTo) {
+    const baseEvent = {
+      created_at: Math.ceil(Date.now() / 1e3),
+      kind: PrivateDirectMessage,
+      tags: [],
+      content: message
+    };
+    const recipientsArray = Array.isArray(recipients) ? recipients : [recipients];
+    recipientsArray.forEach(({ publicKey, relayUrl }) => {
+      baseEvent.tags.push(relayUrl ? ["p", publicKey, relayUrl] : ["p", publicKey]);
+    });
+    if (replyTo) {
+      baseEvent.tags.push(["e", replyTo.eventId, replyTo.relayUrl || "", "reply"]);
+    }
+    if (conversationTitle) {
+      baseEvent.tags.push(["subject", conversationTitle]);
+    }
+    return baseEvent;
+  }
+  function wrapEvent2(senderPrivateKey, recipient, message, conversationTitle, replyTo) {
+    const event = createEvent(recipient, message, conversationTitle, replyTo);
+    return wrapEvent(event, senderPrivateKey, recipient.publicKey);
+  }
+  function wrapManyEvents2(senderPrivateKey, recipients, message, conversationTitle, replyTo) {
+    if (!recipients || recipients.length === 0) {
+      throw new Error("At least one recipient is required.");
+    }
+    const senderPublicKey = getPublicKey(senderPrivateKey);
+    return [{ publicKey: senderPublicKey }, ...recipients].map(
+      (recipient) => wrapEvent2(senderPrivateKey, recipient, message, conversationTitle, replyTo)
+    );
+  }
+  var unwrapEvent2 = unwrapEvent;
+  var unwrapManyEvents2 = unwrapManyEvents;
+
+  // nip18.ts
+  var nip18_exports = {};
+  __export(nip18_exports, {
+    finishRepostEvent: () => finishRepostEvent,
+    getRepostedEvent: () => getRepostedEvent,
+    getRepostedEventPointer: () => getRepostedEventPointer
+  });
+  function finishRepostEvent(t, reposted, relayUrl, privateKey) {
+    let kind;
+    const tags = [...t.tags ?? [], ["e", reposted.id, relayUrl], ["p", reposted.pubkey]];
+    if (reposted.kind === ShortTextNote) {
+      kind = Repost;
+    } else {
+      kind = GenericRepost;
+      tags.push(["k", String(reposted.kind)]);
+    }
+    return finalizeEvent(
+      {
+        kind,
+        tags,
+        content: t.content === "" || reposted.tags?.find((tag) => tag[0] === "-") ? "" : JSON.stringify(reposted),
+        created_at: t.created_at
+      },
+      privateKey
+    );
+  }
+  function getRepostedEventPointer(event) {
+    if (![Repost, GenericRepost].includes(event.kind)) {
+      return void 0;
+    }
+    let lastETag;
+    let lastPTag;
+    for (let i2 = event.tags.length - 1; i2 >= 0 && (lastETag === void 0 || lastPTag === void 0); i2--) {
+      const tag = event.tags[i2];
+      if (tag.length >= 2) {
+        if (tag[0] === "e" && lastETag === void 0) {
+          lastETag = tag;
+        } else if (tag[0] === "p" && lastPTag === void 0) {
+          lastPTag = tag;
+        }
+      }
+    }
+    if (lastETag === void 0) {
+      return void 0;
+    }
+    return {
+      id: lastETag[1],
+      relays: [lastETag[2], lastPTag?.[2]].filter((x) => typeof x === "string"),
+      author: lastPTag?.[1]
+    };
+  }
+  function getRepostedEvent(event, { skipVerification } = {}) {
+    const pointer = getRepostedEventPointer(event);
+    if (pointer === void 0 || event.content === "") {
+      return void 0;
+    }
+    let repostedEvent;
+    try {
+      repostedEvent = JSON.parse(event.content);
+    } catch (error) {
+      return void 0;
+    }
+    if (repostedEvent.id !== pointer.id) {
+      return void 0;
+    }
+    if (!skipVerification && !verifyEvent(repostedEvent)) {
+      return void 0;
+    }
+    return repostedEvent;
+  }
+
+  // nip21.ts
+  var nip21_exports = {};
+  __export(nip21_exports, {
+    NOSTR_URI_REGEX: () => NOSTR_URI_REGEX,
+    parse: () => parse2,
+    test: () => test
+  });
+  var NOSTR_URI_REGEX = new RegExp(`nostr:(${BECH32_REGEX.source})`);
+  function test(value) {
+    return typeof value === "string" && new RegExp(`^${NOSTR_URI_REGEX.source}$`).test(value);
+  }
+  function parse2(uri) {
+    const match = uri.match(new RegExp(`^${NOSTR_URI_REGEX.source}$`));
+    if (!match)
+      throw new Error(`Invalid Nostr URI: ${uri}`);
+    return {
+      uri: match[0],
+      value: match[1],
+      decoded: decode(match[1])
+    };
+  }
+
+  // nip25.ts
+  var nip25_exports = {};
+  __export(nip25_exports, {
+    finishReactionEvent: () => finishReactionEvent,
+    getReactedEventPointer: () => getReactedEventPointer
+  });
+  function finishReactionEvent(t, reacted, privateKey) {
+    const inheritedTags = reacted.tags.filter((tag) => tag.length >= 2 && (tag[0] === "e" || tag[0] === "p"));
+    return finalizeEvent(
+      {
+        ...t,
+        kind: Reaction,
+        tags: [...t.tags ?? [], ...inheritedTags, ["e", reacted.id], ["p", reacted.pubkey]],
+        content: t.content ?? "+"
+      },
+      privateKey
+    );
+  }
+  function getReactedEventPointer(event) {
+    if (event.kind !== Reaction) {
+      return void 0;
+    }
+    let lastETag;
+    let lastPTag;
+    for (let i2 = event.tags.length - 1; i2 >= 0 && (lastETag === void 0 || lastPTag === void 0); i2--) {
+      const tag = event.tags[i2];
+      if (tag.length >= 2) {
+        if (tag[0] === "e" && lastETag === void 0) {
+          lastETag = tag;
+        } else if (tag[0] === "p" && lastPTag === void 0) {
+          lastPTag = tag;
+        }
+      }
+    }
+    if (lastETag === void 0 || lastPTag === void 0) {
+      return void 0;
+    }
+    return {
+      id: lastETag[1],
+      relays: [lastETag[2], lastPTag[2]].filter((x) => x !== void 0),
+      author: lastPTag[1]
+    };
+  }
+
+  // nip27.ts
+  var nip27_exports = {};
+  __export(nip27_exports, {
+    parse: () => parse3
+  });
+  var noCharacter = /\W/m;
+  var noURLCharacter = /\W |\W$|$|,| /m;
+  function* parse3(content) {
+    const max = content.length;
+    let prevIndex = 0;
+    let index = 0;
+    while (index < max) {
+      let u = content.indexOf(":", index);
+      if (u === -1) {
+        break;
+      }
+      if (content.substring(u - 5, u) === "nostr") {
+        const m = content.substring(u + 60).match(noCharacter);
+        const end = m ? u + 60 + m.index : max;
+        try {
+          let pointer;
+          let { data, type } = decode(content.substring(u + 1, end));
+          switch (type) {
+            case "npub":
+              pointer = { pubkey: data };
+              break;
+            case "nsec":
+            case "note":
+              index = end + 1;
+              continue;
+            default:
+              pointer = data;
+          }
+          if (prevIndex !== u - 5) {
+            yield { type: "text", text: content.substring(prevIndex, u - 5) };
+          }
+          yield { type: "reference", pointer };
+          index = end;
+          prevIndex = index;
+          continue;
+        } catch (_err) {
+          index = u + 1;
+          continue;
+        }
+      } else if (content.substring(u - 5, u) === "https" || content.substring(u - 4, u) === "http") {
+        const m = content.substring(u + 4).match(noURLCharacter);
+        const end = m ? u + 4 + m.index : max;
+        const prefixLen = content[u - 1] === "s" ? 5 : 4;
+        try {
+          let url = new URL(content.substring(u - prefixLen, end));
+          if (url.hostname.indexOf(".") === -1) {
+            throw new Error("invalid url");
+          }
+          if (prevIndex !== u - prefixLen) {
+            yield { type: "text", text: content.substring(prevIndex, u - prefixLen) };
+          }
+          if (url.pathname.endsWith(".png") || url.pathname.endsWith(".jpg") || url.pathname.endsWith(".jpeg") || url.pathname.endsWith(".gif") || url.pathname.endsWith(".webp")) {
+            yield { type: "image", url: url.toString() };
+            index = end;
+            prevIndex = index;
+            continue;
+          }
+          if (url.pathname.endsWith(".mp4") || url.pathname.endsWith(".avi") || url.pathname.endsWith(".webm") || url.pathname.endsWith(".mkv")) {
+            yield { type: "video", url: url.toString() };
+            index = end;
+            prevIndex = index;
+            continue;
+          }
+          if (url.pathname.endsWith(".mp3") || url.pathname.endsWith(".aac") || url.pathname.endsWith(".ogg") || url.pathname.endsWith(".opus")) {
+            yield { type: "audio", url: url.toString() };
+            index = end;
+            prevIndex = index;
+            continue;
+          }
+          yield { type: "url", url: url.toString() };
+          index = end;
+          prevIndex = index;
+          continue;
+        } catch (_err) {
+          index = end + 1;
+          continue;
+        }
+      } else if (content.substring(u - 3, u) === "wss" || content.substring(u - 2, u) === "ws") {
+        const m = content.substring(u + 4).match(noURLCharacter);
+        const end = m ? u + 4 + m.index : max;
+        const prefixLen = content[u - 1] === "s" ? 3 : 2;
+        try {
+          let url = new URL(content.substring(u - prefixLen, end));
+          if (url.hostname.indexOf(".") === -1) {
+            throw new Error("invalid ws url");
+          }
+          if (prevIndex !== u - prefixLen) {
+            yield { type: "text", text: content.substring(prevIndex, u - prefixLen) };
+          }
+          yield { type: "relay", url: url.toString() };
+          index = end;
+          prevIndex = index;
+          continue;
+        } catch (_err) {
+          index = end + 1;
+          continue;
+        }
+      } else {
+        index = u + 1;
+        continue;
+      }
+    }
+    if (prevIndex !== max) {
+      yield { type: "text", text: content.substring(prevIndex) };
+    }
+  }
+
+  // nip28.ts
+  var nip28_exports = {};
+  __export(nip28_exports, {
+    channelCreateEvent: () => channelCreateEvent,
+    channelHideMessageEvent: () => channelHideMessageEvent,
+    channelMessageEvent: () => channelMessageEvent,
+    channelMetadataEvent: () => channelMetadataEvent,
+    channelMuteUserEvent: () => channelMuteUserEvent
+  });
+  var channelCreateEvent = (t, privateKey) => {
+    let content;
+    if (typeof t.content === "object") {
+      content = JSON.stringify(t.content);
+    } else if (typeof t.content === "string") {
+      content = t.content;
+    } else {
+      return void 0;
+    }
+    return finalizeEvent(
+      {
+        kind: ChannelCreation,
+        tags: [...t.tags ?? []],
+        content,
+        created_at: t.created_at
+      },
+      privateKey
+    );
+  };
+  var channelMetadataEvent = (t, privateKey) => {
+    let content;
+    if (typeof t.content === "object") {
+      content = JSON.stringify(t.content);
+    } else if (typeof t.content === "string") {
+      content = t.content;
+    } else {
+      return void 0;
+    }
+    return finalizeEvent(
+      {
+        kind: ChannelMetadata,
+        tags: [["e", t.channel_create_event_id], ...t.tags ?? []],
+        content,
+        created_at: t.created_at
+      },
+      privateKey
+    );
+  };
+  var channelMessageEvent = (t, privateKey) => {
+    const tags = [["e", t.channel_create_event_id, t.relay_url, "root"]];
+    if (t.reply_to_channel_message_event_id) {
+      tags.push(["e", t.reply_to_channel_message_event_id, t.relay_url, "reply"]);
+    }
+    return finalizeEvent(
+      {
+        kind: ChannelMessage,
+        tags: [...tags, ...t.tags ?? []],
+        content: t.content,
+        created_at: t.created_at
+      },
+      privateKey
+    );
+  };
+  var channelHideMessageEvent = (t, privateKey) => {
+    let content;
+    if (typeof t.content === "object") {
+      content = JSON.stringify(t.content);
+    } else if (typeof t.content === "string") {
+      content = t.content;
+    } else {
+      return void 0;
+    }
+    return finalizeEvent(
+      {
+        kind: ChannelHideMessage,
+        tags: [["e", t.channel_message_event_id], ...t.tags ?? []],
+        content,
+        created_at: t.created_at
+      },
+      privateKey
+    );
+  };
+  var channelMuteUserEvent = (t, privateKey) => {
+    let content;
+    if (typeof t.content === "object") {
+      content = JSON.stringify(t.content);
+    } else if (typeof t.content === "string") {
+      content = t.content;
+    } else {
+      return void 0;
+    }
+    return finalizeEvent(
+      {
+        kind: ChannelMuteUser,
+        tags: [["p", t.pubkey_to_mute], ...t.tags ?? []],
+        content,
+        created_at: t.created_at
+      },
+      privateKey
+    );
+  };
+
+  // nip30.ts
+  var nip30_exports = {};
+  __export(nip30_exports, {
+    EMOJI_SHORTCODE_REGEX: () => EMOJI_SHORTCODE_REGEX,
+    matchAll: () => matchAll,
+    regex: () => regex,
+    replaceAll: () => replaceAll
+  });
+  var EMOJI_SHORTCODE_REGEX = /:(\w+):/;
+  var regex = () => new RegExp(`\\B${EMOJI_SHORTCODE_REGEX.source}\\B`, "g");
+  function* matchAll(content) {
+    const matches = content.matchAll(regex());
+    for (const match of matches) {
+      try {
+        const [shortcode, name] = match;
+        yield {
+          shortcode,
+          name,
+          start: match.index,
+          end: match.index + shortcode.length
+        };
+      } catch (_e) {
+      }
+    }
+  }
+  function replaceAll(content, replacer) {
+    return content.replaceAll(regex(), (shortcode, name) => {
+      return replacer({
+        shortcode,
+        name
+      });
+    });
+  }
+
+  // nip39.ts
+  var nip39_exports = {};
+  __export(nip39_exports, {
+    useFetchImplementation: () => useFetchImplementation3,
+    validateGithub: () => validateGithub
+  });
+  var _fetch3;
+  try {
+    _fetch3 = fetch;
+  } catch {
+  }
+  function useFetchImplementation3(fetchImplementation) {
+    _fetch3 = fetchImplementation;
+  }
+  async function validateGithub(pubkey, username, proof) {
+    try {
+      let res = await (await _fetch3(`https://gist.github.com/${username}/${proof}/raw`)).text();
+      return res === `Verifying that I control the following Nostr public key: ${pubkey}`;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // nip47.ts
+  var nip47_exports = {};
+  __export(nip47_exports, {
+    makeNwcRequestEvent: () => makeNwcRequestEvent,
+    parseConnectionString: () => parseConnectionString
+  });
+  function parseConnectionString(connectionString) {
+    const { pathname, searchParams } = new URL(connectionString);
+    const pubkey = pathname;
+    const relay = searchParams.get("relay");
+    const secret = searchParams.get("secret");
+    if (!pubkey || !relay || !secret) {
+      throw new Error("invalid connection string");
+    }
+    return { pubkey, relay, secret };
+  }
+  async function makeNwcRequestEvent(pubkey, secretKey, invoice) {
+    const content = {
+      method: "pay_invoice",
+      params: {
+        invoice
+      }
+    };
+    const encryptedContent = encrypt2(secretKey, pubkey, JSON.stringify(content));
+    const eventTemplate = {
+      kind: NWCWalletRequest,
+      created_at: Math.round(Date.now() / 1e3),
+      content: encryptedContent,
+      tags: [["p", pubkey]]
+    };
+    return finalizeEvent(eventTemplate, secretKey);
+  }
+
+  // nip54.ts
+  var nip54_exports = {};
+  __export(nip54_exports, {
+    normalizeIdentifier: () => normalizeIdentifier
+  });
+  function normalizeIdentifier(name) {
+    name = name.trim().toLowerCase();
+    name = name.normalize("NFKC");
+    return Array.from(name).map((char) => {
+      if (/\p{Letter}/u.test(char) || /\p{Number}/u.test(char)) {
+        return char;
+      }
+      return "-";
+    }).join("");
+  }
+
+  // nip57.ts
+  var nip57_exports = {};
+  __export(nip57_exports, {
+    getSatoshisAmountFromBolt11: () => getSatoshisAmountFromBolt11,
+    getZapEndpoint: () => getZapEndpoint,
+    makeZapReceipt: () => makeZapReceipt,
+    makeZapRequest: () => makeZapRequest,
+    useFetchImplementation: () => useFetchImplementation4,
+    validateZapRequest: () => validateZapRequest
+  });
+  var _fetch4;
+  try {
+    _fetch4 = fetch;
+  } catch {
+  }
+  function useFetchImplementation4(fetchImplementation) {
+    _fetch4 = fetchImplementation;
+  }
+  async function getZapEndpoint(metadata) {
+    try {
+      let lnurl = "";
+      let { lud06, lud16 } = JSON.parse(metadata.content);
+      if (lud06) {
+        let { words } = bech32.decode(lud06, 1e3);
+        let data = bech32.fromWords(words);
+        lnurl = utf8Decoder.decode(data);
+      } else if (lud16) {
+        let [name, domain] = lud16.split("@");
+        lnurl = new URL(`/.well-known/lnurlp/${name}`, `https://${domain}`).toString();
+      } else {
+        return null;
+      }
+      let res = await _fetch4(lnurl);
+      let body = await res.json();
+      if (body.allowsNostr && body.nostrPubkey) {
+        return body.callback;
+      }
+    } catch (err) {
+    }
+    return null;
+  }
+  function makeZapRequest({
+    profile,
+    event,
+    amount,
+    relays,
+    comment = ""
+  }) {
+    if (!amount)
+      throw new Error("amount not given");
+    if (!profile)
+      throw new Error("profile not given");
+    let zr = {
+      kind: 9734,
+      created_at: Math.round(Date.now() / 1e3),
+      content: comment,
+      tags: [
+        ["p", profile],
+        ["amount", amount.toString()],
+        ["relays", ...relays]
+      ]
+    };
+    if (event && typeof event === "string") {
+      zr.tags.push(["e", event]);
+    }
+    if (event && typeof event === "object") {
+      if (isReplaceableKind(event.kind)) {
+        const a = ["a", `${event.kind}:${event.pubkey}:`];
+        zr.tags.push(a);
+      } else if (isAddressableKind(event.kind)) {
+        let d = event.tags.find(([t, v]) => t === "d" && v);
+        if (!d)
+          throw new Error("d tag not found or is empty");
+        const a = ["a", `${event.kind}:${event.pubkey}:${d[1]}`];
+        zr.tags.push(a);
+      }
+    }
+    return zr;
+  }
+  function validateZapRequest(zapRequestString) {
+    let zapRequest;
+    try {
+      zapRequest = JSON.parse(zapRequestString);
+    } catch (err) {
+      return "Invalid zap request JSON.";
+    }
+    if (!validateEvent(zapRequest))
+      return "Zap request is not a valid Nostr event.";
+    if (!verifyEvent(zapRequest))
+      return "Invalid signature on zap request.";
+    let p = zapRequest.tags.find(([t, v]) => t === "p" && v);
+    if (!p)
+      return "Zap request doesn't have a 'p' tag.";
+    if (!p[1].match(/^[a-f0-9]{64}$/))
+      return "Zap request 'p' tag is not valid hex.";
+    let e = zapRequest.tags.find(([t, v]) => t === "e" && v);
+    if (e && !e[1].match(/^[a-f0-9]{64}$/))
+      return "Zap request 'e' tag is not valid hex.";
+    let relays = zapRequest.tags.find(([t, v]) => t === "relays" && v);
+    if (!relays)
+      return "Zap request doesn't have a 'relays' tag.";
+    return null;
+  }
+  function makeZapReceipt({
+    zapRequest,
+    preimage,
+    bolt11,
+    paidAt
+  }) {
+    let zr = JSON.parse(zapRequest);
+    let tagsFromZapRequest = zr.tags.filter(([t]) => t === "e" || t === "p" || t === "a");
+    let zap = {
+      kind: 9735,
+      created_at: Math.round(paidAt.getTime() / 1e3),
+      content: "",
+      tags: [...tagsFromZapRequest, ["P", zr.pubkey], ["bolt11", bolt11], ["description", zapRequest]]
+    };
+    if (preimage) {
+      zap.tags.push(["preimage", preimage]);
+    }
+    return zap;
+  }
+  function getSatoshisAmountFromBolt11(bolt11) {
+    if (bolt11.length < 50) {
+      return 0;
+    }
+    bolt11 = bolt11.substring(0, 50);
+    const idx = bolt11.lastIndexOf("1");
+    if (idx === -1) {
+      return 0;
+    }
+    const hrp = bolt11.substring(0, idx);
+    if (!hrp.startsWith("lnbc")) {
+      return 0;
+    }
+    const amount = hrp.substring(4);
+    if (amount.length < 1) {
+      return 0;
+    }
+    const char = amount[amount.length - 1];
+    const digit = char.charCodeAt(0) - "0".charCodeAt(0);
+    const isDigit = digit >= 0 && digit <= 9;
+    let cutPoint = amount.length - 1;
+    if (isDigit) {
+      cutPoint++;
+    }
+    if (cutPoint < 1) {
+      return 0;
+    }
+    const num = parseInt(amount.substring(0, cutPoint));
+    switch (char) {
+      case "m":
+        return num * 1e5;
+      case "u":
+        return num * 100;
+      case "n":
+        return num / 10;
+      case "p":
+        return num / 1e4;
+      default:
+        return num * 1e8;
+    }
   }
 
   // nip98.ts

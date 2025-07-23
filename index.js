@@ -13,7 +13,7 @@ aa.load({
 });
 
 // page script
-const on_loaded =()=>
+const on_loaded =async()=>
 {
   // make sure all mods have 
   if (!aa.required(aa.def.mods.map(i=>i.id)))
@@ -36,8 +36,8 @@ const on_loaded =()=>
     if (p.events.k3?.length) aa.p.load_profiles(p.follows);
   }
 
-  fetch('/README.adoc').then(dis=>dis?.text())
-  .then(text=>{aa.view.l?.prepend(aa.mk.doc(text))});
+  let readme = await aa.readme_setup('/README.adoc');
+  if (readme) aa.view.l?.prepend(aa.mk.doc(readme));
 
   aa.q.last_butts();
 };

@@ -1,3 +1,29 @@
+aa.log_details =(id,summary,key,con)=>
+{
+  let l_id = id;
+  let l = aa.el.get(l_id);
+  if (!l)
+  {
+    l = aa.mk.details(summary,0,0,'base');
+    aa.el.set(l_id,l);
+    aa.log(l);
+  }
+  else aa.logs.lastChild.after(l.parentElement);
+
+  let l_r = aa.el.get(`${l_id} ${key}`);
+  if (!l_r)
+  {
+    l_r = aa.mk.details(key,0,1,'base');
+    aa.el.set(`${l_id} ${key}`,l_r);
+    fastdom.mutate(()=>{l.append(l_r)});
+  }
+  fastdom.mutate(()=>
+  {
+    l_r.append(aa.mk.l('p',{con}));
+    l_r.classList.add('has_new');
+  });
+};
+
 // mark log as read
 aa.log_read =async l=>
 {

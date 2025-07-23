@@ -9,10 +9,9 @@ aa.view.ls.naddr1 =async naddr=>
   aa.log('naddr '+JSON.stringify(data));
   let id_a = aa.view.id_a = aa.fx.id_a(data);
   
-  // aa.view.replace(`#${id_a}`);
-  // aa.view.tits(data.identifier,id_a);
-  let l = aa.temp.printed.find(i=>i.dataset.id_a === id_a);
-  // let l = document.getElementById(nid);
+  let l = aa.e.by_ida(id_a);
+  // let l = [...aa.e.printed.values()].find(i=>i.dataset.id_a === id_a);
+
   if (l)
   {
     aa.view.upd(`#${aa.fx.encode('note',l.dataset.id)}`);
@@ -34,13 +33,12 @@ aa.view.ls.nevent1 =async nevent=>
   let data = aa.fx.decode(nevent);
   aa.log(aa.parse.j());
   if (!data || !data.id) return;
-  let l = aa.temp.printed.find(i=>i.dataset.id === data.id);
-  // let l = document.getElementById(nid);
+  let l = aa.e.printed.get(data.id);
   if (l) aa.view.upd(aa.fx.encode('note',data.id));
   else
   {
     let dat = await aa.db.get_e(data.id);
-    if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
+    if (dat) aa.e.to_printer(dat); 
     else 
     {
       dat = aa.mk.dat(
@@ -74,15 +72,15 @@ aa.view.ls.note1 =async nid=>
   {
     let x = aa.fx.decode(nid);
     let dat = await aa.db.get_e(x);
-    if (dat) aa.e.to_printer(dat); //aa.e.print(dat);
+    if (dat) aa.e.to_printer(dat); 
     else 
     {
-      // let blank = aa.mk.note({event:{id:x},clas:['blank','root']});
-      // aa.e.append_as_root(blank);
       aa.e.miss_e(x);
       aa.get.missing('e');
-      aa.log('trying to find event.. '+x);
-      // setTimeout(()=>{aa.e.view(blank)},500);
+      
+      let msg = aa.mk.l('p',{con:'looking for event.. '+x});
+      aa.temp['looking_for_'+x] = msg;
+      aa.log(msg);
     }
   }
 };

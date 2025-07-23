@@ -10,10 +10,14 @@ user you
 aa.u =
 {
   name:'user',
+  about:'stuff',
   def:
   {
     id:'u',
     ls:{},
+  },
+  bootstrap:
+  {
     relays:
     [
       'wss://nos.lol',
@@ -27,17 +31,25 @@ aa.u =
       'relays_ask off',
     ]
   },
-  get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
   styles:['/u/u.css'],
   scripts:
   [
     '/u/clk.js?v='+aa_version,
     '/u/e.js?v='+aa_version,
     '/u/mk.js?v='+aa_version,
-  ]
+  ],
+  get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
+  butts:
+  {
+    // mod:[],
+    init:
+    [
+      ['u setup','setup']
+    ]
+  }
 };
 
-aa.mk.styles(aa.u.styles);
+
 
 
 // add user
@@ -98,8 +110,9 @@ aa.u.load =async()=>
     },
     aa.cli.def.action
   );
-
-  aa.side = aa.mk.l('aside',{id:'u_u',app:aa.mk.butt_expand('u_u','a_a')});
+  let app = aa.mk.butt_expand('u_u','a_a');
+  aa.el.set('butt_u_u',app);
+  aa.side = aa.mk.l('aside',{id:'u_u',app});
   aa.side.append(aa.mod_l);
   aa.bod.insertBefore(aa.side,aa.bod.lastChild.previousSibling);
 
@@ -253,35 +266,6 @@ aa.u.mk =(k,v)=>
 };
 
 
-// nostr fucking client
-aa.nfc =async()=>
-{
-  let pubkey = await window.nostr.getPublicKey();
-  if (!pubkey)
-  {
-    aa.log('unable to get public key');
-    return
-  }
-  aa.u.add(pubkey);
-  await aa.u.start();
-
-  aa.r.add(aa.u.def.relays.map(i=>`${i} read write`).join());
-  const options_a = 
-  [
-    'score 0',
-    'pow 17',
-    'relays_ask off',
-  ];
-  aa.o.add(options_a.join(', '));
-  aa.q.reset();
-  let l = aa.mk.l('p',{con:'wait a bit then ',app:aa.mk.reload_butt()});
-  aa.log(l);
-  setTimeout(()=>{aa.q.stuff()},1000);
-  // aa.fx.countdown('the page will reload in',21,1000)
-  // .then(dis=>{if (dis) location.reload()});
-};
-
-
 // action to add proof-of-work (pow) to a note
 aa.u.pow =async(s='')=>
 {
@@ -394,20 +378,14 @@ aa.u.setup =async(s='')=>
         'wss://relay.damus.io read write',
         'wss://relay.primal.net read write',
       ];
-      const rel_butt = aa.mk.butt_action(`r add ${def_rels.join(', ')}`,'add some relays');
+      const rel_butt = aa.mk.butt_action(`r add ${aa.u.bootstrap.relays.map(i=>`${i} read write`).join()}`,'add some relays');
       rel_butt.addEventListener('click',aa.clk.done);
       log.lastChild.append(rel_butt,);
     }
 
     log = aa.log('if needed ');
-    const options_a = 
-    [
-      'o add score 4',
-      'pow 17',
-      'relays_ask off',
-      'theme light'
-    ];
-    const options_butt = aa.mk.butt_action(options_a.join(', '),'adjust options');
+
+    const options_butt = aa.mk.butt_action(`o add ${aa.u.bootstrap.options.join(', ')}`,'adjust options');
     options_butt.addEventListener('click',aa.clk.done);
     log.lastChild.append(options_butt,' (load media, switch theme, etc…)');
 
@@ -419,6 +397,31 @@ aa.u.setup =async(s='')=>
     log = aa.log('finally, ');
     log.lastChild.append(aa.mk.reload_butt(),' for a clean start');
   }
+};
+
+
+// quick setup using defaults
+aa.u.setup_quick =async()=>
+{
+  const options = aa.u.bootstrap.options.join(', ');
+  const relays = aa.u.bootstrap.relays.map(i=>`${i} read write`).join();
+  aa.o.add(options);
+  aa.r.add(relays);
+  aa.q.reset();
+
+  let pubkey = await window.nostr.getPublicKey();
+  if (!pubkey)
+  {
+    aa.log('unable to get public key');
+    return
+  }
+  aa.u.add(pubkey);
+  await aa.u.start();
+
+  setTimeout(()=>{aa.q.stuff()},1000);
+  setTimeout(()=>{aa.log(aa.mk.l('p',{con:'wait a bit then ',app:aa.mk.reload_butt()}))},2000);
+  // aa.fx.countdown('the page will reload in',21,1000)
+  // .then(dis=>{if (dis) location.reload()});
 };
 
 
@@ -464,21 +467,54 @@ aa.u.load_u =async()=>
   }
   if (aa.fx.a_add(p.sets,['u'])) needs_saving = true;
   if (needs_saving) aa.p.save(p);
+
   return p
 };
 
 
 // update u_u button
-aa.u.upd_u_u =()=>
+// aa.u.upd_u_u =async()=>
+// {
+//   let butt_u = aa.el.get('butt_u_u');
+//   if (!butt_u || !aa.u.p) return;
+//   let p = aa.u.p;
+//   fastdom.mutate(
+//     ()=>
+//     {
+//       aa.fx.color(p.pubkey,butt_u.parentElement);
+//       butt_u.textContent = p.pubkey.slice(0,1)+'_'+p.pubkey.slice(-1);
+//     }
+//   )
+
+//   if (aa.is.trusted(p.score))
+//   {
+//     // let src;
+//     // let cached = await aa.db.ops('cash',{out:[p.metadata.picture]});
+//     // if (!cached.length)
+//     // {
+//     //   aa.db.ops('cash',{add:[p.metadata.picture]});
+//     //   src = p.metadata.picture;
+//     // }
+//     // else src = URL.createObjectURL(cached[0]);
+//     // fastdom.mutate(()=>{ 
+//       aa.p.link_img(butt_u,p.metadata.picture) 
+//     // });
+//   }
+// };
+
+aa.u.upd_u_u =async()=>
 {
-  let butt_u = document.getElementById('butt_u_u');
+  let butt_u = aa.el.get('butt_u_u');
   if (!butt_u || !aa.u.p) return;
   let p = aa.u.p;
+  let p_data = await aa.p.data(p);
+
   fastdom.mutate(()=>
   {
-    aa.fx.color(p.pubkey,document.getElementById('u_u'));
+    aa.fx.color(p.pubkey,butt_u.parentElement);
     butt_u.textContent = p.pubkey.slice(0,1)+'_'+p.pubkey.slice(-1);
-    if (aa.is.trusted(p.score)) aa.p.link_img(butt_u,p.metadata.picture);
+    
+    if (aa.is.trusted(p.score)) aa.p.link_img(butt_u,p_data.data.src);
   })
 };
 
@@ -528,3 +564,5 @@ aa.u.upd_u_u =()=>
 
 //   return wot
 // };
+
+aa.mk.styles(aa.u.styles);

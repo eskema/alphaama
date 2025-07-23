@@ -1,4 +1,4 @@
-importScripts('/dep/nostr-tools.js?v=2.7.2');
+importScripts('/dep/nostr-tools.js');
 
 const count_lz =x=>
 {

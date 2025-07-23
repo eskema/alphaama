@@ -1,8 +1,8 @@
 // 21,'sat' => 21sats
-aa.fx.amount_display =(num,unit)=> num+aa.fx.plural(num,unit);
+aa.fx.units =(num,unit='sat')=> num+aa.fx.plural(num,unit);
 
 // calculate balance from proofs
-aa.fx.sum_amounts =a=>
+aa.w.sum_amounts =a=>
 {
   let total = 0;
   for (const i of a) total = total + i.amount;

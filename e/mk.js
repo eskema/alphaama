@@ -31,17 +31,22 @@ aa.mk.note =dat=>
     note.id = nid;
     note.dataset.id = dat.event.id;
     const h1 = aa.mk.l('span',{cla:'id'});
+    const nid_inner = aa.mk.l('span',
+    {
+      con:aa.k[dat.event.kind]
+    });
+    nid_inner.dataset.kind = dat.event.kind;
     const h1_nid = aa.mk.l('a',
     {
       cla:'a nid',
       ref:'#'+nid,
-      con:'k'+dat.event.kind+' '+aa.k[dat.event.kind],
+      app:nid_inner,
       clk:aa.clk.a
     });
+    
     const h1_xid = aa.mk.l('span',{cla:'xid',con:dat.event.id});
     h1.append(h1_nid,h1_xid);
     by.prepend(h1);
-    replies_id = dat.event.id+'_replies';
     
     let stored = sessionStorage[dat.event.id];
     if (stored && stored === 'tiny') note.classList.add('tiny');
@@ -58,23 +63,27 @@ aa.mk.note =dat=>
 
   if ('pubkey' in dat.event)
   {
-    const x = dat.event.pubkey;
-    note.dataset.pubkey = x;
-    let p_link = aa.mk.p_link(dat.event.pubkey);
+    const pubkey = dat.event.pubkey;
+    note.dataset.pubkey = pubkey;
+    let p_link = aa.mk.author_link(dat.event.pubkey);
     by.append(p_link);
-    aa.p.get(x).then(p=>
+    aa.p.get(pubkey).then(p=>
     {
-      if (!p && !aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
-      if (!p) p = aa.p.p(x);
-      aa.fx.color(x,note);
+      if (!p && !aa.miss.p[pubkey]) aa.miss.p[pubkey] = {nope:[],relays:[]};
+      if (!p) p = aa.p.p(pubkey);
+      aa.fx.color(pubkey,note);
       note.dataset.trust = p.score;
       // setTimeout(()=>{
-        aa.p.link_data_upd(p_link,aa.p.link_data(p))
+      aa.p.data(p).then(p_link_data=>
+      {
+        aa.p.link_data_upd(p_link.querySelector('.author'),p_link_data.data)
+      })
+      
       // },500);
     });
   }
 
-  by.append(aa.e.note_actions(dat))
+  by.append(aa.e.note_actions(dat));
   
   if ('kind' in dat.event) 
   {
@@ -114,6 +123,7 @@ aa.mk.note =dat=>
   // }
 
   let replies = aa.mk.det('replies');
+  replies_id = dat.event.id+'_replies';
   if (sessionStorage.hasOwnProperty(replies_id))
   {
     if (sessionStorage[replies_id] === 'expanded') 
@@ -121,7 +131,12 @@ aa.mk.note =dat=>
   }
   else replies.classList.add('expanded');
   note.append(replies);
-  setTimeout(()=>{aa.e.render(note)},500);
+  setTimeout(()=>
+  {
+    aa.e.render(note);
+    // let nip10 = NostrTools.nip10.parse(dat.event);
+    // console.log(nip10);
+  },0);
   return note
 };
 

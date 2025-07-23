@@ -17,24 +17,102 @@ aa.o.defaults.relays_ask =
 aa.r =
 {
   name:'relays',
+  about:'manage relays',
   active:{},
-  def:{id:'r',ls:{},r:'read',w:'write'},
+  def:
+  {
+    id:'r',
+    ls:{},
+    r:'read',
+    w:'write',
+  },
+  manager_src:'/r/manager.js?v='+aa_version,
   scripts:
   [
     '/r/clk.js?v='+aa_version,
     '/r/mk.js?v='+aa_version,
+    '/r/msg.js?v='+aa_version,
   ],
+  butts:
+  {
+    mod:[],
+    init:
+    [
+      ['r stuff','stuff']
+    ]
+  },
   temp: new Map(),
   on_sub:new Map(),
+  on_eose:new Map(),
 };
 
 
 // add relays
 aa.r.add =s=>
 {
-  let [valid,invalid,off] = aa.mod.servers_add(aa.r,s,'relays added');
-  for (const url of off) aa.r.force_close([url]);
-  aa.r.manager.postMessage(['relays',aa.r.o.ls]);
+  const mod = aa.r;
+
+  const valid = new Set();
+  const invalid = new Set();
+  const off = new Set();
+  const changed = new Map();
+
+  const items = aa.fx.splitr(s,',');
+
+  // if (!as.length) return all;
+  let df = new DocumentFragment();
+  let haz;
+  items.map(i=>
+  {
+    
+  })
+  for (const i of items)
+  {
+    let a = aa.fx.splitr(i);
+    // [url,set1,set2]
+    let url_to_check = a.shift();
+    const url = aa.is.url(url_to_check)?.href;
+    if (!url)
+    {
+      invalid.add(url_to_check);
+      continue;
+    }
+
+    if (!Object.hasOwn(mod.o.ls,url))
+    {
+      mod.o.ls[url] = {sets:[]};
+      changed.set(url,a);
+    }
+    
+    if (!aa.fx.a_add(mod.o.ls[url].sets,a)) continue;
+    
+    changed.set(url,a);
+    if (a.includes('off')) off.add(url);
+    else valid.add(url);
+  }
+  
+  if (invalid.size) aa.log(`invalid urls: ${[...invalid.values()]}`);
+  
+  if (changed.size)
+  {
+    aa.mod.save(mod);
+    let cla = 'relays added';
+    let log = aa.el.get(cla);
+    if (!log) 
+    {
+      log = aa.mk.details(cla,0,0,'base'); // ,aa.mk.l('div',{cla:'list'})
+      aa.el.set(cla,log);
+      aa.log(log);
+    }
+    // [...changed.entries()].map()
+    log.append(df);
+    aa.r.manager.postMessage(['relays',aa.r.o.ls]);
+  }
+
+  // let [valid,invalid,off] = aa.mod.serve rs_add(aa.r,s,cla);
+  let union = valid.union(off);
+  if (union.size) aa.mod.ui(mod,[...union.values()])
+  if (off.size) aa.r.force_close([...off.values()]); 
 };
 
 
@@ -48,17 +126,17 @@ aa.r.add_from_o =relays=>
 };
 
 
-// authenticate to relay with main keys
-aa.r.auth =async a=>
-{
-  console.log(a);
-  let [s,event,relay] = a;
-  event = aa.e.normalise(event);
-  event.tags = aa.fx.a_u(event.tags);
-  if (!event.id) event.id = aa.fx.hash(event);
-  let signed = await aa.u.sign(event);
-  if (signed) aa.r.manager.postMessage(['auth',{relays:[relay],request:['AUTH',signed]}]);
-};
+// // authenticate to relay with main keys
+// aa.r.auth =async a=>
+// {
+//   console.log(a);
+//   let [s,event,relay] = a;
+//   event = aa.e.normalise(event);
+//   event.tags = aa.fx.a_u(event.tags);
+//   if (!event.id) event.id = aa.fx.hash(event);
+//   let signed = await aa.u.sign(event);
+//   if (signed) aa.r.manager.postMessage(['auth',{relays:[relay],request:['AUTH',signed]}]);
+// };
 
 
 // broadcast event from id to relays
@@ -128,17 +206,56 @@ aa.r.def_req =(id,filter,relays)=>
 };
 
 
-aa.r.event =([s,dat])=>
+// make request and await completion
+aa.r.get =async dis=>
 {
-  for (const sub of dat.subs)
+  let {id,filter,relays,options} = dis;
+
+  let sheet = 
   {
-    if (aa.r.on_sub.has(sub))
+    id,
+    filter,
+    started:aa.now,
+    events:new Map(),
+    eose:new Map(),
+  };
+  
+  sheet.request = ['REQ',id,filter];
+  sheet.relays = relays?.length ? relays : aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
+  sheet.options = options || {};
+  aa.r.on_sub.set(id,dat=>{ sheet.events.set(dat.event.id,dat) });
+  console.log(sheet);
+  return new Promise((resolve,reject)=>
+  {
+    const abort = setTimeout(()=>{reject(sheet)},6666);
+
+    aa.r.on_eose.set(id,data=>
     {
-      aa.r.on_sub.get(sub)(dat);
-      return
-    }
-  }
+      let now = aa.now;
+      sheet.eose.set(data,now);
+      if (sheet.eose.size===sheet.relays.length)
+      {
+        clearTimeout(abort);
+        sheet.ended = now;
+        resolve(sheet)
+      }
+    });
+    aa.r.send_req(sheet);
+  })
 };
+
+
+// aa.r.event =([s,dat])=>
+// {
+//   for (const sub of dat.subs)
+//   {
+//     if (aa.r.on_sub.has(sub))
+//     {
+//       aa.r.on_sub.get(sub)(dat);
+//       return
+//     }
+//   }
+// };
 
 
 // 
@@ -200,9 +317,30 @@ aa.r.del =s=>
 };
 
 
-aa.r.eose =async data=>
-{
+// aa.r.eose =async data=>
+// {
+//   let [eose,sub_id,url] = data;
+//   if (aa.r.on_eose.has(sub_id))
+//   {
+//     aa.r.on_eose.get(sub_id)(url);
+//     return
+//   }
+//   else aa.log_details('r.eose','["EOSE","…"]',sub_id,url)
+// };
 
+
+aa.r.eose_log =([id,url])=>
+{
+  let cla = 'eose';
+  let log = aa.el.get(cla);
+  if (!log) 
+  {
+    log = aa.mk.details(cla);
+    aa.el.set(cla,log);
+    aa.log(log);
+  }
+  log.append()
+  aa.log(data.join(' '))
 };
 
 
@@ -324,6 +462,18 @@ aa.r.load =async()=>
 {
   const mod = aa.r;
   const id = mod.def.id;
+
+  if (!Object.hasOwn(localStorage,'outbox_max'))
+  {
+    localStorage.outbox_max = '3';
+    // aa.mod.ui(aa.o,'outbox_max');
+  }
+  if (!Object.hasOwn(localStorage,'relays_ask')) 
+  {
+    localStorage.relays_ask = 'on';
+    // aa.mod.ui(aa.o,'relays_ask');
+  }
+  
   await aa.mk.scripts(mod.scripts);
   aa.actions.push(
     {
@@ -379,17 +529,6 @@ aa.r.load =async()=>
     aa.r.toggles();
     aa.r.manager_setup();
   });
-
-  if (!Object.hasOwn(localStorage,'outbox_max'))
-  {
-    localStorage.outbox_max = '3';
-    // aa.mod.ui(aa.o,'outbox_max');
-  }
-  if (!Object.hasOwn(localStorage,'relays_ask')) 
-  {
-    localStorage.relays_ask = 'on';
-    // aa.mod.ui(aa.o,'relays_ask');
-  }
 };
 
 
@@ -422,79 +561,6 @@ aa.r.mk =(k,v)=>
 };
 
 
-// OK true
-aa.r.ok_ok =a=>
-{
-  const [s,id,is_ok,reason,origin] = a;
-  let dat = aa.db.e[id];
-  if (!dat) return;
-
-  dat.clas = aa.fx.a_rm(dat.clas,['not_sent','draft']);
-  aa.fx.a_add(dat.seen,[origin]);
-  aa.db.upd_e(dat);
-
-  const l = aa.temp.printed.find(i=>i.dataset.id === id);
-  if (l)
-  {
-    l.classList.remove('not_sent','draft');
-    aa.fx.dataset_add(l,'seen',[origin]);
-    l.querySelector('.actions')?.replaceWith(aa.e.note_actions(dat))
-  }
-};
-
-
-// OK false
-aa.r.ok_not_ok =a=>
-{
-  const [s,id,is_ok,reason,origin] = a;
-  let [type,txt] = reason.split(':');
-  switch (type)
-  {
-    case 'blocked':
-    case 'auth-required':
-      aa.r.force_close([origin]);
-      break;
-    // case 'pow':
-    // case 'duplicate':
-    // case 'rate-limited':
-    // case 'invalid':
-    // case 'restricted':
-    // case 'error':
-    // default:
-  }
-};
-
-
-// manager received from a relay
-// ["OK",<event_id>,<true|false>,<message>]
-aa.r.ok =async a=>
-{
-  const [s,id,is_ok,reason,origin] = a;
-  if (is_ok) aa.r.ok_ok(a);
-  else if (reason) aa.r.ok_not_ok(a);
-
-  // ok details container element
-  let l_id = 'r.ok';
-  let l = aa.el.get(l_id);
-  if (!l)
-  {
-    l = aa.mk.details('["OK","…"]',0,0,'base');
-    aa.el.set(l_id,l);
-    aa.log(l);
-  }
-  else aa.logs.lastChild.after(l.parentElement);
-
-  let l_r = l.querySelector(`[data-origin="${origin}"]`);
-  if (!l_r)
-  {
-    l_r = aa.mk.details(origin,0,1,'base');
-    l_r.dataset.origin = origin;
-    l.append(l_r);
-  }
-  let con = `${id} ${is_ok} ${reason}`;
-  l_r.append(aa.mk.l('p',{con}));
-  l_r.classList.add('has_new');
-};
 
 
 // return sorted relay list for outbox
@@ -626,8 +692,6 @@ aa.r.toggles =()=>
 {
   const mod = aa.r;
   const id = mod.def.id;
-  let add_butt = aa.mk.butt_action(`${id} add `,'+','add');
-  let modal_butt = aa.mk.butt_action(`fx modal ${id}`,'popup');
   let sets_span = aa.mk.l('span',{cla:'sets'});
   let sets = [];
   for (const r of Object.values(aa.r.o.ls)) aa.fx.a_add(sets,r.sets);
@@ -658,9 +722,7 @@ aa.r.toggles =()=>
   toggles.append(sets_span,aa.mk.l('br'),states_span);
   fastdom.mutate(()=>
   {
-    let df = new DocumentFragment();
-    df.append(add_butt,' ',modal_butt,' ',toggles);
-    mod.l.insertBefore(df,mod.l.lastChild);
+    mod.l.insertBefore(toggles,mod.l.lastChild);
   })
 };
 
@@ -704,7 +766,7 @@ aa.r.manager_setup =()=>
 {
   let mod = aa.r;
   // relay manager
-  mod.manager = new Worker('/r/manager.js?v='+aa_version);//,{type:'module'});
+  mod.manager = new Worker(mod.manager_src);//,{type:'module'});
 
   // relay union worker message
   mod.manager.onmessage =async e=>
@@ -712,46 +774,14 @@ aa.r.manager_setup =()=>
     const type = e.data[0]?.toLowerCase();
     if (!type) return;
 
-    let fun = mod.temp.has(type) ? mod.temp.get(type) 
+    let fun = mod.temp.has(type) ? mod.temp.get(type)
     : Object.hasOwn(mod,type) ? mod[type] : false;
   
     if (fun) fun(e.data);
-    else console.log(`aa.r.manager.onmessage`,e.data);
-
-    // if (mod.temp.has(dis)) setTimeout(()=>{mod.temp.get(dis)(type)},0);
-    // else if (Object.hasOwn(mod,dis)) setTimeout(()=>{mod[dis](type)},0);
-    // else console.log(`${mod}.manager.onmessage`,dis,type);
-
+    else aa.log(JSON.stringify(e.data));
   };
 
   mod.manager.postMessage(['relays',mod.o.ls]);
-
-};
-
-
-
-// update relay state in ui
-aa.r.state =([s,relay])=>
-{
-  let url = relay.url;
-  aa.r.active[url] = relay;
-  let l = aa.el.get(url);
-  if (l)
-  {
-    if (!relay.failures)
-    {
-      console.log(relay);
-      return
-    }
-
-    fastdom.mutate(()=>
-    {
-      l.dataset.state = relay.state;
-      l.dataset.ratio = relay.failures.length - relay.successes.length;
-      l.dataset.subs = aa.r.subs_open(relay.subs);
-    })
-  }
-  else console.log('aa.r.state: no element found',relay)
 };
 
 
