@@ -34,7 +34,7 @@ aa.mod.butts =mod=>
 aa.mod.help_setup =async(mod,path)=>
 {
   if (!path) path = mod.readme_src || `/${mod.def.id}/README.adoc`;
-  let readme = aa.readme_setup(path,mod);
+  let readme = await aa.readme_setup(path,mod);
   if (!readme) return;
   let exe = ()=>{aa.mk.help(mod.def.id)};
   let description = `help with ${mod.name} (${mod.def.id})`;

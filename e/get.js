@@ -31,7 +31,7 @@ aa.get.mentions =async(string='')=>
       if (e_x) 
       {
         mentions.push(aa.fx.tag_q(e_x));
-        let dat = await aa.db.get_e(e_x);
+        let dat = await aa.e.get(e_x);
         if (dat && dat.event.pubkey !== aa.u.p.pubkey) 
           mentions.push(aa.fx.tag_p(dat.event.pubkey));
       }
@@ -107,7 +107,7 @@ aa.get.missing =async type=>
         setTimeout(()=>
         {
           if (Object.keys(aa.miss[type]).length) aa.get.missing(type);
-        },420);
+        },1420);
       }
     }
   },1420,'miss_'+type);
@@ -138,7 +138,7 @@ aa.get.quotes =async id=>
 // returns a relay that has event x or empty string
 aa.get.seen =x=>
 {
-  const dat = aa.db.e[x];
+  const dat = aa.em.get(x);
   if (dat && dat.seen.length) return dat.seen[0];
   return ''
 };
@@ -193,14 +193,14 @@ aa.get.tag_comment_root =tags=>
 
 // returns tags for building a reply
 aa.get.tags_for_reply =event=>
-{  
+{
   const tags = [];
   const seen = aa.get.seen(event.id);
   let tag = aa.get.tag_root(event.tags);
   // if (!tag) tag = event.tags.find(t=>t[0]==='a'&&t[3]!=='mention');
   if (tag) 
   {
-    let root = aa.db.e[tag[1]]?.event;
+    let root = aa.em.get(tag[1])?.event;
     tag[2] = aa.get.seen(tag[1]) || aa.is.url(tag[2])?.href || seen;
     tag[3] = 'root';
     if (root) tag[4] = root.pubkey

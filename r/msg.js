@@ -11,8 +11,10 @@ aa.r.auth =async a=>
 };
 
 
-aa.r.event =([s,dat])=>
+aa.r.event =async a=>
 {
+  let [s,dat] = a;
+  // console.log(a);
   for (const sub of dat.subs)
   {
     if (aa.r.on_sub.has(sub))
@@ -44,22 +46,22 @@ aa.r.ok =async data=>
   let text = `${id} ${is_ok} ${reason}`;
   aa.log_details('r.ok','["OK","…"]',url,text)
   
-  if (is_ok) aa.r.ok_ok(data);
+  if (is_ok) aa.r.ok_ok(id,url);
   else if (reason) aa.r.ok_not_ok(data);
 };
 
 
 // OK true
-aa.r.ok_ok =a=>
+aa.r.ok_ok =async(id,url)=>
 {
-  const [s,id,is_ok,reason,url] = a;
-  let dat = aa.db.e[id];
+  // const [s,id,is_ok,reason,url] = a;
+  let dat = await aa.e.get(id);
   if (!dat) return;
 
   const classes = ['not_sent','draft'];
   dat.clas = aa.fx.a_rm(dat.clas,classes);
   aa.fx.a_add(dat.seen,[url]);
-  aa.db.upd_e(dat);
+  // aa.db.upd_e(dat);
   let l = aa.e.printed.get(id);
   if (l)
   {
@@ -68,7 +70,6 @@ aa.r.ok_ok =a=>
       l.classList.remove('not_sent','draft');
       l.querySelector('.by > .actions')?.replaceWith(aa.e.note_actions(dat))
     }
-
     let seen = l.dataset.seen ? aa.fx.splitr(l.dataset.seen.trim()) : [];
     if (aa.fx.a_add(seen,[url])) l.dataset.seen = seen.join(' ');
   }
@@ -76,7 +77,7 @@ aa.r.ok_ok =a=>
 
 
 // OK false
-aa.r.ok_not_ok =a=>
+aa.r.ok_not_ok =async a=>
 {
   const [s,id,is_ok,reason,origin] = a;
   let [type,txt] = reason.split(':');
@@ -111,7 +112,12 @@ aa.r.state =([s,relay])=>
   fastdom.mutate(()=>
   {
     l.dataset.state = relay.state;
-    l.dataset.ratio = relay.failures.length - relay.successes.length;
     l.dataset.subs = aa.r.subs_open(relay.subs);
+    
+    // if (relay.failures) 
+    //   l.dataset.ratio = 
+    //     relay.failures.length - relay.successes.length;
+    // else console.trace(relay);
+      
   })
 };

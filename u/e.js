@@ -4,7 +4,7 @@ aa.e.draft =async dat=>
   aa.fx.a_add(dat.clas,['draft']);
   dat.event.tags = [...new Set(dat.event.tags)];
   if (!dat.event.id) dat.event.id = aa.fx.hash(dat.event);
-  aa.db.e[dat.event.id] = dat;
+  aa.em.set(dat.event.id,dat);
   aa.e.print(dat);
   
   let target = document.getElementById('e');
@@ -21,8 +21,9 @@ aa.e.finalize =async(event,relays)=>
   if (signed)
   {
     event = signed;
-    let dat = aa.db.e[event.id] = aa.mk.dat({event});
-    aa.db.upd_e(dat);
+    let dat = aa.mk.dat({event});
+    // aa.em.set(event.id,dat);
+    // aa.db.upd_e(dat);
     aa.e.print(dat);
     aa.r.send_event({event,relays});
   }
@@ -56,7 +57,7 @@ aa.e.note_decrypt =async id=>
     return
   }
   
-  let dat = await aa.db.get_e(id);
+  let dat = await aa.e.get(id);
   if (!dat) 
   {
     aa.log('event not found');

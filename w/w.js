@@ -174,7 +174,7 @@ aa.w.import =async(id='')=>
     return
   }
 
-  let dat = await aa.db.get_e(id);
+  let dat = await aa.e.get(id);
   if (!dat) 
   {
     aa.log('w import: event not found');
@@ -204,7 +204,7 @@ aa.w.import_7375 =async(id='')=>
     return
   }
 
-  let dat = await aa.db.get_e(id);
+  let dat = await aa.e.get(id);
   if (!dat) 
   {
     aa.log('w import: event not found');
@@ -229,15 +229,15 @@ aa.w.import_7375 =async(id='')=>
 
 
 // nutzap has been redeemed
-aa.w.is_redeemed =id=>
+aa.w.is_redeemed =async id=>
 {
   let ls = aa.w.o.ls;
   if (ls.redeemed.includes(id)) return true;
   else
   {
-    let event = aa.db.e[id].event;
-    let amount = aa.fx.tag_value(event.tags,'amount');
-    ls.redeemable.push([amount,event]);
+    let dat = await aa.e.get(id);
+    let amount = aa.fx.tag_value(dat.event.tags,'amount');
+    ls.redeemable.push([amount,dat.event]);
     aa.w.save();
   }
   return false

@@ -264,13 +264,20 @@
 {
   position: sticky;
   top: calc(1rem + 14px);
-  z-index: 3;
+  z-index: 5!important;
 }
 
 .replies > .note:not(.in_path) > .by
 {
   position: sticky;
   top: calc(2.5rem);
+  z-index: 2;
+}
+
+.in_view > .replies .replies > .note:not(.in_path) > .by
+{
+  position: sticky;
+  top: calc(5rem);
   z-index: 2;
 }
 
@@ -1169,13 +1176,30 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   z-index: 100;
 }
 
-.root:not(.in_view) > .replies > summary,
 .in_view > .replies > .note > .replies > summary
+{
+  position: sticky;
+  top: 3.5rem;
+  z-index: 4;
+}
+
+.root:not(.in_view) > .replies > summary,
+.in_view > .replies .replies > summary
 {
   position: sticky;
   top: 1rem;
   transform: translateX(-1px);
-  z-index: 3;
+}
+
+.root:not(.in_view) > .replies > summary
+{
+  z-index: 6;
+}
+
+.in_view > .replies .replies > summary
+{
+  position: sticky;
+  top: 3.5rem;
 }
 
 .replies > summary::before
@@ -1704,7 +1728,12 @@ html:not(.needs_pagin) .pagination
   a.clicker:hover + .by + .content
   {
     transform: translateX(calc(var(--padm)));
-    z-index: 4;
+    /*z-index: 4;*/
+  }
+  .in_view .replies .by:hover + .content,
+  .in_view .replies a.clicker:hover + .by + .content
+  {
+    top: 6rem;
   }
   
   a.clicker:hover + .by + .content + .tags_wrapper
@@ -1784,17 +1813,19 @@ html:not(.needs_pagin) .pagination
     top: calc(3.5rem + 2px);
   }
   
-  .in_view > .replies .replies .note:hover > .by,
-  html:not(.viewing) .replies .note:hover > .by
+  .in_view > .replies .replies .note:hover > .by
   {
-    top: 0;
+    top: 5rem;
     z-index: 3;
   }
   
   .in_view > .replies  .replies .note:hover
   {
-    z-index: 999;
+    /*z-index: 999;*/
   }
+  
+  
+  
   
 /*  .content-img 
   {

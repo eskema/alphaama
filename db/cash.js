@@ -13,30 +13,40 @@ const cash = {id:'cash'};
 cash.add =async(keys=[])=>
 {
   const cache = await caches.open(cash.id);
-  try { await cache.addAll(keys) }
-  catch{}
+  cache.addAll(keys);
   postMessage(true);
 };
 
 // cash add all with options
 cash.all =async(keys=[])=>
 {
+  const fet =async request=>
+  {
+    return new Promise(async(resolve,reject)=>
+    {
+      let response;
+      try
+      {
+        response = await fetch(request);
+        if (response?.ok) resolve(response.clone())
+      }
+      catch{reject(response)}
+      
+    })
+  };
   const cache = await caches.open(cash.id);
   for (const key of keys)
   {
     const request = new Request(key,{mode:'no-cors'});
-    let response;
-    try { response = await fetch(request) }
-    catch{}
-    if (response)
+    try
     {
-      // let clone = new Response(response.clone(),{headers:{'Access-Control-Allow-Origin':'*'}});
-      // console.log(clone);
-      // clone.headers.set('Access-Control-Allow-Origin', '*');
-      cache.put(request,response);
+      let response = await fet(request);
+      // let response = await fetch(request);
+      if (response?.ok) await cache.put(request,new Response(response.clone()))
     }
-    
+    catch{}
   }
+  postMessage(true);
 };
 
 
@@ -115,7 +125,7 @@ cash.in =async o=>
     let response = o[key].response;
     if (!response) continue;
     let options = o[key].options || {};
-    await cache.put(key,new Response(response,options));
+    await cache.put(key,new Response(response.clone(),options));
   }
 };
 

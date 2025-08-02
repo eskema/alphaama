@@ -1,48 +1,5 @@
-aa.db.e = {};
-
-// returns events if already loaded or get them from database
-aa.db.events =async ids=>
-{
-  const events = [];
-  const a = [];
-  for (const x of ids) 
-  {
-    if (!aa.db.e[x]) a.push(x);
-    else events.push(aa.db.e[x])
-  }
-  if (a.length)
-  {
-    let store = 'events'
-    let stored = await aa.db.ops('idb',{get_a:{store,a}});
-    for (const i of stored) aa.db.e[i.event.id] = i;
-    events.push(...stored);
-  }
-  return events
-};
-
-
-// returns event if already loaded or get it from database
-aa.db.get_a =async id_a=>
-{
-  let version = Object.values(aa.db.e)
-    .filter(i=>i.id_a === id_a)
-    .sort(aa.fx.sorts.ca_desc)[0];
-  if (version) return version;
-  
-  let versions = await aa.db.ops('idb',{dex:{index:'id_a',store:'events',a:[id_a]}});
-  if (versions.length) return version[0];
-  return false
-};
-
-
-// returns event if already loaded or get it from database
-aa.db.get_e =async xid=>
-{
-  if (aa.db.e[xid]) return aa.db.e[xid];
-  let dat = await aa.db.ops('idb',{get:{store:'events',key:xid}});
-  if (dat) aa.db.e[xid] = dat;
-  return dat
-};
+aa.em = new Map();
+aa.em_a = new Map();
 
 
 // get n events from database
@@ -87,30 +44,32 @@ aa.db.event_is_allowed =dat=>
 // update event on database
 aa.db.upd_e =async dat=>
 {
-  const q_id = 'upd_e';
-  if (!aa.temp[q_id]) aa.temp[q_id] = {};
+  // aa.db.save_event(dat.event);
+  // const q_id = 'upd_e';
+  // if (!aa.temp[q_id]) aa.temp[q_id] = {};
 
-  // if (!aa.db.e_is_allowed(dat)) return;
+  // if (!aa.db.event_is_allowed(dat)) return;
   
-  aa.temp[q_id][dat.event.id] = dat;
-  aa.fx.to(()=>
-  {
-    const q = Object.values(aa.temp[q_id]);
-    aa.temp[q_id] = {};
-    if (q.length) 
-    {
-      let chunks = aa.fx.chunks(q,420);
-      let times = 0;
-      for (const a of chunks)
-      {
-        setTimeout(()=>
-        {
-          aa.db.idb.postMessage({put:{store:'events',a}});
-        },times * 50);
-        times++;
-      }
-    }
-  },500,q_id);
+  // aa.temp[q_id][dat.event.id] = dat;
+  // aa.fx.to(()=>
+  // {
+  //   const q = Object.values(aa.temp[q_id]);
+  //   aa.temp[q_id] = {};
+  //   if (q.length) 
+  //   {
+  //     aa.db.save_event()
+  //     // let chunks = aa.fx.chunks(q,420);
+  //     // let times = 0;
+  //     // for (const a of chunks)
+  //     // {
+  //     //   setTimeout(()=>
+  //     //   {
+  //     //     aa.db.idb.postMessage({put:{store:'events',a}});
+  //     //   },times * 200);
+  //     //   times++;
+  //     // }
+  //   }
+  // },4444,q_id);
 };
 
 

@@ -178,7 +178,7 @@ aa.mk.profile =p=>
     aa.fx.color(p.pubkey,profile);
     profile.append(aa.mk.profile_header(p),' ');
     aa.p.l.append(profile);
-    aa.fx.count_upd(document.getElementById('butt_p'));
+    aa.fx.count_upd(aa.el.get('butt_p'));
   }
   return profile
 };

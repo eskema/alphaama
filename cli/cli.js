@@ -148,7 +148,7 @@ aa.fx.reply =async(dat,reply_s)=>
   let x = aa.fx.decode(reply_s);
   // if (reply_s.startsWith('note'))
   // {
-    let reply_dat = await aa.db.get_e(x);
+    let reply_dat = await aa.e.get(x);
     if (!reply_dat) 
     {
       console.log('reply not found')

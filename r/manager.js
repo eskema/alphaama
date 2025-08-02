@@ -1,8 +1,9 @@
-// alphaama relay manager
+// alphaama relay and db manager
 
 // nostr-tools
-importScripts('/dep/nostr-tools.js');
+importScripts('/dep/nostr-tools.js','/dep/store.js');
 
+const db = new store.IDBEventStore;
 
 // relay manager
 const manager = 
@@ -10,7 +11,7 @@ const manager =
   relays:null,
   subs:new Map(),
   events:new Map(),
-  worker_src:'/r/worker.js?v=3',
+  worker_src:'/r/worker.js',
   workers:new Map(),
 };
 
@@ -36,6 +37,49 @@ const is_valid_url =(s='')=>
 };
 
 
+// is hexadecimal
+const is_x =s=> /^[A-F0-9]+$/i.test(s);
+// is a valid nostr key
+const is_key =x=> is_x(x) && x.length === 64;
+
+const fx_id_ae =event=>
+{
+  return fx_id_a(
+  {
+    kind:event.kind,
+    pubkey:event.pubkey,
+    identifier:event.tags.find(t=>t[0]==='d')[1],
+  })
+};
+
+const fx_id_a =o=>
+{
+  if (!o.kind || typeof o.kind !== 'number') return;
+  if (!o.pubkey || !is_key(o.pubkey)) return;
+  if (!o.identifier || typeof o.identifier !== 'string') return;
+  return `${o.kind}:${o.pubkey}:${o.identifier}`;
+};
+
+// make request filter from addressable string
+const fx_id_af =string=>
+{
+  let [kind,pubkey,identifier] = fx_split_ida(string);
+  return {
+    kinds:[parseInt(kind)],
+    authors:[pubkey],
+    '#d':[identifier]
+  }
+};
+
+const fx_split_ida =ida=>
+{
+  let a = ida.split(':');
+  let kind = a.shift();
+  let pubkey = a.shift();
+  let identifier = a.length > 1 ? a.join(':') : a[0];
+  return [kind,pubkey,identifier]
+};
+
 const auth =data=>
 {
   let {relays,request} = data;
@@ -45,7 +89,7 @@ const auth =data=>
     console.log('manager auth: relay is invalid',url);
     return
   }
-  relay.worker.postMessage(['auth',JSON.stringify(request)]);
+  relay.worker.postMessage(['auth',{json:JSON.stringify(request)}]);
 };
 
 
@@ -68,7 +112,111 @@ onmessage =e=>
     case 'request': process_request(dis); break;
     case 'auth': auth(dis); break;
     case 'close' : close_sub(dis); break;
+    case 'events': get_events(dis); break;
+    case 'filter': get_filter(dis); break;
+    case 'outbox': get_outbox(dis); break;
     default: console.log('invalid operation',data)
+  }
+};
+
+
+// get events from memory or db
+const get_events =async([get_id,ids])=>
+{
+  let events = new Map();
+  let missing = new Set();
+  for (const id of ids)
+  {
+    if (manager.events.has(id)) events.set(id,manager.events.get(id))
+    else missing.add(id);
+  }
+  if (missing.size)
+  {
+    const from_db = await db.getByIds([...missing.values()]);
+    for (const event of from_db)
+    {
+      const id = event.id;
+      const dat = mk_dat({event});
+      manager.events.set(id,dat);
+      missing.delete(id);
+      events.set(id,dat);
+    }
+  }
+  let result = [get_id,[...events.values()]];
+  if (result[1].length && missing.size) result.push([...missing.values()])
+  // if (missing.size) result.push([...missing.values()])
+  postMessage(result);
+};
+
+
+const db_filter =async filter=>
+{
+  let events = new Map();
+  for await (let event of db.queryEvents(filter))
+  {
+    events.set(event.id,event);
+  }
+  return events
+};
+
+
+const mem_events =events_map=>
+{
+  let dats = [];
+  for (let [id,event] of events_map)
+  {
+    let dat;
+    if (!manager.events.has(id)) 
+    {
+      dat = mk_dat({event});
+      manager.events.set(id,dat);
+    }
+    else dat = manager.events.get(id);
+    dats.push(dat);
+  }
+  return dats
+}
+
+
+// get events from memory or db
+const get_filter =async([get_id,filter])=>
+{
+  let events = await db_filter(filter);
+  let dats = mem_events(events);
+  // let events = new Map();
+  // for (let [id,event] of events)
+  // {
+  //   let dat;
+  //   if (!manager.events.has(id)) 
+  //   {
+  //     dat = mk_dat({event});
+  //     manager.events.set(id,dat);
+  //   }
+  //   else dat = manager.events.get(id);
+  //   dats.push(dat);
+  // }
+  postMessage([get_id,dats]);
+};
+
+
+const get_outbox =async({request,outbox,options})=>
+{
+  request = await pre_process_request(request);
+  
+  // console.log(request,outbox,options);
+  // return
+  let [fid,filter] = request.slice(1);
+  let filter_authors = filter.authors;
+  delete filter.authors;
+  for (const [url,authors] of outbox)
+  {
+    let dis = 
+    {
+      request:['REQ',fid,{...filter,authors}],
+      url,
+      options
+    };
+    relay_request(dis);
   }
 };
 
@@ -88,29 +236,23 @@ const close_sub =id=>
     {
       let sub = relay.subs.get(id);
       sub.closed = Math.floor(Date.now()/1000);
-      relay.worker.postMessage(['request',JSON.stringify(['CLOSE',id])]);
+
+      sub_close(relay,id)
     }
   }
   manager.subs.delete(id);
 };
 
 
-// order to terminate workers
-const terminate =async o=>
+// close subscription
+const sub_close =(relay,id)=>
 {
-  let url = o.url;
-  let relay = hires(url);
-  if (!relay)
+  let dis = 
   {
-    console.error('!relay',o)
-    return;
-  }
-  
-  relay.o = o;
-  relay.worker.terminate();
-  let state = 3;
-  let subs = relay.subs;
-  postMessage(['state',{state,...o,subs}]);
+    close:id,
+    json:JSON.stringify(['CLOSE',id]),
+  };
+  relay.worker.postMessage(['request',dis]);
 };
 
 
@@ -119,7 +261,7 @@ const hires =(url)=>
 {
   if (!url)
   {
-    console.log(`manager.hires: no url`,url);
+    console.trace(`manager.hires: no url`);
     return
   }
   let relay;
@@ -143,7 +285,7 @@ const hires =(url)=>
     relay =
     {
       url,
-      worker:new Worker(manager.worker_src),
+      worker:new Worker(manager.worker_src+'?v=3&r='+encodeURIComponent(url)),
       subs:new Map(),
       closed:new Map(),
       key:NostrTools.generateSecretKey(),
@@ -159,6 +301,14 @@ const hires =(url)=>
 };
 
 
+// return kind information
+const kind_type =kind=> 
+{
+  if (typeof kind === 'string') kind = parseInt(kind.trim());
+  return NostrTools.kinds.classifyKind(kind);
+}
+
+
 const ping =url=>
 {
   let relay = hires(url);
@@ -167,7 +317,7 @@ const ping =url=>
   if (relay.ping) clearTimeout(relay.ping);
   relay.ping = setTimeout(()=>
     {
-      if (!relay.terminated) console.log('no ping',relay);
+      if (!relay.terminated) console.log('no pong',relay);
     },
     21000
   );
@@ -179,7 +329,15 @@ const ping =url=>
 const mk_dat =(o={})=>
 {
   const dat = {};
-  if (o.event) dat.event = o.event;
+  if (o.event) 
+  {
+    dat.event = o.event;
+    if (kind_type(dat.event.kind) === 'parameterized')
+    {
+      let id_a = fx_id_ae(dat.event);
+      if (id_a) dat.id_a = id_a;
+    }
+  }
   dat.seen = o.seen || [];
   dat.subs = o.subs || [];
   dat.clas = o.clas || [];
@@ -193,7 +351,7 @@ const on_auth =async(challenge,url)=>
 {
   if (!challenge)
   {
-    console.log('auth: no challenge')
+    console.log('auth: no challenge',url)
     return;
   }
   
@@ -202,20 +360,48 @@ const on_auth =async(challenge,url)=>
   relay.challenge = challenge;
 
   let unsigned = NostrTools.nip42.makeAuthEvent(url,challenge);
+  let dis = {};
   if (!manager.relays[url]?.sets.includes('auth'))
   {
+    // console.log(relay);
     let signed = NostrTools.finalizeEvent(unsigned,relay.key);
     if (signed) 
     {
-      let request = ['AUTH',signed];
-      relay.worker.postMessage(['auth',JSON.stringify(request)]);
-      // relay_request({url,request:['AUTH',signed]});
+      dis.json = JSON.stringify(['AUTH',signed]);
+      relay.worker.postMessage(['auth',dis]);
     }
   }
   else 
   {
-    relay.worker.postMessage(['waiting',challenge]);
+    // relay.worker.postMessage(['waiting',challenge]);
     postMessage(['auth',unsigned,url]);
+  }
+};
+
+
+// relay worker closed sub for a reason
+const on_closed =async(a,url)=>
+{
+  let [sub_id,reason] = a.slice(1);
+  if (!reason) return;
+  
+  let [what,why] = reason.split(':');
+  switch (what)
+  {
+    // case 'block':
+    // case 'blocked':
+    case 'restricted':
+    case 'auth-required':
+      console.log(url,sub_id,reason);
+      terminate({url});
+      break;
+    // case 'pow':
+    // case 'duplicate':
+    // case 'rate-limited':
+    // case 'invalid':
+    // case 'restricted':
+    // case 'error':
+    // default:
   }
 };
 
@@ -238,7 +424,7 @@ const on_eose =async(id,url)=>
       if (subscription.has(url)) subscription.delete(url);
       if (subscription.size === 0) manager.subs.delete(sub.id);
     }
-    relay.worker.postMessage(['request',JSON.stringify(['CLOSE',id])]);
+    sub_close(relay,id)
   }
   postMessage(['eose',sub.id,url]);
   // console.log(manager.subs)
@@ -246,25 +432,35 @@ const on_eose =async(id,url)=>
 
 
 // relay worker event
-const on_event =async(a,url)=>
+const on_event =(a,url)=>
 {
   let [sub_id,event] = a.slice(1);
   
   let new_data;
-  const seen = [url];
-  
-  let relay = hires(url);
-  let sub = relay.subs.get(sub_id);
-  const subs = [sub.id];
+  const seen = [];
+  const subs = [];
+
+  if (url)
+  {
+    seen.push(url);
+    let relay = hires(url);
+    let sub = relay.subs.get(sub_id);
+    subs.push(sub.id);
+  }
+  else 
+  {
+    subs.push(sub_id);
+    new_data = true;
+  }
   
   let dat = manager.events.get(event.id);
   if (dat)
   {
     const new_seen = a_add(dat.seen,seen);
     const new_subs = a_add(dat.subs,subs);
-    new_data = new_seen || new_subs;
+    // new_data = new_seen || new_subs;
   }
-  else // if (is_valid_event(event))
+  else
   {
     let event_is_valid;
     try { event_is_valid = NostrTools.verifyEvent(event) }
@@ -274,6 +470,7 @@ const on_event =async(a,url)=>
       new_data = true;
       dat = mk_dat({event,seen,subs});
       manager.events.set(event.id,dat);
+      setTimeout(()=>{db.saveEvent(event)},100)
     }
   }
   if (new_data) postMessage(['event',dat,url]);
@@ -286,13 +483,14 @@ const on_message =(a,url)=>
   switch (a[0].toLowerCase())
   {
     case 'auth': on_auth(a[1],url); break;
+    case 'closed': on_closed(a,url); break;
     case 'eose': on_eose(a[1],url); break;
     case 'event': on_event(a,url); break;
     case 'ok': on_ok(a,url); break;
     case 'pong': ping(url); break;
     case 'state': on_state(a,url); break;
     case 'aborted':
-    case 'terminated': terminate(a[1],url); break;
+    case 'terminated': terminate({url}); break;
     default:postMessage([...a,url])
   }
 };
@@ -317,7 +515,7 @@ const on_not_ok =(reason,url)=>
     case 'block':
     case 'blocked':
     case 'auth-required':
-      terminate(url);
+      terminate({url});
       break;
     // case 'pow':
     // case 'duplicate':
@@ -327,11 +525,7 @@ const on_not_ok =(reason,url)=>
     // case 'error':
     // default:
   }
-  
 };
-
-
-
 
 
 const on_state =async([s,state,worker],url)=>
@@ -345,10 +539,33 @@ const on_state =async([s,state,worker],url)=>
 };
 
 
+const pre_process_request =async request=>
+{
+  let [type,sub_id,filter] = request;
+  if (type === 'REQ')
+  {
+    let since = 1;
+    let events = await db_filter(filter);
+
+    for await (let event of db.queryEvents(request[2]))
+    {
+      if (event.created_at > since) since = event.created_at;
+      let dat = mk_dat({event});
+      manager.events.set(event.id,dat);
+      on_event([request[0],request[1],event]);
+    }
+    // if (request[2].since && request[2].since < since) 
+    //   request[2].since = since + 1;
+  }
+  return request
+};
+
+
 // check where to send request
-const process_request =data=>
+const process_request =async data=>
 {
   let {relays,request,options} = data;
+  request = await pre_process_request(request);
   for (const url of relays) relay_request({url,request,options});
 };
 
@@ -358,12 +575,8 @@ const relay_info =async(relays={})=>
   for (const relay in relays)
   {
     manager.relays[relay] = relays[relay];
-    NostrTools.nip11.fetchRelayInformation(relay)
-    .then(info=>
-    {
-      manager.relays[relay].info = info;
-      postMessage(['info',[relay,manager.relays[relay]]])
-    });
+    manager.relays[relay].info = await NostrTools.nip11.fetchRelayInformation(relay);
+    postMessage(['info',[relay,manager.relays[relay]]])
   }
 };
 
@@ -383,14 +596,16 @@ const relay_request =({url,request,options})=>
     console.log('invalid request');
     return
   }
-
   request = [...request];
+  let dis = {};
   switch (request[0].toLowerCase())
   {
     case 'req':
       let id = request[1];
       let sub_id = 'sub:'+(relay.subs.size+1);
       request[1] = sub_id;
+      dis.id = sub_id;
+      dis.request = request;
       relay.subs.set(sub_id,{id,request,options});
       if (!manager.subs.has(id)) manager.subs.set(id,new Map());
       let r_sub = manager.subs.get(id);
@@ -404,5 +619,24 @@ const relay_request =({url,request,options})=>
       if (dat && dat.seen.includes(url)) return;
       break;
   }
-  relay.worker.postMessage(['request',JSON.stringify(request)]);
+  dis.json = JSON.stringify(request);
+  relay.worker.postMessage(['request',dis]);
+};
+
+
+// order to terminate workers
+const terminate =async o=>
+{
+  let relay = hires(o.url);
+  if (!relay)
+  {
+    console.error('!relay',o)
+    return;
+  }
+  
+  relay.o = o;
+  relay.worker.terminate();
+  let state = 3;
+  let subs = relay.subs;
+  postMessage(['state',{state,...o,subs}]);
 };

@@ -403,7 +403,7 @@ aa.p.link_data =async p=>
         }
         else
         {
-          if (p.score > 3) aa.db.ops('cash',{add:[url]});
+          if (p.score > 3) await aa.db.ops('cash',{all:[url]});
 //     // {
 //     //   aa.db.ops('cash',{add:[p.metadata.picture]});
 //     //   src = p.metadata.picture;
@@ -596,7 +596,7 @@ aa.p.load_profiles =async a=>
       if (!aa.miss.p[x]) aa.miss.p[x] = {nope:[],relays:[]};
       aa.db.p[x] = aa.p.p(x);
     }
-    aa.mk.profile(aa.db.p[x])
+    setTimeout(()=>{aa.mk.profile(aa.db.p[x])},0)
   }
 };
 

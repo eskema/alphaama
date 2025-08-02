@@ -1,12 +1,13 @@
 // alphaama websocket worker
 const worker =
 {
-  requests:[],
+  errors:[],
+  failures:[],
+  open:new Map(),
+  queue:[],
+  received:[],
   sent:[],
   successes:[],
-  failures:[],
-  errors:[],
-  messages:[],
 };
 
 
@@ -58,7 +59,6 @@ const connect =(a=[])=>
     return
   }
 
-
   ws = new WebSocket(worker.url);
   ws.onerror =e=>
   {
@@ -67,7 +67,6 @@ const connect =(a=[])=>
   };
   ws.onclose =e=>
   {
-    // console.log('ws closed',worker);
     if ((worker.failures.length - worker.successes.length) < 21)
     {
       worker.failures.push(get.now);
@@ -79,25 +78,57 @@ const connect =(a=[])=>
   ws.onopen =()=>
   {
     worker.successes.push(get.now);
+    if (worker.open.size)
+    {
+      for (const [id,request] of worker.open)
+      {
+        if (request.stamp) request.request[2].since = request.stamp;
+        request.json = JSON.stringify(request.request);
+        worker.queue.push(request);
+        // worker.open.delete(id)
+        // setTimeout(()=>{worker.open.delete(id)},10);
+      }
+      worker.open.clear();
+    }
+    // console.log('worker connected to '+worker.url,worker);
     // delay to give time for auth
     setTimeout(process_requests,1111);
     post_state();
   }
 };
 
+const log =()=>
+{
+  return [worker.url,[...worker.open.keys()],[...worker.queue,worker]]
+};
+
 
 // on websocket message
 const on_message =e=>
 {
-  worker.messages.push(e.data);
+  worker.received.push(e.data);
   let data;
   try { data = JSON.parse(e.data) }
   catch(er)
-  { 
+  {
     console.log('unknown data',er);
     return
   }
-  if (Array.isArray(data)) postMessage(data);
+  if (Array.isArray(data))
+  {
+    switch (data[0])
+    {
+      case 'AUTH': 
+        worker.waiting = data[1];
+        break;
+      case 'EVENT':
+        let sub = worker.open.get(data[1]);
+        let date = data[2].created_at;
+        if (sub && !sub.stamp || sub.stamp < date) sub.stamp = date;
+        break;
+    }
+    postMessage(data);
+  }
   else console.log('bad data from ws',e.data);
 };
 
@@ -117,6 +148,7 @@ onmessage =async e=>
     case 'open' : connect(data); break;
     case 'auth':
       worker.authed = true;
+      // console.log(data);
       if (Object.hasOwn(worker,'waiting')) delete worker.waiting;
       send_request(data[1]);
       setTimeout(()=>{process_requests()},500);
@@ -146,19 +178,16 @@ const post_state =()=>
 // add request to requests and processes them all
 const process_requests =request=>
 {
-  if (request)
-  {
-    // console.log(worker.requests);
-    worker.requests.push(request);
-  }
+  if (request) worker.queue.push(request);
   let is_ready = worker.has_auth ? worker.authed : true;
-  if (is_ready) 
+  if (is_ready)
   {
-    while (worker.requests.length)
-    send_request(worker.requests.shift())
+    while (worker.queue.length)
+    send_request(worker.queue.shift())
   }
-  else if (worker.has_auth && worker.waiting)
+  else if (worker.waiting)
   {
+    console.log(worker.url+' is waiting');
     setTimeout(process_requests,1000)
   }
 };
@@ -167,19 +196,25 @@ const process_requests =request=>
 // send websocket request 
 const send_request =request=>
 {
-  if (ws?.readyState === 1) 
+  if (ws?.readyState === 1)
   {
-    ws.send(request);
-    worker.sent.push(request);
+    if (Object.hasOwn(request,'close'))
+    {
+      if (worker.open.has(request.close)) worker.open.delete(request.close);
+    }
+    else if (Object.hasOwn(request,'id'))
+    {
+      worker.open.set(request.id,request);
+    }
+    ws.send(request.json);
+    worker.sent.push(request.json);
     post_state()
-  }
-  else if (!Object.hasOwn(worker,'terminated')
-  && worker.failures < 21)
-  {
-    // try again later
-    setTimeout(()=>{send_request(request)},get.delay)
     return
   }
+  // try again later
+  if (!Object.hasOwn(worker,'terminated')
+  && worker.failures < 21)  
+    setTimeout(()=>{send_request(request)},get.delay)
 };
 
 

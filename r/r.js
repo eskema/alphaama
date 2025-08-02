@@ -144,8 +144,11 @@ aa.r.add_from_o =relays=>
 aa.r.bro =async(s='')=>
 {
   let [id,...relays] = s.split(' ');
-  let event = await aa.db.e[id]?.event;
-  if (event) aa.r.send_event({event,relays});
+  let dat = await aa.e.get(id);
+  if (dat) 
+  {
+    aa.r.send_event({event:dat.event,relays});
+  }
   else aa.log('r bro: event not found')
 };
 
@@ -225,6 +228,7 @@ aa.r.get =async dis=>
   sheet.options = options || {};
   aa.r.on_sub.set(id,dat=>{ sheet.events.set(dat.event.id,dat) });
   console.log(sheet);
+
   return new Promise((resolve,reject)=>
   {
     const abort = setTimeout(()=>{reject(sheet)},6666);
@@ -259,34 +263,11 @@ aa.r.get =async dis=>
 
 
 // 
-aa.r.dat =(dat)=>
+aa.r.dat =dat=>
 {
-  // console.log(dat)
-  let event = dat.event;
-  if (aa.miss.e[event.id]) 
-  {
-    delete aa.miss.e[event.id];
-    dat.clas.push('miss');
-  }
-  else if (aa.fx.kind_type(event.kind) === 'parameterized')
-  {
-    let id_a = aa.fx.id_a(
-      {
-        kind:event.kind,
-        pubkey:event.pubkey,
-        identifier:event.tags.find(t=>t[0]==='d')[1],
-      }
-    );
-    
-    dat.id_a = id_a;
-    if (aa.miss.a[id_a])
-    {
-      delete aa.miss.a[id_a];
-      dat.clas.push('miss');
-    }
-  }
+  
   aa.e.to_printer(dat);
-  aa.db.upd_e(dat);
+  // aa.db.upd_e(dat);
 };
 
 
@@ -341,6 +322,45 @@ aa.r.eose_log =([id,url])=>
   }
   log.append()
   aa.log(data.join(' '))
+};
+
+
+aa.r.get_events =async ids=>
+{
+  let id = 'get_events_'+aa.fx.rands();
+
+  return new Promise((resolve,reject)=>
+  {
+    const abort = setTimeout(()=>{reject()},6666);
+    
+    aa.r.temp.set(id,data=>
+    {
+      clearTimeout(abort);
+      setTimeout(()=>{aa.r.temp.delete(id)},100);
+      resolve(data)
+    });
+
+    aa.r.manager.postMessage(['events',[id,ids]]);
+  })
+};
+
+aa.r.get_filter =async filter=>
+{
+  let id = 'get_filter_'+aa.fx.rands();
+
+  return new Promise((resolve,reject)=>
+  {
+    const abort = setTimeout(()=>{reject()},6666);
+    
+    aa.r.temp.set(id,data=>
+    {
+      clearTimeout(abort);
+      setTimeout(()=>{aa.r.temp.delete(id)},100);
+      resolve(data)
+    });
+
+    aa.r.manager.postMessage(['filter',[id,filter]]);
+  })
 };
 
 
@@ -566,7 +586,7 @@ aa.r.mk =(k,v)=>
 // return sorted relay list for outbox
 aa.r.outbox =(a=[],sets=[])=>
 {
-  if (!sets.length) sets = [aa.r.o.w,'k10002'];
+  if (!sets.length) sets = ['write','k10002'];
   if (!a?.length) return [];
   let relays = aa.r.common(a,sets);
   let outbox = aa.fx.intersect(relays,a,parseInt(localStorage.outbox_max));
@@ -633,6 +653,10 @@ aa.r.send_req =(dis)=>
   }
   aa.r.manager.postMessage(['request',{relays,request,options}]);
 };
+
+
+// request from outbox
+aa.r.send_out =(dis)=>{ aa.r.manager.postMessage(['outbox',dis]) };
 
 
 // todo

@@ -145,3 +145,49 @@ aa.mk.av =(src,poster=false,audio=false)=>
   av.append(l,trols);
   return av
 };
+
+// audioBlob: Blob, samples = 100): Promise<number[]>
+aa.fx.generate_waveform =async(audio_blob,samples=100)=>
+{
+  const audio_context = new AudioContext();
+  const array_buffer = await audio_blob.arrayBuffer();
+  const audio_buffer = await audio_context.decodeAudioData(array_buffer);
+
+  const channel_data = audio_buffer.getChannelData(0);
+  const block_size = Math.floor(channel_data.length/samples)
+  const waveform = [];
+
+  for (let i=0; i<samples; i++)
+  {
+    const start = block_size*i;
+    let sum = 0;
+
+    for (let j=0; j<block_size; j++) 
+    {
+      const amplitude = channel_data[start+j];
+      sum += amplitude*amplitude
+    }
+
+    const rms = Math.sqrt(sum/block_size);
+    const normalized = Math.min(1,rms*3);
+    waveform.push(normalized)
+  }
+
+  audio_context.close()
+  return waveform
+};
+
+aa.mk.file_input =()=>
+{
+  let dialog = aa.el.get('dialog');
+  let input = aa.mk.l('input',{typ:'file'});
+  input.onclick = aa.clk.file_input;
+  // let butt = aa.mk.butt_clk('file_input');
+  dialog.append(input);
+  dialog.showModal();
+};
+
+aa.clk.file_input =e=>
+{
+  console.log(e)
+};

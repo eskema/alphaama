@@ -111,7 +111,8 @@ aa.u.load =async()=>
     aa.cli.def.action
   );
   let app = aa.mk.butt_expand('u_u','a_a');
-  aa.el.set('butt_u_u',app);
+  app.id = 'butt_u_u';
+  aa.el.set(app.id,app);
   aa.side = aa.mk.l('aside',{id:'u_u',app});
   aa.side.append(aa.mod_l);
   aa.bod.insertBefore(aa.side,aa.bod.lastChild.previousSibling);
@@ -161,7 +162,7 @@ aa.u.k3_add =async s=>
   
   let dat = await aa.p.events_last(aa.u.p,'k3');
   if (!dat) return false;
-  dat = await aa.db.get_e(dat);
+  dat = await aa.e.get(dat);
   if (!dat)
   {
     aa.log('no k3 found, create one first');
@@ -201,7 +202,7 @@ aa.u.k3_del =async s=>
   
   let dat_k3 = await aa.p.events_last(aa.u.p,'k3');
   if (!dat_k3) return false;
-  dat_k3 = await aa.db.get_e(dat_k3);
+  dat_k3 = await aa.e.get(dat_k3);
   if (!dat_k3) return false;
   aa.cli.fuck_off();
 
@@ -282,7 +283,8 @@ aa.u.pow_note =async(nid,difficulty=0)=>
 {
   return new Promise(async resolve=>
   {
-    let event = aa.db.e[nid].event;
+    let dat = await aa.e.get(nid);
+    let event = dat.event;
     let pow = difficulty;
     if (!pow)
     {
@@ -299,7 +301,7 @@ aa.u.pow_note =async(nid,difficulty=0)=>
       {
         if (note) aa.e.note_rm(note)
         event = pow_e;
-        aa.e.draft(aa.mk.dat({event:event}));
+        aa.e.draft(aa.mk.dat({event}));
       }
       else aa.log('pow failed')
     }
@@ -471,37 +473,6 @@ aa.u.load_u =async()=>
   return p
 };
 
-
-// update u_u button
-// aa.u.upd_u_u =async()=>
-// {
-//   let butt_u = aa.el.get('butt_u_u');
-//   if (!butt_u || !aa.u.p) return;
-//   let p = aa.u.p;
-//   fastdom.mutate(
-//     ()=>
-//     {
-//       aa.fx.color(p.pubkey,butt_u.parentElement);
-//       butt_u.textContent = p.pubkey.slice(0,1)+'_'+p.pubkey.slice(-1);
-//     }
-//   )
-
-//   if (aa.is.trusted(p.score))
-//   {
-//     // let src;
-//     // let cached = await aa.db.ops('cash',{out:[p.metadata.picture]});
-//     // if (!cached.length)
-//     // {
-//     //   aa.db.ops('cash',{add:[p.metadata.picture]});
-//     //   src = p.metadata.picture;
-//     // }
-//     // else src = URL.createObjectURL(cached[0]);
-//     // fastdom.mutate(()=>{ 
-//       aa.p.link_img(butt_u,p.metadata.picture) 
-//     // });
-//   }
-// };
-
 aa.u.upd_u_u =async()=>
 {
   let butt_u = aa.el.get('butt_u_u');
@@ -518,51 +489,5 @@ aa.u.upd_u_u =async()=>
   })
 };
 
-
-// web of trust 
-// aa.u.wot =async()=>
-// {
-//   let ff = {};
-//   let to_get = [];
-//   let follows = aa.u.p.follows;
-//   if (!follows?.length) return false;  
-//   for (const x of follows)
-//   {
-//     let p = aa.db.p[x];
-//     let p_follows = p?.follows;
-//     if (p_follows?.length)
-//     {      
-//       for (const xid of p_follows)
-//       {
-//         if (!aa.is.following(xid))
-//         {
-//           if (!ff[xid]) ff[xid] = [];
-//           aa.fx.a_add(ff[xid],[x]);
-//           if (!aa.db.p[xid]) aa.fx.a_add(to_get,[xid]);
-//         }
-//       }
-//     }
-//   }
-
-//   if (to_get.length)
-//   {
-//     let dat = await aa.db.ops('idb',{get_a:{store:'authors',a:to_get}});
-//     if (dat) for (const p of dat) aa.db.p[p.pubkey] = p;
-//   }
-  
-//   aa.ff = ff;
-//   let wot = {};
-//   let sorted = Object.entries(aa.ff).sort((a,b)=>b[1].length - a[1].length);
-//   return sorted
-//   for (const f of sorted)
-//   {
-//     let x = f[0];
-//     let n = f[1].length;
-//     let id = aa.db.p[x]?.petnames[0] || aa.db.p[x]?.metadata?.name || x;
-//     wot[id] = n;
-//   }
-
-//   return wot
-// };
 
 aa.mk.styles(aa.u.styles);

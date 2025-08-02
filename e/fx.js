@@ -7,6 +7,28 @@ aa.fx.id_a =o=>
 };
 
 
+aa.fx.id_ae =event=>
+{
+  return aa.fx.id_a(
+  {
+    kind:event.kind,
+    pubkey:event.pubkey,
+    identifier:event.tags.find(t=>t[0]==='d')[1],
+  })
+};
+
+// make request filter from addressable string
+aa.fx.id_af =string=>
+{
+  let [kind,pubkey,identifier] = aa.fx.split_ida(string);
+  return {
+    kinds:[parseInt(kind)],
+    authors:[pubkey],
+    '#d':[identifier]
+  }
+};
+
+
 // adds classes to notes up the parent tree starting from element
 // if a string is given, it will be added to a dataset array 
 aa.fx.path =(l,s=false)=>

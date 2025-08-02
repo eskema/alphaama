@@ -563,10 +563,19 @@ aa.fx.qr =s=>
 };
 
 
-aa.fx.random_s =(length)=> 
+// random string
+aa.fx.rands =(length=6,sample)=>
 {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  return Array(length + 1).join('').split('').sort(()=>Math.random()-0.5).join('');
+  const chars = sample
+  || 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+  let result = '';
+  for (let i=0; i<length; i++)
+  {
+    const index = Math.floor(Math.random() * chars.length);
+    result += chars.charAt(index);
+  }
+  return result;
 };
 
 

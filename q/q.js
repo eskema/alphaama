@@ -324,45 +324,47 @@ aa.q.out =async s=>
 
 
 // demand request as outbox
-aa.q.outbox =(request)=>
+aa.q.outbox =request=>
 {
   let [type,fid,filter,options] = request;
-  let outbox;
-  let authors_len = 0;
-  if (filter.authors?.length)
+  
+  let authors_len = filter?.authors?.length;
+  if (!authors_len) 
   {
-    authors_len = filter.authors.length;
-    outbox = aa.r.outbox(filter.authors);
-    delete filter.authors;
+    aa.log('no authors for outbox');
+    return;
   }
 
-  if (outbox?.length)
+  let outbox = aa.r.outbox(filter.authors);
+  if (!outbox.length)
   {
-    let relays = outbox.map(i=>i[0]);
-
-    aa.r.add(relays.join(' out,')+' out');
-    let relays_list = [];
-    for (const r of outbox)
-    {
-      let url = r[0];
-      let f = {...filter};
-      f.authors = r[1];
-      
-      let request = ['REQ',fid,f];
-      let relays = [url];
-      aa.r.on_sub.set(fid,aa.r.dat);
-      aa.r.send_req({request,relays,options});
-      relays_list.push(url+' '+f.authors.length);
-    }
-    // note log
-    if (!options.eose || options.eose !== 'close')
-    {
-      let txt = `outbox for ${authors_len} authors`;
-      txt += `\nusing ${outbox.length} relays:\n`;
-      txt += relays_list.join(', ');
-      aa.q.log('out',request,txt);
-    }
+    aa.log('no authors in outbox');
+    return;
   }
+  
+  aa.r.add(`${outbox.map(i=>i[0]).join(' out,')} out`);
+  aa.r.on_sub.set(fid,aa.r.dat);
+  aa.r.send_out({request:['REQ',fid,filter],outbox,options});
+  // for (const r of outbox)
+  // {
+  //   let url = r[0];
+  //   let f = {...filter};
+  //   f.authors = r[1];
+    
+  //   let request = ['REQ',fid,f];
+  //   let relays = [url];
+    
+  //   aa.r.send_req({request,relays,options});
+  // }
+  // note log
+  if (!options.eose || options.eose !== 'close')
+  {
+    let txt = `outbox for ${authors_len} authors`;
+    txt += `\nusing ${outbox.length} relays:\n`;
+    txt += outbox.map(i=>`${i[0]} ${i[1].length}`).join(', ');
+    aa.q.log('out',request,txt);
+  }
+  
 };
 
 

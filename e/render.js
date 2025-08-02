@@ -15,7 +15,7 @@ aa.e.rnd =
 // based on kind
 aa.e.render =async(l,options)=>
 {
-  let dat = aa.db.e[l?.dataset.id];
+  let dat = await aa.e.get(l?.dataset.id); 
   if (!dat) return;
   if (l.classList.contains('e_render'))
   {
@@ -28,24 +28,30 @@ aa.e.render =async(l,options)=>
   }
   else
   {
-    let times = 0;
+    let renders = 0;
     for (const key in aa.e.rnd)
     {
       if (aa.e.rnd[key].includes(dat.event.kind))
       {
-        times++;
+        renders++;
         let fid = 'render_'+key;
         if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat,options);
       }
     }
     fastdom.mutate(()=>
     {
-      if (!times && !dat.event.content.trim().length)
+      l.classList.add('e_render');
+      let content = dat.event.content;
+      // if (!content) 
+      // {
+      //   console.log(dat);
+      //   return
+      // }
+      if (!renders && (!content || !content?.trim().length))
       {
         l.classList.add('no_content');
         l.querySelector('.tags_wrapper')?.toggleAttribute('open',true);
       }
-      l.classList.add('e_render');
     })
   }
 };
@@ -132,7 +138,7 @@ aa.e.render_highlight =async(note,dat,o={})=>
         // app = aa.mk.nostr_link(aa.fx.encode('note',h_s[1]));
         // from.append(aa.mk.l('p',{app}));
         source.append(aa.mk.nostr_link(aa.fx.encode('note',event_id)));
-        let dat = await aa.db.get_e(event_id);
+        let dat = await aa.e.get(event_id);
         if (dat)
         {
           let source_p = await aa.p.author(dat.event.pubkey);//aa.db.p[event.pubkey]

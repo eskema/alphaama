@@ -23,26 +23,23 @@ aa.kinds[6] =dat=>
   let note = aa.mk.note(dat);
   note.classList.add('tiny'); // 'is_new',
   let tag_reply = aa.get.tag_e_last(dat.event.tags);
-  if (tag_reply && tag_reply.length)
+  if (tag_reply?.length)
   {    
     let repost_id = tag_reply[1];
-    if (repost_id) 
+    aa.e.get(repost_id).then(dat_e=>
     {
-      aa.db.get_e(repost_id).then(dat_e=>
+      if (dat_e) 
       {
-        if (!dat_e)
-        {
-          let event = aa.parse.j(dat.event.content);
-          
-          if (event&& aa.fx.verify_event(event))
-          {
-            let subs = ['k6'];
-            aa.r.dat(aa.mk.dat({event,subs}));
-          }
-        }
-        else aa.e.to_printer(dat_e);//aa.e.print(dat_e);
-      });
-    }
+        aa.e.to_printer(dat_e);
+        return
+      }
+      
+      let event = aa.parse.j(dat.event.content);
+      if (aa.fx.verify_event(event))
+      {
+        aa.r.dat(aa.mk.dat({event,subs:['k6']}));
+      }
+    });
     aa.e.append_check(dat,note,tag_reply);
   }
   else aa.e.append_as_root(note);
@@ -96,7 +93,7 @@ aa.kinds[1111] =dat=>
 {
   let note = aa.mk.note(dat);
   aa.p.from_tags(dat.event.tags);
-  aa.e.append_as_comment(dat,note);
+  aa.e.append_check(dat,note,aa.get.tag_comment_reply(dat.event.tags));
   return note
 };
 

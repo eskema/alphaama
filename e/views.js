@@ -18,7 +18,7 @@ aa.view.ls.naddr1 =async naddr=>
     return
   }
 
-  let dat = await aa.db.get_a(id_a);
+  let dat = await aa.e.get_a(id_a);
   if (dat) aa.e.to_printer(dat);
   else
   {
@@ -37,7 +37,7 @@ aa.view.ls.nevent1 =async nevent=>
   if (l) aa.view.upd(aa.fx.encode('note',data.id));
   else
   {
-    let dat = await aa.db.get_e(data.id);
+    let dat = await aa.e.get(data.id);
     if (dat) aa.e.to_printer(dat); 
     else 
     {
@@ -66,21 +66,21 @@ aa.view.ls.nevent1 =async nevent=>
 aa.view.ls.note1 =async nid=>
 {
   aa.view.active = nid;
-  let l = document.getElementById(nid);
-  if (l && !l.classList.contains('blank')) aa.e.view(l);
+  let x = aa.fx.decode(nid);
+  let l = aa.e.printed.get(x);
+  if (l) aa.e.view(l);
   else
   {
-    let x = aa.fx.decode(nid);
-    let dat = await aa.db.get_e(x);
-    if (dat) aa.e.to_printer(dat); 
+    let dat = await aa.e.get(x);
+    if (dat) aa.e.to_printer(dat);
     else 
     {
       aa.e.miss_e(x);
-      aa.get.missing('e');
+      aa.e.missing_e();
       
-      let msg = aa.mk.l('p',{con:'looking for event.. '+x});
-      aa.temp['looking_for_'+x] = msg;
-      aa.log(msg);
+      // let msg = aa.mk.l('p',{con:'looking for event.. '+x});
+      // aa.temp['looking_for_'+x] = msg;
+      // aa.log(msg);
     }
   }
 };

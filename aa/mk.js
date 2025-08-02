@@ -5,10 +5,11 @@ aa.mk.butt_expand =(id,con=false)=>
   {
     con:con||id,
     cla:'butt',
-    id:'butt_'+id,
+    // id:'butt_'+id,
     clk:aa.clk.expand
   });
-  butt.dataset.controls = id
+  butt.dataset.controls = id;
+  aa.el.set('butt_'+id,butt);
   return butt
 };
 
@@ -36,7 +37,7 @@ aa.mk.butt_clk =sa=>
 
 
 // buttons from sessionStorage state
-aa.mk.butts_session =(id,s)=>
+aa.mk.butts_session =async(id,s)=>
 {
   let dis = `${id}_${s}`;
   if (sessionStorage.getItem(dis))
@@ -52,11 +53,20 @@ aa.mk.butts_session =(id,s)=>
 aa.mk.dat =(o={})=>
 {
   const dat = {};
-  if (o.event) dat.event = o.event;
+  if (o.event)
+  {
+    dat.event = o.event;
+    if (aa.fx.kind_type(dat.event.kind) === 'parameterized')
+    {
+      let id_a = aa.fx.id_ae(dat.event);
+      if (id_a) dat.id_a = id_a;
+    }
+  }
   dat.seen = o.seen || [];
   dat.subs = o.subs || [];
   dat.clas = o.clas || [];
   dat.refs = o.refs || [];
+  
   return dat
 };
 

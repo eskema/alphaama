@@ -33,6 +33,7 @@ const aa =
       // '/dep/math.js?v=14.0.1',
       '/dep/nostr-tools.js?v=2.15.0',
       '/dep/qrcode.js',
+      '/dep/store.js',
       // '/dep/webtorrent.min.js',
       // '/dep/hls.js?v=1',
       // '/dep/blurhash.js?v=10000',
@@ -53,7 +54,7 @@ const aa =
       {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
       {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
       {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
-      {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
+      // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
     ],
     tools:
     [
@@ -300,7 +301,6 @@ aa.readme_setup =async(path,o={})=>
     }
     catch {}
     if (!response) return;
-
     let text = await response.text();
     if (text) o.readme = text;
   }

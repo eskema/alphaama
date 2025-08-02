@@ -95,7 +95,7 @@ aa.mk.k9321 =async(string='')=>
   if (!aa.is.key(pubkey)) { err('no pubkey'); return};
   [memo,id] = aa.fx.split_str(string);
   if (id && !aa.is.key(id)) { err('invalid id'); return};
-  await aa.db.events([id]);
+  await aa.e.get(id);
 
   let p = await aa.p.get(pubkey);
   
@@ -107,7 +107,7 @@ aa.mk.k9321 =async(string='')=>
   if (!p.mints?.length)
   {
     let last_id = aa.p.events_last(p,'k10019');
-    let dat = await aa.db.get_e(last_id);
+    let dat = await aa.e.get(last_id);
     if (dat)
     {
       p.mints = aa.fx.tags_values(dat.event.tags,'mint');

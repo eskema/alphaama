@@ -52,7 +52,7 @@ aa.mk.k4 =async(s='')=>
 };
 
 
-aa.mk.k5 =(s='')=>
+aa.mk.k5 =async(s='')=>
 {
   let [reason,rest] = aa.fx.split_str(s);
   if (!rest) return;
@@ -68,7 +68,7 @@ aa.mk.k5 =(s='')=>
     if (aa.is.key(id)) 
     {
       tag.unshift('e');
-      let dat = aa.db.e[id];
+      let dat = await aa.e.get[id];
       if (dat)
       {
         kind = dat.event.kind+'';
@@ -96,7 +96,7 @@ aa.mk.k7 =async(s='')=>
     aa.log('invalid reaction');
     return
   }
-  let dat = await aa.db.get_e(id);
+  let dat = await aa.e.get(id);
   if (!dat) 
   {
     aa.log('reaction failed: event id not found');

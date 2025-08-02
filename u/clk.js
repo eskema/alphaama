@@ -10,10 +10,11 @@ aa.clk.cancel =e=>
 
 
 // edit event
-aa.clk.edit =e=>
+aa.clk.edit =async e=>
 {
   const note = e.target.closest('.note');
-  let dat = aa.db.e[note.dataset.id] || aa.cli.dat;
+  let dat = await aa.e.get(note.dataset.id);
+  if (!dat) dat = aa.cli.dat;
   aa.e.note_rm(note);
   aa.cli.v(dat.event.content);
 };
@@ -24,24 +25,23 @@ aa.clk.encrypt =async e=>
 {
   const note = e.target.closest('.note');
   const id = note.dataset.id;
-  let dat = aa.db.e[id];
-  let peer = dat.event.tags.find(t=>t[0]==='p')[1];
+  let dat = await aa.e.get(id);
+  let peer = aa.fx.tag_value(dat.event.tags,'p');
   let encrypted = await window.nostr.nip04.encrypt(peer,dat.event.content);
-  let dis = Object.assign({},dat.event);
-  dis.content = encrypted;
-  delete dis.id;
-  if ('sig' in dis) delete dis.sig;
-  note.remove();
-  delete aa.db.e[id];
-  console.log(dis);
-  aa.e.draft(aa.mk.dat({event:dis,clas:['encrypted']}));
+  let event = {...dat.event};
+  event.content = encrypted;
+  delete event.id;
+  if ('sig' in event) delete event.sig;
+  aa.e.note_rm(note);
+  // console.log(event);
+  aa.e.draft(aa.mk.dat({event,clas:['encrypted']}));
 };
 
 
 // post event
-aa.clk.post =e=>
+aa.clk.post =async e=>
 {
-  let dat = aa.db.e[e.target.closest('.note').dataset.id];
+  let dat = await aa.e.get(e.target.closest('.note').dataset.id);
   if (!dat) 
   {
     console.log('event not found in local db');
@@ -73,24 +73,27 @@ aa.clk.react =e=>
 
 
 // sign event
-aa.clk.sign =e=>
+aa.clk.sign =async e=>
 {
-  let dat = aa.db.e[e.target.closest('.note').dataset.id];
-  if (dat && !dat.event.sig)
+  let dat = await aa.e.get(e.target.closest('.note').dataset.id);
+  if (!dat || dat?.event?.sig)
   {
-    aa.u.sign(dat.event).then(signed=>
-    {
-      if (signed)
-      {
-        dat.event = signed;
-        dat.clas = aa.fx.a_rm(dat.clas,['draft']);
-        aa.fx.a_add(dat.clas,['not_sent']);
-        aa.db.upd_e(dat);
-        aa.e.print(dat);
-      }
-    })
+    aa.log('nothing to sign')
+    return
   }
-  else aa.log('nothing to sign')
+
+  let signed = await aa.u.sign(dat.event)
+  if (!signed) 
+  {
+    aa.log('nothing to sign')
+    return
+  }
+
+  dat.event = signed;
+  dat.clas = aa.fx.a_rm(dat.clas,['draft']);
+  aa.fx.a_add(dat.clas,['not_sent']);
+  aa.db.upd_e(dat);
+  aa.e.print(dat);
 };
 
 
@@ -104,7 +107,7 @@ aa.clk.yolo =async e=>
     return
   }
 
-  let dat = aa.db.e[xid];
+  let dat = await aa.e.get(xid);
 
   aa.u.sign(dat.event).then(signed=>
   {
