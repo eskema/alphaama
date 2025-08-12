@@ -20,11 +20,7 @@ aa.view.ls.naddr1 =async naddr=>
 
   let dat = await aa.e.get_a(id_a);
   if (dat) aa.e.to_printer(dat);
-  else
-  {
-    aa.e.miss_a(id_a,data.relays);
-    aa.get.missing('a');
-  }
+  else aa.e.miss_set('a',id_a,data.relays);
 };
 
 
@@ -53,7 +49,7 @@ aa.view.ls.nevent1 =async nevent=>
       {
         for (let url of data.relays)
         {
-          url = aa.is.url(url)?.href;
+          url = aa.fx.url(url)?.href;
           if (url) aa.fx.a_add(dat.seen,[url]);
         }
       }
@@ -66,17 +62,16 @@ aa.view.ls.nevent1 =async nevent=>
 aa.view.ls.note1 =async nid=>
 {
   aa.view.active = nid;
-  let x = aa.fx.decode(nid);
-  let l = aa.e.printed.get(x);
+  let id = aa.fx.decode(nid);
+  let l = aa.e.printed.get(id);
   if (l) aa.e.view(l);
   else
   {
-    let dat = await aa.e.get(x);
+    let dat = await aa.e.get(id);
     if (dat) aa.e.to_printer(dat);
     else 
     {
-      aa.e.miss_e(x);
-      aa.e.missing_e();
+      aa.e.miss_set('e',id);
       
       // let msg = aa.mk.l('p',{con:'looking for event.. '+x});
       // aa.temp['looking_for_'+x] = msg;

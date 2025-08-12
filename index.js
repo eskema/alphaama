@@ -15,10 +15,11 @@ aa.load({
 // page script
 const on_loaded =async()=>
 {
-  // make sure all mods have 
+  // make sure all mods have loaded properly
   if (!aa.required(aa.def.mods.map(i=>i.id)))
   {
-    setTimeout(on_loaded,10);
+    // console.log('not_loaded');
+    setTimeout(on_loaded,11);
     return
   }
 
@@ -26,7 +27,7 @@ const on_loaded =async()=>
   if (aa.e?.l) 
   {
     let e_section = aa.mk.section('e',false,aa.e.l);
-    e_section.append(aa.mk.pagination())
+    fastdom.mutate(()=>{e_section.append(aa.mk.pagination())});
   }
 
   let p = aa.u?.p;

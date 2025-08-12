@@ -29,6 +29,20 @@ aa.cli =
 };
 
 
+// returns false or true if the string is an action
+aa.cli.act =s=>
+{
+  const ns = localStorage.ns;
+  if (!ns) return false; 
+  if (ns.startsWith(s) 
+  || s.startsWith(ns+' ') 
+  || s === ns
+  ) return true;
+  return false
+};
+
+
+// add action to input
 aa.cli.add =s=>
 {
   let text = aa.cli.t.value;
@@ -60,7 +74,6 @@ aa.cli.add =s=>
 aa.cli.clear =async()=>
 {
   aa.cli.t.value = '';
-  // aa.cli.dat_upd();
   aa.cli.upd();
 };
 
@@ -124,74 +137,6 @@ aa.cli.exe =async(s='')=>
     }
   }
   if (output) aa.log(output)
-};
-
-
-
-// creates new dat object (event)
-aa.cli.dat_mk =async(s,reply_to)=>
-{
-  aa.cli.dat = aa.mk.dat(
-  {
-    event: aa.e.normalise({content:s}),
-    clas:['draft']
-  });
-
-  aa.fx.reply(aa.cli.dat,reply_to);
-};
-
-
-aa.fx.reply =async(dat,reply_s)=>
-{
-  if (!reply_s) return;
-
-  let x = aa.fx.decode(reply_s);
-  // if (reply_s.startsWith('note'))
-  // {
-    let reply_dat = await aa.e.get(x);
-    if (!reply_dat) 
-    {
-      console.log('reply not found')
-      return
-    }
-    dat.replying = reply_s;
-    aa.e.kinda_reply(dat,reply_dat);
-  // }
-  // else if (reply_s.startsWith('npub'))
-  // {
-  //   aa.log('the dm feature has been disabled for now');
-  //   // dat.event.kind = 4;
-  //   // dat.event.tags = [['p',x]];
-  // }
-};
-
-
-aa.cli.draft =(dat)=>
-{
-  let note = aa.mk.note(dat);
-  aa.parse.context(note,dat.event,true);
-  note.querySelector('.by').remove()
-  let draft = aa.cli.l.querySelector('.note.draft');
-  if (draft) draft.replaceWith(note);
-  else aa.log(note)
-};
-
-
-// creates / updates / deletes dat event from input
-aa.cli.dat_upd =async(s='')=>
-{
-  if (!s) s = aa.cli.t.value;
-  if (s.length)
-  {
-    const reply_to = aa.view.active;
-    if (reply_to && aa.cli.dat?.replying !== reply_to) delete aa.cli.dat;
-    if (!Object.hasOwn(aa.cli,'dat')) aa.cli.dat_mk(s,reply_to)
-    else aa.cli.dat.event.content = s;
-  }
-  else if (Object.hasOwn(aa.cli,'dat'))
-  {
-    delete aa.cli.dat;
-  }
 };
 
 
@@ -416,12 +361,14 @@ aa.cli.oto_act =(s)=>
 };
 
 
+
+
 // when input is triggered
 aa.cli.run =async s=>
 {
   aa.cli.history_upd(s);
   aa.log(s);
-  if (aa.is.act(s)) aa.cli.exe(s);
+  if (aa.cli.act(s)) aa.cli.exe(s);
   else if (aa.cli.def.action) aa.cli.def.action.exe(s)
 };
 
@@ -458,7 +405,6 @@ aa.cli.upd =e=>
     {
       if (aa.cli.def.action) aa.cli.oto.append(aa.mk.oto_act_item(aa.cli.def.action,'pinned'));
       aa.cli.oto.dataset.s = '';
-      aa.cli.dat_upd();
     }
     if (s) for (const fun of aa.cli.on_upd) fun(s);
     aa.cli.h();

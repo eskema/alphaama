@@ -99,27 +99,3 @@ aa.mk.oto_act_item =(o,s)=>
   }
   return l
 };
-
-
-aa.mk.k1 =async(s='')=>
-{
-  //     const mentions = await aa.get.mentions(s);
-      
-  //   }
-    
-  //   aa.e.draft(aa.cli.dat);
-  //   delete aa.cli.dat;
-  //   aa.cli.fuck_off();
-  // }
-  // else 
-  // {
-  //   aa.log(s);
-  //   let log_text = 'unable to create note';
-  //   if (!aa.u?.p?.pubkey)
-  //   {
-  //     log_text += ', login first using the command: ';
-  //     log_text += localStorage.ns+' u login';
-  //   }
-  //   aa.log(log_text);      
-  // }
-};

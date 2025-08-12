@@ -1,3 +1,22 @@
+// author link for header
+aa.mk.author_link =(pubkey,p)=>
+{
+  return aa.mk.l('div',
+  {
+    cla:'p_link',
+    app:
+    [
+      aa.mk.p_link(pubkey,p),
+      ' ',
+      aa.mk.l('span',
+      {
+        cla:'actions empty',
+        app:aa.mk.butt_clk(['…','pa'])
+      })
+    ]
+  })
+};
+
 aa.mk.profile_data =p=>
 {
   const l = aa.mk.l('section',{cla:'profile_data'});
@@ -35,11 +54,22 @@ aa.mk.profile_data =p=>
 // make all other profile sections after metadata
 aa.mk.extradata =p=>
 {
-  const exc = ['metadata','pubkey','xpub','npub','verified'];
-  const keys = Object.keys(p).filter(i=>!exc.includes(i))
-  const extradata = aa.mk.l('section',{cla:'extradata'});
-  for (const k of keys) extradata.append(aa.mk.item(k,p[k]));
-  return extradata
+  let keys = [
+    'events',
+    'follows',
+    'followers',
+    'nprofiles',
+    'petnames',
+    'relays',
+    'sets',
+  ];
+
+  // const exc = ['metadata','pubkey','xpub','npub','verified'];
+  // const keys = Object.keys(p).filter(i=>!exc.includes(i));
+  let app = new DocumentFragment();
+  for (const k of keys) app.append(aa.mk.item(k,p[k]));
+
+  return aa.mk.l('section',{cla:'extradata',app});
 };
 
 
@@ -78,7 +108,7 @@ aa.mk.metadata =(key,value,p)=>
 };
 
 
-aa.mk.metadata_about =(k,v)=> aa.mk.l('p',{app:aa.parse.content(v)});
+aa.mk.metadata_about =(k,v)=> aa.mk.l('p',{app:aa.e.content(v)});
 
 
 aa.mk.metadata_banner =(k,v,p)=> aa.mk.metadata_picture(k,v,p);
@@ -114,7 +144,7 @@ aa.mk.metadata_nip05 =(k,v,p)=>
 
 aa.mk.metadata_picture =(cla,src,p)=>
 {
-  if (aa.is.trusted(p.score) && src)
+  if (aa.fx.is_trusted(p.score) && src)
   {
     let img = aa.mk.l('img',{src});
     img.addEventListener('click',e=>
@@ -128,9 +158,9 @@ aa.mk.metadata_website =(k,v)=> aa.mk.link(v);
 
 
 // make p link
-aa.mk.p_link =pubkey=>
+aa.mk.p_link =(pubkey,p)=>
 {
-  let p = aa.db.p[pubkey];
+  if (!p) p = aa.db.p[pubkey];
   if (!p) p = aa.p.p(pubkey);
 
   const l = aa.mk.l('a',
@@ -144,21 +174,12 @@ aa.mk.p_link =pubkey=>
   
   aa.fx.color(pubkey,l);
 
-  // aa.p.link_data(p).then(data=>
-  // {
-  //   aa.p.link_data_upd(p_link.querySelector('.author'),data)
-  // })
-  aa.p.data(p).then(o=>
-    {
-      aa.p.link_data_upd(l,o.data);
-      o.a.push(l);
-    }
-  );
-  // setTimeout(()=>
-  // {
-  //   aa.p.link_data_upd(l,o.data);
-  //   o.a.push(l);
-  // },200);
+  aa.p.data(p)
+  .then(o=>
+  {
+    aa.p.link_data_upd(l,o.data);
+    o.a.push(l);
+  });
   
   return l
 };
@@ -183,46 +204,34 @@ aa.mk.profile =p=>
   return profile
 };
 
-aa.mk.author_link =pubkey=>
-{
-  const p_link = aa.mk.l('div',{cla:'p_link'});
-  p_link.append(
-    aa.mk.p_link(pubkey),
-    ' ',
-    aa.mk.l('span',
-    {
-      cla:'actions empty',
-      app:aa.mk.butt_clk(['…','pa'])
-    }
-  ));
-  return p_link
-};
 
 
-aa.mk.profile_header =(p)=>
+
+aa.mk.profile_header =p=>
 {
   const pubkey = aa.mk.l('p',{cla:'pubkey'});
   pubkey.append(
     aa.mk.author_link(p.pubkey),
-    // ' ',aa.mk.l('p',{cla:'actions empty',app:aa.mk.butt_clk(['…','pa'])}),
     ' ',aa.mk.l('span',{cla:'pub',con:p.pubkey}),
     ' ',aa.mk.time(p.updated)
   );
   return pubkey
 };
 
+
 aa.mk.relays =(k,v)=>
 {
   let ul = aa.mk.l('ul',{cla:k+' list'});
   for (const url in v) ul.append(aa.mk.server(url,v[url]));
-  let l = aa.mk.details(k,ul);
-  return l
+  return aa.mk.details(k,ul);
 };
+
 
 aa.mk.follows =(k,v,p)=>
 {
   let l = aa.p.authors_list(v,k);
   return aa.mk.details(k,l);
 }
+
 
 aa.mk.followers = aa.mk.follows;

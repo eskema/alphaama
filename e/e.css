@@ -63,7 +63,7 @@
 }
 
 
-.note.root.no_content
+/*.note.root.no_content
 {
   grid-template-columns: auto 1fr 61.8vw;
   grid-template-areas: 
@@ -73,7 +73,7 @@
     "tags     tags     replies"
     "content  content  replies"
     "versions versions versions";
-}
+}*/
 
 .note.draft > .clicker
 {
@@ -716,16 +716,6 @@ a.author.fu .name
   margin: var(--pad);
 }
 
-.note.no_content > .content > *
-{
-  display: none;
-}
-
-.note.root.no_content:not(.tiny):not(.in_path) > .content:after
-{
-  margin-bottom: 0;
-}
-
 /* @end */
 
 
@@ -956,6 +946,7 @@ a.author.fu .name
   margin: 0;
   max-width: 100%;
   padding: var(--pad);
+  overflow-y: scroll;
 }
 
 .note > .tags_wrapper > .tags 
@@ -971,7 +962,7 @@ a.author.fu .name
   background: rgba(var(--color-a),.82);
   box-shadow: 0px 0px var(--pad) rgb(var(--color-b));
   max-height: 80vh;
-  overflow-y: scroll;
+  
 }
 
 .tag
@@ -1339,37 +1330,13 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
   border: 1px dashed rgba(var(--color-c),1);
   display: grid;
+  grid-template-areas: "by" "content";
   margin: var(--font-size) var(--padm);
   /*margin-bottom: var(--line);*/
   max-height: var(--media-height);
   max-width: 960px;
   overflow: hidden;
   position: relative;
-}
-
-.note_quote_by
-{
-  background: rgb(var(--color-b));
-  display: grid;
-  font-size: var(--font-size-s);
-  grid-area: unset;
-  grid-template-areas: "author . id";
-  grid-template-columns: auto 1fr auto;
-  line-height: 1rem;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.note_quote_by .author .name
-{
-  background: none;
-}
-
-.note_quote_by .nostr_link
-{
-  justify-self: end;
-  margin: 0 var(--pad);
 }
 
 .note_quote .paragraph
@@ -1405,6 +1372,13 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .in_view > .replies > .note > .content .note_quote
 {
   overflow-y:  scroll;
+}
+
+.in_view > .content > .note_quote .paragraph
+{
+  font-size: var(--font-size);
+  line-height: 1.5;
+  padding: var(--padm);
 }
 
 /* @end */
@@ -1657,7 +1631,7 @@ html:not(.needs_pagin) .pagination
     top: 0;
   }*/
   
-  .root:not(.in_path) > .replies .note:hover .by
+  .root:not(.in_path) > .replies .note:hover > .by
   {
     top: 1rem
   }
@@ -1746,7 +1720,7 @@ html:not(.needs_pagin) .pagination
     background-color: rgba(var(--c),1);
   }
   
-  .note:not([data-kind="1"]) .by .id .nid span,
+  .by .id .nid span:not([data-kind="1"]),
   .by:hover .id .nid span
   {
     background-color: rgba(var(--color-b),1)!important;

@@ -6,7 +6,7 @@ aa.r.auth =async a=>
   event = aa.e.normalise(event);
   event.tags = aa.fx.a_u(event.tags);
   if (!event.id) event.id = aa.fx.hash(event);
-  let signed = await aa.u.sign(event);
+  let signed = await aa.e.sign(event);
   if (signed) aa.r.manager.postMessage(['auth',{relays:[relay],request:['AUTH',signed]}]);
 };
 

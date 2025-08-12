@@ -17,149 +17,23 @@ aa.e =
     '/e/clk.js',
     '/e/db.js',
     '/e/fx.js',
-    '/e/get.js',
-    '/e/is.js',
     '/e/kinds.js',
     '/e/mk.js',
     '/e/parse.js',
+    '/e/printer.js',
+    '/e/miss.js',
     '/e/render.js',
     '/e/views.js'
   ],
   styles:['/e/e.css'],
-};
-
-
-// buttons
-aa.e.butts =
-{
-  na:[[localStorage.reaction,'react'],'req','bro','render','tiny','quote'],
-  // k4:['encrypt'],
-  draft:['yolo','sign','pow','edit','cancel'],
-  not_sent:['post','bro','cancel'],
-  blank:['fetch']
-};
-
-// append stashed orphans from refs 
-// aa.e.append_from_refs =()=>
-// {
-//   for (const i in aa.temp.refs)
-//   {
-//     for (const e in aa.temp.refs[i]) 
-//       aa.e.append_check(...e);
-//   }
-// };
-
-
-// decides where to append a note
-aa.e.append_to =async(dat,note,tag)=>
-{
-  if (tag?.length) aa.e.append_check(dat,note,tag);
-  else aa.e.append_as_root(note);
-};
-
-
-// append note to notes section
-aa.e.append_as_root =note=>
-{
-  if (!note.classList.contains('rendered'))
+  butts:
   {
-    note.querySelector('.replies').removeAttribute('open');
-    note.classList.add('root','not_yet');
+    na:[[localStorage.reaction,'react'],'req','bro','render','tiny','quote'],
+    // k4:['encrypt'],
+    draft:['yolo','sign','pow','edit','cancel'],
+    not_sent:['post','bro','cancel'],
+    blank:['fetch']
   }
-
-  if (!note.parentElement) aa.e.note_observer.observe(note);
-  
-  if (note.classList.contains('blank')) aa.e.l.append(note);
-  else aa.e.l.insertBefore(note,[...aa.e.l.children].find(i=>
-    note.dataset.stamp > i.dataset.stamp) || null);
-
-  aa.e.view_check(note);
-};
-
-
-// append note to another note as reply
-aa.e.append_as_rep =(note,rep)=>
-{
-  note.classList.add('reply','not_yet');
-  note.classList.remove('root');
-  if (!sessionStorage[note.dataset.id]) 
-  {
-    note.classList.add('is_new');
-    rep.parentNode.classList.add('haz_new_reply');
-  }
-  
-  if (note.classList.contains('in_path')) 
-    rep.parentNode.classList.add('in_path');
-
-  rep.insertBefore(note,[...rep.children].find(i=>
-    i.tagName==='ARTICLE' 
-    && i.dataset.created_at > note.dataset.created_at)
-    || null);
-  rep.parentNode.classList.add('haz_reply');
-  aa.e.upd_note_path(rep,note.dataset.stamp,aa.is.u(note.dataset.pubkey));
-  aa.e.note_observer.observe(note);
-
-  if (history.state?.view === '#'+note.id) setTimeout(()=>{aa.e.view(note)},1000);
-};
-
-
-// decides where to append a reply
-aa.e.append_check =async(dat,note,tag)=>
-{
-  
-  const [type,id] = tag;
-  let p = aa.db.p[dat.event.pubkey];
-  let relays = aa.fx.in_set(p?.relays,'write');
-  let reply;
-  switch(type)
-  {
-    case 'a':
-      reply = aa.e.by_ida(id);
-      if (!reply) aa.e.miss_print_a(tag,relays);
-      // {
-      //   let dat = await aa.e.get_a(id);
-      //   if (dat) aa.e.to_printer(dat);
-      //   else aa.e.miss_a(tag,relays);
-      // }
-      break;
-    case 'e':
-      reply = aa.e.printed.get(id);
-      if (!reply) aa.e.miss_print(tag,relays);
-      // {
-      //   let dat = await aa.e.get(id);
-      //   if (dat) aa.e.to_printer(dat);
-      //   else aa.e.miss_e(tag,relays);
-      // }
-  }
-  if (reply) aa.e.append_as_rep(note,reply.querySelector('.replies'));
-  else aa.e.orphan(dat,note,tag);
-  // else aa.e.append_as_rep(note,reply.querySelector('.replies'));
-  // setTimeout(()=>{aa.e.append_as_orphan(dat,note,reply_id)},6666)
-};
-
-
-aa.e.append_as_orphan =(dat,note,reply_id)=>
-{
-  if (note.parentElement) return;
-  let root;
-  let tag_root = aa.get.tag_comment_root(dat.event.tags);
-  if (tag_root && tag_root[1] !== reply_id)
-  {
-    let root_kind = tag_root[0];
-    if (root_kind === 'e')
-    {
-      root = aa.e.printed.get(tag_root[1]);
-      if (!root) aa.e.miss_print(tag_root);
-    }
-    else if (root_kind === 'a')
-    {
-      root = aa.e.by_ida(tag_root[1]); 
-      if (!root) aa.e.miss_print_a(tag_root);
-    }
-  }
-  note.classList.add('orphan');
-  if (root) aa.e.append_as_rep(note,root.querySelector('.replies'));
-  // else aa.e.append_as_root(note);
 };
 
 
@@ -186,21 +60,363 @@ aa.e.clear =s=>
 };
 
 
+// splits a string into paragraphs, then into lines and then into words 
+// and process each part separately
+aa.e.content =(s,trusted)=>
+{
+  const df = new DocumentFragment();
+  let l = aa.mk.l('p',{cla:'paragraph'});
+  // checks if element has no children and is empty, ignores trailing spaces
+  const another_l =last_l=>
+  {
+    last_l.normalize();
+    if (aa.fx.is_empty(last_l)) last_l.remove();
+    else 
+    {
+      df.append(last_l);
+      l = aa.mk.l('p',{cla:'paragraph'});
+    }
+  };
+  let paragraphs = s.split(/\n\s*\n/);
+  if (paragraphs.length === 1) paragraphs = s.split(/\n/);
+  for (const paragraph of paragraphs)
+  { 
+    if (!paragraph.length) continue;    
+    
+    const lines = paragraph.trim().split(/\n/);
+    for (let li=0;li<lines.length;li++)
+    {
+      if (l.childNodes.length) l.append(aa.mk.l('br'));
+
+      const words = lines[li].trim().split(' ');
+      for (let i=0;i<words.length;i++)
+      {
+        let word = words[i].trim();
+        if (!word.length) continue;
+
+        if (aa.fx.regex.url.test(word)) 
+        {
+          let dis_node = aa.parser('url',word,trusted);
+          l.append(dis_node,' ');
+        }
+        else if (aa.fx.regex.nostr.test(word)) 
+        {
+          let parsed = aa.parser('nostr',word);
+          let quote = parsed.querySelector('blockquote');
+          if (quote)
+          {
+            another_l(l); 
+            df.append(quote)
+          }
+          else l.append(parsed);
+        }
+        else if (aa.fx.regex.hashtag.test(word)) 
+        {
+          let dis_node = aa.parser('hashtag',word);
+          l.append(dis_node,' ');
+        }
+        else 
+        {
+          if (i === words.length-1) l.append(word);
+          else l.append(word,' ');
+        }
+      }
+    }
+    another_l(l);
+  }
+  return df
+};
+
+
+// parse content as object
+aa.e.content_o =async(note,data,options)=>
+{
+  if (!data && typeof data !== 'object') return;
+
+  let content = note.querySelector('.content');
+  content.textContent = '';
+  content.append(aa.mk.ls({ls:data,sort:options.sort||''}));
+};
+
+
+// toggle parsed content on note
+aa.e.context =(l,event,trust)=>
+{
+  let content = l.querySelector('.content');
+  if (!content) 
+  {
+    content = l;
+    content.classList.add('parsed');
+  }
+  else 
+  {
+    content.textContent = '';
+    content.classList.toggle('parsed');
+  }
+  let parsed;
+  if (content.classList.contains('parsed')) //event.tags.length < 21 && 
+  {
+    parsed = aa.e.content(event.content,trust);
+  }
+  else parsed = aa.mk.l('p',{cla:'paragraph',con:event.content});
+  
+  if (parsed.childNodes.length) 
+  {
+    fastdom.mutate(()=>{content.append(parsed)});
+  }
+};
+
+
+aa.e.em =dat=>
+{
+  // console.log(dat);
+  const id = dat?.event?.id;
+  // if (!id) console.trace(dat);
+  if (!aa.em.has(id))
+  {
+    aa.em.set(id,dat);
+    if (dat.id_a)
+    {
+      if (aa.em_a.has(dat.id_a))
+      {
+        if (aa.em_a.get(dat.id_a).event.created_at
+        < dat.event.created_at) aa.em_a.set(dat.id_a,dat)
+      }
+    } 
+  }
+  return id
+};
+
+
+// decrypt event from id
+aa.e.decrypt =async id=>
+{
+  if (!aa.fx.is_hex(id))
+  {
+    aa.log('invalid id');
+    return
+  }
+  
+  let dat = await aa.e.get(id);
+  if (!dat) 
+  {
+    aa.log('event not found');
+    return
+  }
+
+  let wn = window.nostr;
+  if (!wn)
+  {
+    aa.log('no extension found');
+    return
+  }
+
+  let decrypted;
+  let {kind,tags,content,pubkey} = dat.event;
+  if (kind === 4) 
+  {
+    let pub_to = aa.fx.tag_value(tags,'p');
+    if (aa.fx.is_u(pub_to))
+    {
+      aa.log('content not for you');
+      return
+    }
+    decrypted = await wn.nip04.decrypt(pubkey,content);
+  }
+  else decrypted = await wn.nip44.decrypt(pubkey,content);
+  if (!decrypted)
+  {
+    aa.log('decrypt failed');
+    return
+  }
+  
+  aa.e.decrypted_content(id,decrypted);
+  return decrypted
+};
+
+
+aa.e.decrypted_content =async(id,decrypted)=>
+{
+  let note = aa.e.printed.get(id); //document.getElementById(aa.fx.encode('note',x));
+  if (!note) 
+  {
+    aa.log('decrypted cyphertext:');
+    aa.log(decrypted);
+  }
+  else
+  {
+    fastdom.mutate(()=>
+    {
+      let content = note.querySelector('.content');
+      content.classList.remove('encrypted');
+      content.classList.add('decrypted');
+      content.querySelector('.butt.decrypt')?.remove();
+      
+      content.append('\n',aa.e.content(decrypted));
+    })
+  }
+};
+
+
+// add key to follow list (kind:3)
+aa.e.follows_add =async s=>
+{
+  if (!aa.u.p) 
+  {
+    aa.log('login first')
+    return
+  }
+  let tag = ['p'];
+
+  let [key,rest] = s.split(aa.fx.regex.fw);
+
+  if (key.startsWith('npub')) key = aa.fx.decode(key);
+  if (!aa.fx.is_key(key)) 
+  {
+    aa.log('invalid key to follow '+key);
+    return false
+  }
+  if (aa.p.following(key)) 
+  {
+    aa.log('already following '+key);
+    return false
+  }
+  tag.push(key);
+  
+  let [relay,petname] = rest.trim().split(aa.fx.regex.fw);
+  relay = aa.fx.url(relay)?.href || '';
+  petname = aa.fx.an(petname);
+
+  if (relay) tag.push(relay);
+  if (petname)
+  {
+    if (!relay) tag.push('');
+    tag.push(petname)
+  }
+  
+  let dat = await aa.p.events_last(aa.u.p,'k3');
+  if (!dat) return false;
+  dat = await aa.e.get(dat);
+  if (!dat)
+  {
+    aa.log('no k3 found, create one first');
+    return
+  }
+
+  // const event = aa.fx.list_add([tag],dat.event);
+
+  const event = aa.e.normalise(
+  {
+    kind:3,
+    content:dat.event.content,
+    tags:[...dat.event.tags,tag]
+  });
+
+  aa.mk.confirm(
+  {
+    title:'new follow list',
+    l:aa.mk.tag_list(event.tags),
+    scroll:{behaviour:'smooth',block:'end'},
+    no:{exe:()=>{}},
+    yes:{exe:()=>
+    { 
+      aa.e.finalize(event);
+      setTimeout(()=>{aa.p.author(a[0]).then(p=>{aa.p.profile_upd(p)});},500);
+    }}
+  });
+};
+
+aa.mk.new_list =(tags,kind)=>
+{
+
+};
+
+
+
+aa.fx.list_add =(new_tags,event)=>
+{
+  let {kind,content,tags} = event;
+  for (const tag of new_tags)
+  {
+    // check if already in list
+    if (tags.find(t=>t[0]===tag[0] && t[1]===tag[1]))
+    {
+      aa.log('value already in list');
+      continue;
+    }
+    tags.push(tag)
+  }
+  // const event = aa.e.normalise({kind,content,tags});
+  // aa.e.finalize(aa.e.normalise(event));
+};
+
+
+// delete keys from follow list (kind:3)
+aa.e.follows_del =async string=>
+{
+  if (!aa.u.p)
+  {
+    aa.log('no user found, set one first');
+    return
+  }
+  
+  let id = await aa.p.events_last(aa.u.p,'k3');
+  if (!id) return;
+  dat = await aa.e.get(id);
+  if (!dat) return;
+  aa.cli.fuck_off();
+
+  let {kind,content,tags} = dat.event;
+
+  const old_len = tags.length;
+  let keys_to_unfollow = aa.fx.splitr(string,',');
+
+  let removed_list = aa.mk.l('ul',{cla:'list removed_tags'});
+  for (let key of keys_to_unfollow)
+  {
+    if (key.startsWith('npub')) key = aa.fx.decode(key);
+    if (aa.fx.is_hex(key)) 
+    {
+      removed_list.append(aa.mk.l('li',{con:key,cla:'disabled'}));
+      tags = tags.filter(tag=>tag[1]!==key);
+      aa.p.score(`${key} 4`);
+    }
+    else aa.log('invalid pubkey to unfollow')
+  }
+
+  if (tags.length)
+  {
+    const event = aa.e.normalise({ kind,content,tags });
+    aa.mk.confirm(
+    {
+      title:'new follow list:'+old_len+'->'+tags.length,
+      l:aa.mk.l('div',{cla:'wrap',app:[aa.mk.tag_list(tags),removed_list]}),
+      scroll:{behaviour:'smooth',block:'end'},
+      no:{ exe:()=>{} },
+      yes:{ exe:()=> aa.e.finalize(event) },
+    });
+  }
+};
+
+
 // get stored events
 aa.e.get =async ids=>
 {
   let multi = Array.isArray(ids);
   if (!multi) ids = [ids];
   
-  ids = ids.filter(aa.is.key);
+  ids = ids.filter(aa.fx.is_key);
   if (!ids.length) return;
   let want = new Set(ids);
   
   let result = [];
   for (const id of want)
   {
-    if (aa.em.has(id)) result.push(aa.em.get(id));
-    want.delete(id);
+    if (aa.em.has(id)) 
+    {
+      result.push(aa.em.get(id));
+      want.delete(id);
+    }
   }
   if (want.size)
   {
@@ -229,8 +445,11 @@ aa.e.get_a =async ids=>
   let result = [];
   for (const id of want)
   {
-    if (aa.em_a.has(id)) result.push(aa.em_a.get(id));
-    want.delete(id);
+    if (aa.em_a.has(id)) 
+    {
+      result.push(aa.em_a.get(id));
+      want.delete(id);
+    }
   }
   if (want.size)
   {
@@ -252,49 +471,7 @@ aa.e.get_a =async ids=>
 };
 
 
-aa.miss_type =type=>
-{
-  let dis = new Map();
-  let def_relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-  for (const id in aa.miss[type])
-  {
-    let v = aa.miss[type][id];
-    for (const url of [...def_relays,...v.relays]) 
-    {
-      if (!v.nope.includes(url))
-      {
-        if (!dis.has(url)) dis.set(url,new Set());
-        dis.get(url).add(id);
-      }
-    }
-  }
-  if (!dis.size) return {};
-  
-  let [url,ids] = [...dis.entries()].sort(aa.fx.sorts.len)[0];
-  for (const id of ids) aa.fx.a_add(aa.miss[type][id].nope,[url]);
-  return {relays:[url],ids:[...ids.values()]}
-};
 
-
-aa.e.missing_e =async()=>
-{
-  let type = 'e';
-  aa.fx.to(()=>
-  {
-    let {relays,ids} = aa.miss_type(type);
-    if (!relays) return;
-      
-    let req_id = type+'_'+aa.fx.rands(6);
-    aa.r.on_eose.set(req_id,()=>{aa.r.on_eose.delete(req_id)});
-    // console.log({ids});
-    aa.r.def_req(req_id,{ids},relays);
-    setTimeout(()=>
-    {
-      if (Object.keys(aa.miss[type]).length) aa.e.missing_e();
-    },420);
-
-  },666,'miss_'+type);
-};
 
 
 // returns event raw json
@@ -306,15 +483,18 @@ aa.e.json =async(s='')=>
 };
 
 
+
 // on load
 aa.e.load =async()=>
 {
   let mod = aa.e;
   let id = mod.def.id;
   
-  aa.temp.orphan = {};
-  aa.temp.print = {};
-  aa.temp.refs = {};
+  aa.temp.miss = {};
+  aa.temp.orphan = new Map();
+  aa.temp.prints = new Map();
+  aa.temp.refs = new Map();
+  aa.temp.note_quotes = new Map();
   
   await aa.mk.scripts(mod.scripts);
 
@@ -323,6 +503,12 @@ aa.e.load =async()=>
       action:[id,'clear'],
       description:'clear events section',
       exe:mod.clear
+    },
+    {
+      action:[id,'decrypt'],
+      required:['<id>'],
+      description:'decrypt note',
+      exe:mod.decrypt
     },
     {
       action:[id,'s'],
@@ -347,87 +533,7 @@ aa.e.load =async()=>
   mod.section_observer = new MutationObserver(mod.section_mutated);
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
   aa.mod.help_setup(aa.e);
-};
-
-
-// add event id to missing event list
-aa.e.miss_e =(id,relays=[])=>
-{
-  if (!aa.is.x(id))
-  {
-    console.log(id);
-    return
-  }
-  if (!aa.miss.e[id]) aa.miss.e[id] = {nope:[],relays:[]}
-  aa.fx.a_add(relays,aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
-  aa.fx.a_add(aa.miss.e[id].relays,relays);
-
-};
-
-
-// add event id to missing event list
-aa.e.miss_a =(id,relays=[])=>
-{
-  const [kind,pubkey,identifier] = aa.fx.split_ida(id);
-  // let ur = aa.fx.in_set(aa.db.p[pubkey]?.relays,'write');
-  relays.push(...aa.fx.in_set(aa.db.p[pubkey]?.relays,'write'));
-
-
-  if (!aa.miss.a[id]) aa.miss.a[id] = {nope:[],relays:[]};
-  relays.push(...aa.fx.in_set(aa.r.o.ls,aa.r.o.r));
-  for (const rel of relays)
-  {
-    const r = aa.is.url(rel)?.href;
-    if (r) aa.fx.a_add(aa.miss.a[id].relays,[r]);
-  }
-  aa.miss.a[id].relays = [...new Set(aa.miss.a[id].relays)]
-};
-
-
-// get event from tag and prints it,
-// otherwise add to missing list
-aa.e.miss_print =async(tag,relays=[])=>
-{
-  if (!aa.temp.miss_print) aa.temp.miss_print = new Map();
-  const id = tag[1];
-  if (tag[2]) relays.push(tag[2]);
-  if (!aa.temp.miss_print.has(id)) aa.temp.miss_print.set(id,[]);
-  let dis = aa.temp.miss_print.get(id);
-  
-  aa.fx.a_add(dis,relays);
-  aa.fx.to(aa.e.miss_to,500,'miss_print');
-};
-
-
-aa.e.miss_to =async()=>
-{
-  let ids = [...aa.temp.miss_print.keys()];
-  let [get_id,events,missing] = await aa.r.get_events(ids);
-  // console.log(events);
-  for (const dat of events)
-  {
-    aa.temp.miss_print.delete(dat.event.id);
-    aa.e.to_printer(dat)
-  }
-  if (!missing) return;
-  // console.trace(missing);
-  for (const id of missing)
-  {
-    aa.e.miss_e(id,aa.temp.miss_print.get(id));
-  }
-};
-
-
-// get event from tag and prints it,
-// otherwise add to missing list
-aa.e.miss_print_a =async(tag,relays=[])=>
-{
-  const id = tag[1];
-  const relay = tag[2];
-  if (relay) relays.push(relay);
-  let dat = await aa.e.get_a(id);
-  if (dat) aa.e.to_printer(dat); 
-  else aa.e.miss_a(id,relays);
+  aa.cli.on_upd.push(aa.e.draft_upd);
 };
 
 
@@ -465,488 +571,85 @@ aa.e.note_actions =dat=>
 };
 
 
-// process note by kind if available, otherwise default
-aa.e.note_by_kind =dat=>
+// action to add proof-of-work (pow) to a note
+aa.e.pow =async(string='')=>
 {
-  let k = dat.event.kind;
-  // k>=1000  && k<=9999 : regular
-  // k>=10000 && k<=19999 || k===0 || k===3: replaceable
-  // k>=20000 && k<=29999 : ephemeral
-  // k>=30000 && k<=39999 : replaceable_parameterized
-  let type = aa.fx.kind_type(dat.event.kind); 
-  if (aa.kinds.hasOwnProperty(k)) return aa.kinds[k](dat);
-  switch (type)
-  {
-    case 'parameterized': return aa.e.note_pre(dat);
-    default: return aa.e.note_regular(dat);
-  }
-};
-
-
-// regular note
-aa.e.note_regular =dat=>
-{
-  let note = aa.mk.note(dat);
-  aa.e.append_as_root(note);
-  return note
-};
-
-
-// replaceable parameterized note
-aa.e.note_pre =dat=>
-{
-  // console.log('pre',dat);
-  let note = aa.mk.note(dat);
-
-  let d_tag = dat.event.tags.filter(t=>t[0] === 'd')[0];
-  if (d_tag?.length > 1) 
-  {
-    let ds = d_tag[1];
-    let id_a = [dat.event.kind,dat.event.pubkey,ds].join(':');
-    note.dataset.d = ds;
-    note.dataset.id_a = id_a;
-    let og = document.querySelector(`[data-id_a="${id_a}"]`);
-    let versions = og?.querySelector('.versions');
-    if (versions) 
-    {
-      if (og.dataset.created_at < dat.event.created_at)
-      {
-        aa.e.append_as_rep(note,og.parentElement);
-        note.append(versions);
-        versions.append(og);
-      }
-      else aa.e.append_as_rep(note,versions);
-    }
-    else 
-    {
-      let details = aa.mk.details('versions',false,true);
-      details.classList.add('versions');
-      note.append(details);
-      aa.e.append_as_root(note);
-    }
-  }
-  return note
-};
-
-
-// get all note refs stashed and append them to note
-aa.e.note_refs =id=>
-{
-  // console.log('refs',id);
-  let refs = aa.temp.refs[id];
-  if (!refs) return;
-  for (const i in refs) aa.e.append_check(...refs[i]);
-  delete aa.temp.refs[id];
-  if (id in aa.temp.orphan) delete aa.temp.orphan[id];
-};
-
-
-// note replace
-aa.e.note_replace =(old_note,dat)=>
-{
-  console.log('note replaced');
-  dat.clas = aa.fx.a_rm(dat.clas,['draft']);
-  let note = aa.e.note_by_kind(dat);
-  note.querySelector('.replies').replaceWith(old_note.querySelector('.replies'));
-  // let in_path;
-  // // move replies from old note to new note
-  // for (const child of old_note.querySelector('.replies').children()) 
-  // {
-  //   if (child.tagName !== 'ARTICLE') continue;
-
-  //   aa.e.append_as_rep(child,note_replies);
-  //   if (child.classList.contains('in_path')) in_path = true;
-  // }
+  let [id,difficulty] = aa.fx.split_r(string)
+  difficulty = parseInt(difficulty);
   
-  note.className = old_note.className;
-  // aa.e.printed.delete(dat.event.id);
-  old_note.remove();
-  aa.e.printed.set(dat.event.id,note);
+  if (!aa.fx.is_hex(id) || !difficulty) 
+  { 
+    aa.log('pow failed'); 
+    return 
+  }
+  return await aa.fx.pow_note(id,difficulty);
+};
+
+
+
+
+
+aa.e.quote =data=>
+{
+  const quote_note = aa.mk.l('blockquote',
+  {
+    cla:'note_quote',
+    dat:
+    {
+      id:data.id,
+      id_a:data.id_a
+    },
+    app:aa.mk.l('div',
+    {
+      cla:'content parsed',
+      app:aa.mk.ls({ls:data})
+    }),
+  });
+  aa.e.quote_note_replace(quote_note,data);
+  return quote_note
+};
+
+aa.e.quote_note =async(element,dat)=>
+{
+  let p = await aa.p.author(dat.event.pubkey);
+  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.fx.color(p.pubkey,element);
+  let header = aa.mk.event_header(dat);
+  let content = aa.mk.l('div',{cla:'content',con:dat.event.content});
+  element.textContent = '';
+  element.append(header,content);
+  element.dataset.kind = dat.event.kind;
+  if (!element.dataset.id) element.dataset.id = dat.event.id;
+  aa.e.render(element);
+};
+
+aa.e.quote_note_replace =async(element,data)=>
+{
+  let dat;
   
-  note.classList.remove('blank','tiny','draft','not_sent');
-  if (in_path) note.classList.add('in_path');
-  if (!sessionStorage.getItem(dat.event.id)) note.classList.add('is_new');
-  else note.classList.remove('is_new');
-  if (dat.clas) note.classList.add(...dat.clas);
+  if (data.id_a) dat = await aa.e.get_a(data.id_a);
+  else dat = await aa.e.get(data.id);
   
-  let is_root = note.classList.contains('root');
-  if (!is_root && note.parentElement?.closest('.note')) 
-  {
-    note.classList.remove('root','not_yet');
-  }
-  // else if (is_root) note.classList.add('root');
+  if (dat) aa.e.quote_note(element,dat);
+  else aa.e.miss_quote(element,data);
+};
+
+
+aa.e.quote_update =dat=>
+{
+  // console.log('quote_update',dat);
   
-  let is_reply = note.classList.contains('reply');
-  if (!is_reply && !note.parentElement?.closest('.note')) note.classList.remove('reply');
-  // else if (is_reply) note.classList.add('reply');
-  note.classList.add('replaced');
-  if (note.classList.contains('not_yet')) 
-  {
-    note_replies.removeAttribute('open');
-    aa.e.note_observer.observe(b);
-  }
-  aa.e.render(note);
-  return note
-};
+  let id = dat?.id_a || dat?.event?.id;
+  if (!id) return;
 
-
-// remove note
-aa.e.note_rm =note=>
-{
-  if (aa.view.active === note.id) aa.view.clear();
-  aa.em.delete(note.dataset.id);
-  if (note.dataset.id_a) aa.em_a.delete(note.dataset.id_a);
-  note.remove();
-  aa.fx.count_upd(aa.el.get('butt_e'),false);
-};
-
-
-// on observed note intersection
-aa.e.note_intersect =l=>
-{
-  if (!l.classList.contains('rendered'))
-  {
-    aa.e.note_observer.unobserve(l);
-    fastdom.mutate(()=>
-    {
-      l.classList.remove('not_yet');
-      l.classList.add('rendered');
-      l.querySelector('.replies').setAttribute('open','');
-    });
-  }
-};
-
-
-// create note intersection observer
-aa.e.note_observer = new IntersectionObserver(a=>
-{
-  for (const b of a)
-  {
-    if (b.isIntersecting) 
-    {
-      aa.e.note_intersect(b.target);
-      // b.target.classList.add('in_viewport');
-    }
-    // else b.target.classList.remove('in_viewport');
-  }
-},{root:null,threshold:.9});
-
-
-// stash orphan
-aa.e.orphan =(dat,note,tag)=>
-{
-  const id = tag[1];//.split(':').join('_');
+  let note_quotes = aa.temp.note_quotes.get(id);
+  if (!note_quotes) return;
   
-  if (!aa.temp.refs[id]) aa.temp.refs[id] = {};
-  if (!aa.temp.refs[id][dat.event.id])
+  for (const element of note_quotes)
   {
-    aa.temp.refs[id][dat.event.id] = [dat,note,tag];
-    aa.temp.orphan[dat.event.id] = id;
+    aa.e.quote_note(element,dat)
   }
-};
-
-
-// send data to print
-aa.e.to_printer =dat=>
-{
-  aa.temp.print[dat.event.id] = dat;
-  if (aa.miss.e[dat.event.id]) 
-  {
-    delete aa.miss.e[dat.event.id];
-    dat.clas.push('miss');
-  }
-  else if (dat.id_a)
-  {
-    if (aa.miss.a[dat.id_a])
-    {
-      delete aa.miss.a[dat.id_a];
-      dat.clas.push('miss');
-    }
-  }
-  aa.fx.to(aa.e.printer,0,'printer');
-};
-
-
-// printer queue handler
-aa.e.printer =()=>
-{
-  let to_print = Object.values(aa.temp.print).sort(aa.fx.sorts.ca_asc);
-  aa.temp.print = {};
-
-  for (const dat of to_print) setTimeout(()=>{aa.e.print(dat)},0);
-  
-  setTimeout(()=>{aa.e.missing_e()},100);
-  aa.fx.to(()=>
-  {
-    aa.get.missing('p');
-    // aa.get.missing('e');
-    aa.get.missing('a');
-  },1420,'missing')
-};
-
-
-aa.e.em =dat=>
-{
-  // console.log(dat);
-  const id = dat?.event?.id;
-  // if (!id) console.trace(dat);
-  if (!aa.em.has(id))
-  {
-    aa.em.set(id,dat);
-    if (dat.id_a)
-    {
-      if (aa.em_a.has(dat.id_a))
-      {
-        if (aa.em_a.get(dat.id_a).event.created_at
-        < dat.event.created_at) aa.em_a.set(dat.id_a,dat)
-      }
-    } 
-  }
-  return id
-};
-
-
-// print event
-aa.e.print =dat=>
-{
-  // console.log(dat);
-  const id = aa.e.em(dat);
-  if (aa.temp.orphan[id]) return;
-
-  let note = aa.e.printed.get(id);
-  if (!note)
-  {
-    aa.fx.count_upd(aa.el.get('butt_e'));
-    note = aa.e.note_by_kind(dat);
-    aa.e.printed.set(id,note);
-    aa.get.note_refs(note);
-    if (!note) console.log(dat);
-    else 
-    {
-      if (note.classList.contains('draft'))
-      {
-        aa.fx.scroll(note,{behavior:'smooth',block:'center'});
-      }
-      let k_v = 'pubkey_'+dat.event.pubkey;
-      if (aa.p.viewing && aa.p.viewing[1] === k_v) 
-      {
-        aa.p.viewing[0].push(note);
-      }
-    }
-  }
-  else
-  {
-    if (note.classList.contains('blank') 
-    || note.classList.contains('draft')) 
-    {
-      note = aa.e.note_replace(l,dat);
-    }
-    else
-    {
-      let seen = dat.seen.join(' ');
-      let subs = dat.subs.join(' ');
-      if (note.dataset.seen !== seen) note.dataset.seen = seen;
-      if (note.dataset.subs !== subs) note.dataset.subs = subs;
-    }
-  }
-
-  
-  if (dat.clas.includes('miss')) dat.clas = aa.fx.a_rm(dat.clas,['miss']);
-   //.split(':').join('_')
-  let id_a = dat.id_a?.length ? dat.id_a : id;
-  setTimeout(()=>{aa.get.quotes(id_a)},200);
-  
-  // let looking_for = 'looking_for_'+id;
-  // if (Object.hasOwn(aa.temp,looking_for))
-  // {
-  //   aa.temp[looking_for].parentElement.remove();
-  //   delete aa.temp[looking_for];
-  // }
-  // if (l && history.state?.view === '#'+nid) setTimeout(()=>{aa.e.view(l)},1000);
-};
-
-
-// quote event
-aa.e.quote =o=>
-{
-  if (!o.id) return false;
-  const quote = aa.mk.l('blockquote',{cla:'note_quote'});
-  if (o.dis) quote.cite = o.dis;
-  quote.dataset.id = o.id;
-  let by = aa.mk.l('p',{cla:'note_quote_by'});
-  quote.append(by);
-  let has_pub;
-  let pubkey = o.author ?? o.pubkey;
-  if (pubkey) 
-  {
-    has_pub = true;
-    aa.fx.color(pubkey,quote);
-    pubkey = aa.mk.p_link(pubkey);
-    by.prepend(pubkey);
-  }
-  setTimeout(()=>{aa.e.quote_upd(quote,o)},0);
-  return quote
-};
-
-// quote PRE event
-aa.e.quote_a =o=>
-{
-  const quote = aa.mk.l('blockquote',{cla:'note_quote'});
-  quote.dataset.id_a = o.id_a;
-  setTimeout(()=>{aa.e.quote_a_upd(quote,o)},0);
-  return quote
-};
-
-// update blank quotes
-aa.e.quote_a_upd =async(quote,o)=>
-{
-  let id = o.id_a;
-  let pub = o.pubkey;
-  let p = await aa.p.get(pub);
-  if (!p) p = aa.p.p(pub);
-
-  let by = aa.mk.l('p',{cla:'note_quote_by'});
-  quote.append(by);
-  by.append(aa.mk.p_link(pub));
-  aa.fx.color(pub,quote);
-
-  let a_note = aa.e.by_ida(o.id_a);
-  let content = new DocumentFragment();
-  let quote_classes = [];
-  if (a_note)
-  {    
-    by.append(aa.mk.nostr_link(a_note.id)); 
-    let og_content = a_note.querySelector('.content');
-    if (og_content) 
-    {
-      let new_content = og_content.cloneNode(true);
-      for (const c of new_content.childNodes) content.append(c);
-      quote_classes.push('parsed');
-    }
-  }
-  else
-  {
-    if (!aa.temp.note_quotes) aa.temp.note_quotes = {};
-    if (!aa.temp.note_quotes[id]) aa.temp.note_quotes[id] = [];
-    aa.temp.note_quotes[id].push(quote);
-    quote_classes.push('blank_quote');
-    content = aa.mk.l('p',{cla:'paragraph'});
-    
-    // let req = {ids:[o.id]};
-    let relays = [];
-    if (o.relays?.length) 
-    {
-      content.append(`\nrelays: ${o.relays}`);
-      relays = o.relays
-    }
-    aa.e.miss_a(o.id_a,relays);
-  }
-  quote.append(content)
-  quote.classList.add(...quote_classes);
-};
-
-
-// update blank quotes
-aa.e.quote_upd =async(quote,o)=>
-{
-  let by = quote.querySelector('.note_quote_by');
-  let has_pub = by.querySelector('a.author') ? true : false;
-  let content;
-  let quote_classes = [];
-  let dat = await aa.e.get(o.id);
-  if (dat) 
-  {
-    let p = await aa.p.get(dat.event.pubkey);
-    if (!p) p = aa.p.p(dat.event.pubkey);
-    if (!has_pub) 
-    {
-      by.prepend(aa.mk.p_link(p.pubkey));
-      aa.fx.color(p.pubkey,quote);
-    }
-    by.append(aa.mk.nostr_link(aa.fx.encode('note',o.id)));
-    aa.e.render(quote,dat);
-    // content = aa.parse.content(dat.event.content,aa.is.trusted(p.score));
-    quote_classes.push('parsed');
-    aa.p.from_tags([['p',dat.event.pubkey]]);
-  }
-  else
-  {
-    if (!aa.temp.note_quotes) aa.temp.note_quotes = {};
-    if (!aa.temp.note_quotes[o.id]) aa.temp.note_quotes[o.id] = [];
-    aa.temp.note_quotes[o.id].push(quote);
-    quote_classes.push('blank_quote');
-    if (!has_pub) by.prepend(aa.mk.l('span',{con:'?'}));
-    content = aa.mk.l('p',{cla:'paragraph'});
-    
-    // let req = {ids:[o.id]};
-    let relays = [];
-    if (o.relays?.length) 
-    {
-      content.append(`\nrelays: ${o.relays}`);
-      relays = o.relays
-    }
-    let relay = relays.length?relays[0]:'read';
-    aa.e.miss_e(o.id,relays);
-    let command = aa.q.def.id+' req';
-    let filter = '{"ids":["'+o.id+'"],"eose":"close"}';
-    by.append(aa.mk.butt_action(`${command} ${relay} ${filter}`,'req'));
-  }
-  if (content) quote.append(content)
-  quote.classList.add(...quote_classes);
-};
-
-
-// gets all blank quotes and replaces with actual data
-aa.e.quotes_to =async q_id=>
-{
-  let ids = [...new Set(aa.temp[q_id])];
-  aa.temp[q_id] = [];
-  for (const id of ids)
-  {
-    if (!aa.temp.note_quotes?.hasOwnProperty(id)) continue;
-    let quotes = aa.temp.note_quotes[id];
-    if (!quotes?.length) continue;
-    if (aa.is.key(id))
-    {
-      let dat = await aa.e.get(id);
-      if (dat)
-      {
-        delete aa.temp.note_quotes[id];
-        setTimeout(()=>{for(const q of quotes) q.replaceWith(aa.e.quote(dat.event))},10);
-      }
-    }
-    else
-    {
-      let [kind,pubkey,identifier] = aa.fx.split_ida(id);
-      let dis = {kind,pubkey,identifier,id_a:id};
-      setTimeout(()=>{ for(const q of quotes) q.replaceWith(aa.e.quote_a(dis))},10);
-    }
-  }
-};
-
-
-aa.e.kinda_reply =async(dat,reply_dat)=>
-{
-  // let notes = new Set([1]);
-  let tags;
-  if (reply_dat.event.kind === 1)
-  {
-    tags = aa.get.tags_for_reply(reply_dat.event)
-  }
-  else
-  {
-    switch (reply_dat.event.kind)
-    {
-      case 11:
-      case 1111:
-        dat.event.kind = reply_dat.event.kind;
-        break;
-      default:
-        dat.event.kind = 1111;
-    }
-    tags = await aa.get.tags_for_comment(reply_dat.event);
-  }
-  dat.event.tags.push(...tags);
+  aa.temp.note_quotes.delete(id);
 };
 
 
@@ -995,40 +698,7 @@ aa.e.section_mutated =a=>
 };
 
 
-// update note path when appending
-aa.e.upd_note_path =(l,stamp,is_u=false)=> 
-{
-  let root;
-  let updated;
-  let og;
-  let levels = 0;
 
-  for (; l && l !== document; l = l.parentNode ) 
-  {
-    if (l.classList.contains('note')) 
-    {
-      if (!levels) og = l;
-      levels++;
-      updated = false;
-      root = l;
-      if (l.dataset.stamp < stamp && !is_u)
-      {
-        l.dataset.stamp = stamp;
-        updated = true;
-      }
-      if (l.querySelector('.note.is_new')) l.classList.add('haz_new');
-      aa.clk.time({target:l.querySelector('.by .created_at')});
-      const replies = l.querySelector('.replies');
-      const some = replies.childNodes.length - 1;
-      const all = l.querySelectorAll('.note').length;
-      const summary = replies.querySelector('summary');
-      const sum_butt = summary.querySelector('.mark_read');
-      if (summary && some > 0) sum_butt.textContent = some+(all>some?'.'+all:'')
-    }
-  }
-  if (root && updated) aa.e.append_as_root(root);
-  if (og) og.dataset.level = levels;
-};
 
 
 // view event
@@ -1057,3 +727,94 @@ aa.e.view_check =l=>
 };
 
 aa.mk.styles(aa.e.styles);
+
+
+
+// draft event
+aa.e.draft =async dat=>
+{
+  aa.fx.a_add(dat.clas,['draft']);
+  dat.event.tags = [...new Set(dat.event.tags)];
+  if (!dat.event.id) dat.event.id = aa.fx.hash(dat.event);
+  aa.em.set(dat.event.id,dat);
+  aa.e.print(dat);
+  
+  let target = document.getElementById('e');
+  if (target && !target.classList.contains('expanded')) aa.clk.expand({target});
+};
+
+
+
+// creates new dat object (event)
+aa.e.draft_dat =async(s,reply_to)=>
+{
+  aa.temp.dat = aa.mk.dat(
+  {
+    event: aa.e.normalise({content:s}),
+    clas:['draft']
+  });
+
+  aa.fx.reply(aa.temp.dat,reply_to);
+};
+
+
+// creates / updates / deletes dat event from input
+aa.e.draft_upd =async(s='')=>
+{
+  if (!s) s = aa.cli.t.value;
+  if (s.length)
+  {
+    const reply_to = aa.view.active;
+    if (reply_to 
+    && aa.temp.dat?.replying !== reply_to) 
+      delete aa.temp.dat;
+    if (!aa.temp.dat) aa.e.draft_dat(s,reply_to)
+    else aa.temp.dat.event.content = s;
+  }
+  else if (aa.temp.dat) delete aa.temp.dat;
+};
+
+
+// finalize event creation
+aa.e.finalize =async(event,relays)=>
+{
+  event.tags = aa.fx.a_u(event.tags);
+  if (!event.id) event.id = aa.fx.hash(event);
+  const signed = await aa.e.sign(event);
+  if (signed)
+  {
+    event = signed;
+    let dat = aa.mk.dat({event});
+    // aa.em.set(event.id,dat);
+    // aa.db.upd_e(dat);
+    aa.e.print(dat);
+    aa.r.send_event({event,relays});
+  }
+};
+
+
+// event complete
+aa.e.normalise =event=>
+{
+  if (!event.pubkey) event.pubkey = aa.u.p.pubkey;
+  if (!event.kind) event.kind = 1;
+  if (!event.created_at) event.created_at = aa.now;
+  if (!event.tags) event.tags = [];
+  if (!event.content) event.content = '';
+  return event
+};
+
+
+// sign event
+aa.e.sign =async event=>
+{
+  return new Promise(resolve=>
+  {
+    if (!window.nostr) 
+    {
+      aa.log('you need a signer');
+      resolve(false)
+    }
+    window.nostr.signEvent(event).then(resolve);
+  });
+};

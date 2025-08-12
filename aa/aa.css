@@ -751,7 +751,8 @@ img:not([src]) {
 
 .l.is_new::after
 {
-  content: "*/";
+  content: " */";
+  margin-left: var(--padm);
 }
 
 .l .item
@@ -1360,11 +1361,14 @@ html:not(.cli_expanded) .l:not(.is_new),
 
 #dialog[title]::before
 {
+  background: rgb(var(--color-b));
   color: rgb(var(--color-main));
   content: attr(title);
   display: block;
-  margin: var(--pad) 0;
+  padding: var(--pad) 0;
+  position: sticky;
   text-align: center;
+  top: 0;
 }
 
 .removed_tags

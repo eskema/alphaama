@@ -87,7 +87,7 @@ aa.w.add =(string='')=>
   {
     for (let url of urls)
     {
-      url = aa.is.url(url.trim())?.href;
+      url = aa.fx.url(url.trim())?.href;
       let mint = aa.w.get_mint(url);
       if (!mint && url)
       {
@@ -212,7 +212,7 @@ aa.w.import_7375 =async(id='')=>
   }
   
   let {mint,proofs} = await aa.fx.decrypt_parse(dat.event);
-  url = aa.is.url(mint)?.href;
+  url = aa.fx.url(mint)?.href;
   if (!url) 
   {
     aa.log('w import: invalid mint url');
@@ -578,7 +578,7 @@ aa.w.receive =async(string='')=>
 // redeem nutzap events
 aa.w.redeem =async(string='')=>
 {
-  let ids = aa.fx.splitr(string).filter(aa.is.key);
+  let ids = aa.fx.splitr(string).filter(aa.fx.is_key);
   return ids
 
 };
@@ -618,7 +618,7 @@ aa.w.start =async mod=>
       if (dat.event.created_at > new_since) 
         new_since = dat.event.created_at;
     }
-    aa.r.dat(dat)
+    aa.e.to_printer(dat)
   }
   if (new_since !== old_since) 
   {
@@ -653,7 +653,7 @@ aa.w.token =async(string='')=>
   let [wallet,w] = await aa.w.get_active();
   let opts = {};
 
-  if (pubkey && aa.is.key(pubkey)) opts.pubkey = '02'+pubkey;
+  if (pubkey && aa.fx.is_key(pubkey)) opts.pubkey = '02'+pubkey;
   if (!memo) memo = localStorage.zap_memo;
   
   const {keep,send} = await wallet.send(amount,w.proofs,opts);

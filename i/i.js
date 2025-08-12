@@ -274,7 +274,7 @@ aa.i.load =async()=>
 
 
 // returns all the notes that have a tag with value
-aa.get.notes_with_tag =(k,v)=>
+aa.fx.notes_with_tag =(k,v)=>
 {
   let ids = [];
   let notes = [];
@@ -297,7 +297,7 @@ aa.clk.key =e=>
   const k = l.dataset.k;
   const v = l.dataset.v;
   let dis = e.target.classList.contains('.key') ? e.target : e.target.closest('.key');
-  let items = aa.get.index_items(k,v);
+  let items = aa.fx.index_items(k,v);
   aa.i.filter_solo(dis,items,k,v);
 }
 
@@ -309,12 +309,12 @@ aa.clk.val =e=>
   const k = l.dataset.k;
   const v = l.dataset.v;
   let dis = e.target.classList.contains('.val') ? e.target : e.target.closest('.val');
-  let items = aa.get.index_items(k,v);
+  let items = aa.fx.index_items(k,v);
   aa.i.filter_out(dis,items,k,v);
 }
 
 // get elements with key:value
-// aa.get.index_items =(k,v)=>
+// aa.fx.index_items =(k,v)=>
 // { 
 //   switch (k)
 //   {
@@ -330,7 +330,7 @@ aa.clk.val =e=>
 //     case 'tag_t':
 //     case 'tag_subject': 
 //     case 'tag_d': 
-//       return aa.get.notes_with_tag(k,v);
+//       return aa.fx.notes_with_tag(k,v);
 //   }
 //   return []
 // };

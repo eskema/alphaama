@@ -139,19 +139,27 @@ aa.mod.append =mod_l=>
 
 aa.mod.dialog =(id='')=>
 {
-  let mod_l = aa[id]?.l;
-  if (!mod_l) 
+  let element = aa[id]?.l;
+  if (!element) 
   {
     aa.log('aa.mod.pop: mod not found')
     return
   }
-  if (!mod_l.hasAttribute('open')) 
-  {
-    mod_l.toggleAttribute('open');
-    mod_l.dataset.was = 'closed';
-  }
+
   const dialog = aa.el.get('dialog');
-  dialog.append(mod_l);
+  if (!dialog)
+  {
+    aa.log('aa.mod.pop: dialog not found')
+    return
+  }
+
+  if (!element.hasAttribute('open')) 
+  {
+    element.toggleAttribute('open');
+    element.dataset.was = 'closed';
+  }
+  
+  dialog.append(element);
   dialog.showModal();
 };
 

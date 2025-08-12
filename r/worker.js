@@ -58,8 +58,15 @@ const connect =(a=[])=>
     console.log('no url');
     return
   }
-
-  ws = new WebSocket(worker.url);
+  try { ws = new WebSocket(worker.url) }
+  catch {}
+  
+  if (!ws)
+  {
+    console.log('could not connect to',worker.url)
+    return
+  } 
+  
   ws.onerror =e=>
   {
     worker.errors.push(get.now);

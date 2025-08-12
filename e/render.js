@@ -15,7 +15,7 @@ aa.e.rnd =
 // based on kind
 aa.e.render =async(l,options)=>
 {
-  let dat = await aa.e.get(l?.dataset.id); 
+  let dat = await aa.e.get(l?.dataset.id);
   if (!dat) return;
   if (l.classList.contains('e_render'))
   {
@@ -35,22 +35,20 @@ aa.e.render =async(l,options)=>
       {
         renders++;
         let fid = 'render_'+key;
-        if (aa.e.hasOwnProperty(fid)) aa.e[fid](l,dat,options);
+        if (Object.hasOwn(aa.e,fid)) aa.e[fid](l,dat,options);
       }
     }
     fastdom.mutate(()=>
     {
       l.classList.add('e_render');
-      let content = dat.event.content;
-      // if (!content) 
-      // {
-      //   console.log(dat);
-      //   return
-      // }
-      if (!renders && (!content || !content?.trim().length))
+      let content = l.querySelector('.content');
+      if (!renders && !content?.textContent.length)
       {
         l.classList.add('no_content');
-        l.querySelector('.tags_wrapper')?.toggleAttribute('open',true);
+        let tags = l.querySelector('.tags_wrapper');
+        if (tags) tags.toggleAttribute('open',true);
+        else tags = aa.mk.tag_list(dat.event.tags);
+        content.append(tags)
       }
     })
   }
@@ -61,16 +59,29 @@ aa.e.render =async(l,options)=>
 aa.e.render_content =async(note,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
-  let is_trusted = aa.is.trusted(o.trust||p?.score);
-  aa.parse.context(note,dat.event,is_trusted);
+  let is_trusted = aa.fx.is_trusted(o.trust||p?.score);
+  aa.e.context(note,dat.event,is_trusted);
 };
 
 
-// render content as rich text
-aa.e.render_emojii =async(note,dat)=>
+// render content as emoji
+aa.e.render_emojii =async(note,dat,o={})=>
 {
-  // let p = await aa.p.author(dat.event.pubkey);
-  aa.parse.emojii(note,dat.event);
+  let p = await aa.p.author(dat.event.pubkey);
+  let is_trusted = aa.fx.is_trusted(o.trust||p?.score);
+  if (!is_trusted) return;
+
+  let emoji = dat.event.tags.find(t=>t[0]==='emoji');
+  if (!emoji) return;
+
+  emoji = aa.fx.url(emoji[2])?.href;
+  if (!emoji) return;
+
+  let emojii = aa.mk.img(emoji);
+  emojii.classList.add('emojii');
+  let content = note.querySelector('.content');
+  content.textContent = '';
+  content.append(emojii)
 };
 
 
@@ -101,7 +112,7 @@ aa.e.render_encrypted =async(l,dat)=>
 aa.e.render_highlight =async(note,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
-  let is_trusted = aa.is.trusted(o.trust||p?.score);
+  let is_trusted = aa.fx.is_trusted(o.trust||p?.score);
   
     // highlighted stuff
   let h_s = dat.event.tags.find(i=>i[0]==='a');
@@ -119,7 +130,7 @@ aa.e.render_highlight =async(note,dat,o={})=>
       case 'a':
         let [kind,pubkey,identifier] = aa.fx.split_ida(h_s[1]);
         let data = {kind,pubkey,identifier};
-        let relay = aa.is.url(h_s[2])?.href;
+        let relay = aa.fx.url(h_s[2])?.href;
         if (relay) data.relays = [relay];
         let naddr = aa.fx.encode('naddr',data);
         // let l = aa.mk.l('p');
@@ -156,8 +167,8 @@ aa.e.render_highlight =async(note,dat,o={})=>
   }
 
   let comment = aa.fx.tag_value(dat.event.tags,'comment');
-  if (comment) comment = aa.parse.content(comment,is_trusted);
-  let highlight = aa.mk.l('div',{cla:'highlight',app:aa.parse.content(dat.event.content,is_trusted)});
+  if (comment) comment = aa.e.content(comment,is_trusted);
+  let highlight = aa.mk.l('div',{cla:'highlight',app:aa.e.content(dat.event.content,is_trusted)});
   if (highlight.childNodes.length) 
   {
     fastdom.mutate(()=>
@@ -187,8 +198,8 @@ aa.e.render_highlight =async(note,dat,o={})=>
 aa.e.render_image =async(l,dat)=>
 {
   let p = await aa.p.get(dat.event.pubkey);
-  let trusted = aa.is.trusted(p?.score||0);
-  aa.parse.context(l,dat.event,trusted);
+  let trusted = aa.fx.is_trusted(p?.score||0);
+  aa.e.context(l,dat.event,trusted);
   let url = aa.fx.url_from_tags(dat.event.tags);
   if (url)
   {
@@ -204,7 +215,7 @@ aa.e.render_image =async(l,dat)=>
 // render content as object
 aa.e.render_object =async(l,dat)=>
 {
-  aa.parse.content_o(aa.parse.j(dat.event.content),l,'a');
+  aa.e.content_o(l,aa.parse.j(dat.event.content),'a');
 };
 
 
@@ -212,8 +223,8 @@ aa.e.render_object =async(l,dat)=>
 aa.e.render_video =async(l,dat)=>
 {
   let p = await aa.p.get(dat.event.pubkey);
-  let trusted = aa.is.trusted(p?.score||0);
-  aa.parse.context(l,dat.event,trusted);
+  let trusted = aa.fx.is_trusted(p?.score||0);
+  aa.e.context(l,dat.event,trusted);
   let url = aa.fx.url_from_tags(dat.event.tags);
   if (url)
   {

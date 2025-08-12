@@ -1,3 +1,12 @@
+aa.mk.content_section =con=>
+{
+  return aa.mk.l('section',
+  {
+    cla:'content',
+    app:aa.mk.l('p',{cla:'paragraph',con})
+  })
+};
+
 // make details section
 aa.mk.det =(cla='',id='')=>
 {
@@ -10,133 +19,150 @@ aa.mk.det =(cla='',id='')=>
 };
 
 
+aa.mk.event_header =dat=>
+{
+  const id = dat.event.id;
+  const kind = dat.event.kind;
+
+  return aa.mk.l('header',
+  {
+    cla:'by',
+    app:
+    [
+      aa.mk.l('div',
+      {
+        cla:'id',
+        app:
+        [
+          aa.mk.l('a',
+          {
+            cla:'a nid',
+            ref:`#${aa.fx.encode('note',id)}`,
+            app:aa.mk.l('span',
+            {
+              con:aa.k[kind],
+              dat:{kind}
+            }),
+            clk:aa.clk.a
+          }),
+          ' ',aa.mk.l('span',{cla:'xid',con:id})
+        ]
+      }),
+      ' ',aa.mk.author_link(dat.event.pubkey),
+      ' ',aa.e.note_actions(dat),
+      ' ',aa.mk.time(dat.event.created_at)
+    ]
+  });
+};
+
+
+
+// parse nip19 to render as mention or quote
+aa.mk.nip19 =string=>
+{
+  let decoded = aa.fx.decode(string);
+  if (!decoded) return string;
+  
+  if (string.startsWith('npub1')
+  || string.startsWith('nprofile1')) 
+  {
+    // return p_link
+    let pubkey = typeof decoded === 'string' ? decoded 
+    : decoded.pubkey;
+    return aa.mk.p_link(pubkey);
+  }
+  else if (string.startsWith('note1')
+  || string.startsWith('nevent1')
+  || string.startsWith('naddr1'))
+  {
+    // return quote_note
+    let dis = {};
+    if (string.startsWith('note1')) dis.id= decoded;
+    else if (string.startsWith('nevent1'))
+    {
+      if (decoded.id) dis = decoded;
+    }
+    else if (string.startsWith('naddr1'))
+    {
+      decoded.id_a = aa.fx.id_a(decoded);
+      if (decoded.id_a) dis = decoded;
+    }
+    
+    if (dis.id || dis.id_a)
+    {
+      dis.entity = string;
+      return aa.e.quote(dis)
+    }
+    else return aa.mk.l('span',
+    { con:`${string}:\n${JSON.stringify(decoded)}`})
+  }
+  return aa.mk.nostr_link(string)
+};
+
+
 // make generic note element
 aa.mk.note =dat=>
 {
-  const note = aa.mk.l('article',{cla:'note'});
-  // const heading = aa.mk.l('h1',{cla:'heading'});
-  // `a ${aa.k[dat.event.kind]} by`
-  // heading.textContent = 'k'+dat.event.kind+' '+aa.k[dat.event.kind];
-  const by = aa.mk.l('header',{cla:'by'});
-
-  note.append(by);
-  if (dat.seen) note.dataset.seen = dat.seen.join(' ');
-  if (dat.subs) note.dataset.subs = dat.subs.join(' ');
-  if (dat.clas) note.classList.add(...dat.clas);
+  const {
+    id,
+    pubkey,
+    kind,
+    created_at,
+    content,
+    tags,
+    // sig
+  } = dat.event;
   
-  let replies_id;
-  if ('id' in dat.event)
+  if (!id) console.log('no id',dat);
+  if (!pubkey) console.log('no pubkey',dat);
+  if (typeof kind !== 'number') console.log('no kind',dat);
+
+  const nid = aa.fx.encode('note',id);
+  const stamp = aa.now < created_at ? aa.now : created_at;
+  const cla = ['note',...dat.clas].join(' ');
+  const seen = dat?.seen?.join(' ')||'';
+  const subs = dat?.subs?.join(' ')||'';
+
+  const app = new DocumentFragment();
+
+  const clicker = aa.mk.l('a',
   {
-    const nid = aa.fx.encode('note',dat.event.id);
-    note.id = nid;
-    note.dataset.id = dat.event.id;
-    const h1 = aa.mk.l('span',{cla:'id'});
-    const nid_inner = aa.mk.l('span',
-    {
-      con:aa.k[dat.event.kind]
-    });
-    nid_inner.dataset.kind = dat.event.kind;
-    const h1_nid = aa.mk.l('a',
-    {
-      cla:'a nid',
-      ref:'#'+nid,
-      app:nid_inner,
-      clk:aa.clk.a
-    });
-    
-    const h1_xid = aa.mk.l('span',{cla:'xid',con:dat.event.id});
-    h1.append(h1_nid,h1_xid);
-    by.prepend(h1);
-    
-    let stored = sessionStorage[dat.event.id];
-    if (stored && stored === 'tiny') note.classList.add('tiny');
-    
-    const clicker = aa.mk.l('a',
-    {
-      cla:'a clicker',
-      ref:'#'+nid,
-      con:'k'+dat.event.kind+' '+aa.k[dat.event.kind],
-      clk:aa.clk.a
-    });
-    note.prepend(clicker);
+    cla:'a clicker',
+    ref:'#'+nid,
+    con:'k'+kind+' '+aa.k[kind],
+    clk:aa.clk.a
+  });
+
+  const header = aa.mk.event_header(dat);
+  const content_section = aa.mk.content_section(content);
+
+  app.append(clicker,header,content_section);
+
+  if (tags?.length)
+  {
+    const tags_section = aa.mk.details('tags',aa.mk.tag_list(tags));
+    tags_section.classList.add('tags_wrapper');
+    tags_section.querySelector('summary').dataset.count = tags.length;
+    app.append(tags_section);
   }
 
-  if ('pubkey' in dat.event)
-  {
-    const pubkey = dat.event.pubkey;
-    note.dataset.pubkey = pubkey;
-    let p_link = aa.mk.author_link(dat.event.pubkey);
-    by.append(p_link);
-    aa.p.get(pubkey).then(p=>
-    {
-      if (!p && !aa.miss.p[pubkey]) aa.miss.p[pubkey] = {nope:[],relays:[]};
-      if (!p) p = aa.p.p(pubkey);
-      aa.fx.color(pubkey,note);
-      note.dataset.trust = p.score;
-      // setTimeout(()=>{
-      aa.p.data(p).then(p_link_data=>
-      {
-        aa.p.link_data_upd(p_link.querySelector('.author'),p_link_data.data)
-      })
-      
-      // },500);
-    });
-  }
+  const replies_section = aa.mk.replies_section(id)
+  app.append(replies_section);
 
-  by.append(aa.e.note_actions(dat));
+  const note = aa.mk.l('article',
+  {
+    id:nid,
+    cla,
+    dat:{id,pubkey,kind,created_at,stamp,seen,subs},
+    app
+  });
+
+  let stored = sessionStorage[id];
+  if (stored && stored === 'tiny') note.classList.add('tiny');
   
-  if ('kind' in dat.event) 
-  {
-    note.dataset.kind = dat.event.kind;
-  }
+  setTimeout(()=>{ aa.fx.color(pubkey,note) },0);
+  setTimeout(()=>{ aa.e.render(note) },10);
 
-  if ('created_at' in dat.event)
-  {
-    let ca = dat.event.created_at;
-    let stamp = aa.now < ca ? aa.now : ca
-    note.dataset.created_at = ca;
-    note.dataset.stamp = stamp;
-    by.append(aa.mk.time(ca));
-  }
-
-  if ('content' in dat.event)
-  {
-    note.append(aa.mk.l('section',
-    {
-      cla:'content',
-      app:aa.mk.l('p',{cla:'paragraph',con:dat.event.content})
-    }));
-  }
-
-  if ('tags' in dat.event && dat.event.tags.length)
-  {
-    let tags_list = aa.mk.tag_list(dat.event.tags);
-    let tags_wrapper = aa.mk.details('tags',tags_list);
-    tags_wrapper.classList.add('tags_wrapper');
-    tags_wrapper.querySelector('summary').dataset.count = dat.event.tags.length;
-    note.append(tags_wrapper);
-  }
-
-  // if ('sig' in dat.event) 
-  // {
-  //   note.append(aa.mk.l('p',{cla:'sig',con:dat.event.sig}));
-  // }
-
-  let replies = aa.mk.det('replies');
-  replies_id = dat.event.id+'_replies';
-  if (sessionStorage.hasOwnProperty(replies_id))
-  {
-    if (sessionStorage[replies_id] === 'expanded') 
-      replies.classList.add('expanded');
-  }
-  else replies.classList.add('expanded');
-  note.append(replies);
-  setTimeout(()=>
-  {
-    aa.e.render(note);
-    // let nip10 = NostrTools.nip10.parse(dat.event);
-    // console.log(nip10);
-  },0);
   return note
 };
 
@@ -144,18 +170,18 @@ aa.mk.note =dat=>
 // make a note from text input
 aa.mk.post =async(s='')=>
 {
-  if (!aa.cli.dat) aa.cli.dat_upd(s);
-  if (aa.cli.dat)
+  if (!aa.temp.dat) aa.e.draft_upd(s);
+  if (aa.temp.dat)
   {
-    aa.cli.dat.event.created_at = aa.now;
-    if (aa.cli.dat.event.kind === 1)
+    aa.temp.dat.event.created_at = aa.now;
+    if (aa.temp.dat.event.kind === 1)
     {
-      aa.fx.tags_add(aa.cli.dat.event.tags,aa.get.hashtag(s));
-      const mentions = await aa.get.mentions(s);
-      aa.fx.tags_add(aa.cli.dat.event.tags,mentions);
+      aa.fx.tags_add(aa.temp.dat.event.tags,aa.fx.hashtags(s));
+      const mentions = await aa.fx.mentions(s);
+      aa.fx.tags_add(aa.temp.dat.event.tags,mentions);
     }
-    aa.e.draft(aa.cli.dat);
-    delete aa.cli.dat;
+    aa.e.draft(aa.temp.dat);
+    delete aa.temp.dat;
     aa.cli.fuck_off();
   }
   else
@@ -214,6 +240,17 @@ aa.mk.pagination =()=>
 };
 
 
+aa.mk.replies_section =id=>
+{
+  let replies_section = aa.mk.det('replies');
+  const replies_id = `${id}_replies`;
+  if (!sessionStorage.hasOwnProperty(replies_id)
+  || sessionStorage[replies_id] === 'expanded')
+    replies_section.classList.add('expanded');
+  return replies_section
+};
+
+
 // make tag list
 aa.mk.tag_list =tags=>
 {
@@ -230,3 +267,187 @@ aa.mk.tag_list =tags=>
   }
   return l
 };
+
+
+// make event from JSON string, autocompletes missing fields
+aa.mk.e =(s='')=>
+{
+  let event = aa.parse.j(s);
+  if (event)
+  {
+    aa.e.draft(aa.mk.dat({event:aa.e.normalise(event)}));
+    aa.cli.fuck_off();
+  }
+};
+
+
+
+// set your metadata (kind-0)
+aa.mk.k0 =async(s='')=>
+{
+  let md = aa.parse.j(s);
+  if (!md) return;
+  aa.mk.confirm(
+  {
+    title:'new metadata',
+    l:aa.mk.ls({ls:md}),
+    no:{exe:()=>{}},
+    yes:{exe:()=>
+    {
+      const event = 
+      {
+        pubkey:aa.u.p.pubkey,
+        kind:0,
+        created_at:aa.now,
+        content:JSON.stringify(md),
+        tags:[]
+      };
+      aa.e.finalize(event).then(e=>{console.log(e)});
+    }},
+  });
+};
+
+
+aa.mk.k1 =async(s='')=>
+{
+  //     const mentions = await aa.fx.mentions(s);
+      
+  //   }
+    
+  //   aa.e.draft(aa.temp.dat);
+  //   delete aa.temp.dat;
+  //   aa.cli.fuck_off();
+  // }
+  // else 
+  // {
+  //   aa.log(s);
+  //   let log_text = 'unable to create note';
+  //   if (!aa.u?.p?.pubkey)
+  //   {
+  //     log_text += ', login first using the command: ';
+  //     log_text += localStorage.ns+' u login';
+  //   }
+  //   aa.log(log_text);      
+  // }
+};
+
+
+// Encrypted direct Message
+aa.mk.k4 =async(s='')=>
+{
+  let [pubkey,text] = s.split(aa.fx.regex.fw);
+  let event = {kind:4,tags:[['p',pubkey]]};
+  event.content = await window.nostr.nip04.encrypt(pubkey,text);
+  aa.e.draft(aa.mk.dat(
+  {
+    event:aa.e.normalise(event),
+    clas:['encrypted']
+  }));
+};
+
+
+aa.mk.k5 =async(s='')=>
+{
+  let [reason,rest] = aa.fx.split_str(s);
+  if (!rest) return;
+  
+  const event = {kind:5,content:reason,tags:[]};
+  const relays = [];
+  
+  let ids = [...new Set(aa.fx.splitr(rest))];
+  for (const id of ids)
+  {
+    let tag = [id];
+    let kind;
+    if (aa.fx.is_key(id)) 
+    {
+      tag.unshift('e');
+      let dat = await aa.e.get[id];
+      if (dat)
+      {
+        kind = dat.event.kind+'';
+        aa.fx.a_add(relays,dat.seen);
+        // dat.clas.push('k5');
+        // aa.db.upd_e(dat);
+      }
+    }
+    else tag.unshift('a');
+    event.tags.push(tag);
+    if (kind) event.tags.push(['k',kind])
+  }
+  if (window.confirm('confirm delete request for these events:\n'+ids))
+    aa.e.finalize(aa.e.normalise(event),relays);
+};
+
+
+// new reaction event (kind-7)
+// should go to aa.e
+aa.mk.k7 =async(s='')=>
+{
+  let [id,content] = s.trim().split(' ');
+  if (!aa.fx.is_hex(id))
+  {
+    aa.log('invalid reaction');
+    return
+  }
+  let dat = await aa.e.get(id);
+  if (!dat) 
+  {
+    aa.log('reaction failed: event id not found');
+    return
+  }
+  aa.cli.fuck_off();
+  
+  const seen = dat.seen[0];
+  let tag_e = ['e',id];
+  if (seen) tag_e.push(seen);
+  let tags = [tag_e];
+  if (dat.event.kind !== 1) tags.push(['k',`${dat.event.kind}`]);
+  if (aa.fx.kind_type(dat.event.kind) === 'parameterized')
+  {
+    let tag_a = aa.fx.tag_a(dat.event);
+    if (tag_a)
+    {
+      if (seen) tag_a.push(seen);
+      tags.push(tag_a);
+    }
+  }
+  tags.push(aa.fx.tag_p(dat.event.pubkey));
+  const event = aa.e.normalise({kind:7,content,tags});
+  aa.e.finalize(event);
+};
+
+
+aa.actions.push(
+  {
+    action:['mk','e'],
+    required:['<JSON>'],
+    description:'mk event from JSON, auto-completes missing fields',
+    exe:aa.mk.e
+  },
+  {
+    action:['mk','0'],
+    required:['<JSON>'], 
+    description:'set metadata (kind-0)',
+    exe:aa.mk.k0
+  },
+  {
+    action:['mk','4'],
+    required:['<pubkey>','<text>'],
+    description:'encrypt text to pubkey',
+    exe:aa.mk.k4
+  },
+  {
+    action:['mk','5'],
+    required:['<reason>','<id>'],
+    optional:['<id>'],
+    description:'request note(s) to be deleted',
+    exe:aa.mk.k5
+  },
+  {
+    action:['mk','7'],
+    required:['<id>','<reaction>'], 
+    description:'react to a note',
+    exe:aa.mk.k7
+  },
+);

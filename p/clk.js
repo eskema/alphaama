@@ -1,47 +1,38 @@
 aa.clk.pa =e=>
 {
   let l = e.target.closest('.actions');
-  let profile = l.closest('[data-pubkey]');
-  let x = profile.dataset.pubkey;
-  if (l.classList.contains('empty'))
-  {
-    let butts = [...aa.p.butts.pa];
-    if (!aa.is.u(x)) butts.unshift([aa.is.following(x)?'del':'add','k3']);
-    butts.unshift([`${profile.dataset.trust}`,'p_score']);
-    for (const s of butts) l.append(' ',aa.mk.butt_clk(s));
-    l.classList.remove('empty');
-  }
+  let pubkey = l.closest('[data-pubkey]').dataset.pubkey;
   l.classList.toggle('expanded');
+  if (!l.classList.contains('empty')) return
+  
+  let butts = [...aa.p.butts.pa];
+  if (!aa.fx.is_u(pubkey)) 
+    butts.unshift([aa.p.following(pubkey)?'del':'add','k3']);
+  butts.unshift([`${aa.db.p[pubkey].score}`,'p_score']);
+  
+  for (const s of butts) l.append(' ',aa.mk.butt_clk(s));
+  l.classList.remove('empty');
 };
 
 // follow / unfollow
 aa.clk.k3 =async e=>
 {
-  const x = e.target.closest('[data-pubkey]').dataset.pubkey;
-  const dis = e.target.textContent;
-  if (dis === 'del') 
+  const pubkey = e.target.closest('[data-pubkey]')
+    .dataset.pubkey;
+  
+  if (e.target.textContent === 'del') 
   {
-    // aa.p.del(x);
-    aa.cli.add('p del '+x)
+    aa.cli.add('p del '+pubkey)
   }
   else
   {
+    let p = await aa.p.author(pubkey);
     // aa.p.add(x);
-    let new_follow = [x];
-    const p = await aa.p.get(x);
-    let relay = aa.p.relay(p);
-    if (relay) new_follow.push(relay);
-    let petname;
-    if (p.metadata?.name) petname = p.metadata.name;
-    else if (p.petnames.length) petname = p.petnames[0];
-    if (petname) 
-    {
-      if (!relay) new_follow.push('-')
-      new_follow.push(aa.fx.an(petname));
-    }
-    aa.cli.v(localStorage.ns+' p add '+new_follow.join(' '))
+    
+    aa.cli.add(`p add ${aa.fx.follow(p)}`)
   }
 };
+
 
 aa.clk.mention =async e=>
 {

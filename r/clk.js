@@ -169,7 +169,7 @@ aa.r.filter_out =(rels,k_v,l)=>
 
 
 // get elements with key:value
-aa.get.items =(selector,scope)=>
+aa.fx.items =(selector,scope)=>
 {
   if (!scope) scope = aa.l;
   return Array.from(scope.querySelectorAll(selector))
@@ -183,7 +183,7 @@ aa.clk.l_solo =e=>
   const k = l.dataset.k;
   const v = l.dataset.v;
   let dis = e.target.classList.contains('.key') ? e.target : e.target.closest('.key');
-  let items = aa.get.index_items(k,v);
+  let items = aa.fx.index_items(k,v);
   aa.i.filter_solo(dis,items,k,v);
 }
 
@@ -195,6 +195,6 @@ aa.clk.l_hide =e=>
   const k = l.dataset.k;
   const v = l.dataset.v;
   let dis = e.target.classList.contains('.val') ? e.target : e.target.closest('.val');
-  let items = aa.get.index_items(k,v);
+  let items = aa.fx.index_items(k,v);
   aa.i.filter_out(dis,items,k,v);
 }

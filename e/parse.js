@@ -1,40 +1,3 @@
-// parse
-
-// parse content as object
-aa.parse.content_o =async(ls,note,sort='')=>
-{
-  if (ls && typeof ls === 'object')
-  {
-    let content = note.querySelector('.content');
-    content.textContent = '';
-    content.append(aa.mk.ls({ls,sort}));
-  }
-};
-
-
-// toggle parsed content on note
-aa.parse.context =(l,event,trust)=>
-{
-  let content = l.querySelector('.content');
-  if (!content) content = l;
-  else 
-  {
-    content.textContent = '';
-    content.classList.toggle('parsed');
-  }
-  let parsed;
-  if (content.classList.contains('parsed')) //event.tags.length < 21 && 
-  {
-    parsed = aa.parse.content(event.content,trust);
-  }
-  else parsed = aa.mk.l('p',{cla:'paragraph',con:event.content});
-  if (parsed.childNodes.length) 
-  {
-    fastdom.mutate(()=>{content.append(parsed)});
-  }
-};
-
-
 // parse hashtag
 aa.parse.hashtag =match=>
 {
@@ -47,25 +10,39 @@ aa.parse.hashtag =match=>
 };
 
 
-aa.parse.emojii =async(note,event)=>
+// parse nostr:stuff
+// use with aa.parser('nostr',s)
+aa.parse.nostr =match=>
 {
-  let content = note.querySelector('.content');
-  let emoji = event.tags.find(t=>t[0]==='emoji');
-  if (emoji) 
+  let df = new DocumentFragment();
+  df.append(match.input.slice(0,match.index)); 
+
+  let matches = (match[0]).split('nostr:').join(' ').trim().split(' ');
+  for (const m of matches)
   {
-    emoji = aa.is.url(emoji[2])?.href;
-    if (emoji) 
+    let a = m.split('1');
+    if (a[1])
     {
-      aa.p.get(event.pubkey).then(p=>
+      let mm = a[1].match(aa.fx.regex.bech32);
+      if (mm[0] && mm.index === 0)
       {
-        if (p && aa.is.trust_x(event.pubkey))
+        let s = a[0] + '1' + mm[0];
+        let decoded = aa.fx.decode(s);
+        if (decoded)
         {
-          let emojii = aa.mk.img(emoji);
-          emojii.classList.add('emojii');
-          content.textContent = '';
-          content.append(emojii);
+          df.append(aa.mk.nip19(s),' ');
+          if (mm[0].length < mm.input.length)
+          {
+            df.append(mm.input.slice(mm[0].length),' ');
+          }
         }
-      });
+        else df.append(m,' ');
+      }
     }
   }
+  if (match[0].length < match.input.length)
+  {
+    df.append(match.input.slice(match[0].length),' ');
+  }
+  return df
 };

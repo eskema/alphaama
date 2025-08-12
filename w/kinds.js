@@ -4,12 +4,12 @@ aa.kinds[7374] =dat=>
   const note = aa.mk.note(dat);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
   note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  if (aa.is.u(dat.event.pubkey))
+  if (aa.fx.is_u(dat.event.pubkey))
   {
     let p = aa.u.p;
     if (aa.p.events_newer(p,dat.event)) aa.p.save(p);
   }
-  aa.e.append_check(dat,note,aa.get.tag_reply(dat.event.tags));
+  aa.e.append_check(dat,note,aa.fx.tag_reply(dat.event.tags));
   return note
 };
 
@@ -31,7 +31,7 @@ aa.kinds[9321] =dat=>
   const note = aa.mk.note(dat);
   let p_x = aa.fx.tag_value(dat.event.tags,'p');
   let e_id = aa.fx.tag_value(dat.event.tags,'e');
-  if (aa.is.u(p_x) && !aa.w.is_redeemed(dat.event.id))
+  if (aa.fx.is_u(p_x) && !aa.w.is_redeemed(dat.event.id))
   {
     aa.w.save();
     setTimeout(async()=>
@@ -42,7 +42,7 @@ aa.kinds[9321] =dat=>
       aa.log(log);
     },0);
   }
-  aa.e.append_to(dat,note,aa.get.tag_reply(dat.event.tags));
+  aa.e.append_to(dat,note,aa.fx.tag_reply(dat.event.tags));
   return note
 };
 
@@ -65,12 +65,12 @@ aa.kinds[10019] =dat=>
       for (const tag of tags)
       {
         const [type,url,permission] = tag;
-        const href = aa.is.url(url)?.href;
+        const href = aa.fx.url(url)?.href;
         if (!href) continue;
         relays[href] = {sets};
       }
       aa.p.relays_add(relays,p);
-      if (aa.is.u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      if (aa.fx.is_u(dat.event.pubkey)) aa.r.add_from_o(relays);
       p.mints = aa.fx.tags_values(dat.event.tags,'mint');
       p.p2pk = aa.fx.tag_value(dat.event.tags,'pubkey');
       aa.p.save(p);
@@ -85,7 +85,7 @@ aa.kinds[17375] =dat=>
 {
   const note = aa.e.note_pre(dat);
   note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  if (aa.is.u(dat.event.pubkey))
+  if (aa.fx.is_u(dat.event.pubkey))
   {
     let p = aa.u.p;
     if (p && aa.p.events_newer(p,dat.event))

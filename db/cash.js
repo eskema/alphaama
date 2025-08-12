@@ -17,30 +17,17 @@ cash.add =async(keys=[])=>
   postMessage(true);
 };
 
+
 // cash add all with options
 cash.all =async(keys=[])=>
 {
-  const fet =async request=>
-  {
-    return new Promise(async(resolve,reject)=>
-    {
-      let response;
-      try
-      {
-        response = await fetch(request);
-        if (response?.ok) resolve(response.clone())
-      }
-      catch{reject(response)}
-      
-    })
-  };
   const cache = await caches.open(cash.id);
   for (const key of keys)
   {
     const request = new Request(key,{mode:'no-cors'});
     try
     {
-      let response = await fet(request);
+      let response = await cash.grab(request);
       // let response = await fetch(request);
       if (response?.ok) await cache.put(request,new Response(response.clone()))
     }
@@ -113,21 +100,37 @@ cash.flow =async e=>
 };
 
 
-// put in cache
-cash.in =async o=>
+// fetch
+cash.grab =async request=>
 {
-  const cache = await caches.open(cash.id);
-  for (const key in o)
+  return new Promise(async(resolve,reject)=>
   {
-    if (typeof key === 'object' 
-    && key.url 
-    && key.url.startsWith('chrome')) continue;
-    let response = o[key].response;
-    if (!response) continue;
-    let options = o[key].options || {};
-    await cache.put(key,new Response(response.clone(),options));
-  }
+    let response;
+    try
+    {
+      response = await fetch(request);
+      if (response?.ok) resolve(response.clone())
+    }
+    catch{reject(response)}
+  })
 };
+
+
+// put in cache
+// cash.in =async o=>
+// {
+//   const cache = await caches.open(cash.id);
+//   for (const key in o)
+//   {
+//     if (typeof key === 'object' 
+//     && key.url 
+//     && key.url.startsWith('chrome')) continue;
+//     let response = o[key].response;
+//     if (!response) continue;
+//     let options = o[key].options || {};
+//     await cache.put(key,new Response(response.clone(),options));
+//   }
+// };
 
 
 // get from cache

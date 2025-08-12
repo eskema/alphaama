@@ -87,35 +87,61 @@ aa.mk.details =(con,l=false,open=false,cla='')=>
 };
 
 
-aa.mk.dialog =async o=>
+// 
+aa.mk.confirm =async options=>
 {
   const dialog = aa.el.get('dialog');
   if (!dialog || dialog.open) return false;
-  if (o.title) dialog.title = o.title;
-  if (Object.hasOwn(o,'l')) dialog.append(o.l);
   
   const dialog_options = aa.mk.l('p',{id:'dialog_options'});
   
   const dialog_no = aa.mk.l('button',
   {
-    con:o.no.title || 'cancel',
+    con:options.no.title || 'cancel',
     cla:'butt cancel',
-    clk:e=>{ o.no.exe(); dialog.close()}
+    clk:e=>
+    { 
+      if (Object.hasOwn(options.no,'exe'))
+        options.no.exe(); 
+      dialog.close() 
+    }
   });
   dialog_no.setAttribute('autofocus',true);
+  dialog_options.append(dialog_no);
   
-  const dialog_yes = aa.mk.l('button',
+  if (Object.hasOwn(options,'yes'))
   {
-    con:o.yes.title || 'confirm',
-    cla:'butt confirm',
-    clk:e=>{ o.yes.exe(); dialog.close()}
-  });
+    const dialog_yes = aa.mk.l('button',
+    {
+      con:options.yes.title || 'confirm',
+      cla:'butt confirm',
+      clk:e=>
+      { 
+        if (Object.hasOwn(options.yes,'exe')) 
+          options.yes.exe(); 
+        dialog.close()
+      }
+    });
+    dialog_options.append(dialog_yes);
+  }
 
-  dialog_options.append(dialog_no,dialog_yes);
-  dialog.append(dialog_options);
-  dialog.showModal();
-  if (o.scroll) setTimeout(()=>
-  { aa.fx.scroll(dialog.lastChild,{behaviour:'smooth',block:'end'}) });
+  const has_title = Object.hasOwn(options,'title');
+  const has_l = Object.hasOwn(options,'l');
+  const has_scroll = Object.hasOwn(options,'scroll');
+
+  let df = new DocumentFragment();
+  if (has_l) df.append(options.l);
+  df.append(dialog_options);
+
+  fastdom.mutate(()=>
+  {
+    dialog.title = has_title ? options.title : '';
+    dialog.append(df);
+    dialog.showModal();
+    
+    if (has_l && has_scroll) 
+      setTimeout(()=>{ aa.fx.scroll(options.l,options.scroll) },200);
+  })
 };
 
 
@@ -126,7 +152,7 @@ aa.mk.doc =text=>
   let article = aa.mk.l('article',
   {
     cla:'content parsed',
-    app:aa.parse.content(text,aa.is.trusted(4))
+    app:aa.e.content(text,aa.fx.is_trusted(4))
   });
 
   let title = text.slice(0,text.indexOf('\n'));
@@ -195,7 +221,7 @@ aa.mk.help =async(s='')=>
   let article = aa.mk.l('article',
   {
     cla:'content parsed',
-    app:aa.parse.content(o.readme,1)
+    app:aa.e.content(o.readme,1)
   });
 
   // let title = text.slice(0,text.indexOf('\n'));
@@ -214,11 +240,9 @@ aa.mk.help =async(s='')=>
 aa.mk.img =(src)=>
 {
   const l = aa.mk.l('img',{cla:'content-img'});
-  // l.dataset.src = src;
   l.src = src;
   l.loading = 'lazy';
   l.addEventListener('click',e=>{aa.mk.img_modal(src)});
-  // aa.lazy_god.observe(l);
   return l
 };
 
@@ -227,12 +251,14 @@ aa.mk.img =(src)=>
 aa.mk.img_modal =(src,cla=false)=>
 {
   const dialog = aa.el.get('dialog');
+  
   const img = aa.mk.l('img',
   {
+    src,
     cla:'img_modal contained'+(cla?' '+cla:''),
-    src:src,
-    clk:()=>{dialog.close()}
+    clk:()=>{ dialog.close() }
   });
+  
   const butt = aa.mk.l('button',
   {
     con:'bigger',
@@ -245,8 +271,11 @@ aa.mk.img_modal =(src,cla=false)=>
       img.classList.toggle('contained');
     }
   });
-  dialog.append(butt,' ',img);
-  dialog.showModal();
+  fastdom.mutate(()=>
+  {
+    dialog.append(butt,' ',img);
+    dialog.showModal();
+  })
 };
 
 
@@ -313,7 +342,7 @@ aa.mk.link =(url,text=false,title=false)=>
 {
   let l;
   if (!text) text = url;
-  if (aa.is.url(url))
+  if (aa.fx.url(url))
   {
     l = aa.mk.l('a',{cla:'content_link',ref:url,con:text});
     l.rel = 'noreferrer noopener';
@@ -551,15 +580,29 @@ aa.mk.qr =s=>
 };
 
 
-// make section element
-aa.mk.section =(id,expanded=false,l=false)=>
+// a reload button
+aa.mk.reload_butt =()=> 
 {
-  const section = aa.mk.l('section',{id:id});
-  if (expanded) section.classList.add('expanded');
-  const section_header = aa.mk.l('header');
-  section_header.append(aa.mk.butt_expand(id));
-  section.append(section_header);
-  if (l) section.append(l);
+  return aa.mk.l('button',
+  {
+    con:'reload the page',
+    cla:'butt exe',
+    clk:e=>{location.reload()}
+  })
+};
+
+
+// make section element
+aa.mk.section =(id,expanded,element_to_append)=>
+{
+  let data = 
+  {
+    id,
+    app:[aa.mk.l('header',{app:aa.mk.butt_expand(id)})]
+  };
+  if (expanded) data.cla ='expanded';
+  if (element_to_append) data.app.push(element_to_append);
+  const section = aa.mk.l('section',data);
   aa.view.l?.append(section);
   return section
 };
@@ -568,7 +611,7 @@ aa.mk.section =(id,expanded=false,l=false)=>
 // make server item
 aa.mk.server =(k,v)=>
 {
-  k = aa.is.url(k);
+  k = aa.fx.url(k);
   if (!k) return false;
   let app = aa.mk.l('p',{cla:'url'});
   const l = aa.mk.l('li',{cla:'item server',app});

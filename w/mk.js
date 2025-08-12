@@ -92,9 +92,9 @@ aa.mk.k9321 =async(string='')=>
   [amount,string] = string.split(aa.fx.regex.fw);
   if (!amount) { err('no amount'); return}
   [pubkey,string] = s.split(aa.fx.regex.fw);
-  if (!aa.is.key(pubkey)) { err('no pubkey'); return};
+  if (!aa.fx.is_key(pubkey)) { err('no pubkey'); return};
   [memo,id] = aa.fx.split_str(string);
-  if (id && !aa.is.key(id)) { err('invalid id'); return};
+  if (id && !aa.fx.is_key(id)) { err('invalid id'); return};
   await aa.e.get(id);
 
   let p = await aa.p.get(pubkey);

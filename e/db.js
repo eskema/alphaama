@@ -27,8 +27,8 @@ aa.db.event_is_allowed =dat=>
   let is_allowed;
   let kinds = [0,3,10002,10019,17375];
 
-  if (aa.is.u(dat.event.pubkey)) is_allowed = true;
-  else if (aa.is.following(dat.event.pubkey))
+  if (aa.fx.is_u(dat.event.pubkey)) is_allowed = true;
+  else if (aa.p.following(dat.event.pubkey))
   {
     if (kinds.includes(dat.event.kind)) is_allowed = true;
   }

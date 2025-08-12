@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 67;
+const aa_version = 68;
 // a
 const aa = 
 {
@@ -29,6 +29,7 @@ const aa =
       '/dep/cashuts.js?v=2.0.0',
 
       '/dep/fastdom.js?v=1.0.4',
+      '/dep/fastdom-promised.js?v=1.0.4',
       // '/dep/fastdom-strict.js?v=1.0.4',
       // '/dep/math.js?v=14.0.1',
       '/dep/nostr-tools.js?v=2.15.0',
@@ -62,19 +63,17 @@ const aa =
       '/aa/view.js?v='+aa_version,
       '/db/db.js?v='+aa_version,
       '/aa/clk.js?v='+aa_version,
-      '/aa/is.js?v='+aa_version,
       '/aa/fx.js?v='+aa_version,
       '/aa/log.js?v='+aa_version,
       '/aa/mk.js?v='+aa_version,
       '/aa/parse.js?v='+aa_version,
-      '/aa/wl.js?v='+aa_version,
+      '/aa/wakelock.js?v='+aa_version,
       '/av/av.js?v='+aa_version,
     ],
     styles:['/aa/aa.css?v='+aa_version],
   },
   el:new Map(),
   fx:{},
-  get:{},
   is:{},
   kinds:{},
   miss:{e:{},p:{},a:{}},
@@ -130,7 +129,7 @@ aa.mk.l =(tag_name='div',o={})=>
       case 'cla': l.className = v; break;
       case 'clk': l.addEventListener('click',v); break;
       case 'con': l.textContent = v; break;
-      case 'dat': for(const i in v) l.dataset[i] = v[i]; break;
+      case 'dat': for (const i in v) if (v[i]||v[i]===0) l.dataset[i] = v[i]; break;
       case  'id': l.id = v; break;
       case 'nam': l.name = v; break;
       case 'pla': l.placeholder = v; break;
@@ -180,11 +179,14 @@ aa.load =async(o={})=>
   aa.framed = window.self !== window.top;
   if (aa.framed) aa.l.classList.add('framed');
   let dependencies = o.dependencies || aa.def.dependencies;
+  
+
   let tools = o.tools || aa.def.tools;
   let mods = o.mods || aa.def.mods;
   
   await aa.mk.scripts([...dependencies,...tools]);
-  
+  // extend fastdom
+  aa.fastdom = fastdom.extend(fastdomPromised);
   aa.mk.manifest();
   aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
   aa.view.l = aa.mk.l('main',{id:'view'});

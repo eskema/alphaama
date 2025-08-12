@@ -93,6 +93,19 @@ const auth =data=>
 };
 
 
+const check_limits =()=>
+{
+  if (manager.events.size < 9999) return false;
+
+  for (const [url,worker] of manager.workers)
+    terminate({url})
+  
+  postMessage(['limit','too many events'])
+  
+  return true
+};
+
+
 // on manager message
 onmessage =e=>
 {
@@ -453,6 +466,8 @@ const on_event =(a,url)=>
     new_data = true;
   }
   
+  check_limits();
+
   let dat = manager.events.get(event.id);
   if (dat)
   {

@@ -1,43 +1,50 @@
 // make relay list
-aa.mk.k10002 =(s='')=>
+aa.mk.k10002 =(string='')=>
 {
-  let ls = aa.r.o.ls;
-  let relay_list = [];
-  let a = s ? s.split(',') : Object.keys(ls);
+  let relays = string 
+  ? aa.fx.splitr(string,',')
+  : Object.keys(aa.r.o.ls);
   
-  for (const k of a)
-  { 
-    let read, write;
-    const tag = [k];
-    if (ls[k].sets.includes('read')) read = true;
-    if (ls[k].sets.includes('write')) write = true;
+  let tags = relays.map(url=>
+  {
+    const tag = ['r',url];
+    
+    let read = aa.r.o.ls[url].sets.includes('read');
+    let write = aa.r.o.ls[url].sets.includes('write');
+    
     if (read || write)
     {
       if (read && !write) tag.push('read');
       if (!read && write) tag.push('write');
-      relay_list.push(tag.join(' ').trim())
+      return tag
     }
-  }
+    return
+  })
+  // for (const url of relays)
+  // { 
+  //   let read, write;
+  //   const tag = [url];
+  //   if (ls[url].sets.includes('read')) read = true;
+  //   if (ls[url].sets.includes('write')) write = true;
+  //   if (read || write)
+  //   {
+  //     if (read && !write) tag.push('read');
+  //     if (!read && write) tag.push('write');
+  //     relay_list.push(tag.join(' ').trim())
+  //   }
+  // }
 
-  const relays = [];
-  for (const r of relay_list) 
+  // const relays = [];
+
+  if (tags.length)
   {
-    let relay = r.split(' ');
-    relay.unshift('r');
-    relays.push(relay);
-  }
-  if (relays.length)
-  {
-    aa.mk.dialog(
+    const event = aa.e.normalise({kind:10002,tags});
+    aa.mk.confirm(
     {
       title:'new relay list',
       l:aa.mk.tag_list(relays),
       no:{exe:()=>{}},
-      yes:{exe:()=>
-      {
-        const event = aa.e.normalise({kind:10002,tags:relays});
-        aa.e.finalize(event);
-      }}
+      yes:{exe:()=>{ aa.e.finalize(event) }}
     });
   }
 };

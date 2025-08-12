@@ -71,7 +71,7 @@ aa.r.add =s=>
     let a = aa.fx.splitr(i);
     // [url,set1,set2]
     let url_to_check = a.shift();
-    const url = aa.is.url(url_to_check)?.href;
+    const url = aa.fx.url(url_to_check)?.href;
     if (!url)
     {
       invalid.add(url_to_check);
@@ -91,7 +91,11 @@ aa.r.add =s=>
     else valid.add(url);
   }
   
-  if (invalid.size) aa.log(`invalid urls: ${[...invalid.values()]}`);
+  if (invalid.size) 
+  {
+    aa.log(`aa.r.add - invalid urls: ${[...invalid.values()]}`);
+    console.trace('invalid urls',s);
+  }
   
   if (changed.size)
   {
@@ -134,7 +138,7 @@ aa.r.add_from_o =relays=>
 //   event = aa.e.normalise(event);
 //   event.tags = aa.fx.a_u(event.tags);
 //   if (!event.id) event.id = aa.fx.hash(event);
-//   let signed = await aa.u.sign(event);
+//   let signed = await aa.e.sign(event);
 //   if (signed) aa.r.manager.postMessage(['auth',{relays:[relay],request:['AUTH',signed]}]);
 // };
 
@@ -204,7 +208,7 @@ aa.r.def_req =(id,filter,relays)=>
   const request = ['REQ',id,filter];
   const options = {eose:'close'};
   if (!relays?.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-  if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.r.dat);
+  if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.e.to_printer);
   aa.r.send_req({request,relays,options});
 };
 
@@ -262,15 +266,6 @@ aa.r.get =async dis=>
 // };
 
 
-// 
-aa.r.dat =dat=>
-{
-  
-  aa.e.to_printer(dat);
-  // aa.db.upd_e(dat);
-};
-
-
 // delete relay
 aa.r.del =s=>
 {
@@ -279,7 +274,7 @@ aa.r.del =s=>
   
   for (const i of a)
   {
-    const url = aa.is.url(i.trim())?.href;
+    const url = aa.fx.url(i.trim())?.href;
     if (url && aa.r.o.ls[url])
     {
       //todo
@@ -450,7 +445,7 @@ aa.r.from_o =(o,sets=false)=>
   let relays = {};
   for (let url in o)
   {
-    const href = aa.is.url(url)?.href;
+    const href = aa.fx.url(url)?.href;
     if (href)
     {
       relays[href] = {sets:[]};
@@ -529,11 +524,6 @@ aa.r.load =async()=>
     //   exe:mod.resume
     // },
     {
-      action:[id,'stuff'],
-      description:'attempt to set some relays',
-      exe:mod.stuff
-    },
-    {
       action:['e','bro'],
       required:['<id>'],
       optional:['<url||set>'],
@@ -600,7 +590,7 @@ aa.r.rel =(s='')=>
 {
   s = s.trim();
   const a = [];
-  let relay = aa.is.url(s)?.href;
+  let relay = aa.fx.url(s)?.href;
   if (relay) a.push(relay);
   else a.push(...aa.fx.in_set(aa.r.o.ls,s));
   return a
@@ -636,18 +626,18 @@ aa.r.send_event =({relays,event,options})=>
 
 
 // request from relays
-aa.r.send_req =(dis)=>
+aa.r.send_req =data=>
 {
-  let {relays,request,options} = dis;
+  let {relays,request,options} = data;
   if (!Array.isArray(request) || !request.length)
   {
     aa.log('aa.r.send_req: invalid request');
     return
   }
-  relays = aa.r.validate(dis);
+  relays = aa.r.validate(data);
   if (!relays.length)
   {
-    console.log('aa.r.send_req: no valid relays',dis);
+    console.log('aa.r.send_req: no valid relays',data);
     // console.trace(dis);
     return
   }
@@ -656,7 +646,7 @@ aa.r.send_req =(dis)=>
 
 
 // request from outbox
-aa.r.send_out =(dis)=>{ aa.r.manager.postMessage(['outbox',dis]) };
+aa.r.send_out =data=>{ aa.r.manager.postMessage(['outbox',data]) };
 
 
 // todo
@@ -680,7 +670,7 @@ aa.r.setrm =(s="")=>
     {
       let a = i.trim().split(' ').map(n=>n.trim());
       let url_string = a.shift();
-      const url = aa.is.url(url_string)?.href;
+      const url = aa.fx.url(url_string)?.href;
       const server = mod.o.ls[url];
       if (!server) return;
       server.sets = aa.fx.a_rm(server.sets,a);
@@ -691,23 +681,17 @@ aa.r.setrm =(s="")=>
 };
 
 
-// 
-aa.r.stuff =async(relays=[])=>
+// add relays from p tagged users 10002 'read'
+aa.r.tagged =(event,relays=[])=>
 {
-  // if (!relays.length) relays = await aa.r.ext();
-  if (!relays.length)
+  let pubs = event.tags.filter(aa.fx.is_tag_p).map(i=>i[1]);
+  for (const x of pubs)
   {
-    // let prompt = window.prompt('add some relays','wss://nos.lol wss://relay.damus.io wss://relay.primal.net');
-    // if (prompt) relays = aa.fx.splitr(prompt);
-    // else aa.log(aa.mk.butt_action('r add wss://url.com read write','add some relays'));
-    aa.log(aa.mk.butt_action('r add wss://nos.lol read write, wss://relay.damus.io read write, wss://relay.primal.net read write','add some relays'));
+    let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
+    let ab = aa.fx.a_ab(relays,read_relays);
+    if (!ab.inc.length < 3) relays.push(...ab.exc.slice(0,3 - ab.inc.length))
   }
-  // if (!relays.length) return
-
-  // let rels = relays.filter(i=>aa.is.url(i))
-  // .map(i=>`${aa.is.url(i).href} read write auth`);
-  // if (rels.length) aa.r.add(rels.join(','));
-  // else aa.log('r stuff: no relays given')
+  return new Set(relays);
 };
 
 
@@ -755,7 +739,7 @@ aa.r.toggles =()=>
 aa.r.validate =({relays,request,options})=>
 {
   // filter invalid urls
-  relays = relays.map(i=>aa.is.url(i)?.href).filter(i=>i);
+  relays = relays.map(i=>aa.fx.url(i)?.href).filter(i=>i);
   // check for new relays not already added
   let found = relays.filter(i=>!aa.r.o.ls[i]);
   if (found.length)
@@ -770,6 +754,10 @@ aa.r.validate =({relays,request,options})=>
 
     if (localStorage.relays_ask==='off')
     {
+      if (found.some(i=>!aa.fx.url(i)))
+      {
+        console.log(found)
+      }
       aa.r.add(found.map(i=>`${i} hint`).join());
     }
     else

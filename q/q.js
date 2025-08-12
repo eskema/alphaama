@@ -343,7 +343,7 @@ aa.q.outbox =request=>
   }
   
   aa.r.add(`${outbox.map(i=>i[0]).join(' out,')} out`);
-  aa.r.on_sub.set(fid,aa.r.dat);
+  aa.r.on_sub.set(fid,aa.e.to_printer);
   aa.r.send_out({request:['REQ',fid,filter],outbox,options});
   // for (const r of outbox)
   // {
@@ -451,7 +451,7 @@ aa.q.req =(s='')=>
   }
   else
   {
-    aa.r.on_sub.set(fid,aa.r.dat);
+    aa.r.on_sub.set(fid,aa.e.to_printer);
     aa.r.send_req({request,relays,options});
     // request.push(options);
     aa.q.log('req',request,`to: ${relays}`);
@@ -491,7 +491,7 @@ aa.q.run =async(s='')=>
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
       if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-      aa.r.on_sub.set(fid,aa.r.dat);
+      aa.r.on_sub.set(fid,aa.e.to_printer);
       setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
       

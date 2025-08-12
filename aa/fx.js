@@ -227,7 +227,7 @@ aa.fx.decrypt =async(s='')=>
   let [text,pubkey] = s.split(aa.fx.regex.fw);
   if (text) text = text.trim();
   if (!pubkey) pubkey = aa.u.p.pubkey;
-  if (aa.is.nip4(text)) return await window.nostr.nip04.decrypt(pubkey,text);
+  if (aa.fx.is_nip4(text)) return await window.nostr.nip04.decrypt(pubkey,text);
   else return await window.nostr.nip44.decrypt(pubkey,text)
 };
 
@@ -301,7 +301,7 @@ aa.fx.hash =ish=> NostrTools.getEventHash(ish);
 // generate keypair
 aa.fx.keypair =(xsec='')=>
 {
-  if (xsec && !aa.is.key(xsec))
+  if (xsec && !aa.fx.is_key(xsec))
   {
     aa.log('fx keypair: invalid key provided');
     return false
@@ -404,6 +404,45 @@ aa.fx.intersect =(o={},a=[],n=2)=>
 };
 
 
+// is hexadecimal
+aa.fx.is_hex =string=> aa.fx.regex.hex.test(string);
+
+
+// is a valid nostr key
+aa.fx.is_key =string=>
+{
+  return aa.fx.is_hex(string) 
+  && string.length === 64
+};
+
+
+// is nip4 cyphertext
+aa.fx.is_nip4 =string=> 
+{
+  const len = string.length;
+  if (len < 28) return false;
+  return string[len - 28] == '?' 
+      && string[len - 27] == 'i'
+      && string[len - 26] == 'v'
+      && string[len - 25] == '='
+};
+
+
+// returns wether or not a given level is trusted
+aa.fx.is_trusted =number=>
+{
+  let trust_needed;
+  try { trust_needed = parseInt(localStorage.score) } 
+  catch { console.error('!trust',localStorage.score) }
+  if (Number.isInteger(trust_needed) 
+  && number >= trust_needed) return true;
+};
+
+
+// if key is the same as the user
+aa.fx.is_u =pubkey=> aa.u?.o?.ls?.pubkey === pubkey;
+
+
 // convert a value from a range a_min/a_max into another range b_min/b_max
 aa.fx.linear_convert =(val,a_max,b_max,a_min,b_min)=>
 {
@@ -486,73 +525,6 @@ aa.fx.merge_datasets =(a,l_1,l_2)=>
 aa.fx.plural =(n,s)=> n === 1 ? s : s+'s';
 
 
-// proof of work abort
-aa.fx.pow_abort =(id)=>
-{
-  let m = aa.temp.mining[id]
-  if (!m) return;
-
-  m.ww.terminate();
-
-  let log = document.getElementById('pow_log_'+id);
-
-  let note = document.querySelector('.note[data-id="'+id+'"]');
-  if (note) note.classList.remove('mining');
-
-  if (m.ended)
-  {
-    let t = m.ended - m.start;
-    log.textContent = `${m.started} -> done in ${t} ms`;
-  }
-  else 
-  {
-    log.textContent = 'pow aborted';
-  }
-  aa.log_read(log.parentElement);
-};
-
-
-// proof of work
-aa.fx.pow =async(event,dif)=>
-{
-  return new Promise(resolve=>
-  {
-    if (!aa.temp.mining) aa.temp.mining = {};
-    let start = Date.now(),ended;
-    
-    const m = aa.temp.mining[event.id] = 
-    {
-      ended:false,
-      dif:dif,
-      start:Date.now(),
-      started:false,
-      ww:new Worker('/pow.js'),
-    };
-
-    m.start_date = new Date(m.start);
-    m.started = `mining pow (${dif}) started ${m.start_date}`;
-    
-    const log = aa.mk.l('p',{id:'pow_log_'+event.id,con:m.started});
-    
-    const kill =()=>
-    {
-      setTimeout(()=>{aa.fx.pow_abort(event.id)},200);
-    };
-    let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk:kill});
-    log.append(butt_cancel);
-    aa.log(log);
-
-    m.ww.onmessage =message=>
-    {
-      aa.temp.mining[event.id].ended = Date.now();
-      kill();
-      resolve(message.data);
-    };
-    m.ww.postMessage({event:event,difficulty:dif});
-  });
-};
-
-
 // qr code
 aa.fx.qr =s=>
 {
@@ -584,11 +556,11 @@ aa.fx.regex =
 {
   get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
   get hashtag(){ return /(\B[#])[\w_-]+/g },
+  get hex(){ return /^[A-F0-9]+$/i },
   get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
   get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
   get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
   get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
-  // get url(){ return /https?:\/\/([a-zA-Z0-9\.\-]+\.[a-zA-Z]+)([\p{L}\p{N}\p{M}&\.-\/\?=#\-@%\+_,:!~\/\*]*)/gu },
   get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
   get str(){ return /"([^"]+)"/ }, // text in quotes ""
   get fw(){ return /(?<=^\S+)\s/ }, // first word
@@ -768,7 +740,7 @@ aa.fx.tag_e =(x,mark=false)=>
 {
   let tag = [];
   tag.push('e',x);
-  let relay = aa.get.seen(x);
+  let relay = aa.fx.seen(x);
   if (relay) tag.push(relay);
   if (mark) 
   {
@@ -783,7 +755,7 @@ aa.fx.tag_q =(x)=>
 {
   let tag = [];
   tag.push('q',x);
-  let relay = aa.get.seen(x);
+  let relay = aa.fx.seen(x);
   if (relay) tag.push(relay);
   return tag
 };
@@ -906,9 +878,9 @@ aa.fx.url_from_tags =tags=>
   if (!tag || tag.length < 2)
   {
     tag = tags.find(t=>t[0] === 'imeta');
-    if (tag) url = aa.is.url(aa.fx.a_o(tag).url)?.href;
+    if (tag) url = aa.fx.url(aa.fx.a_o(tag).url)?.href;
   }
-  else url = aa.is.url(tag[1])?.href;
+  else url = aa.fx.url(tag[1])?.href;
   return url
 };
 
@@ -937,8 +909,20 @@ aa.fx.src_ext =(url,extensions)=>
 };
 
 
-// (21,'sat') => 21sats
-aa.fx.units =(num,unit='sat')=> num+aa.fx.plural(num,unit);
+// (1,'unit') => 1unit
+// (21,'unit') => 21units
+aa.fx.units =(amount,unit='sat')=>
+{
+  return `${amount}${aa.fx.plural(amount,unit)}`
+}
+
+
+// converts string to URL
+aa.fx.url =string=>
+{
+  try { return new URL(string) } 
+  catch { return false }
+};
 
 
 // verify event object
@@ -954,8 +938,10 @@ aa.fx.verify_event =o=>
 // verify request filter object
 aa.fx.verify_req_filter =o=>
 {
-  if (!aa.is.o(o)) return;
-  if (!Object.keys(o).length) return;
+  if (!o 
+  || typeof o !== 'object'
+  || o.constructor !== Object
+  || !Object.keys(o).length) return;
   let ints = ['since','until','limit'];
   let hexs = ['ids','authors','#p','#e'];
   for (const k in o)
@@ -978,7 +964,7 @@ aa.fx.verify_req_filter =o=>
       {
         if (hexs.includes(k)) 
         {
-          if (v.some(val=>!aa.is.x(val))) return;
+          if (v.some(val=>!aa.fx.is_hex(val))) return;
         }
         else if (k.startsWith('#')) 
         {
