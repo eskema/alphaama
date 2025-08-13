@@ -138,19 +138,21 @@ aa.kinds[6] =dat=>
   if (tag_reply?.length)
   {    
     let repost_id = tag_reply[1];
-    aa.e.get(repost_id).then(dat_e=>
+    aa.e.get(repost_id)
+    .then(dat_repost=>
     {
-      if (dat_e) 
+      if (dat_repost) 
       {
-        aa.e.to_printer(dat_e);
+        aa.e.print_q(dat_repost);
         return
       }
-      
+
       let event = aa.parse.j(dat.event.content);
-      if (aa.fx.verify_event(event))
+      dat_repost = aa.mk.dat({event,subs:['k6']})
+      aa.fx.verify_event(event).then(()=>
       {
-        aa.e.to_printer(aa.mk.dat({event,subs:['k6']}));
-      }
+        aa.e.print_q(dat_repost);
+      })
     });
     aa.e.append_check(dat,note,tag_reply);
   }

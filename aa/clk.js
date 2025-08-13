@@ -58,8 +58,8 @@ aa.clk.expand =e=>
       sessionStorage[id] = 'expanded';
       block = 'start';
     }
-    aa.fx.scroll(l,{behavior:'smooth',block});
   });
+  setTimeout(()=>{aa.fx.scroll(l,{behavior:'smooth',block});},200)
 };
 
 

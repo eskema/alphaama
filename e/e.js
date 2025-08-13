@@ -679,15 +679,12 @@ aa.e.section_mutated =a=>
 };
 
 
-
-
-
 // view event
 aa.e.view =l=>
 {
   fastdom.mutate(()=>
   {
-    if (l.classList.contains('not_yet')) aa.e.note_intersect(l);
+    if (l.classList.contains('not_yet')) aa.e.note_observer_intersect(l);
     aa.l.classList.add('viewing','view_e');
     l.classList.add('in_view');
     aa.view.in_view = l;
@@ -742,6 +739,7 @@ aa.e.draft_dat =async(s,reply_to)=>
 // creates / updates / deletes dat event from input
 aa.e.draft_upd =async(s='')=>
 {
+  if (!aa.u.p)  return
   if (!s) s = aa.cli.t.value;
   if (s.length)
   {

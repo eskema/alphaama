@@ -19,7 +19,7 @@ aa.view.ls.naddr1 =async naddr=>
   }
 
   let dat = await aa.e.get_a(id_a);
-  if (dat) aa.e.to_printer(dat);
+  if (dat) aa.e.print_q(dat);
   else aa.e.miss_set('a',id_a,data.relays);
 };
 
@@ -34,7 +34,7 @@ aa.view.ls.nevent1 =async nevent=>
   else
   {
     let dat = await aa.e.get(data.id);
-    if (dat) aa.e.to_printer(dat); 
+    if (dat) aa.e.print_q(dat); 
     else 
     {
       dat = aa.mk.dat(
@@ -68,7 +68,7 @@ aa.view.ls.note1 =async nid=>
   else
   {
     let dat = await aa.e.get(id);
-    if (dat) aa.e.to_printer(dat);
+    if (dat) aa.e.print_q(dat);
     else 
     {
       aa.e.miss_set('e',id);

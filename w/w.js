@@ -618,7 +618,7 @@ aa.w.start =async mod=>
       if (dat.event.created_at > new_since) 
         new_since = dat.event.created_at;
     }
-    aa.e.to_printer(dat)
+    aa.e.print_q(dat)
   }
   if (new_since !== old_since) 
   {
@@ -630,7 +630,7 @@ aa.w.start =async mod=>
   // mod.save()
   // console.log(ls);
   // aa.log(aa.mk.ls({ls}))
-  // for (const dat of req.events.values()) aa.e.to_printer(dat)
+  // for (const dat of req.events.values()) aa.e.print_q(dat)
 };
 
 

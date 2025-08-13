@@ -27,7 +27,7 @@ aa.parse.url =(match,is_trusted)=>
     // setTimeout(()=>{aa.lazy_god.observe(l.querySelector('.mf'))},200);
     return l
   }
-  return
+  return match[0]
 };
 
 
@@ -42,7 +42,11 @@ aa.parser =(parse_id,s,is_trusted,regex_id)=>
   {
     df.append(match.input.slice(index,match.index));
     let parsed = aa.parse[parse_id](match,is_trusted);
-    let childs = parsed.childNodes.length;
+    if (!parsed)
+    {
+      console.log(parse_id,s,match)
+    }
+    let childs = parsed?.childNodes.length;
     if (childs > 2) index = match.index + match.input.length;
     else index = match.index + match[0].length;
     df.append(parsed);

@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 68;
+const aa_version = 70;
 // a
 const aa = 
 {

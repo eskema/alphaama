@@ -6,6 +6,7 @@ aa.e.miss_set =(type,id,relays=[])=>
   if (!miss.has(id)) miss.set(id,{nope:[],relays:[]});
   let missing = miss.get(id);
   
+  relays = relays.map(i=>aa.fx.url(i)?.href).filter(i=>i)
   let rset = new Set([
     ...relays.map(i=>aa.fx.url(i)?.href).filter(i=>i),
     ...aa.fx.in_set(aa.r.o.ls,aa.r.o.r)]);
@@ -36,7 +37,6 @@ aa.e.miss_print =async(tag,relays=[])=>
     else console.trace(tag,relays);
   }
 
-
   if (!aa.temp.miss_print) aa.temp.miss_print = new Map();
   if (!aa.temp.miss_print.has(id)) aa.temp.miss_print.set(id,[]);  
   
@@ -54,7 +54,7 @@ aa.e.miss_to =async()=>
   for (const dat of events)
   {
     aa.temp.miss_print.delete(dat.event.id);
-    aa.e.to_printer(dat)
+    aa.e.print_q(dat)
   }
   if (!missing) return;
   // console.trace(missing);
@@ -73,7 +73,7 @@ aa.e.miss_print_a =async(tag,relays=[])=>
 
   if (relay) relays.push(relay);
   let dat = await aa.e.get_a(id);
-  if (dat) aa.e.to_printer(dat); 
+  if (dat) aa.e.print_q(dat); 
   else aa.e.miss_set(type,id,relays);
 };
 
@@ -86,7 +86,6 @@ aa.e.miss_type =type=>
   if (!missing) missing = aa.temp.miss[type] = new Map();
   for (const [id,v] of missing)
   {
-    // let v = missing.get();
     for (const url of [...def_relays,...v.relays]) 
     {
       if (!v.nope.includes(url))

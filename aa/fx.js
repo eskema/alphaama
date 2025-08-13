@@ -849,11 +849,14 @@ aa.fx.time_to_date =s=> new Date(s*1000);
 
 
 // update time element
-aa.fx.time_upd =l=>
+aa.fx.time_upd =element=>
 {
-  const timestamp = parseInt(l.textContent);
+  const timestamp = parseInt(element.textContent);
   const date = aa.fx.time_to_date(timestamp);
-  l.dataset.elapsed = aa.fx.time_elapsed(date);
+  fastdom.mutate(()=>
+  {
+    element.dataset.elapsed = aa.fx.time_elapsed(date);
+  })
 };
 
 
@@ -920,13 +923,14 @@ aa.fx.units =(amount,unit='sat')=>
 // converts string to URL
 aa.fx.url =string=>
 {
+  if (!string) return false;
   try { return new URL(string) } 
   catch { return false }
 };
 
 
 // verify event object
-aa.fx.verify_event =o=>
+aa.fx.verify_event =async o=>
 {
   let verified;
   try {verified = NostrTools.verifyEvent(o)}

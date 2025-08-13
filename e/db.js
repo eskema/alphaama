@@ -16,7 +16,7 @@ aa.db.some =async s=>
     direction: (d && d==='asc') ? 'next' : 'prev'
   };
   const events = await aa.db.ops('idb',{some});
-  for (const dat of events) aa.e.to_printer(dat); 
+  for (const dat of events) aa.e.print_q(dat); 
   return `${localStorage.ns} db some ${some.n}`;
 };
 

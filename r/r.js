@@ -62,10 +62,7 @@ aa.r.add =s=>
   // if (!as.length) return all;
   let df = new DocumentFragment();
   let haz;
-  items.map(i=>
-  {
-    
-  })
+
   for (const i of items)
   {
     let a = aa.fx.splitr(i);
@@ -94,7 +91,7 @@ aa.r.add =s=>
   if (invalid.size) 
   {
     aa.log(`aa.r.add - invalid urls: ${[...invalid.values()]}`);
-    console.trace('invalid urls',s);
+    console.trace('invalid urls',invalid);
   }
   
   if (changed.size)
@@ -184,11 +181,13 @@ aa.r.common =(a=[],sets=[])=>
 
     if (!has_set)
     {
-      for (const r of aa.fx.in_set(aa.r.o.ls,aa.r.o.r))
-      {
-        if (!common[r]) common[r] = [];
-        aa.fx.a_add(common[r],[x]);
-      }
+      if (!common.none) common.none = [];
+        aa.fx.a_add(common.none,[x]);
+      // for (const r of aa.fx.in_set(aa.r.o.ls,aa.r.o.r))
+      // {
+      //   if (!common[r]) common[r] = [];
+      //   aa.fx.a_add(common[r],[x]);
+      // }
     }
   }
   return common
@@ -208,7 +207,7 @@ aa.r.def_req =(id,filter,relays)=>
   const request = ['REQ',id,filter];
   const options = {eose:'close'};
   if (!relays?.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-  if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.e.to_printer);
+  if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.e.print_q);
   aa.r.send_req({request,relays,options});
 };
 
@@ -580,7 +579,19 @@ aa.r.outbox =(a=[],sets=[])=>
   if (!a?.length) return [];
   let relays = aa.r.common(a,sets);
   let outbox = aa.fx.intersect(relays,a,parseInt(localStorage.outbox_max));
+  
+  let none;
+  if (outbox.none)
+  {
+    none = [...outbox.none];
+    delete outbox.none;
+  }
+
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
+  if (none) 
+  {
+    for (const item of sorted_outbox) item[1].push(...none)
+  }
   return sorted_outbox;
 };
 
@@ -598,7 +609,7 @@ aa.r.rel =(s='')=>
 
 
 // send event to relays
-aa.r.send_event =({relays,event,options})=>
+aa.r.send_event =async({relays,event,options})=>
 {
   if (!event)
   {
@@ -744,21 +755,13 @@ aa.r.validate =({relays,request,options})=>
   let found = relays.filter(i=>!aa.r.o.ls[i]);
   if (found.length)
   {
-    // let add_relay_and_request =e=>
-    // {
-    //   aa.r.add(`${url} hint`);
-    //   if (request) aa.r.manager.postMessage(dis);
-    //   // aa.r.c_on(url,opts);
-    //   cleanup(e);
-    // }
-
     if (localStorage.relays_ask==='off')
     {
       if (found.some(i=>!aa.fx.url(i)))
       {
         console.log(found)
       }
-      aa.r.add(found.map(i=>`${i} hint`).join());
+      aa.r.add(found.map(i=>i?`${i} hint`:'').filter(i=>i).join());
     }
     else
     {

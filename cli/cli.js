@@ -158,8 +158,11 @@ aa.cli.expand =e=>
 // focus input
 aa.cli.foc =()=>
 {
+  fastdom.mutate(()=>
+  {
   aa.cli.t.setSelectionRange(aa.cli.t.value.length,aa.cli.t.value.length);
   aa.cli.t.focus({preventScroll:true});
+  })
 }
 
 
