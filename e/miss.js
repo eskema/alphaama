@@ -119,21 +119,31 @@ aa.e.miss_get =async type=>
   {
     let {relays,keys} = aa.e.miss_type(type);
     if (!relays) return;
-    let filters;
-    switch (type)
+    let delay = 0;
+    let chunks = aa.fx.chunks(keys,420);
+    for (const chunk of chunks)
     {
-      case 'a': filters = keys.map(aa.fx.id_af);break;
-      case 'p': filters = [{authors:keys,kinds:[0,10002]}];break;
-      case 'e': filters = [{ids:keys}];break;
+      let filters;
+      switch (type)
+      {
+        case 'a': filters = keys.map(aa.fx.id_af);break;
+        case 'p': filters = [{authors:keys,kinds:[0,10002]}];break;
+        case 'e': filters = [{ids:keys}];break;
+      }
+      
+      for (const f of filters)
+      {
+        delay++;
+        let [filter,options] = aa.q.filter(f);
+        if (!filter) continue;
+
+        let req_id = `${type}_${aa.fx.rands(6)}`;
+        aa.r.on_eose.set(req_id,()=>{aa.r.on_eose.delete(req_id)});
+        setTimeout(()=>{aa.r.def_req(req_id,filter,relays)},delay*10);
+      }
+      delay++;
     }
-    for (const f of filters)
-    {
-      let [filter,options] = aa.q.filter(f);
-      if (!filter) continue;
-      let req_id = `${type}_${aa.fx.rands(6)}`;
-      aa.r.on_eose.set(req_id,()=>{aa.r.on_eose.delete(req_id)});
-      aa.r.def_req(req_id,filter,relays);
-    }
+
     setTimeout(()=>
     {
       if (aa.temp.miss[type].size) aa.e.miss_get(type);
