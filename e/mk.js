@@ -134,9 +134,9 @@ aa.mk.note =dat=>
   });
 
   const header = aa.mk.event_header(dat);
-  const content_section = aa.mk.content_section(content);
+  // const content_section = aa.mk.content_section(content);
 
-  app.append(clicker,header,content_section);
+  app.append(clicker,header);//,content_section);
 
   if (tags?.length)
   {
@@ -161,7 +161,11 @@ aa.mk.note =dat=>
   if (stored && stored === 'tiny') note.classList.add('tiny');
   
   setTimeout(()=>{ aa.fx.color(pubkey,note) },0);
-  setTimeout(()=>{ aa.e.render(note) },10);
+  // setTimeout(()=>{ aa.e.render(note) },10);
+  aa.e.render(dat).then(content=>
+  {
+    fastdom.mutate(()=>{note.insertBefore(content,header.nextElementSibling)})
+  });
 
   return note
 };

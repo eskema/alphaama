@@ -129,41 +129,21 @@ aa.e.content =(s,trusted)=>
 
 
 // parse content as object
-aa.e.content_o =async(note,data,options)=>
+aa.e.content_o =async(content,data,options)=>
 {
   if (!data && typeof data !== 'object') return;
 
-  let content = note.querySelector('.content');
   content.textContent = '';
   content.append(aa.mk.ls({ls:data,sort:options.sort||''}));
 };
 
 
 // toggle parsed content on note
-aa.e.context =(l,event,trust)=>
+aa.e.context =(content,event,trust)=>
 {
-  let content = l.querySelector('.content');
-  if (!content) 
-  {
-    content = l;
-    content.classList.add('parsed');
-  }
-  else 
-  {
-    content.textContent = '';
-    content.classList.toggle('parsed');
-  }
-  let parsed;
-  if (content.classList.contains('parsed')) //event.tags.length < 21 && 
-  {
-    parsed = aa.e.content(event.content,trust);
-  }
-  else parsed = aa.mk.l('p',{cla:'paragraph',con:event.content});
-  
-  if (parsed.childNodes.length) 
-  {
-    fastdom.mutate(()=>{content.append(parsed)});
-  }
+  content.classList.add('parsed');
+  content.textContent = '';
+  content.append(aa.e.content(event.content,trust))
 };
 
 
@@ -445,7 +425,7 @@ aa.e.get_a =async ids=>
   let result = [];
   for (const id of want)
   {
-    if (aa.em_a.has(id)) 
+    if (aa.em_a.has(id))
     {
       result.push(aa.em_a.get(id));
       want.delete(id);
@@ -615,12 +595,13 @@ aa.e.quote_note =async(element,dat)=>
   aa.fx.authors_load_from_tags(dat.event.tags);
   aa.fx.color(p.pubkey,element);
   let header = aa.mk.event_header(dat);
-  let content = aa.mk.l('div',{cla:'content',con:dat.event.content});
+  let content = await aa.e.render(dat);
+  // let content = aa.mk.l('div',{cla:'content',con:dat.event.content});
   element.textContent = '';
   element.append(header,content);
   element.dataset.kind = dat.event.kind;
   if (!element.dataset.id) element.dataset.id = dat.event.id;
-  aa.e.render(element);
+  // aa.e.render(element);
 };
 
 aa.e.quote_note_replace =async(element,data)=>

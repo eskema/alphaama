@@ -194,10 +194,28 @@ aa.clk.react =e=>
 
 
 // toggle parsed content
-aa.clk.render =e=>
+aa.clk.render =async e=>
 {
-  const note = e.target.closest('.note');
-  aa.e.render(note,{trust:localStorage.score});
+  let note = e.target.closest('[data-id]');
+  let dat = aa.em.get(note.dataset.id);
+  let content = note.querySelector('.content');
+  if (content.classList.contains('e_render'))
+  {
+    fastdom.mutate(()=>
+    {
+      content.classList.remove('e_render');
+      let content = l.querySelector('.content');
+      content.textContent = dat.event.content;
+    })
+  }
+  else 
+  {
+    let rendered = await aa.e.render(dat,{trust:localStorage.score});
+    fastdom.mutate(()=>{content.replaceWith(rendered)});
+  }
+  
+  // const dat = aa.em.get(e.target.closest('.note').dataset.id);
+  // aa.e.render(dat,{trust:localStorage.score});
 };
 
 

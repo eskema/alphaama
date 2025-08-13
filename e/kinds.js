@@ -72,7 +72,7 @@ aa.kinds[0] =dat=>
     if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))
     {
-      if (aa.temp.miss.p.has(dat.event.pubkey)) 
+      if (aa.temp.miss?.p?.has(dat.event.pubkey)) 
         aa.temp.miss.p.delete(dat.event.pubkey);
 
       let metadata = aa.parse.j(dat.event.content);
@@ -264,16 +264,6 @@ aa.kinds[30023] =dat=>
 {
   let note = aa.e.note_pre(dat);
   aa.fx.authors_load_from_tags(dat.event.tags);
-  return note
-};
-
-
-// event template for relay data from monitor nip66
-aa.kinds[30166] =dat=>
-{
-  const note = aa.e.note_pre(dat);
-  note.classList.add('root');
-  aa.e.content_o(note,aa.parse.j(dat.event.content),'text_asc');
   return note
 };
 

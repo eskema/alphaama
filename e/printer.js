@@ -74,9 +74,11 @@ aa.e.append_as_rep =(note,rep)=>
   // fastdom.mutate(()=>
   // {
   rep_add.push('haz_reply');
-  note.classList.add(...note_add);
-  rep.parentElement.classList.add(...rep_add);
   rep.insertBefore(note,last);
+  rep.parentElement.classList.add(...rep_add);
+  note.classList.add(...note_add);
+  
+  
   aa.e.upd_note_path(rep,note.dataset.stamp,aa.fx.is_u(note.dataset.pubkey));
   // });
 
@@ -278,12 +280,11 @@ aa.e.upd_note_path =(l,stamp,is_u=false)=>
       stamped = true;
     }
     if (l.querySelector('.note.is_new')) l.classList.add('haz_new');
-    aa.e.replies_summary_upd(l);
     aa.clk.time({target:l.querySelector('.by .created_at')});
+    aa.e.replies_summary_upd(l);
     root = l;
-    
   }
-  if (root?.parentElement === aa.e.l && stamped) 
+  if (root?.parentElement === aa.e.l && stamped)
     aa.e.append_as_root(root);
 };
 
@@ -389,7 +390,10 @@ aa.e.note_replace =(old_note,dat)=>
     note_replies.removeAttribute('open');
     aa.e.note_observer.observe(b);
   }
-  aa.e.render(note);
+  
+  // let content = note.querySelector('.content');
+
+  // aa.e.render(note);
   return note
 };
 

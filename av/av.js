@@ -13,7 +13,7 @@ aa.mk.av =(src,poster=false,audio=false)=>
     var canvasContext = canvas.getContext("2d");
     canvasContext.drawImage(l, 0, 0);
     let src = canvas.toDataURL('image/png');
-    aa.log(aa.mk.l('p',{con:`${src} `,app:aa.mk.img(src)}));
+    aa.log(aa.mk.img(src));
   };
   // toggle sound
   const mute =e=>

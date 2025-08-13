@@ -7,109 +7,115 @@ aa.e.rnd =
   encrypted:[4],
   highlight:[9802],
   image:[20],
-  object:[0],
+  object:[0,30166],
   video:[21,22,1063,34235,34236],
 };
 
+
 // do additional ui enhancements  to event element
 // based on kind
-aa.e.render =async(l,options)=>
+aa.e.render =async(dat,options)=>
 {
-  let dat = await aa.e.get(l?.dataset.id);
-  if (!dat) return;
-  if (l.classList.contains('e_render'))
+  let content = aa.mk.l('div',{cla:'content'});
+  let renders = 0;
+  for (const key in aa.e.rnd)
   {
-    fastdom.mutate(()=>
+    if (aa.e.rnd[key].includes(dat.event.kind))
     {
-      l.classList.remove('e_render');
-      let content = l.querySelector('.content');
-      content.textContent = dat.event.content;
-    })
-  }
-  else
-  {
-    let renders = 0;
-    for (const key in aa.e.rnd)
-    {
-      if (aa.e.rnd[key].includes(dat.event.kind))
+      let fid = 'render_'+key;
+      if (Object.hasOwn(aa.e,fid))
       {
         renders++;
-        let fid = 'render_'+key;
-        if (Object.hasOwn(aa.e,fid)) aa.e[fid](l,dat,options);
+        aa.e[fid](content,dat,options);
       }
     }
-    fastdom.mutate(()=>
-    {
-      l.classList.add('e_render');
-      let content = l.querySelector('.content');
-      if (!renders && !content?.textContent.length)
-      {
-        l.classList.add('no_content');
-        let tags = l.querySelector('.tags_wrapper');
-        if (tags) tags.toggleAttribute('open',true);
-        else tags = aa.mk.tag_list(dat.event.tags);
-        content.append(tags)
-      }
-    })
   }
+
+  content.classList.add('e_render');
+  
+  if (!renders)
+  {
+    if (dat.event.content.length)
+    {
+      content.append(aa.mk.l('p',
+      {
+        cla:'paragraph',
+        con:dat.event.content
+      }))
+    }
+    else
+    {
+      content.classList.add('no_content');
+      content.append(aa.mk.tag_list(dat.event.tags))
+    }
+  }
+
+  return content
 };
 
 
 // render content as rich text
-aa.e.render_content =async(note,dat,o={})=>
+aa.e.render_content =async(content,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
   let is_trusted = aa.fx.is_trusted(o.trust||p?.score);
-  aa.e.context(note,dat.event,is_trusted);
+  aa.e.context(content,dat.event,is_trusted);
 };
 
 
 // render content as emoji
-aa.e.render_emojii =async(note,dat,o={})=>
+aa.e.render_emojii =async(content,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
   let is_trusted = aa.fx.is_trusted(o.trust||p?.score);
   if (!is_trusted) return;
 
   let emoji = dat.event.tags.find(t=>t[0]==='emoji');
-  if (!emoji) return;
+  if (!emoji) 
+  {
+    content.append(aa.mk.l('p',
+    {
+      cla:'paragraph',
+      con:dat.event.content
+    }));
+    return
+  }
 
   emoji = aa.fx.url(emoji[2])?.href;
   if (!emoji) return;
 
   let emojii = aa.mk.img(emoji);
   emojii.classList.add('emojii');
-  let content = note.querySelector('.content');
   content.textContent = '';
   content.append(emojii)
 };
 
 
 // render content encrypted cyphertext
-aa.e.render_encrypted =async(l,dat)=>
+aa.e.render_encrypted =async(content,dat)=>
 {
-  let content = l.querySelector('.content');
-  if (!content) return;
-
   content.classList.add('encrypted');
-  content.querySelector('.paragraph').classList.add('cypher');
-  if (!dat.clas.includes('draft'))
+  let paragraph = aa.mk.l('p',
   {
-    l.querySelector('.actions .butt.react')?.remove();
-    l.querySelector('.actions .butt.req')?.remove();
-  }
+    cla:'paragraph cypher',
+    con:dat.event.content
+  });
+  // if (!dat.clas.includes('draft'))
+  // {
+  //   l.querySelector('.actions .butt.react')?.remove();
+  //   l.querySelector('.actions .butt.req')?.remove();
+  // }
   let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
   if (aa.u.o.ls.pubkey === p_x)
   {
-    l.classList.add('for_u');
+    content.classList.add('for_u');
     content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
   }
-  return p_x
 };
 
 
 // render content as rich text
-aa.e.render_highlight =async(note,dat,o={})=>
+aa.e.render_highlight =async(content,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
   let is_trusted = aa.fx.is_trusted(o.trust||p?.score);
@@ -173,65 +179,46 @@ aa.e.render_highlight =async(note,dat,o={})=>
   {
     fastdom.mutate(()=>
     {
-      let note_content = note.querySelector('.content');
-      if (!note_content) 
-      {
-        note_content = note;
-        // console.trace('no content',note,dat);
-        // note_content = note;
-      }
-      else
-      {
-        // console.log('fine');
-        
-        note_content.textContent = '';
-      }
-      note_content.classList.add('parsed');
-      note_content.append(highlight,source);
-      if (comment) note_content.insertBefore(comment,highlight);
+      content.textContent = '';
+      content.classList.add('parsed');
+      content.append(highlight,source);
+      if (comment) content.insertBefore(comment,highlight);
     });
   }
 };
 
 
 // renders image from tags
-aa.e.render_image =async(l,dat)=>
+aa.e.render_image =async(content,dat)=>
 {
   let p = await aa.p.get(dat.event.pubkey);
   let trusted = aa.fx.is_trusted(p?.score||0);
-  aa.e.context(l,dat.event,trusted);
+  aa.e.context(content,dat.event,trusted);
   let url = aa.fx.url_from_tags(dat.event.tags);
-  if (url)
-  {
-    let img = trusted?aa.mk.img(url):aa.mk.link(url);
-    img = aa.mk.l('p',{cla:'paragraph',app:img})
-    let content = l.querySelector('.content');
-    if (content) content.prepend(img);
-    else l.insertBefore(img,l.children[1])
-  }
+  if (!url) return;
+  
+  let app = trusted ? aa.mk.img(url) : aa.mk.link(url);
+  content.prepend(aa.mk.l('p',{cla:'paragraph',app}))
 };
 
 
 // render content as object
-aa.e.render_object =async(l,dat)=>
+aa.e.render_object =async(content,dat)=>
 {
-  aa.e.content_o(l,aa.parse.j(dat.event.content),'a');
+  aa.e.content_o(content,aa.parse.j(dat.event.content),'a');
 };
 
 
 // renders video from tags
-aa.e.render_video =async(l,dat)=>
+aa.e.render_video =async(content,dat)=>
 {
   let p = await aa.p.get(dat.event.pubkey);
   let trusted = aa.fx.is_trusted(p?.score||0);
-  aa.e.context(l,dat.event,trusted);
+  aa.e.context(content,dat.event,trusted);
   let url = aa.fx.url_from_tags(dat.event.tags);
   if (url)
   {
-    let av = trusted?aa.mk.av(url):aa.mk.link(url);
-    av = aa.mk.l('p',{cla:'paragraph',app:av});
-    let content = l.querySelector('.content');
-    if (content) content.prepend(av);
-    else l.insertBefore(av,l.children[1])
+    let app = trusted?aa.mk.av(url):aa.mk.link(url);
+    content.prepend(aa.mk.l('p',{cla:'paragraph',app}));
   }
 };

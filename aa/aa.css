@@ -753,6 +753,7 @@ img:not([src]) {
 {
   content: " */";
   margin-left: var(--padm);
+  opacity: .6;
 }
 
 .l .item
@@ -1342,6 +1343,11 @@ html:not(.cli_expanded) .l:not(.is_new),
 {
   background: black;
   opacity: .618;
+}
+
+#dialog .wrap
+{
+  padding: var(--line) 0;
 }
 
 #dialog_options
