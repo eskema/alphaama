@@ -47,20 +47,14 @@ aa.u =
 };
 
 
-
-
 // add user
 aa.u.add =(pubkey='')=>
 {
-  if (aa.fx.is_key(pubkey))
-  {
-    aa.u.o.ls = {pubkey:pubkey,npub:aa.fx.encode('npub',pubkey)};
-
-    aa.mod.mk(aa.u);
-    aa.mod.save(aa.u).then(aa.u.start);
-    aa.log('u = '+pubkey);
-  }
-  else return false
+  if (!aa.fx.is_key(pubkey)) return;
+  if (aa.u.p?.pubkey === pubkey) return;
+  
+  aa.u.o.ls = {pubkey:pubkey,npub:aa.fx.encode('npub',pubkey)};
+  aa.mod.save(aa.u).then(aa.u.start);
 };
 
 
@@ -238,7 +232,7 @@ aa.u.setup_butt =()=>
       })
     ]
   });
-  setTimeout(()=>{aa.log(setup_butt)},500);
+  setTimeout(()=>{ aa.log(setup_butt) },500);
 };
 
 
@@ -251,14 +245,13 @@ aa.u.setup_quick =async()=>
   aa.r.add(relays);
   aa.q.reset();
 
-  let pubkey = await window.nostr.getPublicKey();
+  let pubkey = await window.nostr?.getPublicKey();
   if (!pubkey)
   {
     aa.log('unable to get public key');
     return
   }
   aa.u.add(pubkey);
-  await aa.u.start();
 
   setTimeout(()=>{aa.q.stuff()},1000);
   setTimeout(()=>{aa.log(aa.mk.l('p',{con:'wait a bit then ',app:aa.mk.reload_butt()}))},2000);
@@ -301,8 +294,8 @@ aa.u.load_u =async()=>
   }
   else document.getElementById('u_setup')?.parentElement.remove();
 
-  let p = await aa.p.author(pubkey);
-  if (p.score < 9) 
+  let p = await aa.p.author(pubkey);  
+  if (p.score !== 9)
   {
     p.score = 9;
     needs_saving = true;
@@ -318,14 +311,15 @@ aa.u.upd_u_u =async()=>
   let butt_u = aa.el.get('butt_u_u');
   if (!butt_u || !aa.u.p) return;
   let p = aa.u.p;
-  let p_data = await aa.p.data(p);
+  let p_data = await aa.p.data(p,true);
 
   fastdom.mutate(()=>
   {
     aa.fx.color(p.pubkey,butt_u.parentElement);
-    butt_u.textContent = p.pubkey.slice(0,1)+'_'+p.pubkey.slice(-1);
+    butt_u.textContent = aa.fx.short_key(p.pubkey,1);
     
-    if (aa.fx.is_trusted(p.score)) aa.p.link_img(butt_u,p_data.data.src);
+    if (aa.fx.is_trusted(p.score))
+      aa.p.link_img(butt_u,p_data.data.src);
   })
 };
 

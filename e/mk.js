@@ -108,13 +108,14 @@ aa.mk.note =dat=>
     pubkey,
     kind,
     created_at,
-    content,
     tags,
     // sig
   } = dat.event;
   
   if (!id) console.log('no id',dat);
   if (!pubkey) console.log('no pubkey',dat);
+  aa.p.get(pubkey);
+
   if (typeof kind !== 'number') console.log('no kind',dat);
 
   const nid = aa.fx.encode('note',id);

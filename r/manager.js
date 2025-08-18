@@ -140,7 +140,8 @@ const get_events =async([get_id,ids])=>
   let missing = new Set();
   for (const id of ids)
   {
-    if (manager.events.has(id)) events.set(id,manager.events.get(id))
+    if (manager.events.has(id)) 
+      events.set(id,manager.events.get(id));
     else missing.add(id);
   }
   if (missing.size)
@@ -150,13 +151,13 @@ const get_events =async([get_id,ids])=>
     {
       const id = event.id;
       const dat = mk_dat({event});
-      manager.events.set(id,dat);
+      if (!manager.events.has(id)) manager.events.set(id,dat);
       missing.delete(id);
       events.set(id,dat);
     }
   }
   let result = [get_id,[...events.values()]];
-  if (result[1].length && missing.size) result.push([...missing.values()])
+  if (missing.size) result.push([...missing.values()])
   // if (missing.size) result.push([...missing.values()])
   postMessage(result);
 };
@@ -219,8 +220,8 @@ const get_outbox =async({request,outbox,options})=>
   // console.log(request,outbox,options);
   // return
   let [fid,filter] = request.slice(1);
-  let filter_authors = filter.authors;
-  delete filter.authors;
+  // let all_authors = [...filter.authors];
+  if (Object.hasOwn(filter,'authors')) delete filter.authors;
   for (const [url,authors] of outbox)
   {
     let dis = 
@@ -302,6 +303,7 @@ const hires =(url)=>
       subs:new Map(),
       closed:new Map(),
       key:NostrTools.generateSecretKey(),
+      count:0,
     };
     let has_auth = manager.relays[url]?.sets.includes('auth');
     manager.workers.set(url,relay);
@@ -325,8 +327,6 @@ const kind_type =kind=>
 const ping =url=>
 {
   let relay = hires(url);
-  // console.log('ping',relay);
-
   if (relay.ping) clearTimeout(relay.ping);
   relay.ping = setTimeout(()=>
     {
@@ -449,7 +449,6 @@ const on_event =(a,url)=>
 {
   let [sub_id,event] = a.slice(1);
   
-  let new_data;
   const seen = [];
   const subs = [];
 
@@ -459,36 +458,31 @@ const on_event =(a,url)=>
     let relay = hires(url);
     let sub = relay.subs.get(sub_id);
     subs.push(sub.id);
+    relay.count++;
   }
-  else 
-  {
-    subs.push(sub_id);
-    new_data = true;
-  }
+  else subs.push(sub_id);
   
   check_limits();
 
   let dat = manager.events.get(event.id);
   if (dat)
   {
-    const new_seen = a_add(dat.seen,seen);
-    const new_subs = a_add(dat.subs,subs);
-    // new_data = new_seen || new_subs;
+    a_add(dat.seen,seen);
+    a_add(dat.subs,subs);
   }
   else
   {
     let event_is_valid;
     try { event_is_valid = NostrTools.verifyEvent(event) }
-    catch { console.error('invalid event:', event) }
+    catch { console.error('invalid event: ', event) }
     if (event_is_valid)
     {
-      new_data = true;
       dat = mk_dat({event,seen,subs});
       manager.events.set(event.id,dat);
-      setTimeout(()=>{db.saveEvent(event)},100)
+      setTimeout(()=>{db.saveEvent(event)},0)
     }
   }
-  if (new_data) postMessage(['event',dat,url]);
+  postMessage(['event',dat,url]);
 };
 
 
@@ -560,14 +554,14 @@ const pre_process_request =async request=>
   if (type === 'REQ')
   {
     let since = 1;
-    let events = await db_filter(filter);
+    // let events = await db_filter(filter);
 
-    for await (let event of db.queryEvents(request[2]))
+    for await (let event of db.queryEvents(filter))
     {
       if (event.created_at > since) since = event.created_at;
       let dat = mk_dat({event});
       manager.events.set(event.id,dat);
-      on_event([request[0],request[1],event]);
+      on_event([type,sub_id,event]);
     }
     // if (request[2].since && request[2].since < since) 
     //   request[2].since = since + 1;

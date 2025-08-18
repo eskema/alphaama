@@ -161,9 +161,12 @@ aa.mk.metadata_website =(k,v)=> aa.mk.link(v);
 aa.mk.p_link =(pubkey,p)=>
 {
   if (!p) p = aa.db.p[pubkey];
-  if (!p) p = aa.p.p(pubkey);
+  if (!p) 
+  {
+    p = aa.p.p(pubkey);
+  }
 
-  const l = aa.mk.l('a',
+  const element = aa.mk.l('a',
   {
     cla:'a author',
     tit:p.npub+', '+pubkey,
@@ -172,16 +175,15 @@ aa.mk.p_link =(pubkey,p)=>
     app:aa.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
   });
   
-  aa.fx.color(pubkey,l);
+  aa.fx.color(pubkey,element);
 
-  aa.p.data(p)
-  .then(o=>
+  aa.p.data(p).then(dis=>
   {
-    aa.p.link_data_upd(l,o.data);
-    o.a.push(l);
+    dis.a.push(element);
+    aa.p.link_data_upd(element,dis.data);
   });
-  
-  return l
+
+  return element
 };
 
 
@@ -199,7 +201,7 @@ aa.mk.profile =p=>
     aa.fx.color(p.pubkey,profile);
     profile.append(aa.mk.profile_header(p),' ');
     aa.p.l.append(profile);
-    aa.fx.count_upd(aa.el.get('butt_p'));
+    setTimeout(()=>{aa.fx.count_upd(aa.el.get('butt_p'))},200);
   }
   return profile
 };

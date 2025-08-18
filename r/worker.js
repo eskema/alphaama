@@ -129,9 +129,9 @@ const on_message =e=>
         worker.waiting = data[1];
         break;
       case 'EVENT':
-        let sub = worker.open.get(data[1]);
         let date = data[2].created_at;
-        if (sub && !sub.stamp || sub.stamp < date) sub.stamp = date;
+        let sub = worker.open.get(data[1]);
+        if ((sub && !sub.stamp) || sub?.stamp < date) sub.stamp = date;
         break;
     }
     postMessage(data);

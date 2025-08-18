@@ -650,16 +650,10 @@ aa.fx.sorts =
 };
 
 
-// sorts array by order, defaults to ascending
-aa.fx.sort_by =(a,by)=>
+// shorten string to only <start>…<end>
+aa.fx.short_key =(key,len=6)=>
 {
-  switch (by)
-  {
-    case 'desc': return a.sort((a,b)=> b[1] - a[1]);
-    case 'rand': return a.sort(()=> 0.5 - Math.random());
-    case 'asc': 
-    default: return a.sort((a,b)=> a[1] - b[1]);
-  }
+  return key.slice(0,len)+'…'+key.slice(-len)
 };
 
 
@@ -864,8 +858,12 @@ aa.fx.time_upd =element=>
 aa.fx.to =async(f,t,s)=>
 {
   if (!aa.temp.todo) aa.temp.todo = {};
-  if (aa.temp.todo.hasOwnProperty(s)) clearTimeout(aa.temp.todo[s]);
-  aa.temp.todo[s] = setTimeout(()=>{f(s)},t);
+  if (Object.hasOwn(aa.temp.todo,s)) clearTimeout(aa.temp.todo[s]);
+  aa.temp.todo[s] = setTimeout(()=>
+  {
+    delete aa.temp.todo[s];
+    f(s);
+  },t);
 };
 
 

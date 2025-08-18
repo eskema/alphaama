@@ -44,6 +44,8 @@ aa.r =
   temp: new Map(),
   on_sub:new Map(),
   on_eose:new Map(),
+  get r(){ return aa.fx.in_set(this.o.ls,this.o.r) },
+  get w(){ return aa.fx.in_set(this.o.ls,this.o.w) }
 };
 
 
@@ -59,7 +61,6 @@ aa.r.add =s=>
 
   const items = aa.fx.splitr(s,',');
 
-  // if (!as.length) return all;
   let df = new DocumentFragment();
   let haz;
 
@@ -86,6 +87,7 @@ aa.r.add =s=>
     changed.set(url,a);
     if (a.includes('off')) off.add(url);
     else valid.add(url);
+    df.append(aa.mk.l('p',{con:`${url} ${a.join(' ')}`}))
   }
   
   if (invalid.size) 
@@ -105,8 +107,7 @@ aa.r.add =s=>
       aa.el.set(cla,log);
       aa.log(log);
     }
-    // [...changed.entries()].map()
-    log.append(df);
+    fastdom.mutate(()=>{log.append(df)});
     aa.r.manager.postMessage(['relays',aa.r.o.ls]);
   }
 
@@ -161,29 +162,33 @@ aa.r.common =(a=[],sets=[])=>
 {
   let common = {};
   let offed = aa.fx.in_set(aa.r.o.ls,'off',0);
-  for (const x of a)
+  for (const pubkey of a)
   {
     let has_set;
-    let relays = aa.db.p[x]?.relays;
-    if (relays) 
+    let relays = aa.db.p[pubkey]?.relays;
+    if (relays)
     {
       relays = aa.fx.in_sets_all(relays,sets);
       if (relays.length) has_set = true;
     }
     else relays = [];
 
-    for (const r of relays)
+    for (let url of relays)
     {
-      if (offed.includes(r)) continue;
-      if (!common[r]) common[r] = [];
-      if (!common[r].includes(x)) common[r].push(x)
+      if (url.includes(',') || offed.includes(url)) continue;
+      url = aa.fx.url(url)?.href;
+      if (!url) continue;
+      if (!common[url]) 
+        common[url] = [];
+      if (!common[url].includes(pubkey)) 
+        common[url].push(pubkey)
     }
 
     if (!has_set)
     {
       if (!common.none) common.none = [];
-        aa.fx.a_add(common.none,[x]);
-      // for (const r of aa.fx.in_set(aa.r.o.ls,aa.r.o.r))
+        aa.fx.a_add(common.none,[pubkey]);
+      // for (const r of aa.r.r)
       // {
       //   if (!common[r]) common[r] = [];
       //   aa.fx.a_add(common[r],[x]);
@@ -206,63 +211,11 @@ aa.r.def_req =(id,filter,relays)=>
 {
   const request = ['REQ',id,filter];
   const options = {eose:'close'};
-  if (!relays?.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
+  if (!relays?.length) relays = aa.r.r;
   if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.e.print_q);
   aa.r.send_req({request,relays,options});
 };
 
-
-// make request and await completion
-aa.r.get =async dis=>
-{
-  let {id,filter,relays,options} = dis;
-
-  let sheet = 
-  {
-    id,
-    filter,
-    started:aa.now,
-    events:new Map(),
-    eose:new Map(),
-  };
-  
-  sheet.request = ['REQ',id,filter];
-  sheet.relays = relays?.length ? relays : aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
-  sheet.options = options || {};
-  aa.r.on_sub.set(id,dat=>{ sheet.events.set(dat.event.id,dat) });
-  console.log(sheet);
-
-  return new Promise((resolve,reject)=>
-  {
-    const abort = setTimeout(()=>{reject(sheet)},6666);
-
-    aa.r.on_eose.set(id,data=>
-    {
-      let now = aa.now;
-      sheet.eose.set(data,now);
-      if (sheet.eose.size===sheet.relays.length)
-      {
-        clearTimeout(abort);
-        sheet.ended = now;
-        resolve(sheet)
-      }
-    });
-    aa.r.send_req(sheet);
-  })
-};
-
-
-// aa.r.event =([s,dat])=>
-// {
-//   for (const sub of dat.subs)
-//   {
-//     if (aa.r.on_sub.has(sub))
-//     {
-//       aa.r.on_sub.get(sub)(dat);
-//       return
-//     }
-//   }
-// };
 
 
 // delete relay
@@ -316,6 +269,47 @@ aa.r.eose_log =([id,url])=>
   }
   log.append()
   aa.log(data.join(' '))
+};
+
+
+// make request and await eose
+aa.r.get =async dis=>
+{
+  let {id,filter,relays,options} = dis;
+
+  let sheet = 
+  {
+    id,
+    filter,
+    started:aa.now,
+    events:new Map(),
+    eose:new Map(),
+  };
+  
+  sheet.request = ['REQ',id,filter];
+  sheet.relays = relays?.length ? relays : aa.r.r;
+  sheet.options = options || {};
+  aa.r.on_sub.set(id,dat=>{ sheet.events.set(dat.event.id,dat) });
+  // console.log(sheet);
+
+  return new Promise(resolve=>
+  {
+    const abort = setTimeout(()=>{resolve(sheet)},2121);
+
+    aa.r.on_eose.set(id,data=>
+    {
+      let now = aa.now;
+      sheet.eose.set(data,now);
+      if (sheet.eose.size===sheet.relays.length)
+      {
+        clearTimeout(abort);
+        sheet.ended = now;
+        resolve(sheet)
+      }
+    });
+
+    aa.r.send_req(sheet);
+  })
 };
 
 
@@ -625,7 +619,7 @@ aa.r.send_event =async({relays,event,options})=>
 
   relays = relays?.length ? aa.r.validate({relays}) : [];
 
-  if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.w);
+  if (!relays.length) relays = aa.r.w;
   if (!relays.length)
   {
     aa.log('aa.r.send_event: no relays');

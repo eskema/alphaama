@@ -317,8 +317,9 @@ aa.reset =async()=>
   aa.log('reset initiated');
   await aa.db.ops('cash',{clear:'ALL'});
   aa.log('db cash: clear');
-  await aa.db.ops('idb',{clear:{stores:['stuff','authors','events']}});
-  aa.log('db idb: clear');
+  let databases = await indexedDB.databases();
+  for (const db of databases) indexedDB.deleteDatabase(db.name);
+  aa.log('indexedDB: clear')
   sessionStorage.clear();
   aa.log('sessionStorage: clear');
   localStorage.clear();

@@ -592,7 +592,7 @@ aa.e.quote =data=>
 aa.e.quote_note =async(element,dat)=>
 {
   let p = await aa.p.author(dat.event.pubkey);
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   aa.fx.color(p.pubkey,element);
   let header = aa.mk.event_header(dat);
   let content = await aa.e.render(dat);

@@ -469,10 +469,6 @@ aa.mk.nip7_butt =()=>
 {
   let s = 'window.nostr: ok';
   if (window.nostr) return true
-  // {
-  //   aa.log(s,false,false);
-  //   return true
-  // }
 
   aa.log(aa.mk.l('button',
   {

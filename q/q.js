@@ -155,20 +155,108 @@ aa.q.del =s=>
 };
 
 
-aa.q.get =(s='')=>
+aa.q.get =async(fid,as_outbox)=>
 {
-  let [rels,s_filter] = s.split(aa.fx.regex.fw);
-  let id = 'get_'+aa.now;
+  let fo = aa.q.o.ls[fid]?.v;
+  if (!fo) return;
 
-  // const f = a.join('').replace(' ','');
-  let [filter,options] = aa.q.filter(s_filter.replace(' ',''));
-  if (!filter)
+  let id = `${fid}_${aa.fx.rands()}`;
+  let [filter,options] = aa.q.filter(fo);
+  if (!filter 
+  || (as_outbox && !filter.authors?.length))
   {
-    aa.log('invalid filter:'+s_filter);
+    aa.log('invalid filter: '+fid);
     return false
   }
-  let relays = aa.r.rel(rels);
-  aa.r.get({id,filter,relays,options}).then(dis=>console.log(dis))
+  
+  let results = [];
+
+  if (!as_outbox)
+  {
+    let relays = aa.r.r;
+    let dis = {id,filter,relays,options};
+
+    return new Promise(resolve=>
+    {
+      const abort = setTimeout(()=>{resolve({})},10000);
+      const res =ult=>
+      {
+        clearTimeout(abort);
+        // console.log(sheet);
+        resolve(ult);
+      };
+
+      try
+      {
+        aa.r.get(dis).then(res).catch(res)
+      }
+      catch(er){console.log(results,er)}
+
+    })
+  }
+   
+  let outbox = aa.r.outbox(filter.authors);
+  if (!outbox.length)
+  {
+    aa.log('no authors in outbox');
+    return
+  }
+
+  delete filter.authors;
+  
+  // let {id,filter,relays,options} = dis;
+  // let requests = outbox.map(([url,authors])=>
+  // {
+  //   aa.r.get({
+  //     id:fid,
+  //     filter:{...filter,authors},
+  //     relays:[url],
+  //     options
+  //   })
+  // });
+  // let result = await Promise.all(requests);
+  
+  return new Promise(resolve=>
+  {
+    const abort = setTimeout(()=>{resolve(results)},10000);
+    const res =sheet=>
+    {
+      results.push(sheet);
+      if (results.length === outbox.length)
+      {
+        clearTimeout(abort);
+        let events = new Map();
+        for (const result of results)
+        {
+          let seen = [...result.eose.keys()];
+          for (const [dis,dat] of result.events)
+          {
+            if (!events.has(dis)) events.set(dis,dat);
+            let dis_dat = events.get(dis);
+            aa.fx.a_add(dis_dat.seen,seen)
+          }
+        }
+        resolve(events);
+      }
+    };
+
+    for (const [url,authors] of outbox) 
+    {
+      let dis = 
+      {
+        id:id+aa.fx.rands(),
+        filter:{...filter,authors},
+        relays:[url],
+        options
+      }
+      try
+      {
+        aa.r.get(dis).then(res).catch(res)
+      }
+      catch(er){console.log(results,er)}
+      
+    }
+  })
 };
 
 
@@ -490,7 +578,7 @@ aa.q.run =async(s='')=>
       
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
-      if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
+      if (!relays.length) relays = aa.r.r;
       aa.r.on_sub.set(fid,aa.e.print_q);
       setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
@@ -507,34 +595,27 @@ aa.q.run =async(s='')=>
 // fetch basic stuff to get things started
 aa.q.stuff =async()=>
 {
+  // let sheet_1 = await aa.q.get('a');
+  // for (const dat of sheet_1.events) aa.e.print_q(dat);
+  // let sheet_2 = await aa.q.get('a');
+  // for (const dat of sheet_2.events) aa.e.print_q(dat);
+  // let sheet_3 = await aa.q.get('b');
+  // for (const dat of sheet_3.events) aa.e.print_q(dat);
+  // let sheet_4 = await aa.q.get('b',1);
+  // for (const dat of sheet_4.events) aa.e.print_q(dat);
+  
+  // sessionStorage.q_out = 'f';
+  // sessionStorage.q_run = 'n';
+
   aa.q.run('a');
   setTimeout(()=>{ aa.q.run('a') },1000);
-  setTimeout(()=>{ aa.q.run('b') },2000);
+  setTimeout(()=>{ aa.q.run('b') },3000);
   setTimeout(()=>
   {
     aa.q.out('b');
     sessionStorage.q_out = 'f';
     sessionStorage.q_run = 'n';
-  },3000);
-  // setTimeout(()=>
-  // {
-  //   sessionStorage.q_out = 'f';
-  //   sessionStorage.q_run = 'n';
-    
-  //   // aa.q.last_butts();
-  // },4000);
-  
-  // let con = 'q stuff:\n';
-  // let butt_a = ['req your data (relays,metadata,follows,mints,walLNuts)','plug','q_stuff_run_a'];
-  // let butt_b = ['req basic data from your follows','plug','q_stuff_run_b']
-  // const app = 
-  // [
-  //   aa.mk.butt_clk(butt_a),
-  //   ' then ',
-  //   aa.mk.butt_clk(butt_b)
-  // ];
-  // let text = aa.mk.l('p',{con,app})
-  // aa.log(text);
+  },6000);
 };
 
 
@@ -554,7 +635,7 @@ aa.q.sub =async s=>
     }
     txt += ` ${fid}`;
     let relays = aa.r.rel(rels);
-    if (!relays.length) relays = aa.fx.in_set(aa.r.o.ls,aa.r.o.r);
+    if (!relays.length) relays = aa.r.r;
     if (!relays.length)
     {
       aa.log(`${txt} no relays provided`);

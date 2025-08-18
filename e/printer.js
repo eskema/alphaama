@@ -31,21 +31,6 @@ aa.e.append_as_root =note=>
     else aa.e.l.moveBefore(note,last);
   }
 
-  // aa.e.get(note.dataset.id).then(dat=>
-  // {
-  //   let reply = dat.event.tags.find(i=>
-  //     i[0]==='e' 
-  //     && i[3] !== 'mention'
-  //   );
-  //   if (reply) 
-  //   {
-  //     console.trace('not root',
-  //       dat.event.tags,
-  //       aa.fx.tag_reply(dat.event.tags)
-  //     );
-  //   }
-  // });
-
   aa.e.view_check(note);
 };
 
@@ -55,7 +40,7 @@ aa.e.append_as_rep =(note,rep)=>
 {
   note.classList.remove('root','orphan');
   const note_add = ['reply','not_yet'];
-  const rep_add = [];
+  const rep_add = ['haz_reply'];
   
   if (!sessionStorage[note.dataset.id]) 
   {
@@ -72,7 +57,6 @@ aa.e.append_as_rep =(note,rep)=>
       && i.dataset.created_at > note.dataset.created_at)
     || null;
 
-  rep_add.push('haz_reply');
   rep.insertBefore(note,last);
   rep.parentElement.classList.add(...rep_add);
   note.classList.add(...note_add);
@@ -88,16 +72,18 @@ aa.e.append_as_rep =(note,rep)=>
 // decides where to append a reply
 aa.e.append_check =async(dat,note,tag)=>
 {
-  const [type,id] = tag;
-  let reply = type === 'a' 
+  const [type,id,relay] = tag;
+  let reply = type === 'a'
   ? aa.e.by_ida(id)
   : aa.e.printed.get(id);
 
-  if (reply) 
+  if (reply)
   {
     aa.e.append_as_rep(note,reply.querySelector('.replies'));
     return
   }
+  
+  aa.e.orphan(dat,note,tag);
 
   let miss_dat;
   if (type === 'a') miss_dat = await aa.e.get_a(id);
@@ -105,22 +91,26 @@ aa.e.append_check =async(dat,note,tag)=>
 
   if (miss_dat)
   {
-    aa.e.print_q(dat);
+    aa.e.print_q(miss_dat);
     return
   }
 
   let p = await aa.p.get(dat.event.pubkey);
   let relays = aa.fx.in_set(p?.relays,'write');
-  switch(type)
-  {
-    case 'a':
-      aa.e.miss_print_a(tag,relays);
-      break;
-    case 'e':
-      aa.e.miss_print(tag,relays);
-      break;
-  }
-  aa.e.orphan(dat,note,tag);
+  if (relay) aa.fx.a_add(relays,[relay]);
+  relays = [...new Set([...relays,...aa.r.r])];
+  aa.e.miss_set(type,id,relays);
+  // switch(type)
+  // {
+  //   case 'a':
+  //     aa.e.miss_set(type,id,relays)
+  //     aa.e.miss_print_a(tag,relays);
+  //     break;
+  //   case 'e':
+  //     aa.e.miss_print(tag,relays);
+  //     break;
+  // }
+  
 };
 
 
@@ -232,7 +222,7 @@ aa.e.note_rm =note=>
 // stash orphan
 aa.e.orphan =(dat,note,tag)=>
 {
-  const id = tag[1];//.split(':').join('_');
+  const id = tag[1];
   
   if (!aa.temp.refs.has(id)) aa.temp.refs.set(id,new Map());
   let refs = aa.temp.refs.get(id);
@@ -240,24 +230,7 @@ aa.e.orphan =(dat,note,tag)=>
   {
     refs.set(dat.event.id,[dat,note,tag]);
     aa.temp.orphan.set(dat.event.id,id);
-    
-    // setTimeout(()=>
-    // {
-    //   if (!note.parentElement) 
-    //   {
-    //     console.log(note)
-    //     aa.e.append_as_orphan(dat,note,id)
-    //   }
-    // },21000);
   }
-
-  // if (!aa.temp.refs[id]) aa.temp.refs[id] = {};
-  // if (!aa.temp.refs[id][dat.event.id])
-  // {
-  //   aa.temp.refs[id][dat.event.id] = [dat,note,tag];
-  //   aa.temp.orphan[dat.event.id] = id;
-  // }
-  
 };
 
 
@@ -267,83 +240,85 @@ aa.e.print =dat=>
   // console.log(dat);
   const id = aa.e.em(dat);
   let note = aa.e.printed.get(id);
+  if (note)
+  {
+    if (note.classList.contains('blank')
+    || note.classList.contains('draft'))
+    {
+      note = aa.e.note_replace(note,dat);
+    }
+    else aa.fx.dataset(note,{seen:dat.seen,subs:dat.subs});
+    return
+  }
+
+  note = aa.e.note_by_kind(dat);
   if (!note)
   {
-    note = aa.e.note_by_kind(dat);
-    if (!note) 
-    {
-      console.log(dat);
-      return
-    }
-    else aa.e.printed.set(dat.event.id,note);
-    if (dat.clas.includes('miss')) dat.clas = aa.fx.a_rm(dat.clas,['miss']);
-    if (note.classList.contains('draft'))
-    {
-      aa.fx.scroll(note,{behavior:'smooth',block:'center'});
-    }
-    let k_v = 'pubkey_'+dat.event.pubkey;
-    if (aa.p.viewing && aa.p.viewing[1] === k_v) 
-    {
-      aa.p.viewing[0].push(note);
-    }
-    aa.fx.count_upd(aa.el.get('butt_e'));
-    // check for quotes to update with new data
-    aa.e.quote_update(dat);
-    // get all stashed references
-    aa.e.refs_get(note);
+    console.log('invalid note:',dat);
+    return
   }
-  else
+  
+  aa.e.printed.set(dat.event.id,note);
+  
+  if (dat.clas.includes('miss'))
+    dat.clas = aa.fx.a_rm(dat.clas,['miss']);
+
+  if (note.classList.contains('draft'))
+    aa.fx.scroll(note,{behavior:'smooth',block:'center'});
+
+  let k_v = 'pubkey_'+dat.event.pubkey;
+  if (aa.p.viewing && aa.p.viewing[1] === k_v)
+    aa.p.viewing[0].push(note);
+  
+  setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_e')) },0);
+
+  // check for quotes to update with new data
+  setTimeout(()=>{ aa.e.quote_update(dat) },100);
+  // get all stashed references
+  setTimeout(()=>
   {
-    if (note.classList.contains('blank') 
-    || note.classList.contains('draft')) 
-    {
-      note = aa.e.note_replace(l,dat);
-    }
-    else
-    {
-      aa.fx.dataset(note,{seen:dat.seen,subs:dat.subs})
-      // let seen = dat.seen.join(' ');
-      // if (note.dataset.seen !== seen) note.dataset.seen = seen;
-      // let subs = dat.subs.join(' ');
-      // if (note.dataset.subs !== subs) note.dataset.subs = subs;
-    }
-  }
+    aa.e.refs(dat.event.id);
+    if (dat.id_a) aa.e.refs(dat.id_a);
+  },200);
 };
 
 
 // send data to print
 aa.e.print_q =dat=>
 {
-  aa.temp.prints.set(dat.event.id,dat);
+  if (!dat?.event)
+  {
+    console.trace(dat)
+    return
+  }
+  
   if (aa.temp.miss.e?.has(dat.event.id)) 
   {
     aa.temp.miss.e.delete(dat.event.id);
-    dat.clas.push('miss');
   }
   else if (dat.id_a 
   && aa.temp.miss.a?.has(dat.id_a))
   {
     aa.temp.miss.a.delete(dat.id_a);
-    dat.clas.push('miss');
   }
 
-  aa.fx.to(()=>
-  {
-    let prints = [...aa.temp.prints.values()]
-    .sort(aa.fx.sorts.ca_asc);
-    aa.temp.prints.clear();
+  // aa.fx.to(()=>
+  // {
+  //   let prints = [...aa.temp.prints.values()]
+  //   .sort(aa.fx.sorts.ca_asc);
+  //   aa.temp.prints.clear();
 
-    for (const dat of prints) 
-      setTimeout(()=>{aa.e.print(dat)},0);
-    
-    setTimeout(()=>
-    {
-      aa.e.miss_get('p');
-      aa.e.miss_get('a');
-      aa.e.miss_get('e');
-    },9);
-  },
-  0,'printer');
+  //   for (const dat of prints) 
+    setTimeout(()=>{aa.e.print(dat)},0);
+    // aa.e.print(dat);
+    // setTimeout(()=>
+    // {
+    //   aa.e.miss_get('p');
+    //   aa.e.miss_get('a');
+    //   aa.e.miss_get('e');
+    // },120);
+  // },
+  // 0,'printer');
 };
 
 
@@ -356,21 +331,11 @@ aa.e.refs =id=>
   
   for (const [i,a] of aa.temp.refs.get(id))
   {
-    aa.e.append_check(...a);
     if (aa.temp.orphan.has(i)) aa.temp.orphan.delete(i);
+    aa.e.append_check(...a);
   }
   // if (aa.temp.orphan.has(id)) aa.temp.orphan.delete(id);
   aa.temp.refs.delete(id);
-};
-
-
-aa.e.refs_get =note=>
-{
-  // setTimeout(()=>
-  // {
-    aa.e.refs(note.dataset.id);
-    if (note.dataset.id_a) aa.e.refs(note.dataset.id_a);
-  // },210)
 };
 
 

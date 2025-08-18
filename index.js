@@ -34,7 +34,7 @@ const on_loaded =async()=>
   if (p)
   {
     aa.mk.profile(p);
-    if (p.events.k3?.length) aa.p.load_profiles(p.follows);
+    if (p.follows.length) aa.p.load_profiles(p.follows);
   }
 
   let readme = await aa.readme_setup('/README.adoc');

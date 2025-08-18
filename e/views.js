@@ -40,7 +40,7 @@ aa.view.ls.nevent1 =async nevent=>
       dat = aa.mk.dat(
       {
         event:{id:data.id,created_at:aa.now - 10},
-        seen:[aa.fx.in_set(aa.r.o.ls,aa.r.o.r)]
+        seen:[aa.r.r]
       });
 
       if (data.author) dat.event.pubkey = data.author;

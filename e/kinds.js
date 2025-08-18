@@ -67,12 +67,12 @@ aa.kinds[0] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
-  aa.p.get(dat.event.pubkey).then(p=>
+  aa.p.author(dat.event.pubkey)
+  .then(p=>
   {
-    if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))
     {
-      if (aa.temp.miss?.p?.has(dat.event.pubkey)) 
+      if (aa.temp.miss?.p?.has(dat.event.pubkey))
         aa.temp.miss.p.delete(dat.event.pubkey);
 
       let metadata = aa.parse.j(dat.event.content);
@@ -81,8 +81,7 @@ aa.kinds[0] =dat=>
         p.metadata = metadata;
         aa.p.save(p);
         aa.p.links_upd(p);
-        if (aa.fx.is_u(dat.event.pubkey) 
-        && aa.u) aa.u.upd_u_u();
+        if (aa.fx.is_u(dat.event.pubkey)) aa.u.upd_u_u();
       }
     }
   });
@@ -95,7 +94,7 @@ aa.kinds[0] =dat=>
 aa.kinds[1] =dat=>
 {
   let note = aa.mk.note(dat);
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   aa.e.append_to(dat,note,aa.fx.tag_reply(dat.event.tags));
   return note
 };
@@ -107,13 +106,12 @@ aa.kinds[3] =dat=>
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
   
-  aa.p.get(dat.event.pubkey).then(p=>
+  aa.p.author(dat.event.pubkey).then(p=>
   {
-    if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))
     {
-      aa.p.process_k3_tags(dat.event);
-      aa.p.save(p)
+      setTimeout(()=>{aa.p.process_k3_tags(dat.event,p)},0);
+      // aa.p.save(p)
     }
   });
   return note
@@ -133,31 +131,36 @@ aa.kinds[5] =dat=>
 aa.kinds[6] =dat=>
 {
   let note = aa.mk.note(dat);
-  note.classList.add('tiny'); // 'is_new',
+  note.classList.add('tiny');
   let tag_reply = aa.fx.tag_e_last(dat.event.tags);
   if (tag_reply?.length)
-  {    
+  {
     let repost_id = tag_reply[1];
     aa.e.get(repost_id)
     .then(dat_repost=>
     {
-      if (dat_repost) 
+      if (dat_repost?.event)
       {
         aa.e.print_q(dat_repost);
         return
       }
 
       let event = aa.parse.j(dat.event.content);
-      dat_repost = aa.mk.dat({event,subs:['k6']})
-      aa.fx.verify_event(event).then(()=>
+      if (event)
       {
-        aa.e.print_q(dat_repost);
-      })
+        aa.fx.verify_event(event)
+        .then(()=>
+        {
+          aa.e.print_q(aa.mk.dat({event,subs:['k6']}));
+        })
+      }
+      aa.e.miss_set('e',repost_id);
+      // else console.trace(dat);
     });
     aa.e.append_check(dat,note,tag_reply);
   }
   else aa.e.append_as_root(note);
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  
   return note
 };
 
@@ -166,7 +169,7 @@ aa.kinds[6] =dat=>
 aa.kinds[7] =dat=>
 {
   let note = aa.mk.note(dat);
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   note.classList.add('tiny');
 
   let tag_reply = aa.fx.tag_e_last(dat.event.tags);
@@ -180,7 +183,7 @@ aa.kinds[7] =dat=>
 // image template
 aa.kinds[20] =dat=>
 {
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   let note = aa.mk.note(dat);
   aa.e.append_as_root(note);
   return note
@@ -197,7 +200,7 @@ aa.kinds[16] =dat=>
   let note = aa.mk.note(dat);
   note.classList.add('tiny'); // 'is_new',
   aa.e.append_check(dat,note,aa.fx.tag_reply(dat.event.tags));
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   return note
 };
 
@@ -206,7 +209,7 @@ aa.kinds[16] =dat=>
 aa.kinds[1111] =dat=>
 {
   let note = aa.mk.note(dat);
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   aa.e.append_check(dat,note,aa.fx.tag_comment_reply(dat.event.tags));
   return note
 };
@@ -265,7 +268,7 @@ aa.kinds[10002] =dat=>
 aa.kinds[30023] =dat=>
 {
   let note = aa.e.note_pre(dat);
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   return note
 };
 
@@ -274,6 +277,6 @@ aa.kinds[30023] =dat=>
 aa.kinds[34235] =dat=>
 {
   let note = aa.e.note_pre(dat);
-  aa.fx.authors_load_from_tags(dat.event.tags);
+  aa.e.authors(dat.event);
   return note
 };
