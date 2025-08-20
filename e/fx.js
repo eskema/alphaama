@@ -205,22 +205,22 @@ aa.fx.mentions =async(string='')=>
 
 
 // proof of work abort
-aa.fx.pow_abort =(id)=>
+aa.fx.pow_abort =id=>
 {
-  let m = aa.temp.mining[id]
-  if (!m) return;
+  let miner = aa.temp.mining.get(id);
+  if (!miner) return;
 
-  m.ww.terminate();
+  miner.worker.terminate();
 
   let log = document.getElementById('pow_log_'+id);
 
   let note = document.querySelector('.note[data-id="'+id+'"]');
   if (note) note.classList.remove('mining');
 
-  if (m.ended)
+  if (miner.ended)
   {
-    let t = m.ended - m.start;
-    log.textContent = `${m.started} -> done in ${t} ms`;
+    let t = miner.ended - miner.started;
+    log.textContent = `${miner.about} -> done in ${t} ms`;
   }
   else 
   {
@@ -231,69 +231,67 @@ aa.fx.pow_abort =(id)=>
 
 
 // proof of work
-aa.fx.pow =async(event,dif)=>
+aa.fx.pow =async(event,difficulty)=>
 {
   return new Promise(resolve=>
   {
-    if (!aa.temp.mining) aa.temp.mining = {};
-    
-    const m = aa.temp.mining[event.id] = 
+    if (!aa.temp.mining) aa.temp.mining = new Map();
+    let id = event.id;
+    aa.temp.mining.set(id,
     {
       ended:false,
-      dif:dif,
-      start:Date.now(),
-      started:false,
-      ww:new Worker('/e/pow.js'),
+      difficulty,
+      started:Date.now(),
+      worker:new Worker('/e/miner.js'),
+    });
+    const miner = aa.temp.mining.get(id);
+
+    miner.about = `mining pow (${difficulty}) started ${new Date(miner.started)}`;
+    
+    const log = aa.mk.l('p',{id:'pow_log_'+id,con:miner.about});
+    
+    const clk =()=>
+    {
+      setTimeout(()=>{aa.fx.pow_abort(id)},200);
     };
 
-    m.start_date = new Date(m.start);
-    m.started = `mining pow (${dif}) started ${m.start_date}`;
-    
-    const log = aa.mk.l('p',{id:'pow_log_'+event.id,con:m.started});
-    
-    const kill =()=>
-    {
-      setTimeout(()=>{aa.fx.pow_abort(event.id)},200);
-    };
-    let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk:kill});
+    let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk});
     log.append(butt_cancel);
     aa.log(log);
 
-    m.ww.onmessage =message=>
+    miner.worker.onmessage =message=>
     {
-      aa.temp.mining[event.id].ended = Date.now();
-      kill();
+      aa.temp.mining.get(id).ended = Date.now();
+      clk();
       resolve(message.data);
     };
-    m.ww.postMessage({event:event,difficulty:dif});
+    miner.worker.postMessage({event,difficulty});
   });
 };
 
 
 
 // pow from nid with target difficulty
-aa.fx.pow_note =async(nid,difficulty=0)=>
+aa.fx.pow_note =async(id,difficulty=0)=>
 {
   return new Promise(async resolve=>
   {
-    let dat = await aa.e.get(nid);
+    let dat = await aa.e.get(id);
     let event = dat.event;
-    let pow = difficulty;
-    if (!pow)
+    if (!difficulty)
     {
       let nonce = event.tags.filter(t=>t[0] === 'nonce');
-      if (!nonce.length) pow = parseInt(localStorage.pow);
+      if (!nonce.length) difficulty = parseInt(localStorage.pow);
     }
-    if (pow && aa.fx.clz(nid) < pow) 
+    if (difficulty && aa.fx.clz(id) < difficulty)
     {
-      let note = document.querySelector(`.note[data-id="${nid}"]`);
+      let note = aa.e.printed.get(id); 
+      //document.querySelector(`.note[data-id="${nid}"]`);
       if (note) note.classList.add('mining');
-      let mined = await aa.fx.pow(event,pow);
-      let [pow_e,r] = mined;
-      if (pow_e)
+      event = await aa.fx.pow(event,difficulty);
+      if (event)
       {
-        if (note) aa.e.note_rm(note)
-        event = pow_e;
+        if (note) aa.e.note_rm(note);
         aa.e.draft(aa.mk.dat({event}));
       }
       else aa.log('pow failed')

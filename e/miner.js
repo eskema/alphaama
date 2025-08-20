@@ -34,7 +34,7 @@ importScripts('/dep/nostr-tools.js');
 
 onmessage =async e=>
 {
-  // let {event,difficulty} = e.data;
-  let mined = NostrTools.nip13.minPow(...e.data);
+  let {event,difficulty} = e.data;
+  let mined = NostrTools.nip13.minePow(event,difficulty);
   postMessage(mined)
 };

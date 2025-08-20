@@ -2,7 +2,10 @@
 
 alphaama
 mod    p
-author pubkey profile
+pubkey 
+author 
+profile 
+
 
 */
 
@@ -29,28 +32,6 @@ aa.p =
     ]
   }
 };
-
-
-
-
-aa.mk.styles(aa.p.styles);
-
-
-// follow add x to k3
-// aa.p.add =async x=>
-// {
-//   //follow
-//   let new_follow = [x];
-//   const p = await aa.p.get(x);
-//   new_follow.push(aa.p.relay(p));
-//   let petname;
-//   if (p.metadata?.name) petname = p.metadata.name;
-//   else if (p.petnames.length) petname = p.petnames[0];
-//   if (petname?.length) new_follow.push(aa.fx.an(petname));
-//   else new_follow.push('');
-//   aa.cli.add('p add '+new_follow.join(', '))
-//   // aa.cli.v(localStorage.ns+' p add '+new_follow.join(', '));
-// };
 
 
 // load author p from pubkey
@@ -886,3 +867,5 @@ aa.p.updated =(p,t)=>
 
 
 // window.addEventListener('hashchange',aa.p.clear);
+
+aa.mk.styles(aa.p.styles);

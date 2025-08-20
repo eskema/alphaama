@@ -156,18 +156,21 @@ aa.e.note_observer = new IntersectionObserver(a=>
 aa.e.note_observer_intersect =element=>
 {
   aa.e.note_observer.unobserve(element);
-  fastdom.mutate(()=>{ aa.e.note_yet(element) })
+  aa.e.note_yet(element)
 };
 
 
 aa.e.note_yet =element=>
 {
-  if (!element.classList.contains('rendered'))
-  {
-    element.classList.remove('not_yet');
-    element.classList.add('rendered');
-    element.querySelector('.replies')?.setAttribute('open','');
-  }
+  fastdom.mutate(()=>
+  { 
+    if (!element.classList.contains('rendered'))
+    {
+      element.classList.remove('not_yet');
+      element.classList.add('rendered');
+      element.querySelector('.replies')?.toggleAttribute('open',true);
+    }
+  })
 };
 
 

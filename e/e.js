@@ -554,7 +554,7 @@ aa.e.note_actions =dat=>
 // action to add proof-of-work (pow) to a note
 aa.e.pow =async(string='')=>
 {
-  let [id,difficulty] = aa.fx.split_r(string)
+  let [id,difficulty] = aa.fx.splitr(string)
   difficulty = parseInt(difficulty);
   
   if (!aa.fx.is_hex(id) || !difficulty) 

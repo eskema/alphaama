@@ -76,7 +76,6 @@ const aa =
   fx:{},
   is:{},
   kinds:{},
-  miss:{e:{},p:{},a:{}},
   mk:{},
   nfc(){alert('yo')},
   get now(){ return Math.floor(Date.now()/1000) },

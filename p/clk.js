@@ -6,8 +6,10 @@ aa.clk.pa =e=>
   if (!l.classList.contains('empty')) return
   
   let butts = [...aa.p.butts.pa];
+  
   if (!aa.fx.is_u(pubkey)) 
     butts.unshift([aa.p.following(pubkey)?'del':'add','k3']);
+ 
   butts.unshift([`${aa.db.p[pubkey].score}`,'p_score']);
   
   for (const s of butts) l.append(' ',aa.mk.butt_clk(s));
@@ -17,18 +19,16 @@ aa.clk.pa =e=>
 // follow / unfollow
 aa.clk.k3 =async e=>
 {
-  const pubkey = e.target.closest('[data-pubkey]')
-    .dataset.pubkey;
+  const pubkey = e.target
+    .closest('[data-pubkey]')?.dataset.pubkey;
   
   if (e.target.textContent === 'del') 
   {
-    aa.cli.add('p del '+pubkey)
+    aa.cli.add(`p del ${pubkey}`);
   }
   else
   {
     let p = await aa.p.author(pubkey);
-    // aa.p.add(x);
-    
     aa.cli.add(`p add ${aa.fx.follow(p)}`)
   }
 };
@@ -40,7 +40,8 @@ aa.clk.mention =async e=>
   if (!pubkey) return;
 
   let p = await aa.p.get(pubkey);
-  let encoded = aa.fx.encode('nprofile',{
+  let encoded = aa.fx.encode('nprofile',
+  {
     pubkey,
     relays: aa.p.relays(p).slice(0,3)
   });

@@ -180,7 +180,7 @@ aa.clk.post =async e=>
 aa.clk.pow =e=>
 {
   let id = e.target.closest('.note').dataset.id;
-  aa.cli.v(`${localStorage.ns} fx pow ${id} ${localStorage.pow}`);
+  aa.cli.add(`e pow ${id} ${localStorage.pow}`);
 };
 
 
@@ -189,7 +189,7 @@ aa.clk.react =e=>
 {
   const note = e.target.closest('.note');
   const xid = note.dataset.id;
-  aa.cli.v(`${localStorage.ns} mk 7 ${xid} ${localStorage.reaction}`);
+  aa.cli.add(`mk 7 ${xid} ${localStorage.reaction}`);
 };
 
 
@@ -204,7 +204,6 @@ aa.clk.render =async e=>
     fastdom.mutate(()=>
     {
       content.classList.remove('e_render');
-      let content = l.querySelector('.content');
       content.textContent = dat.event.content;
     })
   }
@@ -213,9 +212,6 @@ aa.clk.render =async e=>
     let rendered = await aa.e.render(dat,{trust:localStorage.score});
     fastdom.mutate(()=>{content.replaceWith(rendered)});
   }
-  
-  // const dat = aa.em.get(e.target.closest('.note').dataset.id);
-  // aa.e.render(dat,{trust:localStorage.score});
 };
 
 
