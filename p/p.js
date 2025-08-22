@@ -463,9 +463,9 @@ aa.p.load =async()=>
     },
   );
   // oto complete profiles
-  aa.cli.on_upd.push(aa.p.oto);
+  aa.cli.on_upd.push(mod.oto);
   aa.p.l = aa.mk.l('div',{id:'authors'});
-  aa.mod.help_setup(aa.p);
+  aa.mod.help_setup(mod);
 };
 
 

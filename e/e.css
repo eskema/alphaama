@@ -254,7 +254,7 @@
   z-index: 101;
 }
 
-.in_view .replies .note .by
+.in_view .replies .note > .by
 {
   position: sticky;
   top: calc(calc(var(--line)*2) + calc(var(--pad) - 2px));
@@ -1651,7 +1651,7 @@ html:not(.needs_pagin) .pagination
   .by:hover,
   a.clicker:hover + .by
   {
-    z-index: 9;
+    z-index: 999;
   }
   
 /*  .by .author:hover .name::after
@@ -1679,9 +1679,9 @@ html:not(.needs_pagin) .pagination
     background: rgba(var(--c),.5);
   }
   
-  .by:hover + .content,
+  .note > .by:hover + .content,
   a.clicker:hover + .by + .content,
-  .reply .by:hover + .content
+  .reply > .by:hover + .content
   {
     background: rgb(var(--color-a));
     position: sticky;

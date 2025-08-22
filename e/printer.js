@@ -11,25 +11,27 @@ aa.e.append_as_root =note=>
 {
   if (!note.classList.contains('rendered'))
   {
-    note.querySelector('.replies').removeAttribute('open');
     note.classList.add('root','not_yet');
   }
 
   if (!note.parentElement) aa.e.note_observer.observe(note);
   
-  if (note.classList.contains('blank')) 
-    aa.e.l.append(note);
-  else 
+  fastdom.mutate(()=>
   {
-    let last = [...aa.e.l.children]
-      .find(i=> note.dataset.stamp > i.dataset.stamp) 
-      || null;
+    if (note.classList.contains('blank'))
+      aa.e.l.append(note);
+    else 
+    {
+      let last = [...aa.e.l.children]
+        .find(i=> note.dataset.stamp > i.dataset.stamp)
+        || null;
 
-    if (!note.parentElement
-    || !('moveBefore' in Element.prototype))
-      aa.e.l.insertBefore(note,last);
-    else aa.e.l.moveBefore(note,last);
-  }
+      if (!note.parentElement
+      || !('moveBefore' in Element.prototype))
+        aa.e.l.insertBefore(note,last);
+      else aa.e.l.moveBefore(note,last);
+    }
+  });
 
   aa.e.view_check(note);
 };
@@ -38,8 +40,8 @@ aa.e.append_as_root =note=>
 // append note to another note as reply
 aa.e.append_as_rep =(note,rep)=>
 {
-  note.classList.remove('root','orphan');
-  const note_add = ['reply','not_yet'];
+  const note_rm = ['root','orphan','not_yet'];
+  const note_add = ['reply','rendered'];
   const rep_add = ['haz_reply'];
   
   if (!sessionStorage[note.dataset.id]) 
@@ -56,13 +58,22 @@ aa.e.append_as_rep =(note,rep)=>
       i.tagName==='ARTICLE' 
       && i.dataset.created_at > note.dataset.created_at)
     || null;
-
-  rep.insertBefore(note,last);
-  rep.parentElement.classList.add(...rep_add);
-  note.classList.add(...note_add);
   
-  aa.e.upd_note_path(rep,note.dataset.stamp,aa.fx.is_u(note.dataset.pubkey));
-  aa.e.note_yet(note);
+  fastdom.mutate(()=>
+  {
+    note.classList.add(...note_add);
+    note.classList.remove(...note_rm);
+    rep.insertBefore(note,last);
+    rep.parentElement.classList.add(...rep_add);
+    aa.e.upd_note_path(note);
+  })
+
+  
+  // setTimeout(()=>
+  // {
+  //   aa.e.upd_note_path(note)
+  // },200);
+  // aa.e.note_yet(note);
   // aa.e.note_observer.observe(note);
 
   if (history.state?.view === '#'+note.id) setTimeout(()=>{aa.e.view(note)},1000);
@@ -146,18 +157,32 @@ aa.e.note_observer = new IntersectionObserver(a=>
 {
   for (const b of a)
   {
-    if (b.isIntersecting)
-      aa.e.note_observer_intersect(b.target);
+    if (b.isIntersecting || b.boundingClientRect.top > 0)
+    {
+      aa.e.note_yet(b.target);
+      aa.e.note_observer.unobserve(b.target);
+    }
+      
+      // aa.e.note_observer_intersect(b.target);
+    // else
+    // {
+    //   if (b.boundingClientRect.top > 0) 
+    //   {
+    //     position("BELOW") // do things if below
+    //   } else {
+    //     position("ABOVE") // do things if above
+    //   }
+    // }
   }
 },{root:null,threshold:.9});
 
 
 // on observed note intersection
-aa.e.note_observer_intersect =element=>
-{
-  aa.e.note_observer.unobserve(element);
-  aa.e.note_yet(element)
-};
+// aa.e.note_observer_intersect =element=>
+// {
+//   aa.e.note_observer.unobserve(element);
+//   aa.e.note_yet(element)
+// };
 
 
 aa.e.note_yet =element=>
@@ -168,7 +193,7 @@ aa.e.note_yet =element=>
     {
       element.classList.remove('not_yet');
       element.classList.add('rendered');
-      element.querySelector('.replies')?.toggleAttribute('open',true);
+      // element.querySelector('.replies')?.toggleAttribute('open',true);
     }
   })
 };
@@ -276,52 +301,49 @@ aa.e.print =dat=>
   setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_e')) },0);
 
   // check for quotes to update with new data
-  setTimeout(()=>{ aa.e.quote_update(dat) },100);
+  setTimeout(()=>{ aa.e.quote_update(dat) },0);
   // get all stashed references
   setTimeout(()=>
   {
     aa.e.refs(dat.event.id);
     if (dat.id_a) aa.e.refs(dat.id_a);
-  },200);
+  },0);
 };
 
 
 // send data to print
 aa.e.print_q =dat=>
 {
+  if (!aa.temp.print_q) aa.temp.print_q = new Map();
+  if (aa.temp.print_q.has(dat.event.id)) return;
+
   if (!dat?.event)
   {
     console.trace(dat)
     return
   }
   
+  aa.temp.print_q.set(dat.event.id,dat);
+
   if (aa.temp.miss.e?.has(dat.event.id)) 
   {
     aa.temp.miss.e.delete(dat.event.id);
   }
-  else if (dat.id_a 
-  && aa.temp.miss.a?.has(dat.id_a))
+  if (dat.id_a && aa.temp.miss.a?.has(dat.id_a))
   {
     aa.temp.miss.a.delete(dat.id_a);
   }
 
-  // aa.fx.to(()=>
-  // {
-  //   let prints = [...aa.temp.prints.values()]
-  //   .sort(aa.fx.sorts.ca_asc);
-  //   aa.temp.prints.clear();
+  aa.fx.to(()=>
+  {
+    let prints = [...aa.temp.print_q.values()]
+    .sort(aa.fx.sorts.ca_asc);
+    aa.temp.print_q.clear();
 
-  //   for (const dat of prints) 
-    setTimeout(()=>{aa.e.print(dat)},0);
-    // aa.e.print(dat);
-    // setTimeout(()=>
-    // {
-    //   aa.e.miss_get('p');
-    //   aa.e.miss_get('a');
-    //   aa.e.miss_get('e');
-    // },120);
-  // },
-  // 0,'printer');
+    for (const dat of prints)
+      setTimeout(()=>{aa.e.print(dat)},0);
+  },
+  8,'brrrr');
 };
 
 
@@ -359,24 +381,32 @@ aa.e.replies_summary_upd =async element=>
 
 
 // update note path when appending
-aa.e.upd_note_path =(l,stamp,is_u=false)=> 
+aa.e.upd_note_path =(element)=> 
 {
-  let root;
+  let target = element.querySelector('.by .created_at');
+  let last;
   let stamped;
-  for (; l && l !== document; l = l.parentNode)
+  let stamp = element.dataset.stamp;
+  let is_u = aa.fx.is_u(element.dataset.pubkey);
+
+  for (; element&&element!==document; element=element.parentNode)
   {
-    if (!l.classList.contains('note')) continue;
-    stamped = false;
-    if (l.dataset.stamp < stamp && !is_u) 
+    if (!element.classList.contains('note')) continue;
+    if (element.dataset.stamp < stamp && !is_u) 
     {
-      l.dataset.stamp = stamp;
+      element.dataset.stamp = stamp;
       stamped = true;
     }
-    if (l.querySelector('.note.is_new')) l.classList.add('haz_new');
-    aa.clk.time({target:l.querySelector('.by .created_at')});
-    aa.e.replies_summary_upd(l);
-    root = l;
+    else stamped = false;
+
+    if (element.querySelector('.note.is_new')) 
+    element.classList.add('haz_new');
+    aa.e.replies_summary_upd(element);
+    last = element;
   }
-  if (root?.parentElement === aa.e.l && stamped)
-    aa.e.append_as_root(root);
+  // update 
+  if (stamped && last?.parentElement === aa.e.l) 
+    aa.e.append_as_root(last);
+
+  setTimeout(()=>{aa.clk.time({target})})
 };

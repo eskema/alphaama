@@ -98,24 +98,59 @@ aa.o.add =(s='')=>
 // remove option (if not default)
 aa.o.del =(s='')=>
 {
-  for (const i of s.split(',')) 
+  let mod = aa.o;
+  const id = mod.def.id;
+  const log = localStorage.ns+' '+id+' rm';
+
+  let items = aa.fx.splitr(s,',');
+  for (const item of items)
   {
-    let a = i.trim().split(' ');
-    const id = aa.o.def.id;
-    const dis = localStorage.ns+' '+id+' rm ';
-    const k = a.shift().trim();
-    if (k && localStorage[k])
+    let keys = aa.fx.splitr(i);
+
+    const key = keys.shift();
+    
+    if (!key || !localStorage[key])
     {
-      if (!aa.o.def.hasOwnProperty(k))
-      {
-        localStorage.removeItem(k);
-        let l = document.getElementById(id+'_'+k)
-        if (l) l.remove();
-        aa.log(dis+k);
-      }
-      else aa.log(dis+'key cannot be deleted');
+      aa.log(`${log} key not found`);
+      continue;
     }
-    else aa.log(dis+'key not found');
+
+    if (Object.hasOwn(mod.def,key))
+    {
+      aa.log(`${log} key cannot be deleted`);
+      continue;
+    }
+    
+    localStorage.removeItem(key);
+
+    let l_id = id+'_'+key;
+    let l = aa.el.get(l_id); 
+    if (l)
+    {
+      l.remove();
+      aa.el.delete(l_id)
+    }
+    aa.log(`${log} ${key}`);
+
+
+    // if (key && localStorage[key])
+    // {
+      // if (!Object.hasOwn(mod.def,key))
+      // {
+        // localStorage.removeItem(key);
+
+        // let l_id = id+'_'+key;
+        // let l = aa.el.get(l_id); 
+        // if (l)
+        // {
+        //   l.remove();
+        //   aa.el.delete(l_id)
+        // }
+        // aa.log(`${log} ${key}`);
+      // }
+      // else aa.log(`${log} key cannot be deleted`);
+    // }
+    // else aa.log(`${log} key not found`);
   }
 };
 
@@ -218,7 +253,7 @@ aa.o.on_upd =async o=>
 aa.o.mk =(k,v)=>
 {
   const id = aa.o.def.id;
-  const l = aa.mk.l('li',{id:id+'_'+k,cla:'item'});
+  const l = aa.mk.l('li',{cla:'item'});
   let s = id+' add '+k+' '+v;
   if (k in aa.o.defaults)
   {
@@ -233,6 +268,7 @@ aa.o.mk =(k,v)=>
     if ('fx' in dis) s = id+' add '+k+' '+dis.fx(v);
   }
   l.append(aa.mk.item_action(k,v,s))
+  aa.el.set(id+'_'+k,l);
   return l
 };
 
@@ -279,4 +315,12 @@ aa.o.save =()=>
 aa.fx.pick_other =(s,a)=>
 {
   return a.find(i=>i!==s)
+};
+
+aa.fx.cycle =(s,a)=>
+{
+  let index = a.indexOf(s);
+  if (index === a.length-1) index = 0
+  else index++;
+  return a[index]
 };

@@ -530,7 +530,6 @@ img:not([src]) {
 }
 
 
-
 .item 
 {
   display: grid;
@@ -663,6 +662,42 @@ img:not([src]) {
   text-align: right;
   user-select: none;
 }
+
+/* @end */
+
+/* @group list_filter */
+
+.list_filter
+{
+  background: none;
+  border: none;
+  font-family: var(--font-main);
+  margin-bottom: var(--pad);
+  padding: 0 var(--pad);
+
+}
+
+.list_filter:focus::placeholder
+{
+  opacity: 0;
+}
+
+.list_filter:focus
+{
+  outline: none;
+  /*color: red;*/
+}
+
+.filtering > *:not(.filtered_in)
+{
+  display: none;
+}
+
+.mod .list_filter
+{
+  text-align: center;
+}
+
 
 /* @end */
 
@@ -973,6 +1008,7 @@ html:not(.cli_expanded) .l:not(.is_new),
   text-align: left;
 }
 
+
 .mod[open]
 {
   border-bottom: 1px dashed rgb(var(--color-b));
@@ -1255,6 +1291,8 @@ html:not(.cli_expanded) .l:not(.is_new),
 
 #view > section > header 
 {
+  /*display: grid;*/
+  /*grid-template-columns: auto 1fr;*/
   z-index: 0;
 }
 
@@ -1272,10 +1310,15 @@ html:not(.cli_expanded) .l:not(.is_new),
 }
 
 #view > section > header > .butt:not([data-count]),
-#view > section > header > .butt[data-count="0"]
+#view > section > header > .butt[data-count="0"],
+#view > section > header > .butt:not([data-count]) + .list_filter,
+#view > section:not(.expanded) .list_filter,
+.viewing #view .list_filter
 {
   display: none;
 }
+
+
 
 #view > section > header > .butt::before
 {

@@ -217,7 +217,7 @@ aa.e.decrypt =async id=>
 
 aa.e.decrypted_content =async(id,decrypted)=>
 {
-  let note = aa.e.printed.get(id); //document.getElementById(aa.fx.encode('note',x));
+  let note = aa.e.printed.get(id);
   if (!note) 
   {
     aa.log('decrypted cyphertext:');
@@ -684,7 +684,7 @@ aa.e.view =l=>
 {
   fastdom.mutate(()=>
   {
-    if (l.classList.contains('not_yet')) aa.e.note_observer_intersect(l);
+    if (l.classList.contains('not_yet')) aa.e.note_yet(l);
     aa.l.classList.add('viewing','view_e');
     l.classList.add('in_view');
     aa.view.in_view = l;
@@ -717,7 +717,7 @@ aa.e.draft =async dat=>
   aa.em.set(dat.event.id,dat);
   aa.e.print(dat);
   
-  let target = document.getElementById('e');
+  let target = aa.el.get('section_e');//document.getElementById('e');
   if (target && !target.classList.contains('expanded')) aa.clk.expand({target});
 };
 

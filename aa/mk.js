@@ -428,6 +428,61 @@ aa.mk.list =dis=>
 };
 
 
+aa.mk.list_filter =(element,options={})=>
+{
+  let fx_id = options.fx_id || `list_filter_${aa.fx.rands()}`;
+  let mode = options.mode ?? 'inner';
+  let delay = options.delay ?? 420;
+  let pla = options.placeholder ?? '( Y )';
+  let cla = options.classes ?? 'list_filter';
+
+  const input = aa.mk.l('input',{cla,pla});
+  
+  input.addEventListener('keyup',()=>
+  {
+
+    aa.fx.to(()=>
+    {
+      fastdom.mutate(()=>
+      {
+      if (!input.value.length)
+      {
+        element.classList.remove('filtering');
+        for (const l of element.children) 
+          l.classList.remove('filtered_in','filtered_out');
+        return
+      }
+
+      element.classList.add('filtering');
+      
+      for (const item of element.children) 
+      {
+        let text;
+        switch (mode)
+        {
+          case 'inner': text = item.innerText; break;
+          case 'full' : text = item.textContent; break
+        } 
+
+        if (text.toLowerCase().includes(input.value)) 
+        {
+          item.classList.add('filtered_in');
+          item.classList.remove('filtered_out');
+        }
+        else 
+        {
+          item.classList.add('filtered_out');
+          item.classList.remove('filtered_in');
+        }
+      }
+    })
+    },delay,fx_id)
+  });
+
+  return input
+};
+
+
 // get meta data from manifest
 aa.mk.manifest =()=>
 {
@@ -589,16 +644,23 @@ aa.mk.reload_butt =()=>
 
 
 // make section element
-aa.mk.section =(id,expanded,element_to_append)=>
+aa.mk.section =(id,expanded,element_to_append,filter)=>
 {
-  let data = 
+  let app = [aa.mk.butt_expand(id)];
+  if (filter) 
+    app.push(' ',aa.mk.list_filter(element_to_append));
+
+  let header = aa.mk.l('header',{app});
+  let options = 
   {
     id,
-    app:[aa.mk.l('header',{app:aa.mk.butt_expand(id)})]
+    app:[header]
   };
-  if (expanded) data.cla ='expanded';
-  if (element_to_append) data.app.push(element_to_append);
-  const section = aa.mk.l('section',data);
+  if (expanded) options.cla ='expanded';
+  if (element_to_append) options.app.push(element_to_append);
+
+  const section = aa.mk.l('section',options);
+  aa.el.set('section_'+id,section);
   aa.view.l?.append(section);
   return section
 };

@@ -23,10 +23,10 @@ const on_loaded =async()=>
     return
   }
 
-  if (aa.p?.l) aa.mk.section('p',false,aa.p.l);
+  if (aa.p?.l) aa.mk.section('p',0,aa.p.l,1);
   if (aa.e?.l) 
   {
-    let e_section = aa.mk.section('e',false,aa.e.l);
+    let e_section = aa.mk.section('e',0,aa.e.l,1);
     fastdom.mutate(()=>{e_section.append(aa.mk.pagination())});
   }
 

@@ -246,6 +246,12 @@ aa.load =async(o={})=>
     dialog.textContent = '';
   });
   aa.el.set('dialog',dialog);
+  
+  // window.addEventListener('beforeunload',e=>
+  // {
+  //   e.preventDefault();
+  //   if (window.confirm('reload?')) return tre
+  // })
 
   return true
 };

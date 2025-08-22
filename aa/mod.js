@@ -191,13 +191,12 @@ aa.mod.save =async mod=>
 // update mod item element
 aa.mod.ui =(mod,keys)=>
 {
-  let mod_l = mod.l; //document.getElementById(mod.def.id);
+  let mod_l = mod.l;
   if (keys && !Array.isArray(keys)) keys = [keys];
   for (const k of keys)
   {
     let v = mod.o.ls[k];
     let cur = mod.li.get(k);
-    // let cur = document.getElementById(mod.def.id+'_'+aa.fx.an(k));
     let l = mod.hasOwnProperty('mk') ? mod.mk(k,v) : aa.mk.item(k,v);
     mod.li.set(k,l);
     fastdom.mutate(()=>

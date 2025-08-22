@@ -732,10 +732,16 @@ aa.r.toggles =()=>
     states_span.append(butt,' ');
   }
   let toggles = aa.mk.l('p',{cla:'toggles'});
-  toggles.append(sets_span,aa.mk.l('br'),states_span);
+  toggles.append(
+    sets_span,
+    aa.mk.l('br'),
+    states_span,
+    aa.mk.l('br'),
+    aa.mk.list_filter(mod.ul)
+  );
   fastdom.mutate(()=>
   {
-    mod.l.insertBefore(toggles,mod.l.lastChild);
+    mod.l.insertBefore(toggles,mod.ul);
   })
 };
 
