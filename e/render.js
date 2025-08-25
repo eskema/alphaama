@@ -68,7 +68,7 @@ aa.e.render_emojii =async(content,dat,o={})=>
 {
   let p = await aa.p.author(dat.event.pubkey);
   let is_trusted = aa.fx.is_trusted(o.trust||p?.score);
-  let emoji = aa.fx.tag_value(dat.event.tags,'emoji');
+  let emoji = dat.event.tags.find(i=>i[0]==='emoji');
   if (!emoji || !is_trusted)
   {
     content.append(aa.mk.l('p',

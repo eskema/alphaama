@@ -685,10 +685,9 @@ img:not([src]) {
 .list_filter:focus
 {
   outline: none;
-  /*color: red;*/
 }
 
-.filtering > *:not(.filtered_in)
+html:not(.viewing) .filtering > *:not(.filtered_in)
 {
   display: none;
 }
