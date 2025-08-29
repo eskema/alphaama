@@ -86,11 +86,14 @@ aa.view.resolve =(s,search)=>
 
 
 // view state or go back if same state
-aa.view.state =(s,search='')=>
+aa.view.state =(s='',search='')=>
 {
-  if (s?.length) s.trim();
-  if (search?.length) search = s.length?'?'+search:search;
-  let view = s+search;
+  s.trim();
+  if (search?.length) search = s.length
+  ? `?${search}`
+  : search;
+  let view = `${s}${search}`;
+  if (view.length && !view.startsWith('#')) view = `#${view}`;
   let last;
   if (!history.state || history.state.view !== view)
   {
@@ -109,6 +112,7 @@ aa.view.tits =(title,state)=>
 };
 
 
+// update view
 aa.view.upd =s=>
 {
   aa.view.replace(s);
@@ -117,13 +121,12 @@ aa.view.upd =s=>
 
 
 aa.actions.push(
-  {
-    action:['view'],
-    required:['<entity>'],
-    description:'load into view note1…, npub1…, nprofile1…',
-    exe:aa.view.state
-  }
-);
+{
+  action:['view'],
+  required:['<entity>'],
+  description:'load into view note1…, npub1…, nprofile1…',
+  exe:aa.view.state
+});
 
 
 window.addEventListener('popstate',aa.view.pop);

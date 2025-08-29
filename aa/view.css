@@ -1,0 +1,151 @@
+#view 
+{
+  align-content: start;
+  align-items: start;
+  align-self: start;
+  display: grid;  
+  grid-area: main;
+  grid-template-areas: "p" "e";
+  position: relative;
+  z-index: 1;
+}
+
+#view > section
+{
+  display: grid;
+  z-index: 1;
+}
+
+#view > section > header 
+{
+  z-index: 0;
+}
+
+#view > section > header > .butt 
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-alt));
+  display: block;
+  font-size: var(--font-size-s);
+  line-height: 1rem;
+  padding: var(--padm);
+  padding-top: 0;
+  text-align: left;  
+  width: 100vw;
+}
+
+#view > section > header > .butt::before
+{
+  content: "[" ;
+}
+
+#view > section > header > .butt::after
+{
+  content: ":" attr(data-count) "]";
+}
+
+#view > section.expanded > header > .butt::before
+{
+  content: "";
+}
+
+#view > section.expanded > header > .butt::after
+{
+  content: ":" attr(data-count) "";
+}
+
+#view > section.expanded > header
+{
+  color: rgb(var(--color-c));
+  justify-self: start;
+}
+
+#view > section.expanded > header > .butt
+{
+  padding-left: var(--padm);
+}
+
+.viewing #view > section
+{
+  margin-top: 0;
+}
+
+#view > details
+{
+  margin-bottom: var(--pad);
+  padding-left: var(--padm);
+}
+
+#view > details > summary
+{
+  font-size: var(--font-size-s);
+}
+
+#view > details > summary::before
+{
+  content: "[";
+  font-size: var(--font-size-s);
+}
+
+#view > details > summary::after
+{
+  content: "]";
+  font-size: var(--font-size-s);
+}
+
+#view > details .content
+{
+  max-height: unset;
+}
+
+#view > details[open] > summary
+{
+  font-size: 0;
+}
+
+#view > details[open] > summary::before
+{
+  content: "[x";
+}
+
+#view > details[open] article
+{
+  padding: var(--line) 1rem;
+}
+
+#view > section > header > .butt:not([data-count]),
+#view > section > header > .butt[data-count="0"],
+#view > section > header > .butt:not([data-count]) + .list_filter,
+#view > section:not(.expanded) .list_filter,
+.viewing #view > section > .list_filter,
+.viewing #view > section > header > .butt,
+.viewing #view > details
+{
+  display: none;
+}
+
+@media screen and (min-width: 1025px) 
+{
+  #view > section.expanded > header,
+  #view > details[open] > summary
+  {
+    position: sticky;
+    top: 0;
+    line-height: 1.5rem;
+  }
+
+  #view > section.expanded > header:hover
+  {
+    z-index: 2;
+  }
+  
+  #view > section > header > .butt:hover
+  {
+    background: rgba(var(--color-a));
+  }
+}
+
+/* @media screen and (max-width: 768px) 
+{
+
+} */

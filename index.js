@@ -37,7 +37,7 @@ const on_loaded =async()=>
     if (p.follows.length) aa.p.load_profiles(p.follows);
   }
 
-  let readme = await aa.readme_setup('/README.adoc');
+  let readme = await aa.fx.readme('/README.adoc');
   if (readme) aa.view.l?.prepend(aa.mk.doc(readme));
 
   aa.q.last_butts();

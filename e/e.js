@@ -405,6 +405,11 @@ aa.e.get =async ids=>
     {
       for (const dat of events)
       {
+        if (!dat?.event)
+        {
+          console.log(dat)
+          continue
+        }
         aa.e.em(dat);
         result.push(dat)
       }
@@ -592,7 +597,9 @@ aa.e.quote =data=>
 aa.e.quote_note =async(element,dat)=>
 {
   let p = await aa.p.author(dat.event.pubkey);
-  aa.e.authors(dat.event);
+  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
+  authors.push(['p',dat.event.pubkey]);
+  aa.e.authors(authors);
   aa.fx.color(p.pubkey,element);
   let header = aa.mk.event_header(dat);
   let content = await aa.e.render(dat);

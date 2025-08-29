@@ -33,6 +33,10 @@ aa.r =
     '/r/mk.js?v='+aa_version,
     '/r/msg.js?v='+aa_version,
   ],
+  styles:
+  [
+    '/r/r.css?v='+aa_version,
+  ],
   butts:
   {
     mod:[],
@@ -62,7 +66,6 @@ aa.r.add =s=>
   const items = aa.fx.splitr(s,',');
 
   let df = new DocumentFragment();
-  let haz;
 
   for (const i of items)
   {
@@ -98,22 +101,24 @@ aa.r.add =s=>
   
   if (changed.size)
   {
-    aa.mod.save(mod);
+    aa.mod.save_to(mod);
     let cla = 'relays added';
     let log = aa.el.get(cla);
-    if (!log) 
+    if (!log)
     {
       log = aa.mk.details(cla,0,0,'base'); // ,aa.mk.l('div',{cla:'list'})
       aa.el.set(cla,log);
       aa.log(log);
     }
     fastdom.mutate(()=>{log.append(df)});
-    aa.r.manager.postMessage(['relays',aa.r.o.ls]);
+    let relays = {};
+    for (const key of changed.keys()) relays[key] = mod.o.ls[key];
+    aa.r.manager.postMessage(['relays',relays]);
   }
 
   // let [valid,invalid,off] = aa.mod.serve rs_add(aa.r,s,cla);
   let union = valid.union(off);
-  if (union.size) aa.mod.ui(mod,[...union.values()])
+  if (union.size) aa.mod.ui(mod,[...union.values()]);
   if (off.size) aa.r.force_close([...off.values()]); 
 };
 
@@ -451,6 +456,13 @@ aa.r.from_o =(o,sets=false)=>
 };
 
 
+aa.r.nip11 =(s='')=>
+{
+  let relays = aa.fx.splitr(s);
+  aa.r.manager.postMessage(['info',relays]);
+};
+
+
 // list relays from sets
 aa.r.ls =(s='')=>
 {
@@ -471,18 +483,26 @@ aa.r.load =async()=>
   const mod = aa.r;
   const id = mod.def.id;
 
+  // add mod options
   if (!Object.hasOwn(localStorage,'outbox_max'))
   {
     localStorage.outbox_max = '3';
-    // aa.mod.ui(aa.o,'outbox_max');
   }
   if (!Object.hasOwn(localStorage,'relays_ask')) 
   {
     localStorage.relays_ask = 'on';
-    // aa.mod.ui(aa.o,'relays_ask');
   }
+  if (!Object.hasOwn(localStorage,'events_max'))
+  {
+    localStorage.events_max = '9999';
+  }
+  if (aa.o.l) aa.mod.mk(aa.o);
+  else {console.log('no o')}
   
+  // mod scripts
   await aa.mk.scripts(mod.scripts);
+  
+  // mod actions
   aa.actions.push(
     {
       action:[id,'add'],
@@ -511,6 +531,13 @@ aa.r.load =async()=>
       description:'loads relay list from sets',
       exe:mod.ls
     },
+    {
+      action:[id,'info'],
+      required:['<url>'],
+      optional:['<url>'],
+      description:'fetch relay information (nip11)',
+      exe:mod.nip11
+    },
     // {
     //   action:[id,'resume'],
     //   description:'resume open queries',
@@ -525,6 +552,7 @@ aa.r.load =async()=>
     },
   );
 
+  // load saved data and make ui
   aa.mod.load(mod)
   .then(aa.mod.mk)
   .then(()=>
@@ -532,6 +560,8 @@ aa.r.load =async()=>
     aa.r.toggles();
     aa.r.manager_setup();
   });
+
+  aa.mk.styles(mod.styles);
 };
 
 
@@ -541,26 +571,44 @@ aa.r.mk =(k,v)=>
   // k = url
   // v = {sets:[]}
 
-  const l = aa.mk.server(k,v);
-  if (!l) return false;
   let id = aa.r.def.id;
-  // l.id = id+'_'+aa.fx.an(k);
-  l.dataset.state = 0;
-  // aa.mod.servers_butts(aa.r,l,v);
-  l.append(' ',aa.mk.butt_action(id+' del '+k,'del','del'));
-  
+  // element.dataset.state = 0;
+  const edit_text = `${id} add ${k} off`;
+  const del_text = `${id} del ${k}`;
+
   let sets = aa.mk.l('span',{cla:'sets'});
   if (v.sets && v.sets.length)
   {
     for (const set of v.sets)
     {
-      sets.append(aa.mk.butt_action(id+' setrm '+k+' '+set,set),' ')
+      const set_text = `${id} setrm ${k} ${set}`;
+      sets.append(aa.mk.butt_action(set_text,set),' ')
     }
   }
-  l.append(' ',sets,' ',aa.mk.butt_action(id+' add '+k+' off','+','add'));
-  if (!aa.el.has(k)) aa.el.set(k,l);
-  // aa.r.state_upd(k);
-  return l
+  let info_text = `${id} info ${k}`;
+  let info_butt = aa.mk.butt_action(info_text,'fetch info','relay_info');
+  let info = aa.mk.details(k,info_butt,0,'info');
+  if (v.info) info.append(aa.mk.ls({ls:v.info}));
+  else info.classList.add('empty');
+
+  let actions = aa.mk.l('div',
+  {
+    cla:'mod_actions',
+    app:[
+      aa.mk.butt_action(del_text,'del','del'),
+      ' ',aa.mk.butt_action(edit_text,'edit','add')
+    ]
+  });
+  
+  const element = aa.mk.l('li',
+  {
+    cla:'item relay',
+    dat:{state:0,sets:v.sets},
+    app:[info,' ',sets,' ',actions]
+  });
+  
+  aa.el.set(k,element);
+  return element 
 };
 
 
@@ -795,8 +843,25 @@ aa.r.manager_setup =()=>
     if (fun) fun(e.data);
     else aa.log(JSON.stringify(e.data));
   };
+  // max events in memory
+  let limit = localStorage.events_max
+  ? parseInt(localStorage.events_max)
+  : 99999;
+  let options = {relays:mod.o.ls,limit};
+  // initialize relay manager
+  mod.manager.postMessage(['init',options]);
+};
 
-  mod.manager.postMessage(['relays',mod.o.ls]);
+
+// nip11 relay info message from manager
+aa.r.info =([type,url,info])=>
+{
+  let mod = aa.r;
+  let relay = mod.o.ls[url];
+  relay.info = info;
+  aa.mod.save_to(mod);
+  aa.mod.ui(mod,url);
+  console.log(url,info)
 };
 
 

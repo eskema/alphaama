@@ -192,7 +192,7 @@ aa.mk.help =async(s='')=>
   {
     s = 'aa';
     o = aa;
-    await aa.readme_setup('/aa/README.adoc',aa);
+    await aa.fx.readme('/aa/README.adoc',aa);
   }
   else o = aa[s];
 
@@ -280,44 +280,49 @@ aa.mk.img_modal =(src,cla=false)=>
 
 
 // make generic list item from key : value
-aa.mk.item =(k='',v,o)=>
+aa.mk.item =(key='',value,options)=>
 {
-  let tag_name = o?.tag_name || 'li';
-  let cla = `item item_${k}`;
+  let tag_name = options?.tag_name || 'li';
+  let cla = 'item';
+  if (key) cla += ` item_${key}`;
 
-  let l = aa.mk.l(tag_name,{cla});
+  let element = aa.mk.l(tag_name,{cla});
   let item;
 
-  if (Array.isArray(v))
+  if (Array.isArray(value))
   {
-    item = aa.mk.item_arr(k,v);
-    l.classList.add('ls_arr');
+    item = aa.mk.item_arr(key,value);
+    element.classList.add('ls_arr');
   }
-  else if (typeof v==='object')
+  else if (typeof value==='object')
   {
-    let dis = {ls:v}; 
-    item = aa.mk.details(k,aa.mk.ls(dis));
-    l.classList.add('ls_obj');
+    let dis = {ls:value}; 
+    item = aa.mk.details(key,aa.mk.ls(dis));
+    element.classList.add('ls_obj');
   }
   else
   {
-    if (typeof v === 'number') l.classList.add('ls_num')
-    else if (typeof v === 'boolean') l.classList.add('ls_bool')
-    else l.classList.add('ls_str');
+    if (typeof value === 'number')
+      element.classList.add('ls_num')
+    else if (typeof value === 'boolean')
+      element.classList.add('ls_bool')
+    else element.classList.add('ls_str');
     
-    if (k) item = aa.mk.l('span',{cla:'key',con:k});
-    
-    v = v+'';
-    if (!v.length) l.classList.add('empty');
-    if (v === null) v = 'null';
-    l.append(aa.mk.l('span',{cla:'val',con:v}));
+    value = value+'';
+    if (!value.length) element.classList.add('empty');
+    if (value === null) value = 'null';
+
+    if (key) item = aa.mk.l('span',{cla:'key',con:key});
+
+    element.append(aa.mk.l('span',{cla:'val',con:value}));
   }
-  if (item) 
+  if (item)
   {
-    if (item.classList.contains('empty')) l.classList.add('empty');
-    l.prepend(item);
+    if (item.classList.contains('empty')) 
+      element.classList.add('empty');
+    element.prepend(item);
   }
-  return l
+  return element
 };
 
 
@@ -333,7 +338,7 @@ aa.mk.item_arr =(k,v)=>
   let list = aa.mk.ls({});
   if (!v.length) list.classList.add('empty');
   else list.classList.remove('empty');
-  for (let i=0;i<v.length;i++) list.append(aa.mk.item(''+i,v[i]));
+  for (let i=0;i<v.length;i++) list.append(aa.mk.item('',v[i]));
   return aa.mk.details(k,list);
 }
 
@@ -667,20 +672,22 @@ aa.mk.section =(id,expanded,element_to_append,filter)=>
 
 
 // make server item
-aa.mk.server =(k,v)=>
+aa.mk.server =(k,v,type='li')=>
 {
-  k = aa.fx.url(k);
-  if (!k) return false;
-  let app = aa.mk.l('p',{cla:'url'});
-  const l = aa.mk.l('li',{cla:'item server',app});
-  app.append(
-    aa.mk.l('span',{cla:'protocol',con:k.protocol+'//'}),
-    aa.mk.l('span',{cla:'host',con:k.host}),
-    aa.mk.l('span',{cla:'pathname',con:k.pathname}),
-    aa.mk.l('span',{cla:'hashsearch',con:k.hash+k.search})
-  ); 
-  if (v.sets && v.sets.length) l.dataset.sets = v.sets;
-  return l
+  url = aa.fx.url(k);
+  if (!url) return false;
+
+  return aa.mk.l(type,
+  {
+    cla:'item server',
+    dat:{sets:v.sets},
+    app:[
+      aa.mk.l('span',{cla:'protocol',con:url.protocol+'//'}),
+      aa.mk.l('span',{cla:'host',con:url.host}),
+      aa.mk.l('span',{cla:'pathname',con:url.pathname}),
+      aa.mk.l('span',{cla:'hashsearch',con:url.hash+url.search})
+    ]
+  });
 };
 
 

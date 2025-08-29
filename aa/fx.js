@@ -551,6 +551,25 @@ aa.fx.rands =(length=6,sample)=>
 };
 
 
+// fetch file from path, append text to object and return text
+aa.fx.readme =async(path,o={})=>
+{
+  if (!Object.hasOwn(o,'readme'))
+  {
+    let response;
+    try 
+    { 
+      response = await fetch(path) 
+    }
+    catch {}
+    if (!response) return;
+    let text = await response.text();
+    if (text) o.readme = text;
+  }
+  return o.readme
+};
+
+
 // reusable regex
 aa.fx.regex =
 {
@@ -922,8 +941,14 @@ aa.fx.units =(amount,unit='sat')=>
 aa.fx.url =string=>
 {
   if (!string) return false;
-  try { return new URL(string) } 
+  let url;
+  try { url = new URL(string) }
   catch { return false }
+  let allowed = ['http:','https:','ws:','wss:'];
+  if(!url.hostname.length
+  || !allowed.includes(url.protocol)
+  ) return false
+  else return url
 };
 
 

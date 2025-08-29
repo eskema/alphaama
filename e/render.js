@@ -27,6 +27,7 @@ aa.e.render =async(dat,options)=>
       {
         renders++;
         aa.e[fid](content,dat,options);
+        content.classList.add(fid);
       }
     }
   }
@@ -85,7 +86,8 @@ aa.e.render_emojii =async(content,dat,o={})=>
   let emojii = aa.mk.img(emoji);
   emojii.classList.add('emojii');
   content.textContent = '';
-  content.append(emojii)
+  content.append(emojii);
+  // content.classList.add('render_emojii');
 };
 
 

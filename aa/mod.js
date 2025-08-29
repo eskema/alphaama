@@ -34,7 +34,7 @@ aa.mod.butts =mod=>
 aa.mod.help_setup =async(mod,path)=>
 {
   if (!path) path = mod.readme_src || `/${mod.def.id}/README.adoc`;
-  let readme = await aa.readme_setup(path,mod);
+  let readme = await aa.fx.readme(path,mod);
   if (!readme) return;
   let exe = ()=>{aa.mk.help(mod.def.id)};
   let description = `help with ${mod.name} (${mod.def.id})`;
@@ -187,29 +187,36 @@ aa.mod.save =async mod=>
   })
 };
 
+aa.mod.save_to =async mod=>
+{
+  aa.fx.to(()=>{aa.mod.save(mod)},200,`mod_save_${mod.def.id}`)
+};
+
 
 // update mod item element
 aa.mod.ui =(mod,keys)=>
 {
-  let mod_l = mod.l;
+  let ul = mod.ul;
   if (keys && !Array.isArray(keys)) keys = [keys];
   for (const k of keys)
   {
     let v = mod.o.ls[k];
     let cur = mod.li.get(k);
-    let l = mod.hasOwnProperty('mk') ? mod.mk(k,v) : aa.mk.item(k,v);
+    let l = mod.hasOwnProperty('mk') 
+    ? mod.mk(k,v)
+    : aa.mk.item(k,v);
     mod.li.set(k,l);
     fastdom.mutate(()=>
     {
-      if (!cur) mod_l.append(l);
+      if (!cur) ul.append(l);
       else  cur.replaceWith(l);
     })
   }
   
-  if (mod_l.classList.contains('empty'))
+  if (ul.classList.contains('empty'))
   {
-    mod_l.classList.remove('empty');
-    mod_l.parentElement.classList.remove('empty');
+    ul.classList.remove('empty');
+    ul.parentElement.classList.remove('empty');
   }
 };
 

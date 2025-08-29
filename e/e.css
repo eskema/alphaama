@@ -173,7 +173,7 @@
   margin-bottom: var(--line);
 }
 
-/* @group clicker */
+/* #region clicker */
 
 .clicker
 {
@@ -201,10 +201,9 @@
   pointer-events: none;
 }
 
-/* @end */
+/* #endregion clicker */
 
-
-/* @group by */
+/* #region by */
 
 .by
 {
@@ -281,10 +280,10 @@
   z-index: 2;
 }
 
-/* @end */
+/* #endregion by */
 
 
-/* @group a.author */
+/* #region a.author */
 
 a.author 
 {
@@ -355,7 +354,6 @@ a.author.fu .name
   display: none;
 }
 
-
 .author .name 
 {
   color: rgb(var(--color-e));
@@ -367,54 +365,6 @@ a.author.fu .name
 {
   content: attr(title)!important;
 }
-
-/*.author .name::after 
-{
-  background: rgb(var(--color-b));
-  align-self: center;
-  color: rgb(var(--color-d));
-  content: attr(data-petname) " " attr(data-nip05);
-  font-size: inherit;
-  transition: all .3s var(--cb-io);
-  margin-left: var(--padm);
-  padding: 0 var(--padm);
-  pointer-events: none;
-  /*position: absolute;*!/
-  /*left: 1rem;*!/
-}*/
-/*
-.reply > .by .author .name::before
-{
-  content: attr(data-petname);
-}*/
-
-/*.by .author .name::after
-{
-  background: rgb(var(--c));
-  content: attr(data-nip05) "\A " attr(data-petname);
-  content: attr(title);
-  left: -1px;
-  top: 0;
-  margin-left: 0;
-  opacity: 0;
-  padding: 0 var(--padm);
-  padding-bottom: var(--padm);
-  pointer-events: none;
-  position: absolute;
-  transform: translateY(calc(-100%));
-  white-space: pre-wrap;
-  z-index: -1;
-}
-
-[data-luma="light"].author .name::after
-{
-  color: rgb(var(--color-dark));
-}
-
-[data-luma="dark"].author .name::after
-{
-  color: rgb(var(--color-light));
-}*/
 
 .by .author
 {
@@ -451,15 +401,9 @@ a.author.fu .name
   display: grid;
 }
 
-/*.in_view > .by .author .name::after
-{
-  color: rgb(var(--color-d));
-}*/
+/* #endregion a.author */
 
-/* @end */
-
-
-/* @group id */
+/* #region id */
 
 .id 
 {
@@ -558,10 +502,8 @@ a.author.fu .name
   display: block;
 }
 
-/* @end */
-
-
-/* @group created_at */
+/* #endregion id */
+/* #region created_at */
 
 .created_at 
 {
@@ -620,10 +562,8 @@ a.author.fu .name
   grid-area: title;
 }
 
-/* @end */
-
-
-/* @group content */
+/* #endregion created_at */
+/* #region content */
 
 .content 
 {
@@ -716,10 +656,8 @@ a.author.fu .name
   margin: var(--pad);
 }
 
-/* @end */
-
-
-/* @group paragraph */
+/* #endregion content */
+/* #region paragraph */
 
 .paragraph
 { 
@@ -779,10 +717,8 @@ a.author.fu .name
   margin-bottom: var(--pad);
 }
 
-/* @end */
-
-
-/* @group links */
+/* #endregion paragraph */
+/* #region links */
 
 .source .content_link,
 .paragraph .content_link
@@ -811,10 +747,8 @@ a.author.fu .name
   content: "…";
 }
 
-/* @end */
-
-
-/* @group img / video */
+/* #endregion links */
+/* #region media */
 
 .content-img,
 .content-video
@@ -855,10 +789,8 @@ a.author.fu .name
   max-height: var(--size);
 }
 
-/* @end */
-
-
-/* @group tags */
+/* #endregion media */
+/* #region    tags */
 
 .tags_wrapper
 {
@@ -1042,10 +974,8 @@ a.author.fu .name
   width: auto;
 }
 
-/* @end */
-
-
-/* @group actions */
+/* #endregion tags */
+/* #region    actions */
 
 .actions 
 {
@@ -1098,10 +1028,8 @@ a.author.fu .name
   z-index: 3;
 }
 
-/* @end */
-
-
-/* @group replies */
+/* #endregion actions */
+/* #region    replies */
 
 .replies
 {
@@ -1263,10 +1191,8 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   text-align: left;
 }
 
-/* @end */
-
-
-/* @group blank */
+/* #endregion replies */
+/* #region    blank */
 
 .note.blank
 {
@@ -1301,9 +1227,9 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   word-break: break-word;
 }
 
-/* @end */
+/* #endregion blank */
 
-/* @group orphan */
+/* #region orphan */
 
 #notes .note.orphan
 {
@@ -1322,9 +1248,8 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   /*transform: translateY(-150%);*/
 }
 
-/* @end */
-
-/* @group quote */
+/* #endregion orphan */
+/* #region    quote */
 
 .note_quote
 {
@@ -1381,10 +1306,8 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   padding: var(--padm);
 }
 
-/* @end */
-
-
-/* @group tiny */
+/* #endregion quote */
+/* #region    tiny */
 
 .note.root + .note.tiny
 {
@@ -1423,10 +1346,8 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   margin-bottom: 0;
 }
 
-/* @end */
-
-
-/* @group kind7 */
+/* #endregion tiny */
+/* #region    kind7 */
 
 .note.tiny[data-kind="7"] > .clicker
 {
@@ -1456,6 +1377,11 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   padding: 1px;  
 }
 
+.note[data-kind="7"]:not(.in_view) > .content.render_emojii
+{
+  padding: 0;
+}
+
 .note[data-kind="7"]:not(.in_view) > .content > *
 {
   display: block;
@@ -1464,14 +1390,16 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 .note[data-kind="7"]:not(.in_view) > .content .content-img
 {
   background: none;
+  border: 0;
   margin: 0;
+  max-height: 1rem;
   max-width: 1rem;
   padding: 0;
 }
 
-/* @end */
+/* #endregion kind7 */
 
-/* @group pagination */
+/* #region pagination */
 
 .pagination
 {
@@ -1487,10 +1415,8 @@ html:not(.needs_pagin) .pagination
   display: none;
 }
 
-/* @end */
-
-
-/* @group versions */
+/* #endregion pagination */
+/* #region    versions */
 
 .versions
 {
@@ -1531,15 +1457,8 @@ html:not(.needs_pagin) .pagination
   display: none;
 }
 
-/* @end */
-
-/* @group highlights */
-
-
-#notes .note[data-kind="9802"] > .content::after
-{
-  /*display: none;*/
-}
+/* #endregion versions */
+/* #region    highlights */
 
 .highlight
 {
@@ -1580,8 +1499,7 @@ html:not(.needs_pagin) .pagination
   white-space: pre-wrap;
 }
 
-
-/* @end */
+/* #endregion highlights */
 
 @media screen and (min-width: 1025px) 
 {
@@ -1593,6 +1511,14 @@ html:not(.needs_pagin) .pagination
   .note.root:not(.tiny):not(.in_path)::after
   {
     z-index: 2;
+  }
+
+  .note:hover::after
+  {
+    opacity: 1;
+    transform: translateY(-1px);
+    transition: all .3s var(--cb-io) 2s;
+    z-index: 0;
   }
   
   .note.root:not(.tiny):not(.in_path) > .content::after
@@ -1611,12 +1537,7 @@ html:not(.needs_pagin) .pagination
     border-top: 1px solid rgba(var(--c),.5);
   }
   
-  .note:hover::after
-  {
-    opacity: 1;
-    transform: translateY(0);
-    transition: all .3s var(--cb-io) 2s;
-  }
+
   
   .note.root:not(.in_path):hover > .by,
   .in_view > .replies .replies .note:hover > .by
@@ -1651,7 +1572,7 @@ html:not(.needs_pagin) .pagination
   .by:hover,
   a.clicker:hover + .by
   {
-    z-index: 999;
+    z-index: 999!important;
   }
   
 /*  .by .author:hover .name::after

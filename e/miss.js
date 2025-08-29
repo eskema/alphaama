@@ -1,11 +1,11 @@
 // gets all p tags from event
 // checks if metadata is available 
 // or set it as missing
-aa.e.authors =event=>
+aa.e.authors =p_tags=>
 {
   const missing = new Map();
-  const authors = event.tags.filter(aa.fx.is_tag_p);
-  for (const tag of authors)
+  
+  for (const tag of p_tags)
   {
     let [type,pubkey,relay] = tag;
     if (!aa.db.p[pubkey] || !aa.db.p[pubkey].metadata)
@@ -16,22 +16,8 @@ aa.e.authors =event=>
       if (url) missing.get(pubkey).add(url);
     }
   }
-  if (missing.size) aa.e.miss_authors(missing)
   
-  // aa.fx.to(()=>
-  // {
-  //   a.e.miss_authors(missing)
-  //   aa.p.get_authors([...missing.keys()])
-  //   .then(pubs=>
-  //   {
-  //     for (const p of pubs) if (p.events.k0) missing.delete(p.pubkey);
-
-  //     for (const [pubkey,relays] of missing)
-  //     {
-  //       aa.e.miss_set('p',pubkey,[...relays.values()])
-  //     }
-  //   });
-  // },420,'aa.e.authors');
+  if (missing.size) aa.e.miss_authors(missing)
 };
 
 
@@ -40,61 +26,12 @@ aa.e.miss_authors =async missing=>
   let stored = await aa.p.get_authors([...missing.keys()]);
 
   for (const p of stored)
-    if (p.events.k0) missing.delete(p.pubkey);
+    if (p.metadata) missing.delete(p.pubkey);
 
   for (const [pubkey,relays] of missing)
   {
     aa.e.miss_set('p',pubkey,[...relays.values()])
   }
-};
-
-aa.e.authors_bkp =async event=>
-{
-  let tags = event.tags;
-  if (!aa.temp.pubs) aa.temp.pubs = new Map();
-  const authors = tags.filter(aa.fx.is_tag_p);
-
-  for (const tag of authors)
-  {
-    const pubkey = tag[1];
-    if (!aa.db.p[pubkey] || !aa.db.p[pubkey].events.k0?.length)
-    {
-      if (!aa.temp.pubs.has(pubkey)) aa.temp.pubs.set(pubkey,new Set());
-      
-      let url = aa.fx.url(tag[2])?.href;
-      if (url) aa.temp.pubs.get(pubkey).add(url);
-    }
-  }
-  if (!aa.temp.pubs.size) return
-  
-  aa.fx.to(()=>
-  {
-    aa.db.ops('idb',{get_a:{store:'authors',a:[...aa.temp.pubs.keys()]}})
-    .then(pubs=>
-    {
-      if (!pubs)
-      {
-        console.log('aa.e.authors',tags,pubs);
-        return;
-      }
-      for (const p of pubs) 
-      {
-        if (p.events.k0?.length)
-        {
-          aa.temp.pubs.delete(p.pubkey);
-          aa.db.p[p.pubkey] = p;
-          aa.p.links_upd(p);
-        }
-      }
-      for (const [pubkey,rset] of aa.temp.pubs)
-      {
-        aa.e.miss_set('p',pubkey,[...rset.values()])
-        // aa.temp.pubs.delete(pubkey);
-      }
-      aa.temp.pubs.clear()
-      // aa.e.miss_get('p');
-    });
-  },420,'get_pubs');
 };
 
 

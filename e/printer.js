@@ -297,8 +297,6 @@ aa.e.print =dat=>
   let k_v = 'pubkey_'+dat.event.pubkey;
   if (aa.p.viewing && aa.p.viewing[1] === k_v)
     aa.p.viewing[0].push(note);
-  
-  setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_e')) },0);
 
   // check for quotes to update with new data
   setTimeout(()=>{ aa.e.quote_update(dat) },0);
@@ -308,6 +306,8 @@ aa.e.print =dat=>
     aa.e.refs(dat.event.id);
     if (dat.id_a) aa.e.refs(dat.id_a);
   },0);
+  
+  setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_e')) },0);
 };
 
 
@@ -315,7 +315,7 @@ aa.e.print =dat=>
 aa.e.print_q =dat=>
 {
   if (!aa.temp.print_q) aa.temp.print_q = new Map();
-  if (aa.temp.print_q.has(dat.event.id)) return;
+  if (!dat?.event?.id || aa.temp.print_q.has(dat.event.id)) return;
 
   if (!dat?.event)
   {

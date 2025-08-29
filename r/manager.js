@@ -8,7 +8,8 @@ const db = new store.IDBEventStore;
 // relay manager
 const manager = 
 {
-  relays:null,
+  limit:99999,
+  relays:new Map(),
   subs:new Map(),
   events:new Map(),
   worker_src:'/r/worker.js',
@@ -32,8 +33,12 @@ const is_valid_url =(s='')=>
   if (!s) return;
   let url;
   try { url = new URL(s) }
-  catch(er) { console.error(s) }
-  return url?.href
+  catch(er) { console.error(s); return }
+  let allowed = ['http:','https:','ws:','wss:'];
+  if(!url.hostname.length
+  || !allowed.includes(url.protocol)
+  ) return;
+  else return url?.href
 };
 
 
@@ -93,10 +98,10 @@ const auth =data=>
 };
 
 
-const check_limits =()=>
+const limits_reached =()=>
 {
-  if (manager.events.size < 9999) return false;
-
+  if (manager.events.size < manager.limit) return false;
+  manager.locked = true;
   for (const [url,worker] of manager.workers)
     terminate({url})
   
@@ -119,8 +124,9 @@ onmessage =e=>
   const [type,dis] = data;
   switch (type.toLowerCase())
   {
+    case 'init': init(dis); break;
     case 'terminate': terminate(dis); break;
-    case 'relays': manager.relays = dis; break;
+    case 'relays': set_relays(dis); break;
     case 'info': relay_info(dis); break;
     case 'request': process_request(dis); break;
     case 'auth': auth(dis); break;
@@ -133,11 +139,35 @@ onmessage =e=>
 };
 
 
+const set_relays =relays=>
+{
+  for (const url in relays)
+  {
+    manager.relays.set(url,relays[url])
+  }
+};
+
+
+const init =(options)=>
+{
+  console.log('manager init',options);
+  if (options.limit) manager.limit = options.limit;
+  for (const url in options.relays)
+  {
+    let relay = manager.relays.set(url,options.relays[url]).get(url);
+    if (!Object.hasOwn(relay,'info')) fetch_info(url);
+  }
+
+};
+
+
 // get events from memory or db
 const get_events =async([get_id,ids])=>
 {
   let events = new Map();
   let missing = new Set();
+  let events_found = [];
+  let result = [get_id];
   for (const id of ids)
   {
     if (manager.events.has(id)) 
@@ -146,20 +176,41 @@ const get_events =async([get_id,ids])=>
   }
   if (missing.size)
   {
-    const from_db = await db.getByIds([...missing.values()]);
-    for (const event of from_db)
-    {
-      const id = event.id;
-      const dat = mk_dat({event});
-      if (!manager.events.has(id)) manager.events.set(id,dat);
-      missing.delete(id);
-      events.set(id,dat);
-    }
+    let from_db = await db_ids([...missing.values()]);
+    missing = missing.difference(new Set(from_db.map(i=>i.id)));
+    for (const event of from_db) events.set(event.id,event);
+    // for (const id of from_db.keys()) missing.delete(id);
+
+    // events_found = mem_events(from_db);
+    // missing.
+    // const from_db = await db.getByIds([...missing.values()]);
+    // for (const [id,event]event of from_db)
+    // {
+    //   // const id = event.id;
+    //   // const dat = mk_dat({event});
+    //   // if (!manager.events.has(id)) manager.events.set(id,dat);
+    //   missing.delete(id);
+    //   events.set(id,dat);
+    // }
+    // mem_events(events)
   }
-  let result = [get_id,[...events.values()]];
+
+  result.push([...events.values()]);
   if (missing.size) result.push([...missing.values()])
   // if (missing.size) result.push([...missing.values()])
   postMessage(result);
+};
+
+
+const db_ids =async ids=>
+{
+  let events = new Map();
+  const from_db = await db.getByIds(ids);
+  for (const event of from_db) 
+  {
+    events.set(event.id,event)
+  }
+  return mem_events(events)
 };
 
 
@@ -168,15 +219,17 @@ const db_filter =async filter=>
   let events = new Map();
   for await (let event of db.queryEvents(filter))
   {
-    events.set(event.id,event);
+    events.set(event.id,event)
   }
-  return events
+  return mem_events(events)
 };
 
 
 const mem_events =events_map=>
 {
   let dats = [];
+  if (limits_reached()) return dats;
+
   for (let [id,event] of events_map)
   {
     let dat;
@@ -189,27 +242,15 @@ const mem_events =events_map=>
     dats.push(dat);
   }
   return dats
-}
+};
 
 
 // get events from memory or db
 const get_filter =async([get_id,filter])=>
 {
   let events = await db_filter(filter);
-  let dats = mem_events(events);
-  // let events = new Map();
-  // for (let [id,event] of events)
-  // {
-  //   let dat;
-  //   if (!manager.events.has(id)) 
-  //   {
-  //     dat = mk_dat({event});
-  //     manager.events.set(id,dat);
-  //   }
-  //   else dat = manager.events.get(id);
-  //   dats.push(dat);
-  // }
-  postMessage([get_id,dats]);
+  // let dats = mem_events(events);
+  postMessage([get_id,events]);
 };
 
 
@@ -278,11 +319,11 @@ const hires =(url)=>
     console.trace(`manager.hires: no url`);
     return
   }
-  let relay;
+  let hired;
   if (manager.workers.has(url))
   {
-    relay = manager.workers.get(url);
-    if (relay?.terminated) 
+    hired = manager.workers.get(url);
+    if (hired?.terminated)
     {
       console.log(`manager.hires: relay is terminated`,url);
       return
@@ -296,7 +337,7 @@ const hires =(url)=>
       console.log(`url is invalid`,url);
       return
     }
-    relay =
+    hired =
     {
       url,
       worker:new Worker(manager.worker_src+'?v=3&r='+encodeURIComponent(url)),
@@ -305,14 +346,21 @@ const hires =(url)=>
       key:NostrTools.generateSecretKey(),
       count:0,
     };
-    let has_auth = manager.relays[url]?.sets.includes('auth');
-    manager.workers.set(url,relay);
-    relay.worker.onerror =e=>{ console.log('manager: error',url,e) };
-    relay.worker.onmessage =e=>{ on_message(e.data,url) };
-    relay.worker.postMessage(['open',url,has_auth]);
+
+    manager.workers.set(url,hired);
+    hired.worker.onerror =e=>{ console.log('manager: error',url,e) };
+    hired.worker.onmessage =e=>{ on_message(e.data,url) };
+    let relay = manager.relays.get(url);
+    let has_auth;
+    if (!relay?.sets || !Array.isArray(relay.sets))
+    {
+      console.log('no relay sets',relay)
+    }
+    else has_auth = relay.sets.includes('auth');
+    hired.worker.postMessage(['open',url,has_auth]);
     ping(url);
   }
-  return relay
+  return hired
 };
 
 
@@ -324,7 +372,7 @@ const kind_type =kind=>
 }
 
 
-const ping =url=>
+const ping =async url=>
 {
   let relay = hires(url);
   if (relay.ping) clearTimeout(relay.ping);
@@ -374,7 +422,8 @@ const on_auth =async(challenge,url)=>
 
   let unsigned = NostrTools.nip42.makeAuthEvent(url,challenge);
   let dis = {};
-  if (!manager.relays[url]?.sets.includes('auth'))
+  
+  if (!manager.relays.get(url)?.sets.includes('auth'))
   {
     // console.log(relay);
     let signed = NostrTools.finalizeEvent(unsigned,relay.key);
@@ -447,6 +496,7 @@ const on_eose =async(id,url)=>
 // relay worker event
 const on_event =(a,url)=>
 {
+  if (limits_reached()) return;
   let [sub_id,event] = a.slice(1);
   
   const seen = [];
@@ -461,8 +511,6 @@ const on_event =(a,url)=>
     relay.count++;
   }
   else subs.push(sub_id);
-  
-  check_limits();
 
   let dat = manager.events.get(event.id);
   if (dat)
@@ -554,7 +602,6 @@ const pre_process_request =async request=>
   if (type === 'REQ')
   {
     let since = 1;
-    // let events = await db_filter(filter);
 
     for await (let event of db.queryEvents(filter))
     {
@@ -563,8 +610,6 @@ const pre_process_request =async request=>
       manager.events.set(event.id,dat);
       on_event([type,sub_id,event]);
     }
-    // if (request[2].since && request[2].since < since) 
-    //   request[2].since = since + 1;
   }
   return request
 };
@@ -579,20 +624,61 @@ const process_request =async data=>
 };
 
 
-const relay_info =async(relays={})=>
+const relay_info =async(relays=[])=>
 {
-  for (const relay in relays)
+  for (const url of relays) fetch_info(url)
+};
+
+
+const fetch_info =async url=>
+{
+  url = is_valid_url(url);
+  if (!url) return;
+
+  let relay = manager.relays.get(url);
+  
+  if (relay?.bad) return;
+  let info;
+  try { info = await nip11(url) }
+  catch(er){}
+  
+  info = info || null;
+  if (relay)
   {
-    manager.relays[relay] = relays[relay];
-    manager.relays[relay].info = await NostrTools.nip11.fetchRelayInformation(relay);
-    postMessage(['info',[relay,manager.relays[relay]]])
+    if (info) relay.info = info;
+    else relay.bad = true;
   }
+  postMessage(['info',url,info]);
+};
+
+const nip11 =async url=>
+{
+  return new Promise(resolve=>
+  {
+    const abort = setTimeout(()=>{resolve()},6666);
+
+    NostrTools.nip11.fetchRelayInformation(url)
+    .then(info=>
+    {
+      clearTimeout(abort);
+      resolve(info)
+    })
+    .catch(er=>{console.log(url,er)})
+    // try
+    // {
+    // let info = await NostrTools.nip11.fetchRelayInformation(url);
+    // }
+    // catch { console.log('error fetching') }
+
+  })
 };
 
 
 // post request to relay workers
 const relay_request =({url,request,options})=>
 {
+  if (manager.locked) return;
+
   let relay = hires(url);
   if (!relay)
   {

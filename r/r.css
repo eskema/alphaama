@@ -1,0 +1,128 @@
+.relay
+{
+  grid-template-areas: "actions info state sets";
+  grid-template-columns: auto 1fr auto;
+  overflow-x: scroll;
+  word-break: keep-all;
+  white-space: pre;
+}
+
+.relay .protocol,
+.relay .pathname,
+.relay .hashsearch
+{
+  opacity: .6;
+}
+
+.mod .relay::after
+{
+  content: "(" attr(data-state) ") " attr(data-subs);
+  grid-area: state;
+  margin-right: var(--pad);
+  max-width: 12rem;
+  overflow-x: scroll;
+  white-space: pre;
+}
+
+.mod .relay[data-state="1"]::after
+{
+  color: rgb(var(--color-yes));
+  opacity: .7;
+}
+
+.mod .relay[data-state="3"]::after
+{
+  color: rgb(var(--color-no));
+  opacity: .7;
+}
+
+.mod .relay .info > summary::after
+{
+  content: none
+}
+
+.mod .relay .del
+{
+  margin-left: 0;
+}
+
+.mod .relay .sets,
+.mod .relay .mod_actions
+{
+  align-items: start;
+  align-self: center;
+  display: grid;
+  grid-area: sets;
+  grid-auto-flow: column;
+  grid-gap: var(--padm);
+}
+
+.mod .relay .mod_actions
+{
+  grid-area: actions;
+}
+
+.mod .relay .info[open] + .sets,
+.mod .relay .info[open] ~ .mod_actions
+{
+  grid-auto-flow: row;
+}
+
+.mod .relay .sets .butt
+{
+  display: inline;
+}
+
+.mod .relay .info
+{
+  grid-area: info;
+  padding-left: var(--padm);
+}
+
+.mod .relay .info[open]
+{
+  margin-bottom: var(--pad) 0;
+  /* border-top: 1px dashed rgb(var(--color-c)); */
+  margin: var(--line) 0;
+}
+
+.mod .relay .info[open] > summary
+{
+  font-size: var(--font-size);
+  padding-top: calc(var(--pad));
+  padding-bottom: calc(var(--padm) + 1px);
+}
+
+.mod .relay .info.empty > summary::before
+{
+  content: 'x ';
+  color:rgb(var(--color-no))
+}
+
+.mod .toggles
+{
+  margin: var(--line) var(--pad);
+  text-align: center;
+}
+
+
+.mod .toggles span
+{
+  justify-content: center;
+  display: flex;
+  }
+
+.mod .toggles .active
+{
+  color: rgb(var(--color-main));
+}
+
+.mod .toggles .butt
+{
+  padding: 0 var(--pad)
+}
+
+.mod .toggles .butt:focus:not(.active)
+{
+  color: rgb(var(--color-d));
+}

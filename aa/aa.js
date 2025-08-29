@@ -70,7 +70,14 @@ const aa =
       '/aa/wakelock.js?v='+aa_version,
       '/av/av.js?v='+aa_version,
     ],
-    styles:['/aa/aa.css?v='+aa_version],
+    styles:
+    [
+      '/aa/aa.css?v='+aa_version,
+      '/aa/mod.css?v='+aa_version,
+      '/aa/list.css?v='+aa_version,
+      '/aa/log.css?v='+aa_version,
+      '/aa/view.css?v='+aa_version,
+    ],
   },
   el:new Map(),
   fx:{},
@@ -174,7 +181,7 @@ aa.load =async(o={})=>
   // setup document
   aa.l = document.documentElement;
   aa.bod = document.body;
-  aa.mk.styles(o.styles || aa.def.styles);
+  
   aa.framed = window.self !== window.top;
   if (aa.framed) aa.l.classList.add('framed');
   let dependencies = o.dependencies || aa.def.dependencies;
@@ -224,6 +231,7 @@ aa.load =async(o={})=>
     //   description:'do math with strings',
     //   exe:(s='')=> math.evaluate(s)
     // },
+    
   );
 
   fetch('/stuff/nostr_kinds.json').then(dis=>dis.json())
@@ -252,7 +260,7 @@ aa.load =async(o={})=>
   //   e.preventDefault();
   //   if (window.confirm('reload?')) return tre
   // })
-
+  setTimeout(()=>{aa.mk.styles(o.styles || aa.def.styles)},0);
   return true
 };
 
@@ -276,42 +284,25 @@ aa.log =(con='',l=false,is_new=true)=>
 aa.mods_load =async mods=>
 {
   aa.temp.mods_after_load = [];
-  for (const o of mods)
+  for (const mod of mods)
   {
-    if (aa.required(o.requires))
+    if (aa.required(mod.requires))
     {
-      await aa.mk.scripts([o.src]);
-      if (Object.hasOwn(aa,o.id) 
-      && Object.hasOwn(aa[o.id],'load')) 
-        await aa[o.id].load();
-      aa[o.id].loaded = true;
+      await aa.mk.scripts([mod.src]);
+      let id = mod.id;
+      if (Object.hasOwn(aa,id)
+      && Object.hasOwn(aa[id],'load')) 
+        await aa[id].load();
+      
+      aa[id].loaded = true;
     }
   }
   while (aa.temp.mods_after_load.length)
   {
-    let dis = aa.temp.mods_after_load.shift();
-    setTimeout(dis,0)
+    let after_load = aa.temp.mods_after_load.shift();
+    setTimeout(after_load,0)
   }
   delete aa.temp.mods_after_load;
-};
-
-
-// fetch file from path, append text to object and return text
-aa.readme_setup =async(path,o={})=>
-{
-  if (!Object.hasOwn(o,'readme'))
-  {
-    let response;
-    try 
-    { 
-      response = await fetch(path) 
-    }
-    catch {}
-    if (!response) return;
-    let text = await response.text();
-    if (text) o.readme = text;
-  }
-  return o.readme
 };
 
 

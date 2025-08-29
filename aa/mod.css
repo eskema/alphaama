@@ -1,0 +1,180 @@
+/* #region    mods */
+
+#mods
+{
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: var(--line);
+  padding-left: 0;
+  padding-top: calc(var(--line) + var(--font-size));
+  width: 100%;
+}
+
+.mod
+{
+  background: rgba(var(--color-b),.8);
+  font-size: var(--font-size-s);
+  text-align: center;
+  max-width: 100%;
+  width: auto;
+}
+
+.mod .list
+{
+  text-align: left;
+}
+
+
+.mod[open]
+{
+  background: rgb(var(--color-a));
+  border-bottom: 1px dashed rgb(var(--color-b));
+  border-top: 1px dashed rgb(var(--color-b));
+  justify-self: end;
+  padding-bottom: var(--line);
+  width: 61.8vw;
+}
+
+.mod:not([open])
+{
+  justify-self: end;
+}
+
+#dialog .mod
+{
+  font-size: var(--font-size);
+  width: unset;
+  min-width: 60vw;
+}
+
+.mod > summary
+{  
+  background: rgba(var(--color-a),.8);
+  display: grid;
+  font-size: var(--font-size-m);
+  grid-template-areas: "pop . .";
+  grid-template-columns: auto 1fr auto;
+  padding: var(--pad);
+  user-select: none;
+}
+
+#dialog .mod > summary
+{
+  grid-template-areas: ". . pop";
+  pointer-events: none;
+}
+
+
+.mod[open] > summary
+{
+  color: rgb(var(--color-f));
+
+  justify-self: stretch;
+  padding: var(--pad) 0;
+  position: sticky;
+  top: 0;
+}
+
+.mod:not([open]) > summary
+{
+  font-size: 0;
+}
+
+.mod > summary .butt
+{
+  font-size: var(--font-size-s);
+  grid-area:pop;
+  margin-left: var(--pad);
+  pointer-events: auto;
+}
+
+.mod:not([open]) > summary .butt
+{
+  display: none;
+}
+
+.mod:not([open]) > summary::before
+{
+  content: "- " attr(data-id);
+  font-size: var(--font-size-m);
+}
+
+.mod_header
+{
+  padding: 0 var(--pad);
+}
+
+.mod_name
+{
+  color: rgb(var(--color-f));
+  font-size: var(--font-size-m);
+  margin: 0;
+  text-align: right;
+  position: sticky;
+  top: 0;
+}
+
+.mod_name::first-letter
+{
+  
+  transform: translateX(8px);
+}
+
+.mod_about
+{
+  font-size: var(--font-size);
+  text-align: right;
+  /*margin: 0;*/
+}
+
+.mod_butts
+{
+  
+  text-align: right;
+}
+
+.mod .item 
+{
+  border-bottom: 1px solid rgba(var(--color-c),0);
+  border-top: 1px solid rgba(var(--color-c),0);
+}
+
+.mod .item > .butts
+{
+  grid-area: s;
+}
+
+.mod[open] .list
+{
+  background-color: rgb(var(--color-a));
+}
+
+.mod[open] details[open] .list
+{
+  margin: var(--padm) 0;
+}
+
+.mod > .butt
+{
+  font-size: var(--font-size);
+}
+
+
+@media screen and (min-width: 1025px) 
+{
+  .mod .item:hover
+  {
+    border-bottom: 1px dotted rgb(var(--color-c));
+    border-top: 1px dotted rgb(var(--color-c));
+  }
+}
+
+@media screen and (max-width: 768px) 
+{ 
+  .mod[open]
+  {
+    width: calc(100vw - calc(var(--line)*2));
+  }
+}
+
