@@ -231,23 +231,30 @@ aa.p.get =async pubkey=>
 aa.p.get_authors =async(pubkeys=[],upd)=>
 {
   let authors = [];
-  let a = [];
+  let missing = new Set();
   if (!upd)
   {
     for (const pubkey of pubkeys)
     {
       if (Object.hasOwn(aa.db.p,pubkey)) authors.push(aa.db.p[pubkey]);
-      else a.push(pubkey)
+      else missing.add(pubkey)
     }
-    if (!a.length) return authors;
+    if (!missing.size) return authors;
   }
-
+  let a = [...missing.values()];
   let stored = await aa.db.ops('idb',{get_a:{store:'authors',a}});
   if (stored?.length) for (const p of stored)
   {
     aa.db.p[p.pubkey] = p;
-    authors.push(aa.db.p[p.pubkey]);
+    missing.delete(p.pubkey);
+    authors.push(p);
     setTimeout(()=>{aa.p.links_upd(p)},10);
+  }
+  
+  for (const pubkey of missing)
+  {
+    aa.db.p[pubkey] = aa.p.p(pubkey);
+    authors.push(aa.db.p[pubkey]);
   }
 
   return authors
@@ -647,36 +654,25 @@ aa.p.p =pubkey=>
 // process all p tags from kind-3 event
 aa.p.process_k3_tags =async(event,p)=>
 {
-  const is_u = aa.fx.is_u(event.pubkey);
+  // const is_u = aa.fx.is_u(event.pubkey);
   // let old_follows = [...p.follows];
   // if (ep?.follows?.length) old_follows = [...ep.follows];
   p.follows = event.tags
-    .filter(aa.fx.is_tag_p).map(i=>i[1]);
+    .filter(aa.fx.is_tag_p)
+    .map(i=>i[1]);
 
-  let stored = await aa.p.get_authors(p.follows);
-  let stored_ids = stored.map(i=>i.pubkey);
-  let missing = p.follows
-    .filter(i=>!stored_ids.includes(i));
-  
-  for (const pubkey of missing) if (!aa.db.p[pubkey]) aa.db.p[pubkey] = aa.p.p(pubkey);
-  
-  setTimeout(()=>{aa.p.process_k3_tags_upd(event)},0);
+  await aa.p.get_authors(p.follows);
 
-  if (is_u) // || aa.p.following(event.pubkey))
+  setTimeout(()=>
   {
-    setTimeout(()=>
-    {
-      aa.p.load_profiles(p.follows)
-      // for (const pubkey of missing) aa.e.miss_set('p',pubkey);
-    },420)
-  }
+    aa.p.process_k3_tags_upd(event)
+  },420);
 };
 
 
 aa.p.process_k3_tags_upd =(event)=>
 {
-  const dis_u = aa.fx.is_u(event.pubkey);
-  const a_p = [];
+  const is_u = aa.fx.is_u(event.pubkey);
   for (const tag of event.tags)
   {
     if (!aa.fx.is_tag_p(tag)) continue;
@@ -687,10 +683,9 @@ aa.p.process_k3_tags_upd =(event)=>
     let p = aa.db.p[pubkey];
     if (!p)
     {
-
-      console.log('no p for',pubkey);
-      continue;
       p = aa.db.p[pubkey] = aa.p.p(pubkey);
+      // console.log('no p for',pubkey);
+      // continue;
       upd = true;
     }
 
@@ -709,14 +704,9 @@ aa.p.process_k3_tags_upd =(event)=>
       if (aa.fx.a_add(p.petnames,[petname])) upd = true;
     }
 
-    if (!p?.followers) 
-    {
-      console.trace(p)
-      return
-    }
-    else if (aa.fx.a_add(p.followers,[event.pubkey])) upd = true;
+    if (aa.fx.a_add(p.followers,[event.pubkey])) upd = true;
     
-    if (dis_u)
+    if (is_u)
     {
       if (p.score === 0)
       { 
@@ -729,10 +719,19 @@ aa.p.process_k3_tags_upd =(event)=>
     {
       aa.p.save(p);
       aa.fx.to(()=>{aa.p.links_upd(p)},200,'save_p_'+p.pubkey);
-      // a_p.push(p);
     }
   }
-  aa.p.save(aa.db.p[event.pubkey]);
+  let op = aa.db.p[event.pubkey];
+  aa.p.save(op);
+  
+  if (is_u) // || aa.p.following(event.pubkey))
+  {
+    setTimeout(()=>
+    {
+      aa.p.load_profiles(op.follows)
+      // for (const pubkey of missing) aa.e.miss_set('p',pubkey);
+    },420)
+  }
 };
 
 
@@ -742,8 +741,6 @@ aa.p.profile_upd =async(p)=>
   let profile = aa.mk.profile(p);
   const pubkey = profile.querySelector('.pubkey');
   const p_data = profile.querySelector('.profile_data');
-  // const metadata = profile.querySelector('.metadata');
-  // const extradata = profile.querySelector('.extradata');
   
   fastdom.mutate(()=>
   {
@@ -752,8 +749,7 @@ aa.p.profile_upd =async(p)=>
     let profile_data = aa.mk.profile_data(p);
     if (p_data) p_data.replaceWith(profile_data);
     else profile.append(profile_data);
-    // metadata.replaceWith(aa.mk.metadata(p));
-    // extradata.replaceWith(aa.mk.extradata(p));
+
     profile.dataset.trust = p.score;
     profile.dataset.updated = p.updated ?? 0;
     aa.p.links_upd(p)
@@ -815,25 +811,28 @@ aa.p.save_to =()=>
   aa.temp[q_id] = [];
   let all = [];
   for (const pub of pubs) all.push(aa.db.p[pub]);
-  const chunks = aa.fx.chunks(all,666);
-  let times = 0;
+  
+  let times = 1;
+  const chunks = aa.fx.chunks(all,100);
   for (const a of chunks)
   {
-    setTimeout(()=>
-    {
-      aa.db.idb.postMessage({put:{store:'authors',a}});
-      // for (const p of a) aa.p.links_upd(p)
-    },times * 21);
-    times++;
+    let data = {put:{store:'authors',a}};
+    setTimeout(()=>{aa.db.idb.postMessage(data)}, times*21);
+    // times++;
+    console.log(q_id,a.length)
   }
 };
 
 
 aa.p.save = async p=>
 {
+  aa.db.p[p.pubkey] = p;
+  // if (!p.updated
+  // // || p.followers.length < 10
+  // ) return;
+
   const q_id = 'author_save';
   if (!Object.hasOwn(aa.temp,q_id)) aa.temp[q_id] = [];
-  aa.db.p[p.pubkey] = p;
   aa.temp[q_id].push(p.pubkey);
   aa.fx.to(aa.p.save_to,2100,q_id);
   if (aa.view.active === p.npub) aa.p.profile_upd(p);

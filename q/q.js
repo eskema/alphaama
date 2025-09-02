@@ -355,6 +355,42 @@ aa.q.load =async()=>
 };
 
 
+aa.q.log =(s,request,con)=>
+{
+  let [type,fid,filter,options] = request;
+
+  aa.q.last(fid,filter);
+  if (aa.q.o.ls[fid])
+  {
+    let q_last = aa.parse.j(sessionStorage.q_last);
+    if (!q_last) q_last = {};
+    if (!q_last[fid]) q_last[fid] = [];
+    q_last[fid] = [...q_last[fid].slice(-10),filter];
+    sessionStorage.q_last = JSON.stringify(q_last);
+  }
+
+  let id = `["${type.toUpperCase()}","${fid}"]`;
+  let l = aa.el.get(id);
+  if (!l)
+  {
+    l = aa.mk.details(id,0,0,'base');
+    let close_butt = aa.mk.butt_action(`${aa.q.def.id} close ${fid}`);
+    close_butt.addEventListener('click',e=>{('.l')?.remove()});
+    l.append(close_butt);
+    aa.el.set(id,l);
+    aa.log(l);
+  }
+  else aa.logs.append(l.parentElement);
+  
+  let dis = aa.mk.details(s,0,1,'base');
+  dis.append(
+    aa.mk.l('p',{con}),' ',
+    aa.mk.l('p',{app:aa.mk.ls({ls:{filter,options}})})
+  );
+  l.append(' ',dis);
+};
+
+
 // make q mod item
 aa.q.mk =(k,v) =>
 {
@@ -422,18 +458,7 @@ aa.q.outbox =request=>
   aa.r.add(`${outbox.map(i=>i[0]).join(' out,')} out`);
   aa.r.on_sub.set(fid,aa.e.print_q);
   aa.r.send_out({request:['REQ',fid,filter],outbox,options});
-  // for (const r of outbox)
-  // {
-  //   let url = r[0];
-  //   let f = {...filter};
-  //   f.authors = r[1];
-    
-  //   let request = ['REQ',fid,f];
-  //   let relays = [url];
-    
-  //   aa.r.send_req({request,relays,options});
-  // }
-  // note log
+
   if (!options.eose || options.eose !== 'close')
   {
     let txt = `outbox for ${authors_len} authors`;
@@ -563,7 +588,12 @@ aa.q.run =async(s='')=>
       sessionStorage.q_run = aa.q.active.run;
 
       let [filtered,options] = aa.q.filter(aa.q.o.ls[fid].v);
-      if (filtered) request = ['REQ',fid,filtered];
+      if (!filtered) 
+      {
+        aa.log(aa.q.def.id+' run: invalid filter')
+        continue
+      }
+      request = ['REQ',fid,filtered];
       
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
@@ -595,16 +625,33 @@ aa.q.stuff =async()=>
   
   // sessionStorage.q_out = 'f';
   // sessionStorage.q_run = 'n';
-
+  aa.log('getting your stuff (relays, metadata, follows, etc…)');
   aa.q.run('a');
-  setTimeout(()=>{ aa.q.run('a') },1000);
-  setTimeout(()=>{ aa.q.run('b') },3000);
   setTimeout(()=>
   {
+    aa.log('again now that we might have more relays…');
+    aa.q.run('a') 
+  },2000);
+  setTimeout(()=>
+  {
+    aa.log('getting your follows stuff');
+    aa.q.run('b') 
+  },5000);
+  setTimeout(()=>
+  {
+    aa.log('getting your follows stuff again but now in outbox mode');
     aa.q.out('b');
     sessionStorage.q_out = 'f';
     sessionStorage.q_run = 'n';
-  },6000);
+    setTimeout(()=>
+    {
+      aa.log(aa.mk.l('p',
+      {
+        con:'wait a bit while events load, then ',
+        app:aa.mk.reload_butt()
+      }))
+    },2000);
+  },8000);
 };
 
 
@@ -639,40 +686,4 @@ aa.q.sub =async s=>
     // for (const url of relays) aa.r.lay(url,{a,request});
     aa.q.log('sub',request,`to: ${relays}`);
   }
-};
-
-
-aa.q.log =(s,request,con)=>
-{
-  let [type,fid,filter,options] = request;
-
-  aa.q.last(fid,filter);
-  if (aa.q.o.ls[fid])
-  {
-    let q_last = aa.parse.j(sessionStorage.q_last);
-    if (!q_last) q_last = {};
-    if (!q_last[fid]) q_last[fid] = [];
-    q_last[fid] = [...q_last[fid].slice(-10),filter];
-    sessionStorage.q_last = JSON.stringify(q_last);
-  }
-
-  let id = `["${type.toUpperCase()}","${fid}"]`;
-  let l = aa.el.get(id);
-  if (!l)
-  {
-    l = aa.mk.details(id,0,0,'base');
-    let close_butt = aa.mk.butt_action(`${aa.q.def.id} close ${fid}`);
-    close_butt.addEventListener('click',e=>{('.l')?.remove()});
-    l.append(close_butt);
-    aa.el.set(id,l);
-    aa.log(l);
-  }
-  else aa.logs.append(l.parentElement);
-  
-  let dis = aa.mk.details(s,0,1,'base');
-  dis.append(
-    aa.mk.l('p',{con}),' ',
-    aa.mk.l('p',{app:aa.mk.ls({ls:{filter,options}})})
-  );
-  l.append(' ',dis);
 };

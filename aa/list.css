@@ -143,6 +143,12 @@
   text-align: center;
 }
 
+.list_filter::placeholder
+{
+  font-size: var(--font-size);
+  font-family: var(--font-main);
+}
+
 .list_filter:focus::placeholder
 {
   opacity: 0;

@@ -34,7 +34,44 @@ aa.r.eose =async data=>
     setTimeout(()=>{aa.r.on_eose.get(sub_id)(url)},100);
     return
   }
-  else aa.log_details('r.eose','["EOSE","…"]',sub_id,url)
+  aa.log_details('r.eose','["EOSE","…"]',sub_id,url)
+};
+
+
+aa.r.eose =async data=>
+{
+  let [sub_id,url] = data.slice(1);
+  if (aa.r.on_eose.has(sub_id))
+  {
+    setTimeout(()=>{aa.r.on_eose.get(sub_id)(url)},100);
+    return
+  }
+  // aa.log_details('r.eose','["EOSE","…"]',sub_id,url)
+  // aa.log_details =(id,summary,sub_id,con)=>
+  // {
+  let l_id = `["REQ","${sub_id}"]`;
+  let l = aa.el.get(l_id);
+  if (!l)
+  {
+    aa.log_details('r.eose','["EOSE","…"]',sub_id,url);
+    return
+  }
+
+  let l_r_id = `["EOSE","${sub_id}"]`;
+  let l_r = aa.el.get(l_r_id);
+  if (!l_r)
+  {
+    l_r = aa.mk.details(l_r_id,0,1,'base');
+    aa.el.set(l_r_id,l_r);
+    fastdom.mutate(()=>{l.append(l_r)});
+  }
+  fastdom.mutate(()=>
+  {
+    l_r.append(aa.mk.l('p',{con:url}));
+    l_r.classList.add('has_new');
+  });
+  // };
+  
 };
 
 

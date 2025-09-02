@@ -944,13 +944,26 @@ aa.fx.url =string=>
   let url;
   try { url = new URL(string) }
   catch { return false }
-  let allowed = ['http:','https:','ws:','wss:'];
-  if(!url.hostname.length
-  || !allowed.includes(url.protocol)
-  ) return false
-  else return url
+  if (!url.hostname.length) return false;
+  return url
 };
 
+
+// converts string to URL and returns it or false
+aa.fx.is_valid_relay =(url)=>
+{
+  let protocol_whitelist = [
+    'ws:','wss:'];
+  if (!url
+  || !url.hostname.length
+  || url.hostname.includes('.local')
+  || url.hostname.includes('127.0.')
+  || url.pathname.includes('://')
+  || url.href.includes(',')
+  || !protocol_whitelist.includes(url.protocol)
+  ) return false;
+  else return url?.href
+};
 
 // verify event object
 aa.fx.verify_event =async o=>

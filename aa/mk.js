@@ -435,13 +435,13 @@ aa.mk.list =dis=>
 
 aa.mk.list_filter =(element,options={})=>
 {
-  let fx_id = options.fx_id || `list_filter_${aa.fx.rands()}`;
+  let nam = options.name || `list_filter_${aa.fx.rands()}`;
   let mode = options.mode ?? 'inner';
   let delay = options.delay ?? 420;
-  let pla = options.placeholder ?? '( Y )';
+  let pla = options.placeholder ?? '(Y)';
   let cla = options.classes ?? 'list_filter';
 
-  const input = aa.mk.l('input',{cla,pla});
+  const input = aa.mk.l('input',{nam,cla,pla});
   
   input.addEventListener('keyup',()=>
   {
@@ -481,7 +481,7 @@ aa.mk.list_filter =(element,options={})=>
         }
       }
     })
-    },delay,fx_id)
+    },delay,nam)
   });
 
   return input

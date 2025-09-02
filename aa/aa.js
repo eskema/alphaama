@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 70;
+const aa_version = 72;
 // a
 const aa = 
 {
@@ -73,8 +73,8 @@ const aa =
     styles:
     [
       '/aa/aa.css?v='+aa_version,
-      '/aa/mod.css?v='+aa_version,
       '/aa/list.css?v='+aa_version,
+      '/aa/mod.css?v='+aa_version,
       '/aa/log.css?v='+aa_version,
       '/aa/view.css?v='+aa_version,
     ],

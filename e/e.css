@@ -1264,6 +1264,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   position: relative;
 }
 
+.note_quote .list,
 .note_quote .paragraph
 {
   font-size: var(--font-size-s);
@@ -1605,6 +1606,7 @@ html:not(.needs_pagin) .pagination
   .reply > .by:hover + .content
   {
     background: rgb(var(--color-a));
+    pointer-events: none;
     position: sticky;
     top: 2rem;
     z-index: 11;

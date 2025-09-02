@@ -3,7 +3,7 @@
 // nostr-tools
 importScripts('/dep/nostr-tools.js','/dep/store.js');
 
-const db = new store.IDBEventStore;
+
 
 // relay manager
 const manager = 
@@ -27,64 +27,6 @@ const a_add =(a=[],b=[])=>
 };
 
 
-// converts string to URL and returns it or false
-const is_valid_url =(s='')=>
-{
-  if (!s) return;
-  let url;
-  try { url = new URL(s) }
-  catch(er) { console.error(s); return }
-  let allowed = ['http:','https:','ws:','wss:'];
-  if(!url.hostname.length
-  || !allowed.includes(url.protocol)
-  ) return;
-  else return url?.href
-};
-
-
-// is hexadecimal
-const is_x =s=> /^[A-F0-9]+$/i.test(s);
-// is a valid nostr key
-const is_key =x=> is_x(x) && x.length === 64;
-
-const fx_id_ae =event=>
-{
-  return fx_id_a(
-  {
-    kind:event.kind,
-    pubkey:event.pubkey,
-    identifier:event.tags.find(t=>t[0]==='d')[1],
-  })
-};
-
-const fx_id_a =o=>
-{
-  if (!o.kind || typeof o.kind !== 'number') return;
-  if (!o.pubkey || !is_key(o.pubkey)) return;
-  if (!o.identifier || typeof o.identifier !== 'string') return;
-  return `${o.kind}:${o.pubkey}:${o.identifier}`;
-};
-
-// make request filter from addressable string
-const fx_id_af =string=>
-{
-  let [kind,pubkey,identifier] = fx_split_ida(string);
-  return {
-    kinds:[parseInt(kind)],
-    authors:[pubkey],
-    '#d':[identifier]
-  }
-};
-
-const fx_split_ida =ida=>
-{
-  let a = ida.split(':');
-  let kind = a.shift();
-  let pubkey = a.shift();
-  let identifier = a.length > 1 ? a.join(':') : a[0];
-  return [kind,pubkey,identifier]
-};
-
 const auth =data=>
 {
   let {relays,request} = data;
@@ -98,107 +40,17 @@ const auth =data=>
 };
 
 
-const limits_reached =()=>
-{
-  if (manager.events.size < manager.limit) return false;
-  manager.locked = true;
-  for (const [url,worker] of manager.workers)
-    terminate({url})
-  
-  postMessage(['limit','too many events'])
-  
-  return true
-};
+const db = new store.IDBEventStore;
 
 
-// on manager message
-onmessage =e=>
-{
-  let data = e.data;
-  if (!Array.isArray(data)
-  || !data?.length)
-  {
-    console.log('invalid data',data);
-    return
-  }
-  const [type,dis] = data;
-  switch (type.toLowerCase())
-  {
-    case 'init': init(dis); break;
-    case 'terminate': terminate(dis); break;
-    case 'relays': set_relays(dis); break;
-    case 'info': relay_info(dis); break;
-    case 'request': process_request(dis); break;
-    case 'auth': auth(dis); break;
-    case 'close' : close_sub(dis); break;
-    case 'events': get_events(dis); break;
-    case 'filter': get_filter(dis); break;
-    case 'outbox': get_outbox(dis); break;
-    default: console.log('invalid operation',data)
-  }
-};
-
-
-const set_relays =relays=>
-{
-  for (const url in relays)
-  {
-    manager.relays.set(url,relays[url])
-  }
-};
-
-
-const init =(options)=>
-{
-  console.log('manager init',options);
-  if (options.limit) manager.limit = options.limit;
-  for (const url in options.relays)
-  {
-    let relay = manager.relays.set(url,options.relays[url]).get(url);
-    if (!Object.hasOwn(relay,'info')) fetch_info(url);
-  }
-
-};
-
-
-// get events from memory or db
-const get_events =async([get_id,ids])=>
+const db_filter =async filter=>
 {
   let events = new Map();
-  let missing = new Set();
-  let events_found = [];
-  let result = [get_id];
-  for (const id of ids)
+  for await (let event of db.queryEvents(filter))
   {
-    if (manager.events.has(id)) 
-      events.set(id,manager.events.get(id));
-    else missing.add(id);
+    events.set(event.id,event)
   }
-  if (missing.size)
-  {
-    let from_db = await db_ids([...missing.values()]);
-    missing = missing.difference(new Set(from_db.map(i=>i.id)));
-    for (const event of from_db) events.set(event.id,event);
-    // for (const id of from_db.keys()) missing.delete(id);
-
-    // events_found = mem_events(from_db);
-    // missing.
-    // const from_db = await db.getByIds([...missing.values()]);
-    // for (const [id,event]event of from_db)
-    // {
-    //   // const id = event.id;
-    //   // const dat = mk_dat({event});
-    //   // if (!manager.events.has(id)) manager.events.set(id,dat);
-    //   missing.delete(id);
-    //   events.set(id,dat);
-    // }
-    // mem_events(events)
-  }
-
-  result.push([...events.values()]);
-  if (missing.size) result.push([...missing.values()])
-  // if (missing.size) result.push([...missing.values()])
-  postMessage(result);
+  return mem_events(events)
 };
 
 
@@ -214,42 +66,102 @@ const db_ids =async ids=>
 };
 
 
-const db_filter =async filter=>
+const fetch_info =async url=>
+{
+  url = is_valid_url(url);
+  if (!url) return;
+
+  let relay = manager.relays.get(url);
+  
+  if (relay?.bad) return;
+  let info;
+  try { info = await nip11(url) }
+  catch(er)
+  {
+    
+  }
+  
+  info = info || null;
+  if (relay)
+  {
+    if (info) relay.info = info;
+    else relay.bad = true;
+  }
+  postMessage(['info',url,info]);
+};
+
+
+const fx_id_ae =event=>
+{
+  return fx_id_a(
+  {
+    kind:event.kind,
+    pubkey:event.pubkey,
+    identifier:event.tags.find(t=>t[0]==='d')[1],
+  })
+};
+
+
+const fx_id_a =o=>
+{
+  if (!o.kind || typeof o.kind !== 'number') return;
+  if (!o.pubkey || !is_key(o.pubkey)) return;
+  if (!o.identifier || typeof o.identifier !== 'string') return;
+  return `${o.kind}:${o.pubkey}:${o.identifier}`;
+};
+
+
+// make request filter from addressable string
+const fx_id_af =string=>
+{
+  let [kind,pubkey,identifier] = fx_split_ida(string);
+  return {
+    kinds:[parseInt(kind)],
+    authors:[pubkey],
+    '#d':[identifier]
+  }
+};
+
+
+const fx_split_ida =ida=>
+{
+  let a = ida.split(':');
+  let kind = a.shift();
+  let pubkey = a.shift();
+  let identifier = a.length > 1 ? a.join(':') : a[0];
+  return [kind,pubkey,identifier]
+};
+
+
+// get events from memory or db by ids
+const get_events =async([get_id,ids])=>
 {
   let events = new Map();
-  for await (let event of db.queryEvents(filter))
+  let missing = new Set();
+  let result = [get_id];
+  for (const id of ids)
   {
-    events.set(event.id,event)
+    if (manager.events.has(id)) 
+      events.set(id,manager.events.get(id));
+    else missing.add(id);
   }
-  return mem_events(events)
+  if (missing.size)
+  {
+    let from_db = await db_ids([...missing.values()]);
+    missing = missing.difference(new Set(from_db.map(i=>i.id)));
+    for (const event of from_db) events.set(event.id,event);
+  }
+
+  result.push([...events.values()]);
+  if (missing.size) result.push([...missing.values()])
+  postMessage(result);
 };
 
 
-const mem_events =events_map=>
-{
-  let dats = [];
-  if (limits_reached()) return dats;
-
-  for (let [id,event] of events_map)
-  {
-    let dat;
-    if (!manager.events.has(id)) 
-    {
-      dat = mk_dat({event});
-      manager.events.set(id,dat);
-    }
-    else dat = manager.events.get(id);
-    dats.push(dat);
-  }
-  return dats
-};
-
-
-// get events from memory or db
+// get events from memory or db from filter
 const get_filter =async([get_id,filter])=>
 {
   let events = await db_filter(filter);
-  // let dats = mem_events(events);
   postMessage([get_id,events]);
 };
 
@@ -257,11 +169,7 @@ const get_filter =async([get_id,filter])=>
 const get_outbox =async({request,outbox,options})=>
 {
   request = await pre_process_request(request);
-  
-  // console.log(request,outbox,options);
-  // return
   let [fid,filter] = request.slice(1);
-  // let all_authors = [...filter.authors];
   if (Object.hasOwn(filter,'authors')) delete filter.authors;
   for (const [url,authors] of outbox)
   {
@@ -273,29 +181,6 @@ const get_outbox =async({request,outbox,options})=>
     };
     relay_request(dis);
   }
-};
-
-
-// upstream close subscription
-const close_sub =id=>
-{
-  if (!manager.subs.has(id)) return;
-  
-  let sub_map = manager.subs.get(id);
-  console.log(sub_map);
-  for (const url of sub_map.keys())
-  {
-    let ids = sub_map.get(url);
-    let relay = hires(url);
-    for (const id of ids)
-    {
-      let sub = relay.subs.get(id);
-      sub.closed = Math.floor(Date.now()/1000);
-
-      sub_close(relay,id)
-    }
-  }
-  manager.subs.delete(id);
 };
 
 
@@ -364,6 +249,58 @@ const hires =(url)=>
 };
 
 
+const init =(options)=>
+{
+  console.log('manager init',options);
+  if (options.limit) manager.limit = options.limit;
+  for (const url in options.relays)
+  {
+    let relay = manager.relays.set(url,options.relays[url]).get(url);
+    if (!Object.hasOwn(relay,'info')) fetch_info(url);
+  }
+};
+
+
+// converts string to URL and returns it or false
+const is_valid_url =(s='')=>
+{
+  if (!s) return;
+  let url;
+  try { url = new URL(s) }
+  catch(er) { console.error(s); return }
+  let protocol_whitelist = [
+    // 'http:','https:',
+    'ws:','wss:'];
+  if(!url.hostname.length
+  || url.hostname.includes('.local')
+  || url.hostname.includes('127.0.')
+  || url.pathname.includes('://')
+  || !protocol_whitelist.includes(url.protocol)
+  ) return;
+  else return url?.href
+};
+
+// is hexadecimal
+const is_x =s=> /^[A-F0-9]+$/i.test(s);
+
+
+// is a valid nostr key
+const is_key =x=> is_x(x) && x.length === 64;
+
+
+const limits_reached =()=>
+{
+  if (manager.events.size < manager.limit) return false;
+  manager.locked = true;
+  for (const [url,worker] of manager.workers)
+    terminate({url})
+  
+  postMessage(['limit','too many events'])
+  
+  return true
+};
+
+
 // return kind information
 const kind_type =kind=> 
 {
@@ -372,17 +309,23 @@ const kind_type =kind=>
 }
 
 
-const ping =async url=>
+const mem_events =events_map=>
 {
-  let relay = hires(url);
-  if (relay.ping) clearTimeout(relay.ping);
-  relay.ping = setTimeout(()=>
+  let dats = [];
+  if (limits_reached()) return dats;
+
+  for (let [id,event] of events_map)
+  {
+    let dat;
+    if (!manager.events.has(id)) 
     {
-      if (!relay.terminated) console.log('no pong',relay);
-    },
-    21000
-  );
-  setTimeout(()=>{relay.worker.postMessage(['ping'])},15000);
+      dat = mk_dat({event});
+      manager.events.set(id,dat);
+    }
+    else dat = manager.events.get(id);
+    dats.push(dat);
+  }
+  return dats
 };
 
 
@@ -404,6 +347,54 @@ const mk_dat =(o={})=>
   dat.clas = o.clas || [];
   dat.refs = o.refs || [];
   return dat
+};
+
+
+const nip11 =async url=>
+{
+  return new Promise(resolve=>
+  {
+    const abort = setTimeout(()=>{resolve()},6666);
+
+    NostrTools.nip11.fetchRelayInformation(url)
+    .then(info=>
+    {
+      clearTimeout(abort);
+      resolve(info)
+    })
+    .catch(er=>
+    {
+      // console.log(url,er)
+    })
+  })
+};
+
+
+// on manager message
+onmessage =e=>
+{
+  let data = e.data;
+  if (!Array.isArray(data)
+  || !data?.length)
+  {
+    console.log('invalid data',data);
+    return
+  }
+  const [type,dis] = data;
+  switch (type.toLowerCase())
+  {
+    case 'init': init(dis); break;
+    case 'terminate': terminate(dis); break;
+    case 'relays': set_relays(dis); break;
+    case 'info': relay_info(dis); break;
+    case 'request': process_request(dis); break;
+    case 'auth': auth(dis); break;
+    case 'close' : close_sub(dis); break;
+    case 'events': get_events(dis); break;
+    case 'filter': get_filter(dis); break;
+    case 'outbox': get_outbox(dis); break;
+    default: console.log('invalid operation',data)
+  }
 };
 
 
@@ -596,16 +587,29 @@ const on_state =async([s,state,worker],url)=>
 };
 
 
+const ping =async url=>
+{
+  let relay = hires(url);
+  if (relay.ping) clearTimeout(relay.ping);
+  relay.ping = setTimeout(()=>
+    {
+      if (!relay.terminated) console.log('no pong',relay);
+    },
+    9999
+  );
+  setTimeout(()=>{relay.worker.postMessage(['ping'])},6666);
+};
+
+
 const pre_process_request =async request=>
 {
   let [type,sub_id,filter] = request;
   if (type === 'REQ')
   {
-    let since = 1;
-
+    // let since = 1;
     for await (let event of db.queryEvents(filter))
     {
-      if (event.created_at > since) since = event.created_at;
+      // if (event.created_at > since) since = event.created_at;
       let dat = mk_dat({event});
       manager.events.set(event.id,dat);
       on_event([type,sub_id,event]);
@@ -619,7 +623,7 @@ const pre_process_request =async request=>
 const process_request =async data=>
 {
   let {relays,request,options} = data;
-  request = await pre_process_request(request);
+  if (!options?.db === false) request = await pre_process_request(request);
   for (const url of relays) relay_request({url,request,options});
 };
 
@@ -627,50 +631,6 @@ const process_request =async data=>
 const relay_info =async(relays=[])=>
 {
   for (const url of relays) fetch_info(url)
-};
-
-
-const fetch_info =async url=>
-{
-  url = is_valid_url(url);
-  if (!url) return;
-
-  let relay = manager.relays.get(url);
-  
-  if (relay?.bad) return;
-  let info;
-  try { info = await nip11(url) }
-  catch(er){}
-  
-  info = info || null;
-  if (relay)
-  {
-    if (info) relay.info = info;
-    else relay.bad = true;
-  }
-  postMessage(['info',url,info]);
-};
-
-const nip11 =async url=>
-{
-  return new Promise(resolve=>
-  {
-    const abort = setTimeout(()=>{resolve()},6666);
-
-    NostrTools.nip11.fetchRelayInformation(url)
-    .then(info=>
-    {
-      clearTimeout(abort);
-      resolve(info)
-    })
-    .catch(er=>{console.log(url,er)})
-    // try
-    // {
-    // let info = await NostrTools.nip11.fetchRelayInformation(url);
-    // }
-    // catch { console.log('error fetching') }
-
-  })
 };
 
 
@@ -716,6 +676,15 @@ const relay_request =({url,request,options})=>
   }
   dis.json = JSON.stringify(request);
   relay.worker.postMessage(['request',dis]);
+};
+
+
+const set_relays =relays=>
+{
+  for (const url in relays)
+  {
+    manager.relays.set(url,relays[url])
+  }
 };
 
 

@@ -117,8 +117,7 @@
 #view > section > header > .butt[data-count="0"],
 #view > section > header > .butt:not([data-count]) + .list_filter,
 #view > section:not(.expanded) .list_filter,
-.viewing #view > section > .list_filter,
-.viewing #view > section > header > .butt,
+.viewing #view > section > header,
 .viewing #view > details
 {
   display: none;

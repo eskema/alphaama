@@ -112,8 +112,7 @@ aa.kinds[3] =dat=>
   {
     if (aa.p.events_newer(p,dat.event))
     {
-      setTimeout(()=>{aa.p.process_k3_tags(dat.event,p)},0);
-      // aa.p.save(p)
+      setTimeout(()=>{aa.p.process_k3_tags(dat.event,p)},0)
     }
   });
   return note

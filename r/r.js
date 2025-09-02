@@ -163,11 +163,11 @@ aa.r.bro =async(s='')=>
 
 // given a list of pubkeys
 // return list of relays in common by the pubkeys
-aa.r.common =(a=[],sets=[])=>
+aa.r.common =(pubkeys=[],sets=[])=>
 {
   let common = {};
   let offed = aa.fx.in_set(aa.r.o.ls,'off',0);
-  for (const pubkey of a)
+  for (const pubkey of pubkeys)
   {
     let has_set;
     let relays = aa.db.p[pubkey]?.relays;
@@ -180,24 +180,16 @@ aa.r.common =(a=[],sets=[])=>
 
     for (let url of relays)
     {
-      if (url.includes(',') || offed.includes(url)) continue;
-      url = aa.fx.url(url)?.href;
-      if (!url) continue;
-      if (!common[url]) 
-        common[url] = [];
-      if (!common[url].includes(pubkey)) 
-        common[url].push(pubkey)
+      url = aa.fx.is_valid_relay(aa.fx.url(url));
+      if (!url || offed.includes(url)) continue;
+      if (!common[url]) common[url] = [];
+      if (!common[url].includes(pubkey)) common[url].push(pubkey)
     }
 
     if (!has_set)
     {
       if (!common.none) common.none = [];
-        aa.fx.a_add(common.none,[pubkey]);
-      // for (const r of aa.r.r)
-      // {
-      //   if (!common[r]) common[r] = [];
-      //   aa.fx.a_add(common[r],[x]);
-      // }
+      aa.fx.a_add(common.none,[pubkey]);
     }
   }
   return common
@@ -798,7 +790,7 @@ aa.r.toggles =()=>
 aa.r.validate =({relays,request,options})=>
 {
   // filter invalid urls
-  relays = relays.map(i=>aa.fx.url(i)?.href).filter(i=>i);
+  relays = aa.r.validate_relays(relays);
   // check for new relays not already added
   let found = relays.filter(i=>!aa.r.o.ls[i]);
   if (found.length)
@@ -822,6 +814,15 @@ aa.r.validate =({relays,request,options})=>
 
   return relays.filter(i=>aa.r.o.ls[i] && !aa.r.o.ls[i].sets.includes('off'));
 };
+
+
+aa.r.validate_relays =relays=>
+{
+  return relays
+    .map(i=>aa.fx.url(i))
+    .filter(i=>aa.fx.is_valid_relay(i))
+    .map(i=>i.href);
+}
 
 
 // setup relay manager worker
@@ -861,7 +862,7 @@ aa.r.info =([type,url,info])=>
   relay.info = info;
   aa.mod.save_to(mod);
   aa.mod.ui(mod,url);
-  console.log(url,info)
+  // console.log(url,info)
 };
 
 

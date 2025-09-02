@@ -254,7 +254,6 @@ aa.u.setup_quick =async()=>
   aa.u.add(pubkey);
 
   setTimeout(()=>{aa.q.stuff()},1000);
-  setTimeout(()=>{aa.log(aa.mk.l('p',{con:'wait a bit then ',app:aa.mk.reload_butt()}))},2000);
   // aa.fx.countdown('the page will reload in',21,1000)
   // .then(dis=>{if (dis) location.reload()});
 };
@@ -294,7 +293,7 @@ aa.u.load_u =async()=>
   }
   else document.getElementById('u_setup')?.parentElement.remove();
 
-  let p = await aa.p.author(pubkey);  
+  let p = await aa.p.author(pubkey);
   if (p.score !== 9)
   {
     p.score = 9;
