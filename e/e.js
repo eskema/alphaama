@@ -11,6 +11,7 @@ aa.e =
   name:'events',
   about:'view and manage events',
   def:{id:'e'},
+  kinds:{},
   printed:new Map(),
   scripts:
   [
@@ -25,7 +26,18 @@ aa.e =
     '/e/render.js',
     '/e/views.js'
   ],
-  styles:['/e/e.css'],
+  styles:
+  [
+    '/e/e.css',
+    '/e/by.css',
+    '/e/content.css',
+    '/e/tags.css',
+    '/e/replies.css',
+    '/e/quote.css',
+    '/e/highlight.css',
+    '/e/actions.css',
+    '/e/kind_7.css',
+  ],
   butts:
   {
     na:[[localStorage.reaction,'react'],'req','bro','render','tiny','quote'],
@@ -39,11 +51,14 @@ aa.e =
 
 aa.e.by_ida =dis=>
 {
-  for (const [id,event] of aa.e.printed)
-  {
-    if (event.dataset.id_a === dis) return event
-  }
-  return
+  let last = aa.em_a.get(dis);
+  if (!last) return;
+  return aa.e.printed.get(last.event.id)
+  // for (const [id,event] of aa.e.printed)
+  // {
+  //   if (event.dataset.id_a === dis) return event
+  // }
+  // return
 };
 
 
@@ -94,12 +109,12 @@ aa.e.content =(s,trusted)=>
         let word = words[i].trim();
         if (!word.length) continue;
 
-        if (aa.fx.regex.url.test(word)) 
+        if (aa.regex.url.test(word)) 
         {
           let dis_node = aa.parser('url',word,trusted);
           l.append(dis_node,' ');
         }
-        else if (aa.fx.regex.nostr.test(word)) 
+        else if (aa.regex.nostr.test(word)) 
         {
           let parsed = aa.parser('nostr',word);
           let quote = parsed.querySelector('blockquote');
@@ -110,7 +125,7 @@ aa.e.content =(s,trusted)=>
           }
           else l.append(parsed);
         }
-        else if (aa.fx.regex.hashtag.test(word)) 
+        else if (aa.regex.hashtag.test(word)) 
         {
           let dis_node = aa.parser('hashtag',word);
           l.append(dis_node,' ');
@@ -162,6 +177,7 @@ aa.e.em =dat=>
         if (aa.em_a.get(dat.id_a).event.created_at
         < dat.event.created_at) aa.em_a.set(dat.id_a,dat)
       }
+      else aa.em_a.set(dat.id_a,dat);
     } 
   }
   return id
@@ -248,7 +264,7 @@ aa.e.follows_add =async s=>
   }
   let tag = ['p'];
 
-  let [key,rest] = s.split(aa.fx.regex.fw);
+  let [key,rest] = s.split(aa.regex.fw);
 
   if (key.startsWith('npub')) key = aa.fx.decode(key);
   if (!aa.fx.is_key(key)) 
@@ -263,7 +279,7 @@ aa.e.follows_add =async s=>
   }
   tag.push(key);
   
-  let [relay,petname] = rest.trim().split(aa.fx.regex.fw);
+  let [relay,petname] = rest.trim().split(aa.regex.fw);
   relay = aa.fx.url(relay)?.href || '';
   petname = aa.fx.an(petname);
 
@@ -441,7 +457,7 @@ aa.e.get_a =async ids=>
     let filters = [...want.values()].map(aa.fx.id_af);
     for (const filter of filters)
     {
-      let [get_id,events,missing] = await aa.r.get_filter(filter);
+      let [get_id,events] = await aa.r.get_filter(filter);
       if (events.length)
       {
         for (const dat of events)
@@ -456,7 +472,37 @@ aa.e.get_a =async ids=>
 };
 
 
+// inbox relays from tagged users in event
+aa.e.inboxes =(event,relays=[])=>
+{
+  let relays_set = new Set(relays);
+  let pubs = event.tags.filter(aa.fx.is_tag_p).map(i=>i[1]);
+  for (const x of pubs)
+  {
+    let read_relays = new Set(aa.fx.in_set(aa.db.p[x].relays,'read'));
+    let common = read_relays.intersection(relays_set);
+    if (common.size < 3)
+    {
+      let unc = relays_set.difference(read_relays);
+      relays.push([...unc.values()].slice(0,3 - common.size))
+    }
+    
+    // let inc = [];
+    // let exc = [];
 
+    // for (const i of read_relays)
+    // {
+    //   if (relays.includes(i)) inc.push(i);
+    //   else exc.push(i)
+    // }
+
+    // let ab = aa.fx.a_inc_exc(relays,read_relays);
+    
+    // if (!inc.length < 3) 
+    //   relays.push(...exc.slice(0,3 - inc.length))
+  }
+  return new Set(relays);
+};
 
 
 // returns event raw json
@@ -480,6 +526,10 @@ aa.e.load =async()=>
   aa.temp.prints = new Map();
   aa.temp.refs = new Map();
   aa.temp.note_quotes = new Map();
+
+  fetch('/e/nostr_kinds.json')
+    .then(dis=> dis.json())
+    .then(dis=> mod.kinds_list = dis);
   
   await aa.mk.scripts(mod.scripts);
 
@@ -514,7 +564,7 @@ aa.e.load =async()=>
       exe:(s)=>{ aa.view.state('#'+aa.fx.encode('note',s)) }
     },
   );
-  mod.l = aa.mk.l('div',{id:'notes'});
+  mod.l = aa.mk.l('div',{cla:'notes'});
   mod.section_observer = new MutationObserver(mod.section_mutated);
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
   aa.mod.help_setup(aa.e);

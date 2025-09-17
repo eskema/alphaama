@@ -1,0 +1,207 @@
+.tags_wrapper
+{
+  /* background: rgba(var(--color-b),1); */
+  align-self: end;
+  bottom: var(--size);
+  grid-area: tags;
+  position: sticky;
+}
+
+.tags_wrapper[open]
+{
+  z-index: 2;
+}
+
+.tags_wrapper summary
+{
+  display: inline-grid;
+  color: rgba(var(--color-f),.2);
+  font-size: var(--font-size-s);
+  grid-template-columns: auto auto auto;
+  line-height: 1.5rem;
+  opacity: 1;
+  padding: 0 var(--padm);
+  user-select: none;
+}
+
+.tags_wrapper[open] summary
+{
+  background: rgba(var(--color-a),1);
+  color: rgb(var(--color-e));
+  font-size: var(--font-size-s);
+}
+
+.tags_wrapper:not(.empty) summary::before,
+.tags_wrapper:not(.empty) summary::after
+{
+  /* background: rgba(var(--color-b),1); */
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-s);
+  white-space: pre;
+}
+
+.tags_wrapper[open] summary::before,
+.tags_wrapper[open] summary::after
+{
+  background: rgba(var(--color-a),1);
+  color: rgb(var(--color-f));
+  padding: 0;
+}
+
+.tags_wrapper:not(.empty) summary::before
+{
+  content: "[" attr(data-count) "] ";
+}
+
+.tags_wrapper[open] summary::after
+{
+  content: " ]";
+}
+
+.tags_wrapper[open] summary::before
+{
+  content: "[ " attr(data-count) " ";
+}
+
+.view_e .in_path:not(.in_view) > .tags_wrapper
+{
+  display: none;
+}
+
+.notes > .note > .tags_wrapper
+{
+  z-index: 11;
+}
+
+.tags 
+{
+  background: rgba(var(--color-a),0);
+  box-sizing: border-box;
+  display: grid;
+  font-size: var(--font-size-s);
+  list-style: none;
+  margin: 0;
+  max-width: 100%;
+  padding: var(--pad);
+  overflow-y: scroll;
+}
+
+.note > .tags_wrapper > .tags 
+{
+  position: absolute;
+  transform: translateY(calc(-100% - 1.5rem));
+  transform-origin: bottom;
+  width: max-content;
+}
+
+.note [open] > .tags
+{
+  background: rgba(var(--color-a),.82);
+  box-shadow: 0px 0px var(--pad) rgb(var(--color-b));
+  max-height: 80vh;
+  
+}
+
+.tag
+{
+  display: grid;
+  grid-auto-flow: column;
+  grid-gap: var(--pad);
+  grid-template-columns: auto 1fr auto;
+  transition: all 1s ease-in-out;
+  width: 100%;
+  white-space: pre;
+}
+
+.tags_wrapper .tag
+{
+  overflow-x: scroll;
+}
+
+#dialog .tag
+{
+  color: rgb(var(--color-d));
+}
+
+.tag[data-i]::before
+{
+  align-self: start;
+  content: "[" attr(data-i) "] ";
+  line-height: 1rem;
+
+  min-width: 2rem;
+  text-align: right;
+  /*user-select: none;*/
+}
+
+.tag[data-i]::before,
+.tag button
+{
+  color: rgba(var(--color-d),.8);
+  font-size: var(--font-size-xs);
+  justify-self:end;
+  padding: 0;
+}
+
+.tag button::before
+{
+  color: rgb(var(--color-c));
+  content: "[";
+  font-size: var(--font-size-s);
+}
+
+.tag button::after
+{
+  color: rgb(var(--color-c));
+  content: "]";
+  font-size: var(--font-size-s);
+}
+
+.note.no_content > .tags_wrapper,
+.in_view > .tags_wrapper[open]
+{
+  position: relative;
+  bottom: unset;
+}
+
+.in_view > .tags_wrapper[open] summary
+{
+  position: sticky;
+  top: 1rem;
+}
+
+.note.no_content > .tags_wrapper > .tags,
+.in_view > .tags_wrapper[open] .tags
+{
+  max-height: unset;
+  position: relative;
+  transform: translateY(0);
+  width: auto;
+}
+
+@media screen and (min-width: 1025px) 
+{
+  .tags_wrapper[open]:hover
+  {
+    z-index: 10;
+  }
+  
+  .tags_wrapper[open]:hover > summary
+  {
+    top: 0;
+  }
+  
+  .clicker:hover + .by + .content + .tags_wrapper
+  {
+    opacity: 0;
+  }
+}
+
+
+@media screen and (max-width: 768px) 
+{
+  .note:not(.in_view) .tags_wrapper
+  {
+    display: none;
+  }
+}

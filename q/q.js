@@ -75,7 +75,7 @@ aa.q =
 // add filter
 aa.q.add =(s='',silent)=>
 {
-  let [fid,v] = s.split(aa.fx.regex.fw);
+  let [fid,v] = s.split(aa.regex.fw);
   fid = aa.fx.an(fid);
   let o = aa.parse.j(v);
   if (!o)
@@ -121,6 +121,39 @@ aa.q.add =(s='',silent)=>
 aa.q.close =s=>
 {
   for (const id of aa.fx.splitr(s)) aa.r.close(id);
+};
+
+
+// run filter
+aa.q.db =async(s='')=>
+{
+  const tasks = aa.fx.splitr(s,',');
+  let times = 0;
+  for (const task of tasks)
+  {
+    const a = aa.fx.splitr(task);
+    let fid,request;
+    if (a.length) fid = a.shift();
+    if (fid && aa.q.o.ls.hasOwnProperty(fid))
+    {
+      let [filtered,options] = aa.q.filter(aa.q.o.ls[fid].v);
+      if (!filtered) 
+      {
+        aa.log(aa.q.def.id+' db: invalid filter')
+        continue
+      }
+      
+      let delay = times * 420;
+      times++;
+      let [get_id,events] = await aa.r.get_filter(filtered);
+      for (const dat of events) aa.e.print_q(dat);
+      // setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
+      
+      // aa.q.log('run',request,`to: ${relays}`);
+
+    } 
+    // else aa.log(aa.q.def.id+' db: filter not found');
+  }
 };
 
 
@@ -180,7 +213,6 @@ aa.q.get =async(fid,as_outbox)=>
         aa.r.get(dis).then(res).catch(res)
       }
       catch(er){console.log(results,er)}
-
     })
   }
    
@@ -301,6 +333,12 @@ aa.q.load =async()=>
       exe:mod.add
     },
     {
+      action:[id,'db'],
+      required:['<query_id>'],
+      description:'run query on local db',
+      exe:mod.db
+    },
+    {
       action:[id,'del'],
       required:['<query_id>'],
       description:'remove one or more filters',
@@ -392,23 +430,64 @@ aa.q.log =(s,request,con)=>
 
 
 // make q mod item
-aa.q.mk =(k,v) =>
+aa.q.mk =(key,value) =>
 {
-  k = aa.fx.an(k);
-  const id = aa.q.def.id;
-  const l = aa.mk.l('li',{id:`${id}_${k}`,cla:'item filter'});
+  const mod = aa.q;
+  const id = mod.def.id;
+
+
+  // const l = aa.mk.l('li',{id:`${id}_${key}`,cla:'item filter'});
+  // let butts = aa.mk.l('span',{cla:'butts'});
+  // butts.append(
+  //   aa.mk.butt_action(`${id} del ${key}`,'del'),' ',
+  //   aa.mk.butt_action(`${id} run ${key}`,'run'),' ',
+  //   aa.mk.butt_action(`${id} out ${key}`,'out'),' ',
+  // );
+  // let l_k = aa.mk.l('span',{cla:'key',app:aa.mk.butt_action(`${id} add ${key} ${value.v}`,key,'add')});
+  // let l_v = aa.mk.l('span',{cla:'val',con:value.v});
+  // l.append(l_k,' ',l_v,' ',butts);
+  // return l
+
+    // k = url
+  // v = {sets:[]}
+
+  // element.dataset.state = 0;
+  const texts = {};
+
+  texts.val = `${key} ${value.v}`;
+  texts.del = `${id} del ${key}`;
+  texts.run = `${id} run ${key}`;
+  texts.out = `${id} out ${key}`;
+  texts.req = `${id} req read ${value.v}`;
+  texts.add = `${id} add ${texts.val}`;
+  
+
+  let actions = aa.mk.l('div',
+  {
+    cla:'mod_actions',
+    app:[
+      aa.mk.butt_action(texts.del,'del','del'),
+      ' ',aa.mk.butt_action(texts.add,'edit','add')
+    ]
+  });
+
   let butts = aa.mk.l('span',{cla:'butts'});
-  butts.append(
-    aa.mk.butt_action(`${id} del ${k}`,'del'),' ',
-    aa.mk.butt_action(`${id} run ${k}`,'run'),' ',
-    aa.mk.butt_action(`${id} out ${k}`,'out'),' ',
-  );
-  let key = aa.mk.l('span',{cla:'key',app:aa.mk.butt_action(`${id} add ${k} ${v.v}`,k,'add')});
-  let val = aa.mk.l('span',{cla:'val',con:v.v});
-  l.append(
-    key,' ',val,' ',butts
-  );
-  return l
+  for (const item of ['req','run','out'])
+  {
+    butts.append(aa.mk.butt_action(texts[item],item),' ')
+  }
+
+  let val = aa.mk.l('span',{cla:'val',con:texts.val});
+  
+  const element = aa.mk.l('li',
+  {
+    cla:'item query',
+    app:[val,' ',butts,' ',actions]
+  });
+  
+  aa.el.set(key,element);
+  return element 
+
 };
 
 
@@ -420,17 +499,17 @@ aa.q.out =async s=>
   for (const task of tasks)
   {
     const a = task.trim().split(' ');
-    let fid = a.shift();
-    if (!Object.hasOwn(aa.q.o.ls,fid))
+    let id = a.shift();
+    if (!Object.hasOwn(aa.q.o.ls,id))
     {
-      aa.log(aa.q.def.id+' run: filter not found '+fid);
+      aa.log(aa.q.def.id+' run: filter not found '+id);
       continue
     }
     
-    aa.fx.a_add(aa.q.active.out,[fid]);
+    aa.fx.a_add(aa.q.active.out,[id]);
     sessionStorage.q_out = aa.q.active.out;
-    let request = aa.q.filter(aa.q.o.ls[fid].v);
-    request.unshift('REQ',fid);
+    let request = aa.q.filter(aa.q.o.ls[id].v);
+    request.unshift('REQ',id);
     aa.q.outbox(request);
   }
 };
@@ -531,9 +610,7 @@ aa.q.filter =(s,x)=>
 // raw req
 aa.q.req =(s='')=>
 {
-  let [rels,f] = s.split(aa.fx.regex.fw);
-
-  let a = s.split(' ');
+  let [rels,f] = s.split(aa.regex.fw);
   // let rels = a.shift();
   let relays = aa.r.rel(rels);
   let fid = 'req_'+aa.now;
@@ -542,7 +619,7 @@ aa.q.req =(s='')=>
   let [filter,options] = aa.q.filter(f.replace(' ',''));
   if (!filter)
   {
-    aa.log('invalid filter:'+filt);
+    aa.log('invalid filter: '+filter);
     return false
   }
   let request = ['REQ',fid,filter];
@@ -566,8 +643,8 @@ aa.q.reset =(keys=[])=>
 {
   if (!keys.length) keys = Object.keys(aa.q.ls);
   else keys = keys.filter(key=>Object.hasOwn(aa.q.ls,key));
-  
-  for (const key of keys) aa.q.add(`${key} ${JSON.stringify(aa.q.ls[key])}`,1);
+  for (const key of keys)
+    aa.q.add(`${key} ${JSON.stringify(aa.q.ls[key])}`,true);
 };
 
 

@@ -1,16 +1,13 @@
 // button that toggles the class 'expanded'
-aa.mk.butt_expand =(id,con=false)=>
+aa.mk.butt_expand =(id,con)=>
 {
-  const butt = aa.mk.l('button',
-  {
-    con:con||id,
-    cla:'butt',
-    // id:'butt_'+id,
-    clk:aa.clk.expand
-  });
-  butt.dataset.controls = id;
-  aa.el.set('butt_'+id,butt);
-  return butt
+  if (!con) con = id;
+  let cla = 'butt';
+  let clk = aa.clk.expand;
+  let dat = {controls:id};
+  const element = aa.mk.l('button',{con,cla,clk,dat});
+  aa.el.set(`${cla}_${id}`,element);
+  return element
 };
 
 
@@ -168,16 +165,16 @@ aa.mk.doc =text=>
 // on load
 aa.mk.header =e=>
 {
-  const header = aa.mk.l('header',{id:'header'});
+  const header = aa.mk.l('header',{cla:'aa_header'});
   const caralho =  aa.mk.l('a',
   {
-    id:'caralho',
-    ref:'/',
-    con:'A<3',
-    tit:'vai pró caralho',
-    clk:aa.clk.clear,//aa.clk.a
+    id: 'caralho',
+    ref: '/',
+    con: aa.aka,
+    tit: 'vai pró caralho',
+    clk: aa.clk.clear,
   });
-  const state = aa.mk.l('h1',{id:'state',con:'dickbutt'});
+  const state = aa.mk.l('h1',{cla:'aa_state',con:'dickbutt'});
   state.dataset.pathname = location.pathname;
   aa.state.l = state;
   header.append(caralho,state);
@@ -203,7 +200,7 @@ aa.mk.help =async(s='')=>
     {
       let l = aa.el.get(id);
       l.toggleAttribute('open',true);
-      aa.logs.append(l.parentElement);
+      // aa.logs.append(l.parentElement);
       aa.fx.scroll(l)
     })
     return
@@ -230,8 +227,9 @@ aa.mk.help =async(s='')=>
   
   let details = aa.mk.details(id,article,1);
   aa.el.set(id,details);
-  let log = aa.log(details);
-  setTimeout(()=>{aa.fx.scroll(log)},200);
+  view.append(details);
+  // let log = aa.log(details);
+  setTimeout(()=>{aa.fx.scroll(details)},200);
   // return details
 };
 
@@ -326,13 +324,6 @@ aa.mk.item =(key='',value,options)=>
 };
 
 
-aa.fx.a_red =a=> a.reduce((b,c)=>
-{
-  b[c]=(b[c]||0)+1;
-  return b;
-},{});
-
-
 aa.mk.item_arr =(k,v)=>
 {
   let list = aa.mk.ls({});
@@ -396,6 +387,7 @@ aa.mk.ls =o=>
         const item = o.hasOwnProperty('mk') 
         ? o.mk(k,v) 
         : aa.mk.item(k,v);
+        if (!item) continue;
         l.append(item);
         if (Object.hasOwn(o,'fun')) for (const exe of o.fun) exe(k,v,item);
       }
@@ -649,24 +641,37 @@ aa.mk.reload_butt =()=>
 
 
 // make section element
-aa.mk.section =(id,expanded,element_to_append,filter)=>
+aa.mk.section =options=>
 {
-  let app = [aa.mk.butt_expand(id)];
-  if (filter) 
-    app.push(' ',aa.mk.list_filter(element_to_append));
-
-  let header = aa.mk.l('header',{app});
-  let options = 
+  let 
   {
     id,
+    element,
+    expanded,
+    filter,
+    tagname 
+  } = options;
+  
+  if (!tagname) tagname = 'section';
+  
+  let cla = `${tagname}_${id}`;
+  let app = [aa.mk.butt_expand(cla,id)];
+  let header = aa.mk.l('header',{app});
+  let opts = 
+  {
+    cla,
     app:[header]
   };
-  if (expanded) options.cla ='expanded';
-  if (element_to_append) options.app.push(element_to_append);
+  
+  if (expanded) opts.cla += ' expanded';
+  if (element) 
+  {
+    opts.app.push(element);
+    if (filter) app.push(' ',aa.mk.list_filter(element));
+  }
 
-  const section = aa.mk.l('section',options);
-  aa.el.set('section_'+id,section);
-  aa.view.l?.append(section);
+  const section = aa.mk.l(tagname,opts);
+  aa.el.set(cla,section);
   return section
 };
 

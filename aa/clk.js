@@ -37,29 +37,41 @@ aa.clk.done =e=>
 // expand 
 aa.clk.expand =e=>
 {
-  if (e.hasOwnProperty('stopPropagation')) e.stopPropagation();
-  let l = document.getElementById(e.target.dataset.controls) || e.target;
-  if (!l) return;
+  if (e.hasOwnProperty('stopPropagation'))
+    e.stopPropagation();
   
-  let block;
-  let id = l.id || l.closest('.note').dataset.id+'_replies';
+  let id = e.target.dataset.controls;
+  let element = aa.el.get(id) || e.target;
+  if (!element) return;
 
-  fastdom.mutate(()=>
+  let storage_value = '';
+  let block = 'center';
+  
+  let exp = element.classList.contains('expanded');
+
+  if (exp)
   {
-    if (l.classList.contains('expanded'))
+    fastdom.mutate(()=>
     {
-      l.classList.remove('expanded');
-      sessionStorage[id] = '';
-      block = 'center';
-    }
-    else
+      element.classList.remove('expanded')
+    })
+  }
+  else
+  {
+    storage_value = 'expanded';
+    block = 'start';
+    fastdom.mutate(()=>
     {
-      l.classList.add('expanded');
-      sessionStorage[id] = 'expanded';
-      block = 'start';
-    }
-  });
-  setTimeout(()=>{aa.fx.scroll(l,{behavior:'smooth',block});},200)
+      element.classList.add('expanded')
+    })
+  }
+  
+  sessionStorage[id] = storage_value;
+
+  setTimeout(()=>
+  { 
+    aa.fx.scroll(element,{behavior:'smooth',block}) 
+  },200)
 };
 
 
@@ -69,6 +81,54 @@ aa.clk.time =e=>
   if (!e.target) return;
   let all = e.target.closest('.root')?.querySelectorAll('time') || [e.target];
   for (const l of all) aa.fx.time_upd(l)
+};
+
+// mark replies as read
+aa.clk.mark =e=>
+{
+  e.stopPropagation();
+  // const classes = ['haz_new_reply','haz_new','is_new'];
+  let target = e.target;
+  const classes = target.dataset.classes.split(' ');
+  const replies = e.target.closest('.replies');
+  const note = e.target.closest('.note');
+  const root = e.target.closest('.root');
+  const rid = note.dataset.id+'_replies';
+  const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
+  note.classList.remove(...classes);
+  
+  if (new_stuff.length)
+  {
+    e.preventDefault();
+    for (const l of new_stuff)
+    {
+      sessionStorage[l.dataset.id] = 'is_read';
+      l.classList.remove(...classes);
+    }
+    if (replies.classList.contains('expanded')) 
+    {
+      sessionStorage[rid] = '';
+      replies.classList.remove('expanded');
+    }
+  }
+  else 
+  {
+    if (replies.classList.contains('expanded')) 
+    {
+      sessionStorage[rid] = '';
+      replies.classList.remove('expanded');
+    }
+    else 
+    {
+      sessionStorage[rid] = 'expanded';
+      replies.classList.add('expanded');
+    }
+  }
+  if (!aa.view.active)
+  {
+    let top = root.offsetTop + (3 * parseFloat(getComputedStyle(aa.l).fontSize));
+    if (top < aa.l.scrollTop) aa.l.scrollTo(0,top);
+  }
 };
 
 // wip

@@ -35,27 +35,27 @@ if ('serviceWorker' in navigator)
 
 
 // on load
-aa.db.load =()=>
-{
-  let mod = aa.db;
-  let id = 'db';
+// aa.db.load =()=>
+// {
+//   let mod = aa.db;
+//   let id = 'db';
 
-  aa.actions.push(
-    {
-      action:[id,'count'],
-      required:['<store>'],
-      // optional:['key_range'],
-      description:'get a count of items in a given store. (events,authors,stuff)',
-      exe:mod.count
-    }
-  );
-  fetch('/db/README.adoc')
-  .then(dis=>dis?.text())
-  .then(text=>
-  { 
-    if (text) mod.readme = text;
-  });
-};
+//   aa.actions.push(
+//     {
+//       action:[id,'count'],
+//       required:['<store>'],
+//       // optional:['key_range'],
+//       description:'get a count of items in a given store. (events,authors,stuff)',
+//       exe:mod.count
+//     }
+//   );
+//   fetch('/db/README.adoc')
+//   .then(dis=>dis?.text())
+//   .then(text=>
+//   { 
+//     if (text) mod.readme = text;
+//   });
+// };
 
 
 // count items in db store
@@ -94,4 +94,4 @@ aa.db.sdb.addEventListener('message',e=>
 aa.db.sdb.start();
 
 // wen loaded
-window.addEventListener('load',aa.db.load);
+// window.addEventListener('load',aa.db.load);

@@ -1,0 +1,298 @@
+.content
+{
+  background: rgb(var(--color-b));
+  box-sizing: border-box;
+  color: rgb(var(--color-d));
+  position: relative;
+}
+
+.note > .content
+{
+  align-self: start;
+  grid-area: content;
+  max-height: calc(100vh - var(--size) - var(--line));  
+  overflow: hidden;
+}
+
+.viewing .root:not(.in_view) > .content,
+.root:not(.tiny):not(.in_path) > .content,
+.in_view > .replies > .note > .content
+{
+  overflow-y:  scroll;
+}
+
+.view_e .in_path:not(.in_view) > .content
+{
+  max-height: calc(12rem);
+}
+
+.in_view > .content
+{
+  display: grid;
+  justify-content: center;
+  max-height: unset;
+  padding-top: var(--line);
+  padding-bottom: var(--line);
+}
+
+.draft > .content
+{
+  max-height: unset;
+}
+
+.content > button
+{
+  line-height: var(--line);
+}
+
+.content .item > details[open] > summary::before
+{
+  content: "";
+}
+
+.content .item > details[open] > summary::after
+{
+  content: ":";
+}
+
+.content .list .item .key
+{
+  color: rgb(var(--color-d));
+  margin-right: var(--pad);
+}
+
+.note.mining > .content::after
+{
+  animation: loading 1s ease-in-out 0s infinite alternate;
+  color: red!important;
+  content: "mining in progress..."!important;
+}
+
+.hashtag
+{
+  color: rgb(var(--color-main));
+}
+
+.note:not(.tiny):not(.in_path) > .content::after
+{
+  color: rgb(var(--color-c));
+  content: "--";
+  display: block;
+  font-size: var(--font-size-xs);
+  line-height: 1.5rem;
+  margin-left: var(--pad);
+}
+
+.content > .butt
+{
+  margin: var(--pad);
+}
+
+/* #region paragraph */
+
+.paragraph
+{ 
+  margin-bottom: 0;
+  padding: var(--pad);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.parsed > .paragraph
+{
+  hyphens: auto;
+  word-break: break-word;
+}
+
+.paragraph.cypher,
+.parsed > .paragraph,
+.decrypted > .paragraph
+{
+  padding: var(--pad);
+}
+
+.paragraph.cypher
+{
+  color: rgb(var(--color-c));
+  font-size: var(--font-size-xs)!important;
+  line-height: 1!important;
+  word-break: break-all;
+}
+
+.in_view > .content > .paragraph,
+.in_view > .content > .list
+{
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-m);
+  justify-self: stretch;
+  line-height: calc(var(--font-size-m)*1.5);
+  max-width: 80vw;
+}
+
+.paragraph:first-child
+{
+  margin-top: var(--pad);
+}
+
+.paragraph:last-child
+{
+  margin-bottom: var(--pad);
+}
+
+.paragraph > a.author
+{
+  border-bottom: 1px dotted rgb(var(--c));
+  line-height: inherit;
+}
+
+.paragraph > a.author .name
+{
+  padding: 0;
+  margin: 0;
+}
+
+.paragraph > a.author .img,
+.paragraph > a.author::before,
+.paragraph > a.author::after
+{
+  display: none;
+}
+
+.view_e .in_path:not(.in_view) > .content .paragraph,
+.replies:not(.expanded) .note:not(.is_new):not(.in_view).haz_new > .content .paragraph
+{
+  font-size: var(--font-size-s);
+  line-height: 1rem;
+  padding: 0 var(--pad);
+}
+
+/* #endregion paragraph */
+/* #region links */
+
+
+.content_link
+{
+  color: rgba(var(--color-sad),.6);
+  margin-right: var(--padm);
+}
+
+.nostr_link
+{
+  color: rgba(var(--color-alt),.6);
+}
+
+.nostr_link::before
+{
+  color: rgb(var(--color-c));
+  content: "#";
+}
+
+.nostr_link::after
+{
+  color: rgb(var(--color-c));
+  content: "…";
+}
+
+/* #endregion links */
+
+.content-img,
+.content-video
+{
+  border: 1px solid rgba(var(--color-c),.2);
+  display: block;
+  height: auto;
+  margin: var(--pad) 0;
+  max-height: var(--media-height);
+  max-width: 100%;
+}
+
+.content-img
+{
+  cursor: zoom-in;
+}
+
+.in_view > .content .content-img
+{
+  justify-self: center;
+  margin: var(--line) auto;
+  max-height: var(--media-max-height);
+}
+
+.in_view > .content .content-video
+{
+  max-height: var(--media-max-height);
+}
+
+
+.view_e .note.in_path:not(.in_view) > .content .content-img,
+.view_e .note.in_path:not(.in_view) > .content .content-video
+{
+  max-height: var(--size);
+}
+
+@media screen and (min-width: 1025px)
+{
+  .note.root:not(.tiny):not(.in_path) > .content::after
+  {
+    margin-bottom: 3rem;
+  }
+
+  .note:not(.in_path) > .by:hover + .content
+  {
+    background: rgb(var(--color-a));
+  }
+
+  .note > .by:hover + .content,
+  a.clicker:hover + .by + .content,
+  .reply > .by:hover + .content
+  {
+    background: rgb(var(--color-a));
+    pointer-events: none;
+    position: sticky;
+    top: 2rem;
+    z-index: 11;
+  }
+
+  .in_view > .by:hover + .content
+  {
+    z-index: 101;
+  }
+  
+  a.clicker:hover + .by + .content
+  {
+    transform: translateX(calc(var(--padm)));
+    /*z-index: 4;*/
+  }
+  .in_view .replies .by:hover + .content,
+  .in_view .replies a.clicker:hover + .by + .content
+  {
+    top: 6rem;
+  }
+  
+
+  .in_view > .replies > .note > .content,
+  .viewing .root:not(.in_path) > .content,
+  .view_p .root.in_path > .content,
+  .root:not(.in_view):not(.in_path) > .content
+  {
+    position: sticky; 
+    top: 1rem;
+    z-index: 2;
+  }
+  
+  .in_view > .replies > .note > .content
+  {
+    top: calc(3.5rem + 2px);
+  }
+}
+
+@media screen and (max-width: 768px) 
+{
+  .root:not(.in_view):not(.in_path) > .content
+  {
+    overflow-y:  hidden;
+    position: relative;
+    top: 0;
+  }
+}
+

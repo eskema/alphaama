@@ -1,0 +1,47 @@
+.note.tiny[data-kind="7"] > .clicker
+{
+  border-left: 1px dotted rgba(var(--color-b));
+}
+
+.note.tiny[data-kind="7"] > .content
+{
+  align-self: stretch;
+  align-content: center;
+  background: rgba(var(--color-b),1);
+  font-size: var(--font-size-s);
+  min-width: calc(1rem + 1px);
+}
+
+.note.tiny[data-kind="7"]:not(.in_view)
+{
+  grid-template-areas: "after after" "content by";
+  grid-template-columns: auto 1fr;
+}
+
+.note[data-kind="7"]:not(.in_view) > .content
+{
+  font-family: var(--font-emoji),var(--font-main);
+  font-variant-emoji: emoji;
+  padding-left: 0;
+  padding: 1px;  
+}
+
+.note[data-kind="7"]:not(.in_view) > .content.render_emojii
+{
+  padding: 0;
+}
+
+.note[data-kind="7"]:not(.in_view) > .content > *
+{
+  display: block;
+}
+
+.note[data-kind="7"]:not(.in_view) > .content .content-img
+{
+  background: none;
+  border: 0;
+  margin: 0;
+  max-height: 1rem;
+  max-width: 1rem;
+  padding: 0;
+}

@@ -8,7 +8,7 @@ aa.load({
   {
     // build page layout elements
     aa.mk.page();
-    on_loaded()
+    on_loaded();
   })
 });
 
@@ -23,22 +23,32 @@ const on_loaded =async()=>
     return
   }
 
-  if (aa.p?.l) aa.mk.section('p',0,aa.p.l,1);
+  let p_section;
+  if (aa.p?.l) 
+    p_section = aa.mk.section({id:'p',element:aa.p.l,filter:true});
+  
+  let e_section;
   if (aa.e?.l) 
   {
-    let e_section = aa.mk.section('e',0,aa.e.l,1);
-    fastdom.mutate(()=>{e_section.append(aa.mk.pagination())});
+    e_section = aa.mk.section({id:'e',element:aa.e.l,filter:true});
+    e_section.append(aa.mk.pagination());
   }
 
-  let p = aa.u?.p;
-  if (p)
+  if (aa.view.l) 
   {
-    aa.mk.profile(p);
-    if (p.follows.length) aa.p.load_profiles(p.follows);
-  }
+    fastdom.mutate(()=>{aa.view.l.append(p_section,' ',e_section)});
 
-  let readme = await aa.fx.readme('/README.adoc');
-  if (readme) aa.view.l?.prepend(aa.mk.doc(readme));
+    let p = aa.u?.p;
+    if (p)
+    {
+      aa.mk.profile(p);
+      if (p.follows.length) aa.p.load_profiles(p.follows);
+    }
+
+    let readme = await aa.fx.readme('/README.adoc');
+    if (readme) 
+      fastdom.mutate(()=>{aa.view.l.prepend(aa.mk.doc(readme))});
+  }
 
   aa.q.last_butts();
 };

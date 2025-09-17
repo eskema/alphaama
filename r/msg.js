@@ -26,15 +26,12 @@ aa.r.event =async a=>
 };
 
 
-aa.r.eose =async data=>
+aa.r.notice =async data=>
 {
-  let [sub_id,url] = data.slice(1);
-  if (aa.r.on_eose.has(sub_id))
-  {
-    setTimeout(()=>{aa.r.on_eose.get(sub_id)(url)},100);
-    return
-  }
-  aa.log_details('r.eose','["EOSE","…"]',sub_id,url)
+  let [type,text,url] = data;
+  aa.log_key(`["NOTICE","${url}"]`,text);
+  // aa.log_details('r.notice','["NOTICE","…"]',url,text);
+  // console.log(data);
 };
 
 
@@ -65,6 +62,8 @@ aa.r.eose =async data=>
     aa.el.set(l_r_id,l_r);
     fastdom.mutate(()=>{l.append(l_r)});
   }
+  else aa.fx.move(l_r);
+
   fastdom.mutate(()=>
   {
     l_r.append(aa.mk.l('p',{con:url}));
@@ -80,8 +79,12 @@ aa.r.eose =async data=>
 aa.r.ok =async data=>
 {
   const [id,is_ok,reason,url] = data.slice(1);
-  let text = `${id} ${is_ok} ${reason}`;
-  aa.log_details('r.ok','["OK","…"]',url,text)
+  let key = `["OK","${url}"]`;
+  let dat = await aa.e.get(id);
+  let kind = dat ? dat.event.kind : '?'
+  let text = `${kind} ${id} ${is_ok} ${reason}`;
+  aa.log_key(key,text)
+  // aa.log_details('r.ok','["OK","…"]',url,text);
   
   if (is_ok) aa.r.ok_ok(id,url);
   else if (reason) aa.r.ok_not_ok(data);
@@ -122,13 +125,13 @@ aa.r.ok_not_ok =async a=>
   {
     case 'blocked':
     case 'auth-required':
+    case 'restricted':
       aa.r.force_close([origin]);
       break;
     // case 'pow':
     // case 'duplicate':
     // case 'rate-limited':
     // case 'invalid':
-    // case 'restricted':
     // case 'error':
     // default:
   }

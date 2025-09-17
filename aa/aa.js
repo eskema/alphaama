@@ -7,13 +7,13 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 72;
+const aa_version = 73;
 // a
 const aa = 
 {
   name:'alphaama',
   aka:'A<3',
-  desc:'just .aa nostr fucking client',
+  about:'just .aa nostr fucking client',
   actions:[],
   db:{worker:{}},
   clears:[],
@@ -42,7 +42,7 @@ const aa =
     extensions:
     {
       img:['gif','heic','jpeg','jpg','png','webp'],
-      video:['mp4','webm'],
+      video:['mp4','webm'], // fuck mov 
       audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
     },
     mods:
@@ -77,14 +77,13 @@ const aa =
       '/aa/mod.css?v='+aa_version,
       '/aa/log.css?v='+aa_version,
       '/aa/view.css?v='+aa_version,
+      '/aa/dialog.css?v='+aa_version,
     ],
   },
   el:new Map(),
   fx:{},
   is:{},
-  kinds:{},
   mk:{},
-  nfc(){alert('yo')},
   get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
   state:{},
@@ -132,10 +131,18 @@ aa.mk.l =(tag_name='div',o={})=>
         if (Array.isArray(v)) l.append(...v);
         else l.append(v); 
         break;
+      case 'att': 
+        if (Array.isArray(v))
+          for (const i of v) l.toggleAttribute(i);
+        else l.toggleAttribute(v);
+        break;
       case 'cla': l.className = v; break;
       case 'clk': l.addEventListener('click',v); break;
       case 'con': l.textContent = v; break;
-      case 'dat': for (const i in v) if (v[i]||v[i]===0) l.dataset[i] = v[i]; break;
+      case 'dat': 
+        for (const i in v) 
+        if (v[i]||v[i]===0) l.dataset[i] = v[i]; 
+        break;
       case  'id': l.id = v; break;
       case 'nam': l.name = v; break;
       case 'pla': l.placeholder = v; break;
@@ -147,7 +154,6 @@ aa.mk.l =(tag_name='div',o={})=>
       case 'tit': l.title = v; break;
       case 'typ': l.type = v; break;
       case 'val': l.value = v; break;
-      // case 'for': l.setAttribute('for',v); break;
       default: console.log(o)
     }
   }
@@ -156,23 +162,23 @@ aa.mk.l =(tag_name='div',o={})=>
 
 
 // media observer for lazy cache fetching
-aa.lazy_god = new IntersectionObserver(a=>
-{
-  for (const b of a)
-  {
-    if (b.isIntersecting) 
-    {
-      let l = b.target;
-      aa.lazy_god.unobserve(l);
-      fastdom.mutate(()=>
-      {
-        if (l.dataset.src) l.src = l.dataset.src;
-        l.classList.add('quick_fox');
-        l.classList.remove('lazy_dog');
-      });
-    }
-  }
-},{root:null,threshold:.1});
+// aa.lazy_god = new IntersectionObserver(a=>
+// {
+//   for (const b of a)
+//   {
+//     if (b.isIntersecting) 
+//     {
+//       let l = b.target;
+//       aa.lazy_god.unobserve(l);
+//       fastdom.mutate(()=>
+//       {
+//         if (l.dataset.src) l.src = l.dataset.src;
+//         l.classList.add('quick_fox');
+//         l.classList.remove('lazy_dog');
+//       });
+//     }
+//   }
+// },{root:null,threshold:.1});
 
 
 // if no options found, load with defaults
@@ -206,16 +212,16 @@ aa.load =async(o={})=>
       description:'alphaama help',
       exe:()=>{aa.mk.help()}
     },
-    {
-      action:['help','db'],
-      description:'database help',
-      exe:()=>{aa.mk.help('db')}
-    },
-    {
-      action:['db','help'],
-      description:'database help',
-      exe:()=>{aa.mk.help('db')}
-    },
+    // {
+    //   action:['help','db'],
+    //   description:'database help',
+    //   exe:()=>{aa.mk.help('db')}
+    // },
+    // {
+    //   action:['db','help'],
+    //   description:'database help',
+    //   exe:()=>{aa.mk.help('db')}
+    // },
     {
       action:['zzz'],
       description:'resets everything',
@@ -233,9 +239,6 @@ aa.load =async(o={})=>
     // },
     
   );
-
-  fetch('/stuff/nostr_kinds.json').then(dis=>dis.json())
-  .then(kinds=>aa.k=kinds);
 
   // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   
@@ -266,17 +269,41 @@ aa.load =async(o={})=>
 
 
 // log stuff
-aa.log =(con='',l=false,is_new=true)=>
+aa.log =(con='',container=false,is_new=true)=>
 {
-  const cla = 'l item'+(is_new?' is_new':'');
-  const clk = aa.logs_read;
+  const cla = 'log item'+(is_new?' is_new':'');
+  const clk =e=>
+  {
+    e.stopPropagation();
+    aa.log_read(e.target)
+  };
   const app = typeof con==='string'?aa.mk.l('p',{con}):con;
   const log = aa.mk.l('li',{cla,clk,app});
   
-  if (!l) l = aa.logs;
-  if (l) fastdom.mutate(()=>{l.append(log)});
+  if (!container) container = aa.logs;
+  if (container) fastdom.mutate(()=>{container.append(log)});
   else console.log('log:',con);
   return log
+};
+
+
+// mark log as read
+aa.log_read =async element=>
+{
+  if (!element) return;
+  if (!element.classList.contains('is_new'))
+  element = element.closest('.is_new');
+  if (!element) return;
+
+  fastdom.measure(()=>
+  {
+    element.blur();
+  });
+  fastdom.mutate(()=>
+  {
+    element.classList.remove('is_new');
+    element.classList.add('is_recent');
+  })
 };
 
 
@@ -303,6 +330,22 @@ aa.mods_load =async mods=>
     setTimeout(after_load,0)
   }
   delete aa.temp.mods_after_load;
+};
+
+
+// reusable regex
+aa.regex =
+{
+  get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
+  get hashtag(){ return /(\B[#])[\w_-]+/g },
+  get hex(){ return /^[A-F0-9]+$/i },
+  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
+  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
+  get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
+  get str(){ return /"([^"]+)"/ }, // text in quotes ""
+  get fw(){ return /(?<=^\S+)\s/ }, // first word
 };
 
 
@@ -339,32 +382,45 @@ aa.mk.page =(o={})=>
 {
   let df = new DocumentFragment();
   df.append(aa.mk.header(),aa.view.l,aa.cli.l,aa.el.get('dialog'));
-  aa.bod.prepend(df);
-
-  let onoff = navigator.onLine?'on':'off';
-  let con = `${onoff}line at ${location.origin} since `;
-  let app = aa.mk.time(aa.now);
-  aa.log(aa.mk.l('p',{con,app}),0,0);
+  aa.bod.prepend(df);  
+  aa.log(aa.mk.status(),0,0);
   setTimeout(aa.view.pop,100);
 };
 
 
 // head scripts
-aa.mk.scripts =async a=>
+aa.mk.scripts =async array=>
 {
   return new Promise(resolve=>
   {
-    let n = 0;
-    for (const src of a) 
+    let done = 0;
+    for (const src of array) 
     {
-      let l = aa.mk.l('script',{src});
-      l.addEventListener('load',e=>
+      let element = aa.mk.l('script',{src});
+      element.addEventListener('load',e=>
       {
-        if (n===a.length-1) resolve(true);n++
+        if (done===array.length-1) resolve(true);
+        done++
       });
-      document.head.append(l);
+      document.head.append(element);
     }
   })
+};
+
+
+aa.mk.status =()=>
+{
+  let status = aa.el.get('status');
+  if (status) return status;
+
+  let on_off = navigator.onLine ? 'on' : 'off';
+  status = aa.mk.l('p',
+  {
+    con: `${on_off}line at ${location.origin} since `,
+    app: aa.mk.time(aa.now)
+  });
+  aa.el.set('status',status)
+  return status 
 };
 
 

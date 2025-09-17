@@ -79,19 +79,6 @@
   padding-left: var(--padm);
 }
 
-.mod .relay .info[open]
-{
-  margin-bottom: var(--pad) 0;
-  /* border-top: 1px dashed rgb(var(--color-c)); */
-  margin-bottom: var(--line) 0;
-}
-
-.mod .relay .info[open] > summary
-{
-  font-size: var(--font-size);
-  padding: var(--line) 0;
-}
-
 .mod .relay .info.empty > summary::before
 {
   content: 'x ';

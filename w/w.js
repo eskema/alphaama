@@ -8,13 +8,6 @@ walLNuts
 
 
 
-
-
-// w default options
-if (!Object.hasOwn(localStorage,'zap')) localStorage.zap = '21';
-if (!Object.hasOwn(localStorage,'zap_memo')) localStorage.zap_memo = '<3';
-
-
 // w
 aa.w =
 {
@@ -121,7 +114,6 @@ aa.w.get_active =async url=>
   if (!url) url = aa.w.get_def();
   if (!url) return [];
   
-  let w = aa.w.o;
   let active = aa.w.active[url] || {};
   
   if (!active.wallet)
@@ -129,7 +121,7 @@ aa.w.get_active =async url=>
     active.mint = new cashuts.CashuMint(url);
     let haz_keys;
     let options = {};
-    let mint = aa.w.o.ls.mints[url];
+    let mint = aa.w.get_mint(url); //aa.w.o.ls.mints[url];
     if (mint?.keys)
     {
       options.keys = mint.keys;
@@ -181,6 +173,13 @@ aa.w.import =async(id='')=>
     return
   }
 
+  let kind_17375 = aa.w.o?.kind_17375;
+  if (dat.event.created_at <= kind_17375.created_at)
+  {
+    aa.log('w import: event is not newer');
+    return
+  }
+
   let decrypted_tags = await aa.fx.decrypt_parse(dat.event);
   decrypted_tags.push(...dat.event.tags);
 
@@ -189,9 +188,9 @@ aa.w.import =async(id='')=>
   
   if (mints.length) aa.w.add(mints.join(' '));
   if (privkey.length) aa.w.key(privkey);
-  // aa.r.def_req('w_import',aa.q.ls.w);
-  // let l = aa.e.printed.get(id);
-  // aa.q.run(aa.q.ls.w);
+  
+  aa.w.o.kind_17375 = dat.event;
+  aa.w.save();
 };
 
 
@@ -219,7 +218,7 @@ aa.w.import_7375 =async(id='')=>
     return
   }
   
-  mint = aa.w.o.ls.mints[url];
+  mint = aa.w.get_mint(url);
   if (!mint) mint = aa.w.add(url)[0];
   
   if (proofs?.length) aa.w.proofs_in(proofs,url);
@@ -247,23 +246,45 @@ aa.w.is_redeemed =async id=>
 // add keypair to walLNut
 aa.w.key =(privkey='',confirm=true)=>
 {
-  let ls = aa.w.o.ls;
-  if (!ls)
-  {
-    aa.log('w key: wallet not found');
-    return
-  }
-  if (ls.privkey?.length && !window.confirm('replace walLNut keys?')) return;
+  if ( aa.w.privkey 
+    && confirm 
+    && !window.confirm('replace walLNut keys?') 
+  ) return;
 
   let keys = aa.fx.keypair(privkey);
   if (keys)
   {
-    w.privkey = keys[2];
-    w.pubkey = keys[1];
-    aa.w.save();
+    
+    aa.w.privkey = keys[2];
+    aa.w.pubkey = keys[1];
+    aa.log('wip, use the console to access keys\naa.w.privkey & aa.w.pubkey');
+    // aa.w.save();
   }
   return keys
 };
+
+
+// aa.w.key =(privkey='',confirm=true)=>
+// {
+//   let ls = aa.w.o.ls;
+//   if (!ls)
+//   {
+//     aa.log('w key: wallet not found');
+//     return
+//   }
+//   if (ls.privkey?.length 
+//   && confirm 
+//   && !window.confirm('replace walLNut keys?')) return;
+
+//   let keys = aa.fx.keypair(privkey);
+//   if (keys)
+//   {
+//     ls.privkey = keys[2];
+//     ls.pubkey = keys[1];
+//     aa.w.save();
+//   }
+//   return keys
+// };
 
 
 // on load
@@ -271,21 +292,31 @@ aa.w.load =async()=>
 {
   let mod = aa.w;
   let id = mod.def.id;
+  // w default options
+  if (!Object.hasOwn(localStorage,'zap'))
+    localStorage.zap = '21';
+  if (!Object.hasOwn(localStorage,'zap_memo'))
+    localStorage.zap_memo = '<3';
 
   await aa.mk.scripts(mod.scripts);
-
 
   // extend queries
   if (aa.q?.ls)
   {
-    aa.q.ls.w = {"authors":["u"],"kinds":[7374,7375,7376,10019,17375,37375]};
-    if (!aa.q.o.ls.w) aa.q.reset(['w']);
+    aa.q.ls.w = {"authors":["u"],"kinds":[7375,10019,17375]};
 
-    if (aa.q.ls.a) aa.fx.a_add(aa.q.ls.a.kinds,[10019,17375,37375]);
+    if (aa.q.ls.a) aa.fx.a_add(aa.q.ls.a.kinds,[10019,17375]);
     if (aa.q.ls.b) aa.fx.a_add(aa.q.ls.b.kinds,[10019]);
     if (aa.q.ls.c) aa.fx.a_add(aa.q.ls.c.kinds,[10019]);
     if (aa.q.ls.f) aa.fx.a_add(aa.q.ls.f.kinds,[10019]);
     if (aa.q.ls.n) aa.fx.a_add(aa.q.ls.n.kinds,[9321,9735]);
+    if (aa.q.o && !aa.q.o.ls.w)
+    {
+      if (window.confirm('do you want to update base queries to include kinds for walLNut?'))
+      {
+        aa.q.reset(['w','a','b','c','f','n']);
+      }
+    }
   }
   // extend renders
   aa.fx.a_add(aa.e.rnd.encrypted,[7374,7375,7376,17375,37375]);
@@ -367,13 +398,16 @@ aa.w.load =async()=>
   await aa.mod.load(mod);
   await aa.mod.mk(mod);
   mod.start(mod);
+
+  // w css styles
+  aa.mk.styles(['/w/w.css']);
 };
 
 
 // melt proofs
 aa.w.melt =async(invoice='')=>
 {
-  // let [invoice,w_id] = s.split(aa.fx.regex.fw);
+  // let [invoice,w_id] = s.split(aa.regex.fw);
   let [wallnut,w] = await aa.w.get_active();
   if (!wallnut)
   {
@@ -420,11 +454,17 @@ aa.w.mint =async(quote_id='')=>
 
 
 // make w mod item
-aa.w.mk =(k,v)=>
+aa.w.mk =(key,value)=>
 {
-  if (k === 'privkey') v = '******';
-  let item = aa.mk.item(k,v);
-  return item;
+  switch (key)
+  {
+    case 'mints': return aa.mk.w_mints(key,value)
+    case 'balance': 
+    case 'privkey': 
+      break;
+    // return aa.mk.item(key,'******');
+    default: return aa.mk.item(key,value)
+  }
 };
 
 
@@ -459,7 +499,7 @@ aa.w.proofs_in =(proofs,url)=>
   const amount = aa.w.sum_amounts(proofs);
   mint.proofs.push(...proofs);
   mint.amount = aa.w.sum_amounts(mint.proofs);
-  aa.w.balance();
+  // aa.w.balance();
   return amount
 };
 
@@ -472,7 +512,8 @@ aa.w.proofs_out =(proofs,url)=>
   let old_balance = aa.w.sum_amounts(mint.proofs);
   let new_balance = aa.w.sum_amounts(proofs);
   mint.proofs = [...proofs];
-  aa.w.balance();
+  mint.amount = new_balance;
+  // aa.w.balance();
   // w.balance = new_balance;
   return old_balance - new_balance;
 };
@@ -562,7 +603,7 @@ aa.w.quote_check =async(string='')=>
 // receive token
 aa.w.receive =async(string='')=>
 {
-  let [token,url] = string.split(aa.fx.regex.fw);
+  let [token,url] = string.split(aa.regex.fw);
   let [wallnut,w] = await aa.w.get_active(url);
   if (!wallnut)
   {
@@ -625,12 +666,6 @@ aa.w.start =async mod=>
     mod.o.since = new_since;
     mod.save()
   }
-  // mod.o.test = new Map();
-  // mod.o.test.set('yo','sup');
-  // mod.save()
-  // console.log(ls);
-  // aa.log(aa.mk.ls({ls}))
-  // for (const dat of req.events.values()) aa.e.print_q(dat)
 };
 
 
@@ -646,10 +681,10 @@ aa.w.sum_amounts =a=>
 // returns token to send
 aa.w.token =async(string='')=>
 {
-  let [amount,s] = aa.fx.splitr(string,aa.fx.regex.fw);
+  let [amount,s] = aa.fx.splitr(string,aa.regex.fw);
   amount = parseInt(amount);
   let pubkey,memo;
-  if (s) [pubkey,memo] = aa.fx.splitr(s,aa.fx.regex.fw);
+  if (s) [pubkey,memo] = aa.fx.splitr(s,aa.regex.fw);
   let [wallet,w] = await aa.w.get_active();
   let opts = {};
 
@@ -697,7 +732,7 @@ aa.w.tx_in =async({proofs,url,o})=>
   let redeemed = o?.redeemed?.length ? o.redeemed : [];
 
   const amount = aa.w.proofs_in(proofs,url);
-  aa.log(`${id} +${amount} in ${url} = ${aa.w.o.ls.balance}`);
+  aa.log(`${id} +${amount} in ${url}`);
   aa.w.save();
   aa.mk.k7375({url,amount,redeemed})
 };
@@ -711,7 +746,7 @@ aa.w.tx_out =(proofs,url)=>
     return
   }
 
-  const w = aa.w.o.ls.mints[url];
+  const w = aa.w.get_mint(url);
   if (!w) 
   {
     aa.log(aa.w.def.id+' walLNut not found');
@@ -720,7 +755,7 @@ aa.w.tx_out =(proofs,url)=>
   if (!url) url = aa.w.get_def();
 
   let amount = aa.w.proofs_out(proofs,url);
-  aa.log(`${aa.w.def.id} -${amount} = ${w.balance} in ${url}`);
+  aa.log(`${aa.w.def.id} -${amount} in ${url}`);
   aa.w.save();
 
   aa.mk.k7375({url,amount})
@@ -743,7 +778,3 @@ aa.w.zap_pub =async(amount,pubkey)=>
   let endpoint = await NostrTools.nip57.getZapEndpoint(dat.event);
   return `${endpoint}?amount=${amount}`;
 };
-
-
-// w css styles
-aa.mk.styles(['/w/w.css']);

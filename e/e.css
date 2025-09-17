@@ -1,9 +1,9 @@
-#e
+.section_e
 {
   grid-area: e;
 }
 
-#notes
+.notes
 {
   background: rgb(var(--color-b));
   z-index: 0;
@@ -15,13 +15,12 @@
   align-self: stretch;
   background: rgb(var(--color-b));
   box-sizing: border-box;
-  /*contain:paint;*/
+  /* contain:paint; */
   display: grid;
   grid-template-areas: 
     "after    after"
     "by       by"
     "content  content"
-    /*"after    after"*/
     "tags     tags"
     "versions versions"
     "replies  replies";
@@ -37,7 +36,7 @@
 .note.in_view > .replies > .note,
 .versions > .note,
 .haz_solo .note.root.in_path:not(.in_view):not(.tiny),
-#notes > .note:not(.root):not(.in_path)
+.notes > .note:not(.root):not(.in_path)
 {
   grid-template-columns: auto 1fr 61.8vw;
   grid-template-areas: 
@@ -61,19 +60,6 @@
   grid-template-columns: 1fr 61.8vw;
   margin: 0!important;
 }
-
-
-/*.note.root.no_content
-{
-  grid-template-columns: auto 1fr 61.8vw;
-  grid-template-areas: 
-    "after    after    after"
-    "by       by       by"
-    
-    "tags     tags     replies"
-    "content  content  replies"
-    "versions versions versions";
-}*/
 
 .note.draft > .clicker
 {
@@ -149,26 +135,43 @@
   z-index: unset;
 }
 
+.note.orphan
+{
+  border-top: dashed;
+  border-left: dashed;
+  padding-top: var(--line);
+  padding-left: var(--pad);
+}
+
+.note.orphan::before
+{
+  content: "context still missing";
+  font-size: var(--font-size-s);
+  padding: var(--padm);
+  position: absolute;
+}
+
 .root.not_yet > .replies > .note,
 .note:not(.in_view) > .sig,
 
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 
-.view_e .note.root:not(.in_path),
 .view_p .root:not(.in_path),
-.view_e .note:not(.in_path),
-#e:not(.expanded) .note:not(.in_path)
+/* .view_e .note:not(.in_path), */
+.view_e .note.root:not(.in_path),
+
+.section_e:not(.expanded) .note:not(.in_path)
 {
   display: none;
 }
 
 .view_e .note.in_view .note,
-#e:not(.expanded) .note.in_view .note
+.section_e:not(.expanded) .note.in_view .note
 {
   display: grid;
 }
 
-#e.expanded #notes > .note:last-child
+.section_e.expanded .notes > .note:last-child
 {
   margin-bottom: var(--line);
 }
@@ -203,1111 +206,6 @@
 
 /* #endregion clicker */
 
-/* #region by */
-
-.by
-{
-  align-content: center;
-  align-items: center;
-  align-self: end;
-  background: rgb(var(--color-b));
-  display: grid;
-  font-size: var(--font-size-s);
-  grid-area: by;
-  grid-template-areas: "author id actions created_at clas ";
-  grid-template-columns: auto 1fr auto;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.note.draft .by::after,
-.note.not_sent .by::after
-{
-  color: rgb(var(--color-main));
-  grid-area: clas;
-  padding: 0 var(--padm);
-}
-
-.note.draft .by::after
-{
-  content: 'draft';
-}
-
-.note.not_sent .by::after
-{
-  content: 'not_sent';
-}
-
-.in_view > .by,
-.haz_solo .root.in_path:not(.in_view) > .by,
-.root:not(.in_path) > .by
-{
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.in_view > .by
-{
-  z-index: 101;
-}
-
-.in_view .replies .note > .by
-{
-  position: sticky;
-  top: calc(calc(var(--line)*2) + calc(var(--pad) - 2px));
-}
-
-.in_view > .replies > .note > .by
-{
-  position: sticky;
-  top: calc(1rem + 14px);
-  z-index: 5!important;
-}
-
-.replies > .note:not(.in_path) > .by
-{
-  position: sticky;
-  top: calc(2.5rem);
-  z-index: 2;
-}
-
-.in_view > .replies .replies > .note:not(.in_path) > .by
-{
-  position: sticky;
-  top: calc(5rem);
-  z-index: 2;
-}
-
-/* #endregion by */
-
-
-/* #region a.author */
-
-a.author 
-{
-  color: rgb(var(--color-d));
-  grid-template-areas: "img name nip5 flw";
-  line-height: 1rem;
-  overflow-x: scroll;
-  text-decoration: none;
-  user-select: none;
-}
-
-a.author.fu .name
-{
-  color: rgb(var(--color-f));
-}
-
-.author::before
-{
-  content: "";
-}
-
-.a.author.has-picture img,
-.author::before
-{
-  background: rgb(var(--c));
-  display: block;
-  grid-area: img;
-  height: 1rem; 
-  object-fit: cover;
-  padding: 0;
-  pointer-events: none;
-  width: 1rem;
-}
-
-.author::after
-{
-  align-self: center;
-  background: rgb(var(--color-b));
-  color: rgb(var(--color-d));
-  content: attr(data-followers);
-  display: grid;
-  grid-area: flw;
-  padding: 0 var(--padm);
-}
-
-.paragraph .author::after
-{
-  display: none;
-}
-
-.author.is_u::after
-{
-  color: rgb(var(--color-yes));
-}
-
-.author.is_mf::after
-{
-  color: rgb(var(--color-no));
-}
-
-.author.fu::after
-{
-  color: rgb(var(--color-sad));
-}
-
-.author.is_bff.fu::after
-{
-  display: none;
-}
-
-.author .name 
-{
-  color: rgb(var(--color-e));
-  grid-area: name;
-  padding: 0 var(--padm);
-}
-
-.author .name.empty::before
-{
-  content: attr(title)!important;
-}
-
-.by .author
-{
-  grid-area: author;
-}
-
-.paragraph > a.author
-{
-  border-bottom: 1px dotted rgb(var(--c));
-  line-height: inherit;
-}
-
-.paragraph > a.author .name
-{
-  padding: 0;
-  margin: 0;
-}
-
-/*.paragraph > a.author .name:not(.empty)::after,*/
-.paragraph > a.author .img,
-.paragraph > a.author::before
-{
-  display: none;
-}
-
-.in_view > .by .author
-{
-  color: rgb(var(--color-d));
-}
-
-.in_view > .by .author .name
-{
-  align-self: start;
-  display: grid;
-}
-
-/* #endregion a.author */
-
-/* #region id */
-
-.id 
-{
-  background-color: rgba(var(--c),.21);
-  box-sizing: border-box;
-  display: grid;
-  grid-area: id;
-  grid-template-areas: "nid xid";
-  grid-template-columns: 2fr minmax(var(--size),max-content);
-  line-height: 1rem;
-  margin: 0;
-  
-  overflow-x: scroll;
-  word-break: keep-all;
-}
-
-.nid
-{
-  align-items: center;
-  grid-area: nid;
-  line-height: 1;
-  /*padding: 0 var(--padm);*/
-  text-decoration: none;
-  user-select: none;
-  white-space: pre;
-  word-break: keep-all;
-}
-
-.nid span::before
-{
-  content: "k" attr(data-kind) " ";
-  font-size: var(--font-size-s);
-}
-
-.by .id xid
-{
-  color: rgb(var(--c));
-}
-
-.by .a.nid span
-{
-  background: rgba(var(--color-b),0);
-  color: rgba(var(--color-f),0);
-  justify-self: start;
-  display: grid;
-  align-self: stretch;
-  align-items: center;
-  padding: 0 var(--padm);
-}
-
-.draft[data-luma="light"] > .by .id *,
-.in_view[data-luma="light"] > .by .id *
-/*.tiny[data-luma="light"] > .by .nid*/
-/*.note[data-luma="light"]:not([data-kind="1"]) > .by .nid*/
-{
-  color: rgb(var(--color-dark));
-}
-
-.draft[data-luma="dark"] > .by .xid,
-.in_view[data-luma="dark"] > .by .xid
-/*.note[data-luma="dark"]:not([data-kind="1"]) > .by*/
-{
-  color: rgb(var(--color-light));
-}
-
-
-.by .xid
-{
-  color: rgba(var(--color-f),0);
-  align-self: center;
-  grid-area: xid;
-  padding: 0 var(--padm);
-}
-
-
-.draft > .by .id,
-.in_view > .by .id
-{
-  background-color: rgba(var(--c),1);
-  /*padding: 0 var(--padm);*/
-}
-
-.in_view > .by .nid
-{
-  
-}
-
-.in_view > .by .nid span::before
-{
-  color: inherit;
-  content: "<- ";
-}
-
-.in_view > .by .xid
-{
-  display: block;
-}
-
-/* #endregion id */
-/* #region created_at */
-
-.created_at 
-{
-  cursor: pointer;
-  display: inline-grid;
-  grid-gap: 0 var(--pad);
-  grid-template-areas: "timestamp title elapsed";
-  justify-items: end;
-  white-space: pre;
-  word-break: keep-all;
-}
-
-.created_at::before
-{
-  content: attr(title);
-  grid-area: title;
-}
-
-.created_at::after 
-{
-  content: "~" attr(data-elapsed);
-  font-size: var(--font-size-s);
-  grid-area: elapsed;
-}
-
-.by .created_at
-{
-  color: rgb(var(--color-d));
-  font-size: 0;
-  grid-area: created_at;
-  grid-gap: 0;
-  grid-template-areas: "elapsed";
-  justify-self: end;
-  line-height: 1;
-  padding: 0 var(--padm);
-}
-
-.created_at > *
-{
-  grid-area: elapsed;
-}
-
-
-
-.in_view > .by .created_at
-{
-  align-content: center;
-  font-size: var(--font-size-s);
-  grid-gap: 0 var(--pad);
-  grid-template-areas: "timestamp title elapsed";
-}
-
-.in_view > .by .created_at::before
-{
-  content: attr(title);
-  grid-area: title;
-}
-
-/* #endregion created_at */
-/* #region content */
-
-.content 
-{
-  align-self: start;
-  background: rgb(var(--color-b));
-  box-sizing: border-box;
-  color: rgb(var(--color-d));
-  grid-area: content;
-  max-height: calc(100vh - var(--size) - var(--line));  
-  overflow: hidden;
-  position: relative;
-}
-
-.viewing .root:not(.in_view) > .content,
-.root:not(.tiny):not(.in_path) > .content,
-.in_view > .replies > .note > .content
-{
-  overflow-y:  scroll;
-}
-
-.view_e .in_path:not(.in_view) > .content
-{
-  max-height: calc(12rem);
-}
-
-.in_view > .content
-{
-  display: grid;
-  justify-content: center;
-  max-height: unset;
-  padding-top: var(--line);
-  padding-bottom: var(--line);
-}
-
-.draft > .content
-{
-  max-height: unset;
-}
-
-.content > button
-{
-  line-height: var(--line);
-}
-
-.content .item > details > summary
-{
-  /*font-size: var(--font-size);*/
-}
-
-.content .item > details[open] > summary::before
-{
-  content: "";
-}
-
-.content .item > details[open] > summary::after
-{
-  content: ":";
-}
-
-.content .list .item .key
-{
-  color: rgb(var(--color-d));
-  margin-right: var(--pad);
-}
-
-.note.mining > .content::after
-{
-  animation: loading 1s ease-in-out 0s infinite alternate;
-  color: red!important;
-  content: "mining in progress..."!important;
-}
-
-.hashtag
-{
-  color: rgb(var(--color-main));
-}
-
-.note:not(.tiny):not(.in_path) > .content::after
-{
-  color: rgb(var(--color-c));
-  content: "--";
-  display: block;
-  font-size: var(--font-size-xs);
-  line-height: 1.5rem;
-  margin-left: var(--pad);
-}
-
-.content > .butt
-{
-  margin: var(--pad);
-}
-
-/* #endregion content */
-/* #region paragraph */
-
-.paragraph
-{ 
-  margin-bottom: 0;
-  padding: var(--pad);
-  white-space: pre-wrap;
-  word-break: break-all;
-}
-
-.parsed > .paragraph
-{
-  hyphens: auto;
-  word-break: break-word;
-}
-
-.paragraph.cypher,
-.parsed > .paragraph,
-.decrypted > .paragraph
-{
-  padding: var(--pad);
-}
-
-.paragraph.cypher
-{
-  color: rgb(var(--color-c));
-  font-size: var(--font-size-xs)!important;
-  line-height: 1!important;
-  word-break: break-all;
-}
-
-.in_view > .content > .paragraph,
-.in_view > .content > .list
-{
-  color: rgb(var(--color-d));
-  font-size: var(--font-size-m);
-  justify-self: stretch;
-  line-height: calc(var(--font-size-m)*1.5);
-  max-width: 80vw;
-}
-
-.view_e .in_path:not(.in_view) > .content .paragraph,
-.view_e .in_path:not(.in_view) > .content .paragraph,
-.replies:not(.expanded) .note:not(.is_new):not(.in_view).haz_new > .content .paragraph
-{
-  font-size: var(--font-size-s);
-  line-height: 1rem;
-  padding: 0 var(--pad);
-}
-
-.paragraph:first-child
-{
-  margin-top: var(--pad);
-}
-
-.paragraph:last-child
-{
-  margin-bottom: var(--pad);
-}
-
-/* #endregion paragraph */
-/* #region links */
-
-.source .content_link,
-.paragraph .content_link
-{
-  color: rgba(var(--color-sad),.6);
-  margin-right: var(--padm);
-}
-
-.source .nostr_link,
-.paragraph .nostr_link
-{
-  color: rgba(var(--color-alt),.6);
-}
-
-.source .nostr_link::before,
-.paragraph .nostr_link::before
-{
-  color: rgb(var(--color-c));
-  content: "#";
-}
-
-.source .nostr_link::after,
-.paragraph .nostr_link::after
-{
-  color: rgb(var(--color-c));
-  content: "…";
-}
-
-/* #endregion links */
-/* #region media */
-
-.content-img,
-.content-video
-{
-  border: 1px solid rgba(var(--color-c),.2);
-  display: block;
-  height: auto;
-  margin: var(--pad) 0;
-  max-height: var(--media-height);
-  max-width: 100%;
-}
-
-.content-img
-{
-  cursor: zoom-in;
-}
-
-.in_view > .content .content-img
-{
-  justify-self: center;
-  margin: var(--line) auto;
-  max-height: var(--media-max-height);
-}
-
-.in_view > .content .content-video
-{
-  max-height: var(--media-max-height);
-}
-
-.in_view > .content .note_quote .content-img
-{
-  margin: 0 auto;
-}
-
-.view_e .note.in_path:not(.in_view) > .content .content-img,
-.view_e .note.in_path:not(.in_view) > .content .content-video
-{
-  max-height: var(--size);
-}
-
-/* #endregion media */
-/* #region    tags */
-
-.tags_wrapper
-{
-  background: rgba(var(--color-b),1);
-  align-self: end;
-  bottom: var(--size);
-  grid-area: tags;
-  position: sticky;
-}
-
-.tags_wrapper[open]
-{
-  z-index: 2;
-}
-
-.tags_wrapper summary
-{
-  display: inline-grid;
-  color: rgba(var(--color-f),.2);
-  font-size: var(--font-size-s);
-  grid-template-columns: auto auto auto;
-  line-height: 1.5rem;
-  opacity: 1;
-  padding: 0 var(--padm);
-  user-select: none;
-}
-
-.tags_wrapper[open] summary
-{
-  background: rgba(var(--color-a),1);
-  color: rgb(var(--color-e));
-  font-size: var(--font-size-s);
-}
-
-.tags_wrapper:not(.empty) summary::before,
-.tags_wrapper:not(.empty) summary::after
-{
-  background: rgba(var(--color-b),1);
-  color: rgb(var(--color-d));
-  font-size: var(--font-size-s);
-  white-space: pre;
-}
-
-.tags_wrapper[open] summary::before,
-.tags_wrapper[open] summary::after
-{
-  background: rgba(var(--color-a),1);
-  color: rgb(var(--color-f));
-  padding: 0;
-}
-
-.tags_wrapper:not(.empty) summary::before
-{
-  content: "[" attr(data-count) "] ";
-}
-
-.tags_wrapper[open] summary::after
-{
-  content: " ]";
-}
-
-.tags_wrapper[open] summary::before
-{
-  content: "[ " attr(data-count) " ";
-}
-
-.view_e .in_path:not(.in_view) > .tags_wrapper,
-.replies:not(.expanded) .note:not(.in_view):not(.is_new).haz_new_reply > .tags_wrapper
-{
-  display: none;
-}
-
-#notes > .note > .tags_wrapper
-{
-  z-index: 11;
-}
-
-.tags 
-{
-  background: rgba(var(--color-a),0);
-  box-sizing: border-box;
-  display: grid;
-  font-size: var(--font-size-s);
-  list-style: none;
-  margin: 0;
-  max-width: 100%;
-  padding: var(--pad);
-  overflow-y: scroll;
-}
-
-.note > .tags_wrapper > .tags 
-{
-  position: absolute;
-  transform: translateY(calc(-100% - 1.5rem));
-  transform-origin: bottom;
-  width: max-content;
-}
-
-.note [open] > .tags
-{
-  background: rgba(var(--color-a),.82);
-  box-shadow: 0px 0px var(--pad) rgb(var(--color-b));
-  max-height: 80vh;
-  
-}
-
-.tag
-{
-  display: grid;
-  grid-auto-flow: column;
-  grid-gap: var(--pad);
-  grid-template-columns: auto 1fr auto;
-  transition: all 1s ease-in-out;
-  width: 100%;
-  white-space: pre;
-}
-
-.tags_wrapper .tag
-{
-  overflow-x: scroll;
-}
-
-#dialog .tag
-{
-  color: rgb(var(--color-d));
-}
-
-.tag[data-i]::before
-{
-  align-self: start;
-  content: "[" attr(data-i) "] ";
-  line-height: 1rem;
-
-  min-width: 2rem;
-  text-align: right;
-  /*user-select: none;*/
-}
-
-.tag[data-i]::before,
-.tag button
-{
-  color: rgba(var(--color-d),.8);
-  font-size: var(--font-size-xs);
-  justify-self:end;
-  padding: 0;
-}
-
-.tag button::before
-{
-  color: rgb(var(--color-c));
-  content: "[";
-  font-size: var(--font-size-s);
-}
-
-.tag button::after
-{
-  color: rgb(var(--color-c));
-  content: "]";
-  font-size: var(--font-size-s);
-}
-
-.note.no_content > .tags_wrapper,
-.in_view > .tags_wrapper[open]
-{
-  position: relative;
-  bottom: unset;
-}
-
-.in_view > .tags_wrapper[open] summary
-{
-  position: sticky;
-  top: 1rem;
-}
-
-.note.no_content > .tags_wrapper > .tags,
-.in_view > .tags_wrapper[open] .tags
-{
-  max-height: unset;
-  position: relative;
-  transform: translateY(0);
-  width: auto;
-}
-
-/* #endregion tags */
-/* #region    actions */
-
-.actions 
-{
-  color: rgb(var(--color-e));
-  font-size: var(--font-size-s);
-  grid-area: actions;
-  line-height: 1.5;
-  margin: 0;
-  overflow-x:  scroll;
-  padding: 0 var(--pad);
-  position: relative;
-  user-select: none;
-  white-space: pre;
-  width: auto;
-}
-
-.actions:not(.expanded)
-{
-  font-size: 0;
-}
-
-.actions:not(.expanded) :first-child
-{
-  font-size: var(--font-size-s);
-}
-
-.actions:not(.expanded) > *:not(:first-child)
-{
-  display: none;
-}
-
-.actions.expanded > *:first-child
-{
-  margin-right: var(--pad);
-}
-
-.note .actions.expanded
-{
-  background: rgba(var(--color-a));
-}
-
-.note .actions.expanded .butt
-{
-  font-size: var(--font-size-s);
-}
-
-.note.root > .by .actions,
-.in_view > .replies > .note > .by .actions 
-{
-  z-index: 3;
-}
-
-/* #endregion actions */
-/* #region    replies */
-
-.replies
-{
-  grid-area: replies;
-}
-
-.note:not(.in_path) > .replies.expanded,
-.note.root:not(.in_path) > .replies,
-.note.in_view > .replies,
-.note.in_view .replies.expanded,
-.note.haz_new_reply > .replies,
-.note.haz_reply > .replies,
-.note.is_new > .replies
-{
-  padding-left: var(--padm);
-}
-
-.replies:not(.expanded) .note:not(.haz_new_reply):not(.is_new) > .replies,
-.note.in_view .replies:not(.expanded) .note:not(.haz_new_reply) > .replies,
-.haz_new:not(.haz_new_reply):not(.haz_new_reply)[data-level="11"] .replies,
-.view_e .in_path:not(.in_view) > .replies
-{
-  padding-left: 0;
-  margin-bottom: 0;
-}
-
-/*.haz_solo .note:not(.in_path) > .replies::after,*/
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
-{
-  display: none;
-}
-
-.replies > summary
-{
-  background-color: rgb(var(--color-b));
-  color: rgb(var(--color-d));
-  display: none;
-  font-size: var(--font-size-s);
-  grid-template-columns: 1fr auto;
-  line-height: 1.5rem;
-  position: relative;
-}
-
-.haz_reply > .replies > summary,
-.root.haz_reply > .replies > summary,
-.in_view.haz_reply > .replies > summary,
-.haz_new_reply > .replies > summary
-{
-  display: grid;
-}
-
-.replies:not(.expanded) .note:not(.haz_new_reply) > .replies > summary
-{
-  display: none;
-}
-
-.in_view > .replies > summary
-{
-  position: sticky;
-  top: 1rem;
-  z-index: 100;
-}
-
-.in_view > .replies > .note > .replies > summary
-{
-  position: sticky;
-  top: 3.5rem;
-  z-index: 4;
-}
-
-.root:not(.in_view) > .replies > summary,
-.in_view > .replies .replies > summary
-{
-  position: sticky;
-  top: 1rem;
-  transform: translateX(-1px);
-}
-
-.root:not(.in_view) > .replies > summary
-{
-  z-index: 6;
-}
-
-.in_view > .replies .replies > summary
-{
-  position: sticky;
-  top: 3.5rem;
-}
-
-.replies > summary::before
-{
-  display: none;
-}
-
-.replies > summary::after
-{
-  content: "+";
-  margin: 0 var(--pad);
-}
-
-.replies[open] > summary::after
-{
-  content: "-";
-}
-
-.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
-.view_e .in_path:not(.in_view) > .replies[open] > summary,
-.haz_solo .haz_reply:not(.in_path) > .replies[open] > summary,
-.haz_solo .root:not(.in_view):not(.in_path) > .replies > summary
-{
-  display: none;
-}
-
-.replies.expanded
-{
-  margin-bottom: var(--padm);
-}
-
-.replies.expanded > summary .mark_read::before
-{
-  content: "// ";  
-}
-
-.replies:not(.expanded) > summary .mark_read
-{
-  color: rgb(var(--color-no));
-  text-align: left
-}
-
-.replies:not(.expanded) > summary .mark_read::before
-{
-  content: "/* ";  
-}
-
-.replies:not(.expanded) > summary .mark_read::after
-{
-  content: " read */";  
-}
-
-.replies:not([open]) > summary .mark_read::before
-{
-  content: "!<-- ";  
-}
-
-.replies:not([open]) > summary .mark_read::after
-{
-  content: " hidden -->";  
-}
-
-.replies:not([open]) > summary .mark_read
-{
-  pointer-events: none;
-}
-
-.in_view > .replies > summary .mark_read
-{
-  text-align: left;
-}
-
-/* #endregion replies */
-/* #region    blank */
-
-.note.blank
-{
-  --c: var(--color-c);
-}
-
-.blank > .by::before
-{
-  content: "unknown";
-  font-size: var(--font-size-s);
-  grid-area: author;
-  padding-left: var(--padm);
-}
-
-.blank > .by .created_at
-{
-  display: none;
-}
-
-.blank > .content
-{
-  font-size: var(--font-size-s);
-}
-
-.blank:not(.tiny)[data-nope]::before
-{
-  content: "trying: " attr(data-nope);
-  font-size: var(--font-size-s);
-  line-height: 1.5;
-  padding: var(--pad);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-/* #endregion blank */
-
-/* #region orphan */
-
-#notes .note.orphan
-{
-  border-top: dashed;
-  border-left: dashed;
-  padding-top: var(--line);
-  padding-left: var(--pad);
-}
-
-.note.orphan::before
-{
-  content: "context still missing";
-  font-size: var(--font-size-s);
-  padding: var(--padm);
-  position: absolute;
-  /*transform: translateY(-150%);*/
-}
-
-/* #endregion orphan */
-/* #region    quote */
-
-.note_quote
-{
-  border: 1px dashed rgba(var(--color-c),1);
-  display: grid;
-  grid-template-areas: "by" "content";
-  margin: var(--font-size) var(--padm);
-  /*margin-bottom: var(--line);*/
-  max-height: var(--media-height);
-  max-width: 960px;
-  overflow: hidden;
-  position: relative;
-}
-
-.note_quote .list,
-.note_quote .paragraph
-{
-  font-size: var(--font-size-s);
-  line-height: 1.5;
-  padding: var(--padm);
-}
-
-.note_quote .content-img
-{
-  max-height: var(--size-l);
-}
-
-.in_view > .content .note_quote
-{
-  margin: var(--line) auto;
-}
-
-.in_view > .content .note_quote .note_quote
-{
-  margin: var(--pad);
-}  
-
-
-.in_view > .content .note_quote,
-.content .note_quote .note_quote
-{
-  max-height: unset;
-}
-
-.root > .content .note_quote,
-.in_view > .replies > .note > .content .note_quote
-{
-  overflow-y:  scroll;
-}
-
-.in_view > .content > .note_quote .paragraph
-{
-  font-size: var(--font-size);
-  line-height: 1.5;
-  padding: var(--padm);
-}
-
-/* #endregion quote */
 /* #region    tiny */
 
 .note.root + .note.tiny
@@ -1323,11 +221,12 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   padding: 0;
 }
 
-.note.tiny:not(.in_view) > .content > *,
-.note.tiny:not(.in_view) > .tags_wrapper,
-.note.tiny:not(.in_path) > .replies,
 .note.tiny:not(.in_view) > .by .author .img,
-.note.tiny:not(.in_view) > .by .author::before
+.note.tiny:not(.in_view) > .by .author::before,
+.note.tiny:not(.in_view) > .content > *,
+.note.tiny:not(.in_path) > .replies,
+.note.tiny:not(.in_view) > .tags_wrapper,
+.note.root.tiny:not(.in_view) > .tags_wrapper
 {
   display: none;
 }
@@ -1337,86 +236,13 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   color: rgb(var(--color-no));
 }
 
-.note.root.tiny:not(.in_view) > .tags_wrapper
-{
-  display: none;
-}
-
 .haz_solo .note:not(.in_path).tiny:last-child
 {
   margin-bottom: 0;
 }
 
 /* #endregion tiny */
-/* #region    kind7 */
 
-.note.tiny[data-kind="7"] > .clicker
-{
-  border-left: 1px dotted rgba(var(--color-b));
-}
-
-.note.tiny[data-kind="7"] > .content
-{
-  align-self: stretch;
-  align-content: center;
-  background: rgba(var(--color-b),1);
-  font-size: var(--font-size-s);
-  min-width: calc(1rem + 1px);
-}
-
-.note.tiny[data-kind="7"]:not(.in_view)
-{
-  grid-template-areas: "after after" "content by";
-  grid-template-columns: auto 1fr;
-}
-
-.note[data-kind="7"]:not(.in_view) > .content
-{
-  font-family: var(--font-emoji),var(--font-main);
-  font-variant-emoji: emoji;
-  padding-left: 0;
-  padding: 1px;  
-}
-
-.note[data-kind="7"]:not(.in_view) > .content.render_emojii
-{
-  padding: 0;
-}
-
-.note[data-kind="7"]:not(.in_view) > .content > *
-{
-  display: block;
-}
-
-.note[data-kind="7"]:not(.in_view) > .content .content-img
-{
-  background: none;
-  border: 0;
-  margin: 0;
-  max-height: 1rem;
-  max-width: 1rem;
-  padding: 0;
-}
-
-/* #endregion kind7 */
-
-/* #region pagination */
-
-.pagination
-{
-  font-size: var(--font-size-l);
-  margin: var(--line) 0;
-  text-align: center;
-}
-
-#e:not(.expanded) .pagination,
-.viewing .pagination,
-html:not(.needs_pagin) .pagination
-{
-  display: none;
-}
-
-/* #endregion pagination */
 /* #region    versions */
 
 .versions
@@ -1434,7 +260,7 @@ html:not(.needs_pagin) .pagination
   font-size: 0;
 }
 
-.note.in_view > .versions > summary
+.in_view > .versions > summary
 {
   font-size: var(--font-size-s);
 }
@@ -1459,52 +285,27 @@ html:not(.needs_pagin) .pagination
 }
 
 /* #endregion versions */
-/* #region    highlights */
+/* #region pagination */
 
-.highlight
+.pagination
 {
-  border: 1px dotted rgba(var(--color-main),.6);
-  display: block;
-  max-width: 80vw;
-  margin: var(--pad);
-  margin-bottom: 0;
-  padding: var(--pad);
+  font-size: var(--font-size-l);
+  margin: var(--line) 0;
+  text-align: center;
 }
 
-.highlight > .paragraph
+.section_e:not(.expanded) .pagination,
+.viewing .pagination,
+html:not(.needs_pagin) .pagination
 {
-  background: linear-gradient(to bottom, 
-    rgba(var(--color-b),1) 6%, 
-    rgba(var(--color-main),.21) 6%, 
-    rgba(var(--color-main),.21) 94%, 
-    rgba(var(--color-b),1) 94%);
-  color: rgba(var(--color-e),1);
-  display: inline;
-  hyphens: auto;
-  margin: 0;
-  margin-right: var(--line);
-  padding: 0;
-  word-break: break-word;
+  display: none;
 }
 
-.source
-{
-  border: 1px dotted rgba(var(--color-main),.6);
-  border-top: none;
-  display: block;
-  font-size: var(--font-size-s);
-  margin: 0 var(--pad);
-  margin-bottom: var(--pad);
-  padding: var(--padm);
-  word-break: break-all;
-  white-space: pre-wrap;
-}
-
-/* #endregion highlights */
+/* #endregion pagination */
 
 @media screen and (min-width: 1025px) 
 {
-  html:not(.view_e) #notes
+  html:not(.view_e) .notes
   {
     margin-left: var(--pad-l);
   }
@@ -1522,11 +323,6 @@ html:not(.needs_pagin) .pagination
     z-index: 0;
   }
   
-  .note.root:not(.tiny):not(.in_path) > .content::after
-  {
-    margin-bottom: 3rem;
-  }
-  
   html:not(.viewing) .note:hover
   {
     z-index: 12;
@@ -1538,208 +334,15 @@ html:not(.needs_pagin) .pagination
     border-top: 1px solid rgba(var(--c),.5);
   }
   
-
-  
-  .note.root:not(.in_path):hover > .by,
-  .in_view > .replies .replies .note:hover > .by
-  {
-    top: 0;
-    z-index: 13;
-  }
-
-/*  .in_view > .replies .note:hover > .replies .by,
-  .root:not(.in_path) > .replies .note:hover > .replies .by
-  {
-    top: 0;
-  }*/
-  
-  .root:not(.in_path) > .replies .note:hover > .by
-  {
-    top: 1rem
-  }
-  
-  .mark_read:hover
-  {
-    background-color: rgba(var(--color-a),1);
-    text-align: left;
-  }
-  
-  .replies:not(.expanded) > summary .mark_read:hover::after,
-  .mark_read:hover::after
-  {
-    content: " mark read";
-  }
-  
-  .by:hover,
-  a.clicker:hover + .by
-  {
-    z-index: 999!important;
-  }
-  
-/*  .by .author:hover .name::after
-  {
-    opacity: 1;
-  }*/
-  
-  .tags_wrapper[open]:hover
-  {
-    z-index: 10;
-  }
-  
-  .tags_wrapper[open]:hover > summary
-  {
-    top: 0;
-  }
-  
-  .note:not(.in_path) > .by:hover + .content
-  {
-    background: rgb(var(--color-a));
-  }
-  
   .clicker:hover
   {
     background: rgba(var(--c),.5);
   }
-  
-  .note > .by:hover + .content,
-  a.clicker:hover + .by + .content,
-  .reply > .by:hover + .content
-  {
-    background: rgb(var(--color-a));
-    pointer-events: none;
-    position: sticky;
-    top: 2rem;
-    z-index: 11;
-  }
-  
-  .in_view > .by:hover
-  {
-    z-index: 1000;
-  }
-  
-  .in_view > .by:hover + .content
-  {
-    z-index: 101;
-  }
-  
-  a.clicker:hover + .by + .content
-  {
-    transform: translateX(calc(var(--padm)));
-    /*z-index: 4;*/
-  }
-  .in_view .replies .by:hover + .content,
-  .in_view .replies a.clicker:hover + .by + .content
-  {
-    top: 6rem;
-  }
-  
-  a.clicker:hover + .by + .content + .tags_wrapper
-  {
-    opacity: 0;
-  }
-
-  .by:hover .id
-  {
-    background-color: rgba(var(--c),1);
-  }
-  
-  .by .id .nid span:not([data-kind="1"]),
-  .by:hover .id .nid span
-  {
-    background-color: rgba(var(--color-b),1)!important;
-    color: rgba(var(--color-d),1);
-  }
-  
-  /*[data-luma="light"].note:after,*/
-  [data-luma="light"] > .by:hover .xid,
-  .in_view[data-luma="light"] > .by .xid
-  {
-    color: rgb(var(--color-dark));
-  }
-  
-  /*[data-luma="dark"].note:after,*/
-  [data-luma="dark"] > .by:hover .xid,
-  .in_view[data-luma="dark"] > .by .xid
-  {
-    color: rgb(var(--color-light));
-  }
-  
-  .note > .actions
-  {
-    position: sticky;
-    bottom: 4rem;
-  }
-  
-  .note > .actions[open]
-  {
-    justify-content: end;
-    text-align: right;
-    width: auto;
-  }
-  
-  .note > .actions:not([open]) > summary
-  {
-    text-align: right;
-  }
-  
-  .note .by .actions .butt:hover
-  {
-    color: rgb(var(--color-e));
-    opacity: 1;
-  }
-  
-  .in_view > .replies > .note > .actions,
-  .root:not(.in_path) > .actions
-  {
-    position: sticky;
-    top: 1rem;
-  }
-  
-  .in_view > .replies > .note > .content,
-  .viewing .root:not(.in_path) > .content,
-  .view_p .root.in_path > .content,
-  .root:not(.in_view):not(.in_path) > .content
-  {
-    position: sticky; 
-    top: 1rem;
-    z-index: 2;
-  }
-  
-  .in_view > .replies > .note > .content
-  {
-    top: calc(3.5rem + 2px);
-  }
-  
-  .in_view > .replies .replies .note:hover > .by
-  {
-    top: 5rem;
-    z-index: 3;
-  }
-  
-  .in_view > .replies  .replies .note:hover
-  {
-    /*z-index: 999;*/
-  }
-  
-  
-  
-  
-/*  .content-img 
-  {
-    opacity: .5;
-  }
-  
-  .note > .content:hover .content-img,
-  .content-img.emojii
-  {
-    opacity: 1;
-  }*/
 }
 
 @media screen and (max-width: 768px) 
 {
-  
-  html:not(.view_e) #notes
+  html:not(.view_e) .notes
   {
     margin-left: var(--padm);
   }
@@ -1754,39 +357,5 @@ html:not(.needs_pagin) .pagination
       "tags    tags"
       "replies replies";
     grid-template-columns: auto 1fr;
-  }
-  
-  .root:not(.in_view):not(.in_path) > .content
-  {
-    overflow-y:  hidden;
-    position: relative;
-    top: 0;
-  }
-  
-  .replies > .note:not(.in_path) > .by
-  {
-    position: sticky;
-    top: 1rem;
-  }
-  
-  .note summary
-  {
-    line-height: 3rem;
-    opacity: 1;
-  }
-  
-  .note:not(.in_view) .tags_wrapper
-  {
-    display: none;
-  }
-  
-  .note .actions
-  {
-    justify-self: end;
-  }
-  
-  .note .actions:not([open]) summary
-  {
-    text-align: right;
   }
 }

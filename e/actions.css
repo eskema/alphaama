@@ -1,0 +1,97 @@
+.actions 
+{
+  color: rgb(var(--color-e));
+  font-size: var(--font-size-s);
+  grid-area: actions;
+  line-height: 1.5;
+  margin: 0;
+  overflow-x:  scroll;
+  padding: 0 var(--pad);
+  position: relative;
+  user-select: none;
+  white-space: pre;
+  width: auto;
+}
+
+.actions:not(.expanded)
+{
+  font-size: 0;
+}
+
+.actions:not(.expanded) :first-child
+{
+  font-size: var(--font-size-s);
+}
+
+.actions:not(.expanded) > *:not(:first-child)
+{
+  display: none;
+}
+
+.actions.expanded > *:first-child
+{
+  margin-right: var(--pad);
+}
+
+.note .actions.expanded
+{
+  background: rgba(var(--color-a));
+}
+
+.note .actions.expanded .butt
+{
+  font-size: var(--font-size-s);
+}
+
+.note.root > .by .actions,
+.in_view > .replies > .note > .by .actions 
+{
+  z-index: 3;
+}
+
+@media screen and (min-width: 1025px) 
+{ 
+  .note > .actions
+  {
+    position: sticky;
+    bottom: 4rem;
+  }
+  
+  .note > .actions[open]
+  {
+    justify-content: end;
+    text-align: right;
+    width: auto;
+  }
+  
+  .note > .actions:not([open]) > summary
+  {
+    text-align: right;
+  }
+  
+  .note .by .actions .butt:hover
+  {
+    color: rgb(var(--color-e));
+    opacity: 1;
+  }
+  
+  .in_view > .replies > .note > .actions,
+  .root:not(.in_path) > .actions
+  {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+@media screen and (max-width: 768px) 
+{ 
+  .note .actions
+  {
+    justify-self: end;
+  }
+  
+  .note .actions:not([open]) summary
+  {
+    text-align: right;
+  }
+}

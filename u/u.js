@@ -103,8 +103,8 @@ aa.u.load =async()=>
   );
   let app = aa.mk.butt_expand('u_u','a_a');
   app.id = 'butt_u_u';
-  aa.el.set(app.id,app);
   aa.side = aa.mk.l('aside',{id:'u_u',app});
+  aa.el.set(app.id,app).set('u_u',aa.side);
   aa.side.append(aa.mod_l);
   aa.bod.insertBefore(aa.side,aa.bod.lastChild.previousSibling);
 
@@ -142,7 +142,7 @@ aa.u.setup =async(s='')=>
 {
   aa.u.setup_sheet = {s};
   aa.log('u re beeing set up… '+(aa.u.setup_sheet.s||'via nip07 extension using window.nostr'));
-  let [pubkey,mode] = s.split(aa.fx.regex.fw).map(i=>i.trim());
+  let [pubkey,mode] = s.split(aa.regex.fw).map(i=>i.trim());
   let relays = [];
 
   if (!s && !window.nostr)

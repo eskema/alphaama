@@ -7,7 +7,7 @@ aa.e.note_by_kind =dat=>
   // k>=20000 && k<=29999 : ephemeral
   // k>=30000 && k<=39999 : replaceable_parameterized
   let type = aa.fx.kind_type(dat.event.kind); 
-  if (Object.hasOwn(aa.kinds,kind)) return aa.kinds[kind](dat);
+  if (Object.hasOwn(aa.e.kinds,kind)) return aa.e.kinds[kind](dat);
   switch (type)
   {
     case 'parameterized': return aa.e.note_pre(dat);
@@ -29,41 +29,65 @@ aa.e.note_regular =dat=>
 aa.e.note_pre =dat=>
 {
   // console.log('pre',dat);
-  let note = aa.mk.note(dat);
+  // let note = aa.mk.note(dat);
+  // if (!dat.id_a) return note;
 
-  let d_tag = dat.event.tags.filter(t=>t[0] === 'd')[0];
-  if (d_tag?.length > 1) 
+  // let d_tag = aa.fx.tag_value()dat.event.tags.filter(t=>t[0] === 'd')[0];
+  // if (d_tag?.length > 1) 
+  // {
+  //   let ds = d_tag[1];
+  //   let id_a = [dat.event.kind,dat.event.pubkey,ds].join(':');
+    // note.dataset.d = ds;
+    // note.dataset.id_a = id_a;
+
+  let og_dat = aa.em_a.get(dat.id_a);
+  let og_l = aa.e.printed.get(og_dat.event.id);
+  
+
+  // if (og_dat?.event.id === dat.event.id) return;
+
+  let note = aa.mk.note(dat);
+  
+  if (!og_l)
   {
-    let ds = d_tag[1];
-    let id_a = [dat.event.kind,dat.event.pubkey,ds].join(':');
-    note.dataset.d = ds;
-    note.dataset.id_a = id_a;
-    let og = document.querySelector(`[data-id_a="${id_a}"]`);
-    let versions = og?.querySelector('.versions');
-    if (versions) 
-    {
-      if (og.dataset.created_at < dat.event.created_at)
-      {
-        aa.e.append_as_rep(note,og.parentElement);
-        note.append(versions);
-        versions.append(og);
-      }
-      else aa.e.append_as_rep(note,versions);
-    }
-    else 
-    {
-      let details = aa.mk.details('versions',false,true);
-      details.classList.add('versions');
-      note.append(details);
-      aa.e.append_as_root(note);
-    }
+    let versions_element = aa.mk.details('versions',false,true);
+    versions_element.classList.add('versions');
+    note.append(versions_element);
+    aa.e.append_as_root(note);
+    return note
   }
+
+  // let og = aa.em_a.get(dat.id_a);
+    
+  // let og = document.querySelector(`[data-id_a="${id_a}"]`);
+  let versions = og_l.querySelector('.versions');
+  if (versions) 
+  {
+    if (og_l.dataset.created_at < dat.event.created_at)
+    {
+      let next = og_l.nextElementSibling;
+      
+      // aa.e.append_as_rep(note,og_l.parentElement);
+      note.append(versions);
+      versions.append(og_l);
+      og_l.parentElement.insertBefore(note,next);
+    }
+    else aa.e.append_as_rep(note,versions);
+  }
+  // else 
+  // {
+  //   let details = aa.mk.details('versions',false,true);
+  //   details.classList.add('versions');
+  //   note.append(details);
+  //   aa.e.append_as_root(note);
+  // }
+  // }
   return note
 };
 
 
 // event template for user metadata 
-aa.kinds[0] =dat=>
+aa.e.kinds[0] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
@@ -91,7 +115,7 @@ aa.kinds[0] =dat=>
 
 
 // plain note
-aa.kinds[1] =dat=>
+aa.e.kinds[1] =dat=>
 {
   let note = aa.mk.note(dat);
   const authors = dat.event.tags.filter(aa.fx.is_tag_p);
@@ -103,7 +127,7 @@ aa.kinds[1] =dat=>
 
 
 // event template for follow list / contacts with legacy relay object
-aa.kinds[3] =dat=>
+aa.e.kinds[3] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
@@ -120,7 +144,7 @@ aa.kinds[3] =dat=>
 
 
 // event template for event deletion requests
-aa.kinds[5] =dat=>
+aa.e.kinds[5] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('tiny');
@@ -129,7 +153,7 @@ aa.kinds[5] =dat=>
 
 
 // repost of kind-1 note
-aa.kinds[6] =dat=>
+aa.e.kinds[6] =dat=>
 {
   let note = aa.mk.note(dat);
   note.classList.add('tiny');
@@ -167,7 +191,7 @@ aa.kinds[6] =dat=>
 
 
 // reaction
-aa.kinds[7] =dat=>
+aa.e.kinds[7] =dat=>
 {
   let note = aa.mk.note(dat);
   const authors = dat.event.tags.filter(aa.fx.is_tag_p);
@@ -184,7 +208,7 @@ aa.kinds[7] =dat=>
 
 
 // image template
-aa.kinds[20] =dat=>
+aa.e.kinds[20] =dat=>
 {
   const authors = dat.event.tags.filter(aa.fx.is_tag_p);
   authors.push(['p',dat.event.pubkey]);
@@ -196,11 +220,11 @@ aa.kinds[20] =dat=>
 
 
 // video template
-aa.kinds[1063] = aa.kinds[20];
+aa.e.kinds[1063] = aa.e.kinds[20];
 
 
 // repost of generic note
-aa.kinds[16] =dat=>
+aa.e.kinds[16] =dat=>
 {
   const authors = dat.event.tags.filter(aa.fx.is_tag_p);
   authors.push(['p',dat.event.pubkey]);
@@ -213,7 +237,7 @@ aa.kinds[16] =dat=>
 
 
 // generic comment
-aa.kinds[1111] =dat=>
+aa.e.kinds[1111] =dat=>
 {
   const authors = dat.event.tags.filter(aa.fx.is_tag_p);
   authors.push(['p',dat.event.pubkey]);
@@ -223,19 +247,19 @@ aa.kinds[1111] =dat=>
   return note
 };
 
-aa.kinds[11] = aa.kinds[1111];
+aa.e.kinds[11] = aa.e.kinds[1111];
 
 
 // zap template
-aa.kinds[9735] = aa.kinds[1];
+aa.e.kinds[9735] = aa.e.kinds[1];
 
 
 // highlight template
-aa.kinds[9802] = aa.kinds[20];
+aa.e.kinds[9802] = aa.e.kinds[20];
 
 
 // event template for relay list
-aa.kinds[10002] =dat=>
+aa.e.kinds[10002] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
@@ -274,7 +298,7 @@ aa.kinds[10002] =dat=>
 
 
 // long-form template
-aa.kinds[30023] =dat=>
+aa.e.kinds[30023] =dat=>
 {
   const authors = dat.event.tags.filter(aa.fx.is_tag_p);
   authors.push(['p',dat.event.pubkey]);
@@ -285,7 +309,7 @@ aa.kinds[30023] =dat=>
 
 
 // video
-aa.kinds[34235] =dat=>
+aa.e.kinds[34235] =dat=>
 {
   const authors = dat.event.tags.filter(aa.fx.is_tag_p);
   authors.push(['p',dat.event.pubkey]);

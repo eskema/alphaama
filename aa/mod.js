@@ -61,7 +61,6 @@ aa.mod.load =async mod=>
     let store = 'stuff';
     let key = mod.def.id;
     mod.o = await aa.db.ops('idb',{get:{store,key}});
-    if (mod.o) mod.used = true;
     if (!mod.o && mod.old_id)
     {
       // in case the db key path changes
@@ -74,6 +73,7 @@ aa.mod.load =async mod=>
         aa.mod.save(mod);
       }
     }
+    if (mod.o) mod.used = true;
     if (!mod.o && mod.def) mod.o = mod.def;
   }
   if (mod.o && !mod.o.ls) mod.o.ls = {};
@@ -205,6 +205,7 @@ aa.mod.ui =(mod,keys)=>
     let l = mod.hasOwnProperty('mk') 
     ? mod.mk(k,v)
     : aa.mk.item(k,v);
+    if (!l) continue;
     mod.li.set(k,l);
     fastdom.mutate(()=>
     {

@@ -14,7 +14,11 @@ aa.mk.det =(cla='',id='')=>
   if (cla) l.classList.add(cla);
   if (id) l.id = id;
   let summary = l.querySelector('summary');
-  summary.append(aa.mk.l('button',{cla:'butt mark_read',clk:aa.clk.mark_read}));
+  summary.append(aa.mk.l('button',
+  {
+    cla:'butt mark_read',
+    clk:aa.clk.mark_read
+  }));
   return l 
 };
 
@@ -40,7 +44,7 @@ aa.mk.event_header =dat=>
             ref:`#${aa.fx.encode('note',id)}`,
             app:aa.mk.l('span',
             {
-              con:aa.k[kind],
+              con:aa.e.kinds_list[kind],
               dat:{kind}
             }),
             clk:aa.clk.a
@@ -130,7 +134,7 @@ aa.mk.note =dat=>
   {
     cla:'a clicker',
     ref:'#'+nid,
-    con:'k'+kind+' '+aa.k[kind],
+    con:'k'+kind+' '+aa.e.kinds_list[kind],
     clk:aa.clk.a
   });
 
@@ -157,6 +161,7 @@ aa.mk.note =dat=>
     dat:{id,pubkey,kind,created_at,stamp,seen,subs},
     app
   });
+  
 
   let stored = sessionStorage[id];
   if (stored && stored === 'tiny') note.classList.add('tiny');
@@ -210,7 +215,7 @@ aa.mk.pagination =()=>
   const style = aa.mk.l('style',
   {
     id:'e_pagination',
-    con:`.pagin #notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
+    con:`.pagin .notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
   });
 
   document.head.append(style);
@@ -340,7 +345,7 @@ aa.mk.k1 =async(s='')=>
 // Encrypted direct Message
 aa.mk.k4 =async(s='')=>
 {
-  let [pubkey,text] = s.split(aa.fx.regex.fw);
+  let [pubkey,text] = s.split(aa.regex.fw);
   let event = {kind:4,tags:[['p',pubkey]]};
   event.content = await window.nostr.nip04.encrypt(pubkey,text);
   aa.e.draft(aa.mk.dat(

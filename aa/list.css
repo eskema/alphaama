@@ -38,8 +38,10 @@
 .item > .val
 {
   color: rgb(var(--color-d));
-  margin: 0 var(--pad);
   grid-area: v;
+  margin: 0 var(--pad);
+  overflow-x: scroll;
+  white-space: pre;
 }
 
 .item .sets
@@ -157,6 +159,11 @@
 .list_filter:focus
 {
   outline: none;
+}
+
+.list_details details:not([open])
+{
+  display: inline-block;
 }
 
 html:not(.viewing) .filtering > *:not(.filtered_in)

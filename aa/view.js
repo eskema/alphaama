@@ -4,21 +4,27 @@ aa.view.clear =()=>
   if (aa.view.active)
   {
     const in_view = aa.view.in_view;
-    if (in_view) 
+    if (in_view)
     {
       in_view.classList.remove('in_view');
       if (in_view.classList.contains('note'))
       {
         if (aa.view.in_path?.length) 
-          for (const l of aa.view.in_path) aa.fx.path_rm(l);
+          for (const l of aa.view.in_path) 
+            aa.fx.path_rm(l);
       }
       delete aa.view.in_view;
       delete aa.view.id_a;
     }
   }
-  aa.view.active = false;
-  if (aa.state.l) aa.state.l.textContent = '';
-  aa.l.classList.remove('viewing','view_e','view_p');
+
+  fastdom.mutate(()=>
+  {
+    aa.view.active = false;
+    if (aa.state.l) aa.state.l.textContent = '';
+    aa.l.classList.remove('viewing','view_e','view_p');
+  });
+  
   for (const c of aa.clears) c();
 };
 
@@ -26,8 +32,17 @@ aa.view.clear =()=>
 // view force state
 aa.view.force =state=>
 {
-  if (!Object.hasOwn(state,'last')) state.last = history.state?.view || '';
-  history.pushState(state,'',location.origin+location.pathname+state.view);
+  if (!Object.hasOwn(state,'last')) 
+    state.last = 
+      history.state?.view 
+      || '';
+
+  let path = 
+    location.origin
+    + location.pathname
+    + state.view;
+  
+  history.pushState(state,'',path);
   aa.view.pop();
 };
 
@@ -37,15 +52,19 @@ aa.view.pop =()=>
 {
   let hash = location.hash;
   let search = location.search;
-  if(hash.length) [hash,search] = location.hash.split('?');
-  if(!search) search = '';
-  let no_state = !history.state || !history.state.hasOwnProperty('view')
-  || history.state === '';
-  if(no_state) aa.view.state(hash,search);
+  if (hash.length) [hash,search] = location.hash.split('?');
+  if (!search) search = '';
+  
+  let no_state = 
+    !history.state 
+    || !history.state.hasOwnProperty('view')
+    || history.state === '';
+  
+  if (no_state) aa.view.state(hash,search);
   else
   {
     aa.view.clear();
-    let title = `A<3 ${location.pathname} `;
+    let title = `${aa.aka} ${location.pathname} `;
     const state = history.state.view;
     if (state.length) 
     {
@@ -58,42 +77,49 @@ aa.view.pop =()=>
 
 
 // view replace state
-aa.view.replace =s=>
+aa.view.replace =(path='')=>
 {
-  history.state.view = s;
-  const hash = s.length ? s : '';
-  const path = location.origin+location.pathname+hash;
+  history.state.view = dis;
+  path = 
+    location.origin
+    +location.pathname
+    +path;
   history.replaceState(history.state,'',path);
 };
 
 
 // view resolve state
-aa.view.resolve =(s,search)=>
+aa.view.resolve =(path,search)=>
 {
-  if (s.startsWith('#')) s = s.slice(1);
   let has_view = false;
-  for (const v in aa.view.ls)
+  if (path.startsWith('#')) path = path.slice(1);
+  
+  for (const view in aa.view.ls)
   {
-    if (s.startsWith(v)) 
+    if (path.startsWith(view))
     {
       has_view = true;
-      setTimeout(()=>{aa.view.ls[v](s)},200);
+      setTimeout(()=>{ aa.view.ls[view](path) },200);
       break;
     }
   }
-  if (!has_view) aa.log('no view for '+s);
+  if (!has_view) aa.log('no view for '+path);
 };
 
 
 // view state or go back if same state
-aa.view.state =(s='',search='')=>
+aa.view.state =(string='',search='')=>
 {
-  s.trim();
-  if (search?.length) search = s.length
-  ? `?${search}`
-  : search;
-  let view = `${s}${search}`;
-  if (view.length && !view.startsWith('#')) view = `#${view}`;
+  string = string.trim();
+  if (search?.length) 
+    search = string.length ? 
+      `?${search}`
+      : search;
+
+  let view = `${string}${search}`;
+  if (view.length && !view.startsWith('#'))
+    view = `#${view}`;
+  
   let last;
   if (!history.state || history.state.view !== view)
   {
@@ -107,15 +133,18 @@ aa.view.state =(s='',search='')=>
 // update title and state ui
 aa.view.tits =(title,state)=>
 {
-  if (title) document.title = title;
-  if (state && aa.state.l) fastdom.mutate(()=>{aa.state.l.textContent = state});
+  fastdom.mutate(()=>
+  {
+    if (title) document.title = title;
+    if (state && aa.state.l) aa.state.l.textContent = state
+  });
 };
 
 
 // update view
-aa.view.upd =s=>
+aa.view.upd =path=>
 {
-  aa.view.replace(s);
+  aa.view.replace(path);
   aa.view.resolve(history.state.view);
 };
 

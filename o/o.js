@@ -82,7 +82,7 @@ aa.o.add =(s='')=>
   {
     for (const i of as)
     {
-      let [key,newValue] = i.split(aa.fx.regex.fw);
+      let [key,newValue] = i.split(aa.regex.fw);
       if (key && newValue)
       {
         let oldValue = localStorage[key];

@@ -24,18 +24,40 @@ aa.log_details =(id,summary,key,con)=>
   });
 };
 
-// mark log as read
-aa.log_read =async l=>
+
+aa.log_key =(key,value)=>
 {
-  fastdom.measure(()=>
+  let item = aa.mk.l('p',{con:value});
+  let element = aa.el.get(key);
+  if (!element)
   {
-    l.blur();
-  });
-  fastdom.mutate(()=>
+    element = aa.mk.l('details',
+    {
+      cla: 'base',
+      app: [aa.mk.l('summary',{con:key}),' ',item]
+    });
+    aa.el.set(key,element);
+    // if (!l) return details;
+    // summary.dataset.count = 1;
+    // details.append(l);
+    // return details
+
+    // element = aa.mk.details(key,item,0,'base');
+    // aa.el.set(key,element);
+    // aa.log(element);
+  }
+  let parent = element.parentElement;
+  if (parent)
   {
-    l.classList.remove('is_new');
-    l.classList.add('just_added');
-  })
+    fastdom.mutate(()=>
+    {
+      element.append(item);
+      parent.parentElement.lastChild.after(parent);
+      parent.classList.add('is_new')
+    });
+  } 
+  else aa.log(element);
+  aa.fx.count_upd(element.firstChild);
 };
 
 
@@ -46,29 +68,44 @@ aa.log_parse =(s='')=>
 };
 
 
-// mark logs as read
-aa.logs_read =async e=>
+aa.fx.do_all =(element,selector,fun)=>
 {
-  let ls = [];
-  let j_a = aa.logs.querySelectorAll('.just_added');
-  for (const i of j_a) i.classList.remove('just_added');
-  if (e) 
-  {
-    let dis = e.target?.classList.contains('is_new') ? e.target 
-    : e.target.closest('.l.is_new');
-    if (dis) ls.push(dis);
-    e.stopPropagation();
-  }
-  else ls = aa.logs.querySelectorAll('.l.is_new');
-  if (ls.length) for (const l of ls) aa.log_read(l);
+  if (!element) element = document;
+  let items = element?.querySelectorAll(selector);
+  if (items?.length) 
+    for (const item of items) fun(item)
+}
+
+
+// mark logs as read
+aa.fx.read_all =async(element)=>
+{
+  // let ls = [];
+  aa.fx.do_all(element,'.is_recent',i=>{i.classList.remove('is_recent')})
+  aa.fx.do_all(element,'.is_new',aa.log_read)
+  // let items = element?.querySelectorAll(selector);
+  // if (items.length) 
+  //   for (const item of items) 
+  //     fun(item)
+  //     // i.classList.remove('is_recent');
+
+  // let new_items = element?.querySelectorAll('.is_new');
+  // if (new_items.length) 
+  //   for (const item of ls) 
+  //     aa.log_read(item);
 };
 
 
 // mark logs as read
 aa.logs_clear =async s=>
 {
-  let ls = document.querySelectorAll('#l .l:not(.mod)');
-  for (const l of ls) l.remove();
+  setTimeout(()=>
+  {
+    fastdom.mutate(()=>{aa.logs.textContent = ''});
+    aa.log(aa.mk.status(),0,0);
+  },200)
+  
+  
 };
 
 

@@ -1,9 +1,9 @@
-#p
+.section_p
 {
   grid-area: p;
 }
 
-#authors
+.authors
 {
   padding-left: var(--pad-l);
   pointer-events: none;
@@ -38,19 +38,19 @@
   padding-bottom: var(--line);
 }
 
-.view_p #authors
+.view_p .authors
 {
   padding-left: 0;
 }
 
 .view_p .profile:not(.in_view),
-.view_e #authors,
-#p:not(.expanded) .profile:not(.in_view)
+.view_e .authors,
+.section_p:not(.expanded) .profile:not(.in_view)
 {
   display: none;
 }
 
-#p.expanded .profile:last-child
+.section_p.expanded .profile:last-child
 {
   margin-bottom: var(--line);
 }

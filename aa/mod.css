@@ -155,6 +155,26 @@
   margin: var(--padm) 0;
 }
 
+.mod_details[open],
+.item > .mod_details[open]
+{
+  margin-bottom: var(--pad) 0;
+  /* border-top: 1px dashed rgb(var(--color-c)); */
+  margin-bottom: var(--line) 0;
+}
+
+.mod_details[open] > summary,
+.item > .mod_details[open] > summary
+{
+  font-size: var(--font-size);
+  padding: var(--line) 0;
+}
+
+.mod details.base[open]
+{
+  background: rgb(var(--color-a));
+}
+
 .mod > .butt
 {
   font-size: var(--font-size);

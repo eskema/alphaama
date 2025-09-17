@@ -143,6 +143,7 @@ aa.clk.quote =async e=>
   {
     id:dat.event.id,
     author:dat.event.pubkey,
+    pubkey:dat.event.pubkey,
     relays: dat.seen.slice(0,3)
   };
   let encoded;
@@ -281,7 +282,7 @@ aa.clk.yolo =async e=>
       dat.clas = aa.fx.a_rm(dat.clas,['draft']);
       aa.fx.a_add(dat.clas,['not_sent']);
       let relays = aa.r.w;
-      relays = aa.r.tagged(dat.event,relays);
+      relays = aa.e.inboxes(dat.event,relays);
       aa.r.send_event({event:dat.event,relays}); //aa.r.broadcast(dat.event,relays);
     }
   })

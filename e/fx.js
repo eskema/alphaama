@@ -165,7 +165,7 @@ aa.fx.merge =(dis,dat)=>
 aa.fx.hashtags =(string='')=>
 {
   const tags = [];
-  const hashtags = string.match(aa.fx.regex.hashtag);
+  const hashtags = string.match(aa.regex.hashtag);
   if (hashtags) 
     for (const h of [...new Set(hashtags)]) 
       tags.push(['t',h.slice(1).toLowerCase()])
@@ -179,7 +179,7 @@ aa.fx.hashtags =(string='')=>
 aa.fx.mentions =async(string='')=>
 {
   const mentions = [];
-  const matches = [...string.matchAll(aa.fx.regex.nostr)];
+  const matches = [...string.matchAll(aa.regex.nostr)];
   for (const match of matches)
   {
     let dis = match[0].slice(6);

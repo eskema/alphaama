@@ -21,7 +21,11 @@ aa.p =
     '/p/mk.js?v='+aa_version,
     '/p/view.js?v='+aa_version,
   ],
-  styles:['/p/p.css'],
+  styles:
+  [
+    '/p/author.css',
+    '/p/p.css',
+  ],
   butts:
   {
     pa:
@@ -471,7 +475,7 @@ aa.p.load =async()=>
   );
   // oto complete profiles
   aa.cli.on_upd.push(mod.oto);
-  aa.p.l = aa.mk.l('div',{id:'authors'});
+  aa.p.l = aa.mk.l('div',{cla:'authors'});
   aa.mod.help_setup(mod);
 };
 
@@ -683,7 +687,7 @@ aa.p.process_k3_tags_upd =(event)=>
     let p = aa.db.p[pubkey];
     if (!p)
     {
-      p = aa.db.p[pubkey] = aa.p.p(pubkey);
+      p = aa.p.p(pubkey);
       // console.log('no p for',pubkey);
       // continue;
       upd = true;
@@ -724,13 +728,9 @@ aa.p.process_k3_tags_upd =(event)=>
   let op = aa.db.p[event.pubkey];
   aa.p.save(op);
   
-  if (is_u) // || aa.p.following(event.pubkey))
+  if (is_u)
   {
-    setTimeout(()=>
-    {
-      aa.p.load_profiles(op.follows)
-      // for (const pubkey of missing) aa.e.miss_set('p',pubkey);
-    },420)
+    setTimeout(()=>{ aa.p.load_profiles(op.follows) },420)
   }
 };
 

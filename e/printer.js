@@ -24,12 +24,14 @@ aa.e.append_as_root =note=>
     {
       let last = [...aa.e.l.children]
         .find(i=> note.dataset.stamp > i.dataset.stamp)
-        || null;
-
-      if (!note.parentElement
-      || !('moveBefore' in Element.prototype))
-        aa.e.l.insertBefore(note,last);
-      else aa.e.l.moveBefore(note,last);
+        ; // || null;
+      
+      aa.fx.move(note,last,aa.e.l)
+      // if (!note.parentElement
+      // || !('moveBefore' in Element.prototype))
+      //   aa.e.l.insertBefore(note,last);
+      // else aa.e.l.moveBefore(note,last);
+      
     }
   });
 
@@ -243,7 +245,7 @@ aa.e.note_rm =note=>
   aa.em.delete(note.dataset.id);
   if (note.dataset.id_a) aa.em_a.delete(note.dataset.id_a);
   note.remove();
-  aa.fx.count_upd(aa.el.get('butt_e'),false);
+  aa.fx.count_upd(aa.el.get('butt_section_e'),false);
 };
 
 
@@ -263,7 +265,7 @@ aa.e.orphan =(dat,note,tag)=>
 
 
 // print event
-aa.e.print =dat=>
+aa.e.print =async dat=>
 {
   // console.log(dat);
   const id = aa.e.em(dat);
@@ -307,7 +309,7 @@ aa.e.print =dat=>
     if (dat.id_a) aa.e.refs(dat.id_a);
   },0);
   
-  setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_e')) },0);
+  setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_section_e')) },0);
 };
 
 
@@ -392,20 +394,25 @@ aa.e.upd_note_path =(element)=>
   for (; element&&element!==document; element=element.parentNode)
   {
     if (!element.classList.contains('note')) continue;
-    if (element.dataset.stamp < stamp && !is_u) 
+    
+    last = element;
+
+    if (element.dataset.stamp < stamp) 
     {
       element.dataset.stamp = stamp;
       stamped = true;
     }
     else stamped = false;
 
-    if (element.querySelector('.note.is_new')) 
-    element.classList.add('haz_new');
+    if (element.querySelector('.note.is_new'))
+      element.classList.add('haz_new');
+
     aa.e.replies_summary_upd(element);
-    last = element;
+    
+    
   }
-  // update 
-  if (stamped && last?.parentElement === aa.e.l) 
+  // update root post order
+  if (!is_u && stamped && last?.parentElement === aa.e.l)
     aa.e.append_as_root(last);
 
   setTimeout(()=>{aa.clk.time({target})})

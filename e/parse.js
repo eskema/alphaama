@@ -23,7 +23,7 @@ aa.parse.nostr =match=>
     let a = m.split('1');
     if (a[1])
     {
-      let mm = a[1].match(aa.fx.regex.bech32);
+      let mm = a[1].match(aa.regex.bech32);
       if (mm[0] && mm.index === 0)
       {
         let s = a[0] + '1' + mm[0];

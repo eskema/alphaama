@@ -89,12 +89,12 @@ aa.mk.k9321 =async(string='')=>
   const err =str=>{aa.log('mk.k9321: '+str)};
   let amount,pubkey,memo,id;
   
-  [amount,string] = string.split(aa.fx.regex.fw);
-  if (!amount) { err('no amount'); return}
-  [pubkey,string] = s.split(aa.fx.regex.fw);
-  if (!aa.fx.is_key(pubkey)) { err('no pubkey'); return};
+  [amount,string] = string.split(aa.regex.fw);
+  if (!amount) { err('no amount'); return }
+  [pubkey,string] = s.split(aa.regex.fw);
+  if (!aa.fx.is_key(pubkey)) { err('no pubkey'); return };
   [memo,id] = aa.fx.split_str(string);
-  if (id && !aa.fx.is_key(id)) { err('invalid id'); return};
+  if (id && !aa.fx.is_key(id)) { err('invalid id'); return };
   await aa.e.get(id);
 
   let p = await aa.p.get(pubkey);
@@ -116,10 +116,10 @@ aa.mk.k9321 =async(string='')=>
     }
   }
   
-  let [wallnut,w] = await aa.w.get_active();
-  if (!wallnut) {err('no walLNut');return}
+  let [active,w] = await aa.w.get_active();
+  if (!active) {err('no active walLNut');return}
   
-  let event = 
+  let event = aa.e.normalise(
   {
     kind:9321,
     content:memo,
@@ -128,13 +128,13 @@ aa.mk.k9321 =async(string='')=>
       ['amount',amount],
       ['u',w.url],
     ]
-  };
+  });
   if (id?.length) event.tags.push(aa.fx.tag_e(id));
   let opts = {pubkey:p2pk};
-  const {keep,send} = await wallnut.send(parseInt(amount),w.proofs,opts);
+  const {keep,send} = await active.send(parseInt(amount),w.proofs,opts);
   
   event.tags.push(...send.map(i=>['proof',JSON.stringify(i)]));
-  aa.e.finalize(aa.e.normalise(event));
+  aa.e.finalize(event);
 
   aa.w.tx_out(keep,w.url);
 };
@@ -187,3 +187,36 @@ aa.actions.push(
     exe:aa.mk.k17375
   },
 );
+
+
+aa.mk.w_mints =(key,value)=>
+{
+  let item = aa.mk.l('li',{cla:`item item_${key}`});
+  let df = new DocumentFragment();
+  let total = 0;
+  for (const url in value)
+  {
+    let dis = value[url];
+
+    let proofs = dis.proofs
+      .sort((a,b)=>a.amount < b.amount ? 1 : -1)
+      .map(ls=>aa.mk.details(ls.amount,aa.mk.ls({ls}),false,'mod_details'));
+
+    let proofs_list = aa.mk.l('p',{cla:'list_details'});
+    for (const proof of proofs) proofs_list.append(proof,' ')
+    total = total + dis.amount;
+    let amount = `${dis.amount} ${aa.fx.plural(dis.amount,'sat')}`;
+    let con = `${amount} in ${url}`;
+    df.append(
+      aa.mk.details(
+        con,
+        proofs_list,
+        false,
+        'base'
+      )
+    )
+  }
+  item.append(aa.mk.details(`${total}`,df,false,'mod_details'));
+  return item
+  // return aa.mk.item(key,value)
+}

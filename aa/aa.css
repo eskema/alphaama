@@ -451,7 +451,7 @@ img:not([src]) {
 
 /* #region    header */
 
-#header
+.aa_header
 {
   align-items: center;
   display: grid;
@@ -469,7 +469,7 @@ img:not([src]) {
   user-select: none;
 }
 
-#state
+.aa_state
 {
   display: grid;
   font-size: 1rem;
@@ -481,7 +481,7 @@ img:not([src]) {
   overflow: scroll;
 }
 
-#state::before
+.aa_state::before
 {
   content: attr(data-pathname);
   opacity: .5;
@@ -489,98 +489,40 @@ img:not([src]) {
 
 /* #endregion header */
 
-/* #region    dialog */
+/* #region created_at */
 
-#dialog
+.created_at 
 {
-  background: rgb(var(--color-b));
-  border: none;
-  color: rgb(var(--color-d));
-  display: grid;
-  max-height: 100vh; /*calc(var(--media-max-height) + var(--line));*/
-  max-width: 100vw;
-  padding: 0;
+  cursor: pointer;
+  display: inline-grid;
+  grid-gap: 0 var(--pad);
+  grid-template-areas: "timestamp title elapsed";
+  justify-items: end;
+  white-space: pre;
+  word-break: keep-all;
 }
 
-#dialog[open]::backdrop
+.created_at::before
 {
-  background: black;
-  opacity: .618;
-}
-
-#dialog .wrap
-{
-  padding: var(--line) 0;
-}
-
-#dialog_options
-{
-  background: rgb(var(--color-b));
-  bottom: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-gap: var(--pad);
-  justify-content: center;
-  justify-items: center;
-  margin: 0;
-  padding: var(--pad);
-  position: sticky;
-  position: -webkit-sticky;
-}
-
-#dialog[title]::before
-{
-  background: rgb(var(--color-b));
-  color: rgb(var(--color-main));
   content: attr(title);
-  display: block;
-  padding: var(--pad) 0;
-  position: sticky;
-  text-align: center;
-  top: 0;
+  grid-area: title;
 }
 
-.removed_tags
+.created_at::after 
 {
+  content: "~" attr(data-elapsed);
   font-size: var(--font-size-s);
-  margin: var(--line) auto;
-  padding-left: var(--line);
+  grid-area: elapsed;
 }
 
-.removed_tags .disabled
+.created_at > *
 {
-  text-decoration: line-through;
+  grid-area: elapsed;
 }
 
-#dialog .img_modal
-{
-  cursor: zoom-out;
-  justify-self: center;
-  margin: 0;
-  max-width: 100%;
-  padding: 0;
-}
+/* #endregion created_at */
 
-#dialog .img_modal.contained
-{
-  max-height: var(--media-max-height);
-}
 
-#dialog .img_modal.qr
-{
-  padding: var(--line);
-  max-height: 100vh;
-}
-
-#dialog > button
-{
-  padding-bottom: var(--pad);
-  padding-top: var(--padm);
-  position: sticky;
-  top: 0;
-}
-
-/* #endregion dialog */
 
 @media screen and (min-width: 1025px) 
 {

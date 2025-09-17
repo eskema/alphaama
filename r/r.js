@@ -333,14 +333,14 @@ aa.r.get_filter =async filter=>
 {
   let id = 'get_filter_'+aa.fx.rands();
 
-  return new Promise((resolve,reject)=>
+  return new Promise(resolve=>
   {
-    const abort = setTimeout(()=>{reject()},6666);
+    const abort = setTimeout(()=>{resolve(false)},6666);
     
     aa.r.temp.set(id,data=>
     {
       clearTimeout(abort);
-      setTimeout(()=>{aa.r.temp.delete(id)},100);
+      aa.r.temp.delete(id);
       resolve(data)
     });
 
@@ -579,7 +579,7 @@ aa.r.mk =(k,v)=>
   }
   let info_text = `${id} info ${k}`;
   let info_butt = aa.mk.butt_action(info_text,'fetch info','relay_info');
-  let info = aa.mk.details(k,info_butt,0,'info');
+  let info = aa.mk.details(k,info_butt,0,'info mod_details');
   if (v.info) info.append(aa.mk.ls({ls:v.info}));
   else info.classList.add('empty');
 
@@ -723,20 +723,6 @@ aa.r.setrm =(s="")=>
     }
   }
   aa.mod.save(mod);
-};
-
-
-// add relays from p tagged users 10002 'read'
-aa.r.tagged =(event,relays=[])=>
-{
-  let pubs = event.tags.filter(aa.fx.is_tag_p).map(i=>i[1]);
-  for (const x of pubs)
-  {
-    let read_relays = aa.fx.in_set(aa.db.p[x].relays,'read');
-    let ab = aa.fx.a_ab(relays,read_relays);
-    if (!ab.inc.length < 3) relays.push(...ab.exc.slice(0,3 - ab.inc.length))
-  }
-  return new Set(relays);
 };
 
 

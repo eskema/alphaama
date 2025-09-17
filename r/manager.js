@@ -412,16 +412,19 @@ const on_auth =async(challenge,url)=>
   relay.challenge = challenge;
 
   let unsigned = NostrTools.nip42.makeAuthEvent(url,challenge);
-  let dis = {};
+  
   
   if (!manager.relays.get(url)?.sets.includes('auth'))
   {
     // console.log(relay);
-    let signed = NostrTools.finalizeEvent(unsigned,relay.key);
-    if (signed) 
+    let event = NostrTools.finalizeEvent(unsigned,relay.key);
+    if (event)
     {
-      dis.json = JSON.stringify(['AUTH',signed]);
+      dat = mk_dat({event});
+      manager.events.set(event.id,dat);
+      let dis = {json:JSON.stringify(['AUTH',event])};
       relay.worker.postMessage(['auth',dis]);
+      
     }
   }
   else 

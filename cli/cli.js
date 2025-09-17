@@ -43,30 +43,27 @@ aa.cli.act =s=>
 
 
 // add action to input
-aa.cli.add =s=>
+aa.cli.add =string=>
 {
   let text = aa.cli.t.value;
-  if (!text.length) 
-  {
-    aa.cli.v(localStorage.ns+' '+s);
-    return
-  }
   let ns = localStorage.ns;
-  if (!text.startsWith(ns)
-  && window.confirm('replace input with command?'))
+  let dis = `${ns} ${string}`;
+  
+  if (!text.length || (!text.startsWith(ns) 
+  && window.confirm('replace input with command?')))
   {
-    aa.cli.v(localStorage.ns+' '+s);
+    aa.cli.v(dis);
     return
   }
-  let [act,rest] = s.split(aa.fx.regex.fw);
-  let [cmd,v] = rest.split(aa.fx.regex.fw);
-  let fw = ns+' '+act+' '+cmd+' ';
-  if (text.startsWith(fw))
+  
+  let [act,rest] = string.split(aa.regex.fw);
+  let [cmd,value] = rest.split(aa.regex.fw);
+  if (text.startsWith(`${ns} ${act} ${cmd} `))
   {
-    aa.cli.v(`${text}, ${v}`);
+    aa.cli.v(`${text}, ${value}`);
     return
   }
-  aa.cli.v(localStorage.ns+' '+s);
+  aa.cli.v(dis);
 };
 
 
@@ -85,7 +82,7 @@ aa.cli.collapse =e=>
   {
     aa.l.classList.remove('cli_expanded');
     aa.cli.t.blur();
-    aa.logs_read();
+    aa.fx.read_all(aa.logs);
   });
 };
 
@@ -107,11 +104,11 @@ aa.cli.exe =async(s='')=>
     {
       let act;
       let cut;
-      let cmd = ac.split(aa.fx.regex.fw);
+      let cmd = ac.split(aa.regex.fw);
       let actions = aa.actions.filter(o=>o.action[0] === cmd[0]);
       if (actions.length > 1)
       {
-        let sub_cmd = cmd[1].split(aa.fx.regex.fw);
+        let sub_cmd = cmd[1].split(aa.regex.fw);
         let sub_actions = actions.filter(o=>o.action[1] === sub_cmd[0]);
         if (sub_actions.length)
         {
@@ -123,7 +120,7 @@ aa.cli.exe =async(s='')=>
       {
         act = actions[0];
         let sub = actions[0].action.length > 1;
-        if (sub) cut = cmd[1].split(aa.fx.regex.fw)[1];
+        if (sub) cut = cmd[1].split(aa.regex.fw)[1];
         else cut = cmd[1];
       }
       if (act && 'exe' in act)
@@ -148,7 +145,6 @@ aa.cli.expand =e=>
     aa.l.classList.add('cli_expanded');
     
     aa.cli.upd();
-    // aa.logs_read();
     aa.fx.scroll(aa.logs.lastChild);
     aa.cli.foc();
   });
@@ -308,7 +304,7 @@ aa.cli.mk =()=>
   );
   aa.cli.l.append(
     aa.cli.t,
-    aa.mk.section('l',1,aa.logs),
+    aa.mk.section({id:'l',element:aa.logs,expanded:true}),
     aa.cli.oto,
     butts,
   );

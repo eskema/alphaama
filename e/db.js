@@ -5,20 +5,20 @@ aa.em_a = new Map();
 // get n events from database
 // default order is descending (newest),
 // use the option 'asc' for ascending order (oldest)
-aa.db.some =async s=>
-{
-  const a = s.split(' ');
-  const n = a.shift();
-  const d = a.shift();
-  const some = 
-  {
-    n: n ? parseInt(n) : 1,
-    direction: (d && d==='asc') ? 'next' : 'prev'
-  };
-  const events = await aa.db.ops('idb',{some});
-  for (const dat of events) aa.e.print_q(dat); 
-  return `${localStorage.ns} db some ${some.n}`;
-};
+// aa.db.some =async s=>
+// {
+//   const a = s.split(' ');
+//   const n = a.shift();
+//   const d = a.shift();
+//   const some = 
+//   {
+//     n: n ? parseInt(n) : 1,
+//     direction: (d && d==='asc') ? 'next' : 'prev'
+//   };
+//   const events = await aa.db.ops('idb',{some});
+//   for (const dat of events) aa.e.print_q(dat); 
+//   return `${localStorage.ns} db some ${some.n}`;
+// };
 
 
 // define which events are to be stored
@@ -75,11 +75,11 @@ aa.db.upd_e =async dat=>
 
 // db actions
 aa.actions.push(
-  {
-    action:['db','some'],
-    required:['<number>'],
-    optional:['asc'],
-    description:'request a number of events from db',
-    exe:aa.db.some
-  }
+  // {
+  //   action:['db','some'],
+  //   required:['<number>'],
+  //   optional:['asc'],
+  //   description:'request a number of events from db',
+  //   exe:aa.db.some
+  // }
 );

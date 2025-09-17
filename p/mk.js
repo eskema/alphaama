@@ -154,7 +154,12 @@ aa.mk.metadata_picture =(cla,src,p)=>
   else return aa.mk.l('p',{cla,con:src});
 };
 
-aa.mk.metadata_website =(k,v)=> aa.mk.link(v);
+aa.mk.metadata_website =(k,v)=> 
+{
+  let link = aa.mk.link(v);
+  link.classList.remove('content_link');
+  return link
+};
 
 
 // make p link
@@ -201,7 +206,7 @@ aa.mk.profile =p=>
     aa.fx.color(p.pubkey,profile);
     profile.append(aa.mk.profile_header(p),' ');
     aa.p.l.append(profile);
-    setTimeout(()=>{aa.fx.count_upd(aa.el.get('butt_p'))},200);
+    setTimeout(()=>{aa.fx.count_upd(aa.el.get('butt_section_p'))},200);
   }
   return profile
 };

@@ -1,0 +1,183 @@
+.replies
+{
+  grid-area: replies;
+}
+
+.note:not(.in_path) > .replies.expanded,
+.note.root:not(.in_path) > .replies,
+.note.in_view > .replies,
+.note.in_view .replies.expanded,
+.note.haz_new_reply > .replies,
+.note.haz_reply > .replies,
+.note.is_new > .replies
+{
+  padding-left: var(--padm);
+}
+
+.replies:not(.expanded) .note:not(.haz_new_reply):not(.is_new) > .replies,
+.note.in_view .replies:not(.expanded) .note:not(.haz_new_reply) > .replies,
+.haz_new:not(.haz_new_reply):not(.haz_new_reply)[data-level="11"] .replies,
+.view_e .in_path:not(.in_view) > .replies
+{
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
+html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
+{
+  display: none;
+}
+
+.replies > summary
+{
+  background-color: rgb(var(--color-b));
+  color: rgb(var(--color-d));
+  display: none;
+  font-size: var(--font-size-s);
+  grid-template-columns: 1fr auto;
+  line-height: 1.5rem;
+  position: relative;
+}
+
+.haz_reply > .replies > summary,
+.root.haz_reply > .replies > summary,
+.in_view.haz_reply > .replies > summary,
+.haz_new_reply > .replies > summary
+{
+  display: grid;
+}
+
+.replies:not(.expanded) .note:not(.haz_new_reply) > .replies > summary
+{
+  display: none;
+}
+
+.in_view > .replies > summary
+{
+  position: sticky;
+  top: 1rem;
+  z-index: 100;
+}
+
+.in_view > .replies > .note > .replies > summary
+{
+  position: sticky;
+  top: 3.5rem;
+  z-index: 4;
+}
+
+.root:not(.in_view) > .replies > summary,
+.in_view > .replies .replies > summary
+{
+  position: sticky;
+  top: 1rem;
+  transform: translateX(-1px);
+}
+
+.root:not(.in_view) > .replies > summary
+{
+  z-index: 6;
+}
+
+.in_view > .replies .replies > summary
+{
+  position: sticky;
+  top: 3.5rem;
+}
+
+.replies > summary::before
+{
+  display: none;
+}
+
+.replies > summary::after
+{
+  content: "+";
+  margin: 0 var(--pad);
+}
+
+.replies[open] > summary::after
+{
+  content: "-";
+}
+
+.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
+.view_e .in_path:not(.in_view) > .replies[open] > summary,
+.haz_solo .haz_reply:not(.in_path) > .replies[open] > summary,
+.haz_solo .root:not(.in_view):not(.in_path) > .replies > summary
+{
+  display: none;
+}
+
+.replies.expanded
+{
+  margin-bottom: var(--padm);
+}
+
+.replies.expanded > summary .mark_read::before
+{
+  content: "// ";  
+}
+
+.replies:not(.expanded) > summary .mark_read
+{
+  color: rgb(var(--color-no));
+  text-align: left
+}
+
+.replies:not(.expanded) > summary .mark_read::before
+{
+  content: "/* ";  
+}
+
+.replies:not(.expanded) > summary .mark_read::after
+{
+  content: " read */";  
+}
+
+.replies:not([open]) > summary .mark_read::before
+{
+  content: "!<-- ";  
+}
+
+.replies:not([open]) > summary .mark_read::after
+{
+  content: " hidden -->";  
+}
+
+.replies:not([open]) > summary .mark_read
+{
+  pointer-events: none;
+}
+
+.in_view > .replies > summary .mark_read
+{
+  text-align: left;
+}
+
+
+@media screen and (min-width: 1025px) 
+{
+  .mark_read:hover
+  {
+    background-color: rgba(var(--color-a),1);
+    text-align: left;
+  }
+
+  .replies:not(.expanded) > summary .mark_read:hover::after,
+  .mark_read:hover::after
+  {
+    content: " mark read";
+  }
+}
+
+@media screen and (max-width: 768px) 
+{
+  .note > .replies > summary
+  {
+    line-height: 3rem;
+    opacity: 1;
+  }
+}

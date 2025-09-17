@@ -111,10 +111,14 @@ aa.e.miss_to =async()=>
   }
   if (!missing) return;
   // console.trace(missing);
-  for (const id of missing)
+  setTimeout(()=>
   {
-    aa.e.miss_set('e',id,aa.temp.miss_print.get(id));
-  }
+    for (const id of missing)
+    {
+      if (!aa.em.has(id)) aa.e.miss_set('e',id,aa.temp.miss_print.get(id));
+    }
+  },1000);
+  
 };
 
 
@@ -175,6 +179,7 @@ aa.e.miss_get =async type=>
     let {relays,keys} = aa.e.miss_type(type);
     if (!relays) return;
     let delay = 0;
+    keys = keys.filter(i=>!aa.em.has(i));
     let chunks = aa.fx.chunks(keys,420);
     for (const chunk of chunks)
     {
@@ -187,7 +192,7 @@ aa.e.miss_get =async type=>
         case 'p': 
           filters = [{authors:chunk,kinds:[0,10002]}];
           break;
-        case 'e': 
+        case 'e':
           filters = [{ids:chunk}];
           break;
       }

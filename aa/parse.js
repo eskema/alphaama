@@ -36,7 +36,7 @@ aa.parser =(parse_id,s,is_trusted,regex_id)=>
 {
   const df = new DocumentFragment();
   if (!regex_id) regex_id = parse_id;
-  const matches = [...s.matchAll(aa.fx.regex[regex_id])];
+  const matches = [...s.matchAll(aa.regex[regex_id])];
   let index = 0;
   for (const match of matches) 
   {

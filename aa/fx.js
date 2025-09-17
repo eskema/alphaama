@@ -6,21 +6,6 @@ fun stuff
 */
 
 
-// return array with items in both arrays
-// and array with items that don't
-aa.fx.a_ab =(a,b)=>
-{
-  let inc = [];
-  let exc = [];
-  for (const i of b)
-  {
-    if (a.includes(i)) inc.push(i);
-    else exc.push(i)
-  }
-  return {inc,exc}
-};
-
-
 // checks if array includes items
 // adds them if not and returns if anything was added
 aa.fx.a_add =(a,items_to_add)=>
@@ -162,14 +147,14 @@ aa.fx.clz =x=>
 
 
 // update counter
-aa.fx.count_upd =(l,pos=true)=>
+aa.fx.count_upd =(element,pos=true)=>
 {
-  if (!l) return;
+  if (!element) return;
   fastdom.mutate(()=>
   {
-    if (!l.dataset.count) l.dataset.count = 0;
-    if (pos) l.dataset.count++;
-    else l.dataset.count--
+    if (!element.dataset.count) element.dataset.count = 0;
+    if (pos) element.dataset.count++;
+    else element.dataset.count--
   })
 };
 
@@ -224,7 +209,7 @@ aa.fx.decode =s=>
 // decrypt nip4/44
 aa.fx.decrypt =async(s='')=>
 {
-  let [text,pubkey] = s.split(aa.fx.regex.fw);
+  let [text,pubkey] = s.split(aa.regex.fw);
   if (text) text = text.trim();
   if (!pubkey) pubkey = aa.u.p.pubkey;
   if (aa.fx.is_nip4(text)) return await window.nostr.nip04.decrypt(pubkey,text);
@@ -404,8 +389,23 @@ aa.fx.intersect =(o={},a=[],n=2)=>
 };
 
 
+aa.fx.move =(element,before=null,parent=false)=>
+{
+  if (!parent) parent = element.parentElement;
+  if (!parent) return;
+  if (!element.parentElement
+  || element.parentElement !== parent
+  || !('moveBefore' in Element.prototype)
+  )
+    parent.insertBefore(element,before);
+  else 
+    parent.moveBefore(element,before);
+};
+
+
+
 // is hexadecimal
-aa.fx.is_hex =string=> aa.fx.regex.hex.test(string);
+aa.fx.is_hex =string=> aa.regex.hex.test(string);
 
 
 // is a valid nostr key
@@ -570,22 +570,6 @@ aa.fx.readme =async(path,o={})=>
 };
 
 
-// reusable regex
-aa.fx.regex =
-{
-  get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
-  get hashtag(){ return /(\B[#])[\w_-]+/g },
-  get hex(){ return /^[A-F0-9]+$/i },
-  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
-  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
-  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
-  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
-  get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
-  get str(){ return /"([^"]+)"/ }, // text in quotes ""
-  get fw(){ return /(?<=^\S+)\s/ }, // first word
-};
-
-
 // scroll with delay
 aa.fx.scroll =async(l,options={})=>
 {
@@ -701,7 +685,7 @@ aa.fx.split_str =(s='')=>
 {
   if (s.startsWith('"" ')) return ['',s.slice(3)];
   else if (s.startsWith('""')) return ['',s.slice(2)];
-  let dis = s?.match(aa.fx.regex.str);
+  let dis = s?.match(aa.regex.str);
   if (dis && dis.length) return [dis[1],s.slice(dis.index+dis[0].length).trim()]
   return [s]
 };

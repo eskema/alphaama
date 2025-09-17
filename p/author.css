@@ -1,0 +1,75 @@
+.author
+{
+  color: rgb(var(--color-d));
+  grid-template-areas: "img name nip5 flw";
+  line-height: 1rem;
+  overflow-x: scroll;
+  text-decoration: none;
+  user-select: none;
+}
+
+.author .name
+{
+  color: rgb(var(--color-e));
+  grid-area: name;
+  padding: 0 var(--padm);
+}
+
+.author .name.empty::before
+{
+  content: attr(title)!important;
+}
+
+.author.fu .name
+{
+  color: rgb(var(--color-f));
+}
+
+.author::before
+{
+  content: "";
+}
+
+.author.has-picture img,
+.author::before
+{
+  background: rgb(var(--c));
+  display: block;
+  grid-area: img;
+  height: 1rem; 
+  object-fit: cover;
+  padding: 0;
+  pointer-events: none;
+  width: 1rem;
+}
+
+.author::after
+{
+  align-self: center;
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-d));
+  content: attr(data-followers);
+  display: grid;
+  grid-area: flw;
+  padding: 0 var(--padm);
+}
+
+.author.fu::after
+{
+  color: rgb(var(--color-sad));
+}
+
+.author.is_u::after
+{
+  color: rgb(var(--color-yes));
+}
+
+.author.is_mf::after
+{
+  color: rgb(var(--color-no));
+}
+
+.author.is_bff.fu::after
+{
+  display: none;
+}

@@ -109,7 +109,10 @@ aa.e.render_encrypted =async(content,dat)=>
   if (aa.u.o.ls.pubkey === p_x)
   {
     content.classList.add('for_u');
-    content.append(aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt'));
+    content.append(
+      paragraph,' ',
+      aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt')
+      );
   }
 };
 
@@ -139,34 +142,26 @@ aa.e.render_highlight =async(content,dat,o={})=>
         let relay = aa.fx.url(h_s[2])?.href;
         if (relay) data.relays = [relay];
         let naddr = aa.fx.encode('naddr',data);
-        // let l = aa.mk.l('p');
-        // l.append(aa.mk.nostr_link(naddr));
-        // for (const key in data) l.append(`\n${key} ${data[key]}`);
-        // l.append('\n',naddr);
-        // from.append(l)
-        // let p_hi = await aa.p.author(pubkey);
+
         source.append(aa.mk.nostr_link(naddr));
-        let source_p = await aa.p.author(pubkey);//aa.db.p[event.pubkey]
+        let source_p = await aa.p.author(pubkey);
         let name = aa.p.author_name(source_p);
         source.append(` from ${name}`);
         break;
+
       case 'e':
         let event_id = h_s[1];
-        // app = aa.mk.nostr_link(aa.fx.encode('note',h_s[1]));
-        // from.append(aa.mk.l('p',{app}));
         source.append(aa.mk.nostr_link(aa.fx.encode('note',event_id)));
         let dat = await aa.e.get(event_id);
         if (dat)
         {
-          let source_p = await aa.p.author(dat.event.pubkey);//aa.db.p[event.pubkey]
+          let source_p = await aa.p.author(dat.event.pubkey);
           let name = aa.p.author_name(source_p);
           source.append(` from ${name}`);
         }
-        
         break;
+
       case 'r':
-        // app = aa.mk.link(h_s[1])
-        // from.append(aa.mk.l('p',{app}));
         source.append(aa.mk.link(h_s[1]));
         break;
     }

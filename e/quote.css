@@ -1,0 +1,66 @@
+.note_quote
+{
+  border: 1px dashed rgba(var(--color-c),1);
+  display: grid;
+  grid-template-areas: "by" "content";
+  margin: var(--font-size) var(--padm);
+  max-height: var(--media-height);
+  max-width: 960px;
+  overflow: hidden;
+  overflow-y: scroll;
+  position: relative;
+}
+
+.note_quote .content
+{
+  max-height: unset;
+  overflow: unset;
+}
+
+.note_quote .list,
+.note_quote .paragraph
+{
+  font-size: var(--font-size-s);
+  line-height: 1.5;
+  padding: var(--padm);
+}
+
+.note_quote .content-img
+{
+  max-height: var(--size-l);
+}
+
+.in_view > .content .note_quote
+{
+  margin: var(--line) auto;
+}
+
+.in_view > .content .note_quote .note_quote
+{
+  margin: var(--pad);
+}  
+
+
+.in_view > .content .note_quote,
+.content .note_quote .note_quote
+{
+  max-height: unset;
+}
+
+/* .root > .content .note_quote,
+.in_view > .replies > .note > .content .note_quote
+{
+  overflow-y:  scroll;
+} */
+
+.in_view > .content > .note_quote .paragraph
+{
+  font-size: var(--font-size);
+  line-height: 1.5;
+  padding: var(--padm);
+}
+
+.in_view > .content .note_quote .content-img
+{
+  margin: 0 auto;
+}

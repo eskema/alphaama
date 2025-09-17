@@ -1,9 +1,9 @@
 // event template for walLNut proofs
-aa.kinds[7374] =dat=>
+aa.e.kinds[7374] =dat=>
 {
   const note = aa.mk.note(dat);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  note.querySelector('.tags_wrapper')?.setAttribute('open','');
+  // note.querySelector('.tags_wrapper')?.setAttribute('open','');
   if (aa.fx.is_u(dat.event.pubkey))
   {
     let p = aa.u.p;
@@ -13,20 +13,20 @@ aa.kinds[7374] =dat=>
   return note
 };
 
-aa.kinds[7375] =dat=>
+aa.e.kinds[7375] =dat=>
 {
-  let note = aa.kinds[7374](dat);
+  let note = aa.e.kinds[7374](dat);
   let butt = aa.mk.butt_action(aa.w.def.id+' proofs '+dat.event.id,'import');
-  note.querySelector('.content').append(butt);
+  setTimeout(()=>{ note.querySelector('.content').append(butt) },200);
   return note
 };
 
 
-aa.kinds[7376] = aa.kinds[7374];
+aa.e.kinds[7376] = aa.e.kinds[7374];
 
 
 // event template for nutzap
-aa.kinds[9321] =dat=>
+aa.e.kinds[9321] =dat=>
 {
   const note = aa.mk.note(dat);
   let p_x = aa.fx.tag_value(dat.event.tags,'p');
@@ -48,12 +48,12 @@ aa.kinds[9321] =dat=>
 
 
 // event template for walLNut discovery
-aa.kinds[10019] =dat=>
+aa.e.kinds[10019] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root');
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
-  note.querySelector('.tags_wrapper')?.setAttribute('open','');
+  // note.querySelector('.tags_wrapper')?.setAttribute('open','');
   aa.p.get(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
@@ -81,10 +81,10 @@ aa.kinds[10019] =dat=>
 
 
 // event template for walLNut 
-aa.kinds[17375] =dat=>
+aa.e.kinds[17375] =dat=>
 {
-  const note = aa.e.note_pre(dat);
-  note.querySelector('.tags_wrapper')?.setAttribute('open','');
+  const note = aa.e.note_regular(dat);
+  // note.querySelector('.tags_wrapper')?.setAttribute('open','');
   if (aa.fx.is_u(dat.event.pubkey))
   {
     let p = aa.u.p;
@@ -92,11 +92,11 @@ aa.kinds[17375] =dat=>
     {
       aa.p.save(p);
     }
-
     let butt = aa.mk.butt_action(aa.w.def.id+' import '+dat.event.id,'import');
-    note.querySelector('.content').append(butt)
+    setTimeout(()=>{ note.querySelector('.content').append(butt) },200);
   }
   return note
 };
 
-aa.kinds[37375] = aa.kinds[17375];
+
+aa.e.kinds[37375] = aa.e.kinds[17375];
