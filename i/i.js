@@ -8,7 +8,7 @@ index filtering
 
 
 
-aa.mk.styles(['/i/i.css']);
+
 
 aa.i =
 {
@@ -261,6 +261,7 @@ aa.mk.i_pubkey =(k,v,id)=>
 // on load
 aa.i.load =async()=>
 {
+  aa.add_styles(['/i/i.css']);
   aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
   // const app_i = ()=>
   // {

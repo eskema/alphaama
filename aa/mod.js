@@ -7,7 +7,7 @@ modules
 */
 
 
-aa.mod = {}
+aa.mod = {};
 
 
 aa.mod.butts =mod=>
@@ -94,19 +94,32 @@ aa.mod.mk =async mod=>
   options.fun.push((k,v,l)=>{mod.li.set(k,l)});
   mod.ul = aa.mk.ls(options);
 
-  let mod_header = aa.mk.l('header',{cla:'mod_header'});
+  
+  // let mod_layout = new DocumentFragment();
+  // mod_layout.append(mod_header,mod.ul);
+
+  
+  let mod_l_o =
+  {
+    id: mod.def.id,
+    name: mod.name,
+    element: mod.ul,
+    tagname: 'div',
+    classes: 'mod'
+  };
+  
+  let mod_l = aa.mk.section(mod_l_o);
+
+  let mod_header = mod_l.firstElementChild;
   // let name = aa.mk.l('h2',{con:mod.name,cla:'mod_name'});
   let about = aa.mk.l('p',{con:mod.about,cla:'mod_about'});
   let butts = aa.mod.butts(mod);
-  mod_header.append(about,' ',butts);
-  
-  let mod_layout = new DocumentFragment();
-  mod_layout.append(mod_header,mod.ul);
-  
-  let mod_l = aa.mk.details(mod.name,mod_layout);
-  mod_l.classList.add('mod');
-  let summary = mod_l.querySelector('summary');
-  summary.dataset.id = mod.def.id;
+  mod_header.append(' ',about,' ',butts);
+
+  // let mod_l = aa.mk.details(mod.name,mod_layout);
+  // mod_l.classList.add('mod');
+  // let summary = mod_l.querySelector('summary');
+  // summary.dataset.id = mod.def.id;
   
   let pop = aa.mk.l('button',{cla:'butt exe',con:'pop',clk:e=>
   {
@@ -116,21 +129,21 @@ aa.mod.mk =async mod=>
     else aa.mod.dialog(mod.def.id)
   }});
   pop.setAttribute('autofocus',true)
-  summary.append(pop,' ');
+  mod_header.append(' ',pop); // summary
   
   if (mod.l) mod.l.replaceWith(mod_l);
   else aa.mod.append(mod_l);
-  mod.l = mod_l;
+  mod.l = mod_l;  
 };
 
 aa.mod.append =mod_l=>
 {
   if (aa.mod_l) 
   {
-    let name = mod_l.querySelector('summary').textContent;
+    let name = mod_l.dataset.id;
     // insert alphabetically
     const last = [...aa.mod_l.children]
-    .find(i=> name < i.querySelector('summary').textContent);
+    .find(i=> name < i.dataset.id);
     fastdom.mutate(()=>{aa.mod_l.insertBefore(mod_l,last||null)});
   }
   else aa.log(mod_l)
@@ -164,16 +177,6 @@ aa.mod.dialog =(id='')=>
 };
 
 
-// aa.mod.modal_close =e=>
-// {
-//   const dialog = aa.el.get('dialog');
-//   const mod_l = dialog.querySelector('.mod');
-//   if (mod_l.dataset.was==='closed') mod_l.toggleAttribute('open',false);
-//   aa.mod.append(mod_l);
-//   dialog.close();
-// };
-
-
 // save mod
 aa.mod.save =async mod=>
 {
@@ -187,6 +190,8 @@ aa.mod.save =async mod=>
   })
 };
 
+
+// save mod time out
 aa.mod.save_to =async mod=>
 {
   aa.fx.to(()=>{aa.mod.save(mod)},200,`mod_save_${mod.def.id}`)

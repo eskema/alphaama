@@ -3,6 +3,11 @@
   grid-area: replies;
 }
 
+.replies.expanded
+{
+  margin-bottom: var(--padm);
+}
+
 .note:not(.in_path) > .replies.expanded,
 .note.root:not(.in_path) > .replies,
 .note.in_view > .replies,
@@ -30,133 +35,146 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
   display: none;
 }
 
-.replies > summary
+.replies > header
 {
   background-color: rgb(var(--color-b));
   color: rgb(var(--color-d));
   display: none;
   font-size: var(--font-size-s);
-  grid-template-columns: 1fr auto;
+  grid-template-areas: "mark_read filter collapse";
+  grid-template-columns: 1fr auto auto;
   line-height: 1.5rem;
   position: relative;
 }
 
-.haz_reply > .replies > summary,
-.root.haz_reply > .replies > summary,
-.in_view.haz_reply > .replies > summary,
-.haz_new_reply > .replies > summary
+.haz_reply > .replies > header,
+.root.haz_reply > .replies > header,
+.in_view.haz_reply > .replies > header,
+.haz_new_reply > .replies > header
 {
   display: grid;
 }
 
-.replies:not(.expanded) .note:not(.haz_new_reply) > .replies > summary
+.replies:not(.expanded) .note:not(.haz_new_reply) > .replies > header
 {
   display: none;
 }
 
-.in_view > .replies > summary
+.in_view > .replies > header
 {
   position: sticky;
   top: 1rem;
   z-index: 100;
 }
 
-.in_view > .replies > .note > .replies > summary
+.in_view > .replies > .note > .replies > header
 {
   position: sticky;
   top: 3.5rem;
   z-index: 4;
 }
 
-.root:not(.in_view) > .replies > summary,
-.in_view > .replies .replies > summary
+.root:not(.in_view) > .replies > header,
+.in_view > .replies .replies > header
 {
   position: sticky;
   top: 1rem;
   transform: translateX(-1px);
 }
 
-.root:not(.in_view) > .replies > summary
+.root:not(.in_view) > .replies > header
 {
   z-index: 6;
 }
 
-.in_view > .replies .replies > summary
+.in_view > .replies .replies > header
 {
   position: sticky;
   top: 3.5rem;
 }
 
-.replies > summary::before
+
+.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply) > .replies > header,
+.view_e .in_path:not(.in_view) > .replies > header,
+.haz_solo .haz_reply:not(.in_path) > .replies > header,
+.haz_solo .root:not(.in_view):not(.in_path) > .replies > header
 {
   display: none;
 }
 
-.replies > summary::after
+.replies > header .mark_read
 {
-  content: "+";
-  margin: 0 var(--pad);
+  grid-area: mark_read;
 }
 
-.replies[open] > summary::after
-{
-  content: "-";
-}
-
-.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply) > .replies > summary,
-.view_e .in_path:not(.in_view) > .replies[open] > summary,
-.haz_solo .haz_reply:not(.in_path) > .replies[open] > summary,
-.haz_solo .root:not(.in_view):not(.in_path) > .replies > summary
-{
-  display: none;
-}
-
-.replies.expanded
-{
-  margin-bottom: var(--padm);
-}
-
-.replies.expanded > summary .mark_read::before
+.replies.expanded > header .mark_read::before
 {
   content: "// ";  
 }
 
-.replies:not(.expanded) > summary .mark_read
+.replies:not(.expanded) > header .mark_read
 {
   color: rgb(var(--color-no));
   text-align: left
 }
 
-.replies:not(.expanded) > summary .mark_read::before
+.replies:not(.expanded) > header .mark_read::before
 {
   content: "/* ";  
 }
 
-.replies:not(.expanded) > summary .mark_read::after
+.replies:not(.expanded) > header .mark_read::after
 {
   content: " read */";  
 }
 
-.replies:not([open]) > summary .mark_read::before
+.replies.collapsed > header .mark_read::before
 {
   content: "!<-- ";  
 }
 
-.replies:not([open]) > summary .mark_read::after
+.replies.collapsed > header .mark_read::after
 {
   content: " hidden -->";  
 }
 
-.replies:not([open]) > summary .mark_read
+.replies.collapsed > header .mark_read
 {
   pointer-events: none;
 }
 
-.in_view > .replies > summary .mark_read
+.in_view > .replies > header .mark_read
 {
   text-align: left;
 }
 
+.replies > header > .collapse
+{
+  grid-area: collapse;
+  padding: 0 var(--pad);
+}
+
+.replies > header > .list_filter
+{
+  font-size: var(--font-size-s);
+  grid-area: filter;
+  margin: 0;
+  text-align: right;
+}
+
+.replies.collapsed > .note,
+.replies.collapsed > header > .list_filter
+{
+  display: none;
+}
+
+.replies.collapsed > header > .collapse
+{
+  grid-area: unset;
+  grid-column: 1 / -1;
+  grid-row: 1;
+  text-align: right;
+}
 
 @media screen and (min-width: 1025px) 
 {
@@ -166,7 +184,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
     text-align: left;
   }
 
-  .replies:not(.expanded) > summary .mark_read:hover::after,
+  .replies:not(.expanded) > header .mark_read:hover::after,
   .mark_read:hover::after
   {
     content: " mark read";
@@ -175,7 +193,7 @@ html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 
 @media screen and (max-width: 768px) 
 {
-  .note > .replies > summary
+  .note > .replies > header
   {
     line-height: 3rem;
     opacity: 1;

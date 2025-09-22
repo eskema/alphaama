@@ -34,7 +34,8 @@ aa.p =
       ['refresh','p_refresh'],
       ['@','mention'],
     ]
-  }
+  },
+  profiles: new Map()
 };
 
 
@@ -437,7 +438,8 @@ aa.p.load =async()=>
 {
   let mod = aa.p;
   let id = mod.def.id;
-  await aa.mk.scripts(mod.scripts);
+  aa.add_styles(aa.p.styles);
+  await aa.add_scripts(mod.scripts);
 
   aa.temp.p_link = new Map();
   aa.clears.push(aa.p.clear);
@@ -862,9 +864,3 @@ aa.p.updated =(p,t)=>
 {
   if (t > p.updated) p.updated = t;
 };
-
-
-
-// window.addEventListener('hashchange',aa.p.clear);
-
-aa.mk.styles(aa.p.styles);

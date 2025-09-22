@@ -231,10 +231,7 @@
   display: none;
 }
 
-.note.tiny > .by > .butt.tiny
-{
-  color: rgb(var(--color-no));
-}
+
 
 .haz_solo .note:not(.in_path).tiny:last-child
 {

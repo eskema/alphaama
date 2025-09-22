@@ -118,7 +118,7 @@
   overflow-x: scroll;
 }
 
-#dialog .tag
+dialog .tag
 {
   color: rgb(var(--color-d));
 }

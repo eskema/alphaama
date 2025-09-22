@@ -40,7 +40,7 @@ aa.e =
   ],
   butts:
   {
-    na:[[localStorage.reaction,'react'],'req','bro','render','tiny','quote'],
+    na:[[localStorage.reaction,'react'],'req','bro','render','quote'],
     // k4:['encrypt'],
     draft:['yolo','sign','pow','edit','cancel'],
     not_sent:['post','bro','cancel'],
@@ -521,6 +521,8 @@ aa.e.load =async()=>
   let mod = aa.e;
   let id = mod.def.id;
   
+  aa.add_styles(aa.e.styles);
+
   aa.temp.miss = {};
   aa.temp.orphan = new Map();
   aa.temp.prints = new Map();
@@ -531,7 +533,7 @@ aa.e.load =async()=>
     .then(dis=> dis.json())
     .then(dis=> mod.kinds_list = dis);
   
-  await aa.mk.scripts(mod.scripts);
+  await aa.add_scripts(mod.scripts);
 
   aa.actions.push(
     {
@@ -760,9 +762,6 @@ aa.e.view_check =l=>
   && !l.classList.contains('in_view'))
     setTimeout(()=>{aa.e.view(l)},100);
 };
-
-aa.mk.styles(aa.e.styles);
-
 
 
 // draft event

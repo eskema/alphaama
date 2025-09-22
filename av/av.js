@@ -1,4 +1,4 @@
-aa.mk.styles(['/av/av.css']);
+aa.add_styles(['/av/av.css']);
 
 // audio/video player element
 aa.mk.av =(src,poster=false,audio=false)=>

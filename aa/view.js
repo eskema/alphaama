@@ -1,3 +1,12 @@
+// alphaama view mod
+aa.view =
+{
+  active:false,
+  l:false,
+  ls:{},
+  in_path:[],
+};
+
 // view clear
 aa.view.clear =()=>
 {
@@ -18,12 +27,9 @@ aa.view.clear =()=>
     }
   }
 
-  fastdom.mutate(()=>
-  {
-    aa.view.active = false;
-    if (aa.state.l) aa.state.l.textContent = '';
-    aa.l.classList.remove('viewing','view_e','view_p');
-  });
+  aa.view.active = false;
+  if (aa.state.l) aa.state.l.textContent = '';
+  aa.l.classList.remove('viewing','view_e','view_p');
   
   for (const c of aa.clears) c();
 };

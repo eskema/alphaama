@@ -63,7 +63,8 @@ aa.u.load =async()=>
 {
   let id = 'u';
   const mod = aa[id];
-  // await aa.mk.scripts(mod.scripts);
+  // await aa.add_scripts(mod.scripts);
+  aa.add_styles(aa.u.styles);
 
   aa.cli.def.action = 
   {
@@ -321,6 +322,3 @@ aa.u.upd_u_u =async()=>
       aa.p.link_img(butt_u,p_data.data.src);
   })
 };
-
-
-aa.mk.styles(aa.u.styles);

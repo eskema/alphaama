@@ -84,13 +84,33 @@ aa.mk.details =(con,l=false,open=false,cla='')=>
 };
 
 
+aa.mk.dialog =()=>
+{
+  let id = 'dialog';
+  dialog = aa.mk.l(id);
+  dialog.addEventListener('close',e=>
+  {
+    dialog.removeAttribute('title');
+    const mod_l = dialog.querySelector('.mod');
+    if (mod_l)
+    {
+      if (mod_l.dataset.was==='closed') mod_l.toggleAttribute('open',false);
+      aa.mod.append(mod_l);
+    }
+    
+    dialog.textContent = '';
+  });
+  aa.el.set('dialog',dialog);
+};
+
+
 // 
 aa.mk.confirm =async options=>
 {
   const dialog = aa.el.get('dialog');
   if (!dialog || dialog.open) return false;
   
-  const dialog_options = aa.mk.l('p',{id:'dialog_options'});
+  const dialog_options = aa.mk.l('p',{cla:'dialog_options'});
   
   const dialog_no = aa.mk.l('button',
   {
@@ -484,7 +504,8 @@ aa.mk.list_filter =(element,options={})=>
 aa.mk.manifest =()=>
 {
   const ref = '/site.webmanifest';
-  fetch(ref).then(dis=>dis.json()).then(manifest=>
+  fetch(ref).then(dis=>dis.json())
+  .then(manifest=>
   {
     let df = new DocumentFragment();
     df.append(aa.mk.l('link',{rel:'manifest',ref}));
@@ -646,20 +667,32 @@ aa.mk.section =options=>
   let 
   {
     id,
+    name,
     element,
     expanded,
+    classes,
     filter,
-    tagname 
+    collapse,
+    tagname,
   } = options;
   
   if (!tagname) tagname = 'section';
+  let s_id = `section_${id}`;
+  if (!name) name = id;
   
-  let cla = `${tagname}_${id}`;
-  let app = [aa.mk.butt_expand(cla,id)];
-  let header = aa.mk.l('header',{app});
+  if (!classes?.length) classes = '';
+  classes += ` section ${s_id}`;
+  classes = classes.trim();
+  
+  let section_butt = aa.mk.butt_expand(s_id,name);
+  section_butt.classList.add('section_butt');
+  section_butt.dataset.id = id;
+  
+  let header = aa.mk.l('header',{app:section_butt});
   let opts = 
   {
-    cla,
+    cla:classes.trim(),
+    dat:{id},
     app:[header]
   };
   
@@ -667,11 +700,24 @@ aa.mk.section =options=>
   if (element) 
   {
     opts.app.push(element);
-    if (filter) app.push(' ',aa.mk.list_filter(element));
   }
 
   const section = aa.mk.l(tagname,opts);
-  aa.el.set(cla,section);
+  
+  if (collapse)
+  {
+    header.append(' ',aa.mk.l('button',{con:'-',cla:'butt collapse',clk:e=>
+    {
+      section.classList.toggle('collapsed')
+    }}));
+  }
+
+  if (filter)
+  {
+    header.append(' ',aa.mk.list_filter(element || section));
+  }
+  
+  aa.el.set(s_id,section);
   return section
 };
 

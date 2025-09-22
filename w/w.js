@@ -298,7 +298,7 @@ aa.w.load =async()=>
   if (!Object.hasOwn(localStorage,'zap_memo'))
     localStorage.zap_memo = '<3';
 
-  await aa.mk.scripts(mod.scripts);
+  await aa.add_scripts(mod.scripts);
 
   // extend queries
   if (aa.q?.ls)
@@ -400,7 +400,7 @@ aa.w.load =async()=>
   mod.start(mod);
 
   // w css styles
-  aa.mk.styles(['/w/w.css']);
+  aa.add_styles(['/w/w.css']);
 };
 
 

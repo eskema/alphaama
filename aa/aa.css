@@ -1,6 +1,7 @@
 @font-face 
 {
   font-family: "Source Code Pro";
+  font-display: swap;
   src: 
     url('/stuff/font.otf.woff2') format("woff2"),
     url('/stuff/font.otf') format("opentype");

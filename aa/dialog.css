@@ -1,4 +1,4 @@
-#dialog
+dialog 
 {
   background: rgb(var(--color-b));
   border: none;
@@ -9,18 +9,58 @@
   padding: 0;
 }
 
-#dialog[open]::backdrop
+dialog [open]::backdrop
 {
   background: black;
   opacity: .618;
 }
 
-#dialog .wrap
+dialog .wrap
 {
   padding: var(--line) 0;
 }
 
-#dialog_options
+dialog [title]::before
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-main));
+  content: attr(title);
+  display: block;
+  padding: var(--pad) 0;
+  position: sticky;
+  text-align: center;
+  top: 0;
+}
+
+dialog .img_modal
+{
+  cursor: zoom-out;
+  justify-self: center;
+  margin: 0;
+  max-width: 100%;
+  padding: 0;
+}
+
+dialog .img_modal.contained
+{
+  max-height: var(--media-max-height);
+}
+
+dialog .img_modal.qr
+{
+  padding: var(--line);
+  max-height: 100vh;
+}
+
+dialog > button
+{
+  padding-bottom: var(--pad);
+  padding-top: var(--padm);
+  position: sticky;
+  top: 0;
+}
+
+.dialog_options
 {
   background: rgb(var(--color-b));
   bottom: 0;
@@ -33,44 +73,4 @@
   padding: var(--pad);
   position: sticky;
   position: -webkit-sticky;
-}
-
-#dialog[title]::before
-{
-  background: rgb(var(--color-b));
-  color: rgb(var(--color-main));
-  content: attr(title);
-  display: block;
-  padding: var(--pad) 0;
-  position: sticky;
-  text-align: center;
-  top: 0;
-}
-
-#dialog .img_modal
-{
-  cursor: zoom-out;
-  justify-self: center;
-  margin: 0;
-  max-width: 100%;
-  padding: 0;
-}
-
-#dialog .img_modal.contained
-{
-  max-height: var(--media-max-height);
-}
-
-#dialog .img_modal.qr
-{
-  padding: var(--line);
-  max-height: 100vh;
-}
-
-#dialog > button
-{
-  padding-bottom: var(--pad);
-  padding-top: var(--padm);
-  position: sticky;
-  top: 0;
 }

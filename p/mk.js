@@ -196,18 +196,30 @@ aa.mk.p_link =(pubkey,p)=>
 // creates the profile from p object if not found
 aa.mk.profile =p=>
 {
-  let profile = [...aa.p.l.childNodes].find(i=>i.dataset.pubkey === p.pubkey);
-  if (!profile)
+  let profile = aa.p.profiles.get(p.pubkey);
+  if (profile) return profile;
+  
+  profile = aa.mk.l('article',
   {
-    profile = aa.mk.l('article',{cla:'profile',id:p.npub});
-    profile.dataset.trust = p.score;
-    profile.dataset.pubkey = p.pubkey;
-    profile.dataset.updated = p.updated ?? 0;
+    cla:'profile',
+    id:p.npub,
+    dat:
+    {
+      trust: p.score,
+      pubkey: p.pubkey,
+      updated: p.updated || 0
+    },
+    app:[aa.mk.profile_header(p),' ']
+  });
+
+  aa.p.profiles.set(p.pubkey,profile);
+  setTimeout(()=>
+  {
     aa.fx.color(p.pubkey,profile);
-    profile.append(aa.mk.profile_header(p),' ');
-    aa.p.l.append(profile);
-    setTimeout(()=>{aa.fx.count_upd(aa.el.get('butt_section_p'))},200);
-  }
+    fastdom.mutate(()=>{aa.p.l.append(profile)});
+    aa.fx.count_upd(aa.el.get('butt_section_p'))
+  },200);
+  
   return profile
 };
 

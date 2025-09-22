@@ -242,6 +242,16 @@ aa.fx.decrypt_parse =async event=>
 };
 
 
+// for selector in element do
+aa.fx.do_all =(element,selector,fun)=>
+{
+  if (!element) element = document;
+  let items = element?.querySelectorAll(selector);
+  if (items?.length) 
+    for (const item of items) fun(item)
+};
+
+
 // encodes to bech32 (nip19)
 aa.fx.encode =(s,data)=>
 {

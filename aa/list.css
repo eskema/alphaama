@@ -136,6 +136,7 @@
   background: none;
   border: none;
   font-family: var(--font-main);
+  font-size: var(--font-size);
   margin-bottom: var(--pad);
   padding: 0 var(--pad);
 }
@@ -147,7 +148,7 @@
 
 .list_filter::placeholder
 {
-  font-size: var(--font-size);
+  font-size: inherit;
   font-family: var(--font-main);
 }
 

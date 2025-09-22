@@ -26,6 +26,7 @@ aa.cli =
   ],
   // on_run:[],
   on_upd:[],
+  on_collapse:[]
 };
 
 
@@ -82,8 +83,11 @@ aa.cli.collapse =e=>
   {
     aa.l.classList.remove('cli_expanded');
     aa.cli.t.blur();
-    aa.fx.read_all(aa.logs);
+    
+    // aa.fx.read_all(aa.logs);
   });
+  for (const fun of aa.cli.on_collapse) 
+    setTimeout(()=>{fun()},0)
 };
 
 
@@ -256,7 +260,8 @@ aa.cli.keydown =async e=>
 // on load
 aa.cli.load =async e=>
 {
-  await aa.mk.scripts(aa.cli.scripts);
+  aa.add_styles(aa.cli.styles);
+  await aa.add_scripts(aa.cli.scripts);
   aa.cli.mk();
 };
 
@@ -428,4 +433,3 @@ aa.cli.v =async s=>
 };
 
 
-aa.mk.styles(aa.cli.styles);

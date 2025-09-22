@@ -475,6 +475,8 @@ aa.r.load =async()=>
   const mod = aa.r;
   const id = mod.def.id;
 
+  aa.add_styles(mod.styles);
+
   // add mod options
   if (!Object.hasOwn(localStorage,'outbox_max'))
   {
@@ -492,7 +494,7 @@ aa.r.load =async()=>
   else {console.log('no o')}
   
   // mod scripts
-  await aa.mk.scripts(mod.scripts);
+  await aa.add_scripts(mod.scripts);
   
   // mod actions
   aa.actions.push(
@@ -552,8 +554,6 @@ aa.r.load =async()=>
     aa.r.toggles();
     aa.r.manager_setup();
   });
-
-  aa.mk.styles(mod.styles);
 };
 
 

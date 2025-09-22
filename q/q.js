@@ -420,7 +420,7 @@ aa.q.log =(s,request,con)=>
   }
   else aa.logs.append(l.parentElement);
   
-  let dis = aa.mk.details(s,0,1,'base');
+  let dis = aa.mk.details(s,0,0,'base');
   dis.append(
     aa.mk.l('p',{con}),' ',
     aa.mk.l('p',{app:aa.mk.ls({ls:{filter,options}})})

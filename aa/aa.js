@@ -29,7 +29,7 @@ const aa =
       '/dep/cashuts.js?v=2.0.0',
 
       '/dep/fastdom.js?v=1.0.4',
-      '/dep/fastdom-promised.js?v=1.0.4',
+      // '/dep/fastdom-promised.js?v=1.0.4',
       // '/dep/fastdom-strict.js?v=1.0.4',
       // '/dep/math.js?v=14.0.1',
       '/dep/nostr-tools.js?v=2.15.0',
@@ -82,21 +82,21 @@ const aa =
   },
   el:new Map(),
   fx:{},
-  is:{},
   mk:{},
   get now(){ return Math.floor(Date.now()/1000) },
   parse:{},
   state:{},
   temp:{},
-  view:
-  {
-    active:false,
-    l:false,
-    ls:{},
-    in_path:[],
-  },
   // dev:true
-  get dev(){ return Object.hasOwn(sessionStorage,'dev')}
+  get dev(){ return sessionStorage.hasOwnProperty('dev') }
+};
+
+
+// head styles
+aa.add_styles =async a=>
+{
+  let rel = 'stylesheet';
+  for (const ref of a) document.head.append(aa.mk.l('link',{rel,ref}));
 };
 
 
@@ -118,46 +118,49 @@ aa.dev_set =force=>
 
 
 // make element with options
-aa.mk.l =(tag_name='div',o={})=>
+aa.mk.l =(tag_name='div',options={})=>
 {
-  const l = document.createElement(tag_name);
-  for (const k in o)
+  const element = document.createElement(tag_name);
+  for (const key in options)
   {
-    const v = o[k];
-    if (!v) continue;
-    switch (k)
+    const value = options[key];
+    if (!value) continue;
+    switch (key)
     {
       case 'app':
-        if (Array.isArray(v)) l.append(...v);
-        else l.append(v); 
+        if (Array.isArray(value)) 
+          element.append(...value);
+        else element.append(value); 
         break;
       case 'att': 
-        if (Array.isArray(v))
-          for (const i of v) l.toggleAttribute(i);
-        else l.toggleAttribute(v);
+        if (Array.isArray(value))
+          for (const i of value)
+            element.toggleAttribute(i);
+        else element.toggleAttribute(value);
         break;
-      case 'cla': l.className = v; break;
-      case 'clk': l.addEventListener('click',v); break;
-      case 'con': l.textContent = v; break;
+      case 'cla': element.className = value; break;
+      case 'clk': element.addEventListener('click',value); break;
+      case 'con': element.textContent = value; break;
       case 'dat': 
-        for (const i in v) 
-        if (v[i]||v[i]===0) l.dataset[i] = v[i]; 
+        for (const i in value)
+          if (value[i]||value[i]===0) 
+            element.dataset[i] = value[i]; 
         break;
-      case  'id': l.id = v; break;
-      case 'nam': l.name = v; break;
-      case 'pla': l.placeholder = v; break;
-      case 'ref': l.href = v; break;
-      case 'rel': l.rel = v; break;
-      case 'siz': l.sizes = v; break;
-      case 'src': l.src = v; break;
-      case 'tab': l.tabIndex = v; break;
-      case 'tit': l.title = v; break;
-      case 'typ': l.type = v; break;
-      case 'val': l.value = v; break;
-      default: console.log(o)
+      case  'id': element.id = value; break;
+      case 'nam': element.name = value; break;
+      case 'pla': element.placeholder = value; break;
+      case 'ref': element.href = value; break;
+      case 'rel': element.rel = value; break;
+      case 'siz': element.sizes = value; break;
+      case 'src': element.src = value; break;
+      case 'tab': element.tabIndex = value; break;
+      case 'tit': element.title = value; break;
+      case 'typ': element.type = value; break;
+      case 'val': element.value = value; break;
+      default: console.log('aa.mk.l: invalid key ',key,value)
     }
   }
-  return l
+  return element
 };
 
 
@@ -185,25 +188,26 @@ aa.mk.l =(tag_name='div',o={})=>
 aa.load =async(o={})=>
 {
   // setup document
-  aa.l = document.documentElement;
-  aa.bod = document.body;
-  
+  aa.add_styles(o.styles || aa.def.styles);
   aa.framed = window.self !== window.top;
-  if (aa.framed) aa.l.classList.add('framed');
+  
+  aa.l = o.l || document.documentElement;
+  aa.bod = document.body || o.bod;
+  
   let dependencies = o.dependencies || aa.def.dependencies;
-  
-
   let tools = o.tools || aa.def.tools;
-  let mods = o.mods || aa.def.mods;
   
-  await aa.mk.scripts([...dependencies,...tools]);
+  
+  await aa.add_scripts([...dependencies,...tools]);
   // extend fastdom
-  aa.fastdom = fastdom.extend(fastdomPromised);
+  // aa.fastdom = fastdom.extend(fastdomPromised);
   aa.mk.manifest();
+  aa.mk.dialog();
   aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
   aa.view.l = aa.mk.l('main',{id:'view'});
   aa.mod_l = aa.mk.l('div',{id:'mods'});
   
+  let mods = o.mods || aa.def.mods;
   aa.mods_load(mods);
 
   aa.actions.push(
@@ -242,28 +246,17 @@ aa.load =async(o={})=>
 
   // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
   
-  let id = 'dialog';
-  dialog = aa.mk.l(id,{id});
-  dialog.addEventListener('close',e=>
-  {
-    dialog.removeAttribute('title');
-    const mod_l = dialog.querySelector('.mod');
-    if (mod_l)
-    {
-      if (mod_l.dataset.was==='closed') mod_l.toggleAttribute('open',false);
-      aa.mod.append(mod_l);
-    }
-    
-    dialog.textContent = '';
-  });
-  aa.el.set('dialog',dialog);
   
-  // window.addEventListener('beforeunload',e=>
-  // {
-  //   e.preventDefault();
-  //   if (window.confirm('reload?')) return tre
-  // })
-  setTimeout(()=>{aa.mk.styles(o.styles || aa.def.styles)},0);
+
+  setTimeout(()=>{aa.cli.on_collapse.push(aa.logs_read)},200);
+  
+  
+  window.addEventListener('beforeunload',aa.unload);
+  // window.onbeforeunload = aa.unload;
+
+  if (aa.framed)
+    fastdom.mutate(()=>{aa.l.classList.add('framed')});
+
   return true
 };
 
@@ -315,7 +308,7 @@ aa.mods_load =async mods=>
   {
     if (aa.required(mod.requires))
     {
-      await aa.mk.scripts([mod.src]);
+      await aa.add_scripts([mod.src]);
       let id = mod.id;
       if (Object.hasOwn(aa,id)
       && Object.hasOwn(aa[id],'load')) 
@@ -336,13 +329,13 @@ aa.mods_load =async mods=>
 // reusable regex
 aa.regex =
 {
-  get an(){ return /^[A-Z_0-9]+$/i }, // alphanumeric
+  get an(){ return /^[A-Z_0-9]+$/i },
   get hashtag(){ return /(\B[#])[\w_-]+/g },
   get hex(){ return /^[A-F0-9]+$/i },
-  get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
-  get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+  //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+  //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
   get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
-  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i }, //acdefghjklmnqprstuvwxyz987654320
+  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i },
   get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
   get str(){ return /"([^"]+)"/ }, // text in quotes ""
   get fw(){ return /(?<=^\S+)\s/ }, // first word
@@ -377,11 +370,16 @@ aa.required =mods=>
 };
 
 
-// if no options found, run with defaults
+// default page layout
 aa.mk.page =(o={})=>
 {
   let df = new DocumentFragment();
-  df.append(aa.mk.header(),aa.view.l,aa.cli.l,aa.el.get('dialog'));
+  df.append(
+    aa.mk.header(),
+    aa.view.l,
+    aa.cli.l,
+    aa.el.get('dialog')
+  );
   aa.bod.prepend(df);  
   aa.log(aa.mk.status(),0,0);
   setTimeout(aa.view.pop,100);
@@ -389,7 +387,7 @@ aa.mk.page =(o={})=>
 
 
 // head scripts
-aa.mk.scripts =async array=>
+aa.add_scripts =async array=>
 {
   return new Promise(resolve=>
   {
@@ -408,10 +406,10 @@ aa.mk.scripts =async array=>
 };
 
 
-aa.mk.status =()=>
+aa.mk.status =force=>
 {
   let status = aa.el.get('status');
-  if (status) return status;
+  if (!force && status) return status;
 
   let on_off = navigator.onLine ? 'on' : 'off';
   status = aa.mk.l('p',
@@ -424,9 +422,21 @@ aa.mk.status =()=>
 };
 
 
-// head styles
-aa.mk.styles =async a=>
+
+
+
+// before unload event
+aa.unload =e=>
 {
-  let rel = 'stylesheet';
-  for (const ref of a) document.head.append(aa.mk.l('link',{rel,ref}));
+  e.preventDefault();
+  e.returnValue = ''
+  // return true
+  // if (sessionStorage.hasOwnProperty('reload'))
+  // {
+  //   sessionStorage.removeItem('reload');
+  //   e.returnValue = '';
+  //   return ''
+  // }
+  // e.preventDefault();
+  // if (window.confirm('reload?')) return true
 };

@@ -20,13 +20,8 @@
   width: auto;
 }
 
-.mod .list
-{
-  text-align: left;
-}
 
-
-.mod[open]
+.mod.expanded
 {
   background: rgb(var(--color-a));
   border-bottom: 1px dashed rgb(var(--color-b));
@@ -36,76 +31,82 @@
   width: 61.8vw;
 }
 
-.mod:not([open])
+.mod:not(.expanded)
 {
   justify-self: end;
 }
 
-#dialog .mod
+.mod:not(.expanded) > *:not(header),
+.mod:not(.expanded) > header > *:not(.section_butt)
+{
+  display: none;
+}
+
+dialog .mod
 {
   font-size: var(--font-size);
   width: unset;
   min-width: 60vw;
 }
 
-.mod > summary
+.mod > header
 {  
   background: rgba(var(--color-a),.8);
   display: grid;
-  font-size: var(--font-size-m);
-  grid-template-areas: "pop . .";
+  
+  grid-template-areas: "pop . ." " about about about" "butts butts butts";
   grid-template-columns: auto 1fr auto;
   padding: var(--pad);
   user-select: none;
 }
 
-#dialog .mod > summary
+dialog .mod > header
 {
   grid-template-areas: ". . pop";
   pointer-events: none;
 }
 
 
-.mod[open] > summary
+.mod.expanded > header > .section_butt
 {
   color: rgb(var(--color-f));
-
+  display: grid;
+  font-size: var(--font-size-m);
+  grid-auto-flow: column;
+  justify-items: end;
   justify-self: stretch;
   padding: var(--pad) 0;
   position: sticky;
   top: 0;
 }
 
-.mod:not([open]) > summary
+.mod:not(.expanded) > header > .section_butt
 {
   font-size: 0;
 }
 
-.mod > summary .butt
+
+
+.mod .section_butt::before
 {
-  font-size: var(--font-size-s);
-  grid-area:pop;
-  margin-left: var(--pad);
-  pointer-events: auto;
+  content: "- ";
 }
 
-.mod:not([open]) > summary .butt
-{
-  display: none;
-}
-
-.mod:not([open]) > summary::before
+.mod:not(.expanded) .section_butt::before
 {
   content: "- " attr(data-id);
   font-size: var(--font-size-m);
 }
 
-.mod_header
+.mod > header .butt.exe
 {
-  padding: 0 var(--pad);
+  font-size: var(--font-size-s);
+  grid-area: pop;
+  margin-left: var(--pad);
+  pointer-events: auto;
 }
 
-.mod_name
+/* .mod_name
 {
   color: rgb(var(--color-f));
   font-size: var(--font-size-m);
@@ -113,25 +114,30 @@
   text-align: right;
   position: sticky;
   top: 0;
-}
+} */
 
-.mod_name::first-letter
+/* .mod_name::first-letter
 {
   
   transform: translateX(8px);
-}
+} */
 
 .mod_about
 {
   font-size: var(--font-size);
+  grid-area: about;
   text-align: right;
-  /*margin: 0;*/
 }
 
 .mod_butts
 {
-  
+  grid-area: butts;
   text-align: right;
+}
+
+.mod .list
+{
+  text-align: left;
 }
 
 .mod .item 
@@ -145,12 +151,12 @@
   grid-area: s;
 }
 
-.mod[open] .list
+.mod.expanded .list
 {
   background-color: rgb(var(--color-a));
 }
 
-.mod[open] details[open] .list
+.mod.expanded details[open] .list
 {
   margin: var(--padm) 0;
 }
@@ -175,10 +181,10 @@
   background: rgb(var(--color-a));
 }
 
-.mod > .butt
+/* .mod > .butt
 {
   font-size: var(--font-size);
-}
+} */
 
 
 @media screen and (min-width: 1025px) 
@@ -192,7 +198,7 @@
 
 @media screen and (max-width: 768px) 
 { 
-  .mod[open]
+  .mod.expanded
   {
     width: calc(100vw - calc(var(--line)*2));
   }

@@ -31,12 +31,18 @@ aa.log_key =(key,value)=>
   let element = aa.el.get(key);
   if (!element)
   {
+    let summary = aa.mk.l('summary',{con:key});
     element = aa.mk.l('details',
     {
       cla: 'base',
-      app: [aa.mk.l('summary',{con:key}),' ',item]
+      app: [summary,' ',item]
     });
     aa.el.set(key,element);
+
+    // summary.addEventListener('click',e=>
+    // {
+
+    // })
     // if (!l) return details;
     // summary.dataset.count = 1;
     // details.append(l);
@@ -68,31 +74,13 @@ aa.log_parse =(s='')=>
 };
 
 
-aa.fx.do_all =(element,selector,fun)=>
-{
-  if (!element) element = document;
-  let items = element?.querySelectorAll(selector);
-  if (items?.length) 
-    for (const item of items) fun(item)
-}
-
-
 // mark logs as read
-aa.fx.read_all =async(element)=>
+aa.logs_read =async()=>
 {
-  // let ls = [];
-  aa.fx.do_all(element,'.is_recent',i=>{i.classList.remove('is_recent')})
+  let element = aa.logs;
+  aa.fx.do_all(element,'.is_recent',
+    i=>{i.classList.remove('is_recent')})
   aa.fx.do_all(element,'.is_new',aa.log_read)
-  // let items = element?.querySelectorAll(selector);
-  // if (items.length) 
-  //   for (const item of items) 
-  //     fun(item)
-  //     // i.classList.remove('is_recent');
-
-  // let new_items = element?.querySelectorAll('.is_new');
-  // if (new_items.length) 
-  //   for (const item of ls) 
-  //     aa.log_read(item);
 };
 
 
@@ -104,8 +92,6 @@ aa.logs_clear =async s=>
     fastdom.mutate(()=>{aa.logs.textContent = ''});
     aa.log(aa.mk.status(),0,0);
   },200)
-  
-  
 };
 
 

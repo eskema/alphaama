@@ -7,7 +7,7 @@
   display: grid;
   font-size: var(--font-size-s);
   grid-area: by;
-  grid-template-areas: "author id actions created_at clas ";
+  grid-template-areas: "author id actions created_at x clas ";
   grid-template-columns: auto 1fr auto;
   position: sticky;
   top: 0;
@@ -73,11 +73,6 @@
   z-index: 2;
 }
 
-.by .author
-{
-  grid-area: author;
-}
-
 .by .created_at
 {
   color: rgb(var(--color-d));
@@ -104,6 +99,10 @@
   grid-area: title;
 }
 
+.by .author
+{
+  grid-area: author;
+}
 
 .in_view > .by .author
 {
@@ -206,6 +205,25 @@
 .in_view > .by .xid
 {
   display: block;
+}
+
+.by .butt.tiny
+{
+  font-size: 0;
+  grid-area: x;
+  padding: 0 var(--pad);
+}
+
+.by .butt.tiny::before
+{
+  font-size: var(--font-size-s);
+  content: 'x';
+}
+
+.note.tiny > .by > .butt.tiny::before
+{
+  content: 'o';
+  /* color: rgb(var(--color-no)); */
 }
 
 
