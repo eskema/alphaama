@@ -1,3 +1,26 @@
+// log stuff
+aa.log =(con='',container=false,is_new=true)=>
+{
+  const cla = 'log item'+(is_new?' is_new':'');
+  const clk =e=>
+  {
+    e.stopPropagation();
+    aa.log_read(e.target)
+  };
+  const app = typeof con==='string'?aa.mk.l('p',{con}):con;
+  const log = aa.mk.l('li',{cla,clk,app});
+  
+  if (!container) container = aa.logs;
+  if (container) fastdom.mutate(()=>
+  {
+    container.append(log);
+    if (is_new) container.classList.add('has_new')
+  });
+  else console.log('log:',con);
+  return log
+};
+
+
 aa.log_details =(id,summary,key,con)=>
 {
   let l_id = id;
@@ -57,9 +80,11 @@ aa.log_key =(key,value)=>
   {
     fastdom.mutate(()=>
     {
+      let logs = parent.parentElement;
       element.append(item);
-      parent.parentElement.lastChild.after(parent);
-      parent.classList.add('is_new')
+      logs.lastChild.after(parent);
+      parent.classList.add('is_new');
+      parent.parentElement.classList.add('has_new');
     });
   } 
   else aa.log(element);
@@ -74,13 +99,37 @@ aa.log_parse =(s='')=>
 };
 
 
-// mark logs as read
+// mark log as read
+aa.log_read =async element=>
+{
+  if (!element) return;
+  if (!element.classList.contains('is_new'))
+  element = element.closest('.is_new');
+  if (!element) return;
+
+  fastdom.measure(()=>
+  {
+    element.blur();
+  });
+  fastdom.mutate(()=>
+  {
+    element.classList.remove('is_new');
+    element.classList.add('is_recent');
+    let has_new = [...element.parentElement.children]
+      .find(i=>i.classList.contains('is_new'));
+    if (!has_new) element.parentElement.classList
+      .remove('has_new')
+  })
+};
+
+
+// mark all logs as read
 aa.logs_read =async()=>
 {
   let element = aa.logs;
   aa.fx.do_all(element,'.is_recent',
     i=>{i.classList.remove('is_recent')})
-  aa.fx.do_all(element,'.is_new',aa.log_read)
+  aa.fx.do_all(element,'.is_new',aa.log_read);
 };
 
 

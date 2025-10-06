@@ -17,6 +17,17 @@
   overflow: unset;
 }
 
+.note_quote .content.no_content
+{
+  display: grid;
+}
+
+.note_quote.tiny 
+  > .content
+{
+  display: none;
+}
+
 .note_quote .list,
 .note_quote .paragraph
 {
@@ -38,8 +49,7 @@
 .in_view > .content .note_quote .note_quote
 {
   margin: var(--pad);
-}  
-
+}
 
 .in_view > .content .note_quote,
 .content .note_quote .note_quote

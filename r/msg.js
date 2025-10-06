@@ -30,8 +30,10 @@ aa.r.event =async data=>
 
 aa.r.notice =async data=>
 {
-  let [type,text,url] = data;
-  aa.log_key(`["NOTICE","${url}"]`,text);
+  let url = data.pop();
+  // let [type,text,url] = data;
+  // console.log('notice',data);
+  aa.log_key(`["NOTICE","${url}"]`,data.slice(1));
 };
 
 

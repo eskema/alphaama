@@ -1,5 +1,6 @@
 .section_l
 {
+  display: grid;
   grid-area: l;
   max-height: 40vh;
   position: relative;
@@ -37,6 +38,40 @@
   position: relative;
   counter-reset: log -1;
   z-index: 0;
+}
+
+#logs + button
+{
+  display: none;
+}
+
+#logs.has_new + button
+{
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  line-height: 1.5;
+  padding: 0 var(--padm);
+  position: absolute;
+  text-align: right;
+  transform: translateY(-2rem);
+  z-index: -1;
+  width: 100%;
+}
+
+.cli_expanded #logs + button
+{
+  position: relative;
+  transform: unset;
+  text-align: left;
+  z-index: inherit;
+}
+
+#logs.has_new + button::before
+{
+  content: "x ";
+  white-space: pre;
+  
 }
 
 .log
@@ -281,6 +316,12 @@ html:not(.cli_expanded) .log:not(.is_new),
   {
     border-bottom: 1px dotted rgba(var(--color-d),.5);
     border-top: 1px dotted rgba(var(--color-d),.5);
+  }
+
+  #logs + button:hover
+  {
+    background-color: rgb(var(--color-alt));
+    color: rgb(var(--color-b));
   }
 }
 

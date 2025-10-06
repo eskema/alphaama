@@ -1,7 +1,7 @@
 // broadcast note action
 aa.clk.bro =e=>
 {
-  const note = e.target.closest('.note');
+  const note = e.target.closest('[data-id]');
   aa.cli.v(`${localStorage.ns} e bro ${note.dataset.id}`);
 };
 
@@ -9,9 +9,9 @@ aa.clk.bro =e=>
 // cancel event draft
 aa.clk.cancel =e=>
 {
-  const note = e.target.closest('.note');
-  const xid = note.dataset.id;
-  if (aa.temp.mining && aa.temp.mining[xid]) aa.fx.pow_abort(xid);
+  const note = e.target.closest('[data-id]');
+  const id = note.dataset.id;
+  if (aa.temp.mining && aa.temp.mining[id]) aa.fx.pow_abort(id);
   aa.e.note_rm(note);
 };
 
@@ -19,7 +19,7 @@ aa.clk.cancel =e=>
 // edit event
 aa.clk.edit =async e=>
 {
-  const note = e.target.closest('.note');
+  const note = e.target.closest('[data-id]');
   let dat = await aa.e.get(note.dataset.id);
   if (!dat) dat = aa.temp.dat;
   aa.e.note_rm(note);
@@ -30,7 +30,7 @@ aa.clk.edit =async e=>
 // encrypt note
 aa.clk.encrypt =async e=>
 {
-  const note = e.target.closest('.note');
+  const note = e.target.closest('[data-id]');
   const id = note.dataset.id;
   let dat = await aa.e.get(id);
   let peer = aa.fx.tag_value(dat.event.tags,'p');
@@ -48,7 +48,7 @@ aa.clk.encrypt =async e=>
 // fetch note
 aa.clk.fetch =e=>
 {
-  const note = e.target.closest('.note');
+  const note = e.target.closest('[data-id]');
 
   let filter = '{';
   const id = note.dataset.id;
@@ -82,17 +82,17 @@ aa.clk.mark_read =e=>
   const replies = e.target.closest('.replies');
   const note = e.target.closest('.note');
   const root = e.target.closest('.root');
-  const rid = note.dataset.id+'_replies';
+  const rid = `section_${note.dataset.id}_replies`;
   const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
   note.classList.remove(...classes);
   
   if (new_stuff.length)
   {
     e.preventDefault();
-    for (const l of new_stuff)
+    for (const element of new_stuff)
     {
-      sessionStorage[l.dataset.id] = 'is_read';
-      l.classList.remove(...classes);
+      sessionStorage[element.dataset.id] = 'is_read';
+      element.classList.remove(...classes);
     }
     if (replies.classList.contains('expanded')) 
     {
@@ -136,7 +136,7 @@ aa.clk.na =e=>
 
 aa.clk.quote =async e=>
 {
-  const note = e.target.closest('.note');
+  const note = e.target.closest('[data-id]');
   let id = note.dataset.id;
   let dat = await aa.e.get(id);
   let data = 
@@ -163,7 +163,7 @@ aa.clk.quote =async e=>
 // post event
 aa.clk.post =async e=>
 {
-  let dat = await aa.e.get(e.target.closest('.note').dataset.id);
+  let dat = await aa.e.get(e.target.closest('[data-id]').dataset.id);
   if (!dat) 
   {
     console.log('event not found in local db');
@@ -180,7 +180,7 @@ aa.clk.post =async e=>
 // pow event
 aa.clk.pow =e=>
 {
-  let id = e.target.closest('.note').dataset.id;
+  let id = e.target.closest('[data-id]')?.dataset.id;
   aa.cli.add(`e pow ${id} ${localStorage.pow}`);
 };
 
@@ -188,9 +188,8 @@ aa.clk.pow =e=>
 // react to event
 aa.clk.react =e=>
 {
-  const note = e.target.closest('.note');
-  const xid = note.dataset.id;
-  aa.cli.add(`mk 7 ${xid} ${localStorage.reaction}`);
+  const id = e.target.closest('[data-id]')?.dataset.id;
+  aa.cli.add(`mk 7 ${id} ${localStorage.reaction}`);
 };
 
 
@@ -219,7 +218,7 @@ aa.clk.render =async e=>
 // request replies to note
 aa.clk.req =e=>
 {
-  const note = e.target.closest('.note');
+  const note = e.target.closest('[data-id]');
   const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
   aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
 };
@@ -228,7 +227,7 @@ aa.clk.req =e=>
 // sign event
 aa.clk.sign =async e=>
 {
-  let dat = await aa.e.get(e.target.closest('.note').dataset.id);
+  let dat = await aa.e.get(e.target.closest('[data-id]').dataset.id);
   if (!dat || dat?.event?.sig)
   {
     aa.log('nothing to sign')
@@ -253,19 +252,19 @@ aa.clk.sign =async e=>
 // toggle tiny note 
 aa.clk.tiny =e=>
 {
-  const note = e.target.closest('.note');
+  const note = e.target.closest('[data-id]');
   note.classList.toggle('tiny');
   const is_tiny = note.classList.contains('tiny');
   if (is_tiny) sessionStorage[note.dataset.id] = 'tiny';
   else sessionStorage[note.dataset.id] = '';
-  aa.fx.scroll(note,{behavior:'smooth',block:is_tiny?'start':'center'});
+  // aa.fx.scroll(note,{behavior:'smooth',block:is_tiny?'start':'center'});
 };
 
 
 // sign and broadcast event
 aa.clk.yolo =async e=>
 {
-  let xid = await aa.fx.pow_note(e.target.closest('.note').dataset.id);
+  let xid = await aa.fx.pow_note(e.target.closest('[data-id]').dataset.id);
   if (!xid)
   {
     aa.log('nothing to sign');

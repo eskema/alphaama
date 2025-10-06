@@ -46,28 +46,6 @@ aa.w =
   }
 };
 
-// aa.w.mod_butts =async(used)=>
-// {
-//   if (used)
-//   {
-//     let df = new DocumentFragment();
-//     let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
-//     let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
-//     df.append(add_butt,' ',upd_butt);
-//     fastdom.mutate(()=>
-//     {
-//       mod.l.insertBefore(df,mod.l.lastChild);
-//     })
-//   }
-//   else
-//   {
-//     fastdom.mutate(()=>
-//     {
-//       mod.l.append(aa.mk.butt_action(`${mod.def.id} import`,'import'))
-//     })
-//   }
-// };
-
 
 // add mint to walLNut
 aa.w.add =(string='')=>
@@ -298,7 +276,7 @@ aa.w.load =async()=>
   if (!Object.hasOwn(localStorage,'zap_memo'))
     localStorage.zap_memo = '<3';
 
-  await aa.add_scripts(mod.scripts);
+  // await aa.add_scripts(mod.scripts);
 
   // extend queries
   if (aa.q?.ls)
@@ -400,7 +378,7 @@ aa.w.load =async()=>
   mod.start(mod);
 
   // w css styles
-  aa.add_styles(['/w/w.css']);
+  // aa.add_styles(['/w/w.css']);
 };
 
 
@@ -478,14 +456,14 @@ aa.w.mod_butts =async(used)=>
     df.append(add_butt,' ',upd_butt);
     fastdom.mutate(()=>
     {
-      mod.l.insertBefore(df,mod.l.lastChild);
+      mod.mod_l.insertBefore(df,mod.mod_l.lastChild);
     })
   }
   else
   {
     fastdom.mutate(()=>
     {
-      mod.l.append(aa.mk.butt_action(`${mod.def.id} import`,'import'))
+      mod.mod_l.append(aa.mk.butt_action(`${mod.def.id} import`,'import'))
     })
   }
 };

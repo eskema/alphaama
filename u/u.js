@@ -32,10 +32,10 @@ aa.u =
     ]
   },
   styles:['/u/u.css'],
-  scripts:
-  [
-    // '/u/mk.js?v='+aa_version,
-  ],
+  // scripts:
+  // [
+  //   // '/u/mk.js?v='+aa_version,
+  // ],
   get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
   butts:
   {
@@ -64,7 +64,7 @@ aa.u.load =async()=>
   let id = 'u';
   const mod = aa[id];
   // await aa.add_scripts(mod.scripts);
-  aa.add_styles(aa.u.styles);
+  // aa.add_styles(aa.u.styles);
 
   aa.cli.def.action = 
   {
@@ -102,13 +102,10 @@ aa.u.load =async()=>
     },
     aa.cli.def.action
   );
-  let app = aa.mk.butt_expand('u_u','a_a');
-  app.id = 'butt_u_u';
-  aa.side = aa.mk.l('aside',{id:'u_u',app});
-  aa.el.set(app.id,app).set('u_u',aa.side);
-  aa.side.append(aa.mod_l);
-  aa.bod.insertBefore(aa.side,aa.bod.lastChild.previousSibling);
 
+  let u_u = aa.el.get('side').firstElementChild.firstElementChild;
+  u_u.classList.add('u_u');
+  aa.el.set('butt_u_u',u_u);
   aa.mk.nip7_butt();
   
   await aa.mod.load(mod);
@@ -312,13 +309,13 @@ aa.u.upd_u_u =async()=>
   if (!butt_u || !aa.u.p) return;
   let p = aa.u.p;
   let p_data = await aa.p.data(p,true);
-
+  let parent = butt_u.parentElement;
   fastdom.mutate(()=>
   {
-    aa.fx.color(p.pubkey,butt_u.parentElement);
-    butt_u.textContent = aa.fx.short_key(p.pubkey,1);
-    
+    butt_u.textContent = aa.fx.short_key(p.pubkey,1,'_');
     if (aa.fx.is_trusted(p.score))
-      aa.p.link_img(butt_u,p_data.data.src);
+      aa.p.link_img(parent,p_data.data.src);
+    aa.fx.color(p.pubkey,parent);
   })
 };
+

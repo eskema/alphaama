@@ -90,20 +90,15 @@ aa.mod.mk =async mod=>
   let options = {ls:mod.o.ls,sort:'a',fun:[]};
   if (mod.hasOwnProperty('mk')) options.mk = mod.mk;
 
-  mod.li = new Map();
-  options.fun.push((k,v,l)=>{mod.li.set(k,l)});
-  mod.ul = aa.mk.ls(options);
-
-  
-  // let mod_layout = new DocumentFragment();
-  // mod_layout.append(mod_header,mod.ul);
-
+  mod.mod_li = new Map();
+  options.fun.push((k,v,l)=>{mod.mod_li.set(k,l)});
+  mod.mod_ul = aa.mk.ls(options);
   
   let mod_l_o =
   {
-    id: mod.def.id,
+    id: `mod_${mod.def.id}`,
     name: mod.name,
-    element: mod.ul,
+    element: mod.mod_ul,
     tagname: 'div',
     classes: 'mod'
   };
@@ -112,28 +107,33 @@ aa.mod.mk =async mod=>
 
   let mod_header = mod_l.firstElementChild;
   // let name = aa.mk.l('h2',{con:mod.name,cla:'mod_name'});
+  let mod_info = aa.mk.l('div',{cla:'mod_info'});
   let about = aa.mk.l('p',{con:mod.about,cla:'mod_about'});
   let butts = aa.mod.butts(mod);
-  mod_header.append(' ',about,' ',butts);
+  mod_info.append(about,' ',butts);
 
-  // let mod_l = aa.mk.details(mod.name,mod_layout);
-  // mod_l.classList.add('mod');
-  // let summary = mod_l.querySelector('summary');
-  // summary.dataset.id = mod.def.id;
+  let summary = mod_header.firstElementChild;
+  summary.dataset.mod = mod.def.id;
   
-  let pop = aa.mk.l('button',{cla:'butt exe',con:'pop',clk:e=>
+  let pop = aa.mk.l('button',
   {
-    e.preventDefault();
-    let dialog = e.target.closest('dialog');
-    if (dialog) dialog.close();
-    else aa.mod.dialog(mod.def.id)
-  }});
+    cla:'butt exe',
+    con:'pop',
+    clk:e=>
+    {
+      e.preventDefault();
+      let dialog = e.target.closest('dialog');
+      if (dialog) dialog.close();
+      else aa.mod.dialog(mod.def.id)
+    }
+  });
   pop.setAttribute('autofocus',true)
-  mod_header.append(' ',pop); // summary
+  mod_header.append(' ',pop);
+  mod_l.insertBefore(mod_info,mod_header.nextElementSibling);
   
-  if (mod.l) mod.l.replaceWith(mod_l);
+  if (mod.mod_l) mod.mod_l.replaceWith(mod_l);
   else aa.mod.append(mod_l);
-  mod.l = mod_l;  
+  mod.mod_l = mod_l;
 };
 
 aa.mod.append =mod_l=>
@@ -201,17 +201,19 @@ aa.mod.save_to =async mod=>
 // update mod item element
 aa.mod.ui =(mod,keys)=>
 {
-  let ul = mod.ul;
+  let ul = mod.mod_ul;
+  if (!ul) return;
+  
   if (keys && !Array.isArray(keys)) keys = [keys];
   for (const k of keys)
   {
     let v = mod.o.ls[k];
-    let cur = mod.li.get(k);
+    let cur = mod.mod_li.get(k);
     let l = mod.hasOwnProperty('mk') 
     ? mod.mk(k,v)
     : aa.mk.item(k,v);
     if (!l) continue;
-    mod.li.set(k,l);
+    mod.mod_li.set(k,l);
     fastdom.mutate(()=>
     {
       if (!cur) ul.append(l);

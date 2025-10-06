@@ -1,27 +1,11 @@
 // load alphaama
 aa.load({
   // override defaults
-  // styles:[], tools:[], mods:[],
-}).then(e=>
+  // styles:[], scripts:[], mods:[], 
+}).then(e=>{whateverthefuckyouwant()});
+const whateverthefuckyouwant =async()=>
 {
-  window.addEventListener('load',()=>
-  {
-    // build page layout elements
-    aa.mk.page();
-    on_loaded();
-  })
-});
-
-// page script
-const on_loaded =async()=>
-{
-  // make sure all mods have loaded properly
-  if (!aa.required(aa.def.mods.map(i=>i.id)))
-  {
-    // console.log('not_loaded');
-    setTimeout(on_loaded,11);
-    return
-  }
+  console.log('on_loaded');
 
   let p_section;
   if (aa.p?.l) 
@@ -36,19 +20,23 @@ const on_loaded =async()=>
 
   if (aa.view.l) 
   {
-    fastdom.mutate(()=>{aa.view.l.append(p_section,' ',e_section)});
-
+    let elements = new DocumentFragment();
     let p = aa.u?.p;
     if (p)
     {
       aa.mk.profile(p);
-      if (p.follows.length) aa.p.load_profiles(p.follows);
+      if (p.follows.length) 
+        aa.p.load_profiles(p.follows);
     }
 
     let readme = await aa.fx.readme('/README.adoc');
-    if (readme) 
-      fastdom.mutate(()=>{aa.view.l.prepend(aa.mk.doc(readme))});
+    if (readme) elements.append(aa.mk.doc(readme),' ');
+    elements.append(p_section,' ',e_section);
+    fastdom.mutate(()=>
+    {
+      aa.view.l.append(elements)
+    });
   }
 
-  aa.q.last_butts();
+  aa.q?.last_butts();
 };

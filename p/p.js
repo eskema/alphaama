@@ -12,7 +12,13 @@ profile
 aa.db.p = {};
 aa.p =
 {
-  def:{id:'p'},
+  def:
+  {
+    id:'p',
+    ls:{},
+    followed:[],
+    data: new Map()
+  },
   name:'profiles',
   about:'manage user profiles',
   scripts:
@@ -99,7 +105,7 @@ aa.p.authors_list =(a,cla,sort='text_asc')=>
 // clear profile filter
 aa.p.clear =e=>
 {
-  if (aa.e.l.dataset.solo?.length)
+  if (aa.e?.l?.dataset.solo?.length)
   {
     if (aa.p.viewing) 
     {
@@ -151,123 +157,16 @@ aa.p.data =async(p,upd)=>
   let o = aa.temp.p_link.get(p.pubkey);
   if (!o) 
   {
-    o = {pubkey:p.pubkey,a:[]};
+    o = {pubkey:p.pubkey,elements:[]};
     aa.temp.p_link.set(p.pubkey,o);
   }
-  if (!o.data || upd) o.data = await aa.p.link_data(p);
+  if (!o.data || upd) o.data = await aa.p.data_link(p);
   return o
 };
 
 
-// return last stored replaceable event id from p of kind n
-aa.p.events_last =(p,kn,s='')=>
-{
-  if (p.events[kn])
-  {
-    let id;
-    if (s && p.events[kn][s]?.length) id = p.events[kn][s][0][0];
-    else if (p.events[kn][0]) id = p.events[kn][0][0];
-    return id
-  }
-  return false
-};
-
-
-// check if replaceable event is newer
-aa.p.events_newer =(p,event,param)=>
-{
-  let upd = false;
-  if (!param) param = aa.fx.tag_value(event.tags,'d');
-  let kn = p.events['k'+event.kind];
-  if (!kn) kn = p.events['k'+event.kind] = param ? {} : [];
-  if (param)
-  {
-    if (!kn[param]) kn[param] = [];
-    kn = kn[param];
-  }
-  
-  if (!kn.length || kn[0][1] < event.created_at) 
-  {
-    kn.unshift([event.id,event.created_at]); //,JSON.stringify(event)
-    aa.p.updated(p,event.created_at);
-    upd = true
-  }
-  return upd
-};
-
-
-// true if p follows pubkey
-// default p is u
-aa.p.following =(pubkey,p)=>
-{
-  if (!p) p = aa.u?.p;
-  if (p?.follows?.includes(pubkey)) return true;
-  return false
-};
-
-
-// return follows of pubkey
-aa.p.follows =async(s='')=>
-{
-  let pubkey = aa.fx.is_key(s) ? s : aa.u?.p?.pubkey;
-  let p = aa.db.p[pubkey];//aa.p.author(pubkey);
-  let follows = p ? p.follows : [];
-  aa.log(`${follows.length} follows of ${pubkey}`);
-  return follows
-};
-
-
-// returns profile if already loaded or get it from database
-aa.p.get =async pubkey=>
-{
-  if (!aa.fx.is_key(pubkey)) return;
-  if (aa.db.p[pubkey]) return aa.db.p[pubkey];
-  let p = await aa.db.ops('idb',{get:{store:'authors',key:pubkey}});
-  if (p)
-  {
-    aa.db.p[pubkey] = p;
-    aa.p.links_upd(p)
-  }
-  return aa.db.p[pubkey]
-};
-
-
-// load author list from db into memory
-aa.p.get_authors =async(pubkeys=[],upd)=>
-{
-  let authors = [];
-  let missing = new Set();
-  if (!upd)
-  {
-    for (const pubkey of pubkeys)
-    {
-      if (Object.hasOwn(aa.db.p,pubkey)) authors.push(aa.db.p[pubkey]);
-      else missing.add(pubkey)
-    }
-    if (!missing.size) return authors;
-  }
-  let a = [...missing.values()];
-  let stored = await aa.db.ops('idb',{get_a:{store:'authors',a}});
-  if (stored?.length) for (const p of stored)
-  {
-    aa.db.p[p.pubkey] = p;
-    missing.delete(p.pubkey);
-    authors.push(p);
-    setTimeout(()=>{aa.p.links_upd(p)},10);
-  }
-  
-  for (const pubkey of missing)
-  {
-    aa.db.p[pubkey] = aa.p.p(pubkey);
-    authors.push(aa.db.p[pubkey]);
-  }
-
-  return authors
-};
-
-
 // returns link data from p
-aa.p.link_data =async p=>
+aa.p.data_link =async p=>
 {
   let options = 
   {
@@ -335,12 +234,13 @@ aa.p.link_data =async p=>
   let common = 0;
   for (const k of p.followers) { if (aa.p.following(k)) common++ }
   options.followers = common;
+  
   return options
 };
 
 
 // update link
-aa.p.link_data_upd =async(element,options)=>
+aa.p.data_link_upd =async(element,options)=>
 {
   let
   {
@@ -399,6 +299,114 @@ aa.p.link_data_upd =async(element,options)=>
 };
 
 
+// return last stored replaceable event id from p of kind n
+aa.p.events_last =(p,kn,s='')=>
+{
+  if (p.events[kn])
+  {
+    let id;
+    if (s && p.events[kn][s]?.length) id = p.events[kn][s][0][0];
+    else if (p.events[kn][0]) id = p.events[kn][0][0];
+    return id
+  }
+  return false
+};
+
+
+// check if replaceable event is newer
+aa.p.events_newer =(p,event,param)=>
+{
+  let upd = false;
+  if (!param) param = aa.fx.tag_value(event.tags,'d');
+  let kn = p.events['k'+event.kind];
+  if (!kn) kn = p.events['k'+event.kind] = param ? {} : [];
+  if (param)
+  {
+    if (!kn[param]) kn[param] = [];
+    kn = kn[param];
+  }
+  
+  if (!kn.length || kn[0][1] < event.created_at) 
+  {
+    kn.unshift([event.id,event.created_at]); //,JSON.stringify(event)
+    aa.p.updated(p,event.created_at);
+    upd = true
+  }
+  return upd
+};
+
+
+// true if p follows pubkey
+// default p is u
+aa.p.following =(pubkey,p)=>
+{
+  if (!p) p = aa.u?.p;
+  if (p?.follows?.includes(pubkey)) return true;
+  return false
+};
+
+
+// return follows of pubkey
+aa.p.follows =async(s='')=>
+{
+  let pubkey = aa.fx.is_key(s) ? s : aa.u?.p?.pubkey;
+  let p = aa.db.p[pubkey];//aa.p.author(pubkey);
+  let follows = p ? p.follows : [];
+  aa.log(`${follows.length} follows of ${pubkey}`);
+  return follows
+};
+
+
+// returns profile if already loaded or get it from database
+aa.p.get =async pubkey=>
+{
+  if (!aa.fx.is_key(pubkey)) return;
+
+  if (aa.db.p[pubkey]) return aa.db.p[pubkey];
+  let p = await aa.db.ops('idb',{get:{store:'authors',key:pubkey}});
+  if (p)
+  {
+    aa.db.p[pubkey] = p;
+    aa.p.links_upd(p);
+  }
+  return aa.db.p[pubkey]
+};
+
+
+// load author list from db into memory
+aa.p.get_authors =async(pubkeys=[],upd)=>
+{
+  let authors = [];
+  let missing = new Set();
+  if (!upd)
+  {
+    for (const pubkey of pubkeys)
+    {
+      if (Object.hasOwn(aa.db.p,pubkey)) authors.push(aa.db.p[pubkey]);
+      else missing.add(pubkey)
+    }
+    if (!missing.size) return authors;
+  }
+  let a = [...missing.values()];
+  let stored = await aa.db.ops('idb',{get_a:{store:'authors',a}});
+  if (stored?.length) for (const p of stored)
+  {
+    aa.db.p[p.pubkey] = p;
+    missing.delete(p.pubkey);
+    authors.push(p);
+    setTimeout(()=>{aa.p.links_upd(p)},10);
+  }
+  
+  for (const pubkey of missing)
+  {
+    aa.db.p[pubkey] = aa.p.p(pubkey);
+    authors.push(aa.db.p[pubkey]);
+  }
+
+  return authors
+};
+
+
 // add picture to p_link
 aa.p.link_img =async(l,src=false)=>
 {
@@ -428,7 +436,8 @@ aa.p.links_upd =p=>
   aa.fx.to(async()=>
   {
     let o = await aa.p.data(p,1);
-    for (const i of o.a) aa.p.link_data_upd(i,o.data);  
+    for (const i of o.elements)
+      aa.p.data_link_upd(i,o.data);
   },420,'links_upd_'+p.pubkey);
 };
 
@@ -438,8 +447,8 @@ aa.p.load =async()=>
 {
   let mod = aa.p;
   let id = mod.def.id;
-  aa.add_styles(aa.p.styles);
-  await aa.add_scripts(mod.scripts);
+  // aa.add_styles(aa.p.styles);
+  // await aa.add_scripts(mod.scripts);
 
   aa.temp.p_link = new Map();
   aa.clears.push(aa.p.clear);
@@ -479,6 +488,8 @@ aa.p.load =async()=>
   aa.cli.on_upd.push(mod.oto);
   aa.p.l = aa.mk.l('div',{cla:'authors'});
   aa.mod.help_setup(mod);
+  await aa.mod.load(mod);
+  aa.mod.mk(mod);
 };
 
 

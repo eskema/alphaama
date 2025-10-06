@@ -18,6 +18,7 @@ aa.e.render =async(dat,options)=>
 {
   let content = aa.mk.l('div',{cla:'content'});
   let renders = 0;
+  let classes = [];
   for (const key in aa.e.rnd)
   {
     if (aa.e.rnd[key].includes(dat.event.kind))
@@ -27,12 +28,12 @@ aa.e.render =async(dat,options)=>
       {
         renders++;
         aa.e[fid](content,dat,options);
-        content.classList.add(fid);
+        classes.push(fid);
+        // content.classList.add(fid);
       }
     }
   }
-
-  content.classList.add('e_render');
+  
   
   if (!renders)
   {
@@ -46,11 +47,11 @@ aa.e.render =async(dat,options)=>
     }
     else
     {
-      content.classList.add('no_content');
-      content.append(aa.mk.tag_list(dat.event.tags))
+      classes.push('no_content');
     }
   }
 
+  content.classList.add('e_render',...classes);
   return content
 };
 

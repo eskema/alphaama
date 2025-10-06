@@ -68,10 +68,10 @@ aa.clk.expand =e=>
   
   sessionStorage[id] = storage_value;
 
-  setTimeout(()=>
-  { 
-    aa.fx.scroll(element,{behavior:'smooth',block}) 
-  },200)
+  // setTimeout(()=>
+  // { 
+  //   aa.fx.scroll(element,{behavior:'smooth',block}) 
+  // },200)
 };
 
 

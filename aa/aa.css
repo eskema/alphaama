@@ -287,13 +287,13 @@ button
 button:focus
 {
   outline: none;
-  color: rgb(var(--color-f));
+  /* color: rgb(var(--color-f)); */
 }
 
-button:hover
+/* button:hover
 {
   color: rgb(var(--color-f));
-}
+} */
 
 input[type=number]::-webkit-outer-spin-button,
 input[type=number]::-webkit-inner-spin-button

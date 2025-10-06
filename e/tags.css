@@ -14,8 +14,9 @@
 
 .tags_wrapper summary
 {
-  display: inline-grid;
+  background: rgba(var(--color-b),1);
   color: rgba(var(--color-f),.2);
+  display: inline-grid;
   font-size: var(--font-size-s);
   grid-template-columns: auto auto auto;
   line-height: 1.5rem;
@@ -92,6 +93,18 @@
   transform: translateY(calc(-100% - 1.5rem));
   transform-origin: bottom;
   width: max-content;
+}
+
+.note > .content.no_content + .tags_wrapper
+{
+  bottom: unset;
+  position: relative;
+}
+
+.note > .content.no_content + .tags_wrapper > .tags
+{
+  position: relative;
+  transform: none;
 }
 
 .note [open] > .tags
@@ -181,17 +194,26 @@ dialog .tag
 
 @media screen and (min-width: 1025px) 
 {
+  .tags_wrapper:not([open]) summary:hover
+  {
+    background: rgba(var(--color-b),1);
+  }
+
   .tags_wrapper[open]:hover
   {
     z-index: 10;
   }
   
-  .tags_wrapper[open]:hover > summary
+  .tags_wrapper[open]:hover 
+    > summary
   {
     top: 0;
   }
   
-  .clicker:hover + .by + .content + .tags_wrapper
+  .clicker:hover 
+    + .by 
+    + .content 
+    + .tags_wrapper
   {
     opacity: 0;
   }

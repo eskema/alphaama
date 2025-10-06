@@ -36,3 +36,9 @@
   word-break: break-all;
   white-space: pre-wrap;
 }
+
+.source > .content_link
+{
+  text-decoration: none;
+  color: rgb(var(--color-main));
+}

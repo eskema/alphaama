@@ -260,8 +260,8 @@ aa.cli.keydown =async e=>
 // on load
 aa.cli.load =async e=>
 {
-  aa.add_styles(aa.cli.styles);
-  await aa.add_scripts(aa.cli.scripts);
+  // aa.add_styles(aa.cli.styles);
+  // await aa.add_scripts(aa.cli.scripts);
   aa.cli.mk();
 };
 
@@ -307,9 +307,19 @@ aa.cli.mk =()=>
       tab:3
     })
   );
+  let logs_frag = new DocumentFragment();
+  logs_frag.append(
+    aa.logs,
+    aa.mk.l('button',
+    {
+      cla:'butt',
+      con:'mark read',
+      clk:aa.logs_read
+    })
+  )
   aa.cli.l.append(
     aa.cli.t,
-    aa.mk.section({id:'l',element:aa.logs,expanded:true}),
+    aa.mk.section({id:'l',element:logs_frag,expanded:true}),
     aa.cli.oto,
     butts,
   );

@@ -335,7 +335,7 @@ aa.r.get_filter =async filter=>
 
   return new Promise(resolve=>
   {
-    const abort = setTimeout(()=>{resolve(false)},6666);
+    const abort = setTimeout(()=>{resolve([id,[]])},6666);
     
     aa.r.temp.set(id,data=>
     {
@@ -475,8 +475,6 @@ aa.r.load =async()=>
   const mod = aa.r;
   const id = mod.def.id;
 
-  aa.add_styles(mod.styles);
-
   // add mod options
   if (!Object.hasOwn(localStorage,'outbox_max'))
   {
@@ -490,11 +488,16 @@ aa.r.load =async()=>
   {
     localStorage.events_max = '9999';
   }
-  if (aa.o.l) aa.mod.mk(aa.o);
-  else {console.log('no o')}
+
+  // max events in memory
+  mod.limit = localStorage.events_max
+  ? parseInt(localStorage.events_max)
+  : 99999;
+
+  if (aa.o.mod_l) aa.mod.mk(aa.o);
   
   // mod scripts
-  await aa.add_scripts(mod.scripts);
+  // await aa.add_scripts(mod.scripts);
   
   // mod actions
   aa.actions.push(
@@ -547,13 +550,15 @@ aa.r.load =async()=>
   );
 
   // load saved data and make ui
-  aa.mod.load(mod)
-  .then(aa.mod.mk)
+  await aa.mod.load(mod);
+  aa.mod.mk(mod)
   .then(()=>
   {
     aa.r.toggles();
-    aa.r.manager_setup();
+    setTimeout(()=>{aa.r.manager_setup()},200);
   });
+
+  // aa.add_styles(mod.styles);
 };
 
 
@@ -763,11 +768,11 @@ aa.r.toggles =()=>
     aa.mk.l('br'),
     states_span,
     aa.mk.l('br'),
-    aa.mk.list_filter(mod.ul)
+    aa.mk.list_filter(mod.mod_ul)
   );
   fastdom.mutate(()=>
   {
-    mod.l.insertBefore(toggles,mod.ul);
+    mod.mod_l.insertBefore(toggles,mod.mod_ul);
   })
 };
 
@@ -811,6 +816,20 @@ aa.r.validate_relays =relays=>
 }
 
 
+aa.r.manager_message =async e=>
+{
+  let mod = aa.r;
+  const type = e.data[0]?.toLowerCase();
+  if (!type) return;
+
+  let fun = mod.temp.has(type) ? mod.temp.get(type)
+  : Object.hasOwn(mod,type) ? mod[type] : false;
+
+  if (fun) setTimeout(()=>{fun(e.data)},0);
+  else aa.log(JSON.stringify(e.data));
+};
+
+
 // setup relay manager worker
 aa.r.manager_setup =()=>
 {
@@ -819,24 +838,12 @@ aa.r.manager_setup =()=>
   mod.manager = new Worker(mod.manager_src);//,{type:'module'});
 
   // relay union worker message
-  mod.manager.onmessage =async e=>
-  {
-    const type = e.data[0]?.toLowerCase();
-    if (!type) return;
+  mod.manager.onmessage = mod.manager_message;
+  let relays = mod.o.ls;
+  let limit = mod.limit;
 
-    let fun = mod.temp.has(type) ? mod.temp.get(type)
-    : Object.hasOwn(mod,type) ? mod[type] : false;
-  
-    if (fun) fun(e.data);
-    else aa.log(JSON.stringify(e.data));
-  };
-  // max events in memory
-  let limit = localStorage.events_max
-  ? parseInt(localStorage.events_max)
-  : 99999;
-  let options = {relays:mod.o.ls,limit};
   // initialize relay manager
-  mod.manager.postMessage(['init',options]);
+  mod.manager.postMessage(['init',{relays,limit}]);
 };
 
 

@@ -184,8 +184,8 @@ aa.mk.p_link =(pubkey,p)=>
 
   aa.p.data(p).then(dis=>
   {
-    dis.a.push(element);
-    aa.p.link_data_upd(element,dis.data);
+    dis.elements.push(element);
+    aa.p.data_link_upd(element,dis.data);
   });
 
   return element

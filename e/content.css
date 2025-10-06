@@ -211,40 +211,56 @@
   cursor: zoom-in;
 }
 
-.in_view > .content .content-img
+.in_view 
+  > .content .content-img
 {
   justify-self: center;
   margin: var(--line) auto;
   max-height: var(--media-max-height);
 }
 
-.in_view > .content .content-video
+.in_view 
+  > .content .content-video
 {
   max-height: var(--media-max-height);
 }
 
 
-.view_e .note.in_path:not(.in_view) > .content .content-img,
-.view_e .note.in_path:not(.in_view) > .content .content-video
+.view_e .note.in_path:not(.in_view) 
+  > .content .content-img,
+
+.view_e .note.in_path:not(.in_view) 
+  > .content .content-video
 {
   max-height: var(--size);
 }
 
 @media screen and (min-width: 1025px)
 {
-  .note.root:not(.tiny):not(.in_path) > .content::after
+  .note.root:not(.tiny):not(.in_path) 
+    > .content:not(.no_content)::after
   {
     margin-bottom: 3rem;
   }
 
-  .note:not(.in_path) > .by:hover + .content
+  .note:not(.in_path) 
+    > .by:hover
+      + .content
   {
     background: rgb(var(--color-a));
   }
 
-  .note > .by:hover + .content,
-  a.clicker:hover + .by + .content,
-  .reply > .by:hover + .content
+  .note 
+    > .by:hover 
+      + .content,
+
+  a.clicker:hover 
+    + .by 
+    + .content,
+
+  .reply 
+    > .by:hover 
+      + .content
   {
     background: rgb(var(--color-a));
     pointer-events: none;
@@ -253,34 +269,55 @@
     z-index: 11;
   }
 
-  .in_view > .by:hover + .content
+  .in_view 
+    > .by:hover 
+    + .content
   {
     z-index: 101;
   }
   
-  a.clicker:hover + .by + .content
+  a.clicker:hover 
+    + .by 
+    + .content
   {
     transform: translateX(calc(var(--padm)));
     /*z-index: 4;*/
   }
-  .in_view .replies .by:hover + .content,
-  .in_view .replies a.clicker:hover + .by + .content
+
+  .in_view .replies .by:hover 
+    + .content,
+
+  .in_view .replies a.clicker:hover 
+    + .by 
+    + .content
   {
     top: 6rem;
   }
   
 
-  .in_view > .replies > .note > .content,
-  .viewing .root:not(.in_path) > .content,
-  .view_p .root.in_path > .content,
-  .root:not(.in_view):not(.in_path) > .content
+  .in_view 
+    > .replies 
+      > .note 
+        > .content,
+
+  .viewing .root:not(.in_path) 
+    > .content,
+
+  .view_p .root.in_path 
+    > .content,
+
+  .root:not(.in_view):not(.in_path) 
+    > .content
   {
     position: sticky; 
     top: 1rem;
     z-index: 2;
   }
   
-  .in_view > .replies > .note > .content
+  .in_view 
+    > .replies 
+      > .note 
+        > .content
   {
     top: calc(3.5rem + 2px);
   }
@@ -288,7 +325,8 @@
 
 @media screen and (max-width: 768px) 
 {
-  .root:not(.in_view):not(.in_path) > .content
+  .root:not(.in_view):not(.in_path) 
+    > .content
   {
     overflow-y:  hidden;
     position: relative;

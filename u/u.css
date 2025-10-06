@@ -38,49 +38,9 @@
   }
 }
 
-
-#u_u 
+.section_side > header img 
 {
-  bottom: 0;
-  box-sizing: border-box;
-  min-width: var(--size);
-  
-  position: fixed;
-  right: 0;
-  z-index: 12;
-}
-
-#butt_u_u
-{
-  align-items: center;
-  background-color: rgb(var(--c));
-  border: none;
-  border-radius: 0;
-  bottom: 0;
-  box-sizing: border-box;
-  color: rgb(var(--color-dark));
-  display: grid;
-  height: var(--size);
-  justify-items: center;
-  object-fit: cover;
-  padding: 0;
-  position: fixed;
-  right: 0;
-  text-align: center;
-  width: var(--size);
-  z-index: 1;
-}
-
-#butt_u_u[data-luma="dark"]
-{
-  color: rgb(var(--color-light));
-}
-
-#butt_u_u img 
-{
-  opacity: 0;
-  overflow: hidden;
-  position: absolute;
+  opacity: 1;
   pointer-events: none;
   transform: scale(.82);
   transition: 
@@ -89,36 +49,20 @@
   transform-origin: center center;
 }
 
-#butt_u_u.has-picture
+header.has-picture .section_side_butt
 {
-  font-size: 0;
+  opacity: 0;
 }
 
-#butt_u_u.has-picture img[src]
-{
-  opacity: 1;
-}
-
-#u_u.expanded
-{
-  max-height: calc(100vh - var(--line));
-  overflow-y: scroll;
-}
-
-#u_u.expanded #butt_u_u,
-#u_u.expanded #butt_u_u img
+.section_side.expanded > header img
 {
   font-size: var(--font-size-s);
   width: var(--line);
   height: var(--line);
 }
 
-#u_u:not(.expanded) > *:not(#butt_u_u)
-{
-  display: none;
-}
 
-#u_u #butt_u_u:not(.has-picture)::after
+.section_side > header:not(.has-picture) .section_side_butt::after
 {
   background-color: rgba(var(--c),1);
   align-content: center;
@@ -129,35 +73,11 @@
   position: absolute;
 }
 
-.cli_expanded #u_u
+
+/* @media screen and (min-width: 1025px) 
 {
-  align-content: start;
-  align-items: start;
-  bottom: unset;
-  z-index: 8;
-}
 
-.cli_expanded #u_u.expanded
-{
-  padding-bottom: calc(90vh - var(--size) - var(--line) - var(--size));
-}
-
-.cli_expanded #butt_u_u
-{
-  bottom: unset;
-  top: var(--font-size);
-
-}
-
-
-@media screen and (min-width: 1025px) 
-{
-  #u_u:hover,
-  .cli_expanded #u_u:hover
-  {
-    z-index: 99;
-  }
-}
+} */
 
 
 /*@media screen and (max-width: 768px)

@@ -157,8 +157,9 @@
 .in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
 
 .view_p .root:not(.in_path),
-/* .view_e .note:not(.in_path), */
+
 .view_e .note.root:not(.in_path),
+.view_e .note:not(.in_path),
 
 .section_e:not(.expanded) .note:not(.in_path)
 {
@@ -312,7 +313,8 @@ html:not(.needs_pagin) .pagination
     z-index: 2;
   }
 
-  .note:hover::after
+  .note[data-seen]:hover::after,
+  .note[data-subs]:hover::after
   {
     opacity: 1;
     transform: translateY(-1px);

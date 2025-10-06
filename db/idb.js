@@ -110,6 +110,12 @@ indexed_db.ops.get_all =async(db,store)=>
 };
 
 
+indexed_db.ops.keys =async(db,store)=>
+{
+  const odb = db.transaction(store).objectStore(store);
+  odb.getAllKeys().onsuccess=e=> postMessage(e.target.result);
+};
+
 const merge =(dis,dat)=>
 {
   dis = Object.assign({},dis);

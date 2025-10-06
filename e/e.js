@@ -13,6 +13,7 @@ aa.e =
   def:{id:'e'},
   kinds:{},
   printed:new Map(),
+  sheet:new Map(),
   scripts:
   [
     '/e/clk.js',
@@ -37,6 +38,7 @@ aa.e =
     '/e/highlight.css',
     '/e/actions.css',
     '/e/kind_7.css',
+    '/e/follows.css',
   ],
   butts:
   {
@@ -165,8 +167,7 @@ aa.e.context =(content,event,trust)=>
 aa.e.em =dat=>
 {
   // console.log(dat);
-  const id = dat?.event?.id;
-  // if (!id) console.trace(dat);
+  const id = dat?.event?.id;  
   if (!aa.em.has(id))
   {
     aa.em.set(id,dat);
@@ -174,11 +175,12 @@ aa.e.em =dat=>
     {
       if (aa.em_a.has(dat.id_a))
       {
-        if (aa.em_a.get(dat.id_a).event.created_at
-        < dat.event.created_at) aa.em_a.set(dat.id_a,dat)
+        let last = aa.em_a.get(dat.id_a).event.created_at;
+        if (last < dat.event.created_at)
+          aa.em_a.set(dat.id_a,dat)
       }
       else aa.em_a.set(dat.id_a,dat);
-    } 
+    }
   }
   return id
 };
@@ -254,73 +256,122 @@ aa.e.decrypted_content =async(id,decrypted)=>
 };
 
 
-// add key to follow list (kind:3)
-aa.e.follows_add =async s=>
+aa.e.anal =()=>
 {
-  if (!aa.u.p) 
+  let authors = new Map();
+  for (const dat of aa.em.values())
   {
-    aa.log('login first')
-    return
+    if (!authors.has(dat.event.pubkey))
+    {
+      authors.set(dat.event.pubkey,new Set());
+    }
+   authors.get(dat.event.pubkey).add(dat.event.id);
   }
-  let tag = ['p'];
+  let array = [...authors.entries()]
+    .sort((a,b)=>a[1].size < b[1].size ? 1 : -1 )
+    .map(i=>
+    {
+      let pubkey = i[0];
+      let name = aa.temp.p_link.get(pubkey)?.data.name
+        || aa.db.p[pubkey]?.metadata?.name;
+      return [name,...i]
+    })
+    
+  return array
+};
 
-  let [key,rest] = s.split(aa.regex.fw);
-
+// build p tag from string
+aa.e.follow_tag =string=>
+{
+  let [key,rest] = string.split(aa.regex.fw);
   if (key.startsWith('npub')) key = aa.fx.decode(key);
   if (!aa.fx.is_key(key)) 
   {
     aa.log('invalid key to follow '+key);
     return false
   }
+
   if (aa.p.following(key)) 
   {
     aa.log('already following '+key);
     return false
   }
-  tag.push(key);
+
+  let tag = ['p',key];
   
   let [relay,petname] = rest.trim().split(aa.regex.fw);
   relay = aa.fx.url(relay)?.href || '';
-  petname = aa.fx.an(petname);
-
   if (relay) tag.push(relay);
+  
+  petname = aa.fx.an(petname);
   if (petname)
   {
     if (!relay) tag.push('');
     tag.push(petname)
   }
   
+  return tag
+};
+
+
+// add key to follow list (kind:3)
+aa.e.follows_add =async string=>
+{
+  if (!aa.u.p) 
+  {
+    aa.log('follows_add: login first')
+    return
+  }
+
+  let tag = aa.e.follow_tag(string);
+  if (!tag) return;
+  
   let dat = await aa.p.events_last(aa.u.p,'k3');
   if (!dat) return false;
   dat = await aa.e.get(dat);
   if (!dat)
   {
-    aa.log('no k3 found, create one first');
+    aa.log('follows_add: no list found, create one first');
     return
   }
 
-  // const event = aa.fx.list_add([tag],dat.event);
-
-  const event = aa.e.normalise(
+  // if (aa.e.tags_has_tag(dat.event.tags,tag))
+  if (dat.event.tags.find(t=> t[0]===tag[0] && t[1]===tag[1]))
   {
-    kind:3,
-    content:dat.event.content,
-    tags:[...dat.event.tags,tag]
+    aa.log('follows_add: already in list');
+    return
+  }
+
+  const {kind,content,tags} = dat.event;
+  tags.push(tag);
+
+  let l = aa.mk.l('div',
+  {
+    cla:'follows_add',
+    app:
+    [
+      aa.mk.l('h2',{con:'item to add'}),
+      aa.mk.tag_list([tag]),
+      ' ',aa.mk.details(`preview (${tags.length})`,aa.mk.tag_list(tags),0,'base')
+    ]
   });
 
   aa.mk.confirm(
   {
-    title:'new follow list',
-    l:aa.mk.tag_list(event.tags),
-    scroll:{behaviour:'smooth',block:'end'},
+    title:`list update (kind:${kind})`,
+    l,
     no:{exe:()=>{}},
     yes:{exe:()=>
-    { 
-      aa.e.finalize(event);
-      setTimeout(()=>{aa.p.author(a[0]).then(p=>{aa.p.profile_upd(p)});},500);
+    {
+      aa.e.finalize(aa.e.normalise({kind,content,tags}));
+      setTimeout(()=>
+      {
+        aa.p.author(tag[1]).then(p=>{aa.p.profile_upd(p)})
+      },500);
     }}
   });
 };
+
 
 aa.mk.new_list =(tags,kind)=>
 {
@@ -328,22 +379,11 @@ aa.mk.new_list =(tags,kind)=>
 };
 
 
-
-aa.fx.list_add =(new_tags,event)=>
+// check if already in list
+aa.e.tags_has_tag =(tags,tag)=>
 {
-  let {kind,content,tags} = event;
-  for (const tag of new_tags)
-  {
-    // check if already in list
-    if (tags.find(t=>t[0]===tag[0] && t[1]===tag[1]))
-    {
-      aa.log('value already in list');
-      continue;
-    }
-    tags.push(tag)
-  }
-  // const event = aa.e.normalise({kind,content,tags});
-  // aa.e.finalize(aa.e.normalise(event));
+  if (!tag || !tags.length) return false;
+  return tags.find(t=> t[0]===tag[0] && t[1]===tag[1])
 };
 
 
@@ -352,46 +392,73 @@ aa.e.follows_del =async string=>
 {
   if (!aa.u.p)
   {
-    aa.log('no user found, set one first');
+    aa.log('follows_del: login first');
     return
   }
   
   let id = await aa.p.events_last(aa.u.p,'k3');
   if (!id) return;
   dat = await aa.e.get(id);
-  if (!dat) return;
+  if (!dat) 
+  {
+    aa.log('follows_del: no list found, create one first');
+    return
+  }
+
   aa.cli.fuck_off();
 
   let {kind,content,tags} = dat.event;
 
-  const old_len = tags.length;
-  let keys_to_unfollow = aa.fx.splitr(string,',');
+  let keys_to_unfollow = aa.fx.splitr(string,',')
+    .map(key=> key.startsWith('npub')
+      ? aa.fx.decode(key) 
+      : key)
+    .filter(key=>aa.fx.is_key(key));
 
-  let removed_list = aa.mk.l('ul',{cla:'list removed_tags'});
-  for (let key of keys_to_unfollow)
-  {
-    if (key.startsWith('npub')) key = aa.fx.decode(key);
-    if (aa.fx.is_hex(key)) 
-    {
-      removed_list.append(aa.mk.l('li',{con:key,cla:'disabled'}));
-      tags = tags.filter(tag=>tag[1]!==key);
-      aa.p.score(`${key} 4`);
-    }
-    else aa.log('invalid pubkey to unfollow')
-  }
+  // for (let key of keys_to_unfollow)
+  // {
+  //   if (key.startsWith('npub')) key = aa.fx.decode(key);
+  //   if (aa.fx.is_hex(key)) 
+  //   {
+  //     removed_list.append(aa.mk.l('li',{con:key,cla:'disabled'}));
+  //     tags = tags.filter(tag=>tag[1]!==key);
+  //     aa.p.score(`${key} 4`);
+  //   }
+  //   else aa.log('follows_del: invalid pubkey to delete')
+  // }
+  const is_excluded = tag=> keys_to_unfollow.includes(tag[1]);
+  removed_tags = tags.filter(is_excluded);
+  tags = tags.filter(i=>!is_excluded(i));
 
-  if (tags.length)
+  let l = aa.mk.l('div',
   {
-    const event = aa.e.normalise({ kind,content,tags });
-    aa.mk.confirm(
-    {
-      title:'new follow list:'+old_len+'->'+tags.length,
-      l:aa.mk.l('div',{cla:'wrap',app:[aa.mk.tag_list(tags),removed_list]}),
-      scroll:{behaviour:'smooth',block:'end'},
-      no:{ exe:()=>{} },
-      yes:{ exe:()=> aa.e.finalize(event) },
-    });
-  }
+    cla:'follows_del',
+    app:
+    [
+      aa.mk.l('h2',{con:`items to remove: (${removed_tags.length})`}),
+      aa.mk.tag_list(removed_tags,{cla:'disabled'}),
+      ' ',aa.mk.details(`preview (${tags.length})`,aa.mk.tag_list(tags),0,'base')
+    ]
+  });
+
+  aa.mk.confirm(
+  {
+    title:`list update (kind:${kind})`,
+    l, //:aa.mk.l('div',{cla:'wrap',app:[aa.mk.tag_list(tags),removed_list]}),
+    // scroll:{behaviour:'smooth',block:'end'},
+    no:{ exe:()=>{} },
+    yes:
+    { exe:()=> 
+      {
+        aa.e.finalize(aa.e.normalise({kind,content,tags}));
+        setTimeout(()=>
+        {
+          for (let key of keys_to_unfollow) 
+            aa.p.score(`${key} 4`);
+        },200)
+      }
+    },
+  });
 };
 
 
@@ -521,7 +588,7 @@ aa.e.load =async()=>
   let mod = aa.e;
   let id = mod.def.id;
   
-  aa.add_styles(aa.e.styles);
+  // aa.add_styles(aa.e.styles);
 
   aa.temp.miss = {};
   aa.temp.orphan = new Map();
@@ -533,7 +600,7 @@ aa.e.load =async()=>
     .then(dis=> dis.json())
     .then(dis=> mod.kinds_list = dis);
   
-  await aa.add_scripts(mod.scripts);
+  // await aa.add_scripts(mod.scripts);
 
   aa.actions.push(
     {
@@ -655,6 +722,8 @@ aa.e.quote_note =async(element,dat)=>
   aa.fx.color(p.pubkey,element);
   let header = aa.mk.event_header(dat);
   let content = await aa.e.render(dat);
+  if (content.classList.contains('no_content'))
+    content.append(aa.mk.tag_list(dat.event.tags));
   // let content = aa.mk.l('div',{cla:'content',con:dat.event.content});
   element.textContent = '';
   element.append(header,content);
@@ -754,15 +823,6 @@ aa.e.view =l=>
 };
 
 
-// checks if added element should be in_view
-aa.e.view_check =l=>
-{
-  if ((history.state?.view === '#'+l.id 
-    || aa.view.id_a && aa.view.id_a === l.dataset.id_a)
-  && !l.classList.contains('in_view'))
-    setTimeout(()=>{aa.e.view(l)},100);
-};
-
 
 // draft event
 aa.e.draft =async dat=>
@@ -773,8 +833,21 @@ aa.e.draft =async dat=>
   aa.em.set(dat.event.id,dat);
   aa.e.print(dat);
   
-  let target = aa.el.get('section_e');//document.getElementById('e');
-  if (target && !target.classList.contains('expanded')) aa.clk.expand({target});
+  let section = aa.el.get('section_e');//document.getElementById('e');
+  if (section && !section.classList.contains('expanded')) 
+    aa.clk.expand({target:section});
+  
+  aa.log(aa.mk.l('button',
+  {
+    cla:'butt exe',
+    con:`draft: ${dat.event.content.slice(0,12)}…`,
+    clk:e=>
+    {
+      let draft = aa.e.printed.get(dat.event.id);
+      if (draft) aa.fx.scroll(draft);
+      else aa.log('draft not found');
+    }
+  }))
 };
 
 

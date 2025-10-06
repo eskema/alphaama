@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 73;
+const aa_version = 74;
 // a
 const aa = 
 {
@@ -23,18 +23,22 @@ const aa =
     id:'aa',
     dependencies:
     [
+      '/dep/fastdom.js?v=1.0.4',
+      '/dep/nostr-tools.js?v=2.15.0',
+      '/dep/store.js',
+      
       // '/dep/deps.js', // bundled dependencies 
       // '/dep/asciidoctor.min.js?v=3.0.4',
-      '/dep/bolt11.js',
+      // '/dep/bolt11.js',
       '/dep/cashuts.js?v=2.0.0',
 
-      '/dep/fastdom.js?v=1.0.4',
+      
       // '/dep/fastdom-promised.js?v=1.0.4',
       // '/dep/fastdom-strict.js?v=1.0.4',
       // '/dep/math.js?v=14.0.1',
-      '/dep/nostr-tools.js?v=2.15.0',
+      
       '/dep/qrcode.js',
-      '/dep/store.js',
+      
       // '/dep/webtorrent.min.js',
       // '/dep/hls.js?v=1',
       // '/dep/blurhash.js?v=10000',
@@ -57,7 +61,7 @@ const aa =
       {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
       // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
     ],
-    tools:
+    scripts:
     [
       '/aa/mod.js?v='+aa_version,
       '/aa/view.js?v='+aa_version,
@@ -72,11 +76,11 @@ const aa =
     ],
     styles:
     [
-      '/aa/aa.css?v='+aa_version,
       '/aa/list.css?v='+aa_version,
       '/aa/mod.css?v='+aa_version,
       '/aa/log.css?v='+aa_version,
       '/aa/view.css?v='+aa_version,
+      '/aa/side.css?v='+aa_version,
       '/aa/dialog.css?v='+aa_version,
     ],
   },
@@ -88,7 +92,7 @@ const aa =
   state:{},
   temp:{},
   // dev:true
-  get dev(){ return sessionStorage.hasOwnProperty('dev') }
+  // get dev(){ return sessionStorage.hasOwnProperty('dev') }
 };
 
 
@@ -101,20 +105,20 @@ aa.add_styles =async a=>
 
 
 // toggle aa.dev on current tab
-aa.dev_set =force=>
-{
-  if (force !== undefined)
-  {
-    if (force) sessionStorage.dev = true;
-    else sessionStorage.removeItem(dev);
-  }
-  else
-  {
-    if (aa.dev) sessionStorage.removeItem(dev);
-    else sessionStorage.dev = true
-  }
-  aa.log(`aa.dev = ${aa.dev}`);
-};
+// aa.dev_set =force=>
+// {
+//   if (force !== undefined)
+//   {
+//     if (force) sessionStorage.dev = true;
+//     else sessionStorage.removeItem(dev);
+//   }
+//   else
+//   {
+//     if (aa.dev) sessionStorage.removeItem(dev);
+//     else sessionStorage.dev = true
+//   }
+//   aa.log(`aa.dev = ${aa.dev}`);
+// };
 
 
 // make element with options
@@ -153,6 +157,7 @@ aa.mk.l =(tag_name='div',options={})=>
       case 'rel': element.rel = value; break;
       case 'siz': element.sizes = value; break;
       case 'src': element.src = value; break;
+      case 'sty': element.style = value; break;
       case 'tab': element.tabIndex = value; break;
       case 'tit': element.title = value; break;
       case 'typ': element.type = value; break;
@@ -187,28 +192,39 @@ aa.mk.l =(tag_name='div',options={})=>
 // if no options found, load with defaults
 aa.load =async(o={})=>
 {
+  let {
+    styles,
+    l,
+    bod,
+    dep,
+    mods,
+    scripts,
+    no_page,
+  } = o;
   // setup document
-  aa.add_styles(o.styles || aa.def.styles);
+  aa.add_styles(styles || aa.def.styles);
   aa.framed = window.self !== window.top;
   
-  aa.l = o.l || document.documentElement;
-  aa.bod = document.body || o.bod;
+  aa.l = l || document.documentElement;
+  aa.bod = bod || document.body;
+
+  aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
+  aa.mod_l = aa.mk.l('div',{id:'mods'});
+
+  let dependencies = dep || aa.def.dependencies;
+  scripts = scripts || aa.def.scripts;
   
-  let dependencies = o.dependencies || aa.def.dependencies;
-  let tools = o.tools || aa.def.tools;
+  await aa.add_scripts([...dependencies,...scripts]);
   
-  
-  await aa.add_scripts([...dependencies,...tools]);
   // extend fastdom
   // aa.fastdom = fastdom.extend(fastdomPromised);
+  
+  aa.view.l = aa.mk.l('main',{id:'view'});
   aa.mk.manifest();
   aa.mk.dialog();
-  aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
-  aa.view.l = aa.mk.l('main',{id:'view'});
-  aa.mod_l = aa.mk.l('div',{id:'mods'});
-  
-  let mods = o.mods || aa.def.mods;
-  aa.mods_load(mods);
+  aa.mk.side();
+
+  await aa.mods_load(mods || aa.def.mods);
 
   aa.actions.push(
     {
@@ -243,86 +259,84 @@ aa.load =async(o={})=>
     // },
     
   );
-
-  // aa.asciidoc = Asciidoctor$$module$build$asciidoctor_browser();
-  
-  
-
-  setTimeout(()=>{aa.cli.on_collapse.push(aa.logs_read)},200);
-  
-  
+  if (!no_page) aa.mk.page();
   window.addEventListener('beforeunload',aa.unload);
-  // window.onbeforeunload = aa.unload;
-
-  if (aa.framed)
-    fastdom.mutate(()=>{aa.l.classList.add('framed')});
-
   return true
 };
 
 
-// log stuff
-aa.log =(con='',container=false,is_new=true)=>
-{
-  const cla = 'log item'+(is_new?' is_new':'');
-  const clk =e=>
-  {
-    e.stopPropagation();
-    aa.log_read(e.target)
-  };
-  const app = typeof con==='string'?aa.mk.l('p',{con}):con;
-  const log = aa.mk.l('li',{cla,clk,app});
-  
-  if (!container) container = aa.logs;
-  if (container) fastdom.mutate(()=>{container.append(log)});
-  else console.log('log:',con);
-  return log
-};
 
 
-// mark log as read
-aa.log_read =async element=>
-{
-  if (!element) return;
-  if (!element.classList.contains('is_new'))
-  element = element.closest('.is_new');
-  if (!element) return;
 
-  fastdom.measure(()=>
-  {
-    element.blur();
-  });
-  fastdom.mutate(()=>
-  {
-    element.classList.remove('is_new');
-    element.classList.add('is_recent');
-  })
-};
+
+
+
 
 
 // append mod scripts when required mods have been loaded
+// aa.mods_load =async mods=>
+// {
+//   aa.temp.mods_after_load = [];
+//   let styles = [];
+//   for (const mod of mods)
+//   {
+//     if (aa.required(mod.requires))
+//     {
+//       await aa.add_scripts([mod.src]);
+//       let id = mod.id;
+//       if (Object.hasOwn(aa,id) && Object.hasOwn(aa[id],'load'))
+//       {
+//         let dis_mod = aa[id];
+//         await dis_mod.load();
+//         dis_mod.loaded = true;
+//         if (dis_mod.styles) styles.push(...dis_mod.styles);
+//       }
+//     }
+//     console.log(mod);
+//   }
+//   console.log('yo');
+//   while (aa.temp.mods_after_load.length)
+//   {
+//     let after_load = aa.temp.mods_after_load.shift();
+//     setTimeout(after_load,0)
+//   }
+//   delete aa.temp.mods_after_load;
+//   aa.add_styles(styles);
+// };
+
 aa.mods_load =async mods=>
 {
   aa.temp.mods_after_load = [];
-  for (const mod of mods)
-  {
-    if (aa.required(mod.requires))
-    {
-      await aa.add_scripts([mod.src]);
-      let id = mod.id;
-      if (Object.hasOwn(aa,id)
-      && Object.hasOwn(aa[id],'load')) 
-        await aa[id].load();
-      
-      aa[id].loaded = true;
-    }
-  }
+  
+  for (const mod of mods) await aa.mod_load(mod);
+  
   while (aa.temp.mods_after_load.length)
   {
     let after_load = aa.temp.mods_after_load.shift();
     setTimeout(after_load,0)
   }
   delete aa.temp.mods_after_load;
+};
+
+aa.mod_load =async mod=>
+{
+  return new Promise(async resolve=>
+  {
+    let id = mod.id;
+    await aa.add_scripts([mod.src]);
+    if (Object.hasOwn(aa,id))
+    {
+      let dis_mod = aa[id];
+      if (Object.hasOwn(dis_mod,'styles'))
+        aa.add_styles(dis_mod.styles);
+      if (Object.hasOwn(dis_mod,'scripts'))
+        await aa.add_scripts(dis_mod.scripts);
+      if (Object.hasOwn(dis_mod,'load'))
+        await dis_mod.load();
+      dis_mod.loaded = true;
+    }
+    resolve(true)
+  })
 };
 
 
@@ -362,25 +376,32 @@ aa.reset =async()=>
 
 
 // checks if required mods already loaded
-aa.required =mods=>
-{
-  for (const id of mods) 
-    if (!Object.hasOwn(aa,id) || !aa[id].loaded) return false
-  return true
-};
+// aa.required =mods=>
+// {
+//   for (const id of mods) 
+//     if (!Object.hasOwn(aa,id) || !aa[id].loaded) return false
+//   return true
+// };
 
 
 // default page layout
 aa.mk.page =(o={})=>
 {
-  let df = new DocumentFragment();
-  df.append(
+  let elements = new DocumentFragment();
+  elements.append
+  (
     aa.mk.header(),
     aa.view.l,
     aa.cli.l,
+    aa.el.get('side'),
     aa.el.get('dialog')
   );
-  aa.bod.prepend(df);  
+  
+  aa.bod.prepend(elements);
+  aa.cli.on_collapse.push(aa.logs_read);
+  
+  if (aa.framed)
+    fastdom.mutate(()=>{aa.l.classList.add('framed')});
   aa.log(aa.mk.status(),0,0);
   setTimeout(aa.view.pop,100);
 };
@@ -406,37 +427,9 @@ aa.add_scripts =async array=>
 };
 
 
-aa.mk.status =force=>
-{
-  let status = aa.el.get('status');
-  if (!force && status) return status;
-
-  let on_off = navigator.onLine ? 'on' : 'off';
-  status = aa.mk.l('p',
-  {
-    con: `${on_off}line at ${location.origin} since `,
-    app: aa.mk.time(aa.now)
-  });
-  aa.el.set('status',status)
-  return status 
-};
-
-
-
-
-
 // before unload event
 aa.unload =e=>
 {
   e.preventDefault();
   e.returnValue = ''
-  // return true
-  // if (sessionStorage.hasOwnProperty('reload'))
-  // {
-  //   sessionStorage.removeItem('reload');
-  //   e.returnValue = '';
-  //   return ''
-  // }
-  // e.preventDefault();
-  // if (window.confirm('reload?')) return true
 };

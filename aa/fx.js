@@ -664,9 +664,9 @@ aa.fx.sorts =
 
 
 // shorten string to only <start>…<end>
-aa.fx.short_key =(key,len=6)=>
+aa.fx.short_key =(key,len=6,separator='…')=>
 {
-  return key.slice(0,len)+'…'+key.slice(-len)
+  return `${key.slice(0,len)}${separator}${key.slice(-len)}`
 };
 
 
@@ -686,7 +686,7 @@ aa.fx.splitr =(string,at=' ')=>
 
 
 // split at given index
-aa.fx.split_at =(i,a)=> [a.slice(0,i),a.slice(i)];
+aa.fx.split_at =(a,i=0)=> [a.slice(0,i),a.slice(i)];
 
 
 // splits string, given '"quoted text" and something else'

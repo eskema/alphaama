@@ -9,7 +9,7 @@ dialog
   padding: 0;
 }
 
-dialog [open]::backdrop
+dialog[open]::backdrop
 {
   background: black;
   opacity: .618;
@@ -20,7 +20,7 @@ dialog .wrap
   padding: var(--line) 0;
 }
 
-dialog [title]::before
+dialog[title]::before
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-main));
@@ -62,7 +62,7 @@ dialog > button
 
 .dialog_options
 {
-  background: rgb(var(--color-b));
+  background: rgba(var(--color-b),.8);
   bottom: 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -73,4 +73,9 @@ dialog > button
   padding: var(--pad);
   position: sticky;
   position: -webkit-sticky;
+}
+
+dialog[open] > div
+{
+  margin: var(--pad);
 }

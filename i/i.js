@@ -7,9 +7,6 @@ index filtering
 */
 
 
-
-
-
 aa.i =
 {
   def:{id:'i',ls:{}},
@@ -46,6 +43,11 @@ aa.i.d =dat=>
   if (dat.event.hasOwnProperty('kind')) aa.i.dex.e('kind',dat.event.kind);
   if (dat.event.created_at) aa.i.dex.at(dat.event.created_at,dat.event.id);
   if (dat.event.tags?.length) aa.i.dex.tags(dat.event.tags);
+};
+
+aa.e.index =dat=>
+{
+
 };
 
 
@@ -261,7 +263,7 @@ aa.mk.i_pubkey =(k,v,id)=>
 // on load
 aa.i.load =async()=>
 {
-  aa.add_styles(['/i/i.css']);
+  // aa.add_styles(['/i/i.css']);
   aa.i.l = aa.mk.l('ul',{id:'i',cla:'list'});
   // const app_i = ()=>
   // {
@@ -271,23 +273,6 @@ aa.i.load =async()=>
   // };
   // app_i();
   // aa.i.run();
-};
-
-
-// returns all the notes that have a tag with value
-aa.fx.notes_with_tag =(k,v)=>
-{
-  let ids = [];
-  let notes = [];
-  let tagged = document.querySelectorAll('.'+k+'[data-tag="'+v+'"]');
-  for (const tag of tagged)
-  {
-    let note = tag.closest('.note');
-    if (ids.includes(note.dataset.id)) continue;
-    ids.push(note.dataset.id);
-    notes.push(note);
-  }
-  return notes
 };
 
 
@@ -313,25 +298,3 @@ aa.clk.val =e=>
   let items = aa.fx.index_items(k,v);
   aa.i.filter_out(dis,items,k,v);
 }
-
-// get elements with key:value
-// aa.fx.index_items =(k,v)=>
-// { 
-//   switch (k)
-//   {
-//     // case 'clas':
-//     case 'seen':
-//     case 'subs': 
-//       let items = document.querySelectorAll('.note[data-'+k+']');
-//       return Array.from(items).filter(i=>i.dataset[k].includes(v));
-//     case 'pubkey': 
-//       return Array.from(document.querySelectorAll('.note[data-pubkey="'+v+'"]'));
-//     case 'kind': 
-//       return Array.from(document.querySelectorAll('.note[data-kind="'+v+'"]'));
-//     case 'tag_t':
-//     case 'tag_subject': 
-//     case 'tag_d': 
-//       return aa.fx.notes_with_tag(k,v);
-//   }
-//   return []
-// };

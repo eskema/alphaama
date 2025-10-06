@@ -79,24 +79,24 @@ aa.e.miss_set =(type,id,relays=[])=>
 
 // get event from tag and prints it,
 // otherwise add to missing list
-aa.e.miss_print =async(tag,relays=[])=>
-{
-  // console.log('miss_print',tag);
-  const id = tag[1];
-  if (tag[2])
-  {
-    let relay = aa.fx.url(tag[2])?.href;
-    if (relay) relays.push(relay);
-    else console.log('invalid relay url',tag);
-  }
+// aa.e.miss_print =async(tag,relays=[])=>
+// {
+//   // console.log('miss_print',tag);
+//   const id = tag[1];
+//   if (tag[2])
+//   {
+//     let relay = aa.fx.url(tag[2])?.href;
+//     if (relay) relays.push(relay);
+//     else console.log('invalid relay url',tag);
+//   }
 
-  if (!aa.temp.miss_print) aa.temp.miss_print = new Map();
-  if (!aa.temp.miss_print.has(id)) aa.temp.miss_print.set(id,[]);  
+//   if (!aa.temp.miss_print) aa.temp.miss_print = new Map();
+//   if (!aa.temp.miss_print.has(id)) aa.temp.miss_print.set(id,[]);  
   
-  aa.fx.a_add(aa.temp.miss_print.get(id),relays);
+//   aa.fx.a_add(aa.temp.miss_print.get(id),relays);
   
-  aa.fx.to(aa.e.miss_to,500,'miss_print');
-};
+//   aa.fx.to(aa.e.miss_to,500,'miss_print');
+// };
 
 
 aa.e.miss_to =async()=>
@@ -124,15 +124,15 @@ aa.e.miss_to =async()=>
 
 // get event from tag and prints it,
 // otherwise add to missing list
-aa.e.miss_print_a =async(tag,relays=[])=>
-{
-  const [type,id,relay] = tag;
+// aa.e.miss_print_a =async(tag,relays=[])=>
+// {
+//   const [type,id,relay] = tag;
 
-  if (relay) relays.push(relay);
-  let dat = await aa.e.get_a(id);
-  if (dat) aa.e.print_q(dat); 
-  else aa.e.miss_set(type,id,relays);
-};
+//   if (relay) relays.push(relay);
+//   let dat = await aa.e.get_a(id);
+//   if (dat) aa.e.print_q(dat); 
+//   else aa.e.miss_set(type,id,relays);
+// };
 
 
 

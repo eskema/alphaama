@@ -220,7 +220,7 @@
   content: 'x';
 }
 
-.note.tiny > .by > .butt.tiny::before
+.tiny > .by > .butt.tiny::before
 {
   content: 'o';
   /* color: rgb(var(--color-no)); */

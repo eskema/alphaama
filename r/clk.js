@@ -8,49 +8,7 @@ aa.clk.relset =e=>
   const k_v = `${k}_${v}`;
   let rels = aa.fx.in_set(aa.r.o.ls,v,false);
   aa.r.filter(rels,k_v,l);
-  // let mod = l.closest('.mod');
-  // let list = mod.querySelector('.list');
-  // let cla_active = 'active';
-  // if (l.classList.contains(cla_active))
-  // {
-  //   fastdom.mutate(()=>
-  //   {
-  //     l.classList.remove(cla_active);
-      
-  //     for (const rel of rels)
-  //     {
-  //       let item = aa.r.li.get(rel);
-  //       let a = item.dataset.out ? item.dataset.out.trim().split(' ') : [];
-  //       aa.fx.a_add(a,[k_v]);
-  //       item.dataset.out = a.join(' ');
-  //       item.classList.add('out');
-  //     }
-  //   })
-  // }
-  // else
-  // {
-  //   fastdom.mutate(()=>
-  //   {
-  //     l.classList.add(cla_active);
 
-  //     for (const rel of rels)
-  //     {
-  //       let item = aa.r.li.get(rel);
-  //       let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
-  //       a = aa.fx.a_rm(a,[k_v]);
-  //       if (a.length) item.dataset.out = a.join(' ');
-  //       else
-  //       {
-  //         item.dataset.out = '';
-  //         item.classList.remove('out');
-  //       }
-  //     }
-  //     // for (const el of list.children)
-  //     // {
-  //     //   if (el.dataset.sets.includes(set)) el.classList.add('filt_in')
-  //     // }
-  //   })
-  // }
   console.log(l)
 };
 
@@ -65,55 +23,11 @@ aa.clk.relstate =e=>
   const v = l.dataset.v;
   const k_v = `${k}_${v}`;
   
-  // let rels;
-  rels = [...aa.r.li].filter(i=>i[1].dataset.state===v).map(i=>i[0])
-  // switch(v)
-  // {
-  //   case '0':
-  //     rels = [...aa.r.li].filter(i=>i[1].dataset.state===v).map(i=>i[0])
-  //   default: 
-  //     rels = Object.values(aa.r.active)
-  //     .filter(i=>i.ws?.readyState===v)
-  //     .map(i=>i.ws.url);
-  // }
+  rels = [...aa.r.mod_li]
+    .filter(i=>i[1].dataset.state===v)
+    .map(i=>i[0]);
   aa.r.filter(rels,k_v,l);
-  // let cla_active = 'active';
-  // if (l.classList.contains(cla_active))
-  // {
-  //   fastdom.mutate(()=>
-  //   {
-  //     l.classList.remove(cla_active);
-      
-  //     for (const rel of rels)
-  //     {
-  //       let item = aa.r.li.get(rel);
-  //       let a = item.dataset.out ? item.dataset.out.trim().split(' ') : [];
-  //       aa.fx.a_add(a,[k_v]);
-  //       item.dataset.out = a.join(' ');
-  //       item.classList.add('out');
-  //     }
-  //   })
-  // }
-  // else
-  // {
-  //   fastdom.mutate(()=>
-  //   {
-  //     l.classList.add(cla_active);
 
-  //     for (const rel of rels)
-  //     {
-  //       let item = aa.r.li.get(rel);
-  //       let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
-  //       a = aa.fx.a_rm(a,[k_v]);
-  //       if (a.length) item.dataset.out = a.join(' ');
-  //       else
-  //       {
-  //         item.dataset.out = '';
-  //         item.classList.remove('out');
-  //       }
-  //     }
-  //   })
-  // }
   console.log(l)
 };
 
@@ -142,10 +56,13 @@ aa.r.filter_rm =(rels,k_v,l)=>
 {
   for (const rel of rels)
   {
-    let item = aa.r.li.get(rel);
-    let a = l.dataset.out ? l.dataset.out.trim().split(' ') : [];
+    let item = aa.r.mod_li.get(rel);
+    let a = l.dataset.out 
+      ? l.dataset.out.trim().split(' ') 
+      : [];
     a = aa.fx.a_rm(a,[k_v]);
-    if (a.length) item.dataset.out = a.join(' ');
+    if (a.length) 
+      item.dataset.out = a.join(' ');
     else
     {
       item.dataset.out = '';
@@ -158,7 +75,7 @@ aa.r.filter_out =(rels,k_v,l)=>
 {
   for (const rel of rels)
   {
-    let item = aa.r.li.get(rel);
+    let item = aa.r.mod_li.get(rel);
     let a = item.dataset.out ? item.dataset.out.trim().split(' ') : [];
     aa.fx.a_add(a,[k_v]);
     item.dataset.out = a.join(' ');

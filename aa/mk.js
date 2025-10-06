@@ -1,13 +1,11 @@
-// button that toggles the class 'expanded'
-aa.mk.butt_expand =(id,con)=>
+aa.mk.side =()=>
 {
-  if (!con) con = id;
-  let cla = 'butt';
-  let clk = aa.clk.expand;
-  let dat = {controls:id};
-  const element = aa.mk.l('button',{con,cla,clk,dat});
-  aa.el.set(`${cla}_${id}`,element);
-  return element
+  aa.el.set('side',aa.mk.section({
+    id:'side',
+    name:'a_a',
+    element:aa.mod_l,
+    tagname:'aside'
+  }))
 };
 
 
@@ -666,6 +664,7 @@ aa.mk.section =options=>
 {
   let 
   {
+    clk,
     id,
     name,
     element,
@@ -677,16 +676,21 @@ aa.mk.section =options=>
   } = options;
   
   if (!tagname) tagname = 'section';
-  let s_id = `section_${id}`;
+  let section_id = `section_${id}`;
   if (!name) name = id;
   
   if (!classes?.length) classes = '';
-  classes += ` section ${s_id}`;
+  classes += ` section ${section_id}`;
   classes = classes.trim();
   
-  let section_butt = aa.mk.butt_expand(s_id,name);
-  section_butt.classList.add('section_butt');
-  section_butt.dataset.id = id;
+  let section_butt = aa.mk.l('button',
+  {
+    con: name,
+    cla: `butt section_butt ${section_id}_butt`,
+    clk: clk || aa.clk.expand,
+    dat: {id, controls: section_id}
+  });
+  aa.el.set(`butt_${section_id}`,section_butt);
   
   let header = aa.mk.l('header',{app:section_butt});
   let opts = 
@@ -706,18 +710,26 @@ aa.mk.section =options=>
   
   if (collapse)
   {
-    header.append(' ',aa.mk.l('button',{con:'-',cla:'butt collapse',clk:e=>
-    {
-      section.classList.toggle('collapsed')
-    }}));
+    header.append(
+      ' ',
+      aa.mk.l('button',
+      {
+        con:'-',
+        cla:'butt collapse',
+        clk:e=>{ section.classList.toggle('collapsed') }
+      })
+    );
   }
 
   if (filter)
   {
-    header.append(' ',aa.mk.list_filter(element || section));
+    header.append(
+      ' ',
+      aa.mk.list_filter(element || section)
+    );
   }
   
-  aa.el.set(s_id,section);
+  aa.el.set(section_id,section);
   return section
 };
 
@@ -739,6 +751,23 @@ aa.mk.server =(k,v,type='li')=>
       aa.mk.l('span',{cla:'hashsearch',con:url.hash+url.search})
     ]
   });
+};
+
+
+// status element
+aa.mk.status =force=>
+{
+  let status = aa.el.get('status');
+  if (!force && status) return status;
+
+  let on_off = navigator.onLine ? 'on' : 'off';
+  status = aa.mk.l('p',
+  {
+    con: `${on_off}line at ${location.origin} since `,
+    app: aa.mk.time(aa.now)
+  });
+  aa.el.set('status',status)
+  return status 
 };
 
 

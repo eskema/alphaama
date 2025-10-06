@@ -10,6 +10,11 @@
   z-index: 1;
 }
 
+.expanded > .authors
+{
+  margin-bottom: var(--line);
+}
+
 .profile 
 {
   align-items: end;
@@ -50,10 +55,10 @@
   display: none;
 }
 
-.section_p.expanded .profile:last-child
+/* .section_p.expanded .profile:last-child
 {
   margin-bottom: var(--line);
-}
+} */
 
 
 /* @group profile data */

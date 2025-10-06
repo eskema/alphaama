@@ -60,12 +60,23 @@ dialog .mod
   user-select: none;
 }
 
+.mod_info
+{
+  padding: var(--pad);
+}
+
 dialog .mod > header
 {
   grid-template-areas: ". . pop";
   pointer-events: none;
 }
 
+.mod.expanded > header
+{
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
 
 .mod.expanded > header > .section_butt
 {
@@ -76,16 +87,12 @@ dialog .mod > header
   justify-items: end;
   justify-self: stretch;
   padding: var(--pad) 0;
-  position: sticky;
-  top: 0;
 }
 
 .mod:not(.expanded) > header > .section_butt
 {
   font-size: 0;
 }
-
-
 
 .mod .section_butt::before
 {
@@ -94,7 +101,7 @@ dialog .mod > header
 
 .mod:not(.expanded) .section_butt::before
 {
-  content: "- " attr(data-id);
+  content: "- " attr(data-mod);
   font-size: var(--font-size-m);
 }
 

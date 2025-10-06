@@ -18,7 +18,7 @@ aa.view.ls.npub1 =async npub=>
 
   let ids = [];
   let items = [];
-  let refs = aa.temp.p_link.get(v)?.a;
+  let refs = aa.temp.p_link.get(v)?.elements;
   if (refs) for (const i of refs)
   {
     let note = i.closest('.note');

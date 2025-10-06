@@ -146,7 +146,8 @@ aa.mk.note =dat=>
 
   if (tags?.length)
   {
-    const tags_section = aa.mk.details('tags',aa.mk.tag_list(tags));
+    let opened = dat.event.content.length ? false : true;
+    const tags_section = aa.mk.details('tags',aa.mk.tag_list(tags),opened);
     tags_section.classList.add('tags_wrapper');
     tags_section.querySelector('summary').dataset.count = tags.length;
     app.append(tags_section);
@@ -268,28 +269,31 @@ aa.mk.replies_section =id=>
   // };
   // let replies_section = aa.mk.det('replies');
   const replies_id = `${id}_replies`;
+  let section_id = `section_${replies_id}`;
   
   let replies_section = aa.mk.section(
   {
     id: replies_id,
     classes: 'replies',
     collapse: true,
-    filter: true
+    filter: true,
+    clk:aa.clk.mark_read
   });
   let butt = replies_section.firstElementChild.firstElementChild;
   butt.classList.add('mark_read');
-  butt.addEventListener('click',aa.clk.mark_read);
+  // butt.removeEventListener('click',aa.clk.expand);
+  // butt.addEventListener('click',aa.clk.mark_read);
   
   
-  if (!sessionStorage.hasOwnProperty(replies_id)
-  || sessionStorage[replies_id] === 'expanded')
+  if (!sessionStorage.hasOwnProperty(section_id)
+  || sessionStorage[section_id] === 'expanded')
     replies_section.classList.add('expanded');
   return replies_section
 };
 
 
 // make tag list
-aa.mk.tag_list =tags=>
+aa.mk.tag_list =(tags,options)=>
 {
   const times = tags.length;
   const l = aa.mk.l('ol',{cla:'tags'});
@@ -297,8 +301,10 @@ aa.mk.tag_list =tags=>
   
   for (let i=0;i<times;i++) 
   {
-    let tent = tags[i].join(', ');
-    let li = aa.mk.l('li',{cla:'tag tag_'+tags[i][0],con:tent});
+    let con = tags[i].join(', ');
+    let cla = 'tag tag_'+tags[i][0];
+    if (options?.cla) cla += ' '+options.cla;
+    let li = aa.mk.l('li',{cla,con});
     li.dataset.i = i;
     l.append(li);//aa.mk.tag(tags[i],i));
   }

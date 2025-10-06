@@ -19,8 +19,8 @@ aa.view.clear =()=>
       if (in_view.classList.contains('note'))
       {
         if (aa.view.in_path?.length) 
-          for (const l of aa.view.in_path) 
-            aa.fx.path_rm(l);
+          for (const element of aa.view.in_path) 
+            aa.fx.path_rm(element);
       }
       delete aa.view.in_view;
       delete aa.view.id_a;

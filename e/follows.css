@@ -1,0 +1,4 @@
+.follows_add > details
+{
+  margin-top: var(--line);
+}
