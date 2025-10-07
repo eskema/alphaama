@@ -21,28 +21,7 @@ const aa =
   def:
   {
     id:'aa',
-    dependencies:
-    [
-      '/dep/fastdom.js?v=1.0.4',
-      '/dep/nostr-tools.js?v=2.15.0',
-      '/dep/store.js',
-      
-      // '/dep/deps.js', // bundled dependencies 
-      // '/dep/asciidoctor.min.js?v=3.0.4',
-      // '/dep/bolt11.js',
-      '/dep/cashuts.js?v=2.0.0',
-
-      
-      // '/dep/fastdom-promised.js?v=1.0.4',
-      // '/dep/fastdom-strict.js?v=1.0.4',
-      // '/dep/math.js?v=14.0.1',
-      
-      '/dep/qrcode.js',
-      
-      // '/dep/webtorrent.min.js',
-      // '/dep/hls.js?v=1',
-      // '/dep/blurhash.js?v=10000',
-    ],
+    
     extensions:
     {
       img:['gif','heic','jpeg','jpg','png','webp'],
@@ -51,39 +30,61 @@ const aa =
     },
     mods:
     [
-      {id:'cli',src:'/cli/cli.js?v='+aa_version,requires:[]},
-      {id:'o',src:'/o/o.js?v='+aa_version,requires:['cli']},
-      {id:'p',src:'/p/p.js?v='+aa_version,requires:['o']},
-      {id:'e',src:'/e/e.js?v='+aa_version,requires:['p']},
-      {id:'r',src:'/r/r.js?v='+aa_version,requires:['e']},
-      {id:'q',src:'/q/q.js?v='+aa_version,requires:['r']},
-      {id:'i',src:'/i/i.js?v='+aa_version,requires:['e']},
-      {id:'u',src:'/u/u.js?v='+aa_version,requires:['r']},
+      ['cli','/cli/cli.js'],
+      ['o','/o/o.js'],
+      ['p','/p/p.js'],
+      ['e','/e/e.js'],
+      ['r','/r/r.js'],
+      ['q','/q/q.js'],
+      ['i','/i/i.js'],
+      ['u','/u/u.js'],
       // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
     ],
-    scripts:
-    [
-      '/aa/mod.js?v='+aa_version,
-      '/aa/view.js?v='+aa_version,
-      '/db/db.js?v='+aa_version,
-      '/aa/clk.js?v='+aa_version,
-      '/aa/fx.js?v='+aa_version,
-      '/aa/log.js?v='+aa_version,
-      '/aa/mk.js?v='+aa_version,
-      '/aa/parse.js?v='+aa_version,
-      '/aa/wakelock.js?v='+aa_version,
-      '/av/av.js?v='+aa_version,
-    ],
-    styles:
-    [
-      '/aa/list.css?v='+aa_version,
-      '/aa/mod.css?v='+aa_version,
-      '/aa/log.css?v='+aa_version,
-      '/aa/view.css?v='+aa_version,
-      '/aa/side.css?v='+aa_version,
-      '/aa/dialog.css?v='+aa_version,
-    ],
   },
+  deps:
+  [
+    '/dep/fastdom.js?v=1.0.4',
+    '/dep/nostr-tools.js?v=2.15.0',
+    '/dep/store.js',
+    
+    // '/dep/deps.js', // bundled dependencies 
+    // '/dep/asciidoctor.min.js?v=3.0.4',
+    // '/dep/bolt11.js',
+    // '/dep/cashuts.js?v=2.0.0',
+
+    
+    // '/dep/fastdom-promised.js?v=1.0.4',
+    // '/dep/fastdom-strict.js?v=1.0.4',
+    // '/dep/math.js?v=14.0.1',
+    
+    '/dep/qrcode.js',
+    
+    // '/dep/webtorrent.min.js',
+    // '/dep/hls.js?v=1',
+    // '/dep/blurhash.js?v=10000',
+  ],
+  scripts:
+  [
+    '/aa/mod.js?v='+aa_version,
+    '/aa/view.js?v='+aa_version,
+    '/db/db.js?v='+aa_version,
+    '/aa/clk.js?v='+aa_version,
+    '/aa/fx.js?v='+aa_version,
+    '/aa/log.js?v='+aa_version,
+    '/aa/mk.js?v='+aa_version,
+    '/aa/parse.js?v='+aa_version,
+    '/aa/wakelock.js?v='+aa_version,
+    '/av/av.js?v='+aa_version,
+  ],
+  styles:
+  [
+    '/aa/list.css?v='+aa_version,
+    '/aa/mod.css?v='+aa_version,
+    '/aa/log.css?v='+aa_version,
+    '/aa/view.css?v='+aa_version,
+    '/aa/side.css?v='+aa_version,
+    '/aa/dialog.css?v='+aa_version,
+  ],
   el:new Map(),
   fx:{},
   mk:{},
@@ -93,14 +94,42 @@ const aa =
   temp:{},
   // dev:true
   // get dev(){ return sessionStorage.hasOwnProperty('dev') }
+  regex:
+  {
+    get an(){ return /^[A-Z_0-9]+$/i },
+    get hashtag(){ return /(\B[#])[\w_-]+/g },
+    get hex(){ return /^[A-F0-9]+$/i },
+    //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+    //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+    get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
+    get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i },
+    get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
+    get str(){ return /"([^"]+)"/ }, // text in quotes ""
+    get fw(){ return /(?<=^\S+)\s/ }, // first word
+  }
 };
+
+// aa.regex =
+// {
+//   get an(){ return /^[A-Z_0-9]+$/i },
+//   get hashtag(){ return /(\B[#])[\w_-]+/g },
+//   get hex(){ return /^[A-F0-9]+$/i },
+//   //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+//   //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+//   get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
+//   get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i },
+//   get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
+//   get str(){ return /"([^"]+)"/ }, // text in quotes ""
+//   get fw(){ return /(?<=^\S+)\s/ }, // first word
+// };
 
 
 // head styles
-aa.add_styles =async a=>
+aa.add_styles =async array=>
 {
   let rel = 'stylesheet';
-  for (const ref of a) document.head.append(aa.mk.l('link',{rel,ref}));
+  for (const ref of array)
+    document.head.append(aa.mk.l('link',{rel,ref}));
 };
 
 
@@ -190,29 +219,32 @@ aa.mk.l =(tag_name='div',options={})=>
 
 
 // if no options found, load with defaults
-aa.load =async(o={})=>
+aa.load =async(options={})=>
 {
   let {
     styles,
-    l,
+    element,
     bod,
     dep,
     mods,
     scripts,
     no_page,
-  } = o;
+  } = options;
+
+  let {default: mods_list } = await import('./mods.json',{with:{type:'json'}});
+  console.log(mods_list);
   // setup document
-  aa.add_styles(styles || aa.def.styles);
+  aa.add_styles(styles || aa.styles);
   aa.framed = window.self !== window.top;
   
-  aa.l = l || document.documentElement;
+  aa.l = element || document.documentElement;
   aa.bod = bod || document.body;
 
   aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
   aa.mod_l = aa.mk.l('div',{id:'mods'});
 
-  let dependencies = dep || aa.def.dependencies;
-  scripts = scripts || aa.def.scripts;
+  let dependencies = dep || aa.deps;
+  scripts = scripts || aa.scripts;
   
   await aa.add_scripts([...dependencies,...scripts]);
   
@@ -261,99 +293,59 @@ aa.load =async(o={})=>
   );
   if (!no_page) aa.mk.page();
   window.addEventListener('beforeunload',aa.unload);
-  return true
 };
-
-
-
-
-
-
-
-
-
 
 // append mod scripts when required mods have been loaded
-// aa.mods_load =async mods=>
-// {
-//   aa.temp.mods_after_load = [];
-//   let styles = [];
-//   for (const mod of mods)
-//   {
-//     if (aa.required(mod.requires))
-//     {
-//       await aa.add_scripts([mod.src]);
-//       let id = mod.id;
-//       if (Object.hasOwn(aa,id) && Object.hasOwn(aa[id],'load'))
-//       {
-//         let dis_mod = aa[id];
-//         await dis_mod.load();
-//         dis_mod.loaded = true;
-//         if (dis_mod.styles) styles.push(...dis_mod.styles);
-//       }
-//     }
-//     console.log(mod);
-//   }
-//   console.log('yo');
-//   while (aa.temp.mods_after_load.length)
-//   {
-//     let after_load = aa.temp.mods_after_load.shift();
-//     setTimeout(after_load,0)
-//   }
-//   delete aa.temp.mods_after_load;
-//   aa.add_styles(styles);
-// };
-
-aa.mods_load =async mods=>
+aa.mods_load =async(mods,target)=>
 {
-  aa.temp.mods_after_load = [];
+  if (!target) target = aa;
+  let mods_id = `mods_load_${target.name}`;
+  let temp = aa.temp[mods_id] = [];
   
-  for (const mod of mods) await aa.mod_load(mod);
-  
-  while (aa.temp.mods_after_load.length)
+  for (const [id,src] of mods) //await aa.mod_load(mod);
   {
-    let after_load = aa.temp.mods_after_load.shift();
+    await aa.add_scripts([src]);
+    if (Object.hasOwn(target,id))
+    {
+      let mod = target[id];
+      if (Object.hasOwn(mod,'styles'))
+        aa.add_styles(mod.styles);
+      if (Object.hasOwn(mod,'scripts'))
+        await aa.add_scripts(mod.scripts);
+      if (Object.hasOwn(mod,'load'))
+        await mod.load();
+      mod.loaded = true;
+    }
+  }
+  
+  while (temp.length)
+  {
+    let after_load = temp.shift();
     setTimeout(after_load,0)
   }
-  delete aa.temp.mods_after_load;
+  delete aa.temp[mods_id];
 };
 
-aa.mod_load =async mod=>
-{
-  return new Promise(async resolve=>
-  {
-    let id = mod.id;
-    await aa.add_scripts([mod.src]);
-    if (Object.hasOwn(aa,id))
-    {
-      let dis_mod = aa[id];
-      if (Object.hasOwn(dis_mod,'styles'))
-        aa.add_styles(dis_mod.styles);
-      if (Object.hasOwn(dis_mod,'scripts'))
-        await aa.add_scripts(dis_mod.scripts);
-      if (Object.hasOwn(dis_mod,'load'))
-        await dis_mod.load();
-      dis_mod.loaded = true;
-    }
-    resolve(true)
-  })
-};
-
-
-// reusable regex
-aa.regex =
-{
-  get an(){ return /^[A-Z_0-9]+$/i },
-  get hashtag(){ return /(\B[#])[\w_-]+/g },
-  get hex(){ return /^[A-F0-9]+$/i },
-  //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
-  //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
-  get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
-  get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i },
-  get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
-  get str(){ return /"([^"]+)"/ }, // text in quotes ""
-  get fw(){ return /(?<=^\S+)\s/ }, // first word
-};
+// aa.mod_load =async mod=>
+// {
+//   return new Promise(async resolve=>
+//   {
+//     let id = mod.id;
+//     await aa.add_scripts([mod.src]);
+//     if (Object.hasOwn(aa,id))
+//     {
+//       let dis_mod = aa[id];
+//       if (Object.hasOwn(dis_mod,'styles'))
+//         aa.add_styles(dis_mod.styles);
+//       if (Object.hasOwn(dis_mod,'scripts'))
+//         await aa.add_scripts(dis_mod.scripts);
+//       if (Object.hasOwn(dis_mod,'load'))
+//         await dis_mod.load();
+//       dis_mod.loaded = true;
+//     }
+//     resolve(true)
+//   })
+// };
 
 
 // tries to delete everything saved locally 
@@ -373,15 +365,6 @@ aa.reset =async()=>
   aa.log('shh... go to sleep now.');
   setTimeout(()=>{location.href = location.origin},1000)
 };
-
-
-// checks if required mods already loaded
-// aa.required =mods=>
-// {
-//   for (const id of mods) 
-//     if (!Object.hasOwn(aa,id) || !aa[id].loaded) return false
-//   return true
-// };
 
 
 // default page layout

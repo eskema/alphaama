@@ -18,14 +18,16 @@ aa.e.append_as_root =note=>
   
   let in_view = history.state?.view === '#'+note.id 
     || (aa.view.id_a && aa.view.id_a === note.dataset.id_a);
-  let roots = [...aa.e.l.children];
-  let last = 
-    roots.find(i=> note.dataset.stamp > i.dataset.stamp);
+  
   
   // if (in_view || last || !roots.length)
   // {
     fastdom.mutate(()=>
     {
+      let roots = [...aa.e.l.children];
+      let last = 
+        roots.find(i=> note.dataset.stamp > i.dataset.stamp);
+
       if (last && last.parentElement !== aa.e.l) last = null;
       aa.fx.move(note,last,aa.e.l);
       // roots = [...aa.e.l.children];
@@ -63,16 +65,15 @@ aa.e.append_as_rep =(note,rep)=>
   if (note.classList.contains('in_path')) 
     rep_add.push('in_path');
 
-  let last = [...rep.children]
-    .find(i=>
-      i.tagName==='ARTICLE' 
-      && i.dataset.created_at > note.dataset.created_at)
-    || null;
-  
   fastdom.mutate(()=>
   {
     note.classList.add(...note_add);
     note.classList.remove(...note_rm);
+    let last = [...rep.children]
+    .find(i=>
+      i.tagName==='ARTICLE' 
+      && i.dataset.created_at > note.dataset.created_at)
+    || null;
     rep.insertBefore(note,last);
     rep.parentElement.classList.add(...rep_add);
     aa.e.upd_note_path(note);

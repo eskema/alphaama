@@ -159,6 +159,7 @@
 
 .list_filter:focus
 {
+  background: rgb(var(--color-a));
   outline: none;
 }
 
@@ -170,4 +171,12 @@
 html:not(.viewing) .filtering > *:not(.filtered_in)
 {
   display: none;
+}
+
+@media screen and (min-width: 1025px) 
+{
+  .list_filter:hover
+  {
+    background: rgb(var(--color-a));
+  }
 }
