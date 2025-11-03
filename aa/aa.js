@@ -39,6 +39,10 @@ const aa =
     // '/dep/webtorrent.min.js',
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
+    '/scripts/make.js',
+    '/scripts/debt.js',
+    '/scripts/sift.js',
+    '/scripts/parse.js',
   ],
   mods:
   [
@@ -53,10 +57,7 @@ const aa =
   ],
   scripts:
   [
-    '/scripts/make.js',
-    '/scripts/debt.js',
-    '/scripts/sift.js',
-    '/scripts/parse.js',
+
     '/aa/mk.js',
     '/aa/mod.js',
     '/aa/view.js',

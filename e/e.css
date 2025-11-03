@@ -333,11 +333,6 @@
   {
     z-index: 12;
   }
-
-  .aa:not(.viewing) .note .note:hover
-  {
-    z-index: 14;
-  }
   
   .aa:not(.viewing) .note:hover > .clicker
   {
