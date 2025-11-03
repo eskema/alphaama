@@ -30,7 +30,7 @@ aa.e.miss_authors =async missing=>
 
   for (const [pubkey,relays] of missing)
   {
-    aa.e.miss_set('p',pubkey,[...relays.values()])
+    aa.e.miss_set('p',pubkey,[...relays])
   }
 };
 
@@ -72,7 +72,7 @@ aa.e.miss_set =(type,id,relays=[])=>
     let p = aa.db.p[pubkey];
     if (p) rset = new Set([...rset,...aa.fx.in_set(p.relays,'write')])
   }
-  missing.relays = [...rset.values()];
+  missing.relays = [...rset];
   aa.e.miss_get(type);
 };
 
@@ -95,7 +95,7 @@ aa.e.miss_set =(type,id,relays=[])=>
   
 //   aa.fx.a_add(aa.temp.miss_print.get(id),relays);
   
-//   aa.fx.to(aa.e.miss_to,500,'miss_print');
+//   debt.add(aa.e.miss_to,500,'miss_print');
 // };
 
 
@@ -143,9 +143,10 @@ aa.e.miss_type =type=>
   let dis = new Map();
   let missing = aa.temp.miss[type];
   if (!missing) missing = aa.temp.miss[type] = new Map();
+  let u_relays = new Set(aa.r.r);
   for (const [id,data] of missing)
   {
-    for (const url of [...aa.r.r,...data.relays]) 
+    for (const url of new Set(data.relays).union(u_relays))
     {
       if (!data.nope.includes(url))
       {
@@ -156,25 +157,21 @@ aa.e.miss_type =type=>
   }
   if (!dis.size) return {};
   // get the first value only
-  let [url,keys] = [...dis.entries()].sort(aa.fx.sorts.len)[0];
-  if (Array.isArray(url)) 
-  {
-    console.trace('url should not be array!!',url);
-    return
-  }
+  let sorted = [...dis.entries()].sort(aa.fx.sorts.len);
+  let [url,keys] = sorted[0];
 
   for (const key of keys)
   {
     aa.fx.a_add(missing.get(key).nope,[url]);
   }
-  return {relays:[url],keys:[...keys.values()]}
+  return {relays:[url],keys:[...keys]}
 };
 
 
 aa.e.miss_get =async type=>
 {
   if (!aa.temp.miss[type]) return;
-  aa.fx.to(()=>
+  debt.add(()=>
   {
     let {relays,keys} = aa.e.miss_type(type);
     if (!relays) return;
@@ -203,7 +200,6 @@ aa.e.miss_get =async type=>
         if (!filter) continue;
 
         let req_id = `${type}_${aa.fx.rands(6)}`;
-        aa.r.on_eose.set(req_id,()=>{aa.r.on_eose.delete(req_id)});
         setTimeout(()=>{aa.r.def_req(req_id,filter,relays)},delay*3);
         delay++;
       }
@@ -268,4 +264,14 @@ aa.e.miss_quote =(element,data)=>
 //     relays,
 //     entity
 //   } = data;
+};
+
+
+aa.e.miss_remove =dat=>
+{
+  if (aa.temp.miss.e?.has(dat.event.id))
+    aa.temp.miss.e.delete(dat.event.id);
+
+  if (dat.id_a && aa.temp.miss.a?.has(dat.id_a))
+    aa.temp.miss.a.delete(dat.id_a);
 };

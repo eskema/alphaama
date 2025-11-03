@@ -28,6 +28,7 @@
   grid-template-rows: auto 1fr auto;
   margin: 0;
   padding-top: var(--pad);
+  pointer-events: auto;
   position: relative;
 }
 
@@ -79,6 +80,11 @@
   margin-top: var(--size);
 }
 
+.note.in_view > .replies > .note
+{
+  margin-top: var(--pad);
+}
+
 .view_e .note.in_path.haz_new_reply,
 .replies:not(.expanded) > .note:not(.is_new),
 .replies:not(.expanded) .note:not(.is_new).haz_new_reply,
@@ -89,9 +95,10 @@
 
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
 {
-  padding-top: 0;
   border-left: 1px dotted rgba(var(--c),1);
   border-top: 1px dotted rgba(var(--c),1);
+  padding-top: 0;
+  pointer-events: none;
 }
 
 .replies:not(.expanded) > .note.haz_new_reply:not(.is_new)
@@ -294,7 +301,7 @@
 
 .section_e:not(.expanded) .pagination,
 .viewing .pagination,
-html:not(.needs_pagin) .pagination
+.aa:not(.needs_pagin) .pagination
 {
   display: none;
 }
@@ -303,7 +310,7 @@ html:not(.needs_pagin) .pagination
 
 @media screen and (min-width: 1025px) 
 {
-  html:not(.view_e) .notes
+  .aa:not(.view_e) .notes
   {
     margin-left: var(--pad-l);
   }
@@ -322,26 +329,43 @@ html:not(.needs_pagin) .pagination
     z-index: 0;
   }
   
-  html:not(.viewing) .note:hover
+  .aa:not(.viewing) .note:hover
   {
     z-index: 12;
   }
+
+  .aa:not(.viewing) .note .note:hover
+  {
+    z-index: 14;
+  }
   
-  html:not(.viewing) .note:hover > .clicker
+  .aa:not(.viewing) .note:hover > .clicker
   {
     border-left: 1px solid rgba(var(--c),.5);
     border-top: 1px solid rgba(var(--c),.5);
   }
+
+
   
   .clicker:hover
   {
     background: rgba(var(--c),.5);
   }
+
+  .clicker:hover
+  {
+    /* background: radial-gradient(
+      circle at center, black 17%, white 20%,rgba(var(--c),.5) 21%,black
+    ); */
+    background: linear-gradient(
+      to right, rgba(var(--c),.5),rgba(var(--color-b))
+    );
+  }
 }
 
 @media screen and (max-width: 768px) 
 {
-  html:not(.view_e) .notes
+  .aa:not(.view_e) .notes
   {
     margin-left: var(--padm);
   }

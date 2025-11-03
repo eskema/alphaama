@@ -6,6 +6,7 @@ modules
 
 */
 
+aa.mod_l = make('div',{id:'mods'});
 
 aa.mod = {};
 
@@ -14,7 +15,7 @@ aa.mod.butts =mod=>
 {
   if (!mod?.butts) return;
 
-  let butts = aa.mk.l('p',{cla:'mod_butts'});
+  let butts = make('p',{cla:'mod_butts'});
   if (mod.used)
   {
     if (mod.butts.mod)
@@ -58,15 +59,14 @@ aa.mod.load =async mod=>
 {
   if (!mod.o)
   {
-    let store = 'stuff';
-    let key = mod.def.id;
-    mod.o = await aa.db.ops('idb',{get:{store,key}});
+    let ops = {get:{store:'stuff',key:mod.def.id}};
+    mod.o = await aa.db.ops('idb',ops);
     if (!mod.o && mod.old_id)
     {
       // in case the db key path changes
       // load mod from old_id and upgrade it
-      key = mod.old_id;
-      mod.o = await aa.db.ops('idb',{get:{store,key}});
+      ops.get.key = mod.old_id;
+      mod.o = await aa.db.ops('idb',ops);
       if (mod.o)
       {
         mod.o.id = mod.def.id;
@@ -76,10 +76,12 @@ aa.mod.load =async mod=>
     if (mod.o) mod.used = true;
     if (!mod.o && mod.def) mod.o = mod.def;
   }
+
   if (mod.o && !mod.o.ls) mod.o.ls = {};
 
   // add mod readme
   aa.mod.help_setup(mod);
+  
   return mod
 };
 
@@ -106,16 +108,15 @@ aa.mod.mk =async mod=>
   let mod_l = aa.mk.section(mod_l_o);
 
   let mod_header = mod_l.firstElementChild;
-  // let name = aa.mk.l('h2',{con:mod.name,cla:'mod_name'});
-  let mod_info = aa.mk.l('div',{cla:'mod_info'});
-  let about = aa.mk.l('p',{con:mod.about,cla:'mod_about'});
+  let mod_info = make('div',{cla:'mod_info'});
+  let about = make('p',{con:mod.about,cla:'mod_about'});
   let butts = aa.mod.butts(mod);
   mod_info.append(about,' ',butts);
 
   let summary = mod_header.firstElementChild;
   summary.dataset.mod = mod.def.id;
   
-  let pop = aa.mk.l('button',
+  let pop = make('button',
   {
     cla:'butt exe',
     con:'pop',
@@ -144,7 +145,7 @@ aa.mod.append =mod_l=>
     // insert alphabetically
     const last = [...aa.mod_l.children]
     .find(i=> name < i.dataset.id);
-    fastdom.mutate(()=>{aa.mod_l.insertBefore(mod_l,last||null)});
+    fastdom.mutate(()=>{aa.fx.move(mod_l,last||null,aa.mod_l)});
   }
   else aa.log(mod_l)
 };
@@ -152,7 +153,7 @@ aa.mod.append =mod_l=>
 
 aa.mod.dialog =(id='')=>
 {
-  let element = aa[id]?.l;
+  let element = aa[id]?.mod_l;
   if (!element) 
   {
     aa.log('aa.mod.pop: mod not found')
@@ -171,7 +172,17 @@ aa.mod.dialog =(id='')=>
     element.toggleAttribute('open');
     element.dataset.was = 'closed';
   }
-  
+
+  aa.temp.mod_dialog_close =e=>
+  {
+    if (element.dataset.was==='closed') 
+      element.toggleAttribute('open',false);
+    aa.mod.append(element);
+    dialog.removeEventListener('close',aa.temp.mod_dialog_close);
+    delete aa.temp.mod_dialog_close
+  };
+  dialog.addEventListener('close',aa.temp.mod_dialog_close)
+
   dialog.append(element);
   dialog.showModal();
 };
@@ -194,7 +205,7 @@ aa.mod.save =async mod=>
 // save mod time out
 aa.mod.save_to =async mod=>
 {
-  aa.fx.to(()=>{aa.mod.save(mod)},200,`mod_save_${mod.def.id}`)
+  debt.add(()=>{aa.mod.save(mod)},200,`mod_save_${mod.def.id}`)
 };
 
 
@@ -228,6 +239,7 @@ aa.mod.ui =(mod,keys)=>
   }
 };
 
+// mod actions
 aa.actions.push(
   {
     action:['fx','pop'],

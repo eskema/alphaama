@@ -3,10 +3,10 @@
   grid-area: replies;
 }
 
-.replies.expanded
+/* .replies.expanded
 {
   margin-bottom: var(--padm);
-}
+} */
 
 .note:not(.in_path) > .replies.expanded,
 .note.root:not(.in_path) > .replies,
@@ -28,9 +28,9 @@
   margin-bottom: 0;
 }
 
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
-html:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
+.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
+.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
 {
   display: none;
 }

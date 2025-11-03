@@ -16,13 +16,16 @@ aa.o =
     id:'o',
     ls:
     {
-      'cash':'off',
-      'ns':'.aa', // used as the prefix for actions
+      'cash': 'off',
+      'ns': '.', // used as the prefix for actions
       'pagination': '100', // number of root events displayed
-      'pow':'0', // proof of work difficulty
-      'reaction':'\uD83E\uDD18', // '🤘' default reaction emoji
-      'theme':'dark', // 'light'
-      'score':'11', // user score needed for loading media
+      'pow': '0', // proof of work difficulty
+      'reaction': '\uD83E\uDD18', // '🤘' default reaction emoji
+      'theme': 'dark', // 'light'
+      'score': '11', // user score needed for loading media
+      'ext_image': 'gif heic jpeg jpg png webp',
+      'ext_video': 'mp4 webm', // fuck mov 
+      'ext_audio': '3ga aac aiff flac m4a mp3 ogg wav',
     },
 // todo
 //     'nav_keys':
@@ -206,7 +209,7 @@ aa.o.on_storage =async o=>
 {
   // aa.o.on_upd(o);
   let con = `options changed in another tab: ${o.key} ${o.newValue}`;
-  let log = aa.mk.l('p',{con});
+  let log = make('p',{con});
   let clk =e=>
   {
     aa.mod.ui(aa.o,o.key);
@@ -216,7 +219,7 @@ aa.o.on_storage =async o=>
     mom.append(aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo'))
   };
   con = 'apply on this tab';
-  let apply_butt = aa.mk.l('button',{cla:'butt plug',con,clk});
+  let apply_butt = make('button',{cla:'butt plug',con,clk});
   if (o.oldValue?.length) log.append(' ',apply_butt);
   aa.log(log);
 };
@@ -224,7 +227,7 @@ aa.o.on_storage =async o=>
 
 aa.o.on_upd =async o=>
 {
-  let log = aa.mk.l('p',{con:o.key+' '+o.newValue});
+  let log = make('p',{con:o.key+' '+o.newValue});
   let undo_butt = aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo');
   if (o.oldValue?.length) log.append(' ',undo_butt);
   log = aa.log(log);
@@ -236,7 +239,7 @@ aa.o.on_upd =async o=>
 aa.o.mk =(k,v)=>
 {
   const id = aa.o.def.id;
-  const l = aa.mk.l('li',{cla:'item'});
+  const l = make('li',{cla:'item'});
   let s = id+' add '+k+' '+v;
   if (k in aa.o.defaults)
   {

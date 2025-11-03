@@ -1,17 +1,17 @@
 // author link for header
 aa.mk.author_link =(pubkey,p)=>
 {
-  return aa.mk.l('div',
+  return make('div',
   {
     cla:'p_link',
     app:
     [
       aa.mk.p_link(pubkey,p),
       ' ',
-      aa.mk.l('span',
+      make('span',
       {
         cla:'actions empty',
-        app:aa.mk.butt_clk(['…','pa'])
+        app:aa.mk.butt_clk(['…','action_butt','pa'])
       })
     ]
   })
@@ -19,7 +19,7 @@ aa.mk.author_link =(pubkey,p)=>
 
 aa.mk.profile_data =p=>
 {
-  const l = aa.mk.l('section',{cla:'profile_data'});
+  const l = make('section',{cla:'profile_data'});
   let keys = Object.keys(p);
   for (const k of keys)
   {
@@ -40,7 +40,7 @@ aa.mk.profile_data =p=>
       let item;
       if (Object.hasOwn(aa.mk,k)) 
       {
-        item = aa.mk.l('p',{cla:`item item_${k}`,app:aa.mk[k](k,v,p)});
+        item = make('p',{cla:`item item_${k}`,app:aa.mk[k](k,v,p)});
       }
       else item = aa.mk.item(k,v,{tag_name:'p'});
       if (k === 'metadata') l.prepend(item,' ');
@@ -69,14 +69,14 @@ aa.mk.extradata =p=>
   let app = new DocumentFragment();
   for (const k of keys) app.append(aa.mk.item(k,p[k]));
 
-  return aa.mk.l('section',{cla:'extradata',app});
+  return make('section',{cla:'extradata',app});
 };
 
 
 // make metadata section
 aa.mk.metadata =(key,value,p)=>
 {
-  const ul = aa.mk.l('div',{cla:key+' list'});
+  const ul = make('div',{cla:key+' list'});
 
   for (const k in value)
   {
@@ -96,7 +96,7 @@ aa.mk.metadata =(key,value,p)=>
       if (Array.isArray(v)) val = v.join(', ');
       else if (typeof v === 'object') val = JSON.stringify(v)
       else val = v;
-      l = aa.mk.l('p',{con:val});
+      l = make('p',{con:val});
     }
     l.dataset.meta = k;
     if (v === '') l.classList.add('empty');
@@ -108,13 +108,13 @@ aa.mk.metadata =(key,value,p)=>
 };
 
 
-aa.mk.metadata_about =(k,v)=> aa.mk.l('p',{app:aa.e.content(v)});
+aa.mk.metadata_about =(k,v)=> make('p',{app:aa.e.content(v)});
 
 
 aa.mk.metadata_banner =(k,v,p)=> aa.mk.metadata_picture(k,v,p);
 
 
-aa.mk.metadata_lud16 =(k,v)=> aa.mk.l('a',{ref:'lightning:'+v,con:v});
+aa.mk.metadata_lud16 =(k,v)=> make('a',{ref:'lightning:'+v,con:v});
 
 
 aa.mk.metadata_lud06 =(k,v)=> aa.mk.metadata_lud16(k,v);
@@ -122,7 +122,7 @@ aa.mk.metadata_lud06 =(k,v)=> aa.mk.metadata_lud16(k,v);
 
 aa.mk.metadata_nip05 =(k,v,p)=>
 {
-  l = aa.mk.l('a',{con:v});
+  l = make('a',{con:v});
   let [username,domain] = v.split('@');
   if (!username || !domain) return l;
   
@@ -146,12 +146,12 @@ aa.mk.metadata_picture =(cla,src,p)=>
 {
   if (aa.fx.is_trusted(p.score) && src)
   {
-    let img = aa.mk.l('img',{src});
+    let img = make('img',{src});
     img.addEventListener('click',e=>
     {e.target.classList.toggle('expanded')});
     return img;
   }
-  else return aa.mk.l('p',{cla,con:src});
+  else return make('p',{cla,con:src});
 };
 
 aa.mk.metadata_website =(k,v)=> 
@@ -171,13 +171,13 @@ aa.mk.p_link =(pubkey,p)=>
     p = aa.p.p(pubkey);
   }
 
-  const element = aa.mk.l('a',
+  const element = make('a',
   {
     cla:'a author',
     tit:p.npub+', '+pubkey,
     ref:'#'+p.npub,
     clk:aa.clk.a,
-    app:aa.mk.l('span',{cla:'name',con:p.npub.slice(0,12)})
+    app:make('span',{cla:'name',con:p.npub.slice(0,12)})
   });
   
   aa.fx.color(pubkey,element);
@@ -199,7 +199,7 @@ aa.mk.profile =p=>
   let profile = aa.p.profiles.get(p.pubkey);
   if (profile) return profile;
   
-  profile = aa.mk.l('article',
+  profile = make('article',
   {
     cla:'profile',
     id:p.npub,
@@ -228,10 +228,10 @@ aa.mk.profile =p=>
 
 aa.mk.profile_header =p=>
 {
-  const pubkey = aa.mk.l('p',{cla:'pubkey'});
+  const pubkey = make('p',{cla:'pubkey'});
   pubkey.append(
     aa.mk.author_link(p.pubkey),
-    ' ',aa.mk.l('span',{cla:'pub',con:p.pubkey}),
+    ' ',make('span',{cla:'pub',con:p.pubkey}),
     ' ',aa.mk.time(p.updated)
   );
   return pubkey
@@ -240,7 +240,7 @@ aa.mk.profile_header =p=>
 
 aa.mk.relays =(k,v)=>
 {
-  let ul = aa.mk.l('ul',{cla:k+' list'});
+  let ul = make('ul',{cla:k+' list'});
   for (const url in v) ul.append(aa.mk.server(url,v[url]));
   return aa.mk.details(k,ul);
 };

@@ -91,12 +91,11 @@
   text-align: center;
 }
 
-
 .mod .toggles span
 {
-  justify-content: center;
-  display: flex;
-  }
+  display: block;
+  margin-bottom: var(--pad);
+}
 
 .mod .toggles .active
 {

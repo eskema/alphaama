@@ -4,7 +4,7 @@ aa.e.kinds[7374] =dat=>
   const note = aa.mk.note(dat);
   if (!dat.clas.includes('draft')) note.classList.add('tiny');
   // note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  if (aa.fx.is_u(dat.event.pubkey))
+  if (aa.u.is_u(dat.event.pubkey))
   {
     let p = aa.u.p;
     if (aa.p.events_newer(p,dat.event)) aa.p.save(p);
@@ -31,7 +31,7 @@ aa.e.kinds[9321] =dat=>
   const note = aa.mk.note(dat);
   let p_x = aa.fx.tag_value(dat.event.tags,'p');
   let e_id = aa.fx.tag_value(dat.event.tags,'e');
-  if (aa.fx.is_u(p_x) && !aa.w.is_redeemed(dat.event.id))
+  if (aa.u.is_u(p_x) && !aa.w.is_redeemed(dat.event.id))
   {
     aa.w.save();
     setTimeout(async()=>
@@ -70,7 +70,7 @@ aa.e.kinds[10019] =dat=>
         relays[href] = {sets};
       }
       aa.p.relays_add(relays,p);
-      if (aa.fx.is_u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      if (aa.u.is_u(dat.event.pubkey)) aa.r.add_from_o(relays);
       p.mints = aa.fx.tags_values(dat.event.tags,'mint');
       p.p2pk = aa.fx.tag_value(dat.event.tags,'pubkey');
       aa.p.save(p);
@@ -85,7 +85,7 @@ aa.e.kinds[17375] =dat=>
 {
   const note = aa.e.note_regular(dat);
   // note.querySelector('.tags_wrapper')?.setAttribute('open','');
-  if (aa.fx.is_u(dat.event.pubkey))
+  if (aa.u.is_u(dat.event.pubkey))
   {
     let p = aa.u.p;
     if (p && aa.p.events_newer(p,dat.event))

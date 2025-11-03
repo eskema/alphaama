@@ -269,27 +269,33 @@ aa.cli.load =async e=>
 // make cli element
 aa.cli.mk =()=>
 {
-  aa.cli.l = aa.mk.l('search',{id:'cli'});
-  aa.cli.oto = aa.mk.l('ul',{id:'oto',cla:'list'});
-  aa.cli.t = aa.mk.l('textarea',
+  aa.cli.l = make('search',{id:'cli'});
+  aa.el.set('cli',aa.cli.l);
+  aa.cli.oto = make('ul',{id:'oto',cla:'list'});
+  aa.cli.t = make('textarea',
   {
     id:'cli_t',
-    nam:'content',
-    pla:'whatever the fuck u want',
-    tab:1,
+    name:'content',
+    placeholder:'whatever the fuck u want',
+    tabindex:1,
+    autocomplete: 'off',
+    autocorrect: 'off',
+    spellcheck: 'off',
+    contenteditable: true,
+    rows: 1,
   });
-  aa.cli.t.autocomplete = 'off';
-  aa.cli.t.autocorrect = 'off';
-  aa.cli.t.spellcheck = 'off';
-  aa.cli.t.contentEditable = true;
+  // aa.cli.t.autocomplete = 'off';
+  // aa.cli.t.autocorrect = 'off';
+  // aa.cli.t.spellcheck = 'off';
+  // aa.cli.t.contentEditable = true;
   aa.cli.t.oninput = aa.cli.upd;
   aa.cli.t.onfocus = aa.cli.expand;
   aa.cli.t.onkeydown = aa.cli.keydown;
   aa.cli.t.onselectionchange = aa.cli.selection;
-  aa.cli.t.rows = 1;
-  const butts = aa.mk.l('p',{cla:'butts'});
+  // aa.cli.t.rows = 1;
+  const butts = make('p',{cla:'butts'});
   butts.append(
-    aa.mk.l('button',
+    make('button',
     {
       cla:'cli_collapse',
       con:'-',
@@ -297,7 +303,7 @@ aa.cli.mk =()=>
       clk:aa.cli.collapse,
       tab:2
     }),
-    aa.mk.l('button',
+    make('button',
     {
       cla:'cli_expand',
       con:'T',
@@ -310,20 +316,35 @@ aa.cli.mk =()=>
   let logs_frag = new DocumentFragment();
   logs_frag.append(
     aa.logs,
-    aa.mk.l('button',
-    {
-      cla:'butt',
-      con:'mark read',
-      clk:aa.logs_read
-    })
-  )
+    // make('button',
+    // {
+    //   cla:'butt',
+    //   con:'mark read',
+    //   clk:aa.logs_read
+    // })
+  );
+
+  let logs_section = aa.mk.section(
+  {
+    id: 'l',
+    name: 'logs',
+    element:logs_frag,
+    expanded:true,
+    clk:aa.logs_mark_read
+  });
+  // let butt = replies_section.firstElementChild.firstElementChild;
+  // butt.classList.add('mark_read');
+
   aa.cli.l.append(
     aa.cli.t,
-    aa.mk.section({id:'l',element:logs_frag,expanded:true}),
+    logs_section,
+    // aa.mk.section({id:'l',element:logs_frag,expanded:true}),
     aa.cli.oto,
     butts,
   );
   return aa.cli.l
+
+
 };
 
 

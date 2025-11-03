@@ -223,6 +223,7 @@
   > .content .content-video
 {
   max-height: var(--media-max-height);
+  justify-self: center;
 }
 
 
@@ -263,7 +264,7 @@
       + .content
   {
     background: rgb(var(--color-a));
-    pointer-events: none;
+    /* pointer-events: none; */
     position: sticky;
     top: 2rem;
     z-index: 11;

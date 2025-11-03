@@ -1,16 +1,3 @@
-aa.fx.dataset =async(element,data)=>
-{
-  for (const key in data)
-  {
-    let dis = data[key];
-    if (Array.isArray(dis)) dis = dis.join(' ');
-    if (!element.dataset[key] 
-    || element.dataset[key] !== dis) 
-      element.dataset[key] = dis;
-  }
-};
-
-
 aa.fx.follow =p=>
 {
   let follow = [p.pubkey];
@@ -77,73 +64,6 @@ aa.fx.is_empty =element=>
 aa.fx.is_tag_e =array=> array[0]==='e' && aa.fx.is_hex(array[1]);
 aa.fx.is_tag_p =array=> array[0]==='p' && aa.fx.is_hex(array[1]);
 aa.fx.is_tag_q =array=> array[0]==='q' && aa.fx.is_hex(array[1]);
-
-
-
-// adds classes to notes up the parent tree starting from element
-// if a string is given, it will be added to a dataset array 
-aa.fx.path =(l,s=false)=>
-{
-  for (;l&&l!==document;l=l.parentNode) 
-  {
-    if (l.classList.contains('note'))
-    {
-      if (!aa.view.in_path.find(i=>i.dataset.id===l.dataset.id))
-        aa.view.in_path.push(l);
-      
-      l.classList.add('in_path');
-      if (s)
-      {
-        let a = l.dataset.path ? l.dataset.path.trim().split(' ') : [];
-        let added = aa.fx.a_add(a,[s]);
-        if (added) l.dataset.path = a.join(' ');
-      }
-    }
-  }
-};
-
-
-// removes path class and dataset from element
-aa.fx.path_remove =l=>
-{
-  fastdom.mutate(()=>
-  {
-    l.classList.remove('in_path');
-    l.removeAttribute('data-path');
-  })
-};
-
-
-// removes path dataset from element and class if empty dataset 
-aa.fx.path_rm =s=>
-{
-  // let in_path = document.querySelectorAll('.in_path');
-  const to_rm = [];
-  if (aa.view.in_path.length) for (const l of aa.view.in_path)
-  {
-    let dis;
-    if (s && l.dataset.path)
-    {
-      let a = aa.fx.a_rm(l.dataset.path.trim().split(' '),[s]);
-      if (a.length) l.dataset.path = a.join(' ');
-      else
-      {
-        to_rm.push(l.dataset.id);
-        aa.fx.path_remove(l);
-      }
-    }
-    else 
-    {
-      to_rm.push(l.dataset.id);
-      aa.fx.path_remove(l);
-    }
-  }
-  if (to_rm.length) 
-  {
-    aa.view.in_path = aa.view.in_path
-      .filter(i=>!to_rm.includes(i.dataset.id));
-  }
-};
 
 
 // merge two dat objects
@@ -248,14 +168,14 @@ aa.fx.pow =async(event,difficulty)=>
 
     miner.about = `mining pow (${difficulty}) started ${new Date(miner.started)}`;
     
-    const log = aa.mk.l('p',{id:'pow_log_'+id,con:miner.about});
+    const log = make('p',{id:'pow_log_'+id,con:miner.about});
     
     const clk =()=>
     {
       setTimeout(()=>{aa.fx.pow_abort(id)},200);
     };
 
-    let butt_cancel = aa.mk.l('button',{con:'abort',cla:'butt no',clk});
+    let butt_cancel = make('button',{con:'abort',cla:'butt no',clk});
     log.append(butt_cancel);
     aa.log(log);
 
@@ -306,7 +226,7 @@ aa.fx.quotes =async id=>
   const q_id = 'get_quotes';
   if (!aa.temp.hasOwnProperty(q_id)) aa.temp[q_id] = [];
   aa.temp[q_id].push(id);
-  aa.fx.to(aa.e.quotes_to,100,q_id);
+  debt.add(aa.e.quotes_to,100,q_id);
 };
 
 

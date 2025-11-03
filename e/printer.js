@@ -45,7 +45,7 @@ aa.e.append_as_root =note=>
   // }
   
   if (in_view && !note.classList.contains('in_view'))
-    setTimeout(()=>{aa.e.view(note)},100);
+    setTimeout(()=>{aa.e.view(note)},1000);
 };
 
 
@@ -94,6 +94,12 @@ aa.e.append_as_rep =(note,rep)=>
 // decides where to append a reply
 aa.e.append_check =async(dat,note,tag)=>
 {
+  if (!tag)
+  {
+    console.error('aa.e.append_check',dat,note,tag)
+    aa.e.append_as_root(note);
+    return
+  }
   const [type,id,relay] = tag;
   let is_a = type === 'a';
   let reply = is_a
@@ -118,32 +124,33 @@ aa.e.append_check =async(dat,note,tag)=>
     return
   }
 
-  if (relay)
-  {
-    let filter = is_a 
-      ? aa.fx.id_af(id)
-      : {ids:[id]};
+  // if (relay)
+  // {
+  //   let filter = is_a 
+  //     ? aa.fx.id_af(id)
+  //     : {ids:[id]};
 
-    let dis = 
-    {
-      id:id.slice(8),
-      filter,
-      relays:[relay],
-      options:{eose:'close'}
-    }
+  //   let dis = 
+  //   {
+  //     id:id.slice(8),
+  //     filter,
+  //     relays:[relay],
+  //     options:{eose:'close'}
+  //   };
 
-    let {events} = await aa.r.get(dis);
-    if (events.size)
-    {
-      for (const item of [...events.values()]) aa.e.print_q(item);
-      return
-    }
-  }
-
-  let p = await aa.p.get(dat.event.pubkey);
-  let relays = aa.fx.in_set(p?.relays,'write');
+  //   let {events} = await aa.r.get(dis);
+  //   if (events.size)
+  //   {
+  //     for (const item of [...events.values()]) aa.e.print_q(item);
+  //     return
+  //   }
+  // }
+  let relays = [];
   if (relay) aa.fx.a_add(relays,[relay]);
-  relays = [...new Set([...relays,...aa.r.r])];
+  let p = await aa.p.get(dat.event.pubkey);
+  // let relays = aa.fx.in_set(p?.relays,'write');
+  aa.fx.a_add(relays,aa.fx.in_set(p?.relays,'write'));
+  // relays = [...new Set([...relays,...aa.r.r])];
   aa.e.miss_set(type,id,relays);
 };
 
@@ -298,7 +305,19 @@ aa.e.print =async dat=>
     {
       note = aa.e.note_replace(note,dat);
     }
-    else aa.fx.dataset(note,{seen:dat.seen,subs:dat.subs});
+    else 
+    {
+      debt.add(()=>
+      {
+        let new_seen = dat.seen.join(' ');
+        let new_subs = dat.subs.join(' ');
+        fastdom.mutate(()=>
+        {
+          if (new_seen > note.dataset.seen) note.dataset.seen = new_seen;
+          if (new_subs > note.dataset.subs) note.dataset.subs = new_subs;
+        })
+      },500,`brrr_${id}`);
+    }
     return
   }
 
@@ -316,21 +335,13 @@ aa.e.print =async dat=>
 
   if (note.classList.contains('draft'))
     aa.fx.scroll(note,{behavior:'smooth',block:'center'});
-
-  let k_v = 'pubkey_'+dat.event.pubkey;
-  if (aa.p.viewing && aa.p.viewing[1] === k_v)
-    aa.p.viewing[0].push(note);
   
   
   // check for quotes to update with new data
   setTimeout(()=>{ aa.e.quote_update(dat) },0);
   // get all stashed references
-  setTimeout(()=>
-  {
-    aa.e.refs(dat.event.id);
-    if (dat.id_a) aa.e.refs(dat.id_a);
-  },0);
-  
+  setTimeout(()=>{ aa.e.references(dat) },0);
+  // update section counter
   setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_section_e')) },0);
   // aa.e.anal(dat);
 };
@@ -339,39 +350,44 @@ aa.e.print =async dat=>
 // send data to print
 aa.e.print_q =dat=>
 {
-  if (!aa.temp.print_q) aa.temp.print_q = new Map();
-  if (!dat?.event?.id || aa.temp.print_q.has(dat.event.id)) return;
-
   if (!dat?.event)
   {
     console.trace(dat)
     return
   }
+
+  aa.e.miss_remove(dat);
+  setTimeout(()=>{aa.e.print(dat)},0);
+
+  // if (!aa.temp.print_q) aa.temp.print_q = new Map();
+  // if (!dat?.event?.id || aa.temp.print_q.has(dat.event.id)) return;
   
-  aa.temp.print_q.set(dat.event.id,dat);
+  // aa.temp.print_q.set(dat.event.id,dat);
+  // debt.add(()=>
+  // {
+  //   let prints = [...aa.temp.print_q.values()]
+  //   .sort(aa.fx.sorts.ca_asc);
+  //   aa.temp.print_q.clear();
 
-  if (aa.temp.miss.e?.has(dat.event.id)) 
-  {
-    aa.temp.miss.e.delete(dat.event.id);
-  }
-  if (dat.id_a && aa.temp.miss.a?.has(dat.id_a))
-  {
-    aa.temp.miss.a.delete(dat.id_a);
-  }
-
-  aa.fx.to(()=>
-  {
-    let prints = [...aa.temp.print_q.values()]
-    .sort(aa.fx.sorts.ca_asc);
-    aa.temp.print_q.clear();
-
-    for (const dat of prints)
-      setTimeout(()=>{aa.e.print(dat)},0);
-  },
-  8,'brrrr');
+  //   let chunks = aa.fx.chunks(prints,100);
+  //   for (const chunk of chunks)
+  //   {
+  //     setTimeout(()=>
+  //     {
+  //       for (const dat of prints)
+  //       setTimeout(()=>{aa.e.print(dat)},0);
+  //     })
+  //   }
+  // },
+  // 8,'brrrr');
 };
 
 
+aa.e.references =dat=>
+{
+  aa.e.refs(dat.event.id);
+  if (dat.id_a) aa.e.refs(dat.id_a);
+};
 
 
 // get all note refs stashed and append them to note
@@ -379,10 +395,11 @@ aa.e.refs =id=>
 {
   if (!aa.temp.refs.has(id)) return;
   
-  for (const [i,a] of aa.temp.refs.get(id))
+  for (const array of aa.temp.refs.get(id))
   {
-    if (aa.temp.orphan.has(i)) aa.temp.orphan.delete(i);
-    aa.e.append_check(...a);
+    if (aa.temp.orphan.has(array[0])) 
+      aa.temp.orphan.delete(array[0]);
+    aa.e.append_check(...array[1]);
   }
   // if (aa.temp.orphan.has(id)) aa.temp.orphan.delete(id);
   aa.temp.refs.delete(id);
@@ -412,7 +429,7 @@ aa.e.upd_note_path =(element)=>
   let last;
   let stamped;
   let stamp = element.dataset.stamp;
-  let is_u = aa.fx.is_u(element.dataset.pubkey);
+  let is_u = aa.u.is_u(element.dataset.pubkey);
 
   for (; element&&element!==document; element=element.parentNode)
   {

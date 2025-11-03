@@ -2,36 +2,27 @@
 aa.view =
 {
   active:false,
-  l:false,
+  clears:[],
   ls:{},
-  in_path:[],
 };
 
 // view clear
 aa.view.clear =()=>
 {
-  if (aa.view.active)
-  {
-    const in_view = aa.view.in_view;
-    if (in_view)
-    {
-      in_view.classList.remove('in_view');
-      if (in_view.classList.contains('note'))
-      {
-        if (aa.view.in_path?.length) 
-          for (const element of aa.view.in_path) 
-            aa.fx.path_rm(element);
-      }
-      delete aa.view.in_view;
-      delete aa.view.id_a;
-    }
-  }
-
   aa.view.active = false;
-  if (aa.state.l) aa.state.l.textContent = '';
-  aa.l.classList.remove('viewing','view_e','view_p');
+  const in_view = aa.view.in_view;
+  if (in_view)
+  {
+    in_view.classList.remove('in_view');
+    delete aa.view.in_view;
+  }
+  fastdom.mutate(()=>
+  {
+    if (aa.el.has('state')) aa.el.get('state').textContent = '';
+    aa.l.classList.remove('viewing');
+  });
   
-  for (const c of aa.clears) c();
+  for (const callback of aa.view.clears) callback(in_view);
 };
 
 
@@ -85,12 +76,13 @@ aa.view.pop =()=>
 // view replace state
 aa.view.replace =(path='')=>
 {
-  history.state.view = dis;
+  history.state.view = path;
   path = 
     location.origin
     +location.pathname
     +path;
   history.replaceState(history.state,'',path);
+  aa.view.tits(`${aa.aka} ${location.pathname} `,history.state.view);
 };
 
 
@@ -117,7 +109,7 @@ aa.view.resolve =(path,search)=>
 aa.view.state =(string='',search='')=>
 {
   string = string.trim();
-  if (search?.length) 
+  if (search.length) 
     search = string.length ? 
       `?${search}`
       : search;
@@ -142,7 +134,7 @@ aa.view.tits =(title,state)=>
   fastdom.mutate(()=>
   {
     if (title) document.title = title;
-    if (state && aa.state.l) aa.state.l.textContent = state
+    if (state && aa.el.has('state')) aa.el.get('state').textContent = state
   });
 };
 

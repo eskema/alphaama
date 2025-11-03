@@ -1,15 +1,4 @@
-// parse JSON
-aa.parse.j =(son='')=>
-{
-  let o;
-  son = son.trim();
-  if(son.length > 2)
-  {
-    try{ o = JSON.parse(son) }
-    catch(er){ console.log('aa.parse.j error',son) }
-  }
-  return o
-};
+
 
 
 // parse url as link or media given trust
@@ -18,13 +7,41 @@ aa.parse.url =(match,is_trusted)=>
   let url = aa.fx.url(match[0]);
   if (!url) return;
 
-  const [src,type] = aa.fx.src_type(url);
+  // checks if string is valid url and then checks extension for media file types.
+  // returns false if no media found or array with extension,URL
+  const src_type =url=>
+  {
+    const extensions = 
+    {
+      image:['gif','heic','jpeg','jpg','png','webp'],
+      video:['mp4','webm'], // fuck mov 
+      audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
+    } 
+    const src_ext =(url,extensions)=>
+    {
+      const src = (url.origin + url.pathname).toLowerCase();
+      for (const ext of extensions)
+      {
+        if (src.endsWith('.'+ext)
+        || url.searchParams.get('format') === ext) return true
+      }
+      return false
+    };
+
+    let dis = [url.href];
+    if (src_ext(url,extensions.image)) dis.push('image');
+    if (src_ext(url,extensions.audio)) dis.push('audio');
+    if (src_ext(url,extensions.video)) dis.push('video');
+    return dis
+  };
+
+  const [src,type] = src_type(url);
+
   if (!is_trusted || !type) return aa.mk.link(src);
-  if (type === 'img') return aa.mk.img(src);
+  if (type === 'image') return aa.mk.img(src);
   else if (type === 'audio' || type === 'video')
   {
     let l = aa.mk.av(src,false,type==='audio'?true:false);
-    // setTimeout(()=>{aa.lazy_god.observe(l.querySelector('.mf'))},200);
     return l
   }
   return match[0]
@@ -44,7 +61,8 @@ aa.parser =(parse_id,s,is_trusted,regex_id)=>
     let parsed = aa.parse[parse_id](match,is_trusted);
     if (!parsed)
     {
-      console.log(parse_id,s,match)
+      console.log(parse_id,s,match);
+      return
     }
     let childs = parsed?.childNodes.length;
     if (childs > 2) index = match.index + match.input.length;
@@ -54,3 +72,6 @@ aa.parser =(parse_id,s,is_trusted,regex_id)=>
   if (index < s.length) df.append(s.slice(index));
   return df
 };
+
+
+// wrapper for aa.parse functions

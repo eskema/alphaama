@@ -191,7 +191,7 @@ aa.actions.push(
 
 aa.mk.w_mints =(key,value)=>
 {
-  let item = aa.mk.l('li',{cla:`item item_${key}`});
+  let item = make('li',{cla:`item item_${key}`});
   let df = new DocumentFragment();
   let total = 0;
   for (const url in value)
@@ -202,7 +202,7 @@ aa.mk.w_mints =(key,value)=>
       .sort((a,b)=>a.amount < b.amount ? 1 : -1)
       .map(ls=>aa.mk.details(ls.amount,aa.mk.ls({ls}),false,'mod_details'));
 
-    let proofs_list = aa.mk.l('p',{cla:'list_details'});
+    let proofs_list = make('p',{cla:'list_details'});
     for (const proof of proofs) proofs_list.append(proof,' ')
     total = total + dis.amount;
     let amount = `${dis.amount} ${aa.fx.plural(dis.amount,'sat')}`;

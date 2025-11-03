@@ -6,13 +6,6 @@ relays
 
 */
 
-// relay options
-aa.o.defaults.relays_ask = 
-{
-  options:['on','off'],
-  fx:s=> aa.fx.pick_other(s,aa.o.defaults.relays_ask.options)
-};
-
 
 aa.r =
 {
@@ -29,13 +22,12 @@ aa.r =
   manager_src:'/r/manager.js?v='+aa_version,
   scripts:
   [
-    '/r/clk.js?v='+aa_version,
-    '/r/mk.js?v='+aa_version,
-    '/r/msg.js?v='+aa_version,
+    '/r/mk.js',
+    '/r/msg.js',
   ],
   styles:
   [
-    '/r/r.css?v='+aa_version,
+    '/r/r.css',
   ],
   butts:
   {
@@ -90,12 +82,12 @@ aa.r.add =s=>
     changed.set(url,a);
     if (a.includes('off')) off.add(url);
     else valid.add(url);
-    df.append(aa.mk.l('p',{con:`${url} ${a.join(' ')}`}))
+    df.append(make('p',{con:`${url} ${a.join(' ')}`}))
   }
   
   if (invalid.size) 
   {
-    aa.log(`aa.r.add - invalid urls: ${[...invalid.values()]}`);
+    aa.log(`aa.r.add - invalid urls: ${[...invalid]}`);
     console.trace('invalid urls',invalid);
   }
   
@@ -106,7 +98,7 @@ aa.r.add =s=>
     let log = aa.el.get(cla);
     if (!log)
     {
-      log = aa.mk.details(cla,0,0,'base'); // ,aa.mk.l('div',{cla:'list'})
+      log = aa.mk.details(cla,0,0,'base'); // ,make('div',{cla:'list'})
       aa.el.set(cla,log);
       aa.log(log);
     }
@@ -118,8 +110,8 @@ aa.r.add =s=>
 
   // let [valid,invalid,off] = aa.mod.serve rs_add(aa.r,s,cla);
   let union = valid.union(off);
-  if (union.size) aa.mod.ui(mod,[...union.values()]);
-  if (off.size) aa.r.force_close([...off.values()]); 
+  if (union.size) aa.mod.ui(mod,[...union]);
+  if (off.size) aa.r.force_close([...off]); 
 };
 
 
@@ -210,6 +202,11 @@ aa.r.def_req =(id,filter,relays)=>
   const options = {eose:'close'};
   if (!relays?.length) relays = aa.r.r;
   if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.e.print_q);
+  aa.r.on_eose.set(id,()=>
+  {
+    aa.r.on_eose.delete(id);
+    aa.r.on_sub.delete(id);
+  });
   aa.r.send_req({request,relays,options});
 };
 
@@ -472,6 +469,13 @@ aa.r.ls =(s='')=>
 // on load
 aa.r.load =async()=>
 {
+  // relay options
+  aa.o.defaults.relays_ask = 
+  {
+    options:['on','off'],
+    fx:s=> aa.fx.pick_other(s,aa.o.defaults.relays_ask.options)
+  };
+
   const mod = aa.r;
   const id = mod.def.id;
 
@@ -573,7 +577,7 @@ aa.r.mk =(k,v)=>
   const edit_text = `${id} add ${k} off`;
   const del_text = `${id} del ${k}`;
 
-  let sets = aa.mk.l('span',{cla:'sets'});
+  let sets = make('span',{cla:'sets'});
   if (v.sets && v.sets.length)
   {
     for (const set of v.sets)
@@ -588,7 +592,7 @@ aa.r.mk =(k,v)=>
   if (v.info) info.append(aa.mk.ls({ls:v.info}));
   else info.classList.add('empty');
 
-  let actions = aa.mk.l('div',
+  let actions = make('div',
   {
     cla:'mod_actions',
     app:[
@@ -597,7 +601,7 @@ aa.r.mk =(k,v)=>
     ]
   });
   
-  const element = aa.mk.l('li',
+  const element = make('li',
   {
     cla:'item relay',
     dat:{state:0,sets:v.sets},
@@ -687,7 +691,7 @@ aa.r.send_req =data=>
   relays = aa.r.validate(data);
   if (!relays.length)
   {
-    console.log('aa.r.send_req: no valid relays',data);
+    // console.log('aa.r.send_req: no valid relays',data);
     // console.trace(dis);
     return
   }
@@ -730,46 +734,91 @@ aa.r.setrm =(s="")=>
   aa.mod.save(mod);
 };
 
+// aa.mk.r_toggles =(options)=>
+// {
+//   let {con,} 
+// };
+
 
 // toggles for relay mod l
 aa.r.toggles =()=>
 {
   const mod = aa.r;
-  const id = mod.def.id;
-  let sets_span = aa.mk.l('span',{cla:'sets'});
-  let sets = [];
-  for (const r of Object.values(aa.r.o.ls)) aa.fx.a_add(sets,r.sets);
-  for (const set of sets)
+
+  const clk =e=>
   {
-    let butt = aa.mk.butt_clk([set,'active','relset']);
-    butt.dataset.k = 'sets';
-    butt.dataset.v = set;
-    sets_span.append(butt,' ');
-  }
-  let states_span = aa.mk.l('span',{cla:'states'});
-  let states = 
-  [
-    ['0','unused'],
-    ['1','open'],
-    // ['2','connecting'],
-    ['3','closed'],
-  ];
-  for (const state of states)
+    e.preventDefault();
+    e.stopPropagation();
+    let element = e.target;
+    const k = element.dataset.k;
+    const v = element.dataset.v;
+
+    let items;
+    switch (k)
+    {
+      case 'state': 
+        items = Array.from(aa.r.mod_ul.children)
+          .filter(i=> i.dataset.state === v);
+        break;
+      case 'sets': 
+        items = aa.fx.in_set(aa.r.o.ls,v,false)
+          .map(url=>aa.r.mod_li.get(url)); 
+        break;
+    }
+  //   sift.filter =(items,value,element)=>
+  // {
+    let active_class = 'active';
+    let value = `${k}_${v}`;
+    fastdom.mutate(()=>
+    {
+      if (element.classList.contains(active_class))
+      {
+        element.classList.remove(active_class);
+        for (const item of items) sift.more(item,value);
+      }
+      else
+      {
+        element.classList.add(active_class);
+        for (const item of items) sift.less(item,value);
+      }
+    })
+  // };
+  //   sift.filter(items,`${k}_${v}`,element);
+  };
+
+  let sets_butts = [...Object.values(aa.r.o.ls)
+    .reduce((s,i)=> s.union(new Set(i.sets)), new Set())
+  ].map(i=> make('button',
   {
-    let [id,str] = state;
-    let butt = aa.mk.butt_clk([str,'active','relstate']);
-    butt.dataset.k = 'state';
-    butt.dataset.v = id;
-    states_span.append(butt,' ');
-  }
-  let toggles = aa.mk.l('p',{cla:'toggles'});
-  toggles.append(
-    sets_span,
-    aa.mk.l('br'),
-    states_span,
-    aa.mk.l('br'),
-    aa.mk.list_filter(mod.mod_ul)
-  );
+    con: i,
+    cla: 'butt active',
+    dat: { k: 'sets', v: i },
+    clk
+  }));
+
+
+  let states_butts = [['0','unused'],['1','open'],['3','closed']]
+  .map(([key,value])=> make('button',
+  {
+    con: `${value} (${key})`,
+    cla: 'butt active',
+    dat: { k: 'state', v: key },
+    clk
+  }));
+
+  let toggles = make('p',
+  {
+    cla:'toggles',
+    app:
+    [
+      make('span',{ cla:'sets', app: sets_butts }),
+      make('br'),
+      make('span',{ cla:'states', app: states_butts }),
+      make('br'),
+      aa.mk.sift_input(mod.mod_ul)
+    ]
+  });
+
   fastdom.mutate(()=>
   {
     mod.mod_l.insertBefore(toggles,mod.mod_ul);

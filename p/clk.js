@@ -7,7 +7,7 @@ aa.clk.pa =e=>
   
   let butts = [...aa.p.butts.pa];
   
-  if (!aa.fx.is_u(pubkey)) 
+  if (!aa.u.is_u(pubkey)) 
     butts.unshift([aa.p.following(pubkey)?'del':'add','k3']);
  
   butts.unshift([`${aa.db.p[pubkey].score}`,'p_score']);

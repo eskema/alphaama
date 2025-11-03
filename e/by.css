@@ -7,8 +7,8 @@
   display: grid;
   font-size: var(--font-size-s);
   grid-area: by;
-  grid-template-areas: "author id actions created_at x clas ";
-  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "author id actions created_at x clas";
+  grid-template-columns: auto 1fr auto auto auto;
   position: sticky;
   top: 0;
   z-index: 1;

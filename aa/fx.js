@@ -167,9 +167,9 @@ aa.fx.countdown =async(con,total,n)=>
     let interval;
     const done =dis=>{clearInterval(interval);resolve(dis)};
     let times = 0;
-    let counter = aa.mk.l('span',{con:total,cla:'counter'});
-    let l = aa.mk.l('p',{con,cla:'countdown'});
-    l.append(' ',counter,'…',' ',aa.mk.l('button',
+    let counter = make('span',{con:total,cla:'counter'});
+    let l = make('p',{con,cla:'countdown'});
+    l.append(' ',counter,'…',' ',make('button',
     {
       cla:'butt no',
       con:'abort',
@@ -197,11 +197,15 @@ aa.fx.countdown =async(con,total,n)=>
 
 
 // decodes nip19 (bech32)
-aa.fx.decode =s=> 
+aa.fx.decode =string=> 
 {
   let decoded;
-  try { decoded = NostrTools.nip19.decode(s).data }
-  catch (er) { console.error('aa.fx.decode',s,er) }
+  try
+  { 
+    decoded = NostrTools.nip19
+      .decode(string.toLowerCase()).data 
+  }
+  catch (er) { console.error('aa.fx.decode',string,er) }
   return decoded
 };
 
@@ -232,7 +236,7 @@ aa.fx.decrypt_parse =async event=>
     aa.log(event.id+' decrypt failed');
     return
   }
-  a = aa.parse.j(a);
+  a = aa.pj(a);
   if (!a)
   {
     aa.log(event.id+' decrypt parse failed');
@@ -243,12 +247,11 @@ aa.fx.decrypt_parse =async event=>
 
 
 // for selector in element do
-aa.fx.do_all =(element,selector,fun)=>
+aa.fx.do_all =(selector,callback,element)=>
 {
   if (!element) element = document;
   let items = element?.querySelectorAll(selector);
-  if (items?.length) 
-    for (const item of items) fun(item)
+  if (items?.length) for (const item of items) callback(item)
 };
 
 
@@ -446,11 +449,8 @@ aa.fx.is_trusted =number=>
   catch { console.error('!trust',localStorage.score) }
   if (Number.isInteger(trust_needed) 
   && number >= trust_needed) return true;
+  return
 };
-
-
-// if key is the same as the user
-aa.fx.is_u =pubkey=> aa.u?.o?.ls?.pubkey === pubkey;
 
 
 // convert a value from a range a_min/a_max into another range b_min/b_max
@@ -501,34 +501,6 @@ aa.fx.load =async()=>
   )
 };
 
-
-// splits a string and then 
-// for each item, split and pass through function
-// then a callback
-// aa.fx.loop =(job,s,done)=>
-// {
-//   const a = s.split(',');
-//   if (a.length)
-//   {
-//     for (const task of a) job(task.trim().split(' '));
-//     if (done) done();
-//   }
-// };
-
-
-// merge datasets from one element to another
-aa.fx.merge_datasets =(a,l_1,l_2)=>
-{
-  if (a.length) for (const set of a)
-  {
-    if (l_1.dataset[set])
-    {
-      let sets = l_2.dataset[set] ? l_2.dataset[set].trim().split(' ') : [];
-      aa.fx.a_add(a,l_1.dataset[set].trim().split(' '));
-      l_2.dataset[set] = sets.join(' ');
-    }
-  }
-};
 
 
 // return single or plural string
@@ -585,17 +557,6 @@ aa.fx.scroll =async(l,options={})=>
 {
   if (l) l.scrollIntoView(options)
 }; 
-
-
-// scroll stuff
-// aa.fx.scrolled =async()=>
-// {
-//   if (!aa.temp.scroll) aa.temp.scroll = {top:0,dir:''};
-//   const new_top = aa.l.scrollTop;
-//   if (new_top > aa.temp.scroll.top) aa.temp.scroll.dir = 'down';
-//   else if (new_top < aa.temp.scroll.top) aa.ui.scroll_direction = 'up';
-//   aa.temp.scroll.top = new_top <= 0 ? 0 : new_top;
-// };
 
 
 // sorting functions to use in .sort()
@@ -678,10 +639,13 @@ aa.fx.sort_l =(l,by)=>
 };
 
 
-// split and trim
+// trim split and trim more
+// returns array
 aa.fx.splitr =(string,at=' ')=>
 {
-  return string.trim().split(at).map(dis=>dis.trim())
+  let array = string.trim().split(at).map(item=>item.trim());
+  if (array.length === 1 && array[0] === '') return [];
+  return array
 };
 
 
@@ -868,16 +832,16 @@ aa.fx.time_upd =element=>
 
 
 // timeout with delay if called again before for some time
-aa.fx.to =async(f,t,s)=>
-{
-  if (!aa.temp.todo) aa.temp.todo = {};
-  if (Object.hasOwn(aa.temp.todo,s)) clearTimeout(aa.temp.todo[s]);
-  aa.temp.todo[s] = setTimeout(()=>
-  {
-    delete aa.temp.todo[s];
-    f(s);
-  },t);
-};
+// aa.fx.to =async(f,t,s)=>
+// {
+//   if (!aa.temp.todo) aa.temp.todo = {};
+//   if (Object.hasOwn(aa.temp.todo,s)) clearTimeout(aa.temp.todo[s]);
+//   aa.temp.todo[s] = setTimeout(()=>
+//   {
+//     delete aa.temp.todo[s];
+//     f(s);
+//   },t);
+// };
 
 
 // truncate string to start and end 
@@ -896,30 +860,6 @@ aa.fx.url_from_tags =tags=>
   }
   else url = aa.fx.url(tag[1])?.href;
   return url
-};
-
-
-// checks if string is valid url and then checks extension for media file types.
-// returns false if no media found or array with extension,URL
-aa.fx.src_type =url=>
-{
-  let dis = [url.href];
-  if (aa.fx.src_ext(url,aa.def.extensions.img)) dis.push('img');
-  if (aa.fx.src_ext(url,aa.def.extensions.audio)) dis.push('audio');
-  if (aa.fx.src_ext(url,aa.def.extensions.video)) dis.push('video');
-  return dis
-};
-
-
-aa.fx.src_ext =(url,extensions)=>
-{
-  const src = (url.origin + url.pathname).toLowerCase();
-  for (const ext of extensions)
-  {
-    if (src.endsWith('.'+ext)
-    || url.searchParams.get('format') === ext) return true
-  }
-  return false
 };
 
 

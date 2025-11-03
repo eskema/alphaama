@@ -77,7 +77,7 @@ aa.q.add =(s='',silent)=>
 {
   let [fid,v] = s.split(aa.regex.fw);
   fid = aa.fx.an(fid);
-  let o = aa.parse.j(v);
+  let o = aa.pj(v);
   if (!o)
   {
     aa.log('invalid filter: '+v);
@@ -96,12 +96,13 @@ aa.q.add =(s='',silent)=>
     {
       con += filter.v+' > '+v;
       filter.v = v;
+      filter.o = o;
       changed = true;
     }
   }
   else
   {
-    mod.o.ls[fid] = {v};
+    mod.o.ls[fid] = {v,o};
     con += mod.o.ls[fid].v;
     changed = true;
     is_new = true;
@@ -112,7 +113,7 @@ aa.q.add =(s='',silent)=>
     aa.mod.ui(mod,fid);
   }
 
-  if (!silent) aa.log(aa.mk.l('p',{con}));
+  if (!silent) aa.log(make('p',{con}));
   return fid
 };
 
@@ -147,12 +148,7 @@ aa.q.db =async(s='')=>
       times++;
       let [get_id,events] = await aa.r.get_filter(filtered);
       for (const dat of events) aa.e.print_q(dat);
-      // setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
-      
-      // aa.q.log('run',request,`to: ${relays}`);
-
     } 
-    // else aa.log(aa.q.def.id+' db: filter not found');
   }
 };
 
@@ -167,7 +163,7 @@ aa.q.del =s=>
     let old_v = mod.def.id+' add '+k+' '+mod.o.ls[k].v;
     let con = mod.def.id+' filter deleted: '+k+' ';
     let app = aa.mk.butt_action(old_v,'undo');
-    aa.log(aa.mk.l('p',{con,app}));
+    aa.log(make('p',{con,app}));
 
     delete mod.o.ls[k];
     document.getElementById(mod.def.id+'_'+aa.fx.an(k))?.remove();
@@ -300,7 +296,7 @@ aa.q.last =(fid,filter)=>
 {
   if (aa.q.o.ls[fid])
   {
-    let q_last = aa.parse.j(sessionStorage.q_last);
+    let q_last = aa.pj(sessionStorage.q_last);
     if (!q_last) q_last = {};
     if (!q_last[fid]) q_last[fid] = [];
     q_last[fid] = [...q_last[fid].slice(-100),filter];
@@ -315,7 +311,7 @@ aa.q.last_butts =()=>
   aa.mk.butts_session('q','out');
   
   // if (!sessionStorage.q_last) return;
-  // let q_last = aa.parse.j(sessionStorage.q_last);
+  // let q_last = aa.pj(sessionStorage.q_last);
   // console.log(q_last);
 };
 
@@ -400,7 +396,7 @@ aa.q.log =(s,request,con)=>
   aa.q.last(fid,filter);
   if (aa.q.o.ls[fid])
   {
-    let q_last = aa.parse.j(sessionStorage.q_last);
+    let q_last = aa.pj(sessionStorage.q_last);
     if (!q_last) q_last = {};
     if (!q_last[fid]) q_last[fid] = [];
     q_last[fid] = [...q_last[fid].slice(-10),filter];
@@ -422,8 +418,8 @@ aa.q.log =(s,request,con)=>
   
   let dis = aa.mk.details(s,0,0,'base');
   dis.append(
-    aa.mk.l('p',{con}),' ',
-    aa.mk.l('p',{app:aa.mk.ls({ls:{filter,options}})})
+    make('p',{con}),' ',
+    make('p',{app:aa.mk.ls({ls:{filter,options}})})
   );
   l.append(' ',dis);
 };
@@ -436,15 +432,15 @@ aa.q.mk =(key,value) =>
   const id = mod.def.id;
 
 
-  // const l = aa.mk.l('li',{id:`${id}_${key}`,cla:'item filter'});
-  // let butts = aa.mk.l('span',{cla:'butts'});
+  // const l = make('li',{id:`${id}_${key}`,cla:'item filter'});
+  // let butts = make('span',{cla:'butts'});
   // butts.append(
   //   aa.mk.butt_action(`${id} del ${key}`,'del'),' ',
   //   aa.mk.butt_action(`${id} run ${key}`,'run'),' ',
   //   aa.mk.butt_action(`${id} out ${key}`,'out'),' ',
   // );
-  // let l_k = aa.mk.l('span',{cla:'key',app:aa.mk.butt_action(`${id} add ${key} ${value.v}`,key,'add')});
-  // let l_v = aa.mk.l('span',{cla:'val',con:value.v});
+  // let l_k = make('span',{cla:'key',app:aa.mk.butt_action(`${id} add ${key} ${value.v}`,key,'add')});
+  // let l_v = make('span',{cla:'val',con:value.v});
   // l.append(l_k,' ',l_v,' ',butts);
   // return l
 
@@ -462,7 +458,7 @@ aa.q.mk =(key,value) =>
   texts.add = `${id} add ${texts.val}`;
   
 
-  let actions = aa.mk.l('div',
+  let actions = make('div',
   {
     cla:'mod_actions',
     app:[
@@ -471,15 +467,15 @@ aa.q.mk =(key,value) =>
     ]
   });
 
-  let butts = aa.mk.l('span',{cla:'butts'});
+  let butts = make('span',{cla:'butts'});
   for (const item of ['req','run','out'])
   {
     butts.append(aa.mk.butt_action(texts[item],item),' ')
   }
 
-  let val = aa.mk.l('span',{cla:'val',con:texts.val});
+  let val = make('span',{cla:'val',con:texts.val});
   
-  const element = aa.mk.l('li',
+  const element = make('li',
   {
     cla:'item query',
     app:[val,' ',butts,' ',actions]
@@ -545,7 +541,6 @@ aa.q.outbox =request=>
     txt += outbox.map(i=>`${i[0]} ${i[1].length}`).join(', ');
     aa.q.log('out',request,txt);
   }
-  
 };
 
 
@@ -553,7 +548,7 @@ aa.q.outbox =request=>
 // returns an array with a request filter and options
 aa.q.filter =(s,x)=>
 {
-  const filter = typeof s === 'string' ? aa.parse.j(s) : s;
+  const filter = typeof s === 'string' ? aa.pj(s) : s;
   if (!filter) return [];
 
   let options = {};
@@ -722,13 +717,42 @@ aa.q.stuff =async()=>
     sessionStorage.q_run = 'n';
     setTimeout(()=>
     {
-      aa.log(aa.mk.l('p',
+      aa.log(make('p',
       {
         con:'wait a bit while events load, then ',
         app:aa.mk.reload_butt()
       }))
     },2000);
   },8000);
+};
+
+
+aa.q.stamp =async(id,timestamp)=>
+{
+  let mod = aa.q;
+  let item = mod.o.ls[id];
+  if (!item) return;
+  let changed;
+  if (!item.since || item.since > timestamp) 
+  {
+    item.since = timestamp;
+    changed = true;
+  }
+  if (!item.until || item.until < timestamp) 
+  {
+    item.until = timestamp;
+    changed = true;
+  }
+  
+  if (changed)
+  {
+    console.log('aa.q.stamp changed',id);
+    debt.add(()=>
+    {
+      console.log('aa.q.stamp saved',id);
+      // aa.mod.save(mod);
+    },2100,`q.stamp_${id}`)
+  }
 };
 
 
@@ -759,8 +783,7 @@ aa.q.sub =async s=>
     let request = ['REQ',fid,filter,options];
         
     aa.r.w.postMessage([['req',request,relays]]);
-    // let a = [aa.r.a.ms];
-    // for (const url of relays) aa.r.lay(url,{a,request});
+
     aa.q.log('sub',request,`to: ${relays}`);
   }
 };

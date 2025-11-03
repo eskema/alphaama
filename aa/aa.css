@@ -47,7 +47,7 @@
 
 /* #region themes */
 
-html[data-theme="dark"] 
+.aa[data-theme="dark"] 
 { 
   --color-a: 0,0,0;
   --color-b: 23,23,23;
@@ -68,7 +68,7 @@ html[data-theme="dark"]
   color-scheme: dark;
 }
 
-html[data-theme="light"] 
+.aa[data-theme="light"] 
 {
   --color-a: 255,255,255;
   --color-b: 233,233,233;
@@ -129,7 +129,7 @@ html
   scrollbar-width: none;
 }
 
-body 
+body
 {
   --c: var(--color-f);
   background-attachment: fixed;
@@ -523,7 +523,10 @@ img:not([src]) {
 
 /* #endregion created_at */
 
-
+.aa:not(.viewing) .sifted > .sifted_out
+{
+  display: none;
+}
 
 @media screen and (min-width: 1025px) 
 {

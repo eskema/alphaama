@@ -58,6 +58,10 @@ aa.u.add =(pubkey='')=>
 };
 
 
+// if key is the same as the user
+aa.u.is_u =pubkey=> aa.u.o?.ls?.pubkey === pubkey;
+
+
 // on load
 aa.u.load =async()=>
 {
@@ -123,8 +127,8 @@ aa.u.mk =(k,v)=>
       let link = aa.mk.nostr_link(v,'view');
       link.classList.add('key');
       link.title = 'view u';
-      l = aa.mk.l('li',{id:aa.u.def.id+'_'+k,cla:'item'});
-      l.append(link,' ',aa.mk.l('span',{cla:'val',con:v}));
+      l = make('li',{id:aa.u.def.id+'_'+k,cla:'item'});
+      l.append(link,' ',make('span',{cla:'val',con:v}));
       break;
       
     default: l = aa.mk.item(k,v);
@@ -214,7 +218,7 @@ aa.u.setup =async(s='')=>
 
 aa.u.setup_butt =()=>
 {
-  let setup_butt = aa.mk.l('p',
+  let setup_butt = make('p',
   {
     con:"let's get ",
     id:'u_setup',
@@ -222,7 +226,7 @@ aa.u.setup_butt =()=>
     [
       aa.mk.butt_action('u setup'),
       ' or ',
-      aa.mk.l('button',
+      make('button',
       {
         cla:'butt exe',
         con:'else',

@@ -74,47 +74,85 @@ aa.clk.fetch =e=>
 };
 
 
+// remove classes from elements in a section
+aa.is_read =options=>
+{
+  let { section, sub_section, classes, id } = options;
+  section.classList.remove(...classes);
+  if (sub_section) sub_section.classList.remove(...classes);
+  const new_stuff = section.querySelectorAll('.'+classes.join(',.'));
+  if (new_stuff.length)
+  {
+    for (const element of new_stuff)
+    {
+      if (element.dataset.id) sessionStorage[element.dataset.id] = 'is_read';
+      element.classList.remove(...classes);
+    }
+    if (section.classList.contains('expanded'))
+    {
+      if (id) sessionStorage[id] = '';
+      section.classList.remove('expanded');
+    }
+  }
+  else
+  {
+    if (section.classList.contains('expanded'))
+    {
+      if (id) sessionStorage[id] = '';
+      section.classList.remove('expanded');
+    }
+    else
+    {
+      if (id) sessionStorage[id] = 'expanded';
+      section.classList.add('expanded');
+    }
+  }
+};
+
+
 // mark replies as read
 aa.clk.mark_read =e=>
 {
   e.stopPropagation();
   const classes = ['haz_new_reply','haz_new','is_new'];
-  const replies = e.target.closest('.replies');
+  const section = e.target.closest('.replies');
   const note = e.target.closest('.note');
-  const root = e.target.closest('.root');
-  const rid = `section_${note.dataset.id}_replies`;
-  const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
   note.classList.remove(...classes);
+  const id = `section_${note.dataset.id}_replies`;
+  aa.is_read({section,classes,id});
+  // const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
   
-  if (new_stuff.length)
-  {
-    e.preventDefault();
-    for (const element of new_stuff)
-    {
-      sessionStorage[element.dataset.id] = 'is_read';
-      element.classList.remove(...classes);
-    }
-    if (replies.classList.contains('expanded')) 
-    {
-      sessionStorage[rid] = '';
-      replies.classList.remove('expanded');
-    }
-  }
-  else 
-  {
-    if (replies.classList.contains('expanded')) 
-    {
-      sessionStorage[rid] = '';
-      replies.classList.remove('expanded');
-    }
-    else 
-    {
-      sessionStorage[rid] = 'expanded';
-      replies.classList.add('expanded');
-    }
-  }
+  
+  // if (new_stuff.length)
+  // {
+  //   e.preventDefault();
+  //   for (const element of new_stuff)
+  //   {
+  //     sessionStorage[element.dataset.id] = 'is_read';
+  //     element.classList.remove(...classes);
+  //   }
+  //   if (replies.classList.contains('expanded')) 
+  //   {
+  //     sessionStorage[rid] = '';
+  //     replies.classList.remove('expanded');
+  //   }
+  // }
+  // else 
+  // {
+  //   if (replies.classList.contains('expanded')) 
+  //   {
+  //     sessionStorage[rid] = '';
+  //     replies.classList.remove('expanded');
+  //   }
+  //   else 
+  //   {
+  //     sessionStorage[rid] = 'expanded';
+  //     replies.classList.add('expanded');
+  //   }
+  // }
   if (!aa.view.active)
   {
+    const root = e.target.closest('.root');
     let top = root.offsetTop + (3 * parseFloat(getComputedStyle(aa.l).fontSize));
     if (top < aa.l.scrollTop) aa.l.scrollTo(0,top);
   }
@@ -124,13 +162,17 @@ aa.clk.mark_read =e=>
 // note actions
 aa.clk.na =e=>
 {
-  let l = e.target.closest('.actions');
-  if (l.classList.contains('empty'))
+  let element = e.target.closest('.actions');
+  fastdom.mutate(()=>
   {
-    for (const s of aa.e.butts.na) l.append(' ',aa.mk.butt_clk(s));
-    l.classList.remove('empty');
-  }
-  l.classList.toggle('expanded');
+    if (element.classList.contains('empty'))
+    {
+      for (const a of aa.e.butts.na)
+        element.prepend(aa.mk.butt_clk(a),' ');
+      element.classList.remove('empty');
+    }
+    element.classList.toggle('expanded');
+  });
 };
 
 

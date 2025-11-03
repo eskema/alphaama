@@ -98,6 +98,7 @@
 .note > .content.no_content + .tags_wrapper
 {
   bottom: unset;
+  grid-area: content;
   position: relative;
 }
 
@@ -201,7 +202,7 @@ dialog .tag
 
   .tags_wrapper[open]:hover
   {
-    z-index: 10;
+    z-index: 100;
   }
   
   .tags_wrapper[open]:hover 

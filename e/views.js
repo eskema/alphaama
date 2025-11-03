@@ -27,7 +27,7 @@ aa.view.ls.naddr1 =async naddr=>
 aa.view.ls.nevent1 =async nevent=>
 {
   let data = aa.fx.decode(nevent);
-  aa.log(aa.parse.j());
+  aa.log(aa.pj());
   if (!data || !data.id) return;
   let l = aa.e.printed.get(data.id);
   if (l) aa.view.upd(aa.fx.encode('note',data.id));
@@ -73,7 +73,7 @@ aa.view.ls.note1 =async nid=>
     {
       aa.e.miss_set('e',id);
       
-      // let msg = aa.mk.l('p',{con:'looking for event.. '+x});
+      // let msg = make('p',{con:'looking for event.. '+x});
       // aa.temp['looking_for_'+x] = msg;
       // aa.log(msg);
     }

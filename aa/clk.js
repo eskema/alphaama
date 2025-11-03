@@ -10,15 +10,6 @@ aa.clk.a =e=>
 };
 
 
-// clears view (home)
-aa.clk.clear =e=>
-{
-  e.preventDefault();
-  aa.view.clear();
-  aa.view.force({view:''});
-};
-
-
 // adds a clicked class to show interaction
 aa.clk.clkd =e=>
 {
@@ -68,10 +59,6 @@ aa.clk.expand =e=>
   
   sessionStorage[id] = storage_value;
 
-  // setTimeout(()=>
-  // { 
-  //   aa.fx.scroll(element,{behavior:'smooth',block}) 
-  // },200)
 };
 
 
@@ -135,8 +122,8 @@ aa.clk.mark =e=>
 // aa.clk.list_filter_input =e=>
 // {
 //   let ls = e.target.nextElementSibling;
-//   let lf = aa.mk.l('div',{cla:'lf'});
-//   let inp = aa.mk.l('input');
+//   let lf = make('div',{cla:'lf'});
+//   let inp = make('input');
 //   lf.append(inp);
 //   inp.addEventListener('change',e=>
 //   {

@@ -1,3 +1,4 @@
+aa.logs = make('ul',{id:'logs',cla:'list'});
 // log stuff
 aa.log =(con='',container=false,is_new=true)=>
 {
@@ -7,14 +8,20 @@ aa.log =(con='',container=false,is_new=true)=>
     e.stopPropagation();
     aa.log_read(e.target)
   };
-  const app = typeof con==='string'?aa.mk.l('p',{con}):con;
-  const log = aa.mk.l('li',{cla,clk,app});
+  const app = typeof con==='string'?make('p',{con}):con;
+  const log = make('li',{cla,clk,app});
+  log.append(' ',aa.mk.butt_clip(log.textContent));
   
   if (!container) container = aa.logs;
   if (container) fastdom.mutate(()=>
   {
     container.append(log);
-    if (is_new) container.classList.add('has_new')
+    if (is_new) 
+    {
+      container.classList.add('has_new');
+      if (container.parentElement)
+        container.parentElement.classList.add('has_new');
+    }
   });
   else console.log('log:',con);
   return log
@@ -42,7 +49,7 @@ aa.log_details =(id,summary,key,con)=>
   }
   fastdom.mutate(()=>
   {
-    l_r.append(aa.mk.l('p',{con}));
+    l_r.append(make('p',{con}));
     l_r.classList.add('has_new');
   });
 };
@@ -50,12 +57,12 @@ aa.log_details =(id,summary,key,con)=>
 
 aa.log_key =(key,value)=>
 {
-  let item = aa.mk.l('p',{con:value});
+  let item = make('p',{con:value});
   let element = aa.el.get(key);
   if (!element)
   {
-    let summary = aa.mk.l('summary',{con:key});
-    element = aa.mk.l('details',
+    let summary = make('summary',{con:key});
+    element = make('details',
     {
       cla: 'base',
       app: [summary,' ',item]
@@ -95,7 +102,7 @@ aa.log_key =(key,value)=>
 // log a stringified object as item
 aa.log_parse =(s='')=>
 {
-  aa.log(aa.mk.item('parse',aa.parse.j(s),{tag_name:'p'}))
+  aa.log(aa.mk.item('parse',aa.pj(s),{tag_name:'p'}))
 };
 
 
@@ -127,18 +134,55 @@ aa.log_read =async element=>
 aa.logs_read =async()=>
 {
   let element = aa.logs;
-  aa.fx.do_all(element,'.is_recent',
-    i=>{i.classList.remove('is_recent')})
-  aa.fx.do_all(element,'.is_new',aa.log_read);
+  aa.fx.do_all('.is_recent', 
+    item=>{ item.classList.remove('is_recent') }, element
+  );
+  aa.fx.do_all('.is_new', aa.log_read, element);
+  element.parentElement?.classList.remove('has_new');
+};
+
+
+// mark logs as read
+aa.logs_mark_read =e=>
+{
+  let section = e.target.closest('.section');
+  let sub_section = aa.logs;
+  const classes = ['is_new','has_new'];
+  aa.is_read({section,sub_section,classes});
+  // const new_stuff = aa.logs.querySelectorAll('.'+classes.join(',.'));
+  // if (new_stuff.length)
+  // {
+  //   for (const element of new_stuff) aa.log_read(element);
+    
+  //   if (section.classList.contains('expanded')) 
+  //   {
+  //     section.classList.remove('expanded');
+  //   }
+  // }
+  // else
+  // {
+  //   if (section.classList.contains('expanded'))
+  //   {
+  //     section.classList.remove('expanded');
+  //   }
+  //   else
+  //   {
+  //     section.classList.add('expanded');
+  //   }
+  // }
 };
 
 
 // mark logs as read
 aa.logs_clear =async s=>
 {
+  fastdom.mutate(()=>
+  {
+    aa.logs.textContent = '';
+    aa.logs.parentElement?.classList.remove('has_new');
+  });
   setTimeout(()=>
   {
-    fastdom.mutate(()=>{aa.logs.textContent = ''});
     aa.log(aa.mk.status(),0,0);
   },200)
 };

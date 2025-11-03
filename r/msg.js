@@ -19,6 +19,7 @@ aa.r.event =async data=>
   // console.log(a);
   for (const sub of dat?.subs)
   {
+    aa.q.stamp(sub,dat.event.created_at);
     if (aa.r.on_sub.has(sub))
     {
       aa.r.on_sub.get(sub)(dat);
@@ -66,7 +67,7 @@ aa.r.eose =async data=>
 
   fastdom.mutate(()=>
   {
-    l_r.append(aa.mk.l('p',{con:url}));
+    l_r.append(make('p',{con:url}));
     l_r.classList.add('has_new');
   });
   

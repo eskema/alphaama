@@ -1,26 +1,11 @@
 aa.mk.content_section =con=>
 {
-  return aa.mk.l('section',
+  return make('section',
   {
     cla:'content',
-    app:aa.mk.l('p',{cla:'paragraph',con})
+    app:make('p',{cla:'paragraph',con})
   })
 };
-
-// make details section
-// aa.mk.det =(cla='',id='')=>
-// {
-//   let l = aa.mk.details('',false,true);
-//   if (cla) l.classList.add(cla);
-//   if (id) l.id = id;
-//   let summary = l.querySelector('summary');
-//   summary.append(aa.mk.l('button',
-//   {
-//     cla:'butt mark_read',
-//     clk:aa.clk.mark_read
-//   }));
-//   return l 
-// };
 
 
 aa.mk.event_header =dat=>
@@ -28,34 +13,34 @@ aa.mk.event_header =dat=>
   const id = dat.event.id;
   const kind = dat.event.kind;
 
-  return aa.mk.l('header',
+  return make('header',
   {
     cla:'by',
     app:
     [
-      aa.mk.l('div',
+      make('div',
       {
         cla:'id',
         app:
         [
-          aa.mk.l('a',
+          make('a',
           {
             cla:'a nid',
             ref:`#${aa.fx.encode('note',id)}`,
-            app:aa.mk.l('span',
+            app:make('span',
             {
               con:aa.e.kinds_list[kind],
               dat:{kind}
             }),
             clk:aa.clk.a
           }),
-          ' ',aa.mk.l('span',{cla:'xid',con:id})
+          ' ',make('span',{cla:'xid',con:id})
         ]
       }),
       ' ',aa.mk.author_link(dat.event.pubkey),
       ' ',aa.e.note_actions(dat),
-      ' ',aa.mk.butt_clk(['x','tiny']),
-      ' ',aa.mk.time(dat.event.created_at)
+      ' ',aa.mk.time(dat.event.created_at),
+      ' ',aa.mk.butt_clk(['x','tiny'])
     ]
   });
 };
@@ -98,7 +83,7 @@ aa.mk.nip19 =string=>
       dis.entity = string;
       return aa.e.quote(dis)
     }
-    else return aa.mk.l('span',
+    else return make('span',
     { con:`${string}:\n${JSON.stringify(decoded)}`})
   }
   return aa.mk.nostr_link(string)
@@ -126,12 +111,12 @@ aa.mk.note =dat=>
   const nid = aa.fx.encode('note',id);
   const stamp = aa.now < created_at ? aa.now : created_at;
   const cla = ['note',...dat.clas].join(' ');
-  const seen = dat?.seen?.join(' ')||'';
-  const subs = dat?.subs?.join(' ')||'';
+  const seen = dat?.seen?.join(' ')||'db';
+  const subs = dat?.subs?.join(' ')||'db';
 
   const app = new DocumentFragment();
 
-  const clicker = aa.mk.l('a',
+  const clicker = make('a',
   {
     cla:'a clicker',
     ref:'#'+nid,
@@ -156,7 +141,7 @@ aa.mk.note =dat=>
   const replies_section = aa.mk.replies_section(id)
   app.append(replies_section);
 
-  const note = aa.mk.l('article',
+  const note = make('article',
   {
     id:nid,
     cla,
@@ -214,7 +199,7 @@ aa.mk.pagination =()=>
 {
   let n = parseInt(localStorage.pagination??'0');
   
-  const style = aa.mk.l('style',
+  const style = make('style',
   {
     id:'e_pagination',
     con:`.pagin .notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
@@ -222,8 +207,8 @@ aa.mk.pagination =()=>
 
   document.head.append(style);
 
-  let pagination = aa.mk.l('p',{cla:'pagination'});
-  let butt_more = aa.mk.l('button',
+  let pagination = make('p',{cla:'pagination'});
+  let butt_more = make('button',
   {
     cla:'butt',
     con:'moar',
@@ -260,7 +245,7 @@ aa.mk.replies_section =id=>
   //   if (cla) l.classList.add(cla);
   //   if (id) l.id = id;
   //   let summary = l.querySelector('summary');
-  //   summary.append(aa.mk.l('button',
+  //   summary.append(make('button',
   //   {
   //     cla:'butt mark_read',
   //     clk:aa.clk.mark_read
@@ -296,7 +281,7 @@ aa.mk.replies_section =id=>
 aa.mk.tag_list =(tags,options)=>
 {
   const times = tags.length;
-  const l = aa.mk.l('ol',{cla:'tags'});
+  const l = make('ol',{cla:'tags'});
   l.start = 0;
   
   for (let i=0;i<times;i++) 
@@ -304,7 +289,7 @@ aa.mk.tag_list =(tags,options)=>
     let con = tags[i].join(', ');
     let cla = 'tag tag_'+tags[i][0];
     if (options?.cla) cla += ' '+options.cla;
-    let li = aa.mk.l('li',{cla,con});
+    let li = make('li',{cla,con});
     li.dataset.i = i;
     l.append(li);//aa.mk.tag(tags[i],i));
   }
@@ -315,7 +300,7 @@ aa.mk.tag_list =(tags,options)=>
 // make event from JSON string, autocompletes missing fields
 aa.mk.e =(s='')=>
 {
-  let event = aa.parse.j(s);
+  let event = aa.pj(s);
   if (event)
   {
     aa.e.draft(aa.mk.dat({event:aa.e.normalise(event)}));
@@ -328,7 +313,7 @@ aa.mk.e =(s='')=>
 // set your metadata (kind-0)
 aa.mk.k0 =async(s='')=>
 {
-  let md = aa.parse.j(s);
+  let md = aa.pj(s);
   if (!md) return;
   aa.mk.confirm(
   {
@@ -350,7 +335,7 @@ aa.mk.k0 =async(s='')=>
   });
 };
 
-
+  
 aa.mk.k1 =async(s='')=>
 {
   //     const mentions = await aa.fx.mentions(s);
@@ -391,13 +376,16 @@ aa.mk.k4 =async(s='')=>
 
 aa.mk.k5 =async(s='')=>
 {
-  let [reason,rest] = aa.fx.split_str(s);
+  let [content,rest] = aa.fx.split_str(s);
   if (!rest) return;
   
-  const event = {kind:5,content:reason,tags:[]};
+  const event = {kind:5,content,tags:[]};
   const relays = [];
   
   let ids = [...new Set(aa.fx.splitr(rest))];
+  let dis = `confirm delete request for these events:\n${ids}`;
+  if (!window.confirm(dis)) return;
+
   for (const id of ids)
   {
     let tag = [id];
@@ -405,7 +393,7 @@ aa.mk.k5 =async(s='')=>
     if (aa.fx.is_key(id)) 
     {
       tag.unshift('e');
-      let dat = await aa.e.get[id];
+      let dat = await aa.e.get(id);
       if (dat)
       {
         kind = dat.event.kind+'';
@@ -417,9 +405,9 @@ aa.mk.k5 =async(s='')=>
     else tag.unshift('a');
     event.tags.push(tag);
     if (kind) event.tags.push(['k',kind])
-  }
-  if (window.confirm('confirm delete request for these events:\n'+ids))
+
     aa.e.finalize(aa.e.normalise(event),relays);
+  }
 };
 
 

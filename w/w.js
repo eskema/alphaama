@@ -533,8 +533,8 @@ aa.w.quote_check =async(string='')=>
     return ''
   }
   let checks = 0;
-  let log = aa.mk.l('div',{cla:'quote_check'});
-  let butt = aa.mk.l('button',
+  let log = make('div',{cla:'quote_check'});
+  let butt = make('button',
   {
     con:'stop checking '+quote_id,
     clk:e=>{log.remove()}

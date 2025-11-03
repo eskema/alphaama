@@ -99,13 +99,13 @@ aa.e.kinds[0] =dat=>
       if (aa.temp.miss?.p?.has(dat.event.pubkey))
         aa.temp.miss.p.delete(dat.event.pubkey);
 
-      let metadata = aa.parse.j(dat.event.content);
+      let metadata = aa.pj(dat.event.content);
       if (metadata)
       {
         p.metadata = metadata;
         aa.p.save(p);
         aa.p.links_upd(p);
-        if (aa.fx.is_u(dat.event.pubkey)) aa.u.upd_u_u();
+        if (aa.u.is_u(dat.event.pubkey)) aa.u.upd_u_u();
       }
     }
   });
@@ -170,7 +170,7 @@ aa.e.kinds[6] =dat=>
         return
       }
 
-      let event = aa.parse.j(dat.event.content);
+      let event = aa.pj(dat.event.content);
       if (event)
       {
         aa.fx.verify_event(event)
@@ -243,7 +243,7 @@ aa.e.kinds[1111] =dat=>
   authors.push(['p',dat.event.pubkey]);
   aa.e.authors(authors);
   let note = aa.mk.note(dat);
-  aa.e.append_check(dat,note,aa.fx.tag_comment_reply(dat.event.tags));
+  aa.e.append_to(dat,note,aa.fx.tag_comment_reply(dat.event.tags));
   return note
 };
 
@@ -271,6 +271,9 @@ aa.e.kinds[10002] =dat=>
     {
       let relays = {};
       let sets = ['k10002'];
+
+      let old = aa.fx.in_set(p.relays,'k10002','');
+
       let tags = dat.event.tags.filter(i=>i[0]==='r');
       for (const tag of tags)
       {
@@ -284,11 +287,19 @@ aa.e.kinds[10002] =dat=>
         else if (permission === 'write') 
           aa.fx.a_add(relay.sets,['write']);
         else aa.fx.a_add(relay.sets,['read','write']);
-        // if (aa.fx.is_u(dat.event.pubkey)) aa.fx.a_add(relay.sets,['auth']);
+        // if (aa.u.is_u(dat.event.pubkey)) aa.fx.a_add(relay.sets,['auth']);
       }
-      // let relays = aa.r.from_tags(dat.event.tags,['k10002']);
       aa.p.relays_add(relays,p);
-      if (aa.fx.is_u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      if (aa.u.is_u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      for (const i of old)
+      {
+        if (!Object.hasOwn(relays,i))
+        {
+          p.relays[i].sets = aa.fx.a_rm(p.relays[i].sets,sets);
+          if (!p.relays[i].sets.length)
+            delete p.relays[i];
+        }
+      }
       aa.p.save(p);
     }
   });

@@ -1,11 +1,9 @@
 .av 
 {
-  color: rgb(var(--c-a-e));
   display: grid;
   grid-template-rows: 1fr auto;
-  grid-template-areas: "av";
-  margin: 1rem 0;
-  padding-top: 1.5rem;
+  grid-template-areas: "controls" "av";
+  margin: var(--line) 0;
   position: relative;
 }
 
@@ -25,61 +23,34 @@
 
 .av .controls 
 {
+  --data: attr(data-elapsed) "s (" attr(data-percentage) ") "  attr(data-duration) "s";
+  --percent: attr(data-percentage);
+  --color-front: rgb(var(--color-main));
+  --color-back: rgb(var(--color-c));
   align-self: start;
   cursor: pointer;
-  display: grid;
   font-size: var(--font-size-s);
-  grid-area: av;
-  grid-template-columns: 1fr auto;
-  grid-template-areas: 
-    "progress progress progress progress progress"
-    "before   rewind   mute     grab     pip"
-    "url      url      url      url      url";
+  grid-area: controls;
   line-height: 2;
-  text-align: right;
-  transform: translateY(-2rem);
+  overflow: hidden;
 }
 
-.av .controls::before 
+.av .controls::after
 {
-  content: "<video " attr(data-duration) "s";
-  grid-area: before;
+  content: attr(data-duration) "s";
+  float: right;
+  text-align: right;
   white-space: pre;
 }
 
-.av.audio .controls::before 
+.av .started + .controls::after 
 {
-  content: "<audio " attr(data-duration) "s";
-}
-
-.av .controls:hover 
-{
-  z-index: 2;
-}
-
-.av .mf:hover + .controls::before 
-{
-  content: "<play " attr(data-duration) "s";
-}
-
-.av .started + .controls::before 
-{
-  content: "<video " attr(data-remains) "s";
-}
-
-.av.audio .started + .controls::before 
-{
-  content: "<audio " attr(data-remains) "s";
-}
-
-.av .mf.started.playin + .controls::before
-{
-  content: "<pause " attr(data-remains) "s";
+  content: var(--data);
 }
 
 .av .controls button
 {
-  margin-left: 1rem;
+  margin-right: 1rem;
   padding: 0;
 }
 
@@ -92,17 +63,26 @@
 {
   box-sizing: border-box;
   cursor: text;
-  grid-area: url;
-  justify-self: start;
-  mix-blend-mode: color-dodge;
-  top: 0rem;
+  display: block;
+  overflow-x: scroll;
   width: 100%;
-  word-break: break-all;
+  word-break: keep-all;
+  hyphens: none;
 }
 
-.av .controls progress 
+.av .url::before 
 {
-  grid-area: progress;
+  content: "<video ";
+  white-space: pre;
+}
+
+.av.audio .url::before 
+{
+  content: "<audio ";
+}
+
+/* .av .controls progress 
+{
   pointer-events: none;
   width: 100%;
 }
@@ -120,11 +100,54 @@
 .av .controls progress[value]::-webkit-progress-bar 
 {
   background-color: rgb(var(--color-a));
+  background-color: rgb(var(--color-c));
 }
 
 .av .controls progress[value]::-webkit-progress-value 
 {
   background-color: rgb(var(--color-main));
+} */
+
+.av .controls input[type="range"]
+{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-size: 100% 2px!important;
+  background-position: 0 50%!important;
+  /* background: 
+    linear-gradient(to bottom,
+      rgb(var(--color-b)) 42%, transparent, rgba(var(--color-b)) 58%
+    ) no-repeat; */
+  
+  cursor: pointer;
+  display: block;
+  margin: 0;
+  width: 100%;
+  overflow: hidden;
+  transition: var(--trans);
+}
+
+.av .controls input[type="range"]::-webkit-slider-runnable-track 
+{
+  /* background: 
+    linear-gradient(to bottom,
+      rgb(var(--color-b)) 42%, transparent, rgba(var(--color-b)) 58%
+    ) no-repeat; */
+  
+  height: 1rem;
+  /* cursor: pointer; */
+}
+
+.av .controls input[type="range"]::-webkit-slider-thumb
+{
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: rgb(var(--color-main));
+  border-radius: 50%;
+  height: 1rem;
+  opacity: 0;
+  width: 1rem;
 }
 
 .av .url,
@@ -133,12 +156,12 @@
   color: rgb(var(--color-d));
 }
 
-.av audio
+/* .av audio
 {
-/*  display: block!important;
+ display: block!important;
   min-width: 300px;
-  min-height: 500px;*/
-}
+  min-height: 500px;
+} */
 
 @media screen and (min-width: 1025px) 
 {
@@ -152,7 +175,7 @@
     opacity: 1;
   }
   
-  .av .mf.started:hover + .controls::before 
+  /* .av .mf.started:hover + .controls::before 
   {
     content: "<play " attr(data-remains) "s";
   }
@@ -160,7 +183,7 @@
   .av .mf.started.playin:hover + .controls::before 
   {
     content: "<pause " attr(data-remains) "s";
-  }
+  } */
   
   .av .controls button:hover
   {

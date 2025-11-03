@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 74;
+const aa_version = 75;
 // a
 const aa = 
 {
@@ -15,75 +15,66 @@ const aa =
   aka:'A<3',
   about:'just .aa nostr fucking client',
   actions:[],
-  db:{worker:{}},
+  db:{},
   clears:[],
   clk:{},
   def:
   {
     id:'aa',
-    
-    extensions:
-    {
-      img:['gif','heic','jpeg','jpg','png','webp'],
-      video:['mp4','webm'], // fuck mov 
-      audio:['3ga','aac','aiff','flac','m4a','mp3','ogg','wav']
-    },
-    mods:
-    [
-      ['cli','/cli/cli.js'],
-      ['o','/o/o.js'],
-      ['p','/p/p.js'],
-      ['e','/e/e.js'],
-      ['r','/r/r.js'],
-      ['q','/q/q.js'],
-      ['i','/i/i.js'],
-      ['u','/u/u.js'],
-      // {id:'w',src:'/w/w.js?v='+aa_version,requires:['q']},
-    ],
   },
+  l: document.documentElement,
+  bod: document.body,
   deps:
   [
     '/dep/fastdom.js?v=1.0.4',
     '/dep/nostr-tools.js?v=2.15.0',
     '/dep/store.js',
-    
-    // '/dep/deps.js', // bundled dependencies 
+    '/dep/qrcode.js',
     // '/dep/asciidoctor.min.js?v=3.0.4',
     // '/dep/bolt11.js',
     // '/dep/cashuts.js?v=2.0.0',
-
-    
     // '/dep/fastdom-promised.js?v=1.0.4',
     // '/dep/fastdom-strict.js?v=1.0.4',
     // '/dep/math.js?v=14.0.1',
-    
-    '/dep/qrcode.js',
-    
     // '/dep/webtorrent.min.js',
     // '/dep/hls.js?v=1',
     // '/dep/blurhash.js?v=10000',
   ],
+  mods:
+  [
+    ['cli','/cli/cli.js'],
+    ['o','/o/o.js'],
+    ['p','/p/p.js'],
+    ['e','/e/e.js'],
+    ['r','/r/r.js'],
+    ['q','/q/q.js'],
+    ['u','/u/u.js'],
+    // ['w','/w/w.js'],
+  ],
   scripts:
   [
-    '/aa/mod.js?v='+aa_version,
-    '/aa/view.js?v='+aa_version,
-    '/db/db.js?v='+aa_version,
-    '/aa/clk.js?v='+aa_version,
-    '/aa/fx.js?v='+aa_version,
-    '/aa/log.js?v='+aa_version,
-    '/aa/mk.js?v='+aa_version,
-    '/aa/parse.js?v='+aa_version,
-    '/aa/wakelock.js?v='+aa_version,
-    '/av/av.js?v='+aa_version,
+    '/scripts/make.js',
+    '/scripts/debt.js',
+    '/scripts/sift.js',
+    '/scripts/parse.js',
+    '/aa/mk.js',
+    '/aa/mod.js',
+    '/aa/view.js',
+    '/db/db.js',
+    '/aa/clk.js',
+    '/aa/fx.js',
+    '/aa/log.js',
+    '/aa/wakelock.js',
+    '/av/av.js',
   ],
   styles:
   [
-    '/aa/list.css?v='+aa_version,
-    '/aa/mod.css?v='+aa_version,
-    '/aa/log.css?v='+aa_version,
-    '/aa/view.css?v='+aa_version,
-    '/aa/side.css?v='+aa_version,
-    '/aa/dialog.css?v='+aa_version,
+    '/aa/list.css',
+    '/aa/mod.css',
+    '/aa/log.css',
+    '/aa/view.css',
+    '/aa/side.css',
+    '/aa/dialog.css',
   ],
   el:new Map(),
   fx:{},
@@ -94,299 +85,46 @@ const aa =
   temp:{},
   // dev:true
   // get dev(){ return sessionStorage.hasOwnProperty('dev') }
-  regex:
-  {
-    get an(){ return /^[A-Z_0-9]+$/i },
-    get hashtag(){ return /(\B[#])[\w_-]+/g },
-    get hex(){ return /^[A-F0-9]+$/i },
-    //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
-    //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
-    get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
-    get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i },
-    get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
-    get str(){ return /"([^"]+)"/ }, // text in quotes ""
-    get fw(){ return /(?<=^\S+)\s/ }, // first word
-  }
+  // regex:
+  // {
+  //   get an(){ return /^[A-Z_0-9]+$/i },
+  //   get hashtag(){ return /(\B[#])[\w_-]+/g },
+  //   get hex(){ return /^[A-F0-9]+$/i },
+  //   get paragraph(){ return /\n/ },
+  //   get paragraphs(){ return /\n\s*\n/ },
+  //   //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
+  //   //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
+  //   get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
+  //   get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i },
+  //   get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
+  //   get str(){ return /"([^"]+)"/ }, // text in quotes ""
+  //   get fw(){ return /(?<=^\S+)\s/ }, // first word
+  // },
+  resets:[]
 };
 
-// aa.regex =
-// {
-//   get an(){ return /^[A-Z_0-9]+$/i },
-//   get hashtag(){ return /(\B[#])[\w_-]+/g },
-//   get hex(){ return /^[A-F0-9]+$/i },
-//   //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
-//   //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },
-//   get nostr(){ return /((nostr:)[A-Z0-9]{12,})\b/gi }, 
-//   get bech32(){ return /^[AC-HJ-NP-Z02-9]*/i },
-//   get url(){ return /(http|ftp|https):\/\/([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])/g },
-//   get str(){ return /"([^"]+)"/ }, // text in quotes ""
-//   get fw(){ return /(?<=^\S+)\s/ }, // first word
-// };
-
-
-// head styles
-aa.add_styles =async array=>
-{
-  let rel = 'stylesheet';
-  for (const ref of array)
-    document.head.append(aa.mk.l('link',{rel,ref}));
-};
-
-
-// toggle aa.dev on current tab
-// aa.dev_set =force=>
-// {
-//   if (force !== undefined)
-//   {
-//     if (force) sessionStorage.dev = true;
-//     else sessionStorage.removeItem(dev);
-//   }
-//   else
-//   {
-//     if (aa.dev) sessionStorage.removeItem(dev);
-//     else sessionStorage.dev = true
-//   }
-//   aa.log(`aa.dev = ${aa.dev}`);
-// };
-
-
-// make element with options
-aa.mk.l =(tag_name='div',options={})=>
-{
-  const element = document.createElement(tag_name);
-  for (const key in options)
-  {
-    const value = options[key];
-    if (!value) continue;
-    switch (key)
-    {
-      case 'app':
-        if (Array.isArray(value)) 
-          element.append(...value);
-        else element.append(value); 
-        break;
-      case 'att': 
-        if (Array.isArray(value))
-          for (const i of value)
-            element.toggleAttribute(i);
-        else element.toggleAttribute(value);
-        break;
-      case 'cla': element.className = value; break;
-      case 'clk': element.addEventListener('click',value); break;
-      case 'con': element.textContent = value; break;
-      case 'dat': 
-        for (const i in value)
-          if (value[i]||value[i]===0) 
-            element.dataset[i] = value[i]; 
-        break;
-      case  'id': element.id = value; break;
-      case 'nam': element.name = value; break;
-      case 'pla': element.placeholder = value; break;
-      case 'ref': element.href = value; break;
-      case 'rel': element.rel = value; break;
-      case 'siz': element.sizes = value; break;
-      case 'src': element.src = value; break;
-      case 'sty': element.style = value; break;
-      case 'tab': element.tabIndex = value; break;
-      case 'tit': element.title = value; break;
-      case 'typ': element.type = value; break;
-      case 'val': element.value = value; break;
-      default: console.log('aa.mk.l: invalid key ',key,value)
-    }
-  }
-  return element
-};
-
-
-// media observer for lazy cache fetching
-// aa.lazy_god = new IntersectionObserver(a=>
-// {
-//   for (const b of a)
-//   {
-//     if (b.isIntersecting) 
-//     {
-//       let l = b.target;
-//       aa.lazy_god.unobserve(l);
-//       fastdom.mutate(()=>
-//       {
-//         if (l.dataset.src) l.src = l.dataset.src;
-//         l.classList.add('quick_fox');
-//         l.classList.remove('lazy_dog');
-//       });
-//     }
-//   }
-// },{root:null,threshold:.1});
-
-
-// if no options found, load with defaults
-aa.load =async(options={})=>
-{
-  let {
-    styles,
-    element,
-    bod,
-    dep,
-    mods,
-    scripts,
-    no_page,
-  } = options;
-
-  let {default: mods_list } = await import('./mods.json',{with:{type:'json'}});
-  console.log(mods_list);
-  // setup document
-  aa.add_styles(styles || aa.styles);
-  aa.framed = window.self !== window.top;
-  
-  aa.l = element || document.documentElement;
-  aa.bod = bod || document.body;
-
-  aa.logs = aa.mk.l('ul',{id:'logs',cla:'list'});
-  aa.mod_l = aa.mk.l('div',{id:'mods'});
-
-  let dependencies = dep || aa.deps;
-  scripts = scripts || aa.scripts;
-  
-  await aa.add_scripts([...dependencies,...scripts]);
-  
-  // extend fastdom
-  // aa.fastdom = fastdom.extend(fastdomPromised);
-  
-  aa.view.l = aa.mk.l('main',{id:'view'});
-  aa.mk.manifest();
-  aa.mk.dialog();
-  aa.mk.side();
-
-  await aa.mods_load(mods || aa.def.mods);
-
-  aa.actions.push(
-    {
-      action:['help','aa'],
-      description:'alphaama help',
-      exe:()=>{aa.mk.help()}
-    },
-    // {
-    //   action:['help','db'],
-    //   description:'database help',
-    //   exe:()=>{aa.mk.help('db')}
-    // },
-    // {
-    //   action:['db','help'],
-    //   description:'database help',
-    //   exe:()=>{aa.mk.help('db')}
-    // },
-    {
-      action:['zzz'],
-      description:'resets everything',
-      exe:aa.reset
-    },
-    {
-      action:['o','dev'],
-      description:'toggle dev for this tab',
-      exe:aa.dev_set
-    },
-    // {
-    //   action:['fx','math'],
-    //   description:'do math with strings',
-    //   exe:(s='')=> math.evaluate(s)
-    // },
-    
-  );
-  if (!no_page) aa.mk.page();
-  window.addEventListener('beforeunload',aa.unload);
-};
 
 // append mod scripts when required mods have been loaded
-aa.mods_load =async(mods,target)=>
+aa.add_mods =async(mods,target)=>
 {
   if (!target) target = aa;
-  let mods_id = `mods_load_${target.name}`;
-  let temp = aa.temp[mods_id] = [];
-  
-  for (const [id,src] of mods) //await aa.mod_load(mod);
+  await aa.add_scripts(mods.map(i=>i[1]));
+  for (const id of mods.map(i=>i[0]))
   {
-    await aa.add_scripts([src]);
-    if (Object.hasOwn(target,id))
-    {
-      let mod = target[id];
-      if (Object.hasOwn(mod,'styles'))
-        aa.add_styles(mod.styles);
-      if (Object.hasOwn(mod,'scripts'))
-        await aa.add_scripts(mod.scripts);
-      if (Object.hasOwn(mod,'load'))
-        await mod.load();
-      mod.loaded = true;
-    }
+    if (!Object.hasOwn(target,id)) continue;
+    
+    let mod = target[id];
+
+    if (Object.hasOwn(mod,'styles'))
+      aa.add_styles(mod.styles);
+
+    if (Object.hasOwn(mod,'scripts'))
+      await aa.add_scripts(mod.scripts);
+
+    if (Object.hasOwn(mod,'load'))
+      await mod.load();
+    mod.loaded = true;
   }
-  
-  while (temp.length)
-  {
-    let after_load = temp.shift();
-    setTimeout(after_load,0)
-  }
-  delete aa.temp[mods_id];
-};
-
-// aa.mod_load =async mod=>
-// {
-//   return new Promise(async resolve=>
-//   {
-//     let id = mod.id;
-//     await aa.add_scripts([mod.src]);
-//     if (Object.hasOwn(aa,id))
-//     {
-//       let dis_mod = aa[id];
-//       if (Object.hasOwn(dis_mod,'styles'))
-//         aa.add_styles(dis_mod.styles);
-//       if (Object.hasOwn(dis_mod,'scripts'))
-//         await aa.add_scripts(dis_mod.scripts);
-//       if (Object.hasOwn(dis_mod,'load'))
-//         await dis_mod.load();
-//       dis_mod.loaded = true;
-//     }
-//     resolve(true)
-//   })
-// };
-
-
-// tries to delete everything saved locally 
-// and then reload clean
-aa.reset =async()=>
-{
-  aa.log('reset initiated');
-  await aa.db.ops('cash',{clear:'ALL'});
-  aa.log('db cash: clear');
-  let databases = await indexedDB.databases();
-  for (const db of databases) indexedDB.deleteDatabase(db.name);
-  aa.log('indexedDB: clear')
-  sessionStorage.clear();
-  aa.log('sessionStorage: clear');
-  localStorage.clear();
-  aa.log('localStorage: clear');
-  aa.log('shh... go to sleep now.');
-  setTimeout(()=>{location.href = location.origin},1000)
-};
-
-
-// default page layout
-aa.mk.page =(o={})=>
-{
-  let elements = new DocumentFragment();
-  elements.append
-  (
-    aa.mk.header(),
-    aa.view.l,
-    aa.cli.l,
-    aa.el.get('side'),
-    aa.el.get('dialog')
-  );
-  
-  aa.bod.prepend(elements);
-  aa.cli.on_collapse.push(aa.logs_read);
-  
-  if (aa.framed)
-    fastdom.mutate(()=>{aa.l.classList.add('framed')});
-  aa.log(aa.mk.status(),0,0);
-  setTimeout(aa.view.pop,100);
 };
 
 
@@ -396,9 +134,13 @@ aa.add_scripts =async array=>
   return new Promise(resolve=>
   {
     let done = 0;
-    for (const src of array) 
+    for (let src of array) 
     {
-      let element = aa.mk.l('script',{src});
+      src = `${src}?v=${aa_version}`;
+      let element = document.createElement('script');
+      element.src = src;
+
+      // let element = make('script',{src});
       element.addEventListener('load',e=>
       {
         if (done===array.length-1) resolve(true);
@@ -408,6 +150,180 @@ aa.add_scripts =async array=>
     }
   })
 };
+
+
+// base elements
+aa.add_stuff =no_page=>
+{
+  aa.mk.manifest();
+  aa.el.set('caralho',make('a',
+  {
+    id: 'caralho',
+    ref: '/',
+    con: aa.aka,
+    tit: 'vai pró caralho',
+    clk: e=>
+    {
+      e.preventDefault();
+      aa.view.clear();
+      aa.view.force({view:''});
+    },
+  }));
+
+  aa.el.set('state', make('h1',
+  {
+    cla: 'aa_state',
+    con: 'dickbutt',
+    dat: { pathname: location.pathname }
+  }));
+
+  aa.el.set('header', make('header',
+  {
+    cla:'aa_header',
+    app:[aa.el.get('caralho'), aa.el.get('state')]
+  }));
+
+  aa.el.set('view', make('main',{id:'view'}));
+  aa.el.set('side', aa.mk.section({
+    id:'side',
+    name:'a_a',
+    // element:aa.mod_l,
+    tagname:'aside'
+  }));
+
+  aa.el.set('dialog',aa.mk.dialog());
+};
+
+
+// head styles
+aa.add_styles =async array=>
+{
+  document.head.append(...array.map(path=>
+  {
+    let element = document.createElement('link');
+    element.rel = 'stylesheet';
+    element.href = `${path}?v=${aa_version}`;
+    return element
+  }))
+};
+
+
+// if no options found, load with defaults
+aa.load =async(options={})=>
+{
+  let {
+    styles,
+    deps,
+    scripts,
+    mods,
+    page,
+  } = options;
+  
+  deps = deps || aa.deps;
+  styles = styles || aa.styles;
+  scripts = scripts || aa.scripts;
+  mods = mods || aa.mods;
+
+  aa.framed = window.self !== window.top;
+
+  let regex_module = await import('./regex.js');
+  aa.regex = regex_module.default;
+
+  aa.add_styles(styles);
+  await aa.add_scripts(deps);
+  await aa.add_scripts(scripts);
+  aa.add_stuff(page);
+  await aa.add_mods(mods);
+
+  aa.resets.push(
+    async()=>
+    {
+      await aa.db.ops('cash',{clear:'ALL'});
+      aa.log('db cash: clear');
+      let databases = await indexedDB.databases();
+      for (const db of databases) indexedDB.deleteDatabase(db.name);
+      aa.log('indexedDB: clear');
+    }
+  );
+
+  aa.actions.push(
+    {
+      action:['help','aa'],
+      description:'alphaama help',
+      exe:()=>{aa.mk.help()}
+    },
+    {
+      action:['zzz'],
+      description:'resets everything',
+      exe:aa.reset
+    },
+  );
+
+  // window.addEventListener('beforeunload',aa.unload);
+};
+
+
+// JSON.parse wrapper
+aa.pj =(string='')=>
+{
+  let json;
+  string = string.trim();
+  if (string.length > 2)
+  {
+    try { json = JSON.parse(string) }
+    catch(er){ console.log('aa.pj:',string,er) }
+  }
+  return json
+};
+
+
+// tries to delete everything saved locally 
+// and then reload clean
+aa.reset =async()=>
+{
+  aa.log('reset initiated');
+  sessionStorage.clear();
+  aa.log('sessionStorage: clear');
+  localStorage.clear();
+  aa.log('localStorage: clear');
+
+  for (const callback of aa.resets) await callback();
+
+  aa.log('shh... go to sleep now.');
+  setTimeout(()=>{location.href = location.origin},999)
+};
+
+
+// default page layout
+aa.mk.page =(o={})=>
+{
+  let elements = new DocumentFragment();
+  let side = aa.el.get('side');
+  side.append(aa.mod_l);
+  elements.append
+  (
+    aa.el.get('header'),
+    aa.el.get('view'),
+    aa.el.get('cli'),
+    aa.el.get('side'),
+    aa.el.get('dialog')
+  );
+  let classes = ['aa'];
+  if (aa.framed) classes.push('framed');
+  fastdom.mutate(()=>
+  {
+    aa.l.classList.add(...classes);
+    aa.bod.prepend(elements);
+  });
+  
+  aa.cli.on_collapse.push(aa.logs_read);
+  
+  aa.log(aa.mk.status(),0,0);
+
+  setTimeout(aa.view.pop,100);
+};
+
+
 
 
 // before unload event

@@ -5,11 +5,11 @@
   grid-area: actions;
   line-height: 1.5;
   margin: 0;
-  overflow-x:  scroll;
+  overflow-x: scroll;
   padding: 0 var(--pad);
   position: relative;
   user-select: none;
-  white-space: pre;
+  /* white-space: pre; */
   width: auto;
 }
 
@@ -18,30 +18,41 @@
   font-size: 0;
 }
 
-.actions:not(.expanded) :first-child
-{
-  font-size: var(--font-size-s);
-}
-
-.actions:not(.expanded) > *:not(:first-child)
+.actions:not(.expanded) > .butt
 {
   display: none;
 }
 
-.actions.expanded > *:first-child
+.actions:not(.expanded) > .butt.action_butt
+{
+  display: block;
+  font-size: var(--font-size-s);
+}
+
+.actions > .butt
+{
+  padding: 0 var(--padm);
+}
+
+/* .actions:not(.expanded) > *:not(.action_butt)
+{
+  display: none;
+} */
+
+/* .actions.expanded > .action_butt
 {
   margin-right: var(--pad);
-}
+} */
 
 .note .actions.expanded
 {
   background: rgba(var(--color-a));
 }
 
-.note .actions.expanded .butt
+/* .note .actions.expanded .butt
 {
   font-size: var(--font-size-s);
-}
+} */
 
 .note.root > .by .actions,
 .in_view > .replies > .note > .by .actions 
@@ -50,48 +61,16 @@
 }
 
 @media screen and (min-width: 1025px) 
-{ 
-  .note > .actions
-  {
-    position: sticky;
-    bottom: 4rem;
-  }
-  
-  .note > .actions[open]
-  {
-    justify-content: end;
-    text-align: right;
-    width: auto;
-  }
-  
-  .note > .actions:not([open]) > summary
-  {
-    text-align: right;
-  }
-  
+{
   .note .by .actions .butt:hover
   {
     color: rgb(var(--color-e));
     opacity: 1;
   }
   
-  .in_view > .replies > .note > .actions,
-  .root:not(.in_path) > .actions
-  {
-    position: sticky;
-    top: 1rem;
-  }
 }
 
-@media screen and (max-width: 768px) 
+/* @media screen and (max-width: 768px) 
 { 
-  .note .actions
-  {
-    justify-self: end;
-  }
-  
-  .note .actions:not([open]) summary
-  {
-    text-align: right;
-  }
-}
+
+} */

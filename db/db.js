@@ -1,10 +1,15 @@
-aa.db.worker.cash = '/db/cash.js';
-aa.db.worker.idb = '/db/idb.js';
-aa.db.worker.sdb = '/db/sdb.js';
-aa.db.cash = new Worker(aa.db.worker.cash);
-aa.db.idb = new Worker(aa.db.worker.idb);
-aa.db.sdb = new SharedWorker(aa.db.worker.sdb).port;
+aa.db.srcs = new Map();
+// cache
+aa.db.srcs.set('cash','/db/cash.js');
+aa.db.cash = new Worker(aa.db.srcs.get('cash'));
 
+// indexedDB
+aa.db.srcs.set('idb','/db/idb.js');
+aa.db.idb = new Worker(aa.db.srcs.get('idb'));
+
+// shared worker
+// aa.db.worker.sdb = '/db/sdb.js';
+// aa.db.sdb = new SharedWorker(aa.db.worker.sdb).port;
 
 
 // web cache navigation for offline use
@@ -13,7 +18,7 @@ if ('serviceWorker' in navigator)
   if (localStorage.cash === 'on')
   {
     navigator.serviceWorker
-    .register(aa.db.worker.cash,{scope:'/'});
+    .register(aa.db.srcs.get('cash'),{scope:'/'});
   }
   // else
   // {
@@ -68,30 +73,57 @@ aa.db.count =async(s='')=>
 
 // pass operations to worker and await results
 // kills the worker when finished
-aa.db.ops =async(s,o)=>
+// aa.db.ops =async(worker_src,ops)=>
+// {
+//   return new Promise((resolve,reject)=>
+//   {
+//     const db = new Worker(aa.db.worker[worker_src]);
+//     const abort = setTimeout(()=>{ db?.terminate(); resolve() },6666);
+//     db.onmessage =e=> 
+//     {
+//       clearTimeout(abort);
+//       setTimeout(()=>{db?.terminate()},10);
+//       resolve(e.data);
+//     }
+//     db.postMessage(ops);
+//   });
+// };
+
+// pass operations to worker and await results
+// kills the worker when finished
+// const db = new Worker(aa.db.worker[worker_src]);
+aa.db.ops =async(worker,ops)=>
 {
-  return new Promise((resolve,reject)=>
+  if (typeof worker === 'string'
+    && aa.db.srcs.has(worker)
+  ) worker = new Worker(aa.db.srcs.get(worker));
+
+  const term =()=>{ worker?.terminate() };
+
+  return new Promise(resolve=>
   {
-    const db = new Worker(aa.db.worker[s]);
-    const abort = setTimeout(()=>{ db?.terminate(); resolve() },6666);
-    db.onmessage =e=> 
+    const abort = setTimeout(()=>{ term(); resolve() }, 6666);
+
+    worker.onmessage =e=>
     {
       clearTimeout(abort);
-      setTimeout(()=>{db?.terminate()},10);
+      setTimeout(term,21);
       resolve(e.data);
     }
-    db.postMessage(o);
+    worker.postMessage(ops);
   });
 };
 
 
 // shared db
-aa.db.sdb.addEventListener('message',e=>
-{
-  console.log('sdb',e.data)
-});
+// aa.db.sdb.addEventListener('message',e=>
+// {
+//   console.log('sdb',e.data)
+// });
 
-aa.db.sdb.start();
+// aa.db.sdb.start();
+
+
 
 // wen loaded
 // window.addEventListener('load',aa.db.load);

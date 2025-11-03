@@ -47,7 +47,7 @@
 .cli_collapse
 {
   align-self: stretch;
-  background: rgb(var(--color-f));
+  background: rgb(var(--color-d));
   border-radius: 0;
   border: none;
   color: rgb(var(--color-a));

@@ -114,7 +114,7 @@
   pointer-events: none;
 }
 
-.item.out
+.item.sifted_out
 {
   display: none;
 }
@@ -166,11 +166,6 @@
 .list_details details:not([open])
 {
   display: inline-block;
-}
-
-html:not(.viewing) .filtering > *:not(.filtered_in)
-{
-  display: none;
 }
 
 @media screen and (min-width: 1025px) 

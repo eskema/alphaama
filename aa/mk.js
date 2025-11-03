@@ -1,12 +1,4 @@
-aa.mk.side =()=>
-{
-  aa.el.set('side',aa.mk.section({
-    id:'side',
-    name:'a_a',
-    element:aa.mod_l,
-    tagname:'aside'
-  }))
-};
+
 
 
 // make button with a clk
@@ -27,7 +19,41 @@ aa.mk.butt_clk =sa=>
   else clk = cla = con = sa;
   cla = 'butt '+cla;
   clk = aa.clk[clk];
-  return aa.mk.l('button',{con,cla,clk});
+  return make('button',{con,cla,clk});
+};
+
+
+// button to copy text to clipboard
+aa.mk.butt_clip =(content,options)=>
+{
+  if (typeof content !== 'string') 
+    content = JSON.stringify(content);
+
+  return make('button',
+  {
+    content: 'copy to clipboard',
+    classes: 'butt clip',
+    title: 'copy to clipboard',
+    clk: async e=>
+    {
+      try
+      {
+        await navigator.clipboard.writeText(content);
+        let l = e.target;
+        fastdom.mutate(()=>
+        {
+          l.classList.remove('copied','failed');
+          l.classList.add('copied')
+        })
+        
+        // setTimeout(()=>{l.classList.add('copied')},100);
+      }
+      catch (er) 
+      {
+        e.target.classList.add('failed');
+      }
+    }
+  })
 };
 
 
@@ -69,10 +95,10 @@ aa.mk.dat =(o={})=>
 // make details element
 aa.mk.details =(con,l=false,open=false,cla='')=>
 { 
-  const details = aa.mk.l('details',{cla});
+  const details = make('details',{cla});
   if (open) details.open = true;
   // cla = 'base' + cla?' '+cla:'';
-  const summary = aa.mk.l('summary',{con});
+  const summary = make('summary',{con});
   details.append(summary);
   if (!l) return details;
   // if (l.classList.contains('list'))
@@ -82,23 +108,17 @@ aa.mk.details =(con,l=false,open=false,cla='')=>
 };
 
 
-aa.mk.dialog =()=>
+aa.mk.dialog =(id='dialog')=>
 {
-  let id = 'dialog';
-  dialog = aa.mk.l(id);
+  let dialog = make(id);
+  
   dialog.addEventListener('close',e=>
   {
     dialog.removeAttribute('title');
-    const mod_l = dialog.querySelector('.mod');
-    if (mod_l)
-    {
-      if (mod_l.dataset.was==='closed') mod_l.toggleAttribute('open',false);
-      aa.mod.append(mod_l);
-    }
-    
     dialog.textContent = '';
   });
-  aa.el.set('dialog',dialog);
+
+  return dialog
 };
 
 
@@ -108,9 +128,9 @@ aa.mk.confirm =async options=>
   const dialog = aa.el.get('dialog');
   if (!dialog || dialog.open) return false;
   
-  const dialog_options = aa.mk.l('p',{cla:'dialog_options'});
+  const dialog_options = make('p',{cla:'dialog_options'});
   
-  const dialog_no = aa.mk.l('button',
+  const dialog_no = make('button',
   {
     con:options.no.title || 'cancel',
     cla:'butt cancel',
@@ -126,7 +146,7 @@ aa.mk.confirm =async options=>
   
   if (Object.hasOwn(options,'yes'))
   {
-    const dialog_yes = aa.mk.l('button',
+    const dialog_yes = make('button',
     {
       con:options.yes.title || 'confirm',
       cla:'butt confirm',
@@ -164,7 +184,7 @@ aa.mk.confirm =async options=>
 aa.mk.doc =text=>
 {
   if (!text) return;
-  let article = aa.mk.l('article',
+  let article = make('article',
   {
     cla:'content parsed',
     app:aa.e.content(text,aa.fx.is_trusted(4))
@@ -177,26 +197,6 @@ aa.mk.doc =text=>
   let details = aa.mk.details(title,article);
   details.id = 'aa_read_me';
   return details
-};
-
-
-// on load
-aa.mk.header =e=>
-{
-  const header = aa.mk.l('header',{cla:'aa_header'});
-  const caralho =  aa.mk.l('a',
-  {
-    id: 'caralho',
-    ref: '/',
-    con: aa.aka,
-    tit: 'vai pró caralho',
-    clk: aa.clk.clear,
-  });
-  const state = aa.mk.l('h1',{cla:'aa_state',con:'dickbutt'});
-  state.dataset.pathname = location.pathname;
-  aa.state.l = state;
-  header.append(caralho,state);
-  return header
 };
 
 
@@ -233,7 +233,7 @@ aa.mk.help =async(s='')=>
 
   // if (!text) return;
 
-  let article = aa.mk.l('article',
+  let article = make('article',
   {
     cla:'content parsed',
     app:aa.e.content(o.readme,1)
@@ -255,7 +255,7 @@ aa.mk.help =async(s='')=>
 // make generic image
 aa.mk.img =(src)=>
 {
-  const l = aa.mk.l('img',{cla:'content-img'});
+  const l = make('img',{cla:'content-img'});
   l.src = src;
   l.loading = 'lazy';
   l.addEventListener('click',e=>{aa.mk.img_modal(src)});
@@ -268,14 +268,14 @@ aa.mk.img_modal =(src,cla=false)=>
 {
   const dialog = aa.el.get('dialog');
   
-  const img = aa.mk.l('img',
+  const img = make('img',
   {
     src,
     cla:'img_modal contained'+(cla?' '+cla:''),
     clk:()=>{ dialog.close() }
   });
   
-  const butt = aa.mk.l('button',
+  const butt = make('button',
   {
     con:'bigger',
     cla:'butt modal',
@@ -302,7 +302,7 @@ aa.mk.item =(key='',value,options)=>
   let cla = 'item';
   if (key) cla += ` item_${key}`;
 
-  let element = aa.mk.l(tag_name,{cla});
+  let element = make(tag_name,{cla});
   let item;
 
   if (Array.isArray(value))
@@ -328,9 +328,9 @@ aa.mk.item =(key='',value,options)=>
     if (!value.length) element.classList.add('empty');
     if (value === null) value = 'null';
 
-    if (key) item = aa.mk.l('span',{cla:'key',con:key});
+    if (key) item = make('span',{cla:'key',con:key});
 
-    element.append(aa.mk.l('span',{cla:'val',con:value}));
+    element.append(make('span',{cla:'val',con:value}));
   }
   if (item)
   {
@@ -358,11 +358,11 @@ aa.mk.link =(url,text=false,title=false)=>
   if (!text) text = url;
   if (aa.fx.url(url))
   {
-    l = aa.mk.l('a',{cla:'content_link',ref:url,con:text});
+    l = make('a',{cla:'content_link',ref:url,con:text});
     l.rel = 'noreferrer noopener';
     l.target = '_blank';
   }
-  else l = aa.mk.l('span',{cla:'content_link',con:text});
+  else l = make('span',{cla:'content_link',con:text});
   if (title) l.title = title;
   
   return l
@@ -387,7 +387,7 @@ aa.mk.ls =o=>
   let l = o.l;
   if (!l)
   {
-    l = aa.mk.l('ul',{cla:'list'});
+    l = make('ul',{cla:'list'});
     if (o.id) l.id = o.id;
     if (o.cla) l.classList.add(...o.cla.split(' '));
   }
@@ -419,7 +419,7 @@ aa.mk.ls =o=>
 // make list element from object
 aa.mk.list =dis=>
 {
-  let l = aa.mk.l('ul',{cla:'list ls'});
+  let l = make('ul',{cla:'list ls'});
   if (typeof dis !== 'object') return l;
 
   if (Array.isArray(dis))
@@ -443,55 +443,21 @@ aa.mk.list =dis=>
 };
 
 
-aa.mk.list_filter =(element,options={})=>
+aa.mk.sift_input =(element,options={})=>
 {
-  let nam = options.name || `list_filter_${aa.fx.rands()}`;
-  let mode = options.mode ?? 'inner';
-  let delay = options.delay ?? 420;
-  let pla = options.placeholder ?? '(Y)';
+  let name = options.name || `list_filter_${aa.fx.rands()}`;
+  
+  let placeholder = options.placeholder ?? '(Y)';
   let cla = options.classes ?? 'list_filter';
 
-  const input = aa.mk.l('input',{nam,cla,pla});
+  const input = make('input',{name,cla,placeholder});
   
   input.addEventListener('keyup',()=>
   {
-
-    aa.fx.to(()=>
+    debt.add(()=>
     {
-      fastdom.mutate(()=>
-      {
-      if (!input.value.length)
-      {
-        element.classList.remove('filtering');
-        for (const l of element.children) 
-          l.classList.remove('filtered_in','filtered_out');
-        return
-      }
-
-      element.classList.add('filtering');
-      
-      for (const item of element.children) 
-      {
-        let text;
-        switch (mode)
-        {
-          case 'inner': text = item.innerText; break;
-          case 'full' : text = item.textContent; break
-        } 
-
-        if (text.toLowerCase().includes(input.value)) 
-        {
-          item.classList.add('filtered_in');
-          item.classList.remove('filtered_out');
-        }
-        else 
-        {
-          item.classList.add('filtered_out');
-          item.classList.remove('filtered_in');
-        }
-      }
-    })
-    },delay,nam)
+      fastdom.mutate(()=> { sift.content(element,input.value) })
+    }, 420, name)
   });
 
   return input
@@ -506,10 +472,10 @@ aa.mk.manifest =()=>
   .then(manifest=>
   {
     let df = new DocumentFragment();
-    df.append(aa.mk.l('link',{rel:'manifest',ref}));
+    df.append(make('link',{rel:'manifest',ref}));
     for (const icon of manifest.icons)
     {
-      let link = aa.mk.l('link');
+      let link = make('link');
       if (icon.src.includes('apple-touch-icon'))
       {
         link.rel = 'apple-touch-icon';
@@ -541,7 +507,7 @@ aa.mk.nip7_butt =()=>
   let s = 'window.nostr: ok';
   if (window.nostr) return true
 
-  aa.log(aa.mk.l('button',
+  aa.log(make('button',
   {
     con:'window.nostr: not found, you need it for signing',
     cla:'butt nip07_check',
@@ -552,7 +518,7 @@ aa.mk.nip7_butt =()=>
       {
         let parent = e.target.parentElement;
         parent.textContent = '';
-        parent.append(aa.mk.l('p',{con:s}));
+        parent.append(make('p',{con:s}));
       }
     }
   }),0,0);
@@ -575,26 +541,24 @@ aa.mk.notice =(o,inverted)=>
 // }
   // console.log(o);
   let cla = 'notice';
-  let l = aa.mk.l('div',{cla});
+  let l = make('div',{cla});
   if (Object.hasOwn(o,'id')) l.id = o.id;
   
-  
-  
   // cla = 'description';
-  // if (Object.hasOwn(o,cla)) l.append(aa.mk.l('p',{cla,con:o.description}));
+  // if (Object.hasOwn(o,cla)) l.append(make('p',{cla,con:o.description}));
   for (const butt of o.butts)
   {
     cla = 'butt'+(' '+butt.cla||'');
     const con = butt.con;
     const clk = butt.exe;
-    l.append(aa.mk.l('button',{cla,con,clk}));
+    l.append(make('button',{cla,con,clk}));
   }
 
   cla = 'title';
   con = o.title;
   if (Object.hasOwn(o,cla)) 
   {
-    const dis = aa.mk.l('p',{cla,con});
+    const dis = make('p',{cla,con});
     if (!inverted) l.prepend(dis);
     else l.append(dis);
   }
@@ -607,7 +571,7 @@ aa.mk.notice =(o,inverted)=>
 // make a nostr link
 aa.mk.nostr_link =(s='',con=false)=>
 {
-  const a = aa.mk.l('a',
+  const a = make('a',
   {
     cla:'nostr_link',
     con:con||s.slice(0,12),
@@ -630,7 +594,7 @@ aa.mk.nostr_link =(s='',con=false)=>
 // qr code
 aa.mk.qr =s=>
 {
-  let l = aa.mk.l('div',{cla:'qrcode'});
+  let l = make('div',{cla:'qrcode'});
   aa.temp.qr = new QRCode(l,
   {
     text:s.trim(),
@@ -650,7 +614,7 @@ aa.mk.qr =s=>
 // a reload button
 aa.mk.reload_butt =()=> 
 {
-  return aa.mk.l('button',
+  return make('button',
   {
     con:'reload the page',
     cla:'butt exe',
@@ -683,7 +647,7 @@ aa.mk.section =options=>
   classes += ` section ${section_id}`;
   classes = classes.trim();
   
-  let section_butt = aa.mk.l('button',
+  let section_butt = make('button',
   {
     con: name,
     cla: `butt section_butt ${section_id}_butt`,
@@ -692,7 +656,7 @@ aa.mk.section =options=>
   });
   aa.el.set(`butt_${section_id}`,section_butt);
   
-  let header = aa.mk.l('header',{app:section_butt});
+  let header = make('header',{app:section_butt});
   let opts = 
   {
     cla:classes.trim(),
@@ -706,13 +670,13 @@ aa.mk.section =options=>
     opts.app.push(element);
   }
 
-  const section = aa.mk.l(tagname,opts);
+  const section = make(tagname,opts);
   
   if (collapse)
   {
     header.append(
       ' ',
-      aa.mk.l('button',
+      make('button',
       {
         con:'-',
         cla:'butt collapse',
@@ -725,7 +689,7 @@ aa.mk.section =options=>
   {
     header.append(
       ' ',
-      aa.mk.list_filter(element || section)
+      aa.mk.sift_input(element || section)
     );
   }
   
@@ -740,15 +704,15 @@ aa.mk.server =(k,v,type='li')=>
   url = aa.fx.url(k);
   if (!url) return false;
 
-  return aa.mk.l(type,
+  return make(type,
   {
     cla:'item server',
     dat:{sets:v.sets},
     app:[
-      aa.mk.l('span',{cla:'protocol',con:url.protocol+'//'}),
-      aa.mk.l('span',{cla:'host',con:url.host}),
-      aa.mk.l('span',{cla:'pathname',con:url.pathname}),
-      aa.mk.l('span',{cla:'hashsearch',con:url.hash+url.search})
+      make('span',{cla:'protocol',con:url.protocol+'//'}),
+      make('span',{cla:'host',con:url.host}),
+      make('span',{cla:'pathname',con:url.pathname}),
+      make('span',{cla:'hashsearch',con:url.hash+url.search})
     ]
   });
 };
@@ -761,7 +725,7 @@ aa.mk.status =force=>
   if (!force && status) return status;
 
   let on_off = navigator.onLine ? 'on' : 'off';
-  status = aa.mk.l('p',
+  status = make('p',
   {
     con: `${on_off}line at ${location.origin} since `,
     app: aa.mk.time(aa.now)
@@ -776,7 +740,7 @@ aa.mk.time =timestamp=>
 {
   const d = new Date(timestamp*1000);
   const title = aa.fx.time_display(timestamp);
-  const l = aa.mk.l('time',
+  const l = make('time',
   {
     cla:'created_at',
     con:timestamp,
@@ -787,3 +751,5 @@ aa.mk.time =timestamp=>
   l.dataset.elapsed = aa.fx.time_elapsed(d);
   return l
 };
+
+

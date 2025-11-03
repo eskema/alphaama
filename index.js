@@ -3,10 +3,11 @@ aa.load({
   // override defaults
   // styles:[], scripts:[], mods:[], 
 }).then(e=>{whateverthefuckyouwant()});
+
 const whateverthefuckyouwant =async()=>
 {
   console.log('on_loaded');
-
+  aa.mk.page();
   let p_section;
   if (aa.p?.l) 
     p_section = aa.mk.section({id:'p',element:aa.p.l,filter:true});
@@ -17,10 +18,10 @@ const whateverthefuckyouwant =async()=>
     e_section = aa.mk.section({id:'e',element:aa.e.l,filter:true});
     e_section.append(aa.mk.pagination());
   }
-
-  if (aa.view.l) 
+  let view = aa.el.get('view');
+  if (view)
   {
-    let elements = new DocumentFragment();
+    let elements = make();
     let p = aa.u?.p;
     if (p)
     {
@@ -34,9 +35,10 @@ const whateverthefuckyouwant =async()=>
     elements.append(p_section,' ',e_section);
     fastdom.mutate(()=>
     {
-      aa.view.l.append(elements)
+      view.append(elements)
     });
   }
 
   aa.q?.last_butts();
+
 };

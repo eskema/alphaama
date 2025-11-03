@@ -4,7 +4,7 @@ aa.mk.butt_action =(s,con=false,cla='')=>
   con = con||s;
   cla = 'butt plug'+(cla?' '+cla:'');
   let clk =e=>{ aa.cli.add(s); aa.cli.foc() };
-  return aa.mk.l('button',{con,cla,clk})
+  return make('button',{con,cla,clk})
 };
 
 
@@ -15,7 +15,7 @@ aa.mk.item_action =(k,v,s)=>
   df.append(
     aa.mk.butt_action(s,k,'key'),
     ' ',
-    aa.mk.l('span',{cla:'val',con:v})
+    make('span',{cla:'val',con:v})
   )
   return df
 };
@@ -23,11 +23,11 @@ aa.mk.item_action =(k,v,s)=>
 
 aa.mk.mention_item =(p,w)=>
 {
-  const l = aa.mk.l('li',{cla:'item mention',dat:{before:p.metadata.name??''}});
+  const l = make('li',{cla:'item mention',dat:{before:p.metadata.name??''}});
   let after = (p.petname?p.petname:p.petnames[0])+' '+(p.metadata.nip05??'');
   l.append(
-    aa.mk.l('span',{cla:'description',con:after,}),
-    aa.mk.l('span',{cla:'val',con:p.npub})
+    make('span',{cla:'description',con:after,}),
+    make('span',{cla:'val',con:p.npub})
   );
   l.tabIndex = '1';
   
@@ -52,19 +52,19 @@ aa.mk.mention_item =(p,w)=>
 // makes an action item for otocomplete
 aa.mk.oto_act_item =(o,s)=>
 {
-  const l = aa.mk.l('li',{cla:'item',dat:{before:localStorage.ns}});
-  l.append(aa.mk.l('span',{cla:'val',con:o.action.join(' ')}));
+  const l = make('li',{cla:'item',dat:{before:localStorage.ns}});
+  l.append(make('span',{cla:'val',con:o.action.join(' ')}));
   l.tabIndex = '1';
-  if (o.required) l.append(' ',aa.mk.l('span',{cla:'required',con:o.required.join(' ')}));
-  if (o.optional) l.append(' ',aa.mk.l('span',{cla:'optional',con:o.optional.join(' ')}));
-  if (o.description) l.append(' ',aa.mk.l('span',{cla:'description',con:o.description}));
+  if (o.required) l.append(' ',make('span',{cla:'required',con:o.required.join(' ')}));
+  if (o.optional) l.append(' ',make('span',{cla:'optional',con:o.optional.join(' ')}));
+  if (o.description) l.append(' ',make('span',{cla:'description',con:o.description}));
   if (o.acts?.length)
   {
-    let acts = aa.mk.l('span',{cla:'acts'})
+    let acts = make('span',{cla:'acts'})
     l.append(' ',acts);
     for (const act of o.acts)
     {
-      let butt = aa.mk.l('button',{cla:'butt acts',con:act,clk:e=>
+      let butt = make('button',{cla:'butt acts',con:act,clk:e=>
       {
         e.stopPropagation();
         e.preventDefault();

@@ -56,111 +56,49 @@ aa.e.by_ida =dis=>
   let last = aa.em_a.get(dis);
   if (!last) return;
   return aa.e.printed.get(last.event.id)
-  // for (const [id,event] of aa.e.printed)
-  // {
-  //   if (event.dataset.id_a === dis) return event
-  // }
-  // return
 };
 
 
 // clear notes from section
-aa.e.clear =s=>
+aa.e.clear_events =s=>
 {
   fastdom.mutate(()=>
   {
     aa.e.l.textContent = '';
     aa.el.get('butt_e').dataset.count = 0;
     aa.log('events cleared');
-    aa.cli.fuck_off();
   });
 };
 
-
-// splits a string into paragraphs, then into lines and then into words 
-// and process each part separately
-aa.e.content =(s,trusted)=>
+aa.e.content =(content,is_trusted)=>
 {
-  const df = new DocumentFragment();
-  let l = aa.mk.l('p',{cla:'paragraph'});
-  // checks if element has no children and is empty, ignores trailing spaces
-  const another_l =last_l=>
-  {
-    last_l.normalize();
-    if (aa.fx.is_empty(last_l)) last_l.remove();
-    else 
-    {
-      df.append(last_l);
-      l = aa.mk.l('p',{cla:'paragraph'});
-    }
-  };
-  let paragraphs = s.split(/\n\s*\n/);
-  if (paragraphs.length === 1) paragraphs = s.split(/\n/);
-  for (const paragraph of paragraphs)
-  { 
-    if (!paragraph.length) continue;    
-    
-    const lines = paragraph.trim().split(/\n/);
-    for (let li=0;li<lines.length;li++)
-    {
-      if (l.childNodes.length) l.append(aa.mk.l('br'));
+  let items = 
+  [
+    {id:'url', regex:aa.regex.url, exe:aa.parse.url},
+    {id:'nostr', regex:aa.regex.nostr, exe:aa.parse.nostr},
+    {id:'hashtag', regex:aa.regex.hashtag, exe:aa.parse.hashtag},
+  ];
 
-      const words = lines[li].trim().split(' ');
-      for (let i=0;i<words.length;i++)
-      {
-        let word = words[i].trim();
-        if (!word.length) continue;
-
-        if (aa.regex.url.test(word)) 
-        {
-          let dis_node = aa.parser('url',word,trusted);
-          l.append(dis_node,' ');
-        }
-        else if (aa.regex.nostr.test(word)) 
-        {
-          let parsed = aa.parser('nostr',word);
-          let quote = parsed.querySelector('blockquote');
-          if (quote)
-          {
-            another_l(l); 
-            df.append(quote)
-          }
-          else l.append(parsed);
-        }
-        else if (aa.regex.hashtag.test(word)) 
-        {
-          let dis_node = aa.parser('hashtag',word);
-          l.append(dis_node,' ');
-        }
-        else 
-        {
-          if (i === words.length-1) l.append(word);
-          else l.append(word,' ');
-        }
-      }
-    }
-    another_l(l);
-  }
-  return df
+  return parse_all({ content, items, is_trusted })
 };
 
 
 // parse content as object
-aa.e.content_o =async(content,data,options)=>
+aa.e.content_o =async(element,ls,options)=>
 {
-  if (!data && typeof data !== 'object') return;
-
-  content.textContent = '';
-  content.append(aa.mk.ls({ls:data,sort:options.sort||''}));
+  if (!ls && typeof ls !== 'object') return;
+  let sort = options.sort || '';
+  element.textContent = '';
+  element.append(aa.mk.ls({ls, sort}));
 };
 
 
 // toggle parsed content on note
-aa.e.context =(content,event,trust)=>
+aa.e.context =(element,event,is_trusted)=>
 {
-  content.classList.add('parsed');
-  content.textContent = '';
-  content.append(aa.e.content(event.content,trust))
+  element.classList.add('parsed');
+  element.textContent = '';
+  element.append(aa.e.content(event.content,is_trusted))
 };
 
 
@@ -214,7 +152,7 @@ aa.e.decrypt =async id=>
   if (kind === 4) 
   {
     let pub_to = aa.fx.tag_value(tags,'p');
-    if (aa.fx.is_u(pub_to))
+    if (aa.u.is_u(pub_to))
     {
       aa.log('content not for you');
       return
@@ -345,12 +283,12 @@ aa.e.follows_add =async string=>
   const {kind,content,tags} = dat.event;
   tags.push(tag);
 
-  let l = aa.mk.l('div',
+  let l = make('div',
   {
     cla:'follows_add',
     app:
     [
-      aa.mk.l('h2',{con:'item to add'}),
+      make('h2',{con:'item to add'}),
       aa.mk.tag_list([tag]),
       ' ',aa.mk.details(`preview (${tags.length})`,aa.mk.tag_list(tags),0,'base')
     ]
@@ -420,7 +358,7 @@ aa.e.follows_del =async string=>
   //   if (key.startsWith('npub')) key = aa.fx.decode(key);
   //   if (aa.fx.is_hex(key)) 
   //   {
-  //     removed_list.append(aa.mk.l('li',{con:key,cla:'disabled'}));
+  //     removed_list.append(make('li',{con:key,cla:'disabled'}));
   //     tags = tags.filter(tag=>tag[1]!==key);
   //     aa.p.score(`${key} 4`);
   //   }
@@ -430,12 +368,12 @@ aa.e.follows_del =async string=>
   removed_tags = tags.filter(is_excluded);
   tags = tags.filter(i=>!is_excluded(i));
 
-  let l = aa.mk.l('div',
+  let l = make('div',
   {
     cla:'follows_del',
     app:
     [
-      aa.mk.l('h2',{con:`items to remove: (${removed_tags.length})`}),
+      make('h2',{con:`items to remove: (${removed_tags.length})`}),
       aa.mk.tag_list(removed_tags,{cla:'disabled'}),
       ' ',aa.mk.details(`preview (${tags.length})`,aa.mk.tag_list(tags),0,'base')
     ]
@@ -444,7 +382,7 @@ aa.e.follows_del =async string=>
   aa.mk.confirm(
   {
     title:`list update (kind:${kind})`,
-    l, //:aa.mk.l('div',{cla:'wrap',app:[aa.mk.tag_list(tags),removed_list]}),
+    l, //:make('div',{cla:'wrap',app:[aa.mk.tag_list(tags),removed_list]}),
     // scroll:{behaviour:'smooth',block:'end'},
     no:{ exe:()=>{} },
     yes:
@@ -483,7 +421,7 @@ aa.e.get =async ids=>
   }
   if (want.size)
   {
-    let [get_id,events,missing] = await aa.r.get_events([...want.values()]);
+    let [get_id,events,missing] = await aa.r.get_events([...want]);
     if (events.length)
     {
       for (const dat of events)
@@ -521,7 +459,7 @@ aa.e.get_a =async ids=>
   }
   if (want.size)
   {
-    let filters = [...want.values()].map(aa.fx.id_af);
+    let filters = [...want].map(aa.fx.id_af);
     for (const filter of filters)
     {
       let [get_id,events] = await aa.r.get_filter(filter);
@@ -551,22 +489,8 @@ aa.e.inboxes =(event,relays=[])=>
     if (common.size < 3)
     {
       let unc = relays_set.difference(read_relays);
-      relays.push([...unc.values()].slice(0,3 - common.size))
+      relays.push([...unc].slice(0,3 - common.size))
     }
-    
-    // let inc = [];
-    // let exc = [];
-
-    // for (const i of read_relays)
-    // {
-    //   if (relays.includes(i)) inc.push(i);
-    //   else exc.push(i)
-    // }
-
-    // let ab = aa.fx.a_inc_exc(relays,read_relays);
-    
-    // if (!inc.length < 3) 
-    //   relays.push(...exc.slice(0,3 - inc.length))
   }
   return new Set(relays);
 };
@@ -581,21 +505,18 @@ aa.e.json =async(s='')=>
 };
 
 
-
 // on load
 aa.e.load =async()=>
 {
   let mod = aa.e;
   let id = mod.def.id;
   
-  // aa.add_styles(aa.e.styles);
-
   aa.temp.miss = {};
   aa.temp.orphan = new Map();
   aa.temp.prints = new Map();
   aa.temp.refs = new Map();
   aa.temp.note_quotes = new Map();
-
+  aa.view.clears.push(aa.e.view_clear);
   fetch('/e/nostr_kinds.json')
     .then(dis=> dis.json())
     .then(dis=> mod.kinds_list = dis);
@@ -606,7 +527,7 @@ aa.e.load =async()=>
     {
       action:[id,'clear'],
       description:'clear events section',
-      exe:mod.clear
+      exe:mod.clear_events
     },
     {
       action:[id,'decrypt'],
@@ -633,7 +554,7 @@ aa.e.load =async()=>
       exe:(s)=>{ aa.view.state('#'+aa.fx.encode('note',s)) }
     },
   );
-  mod.l = aa.mk.l('div',{cla:'notes'});
+  mod.l = make('div',{cla:'notes'});
   mod.section_observer = new MutationObserver(mod.section_mutated);
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
   aa.mod.help_setup(aa.e);
@@ -645,7 +566,7 @@ aa.e.load =async()=>
 aa.e.note_actions =dat=>
 {
   // console.log(dat);
-  const l = aa.mk.l('p',{cla:'actions expanded'});
+  const l = make('p',{cla:'actions expanded'});
   let butts = [];
   if (dat.clas.includes('draft'))
   {
@@ -666,11 +587,13 @@ aa.e.note_actions =dat=>
   else if (dat.clas.includes('blank')) aa.fx.a_add(butts,aa.e.butts.blank);
   else
   {
-    aa.fx.a_add(butts,[['…','na']]);
+    // aa.mk.butt_clk(s)
+    aa.fx.a_add(butts,[['…','action_butt','na']]);
     l.classList.add('empty');
     l.classList.remove('expanded');
   }
-  if (butts.length) for (const s of butts) l.append(aa.mk.butt_clk(s),' ');
+  if (butts.length) for (const a of butts) 
+    l.append(aa.mk.butt_clk(a),' ');
   return l
 };
 
@@ -695,7 +618,7 @@ aa.e.pow =async(string='')=>
 
 aa.e.quote =data=>
 {
-  const quote_note = aa.mk.l('blockquote',
+  const quote_note = make('blockquote',
   {
     cla:'note_quote',
     dat:
@@ -703,7 +626,7 @@ aa.e.quote =data=>
       id:data.id,
       id_a:data.id_a
     },
-    app:aa.mk.l('div',
+    app:make('div',
     {
       cla:'content parsed',
       app:aa.mk.ls({ls:data})
@@ -724,7 +647,7 @@ aa.e.quote_note =async(element,dat)=>
   let content = await aa.e.render(dat);
   if (content.classList.contains('no_content'))
     content.append(aa.mk.tag_list(dat.event.tags));
-  // let content = aa.mk.l('div',{cla:'content',con:dat.event.content});
+  // let content = make('div',{cla:'content',con:dat.event.content});
   element.textContent = '';
   element.append(header,content);
   element.dataset.kind = dat.event.kind;
@@ -778,7 +701,7 @@ aa.e.search =async s=>
       let name = l_event.querySelector('.by .name').textContent;
       let con = `${name}: ${text.slice(has,has+21)}… `;
       let app = aa.mk.nostr_link(l_event.id);
-      df.append(aa.mk.l('p',{con,app}),' ');
+      df.append(make('p',{con,app}),' ');
     }
   }
   aa.log(aa.mk.details(`e (s)earch results for ${s}`,df,1))
@@ -788,7 +711,7 @@ aa.e.search =async s=>
 // mutation observer for notes section
 aa.e.section_mutated =a=>
 {
-  let threshold = parseInt(localStorage.pagination)||0;
+  let threshold = parseInt(localStorage.pagination) || 0;
   for (const mutation of a)
   {
     let count  = mutation.target.children.length;
@@ -808,20 +731,41 @@ aa.e.section_mutated =a=>
 
 
 // view event
-aa.e.view =l=>
+aa.e.view =element=>
 {
   fastdom.mutate(()=>
   {
-    if (l.classList.contains('not_yet')) aa.e.note_yet(l);
+    if (element.classList.contains('not_yet')) 
+      aa.e.note_yet(element);
     aa.l.classList.add('viewing','view_e');
-    l.classList.add('in_view');
-    aa.view.in_view = l;
-    aa.clk.time({target:l.querySelector('.by .created_at')});
-    aa.fx.path(l);
-    setTimeout(()=>{aa.fx.scroll(l)},200);
+    element.classList.add('in_view');
+    aa.view.in_view = element;
+    aa.clk.time({target:element.querySelector('.by .created_at')});
+    sift.path_add(element,'note');
+    setTimeout(()=>{aa.fx.scroll(element)},200);
   });
 };
 
+
+// clear view from aa.e.view
+aa.e.view_clear =in_view=>
+{
+  if (Object.hasOwn(aa.view,'id_a')) 
+    delete aa.view.id_a;
+
+  fastdom.mutate(()=>{ aa.l.classList.remove('view_e') });
+
+  let solo = aa.e.l.dataset.solo;
+  if (!solo)
+  {
+    for (const item of sift.in_path)
+    {
+      sift.in_path.delete(item);
+      sift.path_remove(item);
+    }
+  }
+  else sift.solo_remove(sift.in_path,solo,aa.e.l);
+};
 
 
 // draft event
@@ -837,7 +781,7 @@ aa.e.draft =async dat=>
   if (section && !section.classList.contains('expanded')) 
     aa.clk.expand({target:section});
   
-  aa.log(aa.mk.l('button',
+  aa.log(make('button',
   {
     cla:'butt exe',
     con:`draft: ${dat.event.content.slice(0,12)}…`,
@@ -851,13 +795,12 @@ aa.e.draft =async dat=>
 };
 
 
-
 // creates new dat object (event)
-aa.e.draft_dat =async(s,reply_to)=>
+aa.e.draft_dat =async(content,reply_to)=>
 {
   aa.temp.dat = aa.mk.dat(
   {
-    event: aa.e.normalise({content:s}),
+    event: aa.e.normalise({content}),
     clas:['draft']
   });
 
@@ -901,8 +844,8 @@ aa.e.finalize =async(event,relays)=>
 };
 
 
-// event complete
-aa.e.normalise =event=>
+// fill missing event fields
+aa.e.normalise =(event={})=>
 {
   if (!event.pubkey) event.pubkey = aa.u.p.pubkey;
   if (!event.kind) event.kind = 1;
