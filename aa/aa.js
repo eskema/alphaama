@@ -235,31 +235,6 @@ aa.load =async(options={})=>
   await aa.add_scripts(scripts);
   aa.add_stuff(page);
   await aa.add_mods(mods);
-
-  aa.resets.push(
-    async()=>
-    {
-      await aa.db.ops('cash',{clear:'ALL'});
-      aa.log('db cash: clear');
-      let databases = await indexedDB.databases();
-      for (const db of databases) indexedDB.deleteDatabase(db.name);
-      aa.log('indexedDB: clear');
-    }
-  );
-
-  aa.actions.push(
-    {
-      action:['help','aa'],
-      description:'alphaama help',
-      exe:()=>{aa.mk.help()}
-    },
-    {
-      action:['zzz'],
-      description:'resets everything',
-      exe:aa.reset
-    },
-  );
-
   // window.addEventListener('beforeunload',aa.unload);
 };
 
@@ -275,23 +250,6 @@ aa.pj =(string='')=>
     catch(er){ console.log('aa.pj:',string,er) }
   }
   return json
-};
-
-
-// tries to delete everything saved locally 
-// and then reload clean
-aa.reset =async()=>
-{
-  aa.log('reset initiated');
-  sessionStorage.clear();
-  aa.log('sessionStorage: clear');
-  localStorage.clear();
-  aa.log('localStorage: clear');
-
-  for (const callback of aa.resets) await callback();
-
-  aa.log('shh... go to sleep now.');
-  setTimeout(()=>{location.href = location.origin},999)
 };
 
 

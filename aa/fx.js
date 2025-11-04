@@ -459,48 +459,7 @@ aa.fx.linear_convert =(val,a_max,b_max,a_min,b_min)=>
   if (!a_min) a_min = 0;
   if (!b_min) b_min = 0;
   return ((val-a_min)/(a_max-a_min))*(b_max-b_min)+b_min;
-}
-
-
-// on load
-aa.fx.load =async()=>
-{
-  let id = 'fx';
-  let mod = aa.fx;
-  aa.actions.push(
-    {
-      action:[id,'qr'],
-      required:['<text>'],
-      description:'create qr code',
-      exe:mod.qr
-    },
-    {
-      action:[id,'decode'],
-      required:['<nip19>'],
-      description:'decode nip19 (bech32) entity',
-      exe:mod.decode
-    },
-    {
-      action:[id,'decrypt'],
-      required:['<pubkey>','<text>'],
-      description:'decrypt cyphertext',
-      exe:mod.decrypt
-    },
-    {
-      action:[id,'kind'],
-      required:['<number>'],
-      description:'check if it is known',
-      exe:mod.kinds_type
-    },
-    {
-      action:[id,'keypair'],
-      optional:['<xsec>'],
-      description:'generate nostr keys (secret_bytes,public,xsec,nsec)',
-      exe:mod.keypair
-    },
-  )
 };
-
 
 
 // return single or plural string

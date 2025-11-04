@@ -78,7 +78,59 @@ aa.u.load =async()=>
     exe:aa.mk.post
   };
 
+  aa.resets.push(
+    async()=>
+    {
+      await aa.db.ops('cash',{clear:'ALL'});
+      aa.log('db cash: clear');
+      let databases = await indexedDB.databases();
+      for (const db of databases) indexedDB.deleteDatabase(db.name);
+      aa.log('indexedDB: clear');
+    }
+  );
+
   aa.actions.push(
+    {
+      action:['help','aa'],
+      description:'alphaama help',
+      exe:()=>{aa.mk.help()}
+    },
+    {
+      action:['zzz'],
+      description:'resets everything',
+      exe:aa.u.reset
+    },
+    {
+      action:['fx','qr'],
+      required:['<text>'],
+      description:'create qr code',
+      exe:aa.fx.qr
+    },
+    {
+      action:['fx','decode'],
+      required:['<nip19>'],
+      description:'decode nip19 (bech32) entity',
+      exe:aa.fx.decode
+    },
+    {
+      action:['fx','decrypt'],
+      required:['<pubkey>','<text>'],
+      description:'decrypt cyphertext',
+      exe:aa.fx.decrypt
+    },
+    {
+      action:['fx','kind'],
+      required:['<number>'],
+      description:'check if it is known',
+      exe:aa.fx.kinds_type
+    },
+    {
+      action:['fx','keypair'],
+      optional:['<xsec>'],
+      description:'generate nostr keys (secret_bytes,public,xsec,nsec)',
+      exe:aa.fx.keypair
+    },
+
     {
       action:[id,'setup'],
       optional:['<pubkey || nip05 || nprofile || npub>'],
@@ -114,6 +166,23 @@ aa.u.load =async()=>
   
   await aa.mod.load(mod);
   await mod.start(mod);
+};
+
+
+// tries to delete everything saved locally 
+// and then reload clean
+aa.u.reset =async()=>
+{
+  aa.log('reset initiated');
+  sessionStorage.clear();
+  aa.log('sessionStorage: clear');
+  localStorage.clear();
+  aa.log('localStorage: clear');
+
+  for (const callback of aa.resets) await callback();
+
+  aa.log('shh... go to sleep now.');
+  setTimeout(()=>{location.href = location.origin},999)
 };
 
 

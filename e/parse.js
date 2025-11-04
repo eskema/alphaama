@@ -17,13 +17,32 @@ aa.parse.hashtag =match=>
 aa.parse.nostr =match=>
 {
   let fragment = new DocumentFragment();
-  fragment.append(match.input.slice(0,match.index));
+  
   let result = { parsed: fragment, type: 'inline'};
   // might be more than one…
   let entities = match[0].split('nostr:')
     .join(' ')
     .trim()
     .split(' ');
+  
+  let block_types = new Set(['note','nevent','naddr']);
+  if (new Set(entities).intersection(block_types).size)
+  {
+    result.type = 'block'
+  }
+
+  let contente =content=>
+  {
+    if (result.type === 'block')
+      content = make('p',{classes:'paragraph',content});
+    return content
+  };
+    
+  
+  if (match.index)
+  {
+    fragment.append(contente(match.input.slice(0,match.index)))
+  }
 
   for (const entity of entities)
   {
@@ -41,18 +60,13 @@ aa.parse.nostr =match=>
       fragment.append(aa.mk.nip19(whole),' ');
       
       if (rest_match[0].length < rest_match.input.length)
-        fragment.append(rest_match.input.slice(rest_match[0].length),' ');
-
-      if (type === 'note' 
-      || type === 'nevent' 
-      || type === 'naddr')
-        result.type = 'block';
+        fragment.append(contente(rest_match.input.slice(rest_match[0].length)),' ');
     }
-    else fragment.append(entity,' ');
+    else fragment.append(contente(entity),' ');
   }
-  if (match[0].length < match.input.length)
+  if (match[0].length < (match.input.length - match.index))
   {
-    fragment.append(match.input.slice(match[0].length),' ');
+    fragment.append(contente(match.input.slice(match[0].length + match.index)),' ')
   }
   return result
 };
