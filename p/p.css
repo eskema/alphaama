@@ -605,7 +605,15 @@ p[data-meta="banner"]
   }
 }
 
-/*@media screen and (max-width: 768px) 
+@media screen and (max-width: 768px) 
 {
+  .profile:not(.in_view) > .pubkey
+  {
+    grid-template-columns: 2fr 4rem auto;
+  }
 
-}*/
+  .profile > .pubkey .created_at
+  {
+    grid-gap: 0
+  }
+}

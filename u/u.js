@@ -188,12 +188,7 @@ aa.u.setup =async(s='')=>
     if (!Object.keys(aa.u.p.relays).length)
     {
       log = aa.log('first ');
-      let def_rels = 
-      [
-        'wss://nos.lol read write',
-        'wss://relay.damus.io read write',
-        'wss://relay.primal.net read write',
-      ];
+
       const rel_butt = aa.mk.butt_action(`r add ${aa.u.bootstrap.relays.map(i=>`${i} read write`).join()}`,'add some relays');
       rel_butt.addEventListener('click',aa.clk.done);
       log.lastChild.append(rel_butt,);

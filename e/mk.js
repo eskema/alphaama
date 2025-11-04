@@ -1,13 +1,3 @@
-aa.mk.content_section =con=>
-{
-  return make('section',
-  {
-    cla:'content',
-    app:make('p',{cla:'paragraph',con})
-  })
-};
-
-
 aa.mk.event_header =dat=>
 {
   const id = dat.event.id;
@@ -125,9 +115,8 @@ aa.mk.note =dat=>
   });
 
   const header = aa.mk.event_header(dat);
-  // const content_section = aa.mk.content_section(content);
 
-  app.append(clicker,header);//,content_section);
+  app.append(clicker,header);
 
   if (tags?.length)
   {

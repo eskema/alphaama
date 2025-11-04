@@ -592,8 +592,8 @@ aa.e.note_actions =dat=>
     l.classList.add('empty');
     l.classList.remove('expanded');
   }
-  if (butts.length) for (const a of butts) 
-    l.append(aa.mk.butt_clk(a),' ');
+  if (butts.length) for (const array of butts)
+    l.append(aa.mk.butt_clk(array),' ');
   return l
 };
 
@@ -753,7 +753,7 @@ aa.e.view_clear =in_view=>
   if (Object.hasOwn(aa.view,'id_a')) 
     delete aa.view.id_a;
 
-  fastdom.mutate(()=>{ aa.l.classList.remove('view_e') });
+  aa.l.classList.remove('view_e');
 
   let solo = aa.e.l.dataset.solo;
   if (!solo)

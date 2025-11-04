@@ -71,6 +71,8 @@ header.has-picture .section_side_butt
   display: grid;
   justify-content: center;
   position: absolute;
+  width: var(--size);
+  height: var(--size);
 }
 
 

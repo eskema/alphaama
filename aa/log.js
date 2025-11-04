@@ -10,7 +10,7 @@ aa.log =(con='',container=false,is_new=true)=>
   };
   const app = typeof con==='string'?make('p',{con}):con;
   const log = make('li',{cla,clk,app});
-  log.append(' ',aa.mk.butt_clip(log.textContent));
+  log.prepend(' ',aa.mk.butt_clip(log.textContent));
   
   if (!container) container = aa.logs;
   if (container) fastdom.mutate(()=>

@@ -12,7 +12,8 @@ aa.clk.pa =e=>
  
   butts.unshift([`${aa.db.p[pubkey].score}`,'p_score']);
   
-  for (const s of butts) l.append(' ',aa.mk.butt_clk(s));
+  for (const array of butts) 
+    l.append(' ',aa.mk.butt_clk(array));
   l.classList.remove('empty');
 };
 

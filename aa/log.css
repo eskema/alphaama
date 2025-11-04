@@ -378,10 +378,18 @@ details.base[open] > summary,
 
 }
 
-/* @media screen and (max-width: 768px) 
+@media screen and (max-width: 768px) 
 {
+  .log 
+  {
+    padding-left: 0;
+  }
 
-} */
+  .log::before
+  {
+    margin-left: 0;
+  }
+}
 
 /* #region    notice */
 
