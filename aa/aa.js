@@ -140,6 +140,7 @@ aa.add_scripts =async array=>
       src = `${src}?v=${aa_version}`;
       let element = document.createElement('script');
       element.src = src;
+      element.toggleAttribute('defer');
 
       // let element = make('script',{src});
       element.addEventListener('load',e=>
@@ -224,13 +225,14 @@ aa.load =async(options={})=>
   styles = styles || aa.styles;
   scripts = scripts || aa.scripts;
   mods = mods || aa.mods;
+  
+  aa.add_styles(styles);
 
   aa.framed = window.self !== window.top;
 
   let regex_module = await import('./regex.js');
   aa.regex = regex_module.default;
 
-  aa.add_styles(styles);
   await aa.add_scripts(deps);
   await aa.add_scripts(scripts);
   aa.add_stuff(page);
