@@ -123,10 +123,11 @@
   display: grid;
   grid-area: id;
   grid-template-areas: "nid xid";
-  grid-template-columns: 2fr minmax(var(--size),max-content);
+  grid-template-columns: 
+    2fr minmax(var(--size),max-content);
+  hyphens: none;
   line-height: 1rem;
   margin: 0;
-  
   overflow-x: scroll;
   word-break: keep-all;
 }
