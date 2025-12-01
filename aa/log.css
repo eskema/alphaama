@@ -188,6 +188,7 @@ details.base[open] > summary,
 {
   border-bottom: 1px dotted rgba(var(--color-c),1);
   margin-bottom:  var(--pad);
+  padding: 0;
   position: sticky;
   top: var(--line);
   z-index: 2;

@@ -215,5 +215,11 @@ aa.e.render_video =async(element,dat)=>
   {
     let app = trusted?aa.mk.av(url):aa.mk.link(url);
     element.prepend(make('p',{cla:'paragraph',app}));
+    setTimeout(()=>
+    {
+      element.parentElement
+        ?.querySelector('tags_wrapper')
+        ?.toggleAttribute('open',true)
+    },200);
   }
 };

@@ -8,7 +8,7 @@ const make =(tag_name,options={})=>
   for (const key in options)
   {
     const value = options[key];
-    if (!value) continue;
+    if (!value && value !== 0) continue;
     switch (key)
     {
       case 'app':
@@ -31,6 +31,10 @@ const make =(tag_name,options={})=>
         for (const i in value)
           if (value[i]||value[i]===0) 
             element.dataset[i] = value[i]; 
+        break;
+      case 'listeners':
+        for (const i in value)
+          element.addEventListener(i,value[i]);
         break;
       case 'nam': 
         console.trace(value); element.name = value; break;

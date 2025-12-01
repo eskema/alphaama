@@ -77,10 +77,11 @@ aa.clk.fetch =e=>
 // remove classes from elements in a section
 aa.is_read =options=>
 {
-  let { section, sub_section, classes, id } = options;
+  let { section, sub_section, classes } = options;
   section.classList.remove(...classes);
   if (sub_section) sub_section.classList.remove(...classes);
   const new_stuff = section.querySelectorAll('.'+classes.join(',.'));
+  let id = section.dataset.id;
   if (new_stuff.length)
   {
     for (const element of new_stuff)
@@ -118,8 +119,8 @@ aa.clk.mark_read =e=>
   const section = e.target.closest('.replies');
   const note = e.target.closest('.note');
   note.classList.remove(...classes);
-  const id = `section_${note.dataset.id}_replies`;
-  aa.is_read({section,classes,id});
+  // const id = `section_${note.dataset.id}_replies`;
+  aa.is_read({section,classes});
   // const new_stuff = replies.querySelectorAll('.'+classes.join(',.'));
   
   

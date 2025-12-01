@@ -4,6 +4,7 @@
   box-sizing: border-box;
   color: rgb(var(--color-d));
   position: relative;
+  word-break: break-word;
 }
 
 .note > .content
@@ -12,6 +13,12 @@
   grid-area: content;
   max-height: calc(100vh - var(--size) - var(--line));  
   overflow: hidden;
+}
+
+.note > .content:not(.e_render)
+{
+  padding: var(--pad);
+  white-space: pre-wrap;
 }
 
 .viewing .root:not(.in_view) > .content,

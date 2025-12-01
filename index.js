@@ -6,7 +6,7 @@ aa.load({
 
 const whateverthefuckyouwant =async()=>
 {
-  console.log('on_loaded');
+  // console.log('on_loaded');
   aa.mk.page();
   let p_section;
   if (aa.p?.l) 
@@ -15,8 +15,17 @@ const whateverthefuckyouwant =async()=>
   let e_section;
   if (aa.e?.l) 
   {
-    e_section = aa.mk.section({id:'e',element:aa.e.l,filter:true});
-    e_section.append(aa.mk.pagination());
+    e_section = aa.mk.section(
+    {
+      id: 'e',
+      element: aa.e.l,
+      map: aa.e.printed,
+      filter: true,
+      filter_by: i=> i.classList.contains('root'),
+      order: 'desc',
+      max: parseInt(localStorage.pagination),
+      sort_by: i=> i.dataset.stamp,
+    });
   }
   let view = aa.el.get('view');
   if (view)

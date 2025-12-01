@@ -8,7 +8,9 @@ aa.log =(con='',container=false,is_new=true)=>
     e.stopPropagation();
     aa.log_read(e.target)
   };
-  const app = typeof con==='string'?make('p',{con}):con;
+  const app = typeof con === 'string'
+    ? make('p',{con})
+    : con;
   const log = make('li',{cla,clk,app});
   log.prepend(' ',aa.mk.butt_clip(log.textContent));
   
@@ -68,30 +70,18 @@ aa.log_key =(key,value)=>
       app: [summary,' ',item]
     });
     aa.el.set(key,element);
-
-    // summary.addEventListener('click',e=>
-    // {
-
-    // })
-    // if (!l) return details;
-    // summary.dataset.count = 1;
-    // details.append(l);
-    // return details
-
-    // element = aa.mk.details(key,item,0,'base');
-    // aa.el.set(key,element);
-    // aa.log(element);
   }
-  let parent = element.parentElement;
-  if (parent)
+  let log = element.parentElement;
+  if (log)
   {
     fastdom.mutate(()=>
     {
-      let logs = parent.parentElement;
+      let logs = log.parentElement;
       element.append(item);
-      logs.lastChild.after(parent);
-      parent.classList.add('is_new');
-      parent.parentElement.classList.add('has_new');
+      logs.lastChild.after(log);
+      log.classList.add('is_new');
+      logs.classList.add('has_new');
+      logs.parentElement.classList.add('has_new');
     });
   } 
   else aa.log(element);

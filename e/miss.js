@@ -73,7 +73,7 @@ aa.e.miss_set =(type,id,relays=[])=>
     if (p) rset = new Set([...rset,...aa.fx.in_set(p.relays,'write')])
   }
   missing.relays = [...rset];
-  aa.e.miss_get(type);
+  setTimeout(()=>{aa.e.miss_get(type)},420);
 };
 
 
@@ -99,27 +99,27 @@ aa.e.miss_set =(type,id,relays=[])=>
 // };
 
 
-aa.e.miss_to =async()=>
-{
-  let ids = [...aa.temp.miss_print.keys()];
-  let [get_id,events,missing] = await aa.r.get_events(ids);
-  // console.log(events);
-  for (const dat of events)
-  {
-    aa.temp.miss_print.delete(dat.event.id);
-    aa.e.print_q(dat)
-  }
-  if (!missing) return;
-  // console.trace(missing);
-  setTimeout(()=>
-  {
-    for (const id of missing)
-    {
-      if (!aa.em.has(id)) aa.e.miss_set('e',id,aa.temp.miss_print.get(id));
-    }
-  },1000);
+// aa.e.miss_to =async()=>
+// {
+//   let ids = [...aa.temp.miss_print.keys()];
+//   let [get_id,events,missing] = await aa.r.get_events(ids);
+//   // console.log(events);
+//   for (const dat of events)
+//   {
+//     aa.temp.miss_print.delete(dat.event.id);
+//     aa.e.print_q(dat)
+//   }
+//   if (!missing) return;
+//   // console.trace(missing);
+//   setTimeout(()=>
+//   {
+//     for (const id of missing)
+//     {
+//       if (!aa.em.has(id)) aa.e.miss_set('e',id,aa.temp.miss_print.get(id));
+//     }
+//   },1000);
   
-};
+// };
 
 
 // get event from tag and prints it,
@@ -140,13 +140,18 @@ aa.e.miss_to =async()=>
 
 aa.e.miss_type =type=>
 {
-  let dis = new Map();
+  let result = {};
+  if (!Object.hasOwn(aa.temp.miss, type))
+    return result;
+
   let missing = aa.temp.miss[type];
-  if (!missing) missing = aa.temp.miss[type] = new Map();
-  let u_relays = new Set(aa.r.r);
+
+  let read_relays = new Set(aa.r.r);
+  let dis = new Map();
   for (const [id,data] of missing)
   {
-    for (const url of new Set(data.relays).union(u_relays))
+    if (!id) continue;
+    for (const url of new Set(data.relays).union(read_relays))
     {
       if (!data.nope.includes(url))
       {
@@ -155,16 +160,19 @@ aa.e.miss_type =type=>
       }
     }
   }
-  if (!dis.size) return {};
+  if (!dis.size) return result;
+  
   // get the first value only
   let sorted = [...dis.entries()].sort(aa.fx.sorts.len);
   let [url,keys] = sorted[0];
-
-  for (const key of keys)
+  
+  result.relays = [url];
+  result.keys = [...keys];
+  for (const key of result.keys)
   {
-    aa.fx.a_add(missing.get(key).nope,[url]);
+    aa.fx.a_add(missing.get(key).nope,result.relays);
   }
-  return {relays:[url],keys:[...keys]}
+  return result
 };
 
 

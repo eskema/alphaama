@@ -59,6 +59,26 @@ aa.fx.an =s=>
 };
 
 
+// convert string to base64
+aa.fx.base64 =string=>
+{
+  const bytes = new TextEncoder().encode(string);
+  string = Array.from(bytes, b=> String.fromCodePoint(b))
+    .join('');
+  return btoa(string)
+};
+
+
+// SHA256 from blob
+aa.fx.blob_sha256 =async blob=>
+{
+  const buffer = await blob.arrayBuffer();
+  const hash_buffer = await crypto.subtle.digest('SHA-256',buffer);
+  return Array.from(new Uint8Array(hash_buffer))
+    .map(b=> b.toString(16).padStart(2,'0')).join('')
+};
+
+
 // splits array into chunks of n items
 // returns array of chunks
 aa.fx.chunks =(a,n)=>
@@ -66,7 +86,7 @@ aa.fx.chunks =(a,n)=>
   const chunks = [];
   for (let i = 0; i < a.length; i += n) chunks.push(a.slice(i,i+n));
   return chunks;
-}
+};
 
 
 // adds css color in rgb to element from hex string
@@ -269,8 +289,9 @@ aa.fx.encode =(s,data)=>
 aa.fx.encrypt44 =async(text,pubkey)=>
 {
   if (!pubkey) pubkey = aa.u.p.pubkey;
-  if (window.nostr) return await window.nostr.nip44.encrypt(pubkey,text)
-  else 
+  if (window.nostr) 
+    return await window.nostr.nip44.encrypt(pubkey,text)
+  else
   {
     aa.log('you need a signer');
     return false
@@ -402,21 +423,6 @@ aa.fx.intersect =(o={},a=[],n=2)=>
 };
 
 
-aa.fx.move =(element,before=null,parent=false)=>
-{
-  if (!parent) parent = element.parentElement;
-  if (!parent) return;
-  if (!element.parentElement
-  || element.parentElement !== parent
-  || !('moveBefore' in Element.prototype)
-  )
-    parent.insertBefore(element,before);
-  else 
-    parent.moveBefore(element,before);
-};
-
-
-
 // is hexadecimal
 aa.fx.is_hex =string=> aa.regex.hex.test(string);
 
@@ -459,6 +465,19 @@ aa.fx.linear_convert =(val,a_max,b_max,a_min,b_min)=>
   if (!a_min) a_min = 0;
   if (!b_min) b_min = 0;
   return ((val-a_min)/(a_max-a_min))*(b_max-b_min)+b_min;
+};
+
+
+aa.fx.parse =(content,is_trusted)=>
+{
+  let items = 
+  [
+    {id:'url', regex:aa.regex.url, exe:aa.parse.url},
+    {id:'nostr', regex:aa.regex.nostr, exe:aa.parse.nostr},
+    {id:'hashtag', regex:aa.regex.hashtag, exe:aa.parse.hashtag},
+  ];
+
+  return parse_all({ content, items, is_trusted })
 };
 
 
@@ -788,6 +807,8 @@ aa.fx.time_upd =element=>
     element.dataset.elapsed = aa.fx.time_elapsed(date);
   })
 };
+
+
 
 
 // timeout with delay if called again before for some time

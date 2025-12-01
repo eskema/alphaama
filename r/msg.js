@@ -16,14 +16,13 @@ aa.r.auth =async data=>
 aa.r.event =async data=>
 {
   let [type,dat] = data;
-  // console.log(a);
+  // console.log(data);
   for (const sub of dat?.subs)
   {
     aa.q.stamp(sub,dat.event.created_at);
     if (aa.r.on_sub.has(sub))
     {
       aa.r.on_sub.get(sub)(dat);
-      return
     }
   }
 };
@@ -63,7 +62,7 @@ aa.r.eose =async data=>
     aa.el.set(l_r_id,l_r);
     fastdom.mutate(()=>{l.append(l_r)});
   }
-  else aa.fx.move(l_r);
+  else sift.move(l_r);
 
   fastdom.mutate(()=>
   {

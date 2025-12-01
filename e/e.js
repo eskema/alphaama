@@ -70,6 +70,7 @@ aa.e.clear_events =s=>
   });
 };
 
+
 aa.e.content =(content,is_trusted)=>
 {
   let items = 
@@ -613,9 +614,6 @@ aa.e.pow =async(string='')=>
 };
 
 
-
-
-
 aa.e.quote =data=>
 {
   const quote_note = make('blockquote',
@@ -630,11 +628,12 @@ aa.e.quote =data=>
     {
       cla:'content parsed',
       app:aa.mk.ls({ls:data})
-    }),
+    })
   });
   aa.e.quote_note_replace(quote_note,data);
   return quote_note
 };
+
 
 aa.e.quote_note =async(element,dat)=>
 {
@@ -655,15 +654,22 @@ aa.e.quote_note =async(element,dat)=>
   // aa.e.render(element);
 };
 
+
 aa.e.quote_note_replace =async(element,data)=>
 {
-  let dat;
-  
-  if (data.id_a) dat = await aa.e.get_a(data.id_a);
-  else dat = await aa.e.get(data.id);
-  
-  if (dat) aa.e.quote_note(element,dat);
-  else aa.e.miss_quote(element,data);
+  try
+  {
+    let dat;
+    if (data.id_a) dat = await aa.e.get_a(data.id_a);
+    else dat = await aa.e.get(data.id);
+    
+    if (dat) aa.e.quote_note(element,dat);
+    else aa.e.miss_quote(element,data);
+  }
+  catch(er) 
+  { 
+    console.error(data,er)
+  }
 };
 
 
@@ -754,17 +760,7 @@ aa.e.view_clear =in_view=>
     delete aa.view.id_a;
 
   aa.l.classList.remove('view_e');
-
-  let solo = aa.e.l.dataset.solo;
-  if (!solo)
-  {
-    for (const item of sift.in_path)
-    {
-      sift.in_path.delete(item);
-      sift.path_remove(item);
-    }
-  }
-  else sift.solo_remove(sift.in_path,solo,aa.e.l);
+  sift.solo_clear(aa.temp[`section_e`]);
 };
 
 

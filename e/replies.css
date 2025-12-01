@@ -176,6 +176,30 @@
   text-align: right;
 }
 
+.view_e .note.in_path.haz_new_reply,
+.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply),
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new) + .note,
+.replies:not(.expanded) .note.haz_new > .replies > header + .note,
+.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
+{
+  padding-top: 0;
+}
+
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
+{
+  border-left: 1px dotted rgba(var(--c),1);
+  border-top: 1px dotted rgba(var(--c),1);
+  padding-top: 0;
+  pointer-events: none;
+}
+
+.replies:not(.expanded) > .note.haz_new_reply:not(.is_new)
+{
+  padding-top: var(--pad);
+  margin-bottom: var(--padm);
+}
+
+
 @media screen and (min-width: 1025px) 
 {
   .mark_read:hover

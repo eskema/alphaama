@@ -74,14 +74,7 @@ aa.e.note_pre =dat=>
     }
     else aa.e.append_as_rep(note,versions);
   }
-  // else 
-  // {
-  //   let details = aa.mk.details('versions',false,true);
-  //   details.classList.add('versions');
-  //   note.append(details);
-  //   aa.e.append_as_root(note);
-  // }
-  // }
+
   return note
 };
 

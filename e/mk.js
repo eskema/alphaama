@@ -183,47 +183,47 @@ aa.mk.post =async(s='')=>
   }
 };
 
-// restrict amount of root events displayed at once, 
-aa.mk.pagination =()=>  
-{
-  let n = parseInt(localStorage.pagination??'0');
+// // restrict amount of root events displayed at once, 
+// aa.mk.pagination =()=>  
+// {
+//   let n = parseInt(localStorage.pagination??'0');
   
-  const style = make('style',
-  {
-    id:'e_pagination',
-    con:`.pagin .notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
-  });
+//   const style = make('style',
+//   {
+//     id:'e_pagination',
+//     con:`.pagin .notes > .note:not(:nth-child(-n+${n})):not(.in_path){display:none;}`
+//   });
 
-  document.head.append(style);
+//   document.head.append(style);
 
-  let pagination = make('p',{cla:'pagination'});
-  let butt_more = make('button',
-  {
-    cla:'butt',
-    con:'moar',
-    clk:e=>
-    {
-      fastdom.mutate(()=>
-      {
-        if (aa.l.classList.contains('pagin'))
-        {
-          let position = aa.l.scrollTop;
-          aa.l.classList.remove('pagin');
-          e.target.textContent = 'less';
-          aa.l.scrollTop = position;
-        }
-        else 
-        {
-          aa.l.classList.add('pagin');
-          e.target.textContent = 'moar';
-        }
-      });
-    }
-  });
-  pagination.append(butt_more);
-  fastdom.mutate(()=>{aa.l.classList.add('pagin')});
-  return pagination
-};
+//   let pagination = make('p',{cla:'pagination'});
+//   let butt_more = make('button',
+//   {
+//     cla:'butt',
+//     con:'moar',
+//     clk:e=>
+//     {
+//       fastdom.mutate(()=>
+//       {
+//         if (aa.l.classList.contains('pagin'))
+//         {
+//           let position = aa.l.scrollTop;
+//           aa.l.classList.remove('pagin');
+//           e.target.textContent = 'less';
+//           aa.l.scrollTop = position;
+//         }
+//         else 
+//         {
+//           aa.l.classList.add('pagin');
+//           e.target.textContent = 'moar';
+//         }
+//       });
+//     }
+//   });
+//   pagination.append(butt_more);
+//   fastdom.mutate(()=>{aa.l.classList.add('pagin')});
+//   return pagination
+// };
 
 
 aa.mk.replies_section =id=>

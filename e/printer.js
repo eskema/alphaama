@@ -6,43 +6,52 @@ aa.e.append_to =async(dat,note,tag)=>
 };
 
 
-// append note to notes section
-aa.e.append_as_root =note=>
+aa.e.last_child =(stamp,parent)=>
 {
-  if (!note.classList.contains('rendered'))
+  if (!parent || parent.nodeType !== 1) return;
+  let last;
+  let sort = parent.dataset.sort;
+  for (const element of parent.children)
   {
-    note.classList.add('root','not_yet');
-  }
-
-  if (!note.parentElement) aa.e.note_observer.observe(note);
-  
-  let in_view = history.state?.view === '#'+note.id 
-    || (aa.view.id_a && aa.view.id_a === note.dataset.id_a);
-  
-  
-  // if (in_view || last || !roots.length)
-  // {
-    fastdom.mutate(()=>
+    if (sort === 'desc')
     {
-      let roots = [...aa.e.l.children];
-      let last = 
-        roots.find(i=> note.dataset.stamp > i.dataset.stamp);
+      if (stamp < element.dataset.stamp) continue;
+    }
+    else if (stamp > element.dataset.stamp) continue;
 
-      if (last && last.parentElement !== aa.e.l) last = null;
-      aa.fx.move(note,last,aa.e.l);
-      // roots = [...aa.e.l.children];
-      // if (roots.length >= 50)
-      // {
-      //   for (const item of [...aa.e.l.children].slice(50))
-      //     // setTimeout(()=>
-      //     // {
-      //       if (item?.parentElement === aa.e.l
-      //         && !item.classList.contains('in_path')
-      //       ) aa.e.l.removeChild(item)
-      //     // },0);
-      // }
-    });
-  // }
+    last = element;
+    break;
+  }
+  if (!last
+  || (last && last.parentElement !== parent)
+  ) last = null;
+  return last
+};
+
+// append note to notes section
+aa.e.append_as_root =(note,parent)=>
+{
+  if (!parent) parent = aa.e.l;
+
+  let classes = 'root';
+  // on first append
+  if (!note.classList.contains(classes))
+  {
+    note.classList.add(classes,'not_yet');
+    aa.e.note_observer.observe(note)
+    aa.e.view_check(note);
+  }
+  // let stamp = parseInt(note.dataset.stamp);
+  let options = aa.temp[`section_e`];
+  if (options) 
+    fastdom.mutate(()=>{ sift.insert(note,options) });
+};
+
+
+aa.e.view_check =note=>
+{
+  let in_view = history.state?.view === '#'+note.id 
+  || (aa.view.id_a && aa.view.id_a === note.dataset.id_a);
   
   if (in_view && !note.classList.contains('in_view'))
     setTimeout(()=>{aa.e.view(note)},1000);
@@ -77,7 +86,7 @@ aa.e.append_as_rep =(note,rep)=>
     rep.insertBefore(note,last);
     rep.parentElement.classList.add(...rep_add);
     aa.e.upd_note_path(note);
-  })
+  });
 
   
   // setTimeout(()=>
@@ -87,7 +96,8 @@ aa.e.append_as_rep =(note,rep)=>
   // aa.e.note_yet(note);
   // aa.e.note_observer.observe(note);
 
-  if (history.state?.view === '#'+note.id) setTimeout(()=>{aa.e.view(note)},1000);
+  if (history.state?.view === '#'+note.id) 
+    setTimeout(()=>{aa.e.view(note)},1000);
 };
 
 
@@ -124,62 +134,12 @@ aa.e.append_check =async(dat,note,tag)=>
     return
   }
 
-  // if (relay)
-  // {
-  //   let filter = is_a 
-  //     ? aa.fx.id_af(id)
-  //     : {ids:[id]};
-
-  //   let dis = 
-  //   {
-  //     id:id.slice(8),
-  //     filter,
-  //     relays:[relay],
-  //     options:{eose:'close'}
-  //   };
-
-  //   let {events} = await aa.r.get(dis);
-  //   if (events.size)
-  //   {
-  //     for (const item of [...events.values()]) aa.e.print_q(item);
-  //     return
-  //   }
-  // }
   let relays = [];
   if (relay) aa.fx.a_add(relays,[relay]);
   let p = await aa.p.get(dat.event.pubkey);
-  // let relays = aa.fx.in_set(p?.relays,'write');
   aa.fx.a_add(relays,aa.fx.in_set(p?.relays,'write'));
-  // relays = [...new Set([...relays,...aa.r.r])];
   aa.e.miss_set(type,id,relays);
 };
-
-
-// aa.e.append_as_orphan =(dat,note,reply_id)=>
-// {
-//   if (note.parentElement) return;
-//   let root;
-//   let tag_root = aa.fx.tag_comment_root(dat.event.tags)
-//   || aa.fx.tag_root(dat.event.tags);
-//   if (tag_root && tag_root[1] !== reply_id)
-//   {
-//     let root_kind = tag_root[0].toLowerCase();
-//     if (root_kind === 'e')
-//     {
-//       root = aa.e.printed.get(tag_root[1]);
-//       if (!root) aa.e.miss_print(tag_root);
-//     }
-//     else if (root_kind === 'a')
-//     {
-//       root = aa.e.by_ida(tag_root[1]); 
-//       if (!root) aa.e.miss_print_a(tag_root);
-//     }
-//   }
-//   note.classList.add('orphan');
-//   if (root) aa.e.append_as_rep(note,root.querySelector('.replies'));
-//   else aa.e.append_as_root(note);
-// };
-
 
 
 // create note intersection observer
@@ -192,17 +152,8 @@ aa.e.note_observer = new IntersectionObserver(a=>
       aa.e.note_yet(b.target);
       aa.e.note_observer.unobserve(b.target);
     }
-      
-      // aa.e.note_observer_intersect(b.target);
-    // else
-    // {
-    //   if (b.boundingClientRect.top > 0) 
-    //   {
-    //     position("BELOW") // do things if below
-    //   } else {
-    //     position("ABOVE") // do things if above
-    //   }
-    // }
+
+    //   if (b.boundingClientRect.top > 0)
   }
 },{root:null,threshold:.9});
 
@@ -295,8 +246,10 @@ aa.e.orphan =(dat,note,tag)=>
 // print event
 aa.e.print =async dat=>
 {
-  // console.log(dat);
   const id = aa.e.em(dat);
+  console.log(dat);
+  // return
+
   let note = aa.e.printed.get(id);
   if (note)
   {
@@ -343,43 +296,76 @@ aa.e.print =async dat=>
   setTimeout(()=>{ aa.e.references(dat) },0);
   // update section counter
   setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_section_e')) },0);
+  //setTimeout(()=>{ aa.fx.section_upd('section_e') },0);
   // aa.e.anal(dat);
+};
+
+
+aa.e.print_kind =(map,kind,order,delay)=>
+{
+  if (!map.has(kind)) return;
+  let items = map.get(kind).sort(order);
+  map.delete(kind);
+  for (const item of items)
+    setTimeout(()=>{aa.e.print(item)},21);
+  // return items
 };
 
 
 // send data to print
 aa.e.print_q =dat=>
-{
-  if (!dat?.event)
+{ 
+  if (!Object.hasOwn(aa.temp,'print_q')) 
+    aa.temp.print_q = new Map();
+
+  if (!dat?.event?.id || aa.temp.print_q.has(dat.event.id)) 
   {
-    console.trace(dat)
+    if (!dat?.event?.id) console.trace(dat);
     return
   }
+  
+  aa.temp.print_q.set(dat.event.id,dat);
 
   aa.e.miss_remove(dat);
-  setTimeout(()=>{aa.e.print(dat)},0);
 
-  // if (!aa.temp.print_q) aa.temp.print_q = new Map();
-  // if (!dat?.event?.id || aa.temp.print_q.has(dat.event.id)) return;
-  
-  // aa.temp.print_q.set(dat.event.id,dat);
-  // debt.add(()=>
-  // {
-  //   let prints = [...aa.temp.print_q.values()]
-  //   .sort(aa.fx.sorts.ca_asc);
-  //   aa.temp.print_q.clear();
+  debt.add(()=>
+  {
+    // separate events by kind 
+    // in order to prioritize 
+    // and optimize sorting
+    let print_map = new Map();
+    for (const item of aa.temp.print_q.values())
+    {
+      if (!print_map.has(item.event.kind))
+        print_map.set(item.event.kind,[]);
+      print_map.get(item.event.kind).push(item);
+    }
+    aa.temp.print_q.clear();
+    
+    aa.e.print_kind(print_map,0,aa.fx.sorts.ca_desc);
+    aa.e.print_kind(print_map,3,aa.fx.sorts.ca_desc);
+    aa.e.print_kind(print_map,10002,aa.fx.sorts.ca_desc);
 
-  //   let chunks = aa.fx.chunks(prints,100);
-  //   for (const chunk of chunks)
-  //   {
-  //     setTimeout(()=>
-  //     {
-  //       for (const dat of prints)
-  //       setTimeout(()=>{aa.e.print(dat)},0);
-  //     })
-  //   }
-  // },
-  // 8,'brrrr');
+    for (const kind of print_map.keys())
+    {
+      aa.e.print_kind(print_map,kind,aa.fx.sorts.ca_asc);
+    }
+
+    // let dats = [...aa.temp.print_q.values()];
+
+    // let profiles = dats
+    //   .filter(i=>i.event.kind === 0)
+    //   .sort(aa.fx.sorts.ca_desc);
+
+    // let prints = [...aa.temp.print_q.values()]
+    // .sort(aa.fx.sorts.ca_asc);
+
+    // aa.temp.print_q.clear();
+
+    // for (const dat of prints)
+    //   setTimeout(()=>{aa.e.print(dat)},21);
+  },
+  420,'brrrr');
 };
 
 
@@ -401,7 +387,6 @@ aa.e.refs =id=>
       aa.temp.orphan.delete(array[0]);
     aa.e.append_check(...array[1]);
   }
-  // if (aa.temp.orphan.has(id)) aa.temp.orphan.delete(id);
   aa.temp.refs.delete(id);
 };
 
@@ -415,7 +400,7 @@ aa.e.replies_summary_upd =async element=>
     const replies = element.querySelector('.replies');
     const direct = replies.childNodes.length - 1;
     const all = replies.querySelectorAll('.note').length;
-    const button = replies.firstChild.firstChild;//querySelector('.mark_read');
+    const button = replies.firstChild.firstChild;
     if (button && direct > 0)
       button.textContent = direct+(all>direct?'.'+all:'')
   })
@@ -423,40 +408,35 @@ aa.e.replies_summary_upd =async element=>
 
 
 // update note path when appending
-aa.e.upd_note_path =(element)=> 
+aa.e.upd_note_path =element=> 
 {
-  let target = element.querySelector('.by .created_at');
   let last;
   let stamped;
   let stamp = element.dataset.stamp;
-  let is_u = aa.u.is_u(element.dataset.pubkey);
 
-  for (; element&&element!==document; element=element.parentNode)
+  for (; element && element !== document; element = element.parentNode)
   {
     if (!element.classList.contains('note')) continue;
-    
     last = element;
-
     if (element.dataset.stamp < stamp) 
     {
       element.dataset.stamp = stamp;
       stamped = true;
     }
     else stamped = false;
-
     if (element.querySelector('.note.is_new'))
       element.classList.add('haz_new');
-
     aa.e.replies_summary_upd(element);
-    
-    
   }
   // update root post order
-  let upd_root_stamp = stamped 
-    // && !is_u
+  let upd_root_stamp = stamped
     && last?.classList.contains('root');
   if (upd_root_stamp)
+  // && stamp > aa.e.l.lastChild.dataset.stamp)
     aa.e.append_as_root(last);
 
-  setTimeout(()=>{aa.clk.time({target})})
+  setTimeout(()=>
+  {
+    aa.clk.time({target:last.querySelector('.by .created_at')})
+  })
 };

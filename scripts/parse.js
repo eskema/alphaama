@@ -21,14 +21,43 @@ const parse =(options={})=>
       console.error('parser:',regex,match);
       return
     }
-    let childs = parsed?.childNodes.length;
+    fragment.append(parsed);
+    let childs = parsed?.childElementCount;
     if (childs > 2) index = match.index + match.input.length;
     else index = match.index + match[0].length;
-    fragment.append(parsed);
     if (type === 'block') result.type = type;
   }
-  if (index < content.length) fragment.append(content.slice(index));
   return result
+};
+
+
+const is_empty =element=>
+{
+  element.normalize();
+  if (!element.childNodes.length) return true;
+  if (element.firstChild?.nodeType === 3)
+  {
+    const text = (element.textContent+'').trim();
+    if (!text || text === ' ') return true
+  }
+  return false
+};
+
+
+const parse_another =(options={})=>
+{
+  let { parent, element, cla} = options;
+  if (!cla) cla = 'paragraph';
+  
+  const new_paragraph =()=> make('p',{cla});
+  
+  if (!element) return new_paragraph();
+  
+  
+  if (is_empty(element)) element.remove();
+  else parent.append(element);
+  
+  return new_paragraph()
 };
 
 
@@ -42,36 +71,14 @@ const parse_all =(options)=>
     is_trusted,
   } = options;
 
-  let cla = 'paragraph';
-  const element = make();
-  let child = make('p',{cla});
-
   let tested = [];
   for (const item of items)
     if (item.regex.test(content))
         tested.push(item);
 
-  const is_empty =l=>
-  {
-    if (!l.childNodes.length) return true;
-    if (l.firstChild.nodeType === 3)
-    {
-      const text = (l.textContent+'').trim();
-      if (!text || text === ' ') return true
-    }
-    return false
-  };
-
-  const another_child =l=>
-  {
-    l.normalize();
-    if (is_empty(l)) l.remove();
-    else 
-    {
-      element.append(l);
-      child = make('p',{cla});
-    }
-  };
+  //let cla = 'paragraph';
+  const parent = make();
+  let element = parse_another(); // make('p',{cla});
 
   let paragraphs = content.split(/\n\s*\n/);
   if (paragraphs.length === 1) 
@@ -81,12 +88,14 @@ const parse_all =(options)=>
     if (!paragraph.length) continue;
     
     const lines = paragraph.trim().split(/\n/);
+    // parse_lines({lines,parent,element});
+
     for (let i = 0; i < lines.length; i++)
     {
-      let line = lines[i]
-      if (child.childNodes.length)
-        child.append(make('br'));
-      
+      if (element.childNodes.length)
+        element.append(make('br'));
+
+      let line = lines[i];
       let in_line = [];
       for (const item of tested)
       {
@@ -96,9 +105,10 @@ const parse_all =(options)=>
           in_line.push(item);
         }
       }
+
       if (!in_line.length)
       {
-        child.append(line);
+        element.append(line);
         continue;
       }
 
@@ -127,18 +137,19 @@ const parse_all =(options)=>
           let { parsed, type } = parse(found);
           if (type === 'block')
           {
-            another_child(child);
-            element.append(parsed);
-          } else child.append(parsed,' ');
+            element = parse_another({parent,element});
+            parent.append(parsed);
+          }
+          else element.append(parsed,' ');
         }
         else
         {
-          if (ii === words.length-1) child.append(word);
-          else child.append(word,' ');
+          if (ii === words.length-1) element.append(word);
+          else element.append(word,' ');
         }
       }
     }
-    another_child(child);
+    element = parse_another({parent,element});
   }
-  return element
+  return parent
 };

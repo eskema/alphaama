@@ -85,28 +85,6 @@
   margin-top: var(--pad);
 }
 
-.view_e .note.in_path.haz_new_reply,
-.replies:not(.expanded) > .note:not(.is_new),
-.replies:not(.expanded) .note:not(.is_new).haz_new_reply,
-.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
-{
-  padding-top: 0;
-}
-
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
-{
-  border-left: 1px dotted rgba(var(--c),1);
-  border-top: 1px dotted rgba(var(--c),1);
-  padding-top: 0;
-  pointer-events: none;
-}
-
-.replies:not(.expanded) > .note.haz_new_reply:not(.is_new)
-{
-  padding-top: var(--pad);
-  margin-bottom: var(--padm);
-}
-
 .note::after
 {
   align-self: end;
@@ -292,19 +270,34 @@
 /* #endregion versions */
 /* #region pagination */
 
-.pagination
+/* .pagination
 {
   font-size: var(--font-size-l);
   margin: var(--line) 0;
   text-align: center;
-}
+} */
 
-.section_e:not(.expanded) .pagination,
+/* .section_e:not(.expanded) .pagination,
 .viewing .pagination,
 .aa:not(.needs_pagin) .pagination
 {
   display: none;
+} */
+
+
+/* testing compact view */
+
+/* .note > .content
+{
+  height: var(--line);
+  padding-top: 0;
+  margin-top: 0;
 }
+
+.note > .replies > .note > *:not(.replies):not(.by)
+{
+  display: none;
+} */
 
 /* #endregion pagination */
 
@@ -313,6 +306,7 @@
   .aa:not(.view_e) .notes
   {
     margin-left: var(--pad-l);
+    margin-right: var(--pad-l);
   }
   
   .note.root:not(.tiny):not(.in_path)::after

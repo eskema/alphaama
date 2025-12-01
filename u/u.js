@@ -48,13 +48,14 @@ aa.u =
 
 
 // add user
-aa.u.add =(pubkey='')=>
+aa.u.add =async(pubkey='')=>
 {
   if (!aa.fx.is_key(pubkey)) return;
   if (aa.u.p?.pubkey === pubkey) return;
   
   aa.u.o.ls = {pubkey:pubkey,npub:aa.fx.encode('npub',pubkey)};
-  aa.mod.save(aa.u).then(aa.u.start);
+  await aa.mod.save(aa.u);
+  await aa.u.start();
 };
 
 
@@ -246,8 +247,8 @@ aa.u.setup =async(s='')=>
   aa.u.setup_sheet.relays = relays;
   aa.u.setup_sheet.mode = mode;
 
-  aa.u.add(pubkey);
-  await aa.u.start();
+  await aa.u.add(pubkey);
+  // await aa.u.start();
 
   if (mode) aa.o.add(`mode ${mode}`);
   else
@@ -298,6 +299,7 @@ aa.u.setup_butt =()=>
       })
     ]
   });
+
   setTimeout(()=>{ aa.log(setup_butt) },500);
 };
 
@@ -317,7 +319,7 @@ aa.u.setup_quick =async()=>
     aa.log('unable to get public key');
     return
   }
-  aa.u.add(pubkey);
+  await aa.u.add(pubkey);
 
   setTimeout(()=>{aa.q.stuff()},1000);
   // aa.fx.countdown('the page will reload in',21,1000)

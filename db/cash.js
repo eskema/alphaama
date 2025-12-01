@@ -111,26 +111,23 @@ cash.grab =async request=>
       response = await fetch(request);
       if (response?.ok) resolve(response.clone())
     }
-    catch{reject(response)}
+    catch { reject(response) }
   })
 };
 
 
-// put in cache
-// cash.in =async o=>
-// {
-//   const cache = await caches.open(cash.id);
-//   for (const key in o)
-//   {
-//     if (typeof key === 'object' 
-//     && key.url 
-//     && key.url.startsWith('chrome')) continue;
-//     let response = o[key].response;
-//     if (!response) continue;
-//     let options = o[key].options || {};
-//     await cache.put(key,new Response(response.clone(),options));
-//   }
-// };
+cash.in =async array=>
+{
+  let [key,response,options] = array;
+  if (!key || !response) return;
+  if (!options) options = {};
+  // {
+  //   headers:{'Content-Type':'application/json'}
+  // };
+  let result = await cash.put(new Request(key), 
+    new Response(response,options));
+  postMessage(result);
+};
 
 
 // get from cache

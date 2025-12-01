@@ -26,18 +26,19 @@ aa.parse.nostr =match=>
     .split(' ');
   
   let block_types = new Set(['note','nevent','naddr']);
-  if (new Set(entities).intersection(block_types).size)
+  let has_block_type = new Set(entities.map(i=>i.split('1')[0]))
+    .intersection(block_types).size;
+  if (has_block_type)
   {
     result.type = 'block'
   }
 
-  let contente =content=>
+  const contente =content=>
   {
     if (result.type === 'block')
       content = make('p',{classes:'paragraph',content});
     return content
   };
-    
   
   if (match.index)
   {
@@ -57,12 +58,12 @@ aa.parse.nostr =match=>
     let decoded = aa.fx.decode(whole);
     if (decoded)
     {
-      fragment.append(aa.mk.nip19(whole),' ');
+      fragment.append(aa.mk.nip19(whole));
       
       if (rest_match[0].length < rest_match.input.length)
         fragment.append(contente(rest_match.input.slice(rest_match[0].length)),' ');
     }
-    else fragment.append(contente(entity),' ');
+    else fragment.append(contente(entity));
   }
   if (match[0].length < (match.input.length - match.index))
   {

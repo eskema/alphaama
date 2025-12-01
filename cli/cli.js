@@ -338,7 +338,6 @@ aa.cli.mk =()=>
   aa.cli.l.append(
     aa.cli.t,
     logs_section,
-    // aa.mk.section({id:'l',element:logs_frag,expanded:true}),
     aa.cli.oto,
     butts,
   );

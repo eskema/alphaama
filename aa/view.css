@@ -18,6 +18,13 @@
 
 #view > section > header 
 {
+  align-items: center;
+  display: grid;
+  /* grid-auto-flow: column;
+  grid-template-areas: 
+    "button button" 
+    "search pagination";
+  grid-template-columns: auto 1fr; */
   z-index: 0;
 }
 
@@ -31,7 +38,7 @@
   padding: var(--padm);
   padding-top: 0;
   text-align: left;  
-  width: 100vw;
+  justify-self: stretch;
 }
 
 #view > section > header > .butt::before
@@ -44,6 +51,33 @@
   content: ":" attr(data-count) "]";
 }
 
+#view > section > footer
+{
+  bottom: calc(var(--size) - var(--pad));
+  position: sticky;
+  z-index: -1;
+}
+
+#view > section.expanded 
+{
+  padding-bottom: var(--size);
+}
+
+#view > section.expanded > header
+{
+  color: rgb(var(--color-c));
+  /* justify-self: start; */
+  padding-bottom: var(--line);
+}
+
+#view > section.expanded > header > .butt
+{
+  
+  font-size: var(--font-size);
+  padding-left: var(--padm);
+  padding-top: var(--padm);
+}
+
 #view > section.expanded > header > .butt::before
 {
   content: "";
@@ -52,22 +86,6 @@
 #view > section.expanded > header > .butt::after
 {
   content: ":" attr(data-count) "";
-}
-
-#view > section.expanded > header
-{
-  color: rgb(var(--color-c));
-  justify-self: start;
-}
-
-#view > section.expanded > header > .butt
-{
-  padding-left: var(--padm);
-}
-
-.viewing #view > section
-{
-  margin-top: 0;
 }
 
 #view > details
@@ -113,15 +131,142 @@
   padding: var(--line) 1rem;
 }
 
-#view > section > header > .butt:not([data-count]),
+.viewing #view > section
+{
+  margin-top: 0;
+}
+
+/* #view > section > header > .butt:not([data-count]),
 #view > section > header > .butt[data-count="0"],
-#view > section > header > .butt:not([data-count]) + .list_filter,
-#view > section:not(.expanded) .list_filter,
+#view > section > header > .butt:not([data-count]) + .list_filter, */
+
+#view 
+  > section:not(.expanded) 
+    > header 
+      > *:not(.section_butt[data-count]),
+
+#view > section:not(.expanded) > footer,
 .viewing #view > section > header,
+.viewing #view > section > footer,
 .viewing #view > details
 {
   display: none;
 }
+
+
+.pagination
+{
+  align-content: center;
+  /* background: rgb(var(--color-b)); */
+  display: grid;
+  /* font-size: var(--font-size-s); */
+  grid-gap: 0 var(--pad);
+  grid-template-columns: 1fr auto 1fr;
+  justify-items: stretch;
+  justify-content: center;
+
+  line-height: 1;
+  margin: 0;
+  padding: var(--pad) var(--padm);
+  padding-bottom: calc(var(--pad) + 1.5rem);
+}
+
+.pagination .butt
+{
+  color: rgb(var(--color-e));
+  line-height: 3rem;
+}
+
+.pagination input:hover,
+.pagination .butt:hover
+{
+  color: rgb(var(--color-main));
+}
+
+.pagination input[type="number"]
+{
+  /* width: auto; */
+  field-sizing: content;
+  min-width: var(--pad);
+  max-width: 3rem;
+  text-align: center;
+}
+
+.pagination_previous,
+.pagination_next
+{
+  align-self: center;
+  display: inline-grid;
+  /* font-size: 0; */
+  grid-auto-flow: column;
+  grid-template-columns: auto;
+  white-space: pre;
+}
+
+/* .pagination_previous::after,
+.pagination_previous::before,
+.pagination_next::after,
+.pagination_next::before
+{
+  font-size: 0;
+} */
+
+.pagination_previous
+{
+  /* justify-items: start; */
+  justify-content: start;
+  padding-right: var(--padm);
+}
+
+.pagination_next
+{
+  /* justify-items: end; */
+  justify-content: end;
+  padding-left: var(--padm);
+  text-align: right;
+}
+
+/* .pagination_previous::after,
+.pagination_previous::before,
+.pagination_next::after,
+.pagination_next::before,
+.pagination_previous:hover,
+.pagination_next:hover
+{
+  font-size: var(--font-size);
+} */
+
+.pagination_previous:hover,
+.pagination_next:hover
+{
+  grid-template-columns: auto 1fr auto;
+}
+
+.pagination_previous::before
+{
+  content: '< '
+}
+
+.pagination_next::after
+{
+  content: ' >'
+}
+
+.pagination_previous::after,
+.pagination_next::before
+{
+  content: ' -- '
+}
+
+.pagination .page_controls
+{
+  padding: 0 var(--padm);
+}
+
+/* .pagination_page[value="1"] + .butt
+{
+  display: none;
+} */
 
 @media screen and (min-width: 1025px) 
 {
@@ -135,6 +280,7 @@
 
   #view > section.expanded > header:hover
   {
+    
     z-index: 2;
   }
   
@@ -142,9 +288,19 @@
   {
     background: rgba(var(--color-a));
   }
+
+  #view > section > footer:hover
+  {
+    z-index: 1;
+  }
+
+  .pagination:hover > *
+  {
+    background: rgb(var(--color-a));
+  }
 }
 
-/* @media screen and (max-width: 768px) 
+@media screen and (max-width: 768px) 
 {
 
-} */
+}

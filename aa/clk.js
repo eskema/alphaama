@@ -34,31 +34,25 @@ aa.clk.expand =e=>
   let id = e.target.dataset.controls;
   let element = aa.el.get(id) || e.target;
   if (!element) return;
-
+  let cla = 'expanded';
   let storage_value = '';
-  let block = 'center';
   
-  let exp = element.classList.contains('expanded');
-
-  if (exp)
+  if (element.classList.contains(cla))
   {
     fastdom.mutate(()=>
     {
-      element.classList.remove('expanded')
+      element.classList.remove(cla)
     })
   }
   else
   {
-    storage_value = 'expanded';
-    block = 'start';
+    storage_value = cla;
     fastdom.mutate(()=>
     {
-      element.classList.add('expanded')
+      element.classList.add(cla)
     })
   }
-  
   sessionStorage[id] = storage_value;
-
 };
 
 

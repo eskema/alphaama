@@ -145,7 +145,7 @@ aa.mod.append =mod_l=>
     // insert alphabetically
     const last = [...aa.mod_l.children]
     .find(i=> name < i.dataset.id);
-    fastdom.mutate(()=>{aa.fx.move(mod_l,last||null,aa.mod_l)});
+    fastdom.mutate(()=>{sift.move(mod_l,last||null,aa.mod_l)});
   }
   else aa.log(mod_l)
 };

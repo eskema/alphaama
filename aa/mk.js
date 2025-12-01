@@ -1,6 +1,3 @@
-
-
-
 // make button with a clk
 aa.mk.butt_clk =sa=>
 {
@@ -443,23 +440,56 @@ aa.mk.list =dis=>
 };
 
 
-aa.mk.sift_input =(element,options={})=>
+aa.mk.sift_input =(options={})=>
 {
-  let name = options.name || `list_filter_${aa.fx.rands()}`;
-  
-  let placeholder = options.placeholder ?? '(Y)';
-  let cla = options.classes ?? 'list_filter';
+  const name = options.name || `list_filter_${aa.fx.rands()}`;
+  const classes = options.classes || 'list_filter';
+  const placeholder = options.placeholder || '(Y)';
+  const input = make('input',
+  {
+    name,
+    classes,
+    placeholder
+  });
 
-  const input = make('input',{name,cla,placeholder});
-  
   input.addEventListener('keyup',()=>
   {
     debt.add(()=>
     {
-      fastdom.mutate(()=> { sift.content(element,input.value) })
+      fastdom.mutate(()=>
+      {
+        options.value = e.target.value;
+        sift.content(options) 
+      })
     }, 420, name)
   });
+  
+  return input
+};
 
+
+aa.mk.sift_input_map =options=>
+{
+  const name = options.name || `sift_filter_${aa.fx.rands()}`;
+  const input = make('input',
+  {
+    name,
+    classes: 'list_filter',
+    placeholder: '(Y)',
+  });
+
+  input.addEventListener('keyup',e=>
+  {
+    debt.add(()=>
+    {
+      fastdom.mutate(()=> 
+      { 
+        options.value = e.target.value;
+        sift.map(options)
+      })
+    }, 420, name)
+  });
+  
   return input
 };
 
@@ -591,18 +621,133 @@ aa.mk.nostr_link =(s='',con=false)=>
 };
 
 
+// restrict amount of root events displayed at once, 
+aa.mk.pagination =options=>
+{
+  let {
+    element,
+    order,
+    max
+  } = options;
+
+  let pagination = make('p',{cla:'pagination'});
+
+  if (!options.page) options.page = 1;
+  
+  let page_input = make('input',
+  {
+    type: 'number',
+    classes: 'pagination_page',
+    min: 1,
+    value: 1,
+    listeners:
+    {
+      'change': async e=>
+      {
+        options.page = e.target.value;
+        sift.paginate(options)
+      }
+    }
+  });
+
+  let prev_butt = make('button',
+  {
+    classes: 'butt pagination_previous', 
+    content: 'previous page',
+    listeners:
+    {
+      'click':async e=>
+      {
+        let new_page = options.page - 1;
+        if (new_page < 1) new_page = 1;
+        page_input.value = options.page = new_page;
+        sift.paginate(options)
+      }
+    }
+  });
+
+  let next_butt = make('button',
+  {
+    classes: 'butt pagination_next', 
+    content: 'next page',
+  });
+
+  const order_toggle =order=>
+  {
+    return order === 'asc'
+      ? 'desc'
+      : 'asc'
+  };
+
+  const order_text =order=>
+  {
+    return order === 'asc'
+      ? 'oldest'
+      : 'newest'
+  };
+
+  let order_butt = make('button',
+  {
+    classes: 'butt order',
+    content: order_text(options.order),
+  });
+
+  let max_input = make('input',
+  {
+    type: 'number',
+    classes: 'pagination_max',
+    min: 1,
+    value: max,
+  });
+
+  next_butt.addEventListener('click',async e=>
+  {
+    console.log(options);
+    let new_page = options.page + 1;
+    page_input.value = options.page = new_page;
+    sift.paginate(options);
+    console.log(options);
+  });
+
+  order_butt.addEventListener('click',async e=>
+  {
+    options.order = order_toggle(options.order);
+    e.target.textContent = order_text(options.order);
+    sift.paginate(options);
+  });
+
+  max_input.addEventListener('change',async e=>
+  {
+    options.max = e.target.value;
+    sift.paginate(options);
+  });
+
+  let page_controls = make('span',
+  {
+    classes: 'page_controls',
+    app: ['page ',page_input,' showing ',max_input,' root notes ordered by ', order_butt]
+  });
+  
+  pagination.append( 
+    prev_butt,' ',page_controls,' ',next_butt
+  );
+
+  return pagination
+};
+
+
 // qr code
 aa.mk.qr =s=>
 {
   let l = make('div',{cla:'qrcode'});
   aa.temp.qr = new QRCode(l,
   {
-    text:s.trim(),
+    text: s.trim(),
     width: 512,
     height: 512,
-    colorDark : "#000000",
-    colorLight : "#ffffff",
-    correctLevel : QRCode.CorrectLevel.H
+    colorDark: "#000000",
+    colorLight: "#ffffff",
+    correctLevel: QRCode.CorrectLevel.H
   });
   let img = l.querySelector('img');
   img.classList.add('qr');
@@ -635,8 +780,13 @@ aa.mk.section =options=>
     expanded,
     classes,
     filter,
+    filter_by,
+    map,
+    sort_by,
     collapse,
     tagname,
+    order,
+    max,
   } = options;
   
   if (!tagname) tagname = 'section';
@@ -657,20 +807,31 @@ aa.mk.section =options=>
   aa.el.set(`butt_${section_id}`,section_butt);
   
   let header = make('header',{app:section_butt});
-  let opts = 
+  let footer = make('footer');
+
+  let section_options = 
   {
     cla:classes.trim(),
     dat:{id},
     app:[header]
   };
-  
-  if (expanded) opts.cla += ' expanded';
-  if (element) 
-  {
-    opts.app.push(element);
-  }
+  if (expanded) section_options.cla += ' expanded';
+  if (element) section_options.app.push(element);
 
-  const section = make(tagname,opts);
+  const section = make(tagname,section_options);
+  aa.el.set(section_id,section);
+
+  let sift_options = 
+  {
+    element: element || section,
+    map,
+    filter_by,
+    max,
+    sort_by,
+    order,
+  };
+
+  aa.temp[section_id] = sift_options;
   
   if (collapse)
   {
@@ -680,22 +841,34 @@ aa.mk.section =options=>
       {
         con:'-',
         cla:'butt collapse',
-        clk:e=>{ section.classList.toggle('collapsed') }
+        clk:()=>{ section.classList.toggle('collapsed') }
       })
     );
+  }
+
+  if (max)
+  {
+    footer.append(aa.mk.pagination(sift_options));
   }
 
   if (filter)
   {
     header.append(
       ' ',
-      aa.mk.sift_input(element || section)
+      aa.mk.sift_input_map(sift_options)
     );
   }
-  
-  aa.el.set(section_id,section);
+
+  if (footer.children.length) section.append(' ',footer);
+
   return section
 };
+
+
+// aa.e.sift =()=>
+// {
+
+// };
 
 
 // make server item

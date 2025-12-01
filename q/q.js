@@ -137,19 +137,94 @@ aa.q.db =async(s='')=>
     if (a.length) fid = a.shift();
     if (fid && aa.q.o.ls.hasOwnProperty(fid))
     {
-      let [filtered,options] = aa.q.filter(aa.q.o.ls[fid].v);
+      let filter = aa.q.o.ls[fid].o || aa.q.o.ls[fid].v;
+      let [filtered] = aa.q.filter(filter);
       if (!filtered) 
       {
         aa.log(aa.q.def.id+' db: invalid filter')
         continue
       }
       
-      let delay = times * 420;
       times++;
       let [get_id,events] = await aa.r.get_filter(filtered);
       for (const dat of events) aa.e.print_q(dat);
     } 
   }
+};
+
+
+// takes a string and
+// returns an array with a request filter and options
+aa.q.filter =filter=>
+{
+  if (typeof filter === 'string') 
+    filter = aa.pj(filter);
+  if (!filter) return [];
+
+  let var_map = new Map();
+  var_map.set('u', ()=>[aa.u.p.pubkey]);
+  var_map.set('k3', ()=>aa.u.p.follows);
+
+  let options = {};
+
+  let p;
+  let x = aa.u.p.pubkey;
+  if (!x) aa.log('vars: no u');
+  else p = aa.db.p[x];
+
+  let filter_keys = Object.keys(filter);
+  for (const key of filter_keys)
+  {
+    const value = filter[key];
+    switch(key)
+    {
+      case 'eose':
+        options[key] = value;
+        delete filter[key];
+        break;
+      case 'since':
+      case 'until':
+        if (typeof value === 'string') 
+          filter[key] = aa.fx.time_convert(value);
+        break;
+      default:
+        if (!Array.isArray(value)) break;
+        for (const val of value)
+        {
+          if (!val && val !== 0)
+          {
+            console.trace(filter);
+            return []
+          }
+
+          if (typeof val === 'string')
+          {
+            // filter[key] = value.filter(i=>i!==val);
+            // if (p) filter[key].push(...p.follows);
+
+            switch (val)
+            {
+              case 'u':
+              case 'x':
+                filter[key] = filter[key].filter(i=>i!==val);
+                if (x) filter[key].push(x);
+                break;
+              case 'k3':
+                filter[key] = filter[key].filter(i=>i!==val);
+                if (p) filter[key].push(...p.follows);
+                break;
+            }
+          }
+          if (!filter[key].length) 
+          {
+            aa.log('vars: invalid filter');
+            return []
+          }
+        }
+    }
+  }
+  if (!Object.keys(options).length) options = false;
+  return [filter,options]
 };
 
 
@@ -173,42 +248,51 @@ aa.q.del =s=>
 };
 
 
-aa.q.get =async(fid,as_outbox)=>
+aa.q.get =async(fid,options)=>
 {
-  let fo = aa.q.o.ls[fid]?.v;
-  if (!fo) return;
+  let filter_raw = aa.q.o.ls[fid]?.o;
+  if (!filter_raw) 
+  {
+    let filter_json = aa.q.o.ls[fid]?.v;
+    if (filter_json) filter_raw = aa.pj(filter_json);
+  }
+  if (!filter_raw) return;
 
   let id = `${fid}_${aa.fx.rands()}`;
-  let [filter,options] = aa.q.filter(fo);
+  let as_outbox = options?.mode === 'outbox';
+  
+  let [filter,opts] = aa.q.filter(filter_raw);
   if (!filter 
   || (as_outbox && !filter.authors?.length))
   {
     aa.log('invalid filter: '+fid);
     return false
   }
+
+  if (!options) options = opts;
   
   let results = [];
 
   if (!as_outbox)
   {
     let relays = aa.r.r;
-    let dis = {id,filter,relays,options};
+    let request = {id,filter,relays,options};
 
     return new Promise(resolve=>
     {
       const abort = setTimeout(()=>{resolve({})},10000);
-      const res =ult=>
+      const res =sheet=>
       {
         clearTimeout(abort);
-        // console.log(sheet);
-        resolve(ult);
+        results.push(sheet);
+        resolve(results);
       };
 
       try
       {
-        aa.r.get(dis).then(res).catch(res)
+        aa.r.get(request).then(res).catch(res)
       }
-      catch(er){console.log(results,er)}
+      catch(er){ console.log(results,er) }
     })
   }
    
@@ -242,22 +326,11 @@ aa.q.get =async(fid,as_outbox)=>
       if (results.length === outbox.length)
       {
         clearTimeout(abort);
-        let events = new Map();
-        for (const result of results)
-        {
-          let seen = [...result.eose.keys()];
-          for (const [dis,dat] of result.events)
-          {
-            if (!events.has(dis)) events.set(dis,dat);
-            let dis_dat = events.get(dis);
-            aa.fx.a_add(dis_dat.seen,seen)
-          }
-        }
-        resolve(events);
+        resolve(results);
       }
     };
 
-    for (const [url,authors] of outbox) 
+    for (const [url,authors] of outbox)
     {
       let dis = 
       {
@@ -266,6 +339,7 @@ aa.q.get =async(fid,as_outbox)=>
         relays:[url],
         options
       }
+
       try
       {
         aa.r.get(dis).then(res).catch(res)
@@ -544,64 +618,6 @@ aa.q.outbox =request=>
 };
 
 
-// takes a string and
-// returns an array with a request filter and options
-aa.q.filter =(s,x)=>
-{
-  const filter = typeof s === 'string' ? aa.pj(s) : s;
-  if (!filter) return [];
-
-  let options = {};
-  let p;
-  if (!x) x = aa.u.p.pubkey;
-  if (!x) aa.log('vars: no u');
-  else p = aa.db.p[x];
-
-  for (const k in filter)
-  {
-    const v = filter[k];
-    switch (k)
-    {
-      case 'eose':
-        options.eose = v;
-        delete filter[k];
-        break;
-      case 'since':
-      case 'until':
-        if (typeof v === 'string') filter[k] = aa.fx.time_convert(v);
-        break;
-      default:
-        if (Array.isArray(v)) for (const val of v)
-        {
-          if (typeof val === 'string')
-          {
-            switch (val)
-            {
-              case 'u':
-              case 'x':
-                filter[k] = filter[k].filter(dis=>dis!==val);
-                if (x) filter[k].push(x);
-                break;
-              case 'k3':
-                filter[k] = filter[k].filter(dis=>dis!==val);
-                if (p) filter[k].push(...p.follows);
-                break;
-            }
-          }
-          if (!filter[k].length) 
-          {
-            aa.log('vars: invalid filter');
-            return []
-          }
-        }
-    }
-  }
-  if (!Object.keys(options).length) options = false;
-  return [filter,options]
-};
-
-
-
 // raw req
 aa.q.req =(s='')=>
 {
@@ -686,14 +702,17 @@ aa.q.run =async(s='')=>
 // fetch basic stuff to get things started
 aa.q.stuff =async()=>
 {
-  // let sheet_1 = await aa.q.get('a');
-  // for (const dat of sheet_1.events) aa.e.print_q(dat);
-  // let sheet_2 = await aa.q.get('a');
-  // for (const dat of sheet_2.events) aa.e.print_q(dat);
-  // let sheet_3 = await aa.q.get('b');
-  // for (const dat of sheet_3.events) aa.e.print_q(dat);
-  // let sheet_4 = await aa.q.get('b',1);
-  // for (const dat of sheet_4.events) aa.e.print_q(dat);
+  let options = {eose:'close'};
+
+  let a_sheets = await aa.q.get('a',{options});
+  
+  for (const dat of sheet_1.events) aa.e.print_q(dat);
+  let sheet_2 = await aa.q.get('a',{options});
+  for (const dat of sheet_2.events) aa.e.print_q(dat);
+  let sheet_3 = await aa.q.get('b',{options});
+  for (const dat of sheet_3.events) aa.e.print_q(dat);
+  let sheet_4 = await aa.q.get('b',{options,mode:'outbox'});
+  for (const dat of sheet_4.events) aa.e.print_q(dat);
   
   // sessionStorage.q_out = 'f';
   // sessionStorage.q_run = 'n';
@@ -703,14 +722,15 @@ aa.q.stuff =async()=>
   {
     aa.log('again now that we might have more relays…');
     aa.q.run('a') 
-  },2000);
+  },1400);
   setTimeout(()=>
   {
     aa.log('getting your follows stuff');
     aa.q.run('b') 
-  },5000);
+  },3000);
   setTimeout(()=>
   {
+    console.log(JSON.stringify(aa.u.p));
     aa.log('getting your follows stuff again but now in outbox mode');
     aa.q.out('b');
     sessionStorage.q_out = 'f';
@@ -730,28 +750,27 @@ aa.q.stuff =async()=>
 aa.q.stamp =async(id,timestamp)=>
 {
   let mod = aa.q;
-  let item = mod.o.ls[id];
-  if (!item) return;
+  let sub = mod.o.ls[id];
+  if (!sub) return;
   let changed;
-  if (!item.since || item.since > timestamp) 
+  if (!sub.since || sub.since > timestamp)
   {
-    item.since = timestamp;
+    sub.since = timestamp;
     changed = true;
   }
-  if (!item.until || item.until < timestamp) 
+  if (!sub.until || sub.until < timestamp)
   {
-    item.until = timestamp;
+    sub.until = timestamp;
     changed = true;
   }
   
   if (changed)
   {
-    console.log('aa.q.stamp changed',id);
     debt.add(()=>
     {
-      console.log('aa.q.stamp saved',id);
-      // aa.mod.save(mod);
-    },2100,`q.stamp_${id}`)
+      // console.log('aa.q.stamp saved',id);
+      aa.mod.save(mod);
+    }, 2100, `q.stamp_${id}`)
   }
 };
 

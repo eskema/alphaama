@@ -136,13 +136,14 @@
   background: none;
   border: none;
   font-family: var(--font-main);
-  font-size: var(--font-size);
-  margin-bottom: var(--pad);
+
   padding: 0 var(--pad);
 }
 
 .mod .list_filter
 {
+  font-size: var(--font-size);
+  margin-bottom: var(--pad);
   text-align: center;
 }
 

@@ -9,6 +9,7 @@
   grid-area: by;
   grid-template-areas: "author id actions created_at x clas";
   grid-template-columns: auto 1fr auto auto auto;
+  line-height: 1;
   position: sticky;
   top: 0;
   z-index: 1;
@@ -115,7 +116,6 @@
   display: grid;
 }
 
-
 .by .id
 {
   background-color: rgba(var(--c),.21);
@@ -137,7 +137,6 @@
   align-items: center;
   grid-area: nid;
   line-height: 1;
-  /*padding: 0 var(--padm);*/
   text-decoration: none;
   user-select: none;
   white-space: pre;
@@ -149,11 +148,6 @@
   content: "k" attr(data-kind) " ";
   font-size: var(--font-size-s);
 }
-
-/* .by .id .xid
-{
-  color: rgb(var(--c));
-} */
 
 .by .a.nid span
 {
@@ -168,15 +162,12 @@
 
 .draft[data-luma="light"] > .by .id *,
 .in_view[data-luma="light"] > .by .id *
-/*.tiny[data-luma="light"] > .by .nid*/
-/*.note[data-luma="light"]:not([data-kind="1"]) > .by .nid*/
 {
   color: rgb(var(--color-dark));
 }
 
 .draft[data-luma="dark"] > .by .xid,
 .in_view[data-luma="dark"] > .by .xid
-/*.note[data-luma="dark"]:not([data-kind="1"]) > .by*/
 {
   color: rgb(var(--color-light));
 }
@@ -189,18 +180,10 @@
   padding: 0 var(--padm);
 }
 
-
 .draft > .by .id,
 .in_view > .by .id
 {
   background-color: rgba(var(--c),1);
-  /*padding: 0 var(--padm);*/
-}
-
-.in_view > .by .nid span::before
-{
-  color: inherit;
-  content: "<- ";
 }
 
 .in_view > .by .xid
@@ -224,7 +207,6 @@
 .tiny > .by > .butt.tiny::before
 {
   content: 'o';
-  /* color: rgb(var(--color-no)); */
 }
 
 
@@ -265,14 +247,12 @@
     color: rgba(var(--color-d),1);
   }
   
-  /*[data-luma="light"].note:after,*/
   [data-luma="light"] > .by:hover .xid,
   .in_view[data-luma="light"] > .by .xid
   {
     color: rgb(var(--color-dark));
   }
   
-  /*[data-luma="dark"].note:after,*/
   [data-luma="dark"] > .by:hover .xid,
   .in_view[data-luma="dark"] > .by .xid
   {

@@ -288,7 +288,7 @@ aa.r.get =async dis=>
 
   return new Promise(resolve=>
   {
-    const abort = setTimeout(()=>{resolve(sheet)},2121);
+    const abort = setTimeout(()=>{resolve(sheet)},6666);
 
     aa.r.on_eose.set(id,data=>
     {
@@ -313,7 +313,7 @@ aa.r.get_events =async ids=>
 
   return new Promise((resolve,reject)=>
   {
-    const abort = setTimeout(()=>{reject()},6666);
+    const abort = setTimeout(()=>{resolve(false)},33333);
     
     aa.r.temp.set(id,data=>
     {
@@ -573,7 +573,6 @@ aa.r.mk =(k,v)=>
   // v = {sets:[]}
 
   let id = aa.r.def.id;
-  // element.dataset.state = 0;
   const edit_text = `${id} add ${k} off`;
   const del_text = `${id} del ${k}`;
 
@@ -611,8 +610,6 @@ aa.r.mk =(k,v)=>
   aa.el.set(k,element);
   return element 
 };
-
-
 
 
 // return sorted relay list for outbox

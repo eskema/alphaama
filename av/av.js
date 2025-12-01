@@ -137,7 +137,7 @@ aa.mk.av =(src,poster=false,audio=false)=>
   play_butt.textContent = 'play';
   play_butt.onclick = vip;
   
-  const seeker = document.createElement('input');
+  
   // if (Hls.isSupported()) 
   // {
   //   const hls = new Hls();
@@ -161,7 +161,7 @@ aa.mk.av =(src,poster=false,audio=false)=>
   // progressbar.setAttribute('value', 0);
   l.ontimeupdate = progress;
 
-  
+  const seeker = document.createElement('input');
   seeker.type = 'range';
   seeker.classList.add('seeker');
   seeker.name = `seeker_${aa.fx.an(src)}`;
@@ -223,9 +223,10 @@ aa.mk.av =(src,poster=false,audio=false)=>
     // rewind_butt,
     // seekback_butt,
     // seekforward_butt,
-    mute_butt,
-    pip_butt,
-    grab_butt,
+    // seeker,
+    // mute_butt,
+    // pip_butt,
+    // grab_butt,
     
     
     // progressbar,

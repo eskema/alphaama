@@ -679,6 +679,11 @@ aa.p.process_k3_tags_upd =(event)=>
       upd = true;
     }
 
+    if (!p)
+    {
+      console.log('no p',pubkey)
+    }
+
     if (relay)
     {
       let url = aa.fx.url(relay)?.href;
@@ -694,7 +699,15 @@ aa.p.process_k3_tags_upd =(event)=>
       if (aa.fx.a_add(p.petnames,[petname])) upd = true;
     }
 
-    if (aa.fx.a_add(p.followers,[op.pubkey])) upd = true;
+    if (p.followers)
+    {
+      if (aa.fx.a_add(p.followers,[op.pubkey])) upd = true;
+    }
+    else 
+    {
+      console.log('no followers',p)
+    }
+    
     
     if (is_u)
     {
