@@ -248,7 +248,6 @@ aa.u.setup =async(s='')=>
   aa.u.setup_sheet.mode = mode;
 
   await aa.u.add(pubkey);
-  // await aa.u.start();
 
   if (mode) aa.o.add(`mode ${mode}`);
   else

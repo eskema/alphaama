@@ -280,7 +280,7 @@ aa.q.get =async(fid,options)=>
 
     return new Promise(resolve=>
     {
-      const abort = setTimeout(()=>{resolve({})},10000);
+      const abort = setTimeout(()=>{ resolve(results) },10000);
       const res =sheet=>
       {
         clearTimeout(abort);
@@ -295,7 +295,7 @@ aa.q.get =async(fid,options)=>
       catch(er){ console.log(results,er) }
     })
   }
-   
+  // as outbox
   let outbox = aa.r.outbox(filter.authors);
   if (!outbox.length)
   {
@@ -697,53 +697,82 @@ aa.q.run =async(s='')=>
   }
 };
 
+aa.q.print =async(id,options)=>
+{
+  let sheets = await aa.q.get(id,options);
+  if (!sheets) return;
+
+  for (const sheet of sheets)
+  {
+    for (const [id,dat] of sheet.events)
+      aa.e.print_q(dat)
+  }
+};
 
 
 // fetch basic stuff to get things started
 aa.q.stuff =async()=>
 {
   let options = {eose:'close'};
+  aa.log('getting your stuff (relays, metadata, follows, etc…)');
+  await aa.q.print('a',{options});
+  setTimeout(async()=>
+  {
+    aa.log('getting your stuff again now that we might have more relays…');
+    await aa.q.print('a',{options});
+    setTimeout(async()=>
+    {
+      aa.log('getting your follows stuff');
+      await aa.q.print('b',{options});
+      setTimeout(async()=>
+      {
+        aa.log('getting your follows stuff again but now in outbox mode');
+        await aa.q.print('b',{options, mode:'outbox'});
+        aa.log(make('p',{ content: 'all done ', app: aa.mk.reload_butt() }))
+        sessionStorage.q_out = 'f';
+        sessionStorage.q_run = 'n';
+      },999);
+    },666);
+  },420)
 
-  let a_sheets = await aa.q.get('a',{options});
-  
-  for (const dat of sheet_1.events) aa.e.print_q(dat);
-  let sheet_2 = await aa.q.get('a',{options});
-  for (const dat of sheet_2.events) aa.e.print_q(dat);
-  let sheet_3 = await aa.q.get('b',{options});
-  for (const dat of sheet_3.events) aa.e.print_q(dat);
-  let sheet_4 = await aa.q.get('b',{options,mode:'outbox'});
-  for (const dat of sheet_4.events) aa.e.print_q(dat);
+  // for (const dat of sheet_1.events) aa.e.print_q(dat);
+  // let sheet_2 = await aa.q.get('a',{options});
+  // for (const dat of sheet_2.events) aa.e.print_q(dat);
+  // let sheet_3 = await aa.q.get('b',{options});
+  // for (const dat of sheet_3.events) aa.e.print_q(dat);
+  // let sheet_4 = await aa.q.get('b',{options,mode:'outbox'});
+  // for (const dat of sheet_4.events) aa.e.print_q(dat);
   
   // sessionStorage.q_out = 'f';
   // sessionStorage.q_run = 'n';
-  aa.log('getting your stuff (relays, metadata, follows, etc…)');
-  aa.q.run('a');
-  setTimeout(()=>
-  {
-    aa.log('again now that we might have more relays…');
-    aa.q.run('a') 
-  },1400);
-  setTimeout(()=>
-  {
-    aa.log('getting your follows stuff');
-    aa.q.run('b') 
-  },3000);
-  setTimeout(()=>
-  {
-    console.log(JSON.stringify(aa.u.p));
-    aa.log('getting your follows stuff again but now in outbox mode');
-    aa.q.out('b');
-    sessionStorage.q_out = 'f';
-    sessionStorage.q_run = 'n';
-    setTimeout(()=>
-    {
-      aa.log(make('p',
-      {
-        con:'wait a bit while events load, then ',
-        app:aa.mk.reload_butt()
-      }))
-    },2000);
-  },8000);
+  // aa.log('getting your stuff (relays, metadata, follows, etc…)');
+  // aa.q.run('a');
+  // setTimeout(()=>
+  // {
+  //   aa.log('again now that we might have more relays…');
+  //   aa.q.run('a') 
+  // },1400);
+  // setTimeout(()=>
+  // {
+  //   aa.log('getting your follows stuff');
+  //   aa.q.run('b') 
+  // },3000);
+  // setTimeout(()=>
+  // {
+  //   console.log(JSON.stringify(aa.u.p));
+  //   aa.log('getting your follows stuff again but now in outbox mode');
+  //   aa.q.out('b');
+  //   sessionStorage.q_out = 'f';
+  //   sessionStorage.q_run = 'n';
+  //   setTimeout(()=>
+  //   {
+  //     aa.log(make('p',
+  //     {
+  //       con:'wait a bit while events load, then ',
+  //       app:aa.mk.reload_butt()
+  //     }))
+  //   },2000);
+  // },8000);
 };
 
 

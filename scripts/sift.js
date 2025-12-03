@@ -78,14 +78,14 @@ sift.less =(element,value='',options={})=>
   let setname = options.setname || 'sift';
   let classname = options.classname || 'sifted_out';
   let set = element.dataset[setname];
-  let values = sift.set_del(set,value);
-  if (values)
-    element.dataset[setname] = values;
-  else
-  {
+  // let values = sift.set_del(set,value);
+  // if (values)
+  //   element.dataset[setname] = values;
+  // else
+  // {
     delete element.dataset[setname];
     element.classList.remove(classname);
-  }
+  // }
 };
 
 

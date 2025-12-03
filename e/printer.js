@@ -247,7 +247,7 @@ aa.e.orphan =(dat,note,tag)=>
 aa.e.print =async dat=>
 {
   const id = aa.e.em(dat);
-  console.log(dat);
+  // console.log(dat);
   // return
 
   let note = aa.e.printed.get(id);

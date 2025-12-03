@@ -196,11 +196,11 @@ aa.e.render_object =async(element,dat)=>
 {
   aa.e.content_o(element,aa.pj(dat.event.content),'a');
 
-  let ls = aa.pj(dat.event.content);
-  if (!ls || typeof ls !== 'object') return;
+  // let ls = aa.pj(dat.event.content);
+  // if (!ls || typeof ls !== 'object') return;
 
-  element.textContent = '';
-  element.append(aa.mk.ls({ls,sort:'a'}));
+  // element.textContent = '';
+  // element.append(aa.mk.ls({ls,sort:'a'}));
 };
 
 
