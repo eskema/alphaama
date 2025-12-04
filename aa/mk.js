@@ -653,17 +653,7 @@ aa.mk.pagination =options=>
   let prev_butt = make('button',
   {
     classes: 'butt pagination_previous', 
-    content: 'previous page',
-    listeners:
-    {
-      'click':async e=>
-      {
-        let new_page = options.page - 1;
-        if (new_page < 1) new_page = 1;
-        page_input.value = options.page = new_page;
-        sift.paginate(options)
-      }
-    }
+    content: 'previous page'
   });
 
   let next_butt = make('button',
@@ -700,13 +690,22 @@ aa.mk.pagination =options=>
     value: max,
   });
 
-  next_butt.addEventListener('click',async e=>
+  prev_butt.addEventListener('click',async e=>
   {
-    console.log(options);
-    let new_page = options.page + 1;
+    let new_page = options.page - 1;
+    if (new_page < 1) new_page = 1;
     page_input.value = options.page = new_page;
     sift.paginate(options);
-    console.log(options);
+    setTimeout(()=>{element.scrollIntoView()},200);
+  });
+
+  next_butt.addEventListener('click',async e=>
+  {
+    let new_page = options.page + 1;
+    // if (new_page > total_pages) new_page = total_pages;
+    page_input.value = options.page = new_page;
+    sift.paginate(options);
+    setTimeout(()=>{element.scrollIntoView()},200);
   });
 
   order_butt.addEventListener('click',async e=>
