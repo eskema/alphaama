@@ -46,10 +46,15 @@ const db = new store.IDBEventStore;
 const db_filter =async filter=>
 {
   let events = new Map();
-  for await (let event of db.queryEvents(filter))
+  try
   {
-    events.set(event.id,event)
+    for await (let event of db.queryEvents(filter))
+    {
+      events.set(event.id,event)
+    }
   }
+  catch(er){ console.error(er)}
+
   return mem_events(events)
 };
 
@@ -168,19 +173,22 @@ const get_filter =async([get_id,filter])=>
 
 const get_outbox =async({request,outbox,options})=>
 {
-  request = await pre_process_request(request);
-  let [fid,filter] = request.slice(1);
-  if (Object.hasOwn(filter,'authors')) delete filter.authors;
-  for (const [url,authors] of outbox)
+  setTimeout(()=>
   {
-    let dis = 
+    let [fid,filter] = request.slice(1);
+    if (Object.hasOwn(filter,'authors')) delete filter.authors;
+    for (const [url,authors] of outbox)
     {
-      request:['REQ',fid,{...filter,authors}],
-      url,
-      options
-    };
-    relay_request(dis);
-  }
+      let dis = 
+      {
+        request:['REQ',fid,{...filter,authors}],
+        url,
+        options
+      };
+      relay_request(dis);
+    }
+  },420);
+  pre_process_request(request);
 };
 
 
@@ -511,6 +519,7 @@ const on_event =(a,url)=>
   {
     a_add(dat.seen,seen);
     a_add(dat.subs,subs);
+    postMessage(['event',dat,url]);
   }
   else
   {
@@ -521,10 +530,10 @@ const on_event =(a,url)=>
     {
       dat = mk_dat({event,seen,subs});
       manager.events.set(event.id,dat);
+      postMessage(['event',dat,url]);
       setTimeout(()=>{db.saveEvent(event)},0)
     }
   }
-  postMessage(['event',dat,url]);
 };
 
 
@@ -626,8 +635,14 @@ const pre_process_request =async request=>
 const process_request =async data=>
 {
   let {relays,request,options} = data;
-  if (!options?.db === false) request = await pre_process_request(request);
-  for (const url of relays) relay_request({url,request,options});
+  if (!options?.db === false)
+    setTimeout(()=>{pre_process_request(request)})
+  // if (!options?.db === false) request = await pre_process_request(request);
+  setTimeout(()=>
+  {
+    for (const url of relays) relay_request({url,request,options});
+  },420);
+  // if (!options?.db === false) pre_process_request(request);
 };
 
 
@@ -638,7 +653,7 @@ const relay_info =async(relays=[])=>
 
 
 // post request to relay workers
-const relay_request =({url,request,options})=>
+const relay_request =async({url,request,options})=>
 {
   if (manager.locked) return;
 

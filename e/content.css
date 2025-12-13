@@ -118,12 +118,17 @@
   padding: var(--pad);
 }
 
-.paragraph.cypher
+.content > .paragraph.cypher
 {
   color: rgb(var(--color-c));
-  font-size: var(--font-size-xs)!important;
+  font-size: var(--font-size-xs);
   line-height: 1!important;
   word-break: break-all;
+}
+
+.in_view > .content > .paragraph.cypher
+{
+  font-size: var(--font-size);
 }
 
 .in_view > .content > .paragraph,

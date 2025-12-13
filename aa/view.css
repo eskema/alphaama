@@ -302,5 +302,18 @@
 
 @media screen and (max-width: 768px) 
 {
+  .pagination
+  {
+    align-content: center;
 
+    grid-gap: var(--pad) 0;
+    grid-template-columns: 1fr;
+    justify-items: stretch;
+    justify-content: center;
+
+    line-height: 1;
+    margin: 0;
+    padding: var(--pad) var(--padm);
+    padding-bottom: calc(var(--pad) + 1.5rem);
+  }
 }

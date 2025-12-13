@@ -34,7 +34,7 @@ sift.insert =(item,options)=>
   {
     for(const i of [...element.children].slice(max))
       if(!i.classList.contains('in_path')
-      || !i.classList.contains('sifted_in')
+      && !i.classList.contains('sifted_in')
       ) i.remove()
   }
 };

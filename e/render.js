@@ -98,15 +98,16 @@ aa.e.render_encrypted =async(element,dat)=>
     cla:'paragraph cypher',
     con:dat.event.content
   });
+  element.append(paragraph);
 
   let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
   if (aa.u.o.ls.pubkey === p_x)
   {
     element.classList.add('for_u');
     element.append(
-      paragraph,' ',
+      ' ',
       aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt')
-      );
+    );
   }
 };
 

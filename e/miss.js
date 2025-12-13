@@ -179,7 +179,8 @@ aa.e.miss_type =type=>
 aa.e.miss_get =async type=>
 {
   if (!aa.temp.miss[type]) return;
-  debt.add(()=>
+
+  const get_missing =type=>
   {
     let {relays,keys} = aa.e.miss_type(type);
     if (!relays) return;
@@ -216,11 +217,11 @@ aa.e.miss_get =async type=>
 
     if (aa.e.miss_check(type)) 
     {
-      setTimeout(()=>{ aa.e.miss_get(type) },0);
+      setTimeout(()=>{ get_missing(type) },0);
     }
-    
+  };
 
-  },420,'miss_'+type);
+  debt.add(()=>{get_missing(type)},420,'miss_'+type);
 };
 
 

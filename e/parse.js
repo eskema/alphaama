@@ -42,19 +42,20 @@ aa.parse.nostr =match=>
   
   if (match.index)
   {
-    fragment.append(contente(match.input.slice(0,match.index)))
+    result.before = match.input.slice(0,match.index);
+    // fragment.append(contente(match.input.slice(0,match.index)))
   }
 
   for (const entity of entities)
   {
-    let [type,rest] = entity.split('1');
+    let [prefix,rest] = entity.split('1');
     if (!rest) continue;
 
     let rest_match = rest.match(aa.regex.bech32);
     let is_ok = rest_match[0] && rest_match.index === 0;
     if (!is_ok) continue;
 
-    let whole = `${type}1${rest_match[0]}`;
+    let whole = `${prefix}1${rest_match[0]}`;
     let decoded = aa.fx.decode(whole);
     if (decoded)
     {
@@ -65,10 +66,13 @@ aa.parse.nostr =match=>
     }
     else fragment.append(contente(entity));
   }
+
   if (match[0].length < (match.input.length - match.index))
   {
-    fragment.append(contente(match.input.slice(match[0].length + match.index)),' ')
+    result.after = match.input.slice(match[0].length + match.index);
+    // fragment.append(contente(match.input.slice(match[0].length + match.index)),' ')
   }
+
   return result
 };
 

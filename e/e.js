@@ -422,8 +422,8 @@ aa.e.get =async ids=>
   }
   if (want.size)
   {
-    let [get_id,events,missing] = await aa.r.get_events([...want]);
-    if (events.length)
+    let [ get_id, events ] = await aa.r.get_events([...want]);
+    if (events?.length)
     {
       for (const dat of events)
       {

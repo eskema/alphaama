@@ -141,11 +141,10 @@ aa.mod.append =mod_l=>
 {
   if (aa.mod_l) 
   {
-    let name = mod_l.dataset.id;
     // insert alphabetically
     const last = [...aa.mod_l.children]
-    .find(i=> name < i.dataset.id);
-    fastdom.mutate(()=>{sift.move(mod_l,last||null,aa.mod_l)});
+    .find(i=> mod_l.dataset.id < i.dataset.id) || null;
+    fastdom.mutate(()=>{ sift.move(mod_l,last,aa.mod_l) });
   }
   else aa.log(mod_l)
 };

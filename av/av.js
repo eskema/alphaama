@@ -53,29 +53,7 @@ aa.mk.av =(src,poster=false,audio=false)=>
     if (document.pictureInPictureElement) document.exitPictureInPicture();
     else if (document.pictureInPictureEnabled) l.requestPictureInPicture();
   };
-  // update progress
-  const progress =e=>
-  { 
-    const l = e.target;
-    const trols = l.closest('.av').querySelector('.controls');
-    const seeker = trols.querySelector('.seeker');
-    const duration = Math.floor(l.duration||0);
-    const percentage = Math.floor((100 / duration) * l.currentTime);
-    fastdom.mutate(()=>
-    {
-      trols.dataset.elapsed = Math.ceil(l.currentTime);
-      trols.dataset.remains = Math.ceil(duration - l.currentTime);
-      trols.dataset.duration = duration;
-      trols.dataset.percentage = percented = `${percentage}%`;
-      let style = 'linear-gradient(';
-      style += 'to right,';
-      style += `var(--color-front) ${percented},`;
-      style += `var(--color-back) ${percented}`;
-      style += ') no-repeat';
-      seeker.style.background = style;
-      seeker.value = l.currentTime;
-    });
-  };
+
 
   // rewind video
   // const rewind =e=>
@@ -158,7 +136,7 @@ aa.mk.av =(src,poster=false,audio=false)=>
   // progressbar.setAttribute('min', 0);
   // progressbar.setAttribute('max', 100);
   // progressbar.setAttribute('value', 0);
-  l.ontimeupdate = progress;
+  
 
   const seeker = document.createElement('input');
   seeker.type = 'range';
@@ -168,12 +146,40 @@ aa.mk.av =(src,poster=false,audio=false)=>
   // seeker.setAttribute('max', 100);
   seeker.setAttribute('value', 0);
   seeker.setAttribute('step', 'any');
+
+  // update progress
+  const progress =e=>
+  { 
+    // const l = e.target;
+    // const trols = l.closest('.av').querySelector('.controls');
+    // const seeker = trols.querySelector('.seeker');
+    const duration = Math.floor(l.duration||0);
+    const percentage = Math.floor((100 / duration) * l.currentTime);
+    fastdom.mutate(()=>
+    {
+      trols.dataset.elapsed = Math.ceil(l.currentTime);
+      trols.dataset.remains = Math.ceil(duration - l.currentTime);
+      trols.dataset.duration = duration;
+      trols.dataset.percentage = percented = `${percentage}%`;
+      let style = 'linear-gradient(';
+      style += 'to right,';
+      style += `var(--color-front) ${percented},`;
+      style += `var(--color-back) ${percented}`;
+      style += ') no-repeat';
+      seeker.style.background = style;
+      seeker.value = l.currentTime;
+    });
+  };
+
+
   seeker.addEventListener('input',e=>
   {
     // l.pause();
     l.currentTime = e.target.value; //Math.floor((l.duration * e.target.value) / 100);
     progress({target:l})
   });
+
+  l.ontimeupdate = progress;
   // seeker.addEventListener('change',e=>
   // {
   //   if (l.duration)

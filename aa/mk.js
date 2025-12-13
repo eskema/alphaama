@@ -452,7 +452,7 @@ aa.mk.sift_input =(options={})=>
     placeholder
   });
 
-  input.addEventListener('keyup',()=>
+  input.addEventListener('keyup',e=>
   {
     debt.add(()=>
     {

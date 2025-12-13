@@ -14,13 +14,20 @@ const parse =(options={})=>
   const matches = [...content.matchAll(regex)];
   for (const match of matches)
   {
-    fragment.append(match.input.slice(index,match.index));
-    let { parsed, type } = exe(match,is_trusted);
+    // if (match.index > index)
+    // {
+    //   result.before = match.input.slice(0,match.index);
+    // }
+    
+    // fragment.append(match.input.slice(index,match.index));
+    let { parsed, type, before, after } = exe(match,is_trusted);
     if (!parsed)
     {
       console.error('parser:',regex,match);
       return
     }
+    if (before) result.before = before;
+    if (after) result.after = after;
     fragment.append(parsed);
     let childs = parsed?.childElementCount;
     if (childs > 2) index = match.index + match.input.length;
@@ -134,13 +141,16 @@ const parse_all =(options)=>
           found.content = word;
           found.is_trusted = is_trusted;
           found.regex.lastIndex = 0;
-          let { parsed, type } = parse(found);
+          let { parsed, type, before, after } = parse(found);
+          if (before) element.append(before,' ');
           if (type === 'block')
           {
+            
             element = parse_another({parent,element});
             parent.append(parsed);
           }
           else element.append(parsed,' ');
+          if (after) element.append(' ',after,' ');
         }
         else
         {

@@ -311,9 +311,9 @@ aa.r.get_events =async ids=>
 {
   let id = 'get_events_'+aa.fx.rands();
 
-  return new Promise((resolve,reject)=>
+  return new Promise(resolve=>
   {
-    const abort = setTimeout(()=>{resolve(false)},33333);
+    const abort = setTimeout(()=>{resolve([])},9999);
     
     aa.r.temp.set(id,data=>
     {
@@ -812,7 +812,7 @@ aa.r.toggles =()=>
       make('br'),
       make('span',{ cla:'states', app: states_butts }),
       make('br'),
-      aa.mk.sift_input(mod.mod_ul)
+      aa.mk.sift_input({element:mod.mod_ul})
     ]
   });
 
