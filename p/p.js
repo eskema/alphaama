@@ -106,7 +106,9 @@ aa.p.authors_list =(a,cla,sort='text_asc')=>
 // clear profile filter
 aa.p.view_clear =element=>
 {
-  fastdom.mutate(()=>{ aa.l.classList.remove('view_p') });
+  // fastdom.mutate(()=>{ 
+    aa.l.classList.remove('view_p') 
+  // });
 };
 
 
