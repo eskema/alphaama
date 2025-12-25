@@ -44,7 +44,10 @@ aa.e.append_as_root =(note,parent)=>
   // let stamp = parseInt(note.dataset.stamp);
   let options = aa.temp[`section_e`];
   if (options) 
-    fastdom.mutate(()=>{ sift.insert(note,options) });
+    // fastdom.mutate(()=>{
+      sift.insert(note,options) 
+    // });
+  else console.log('aa.e.append_as_root: no options')
 };
 
 
@@ -244,7 +247,7 @@ aa.e.orphan =(dat,note,tag)=>
 
 
 // print event
-aa.e.print =async dat=>
+aa.e.print =dat=>
 {
   const id = aa.e.em(dat);
   // console.log(dat);
@@ -307,7 +310,9 @@ aa.e.print_kind =(map,kind,order,delay)=>
   let items = map.get(kind).sort(order);
   map.delete(kind);
   for (const item of items)
-    setTimeout(()=>{aa.e.print(item)},21);
+    setTimeout(()=>{
+      aa.e.print(item)
+    },21);
   // return items
 };
 

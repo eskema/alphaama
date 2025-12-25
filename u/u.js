@@ -274,8 +274,8 @@ aa.u.setup =async(s='')=>
     req_butt.addEventListener('click',aa.clk.done);
     log.lastChild.append(req_butt,' like profile, follows, etc..');
     
-    log = aa.log('finally, ');
-    log.lastChild.append(aa.mk.reload_butt(),' for a clean start');
+    // log = aa.log('finally, ');
+    // log.lastChild.append(aa.mk.reload_butt(),' for a clean start');
   }
 };
 

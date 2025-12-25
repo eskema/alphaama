@@ -787,6 +787,7 @@ aa.mk.section =options=>
     order,
     max,
   } = options;
+
   
   if (!tagname) tagname = 'section';
   let section_id = `section_${id}`;
@@ -823,11 +824,12 @@ aa.mk.section =options=>
   let sift_options = 
   {
     element: element || section,
-    map,
     filter_by,
+    items: [],
+    map,
     max,
-    sort_by,
     order,
+    sort_by,
   };
 
   aa.temp[section_id] = sift_options;

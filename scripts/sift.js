@@ -8,26 +8,70 @@ const sift =
 
 sift.insert =(item,options)=>
 {
-  let 
+  let
   { 
-    element, 
+    items,
+    element,
+    map,
     max,
     order,
+    page,
     sort_by
   } = options;
 
-  let compare = order === 'desc'
+  let finder = order === 'desc'
     ? i=> sort_by(i) < sort_by(item)
     : i=> sort_by(i) > sort_by(item);
-
-  let last = 
-    [...element.children].find(compare) 
-    || null;
   
-  if (last 
-  || !max 
-  || max && element.childElementCount < max
-  ) sift.move(item,last,element);
+  let sorter = order === 'desc'
+    ? (a,b)=> sort_by(a) < sort_by(b) ? 1 : -1
+    : (a,b)=> sort_by(a) > sort_by(b) ? 1 : -1;
+  
+  items.sort(sorter);
+  let last = items.find(finder) || null;
+  let index = last 
+    ? items.indexOf(last) 
+    : items.length 
+      ? items.length - 1
+      : 0;
+  if (!items.includes(item)) items.splice(index,0,item);
+  let upper = max * page;
+  let lower = upper - max;
+  if (index >= lower && index <= upper)
+  {
+    sift.move(item,last,element)
+  }
+  // if (page === 1)
+  // {
+  //   let last =
+  //     [...element.children].find(compare) 
+  //     || null;
+  
+  //   if (last 
+  //   || !max 
+  //   || max && element.childElementCount < max
+  //   ) sift.move(item,last,element);
+  // }
+  // else 
+  // {
+  //   if (map)
+  //   {
+  //     let items = sift.items(options);
+
+  //     if (items && items.length && items.find(item))
+  //     {
+  //       let last =
+  //         [...element.children].find(compare) 
+  //         || null;
+      
+  //       if (last 
+  //       || !max 
+  //       || max && element.childElementCount < max
+  //       ) sift.move(item,last,element);
+  //     }
+  //   }
+  // }
+
 
   // keep items at max
   if (max && element.childElementCount > max)
@@ -130,12 +174,13 @@ sift.map =options=>
 {
   let element = options.element;
   let map = options.map;
+  let items = options.items;
   let value = options.value;
   let class_name = options.class_name || 'sifted';
   let class_in = options.class_in || `sifted_in`;
   let class_out = options.class_out || `sifted_out`;
   
-  let items = sift.items(options);
+  if (!items) items = sift.items(options);
   if (!value)
   {
     element.classList.remove(class_name);
@@ -152,8 +197,8 @@ sift.map =options=>
     let included = item.textContent.toLowerCase().includes(value);
     item.classList.add(included ? class_in : class_out);
     item.classList.remove(included ? class_out : class_in);
-    if (options.map)
-    {
+    // if (options.map)
+    // {
       if (included && item.parentElement !== element)
       {
         sift.insert(item,options)
@@ -162,12 +207,69 @@ sift.map =options=>
       {
         item.remove()
       }
-    }
+    // }
   }
 };
 
 
 sift.items =options=>
+{
+  let
+  {
+    items,
+    element,
+    map,
+    filter_by,
+    sort_by,
+    page,
+    max,
+    order,
+  } = options;
+
+  if (!element || !map) return;
+
+  // let items = map
+  //   ? [...map.values()]
+  //   : [...element.children];
+  
+  if (!options.counts) options.counts = {};
+  options.counts.total = items.length;
+  
+  // if (filter_by)
+  // {
+  //   items = items.filter(filter_by);
+  //   options.counts.filtered = items.length;
+  // }
+
+  // if (order && sort_by)
+  // {
+  //   let sort = order === 'desc'
+  //     ? (a,b)=> sort_by(a) < sort_by(b) ? 1 : -1
+  //     : (a,b)=> sort_by(a) > sort_by(b) ? 1 : -1;
+  //   items = items.sort(sort);
+  // }
+
+  if (max)
+  {
+    // let pages = Math.floor(items.length / max);
+    let pages = items.reduce((res,_,i,array)=>
+    {
+      if (i % max === 0) res.push(array.slice(i, i + max));
+      return res;
+    },[]);
+
+    if (!page) page = 0;
+    else if (page > 0) page = page - 1;
+    
+    items = pages[page];
+    options.counts.pages = pages.length;
+  }
+
+  return items
+};
+
+
+sift.items_old =options=>
 {
   let
   {
@@ -209,7 +311,7 @@ sift.items =options=>
     {
       if (i % max === 0) res.push(array.slice(i, i + max));
       return res;
-    },[]); //[page > 0 ? page - 1 : 0]
+    },[]);
 
     if (!page) page = 0;
     else if (page > 0) page = page - 1;

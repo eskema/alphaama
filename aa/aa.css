@@ -47,7 +47,7 @@
 
 /* #region themes */
 
-.aa[data-theme="dark"] 
+html[data-theme="dark"] 
 { 
   --color-a: 0,0,0;
   --color-b: 23,23,23;
@@ -68,7 +68,7 @@
   color-scheme: dark;
 }
 
-.aa[data-theme="light"] 
+html[data-theme="light"] 
 {
   --color-a: 255,255,255;
   --color-b: 233,233,233;
