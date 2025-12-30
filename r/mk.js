@@ -18,7 +18,7 @@ aa.mk.k10002 =(string='')=>
       if (!read && write) tag.push('write');
       return tag
     }
-    return
+    return tag
   })
   // for (const url of relays)
   // { 
@@ -42,7 +42,7 @@ aa.mk.k10002 =(string='')=>
     aa.mk.confirm(
     {
       title:'new relay list',
-      l:aa.mk.tag_list(relays),
+      l:aa.mk.tag_list(tags),
       no:{exe:()=>{}},
       yes:{exe:()=>{ aa.e.finalize(event) }}
     });
