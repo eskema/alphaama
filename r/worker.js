@@ -28,7 +28,7 @@ let ws;
 // open websocket connection
 const connect =(a=[])=>
 {
-  let [s,url,has_auth] = a;
+  let [s,url,has_auth,options] = a;
   if (worker.terminated)
   {
     console.log('terminated',worker,url);
@@ -45,6 +45,7 @@ const connect =(a=[])=>
       worker.url = url;
       worker.id = `${url}/${Math.floor(100000+Math.random()*900000)}`;
       if (has_auth) worker.has_auth = true;
+      if (options.sets) worker.sets = new Set(options.sets);
     }
     catch(er)
     {
@@ -74,7 +75,10 @@ const connect =(a=[])=>
   };
   ws.onclose =e=>
   {
-    if ((worker.failures.length - worker.successes.length) < 21)
+    // let has_rw = worker.successes.length && (worker.sets.has('read') 
+      // || worker.sets.has('write'));
+    if (//has_rw || 
+      (worker.failures.length - worker.successes.length) < 21)
     {
       worker.failures.push(get.now);
       setTimeout(connect,get.delay)
@@ -185,12 +189,22 @@ const post_state =()=>
 // add request to requests and processes them all
 const process_requests =request=>
 {
-  if (request) worker.queue.push(request);
+  if (request) 
+    worker.queue.push(request);
+    
   let is_ready = worker.has_auth ? worker.authed : true;
   if (is_ready)
   {
     while (worker.queue.length)
-    send_request(worker.queue.shift())
+    {
+      if (worker.open.size < 19)
+        send_request(worker.queue.shift())
+      else 
+      {
+        setTimeout(process_requests,1000)
+        return
+      }
+    }
   }
   else if (worker.waiting)
   {

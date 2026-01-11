@@ -241,8 +241,10 @@ const hires =(url)=>
     };
 
     manager.workers.set(url,hired);
-    hired.worker.onerror =e=>{ console.log('manager: error',url,e) };
-    hired.worker.onmessage =e=>{ on_message(e.data,url) };
+    hired.worker.onerror =e=>
+    { console.log('manager: error',url,e) };
+    hired.worker.onmessage =e=>
+    { on_message(e.data,url) };
     let relay = manager.relays.get(url);
     let has_auth;
     if (!relay?.sets || !Array.isArray(relay.sets))
@@ -250,7 +252,8 @@ const hires =(url)=>
       console.log('no relay sets',relay)
     }
     else has_auth = relay.sets.includes('auth');
-    hired.worker.postMessage(['open',url,has_auth]);
+    let options = { sets: relay.sets };
+    hired.worker.postMessage(['open',url,has_auth,options]);
     ping(url);
   }
   return hired

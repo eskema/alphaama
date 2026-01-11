@@ -5,8 +5,16 @@ aa.mk.k10002 =(string='')=>
   ? aa.fx.splitr(string,',')
   : Object.keys(aa.r.o.ls);
   
-  let tags = relays.map(url=>
+  let tags = relays.map(i=>
   {
+    let url = aa.fx.url(i)?.href;
+    if (!url)
+    {
+      aa.log(`invalid url in relay list: ${i}`);
+      return
+    }
+    if (!aa.r.o.ls[url]) aa.r.add(`${url} read write`);
+
     const tag = ['r',url];
     
     let read = aa.r.o.ls[url].sets.includes('read');

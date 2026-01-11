@@ -283,7 +283,7 @@ aa.e.kinds[10002] =dat=>
         // if (aa.u.is_u(dat.event.pubkey)) aa.fx.a_add(relay.sets,['auth']);
       }
       aa.p.relays_add(relays,p);
-      if (aa.u.is_u(dat.event.pubkey)) aa.r.add_from_o(relays);
+      
       for (const i of old)
       {
         if (!Object.hasOwn(relays,i))
@@ -292,6 +292,20 @@ aa.e.kinds[10002] =dat=>
           if (!p.relays[i].sets.length)
             delete p.relays[i];
         }
+      }
+      if (aa.u.is_u(dat.event.pubkey))
+      {
+        aa.r.add_from_o(relays);
+        let u_old = aa.fx.in_set(aa.r.o.ls,'k10002','');
+        for (const i of u_old)
+        {
+          if (!Object.hasOwn(relays,i))
+          {
+            aa.r.o.ls[i].sets = aa.fx.a_rm(aa.r.o.ls[i].sets,sets);
+            aa.mod.ui(mod,i);
+          }
+        }
+        aa.mod.save(aa.r);
       }
       aa.p.save(p);
     }

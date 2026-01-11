@@ -259,8 +259,8 @@ aa.mk.replies_section =id=>
   // butt.addEventListener('click',aa.clk.mark_read);
   
   
-  if (!sessionStorage.hasOwnProperty(section_id)
-  || sessionStorage[section_id] === 'expanded')
+  if (!sessionStorage.hasOwnProperty(replies_id)
+  || sessionStorage[replies_id] === 'expanded')
     replies_section.classList.add('expanded');
   return replies_section
 };

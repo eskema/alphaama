@@ -659,9 +659,10 @@ aa.e.quote_note_replace =async(element,data)=>
 {
   try
   {
-    let dat;
-    if (data.id_a) dat = await aa.e.get_a(data.id_a);
-    else dat = await aa.e.get(data.id);
+    // let dat;
+    // if (data.id_a) dat = await aa.e.get_a(data.id_a);
+    // else dat = await aa.e.get(data.id);
+    let dat = await aa.e.get(data.id);
     
     if (dat) aa.e.quote_note(element,dat);
     else aa.e.miss_quote(element,data);
