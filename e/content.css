@@ -12,7 +12,8 @@
   align-self: start;
   grid-area: content;
   max-height: calc(100vh - var(--size) - var(--line));  
-  overflow: hidden;
+  /* overflow: hidden; */
+  overflow-y:  scroll;
 }
 
 .note > .content:not(.e_render)
@@ -21,12 +22,12 @@
   white-space: pre-wrap;
 }
 
-.viewing .root:not(.in_view) > .content,
+/* .viewing .root:not(.in_view) > .content,
 .root:not(.tiny):not(.in_path) > .content,
 .in_view > .replies > .note > .content
 {
   overflow-y:  scroll;
-}
+} */
 
 .view_e .in_path:not(.in_view) > .content
 {
@@ -193,13 +194,13 @@
   color: rgba(var(--color-alt),.6);
 }
 
-.nostr_link::before
+.nostr_link.sliced::before
 {
   color: rgb(var(--color-c));
   content: "#";
 }
 
-.nostr_link::after
+.nostr_link.sliced::after
 {
   color: rgb(var(--color-c));
   content: "…";

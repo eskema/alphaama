@@ -20,7 +20,7 @@ aa.mod.butts =mod=>
   {
     if (mod.butts.mod)
     {
-      if (Object.hasOwn(mod,'add')) butts.append(aa.mk.butt_action(`${mod.def.id} add`,'add'),' ');
+      if (Object.hasOwn(mod,'add')) butts.append(aa.mk.butt_action(`${mod.def.id} add `,'add'),' ');
       for (const i of mod.butts.mod) butts.append(aa.mk.butt_action(...i),' ') 
     }
   }

@@ -101,7 +101,7 @@ aa.e.render_encrypted =async(element,dat)=>
   element.append(paragraph);
 
   let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
-  if (aa.u.o.ls.pubkey === p_x)
+  if (aa.u.is_u(p_x))
   {
     element.classList.add('for_u');
     element.append(

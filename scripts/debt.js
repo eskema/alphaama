@@ -8,7 +8,7 @@ const debt =
     this.map.set(id, setTimeout(()=>
     { 
       this.map.delete(id);
-      exe(id) 
+      exe(id)
     }, delay))
   },
   clear(id)

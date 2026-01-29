@@ -18,12 +18,18 @@ aa.log =(con='',container=false,is_new=true)=>
   if (container) fastdom.mutate(()=>
   {
     container.append(log);
+    
+    // if (log.offsetTop + log.offsetHeight >= container.offsetHeight - 1) 
+    //   container.scrollIntoView({block:'end'});
+    
     if (is_new) 
     {
       container.classList.add('has_new');
       if (container.parentElement)
         container.parentElement.classList.add('has_new');
     }
+
+      
   });
   else console.log('log:',con);
   return log

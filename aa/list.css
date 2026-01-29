@@ -26,13 +26,14 @@
 {
   color: rgb(var(--color-c));
   content: attr(data-after);
-  grid-area: aft;
+  grid-area: s;
 }
 
 .item > .key
 {
   color: rgb(var(--color-e));
   grid-area: k;
+  margin: 0 var(--pad);
 }
 
 .item > .val
@@ -53,7 +54,7 @@
 {
   color: rgb(var(--color-no));
   /* color: rgb(var(--color-a)); */
-  margin-left: var(--pad);
+  /* margin-left: var(--pad); */
 }
 
 .item > details

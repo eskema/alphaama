@@ -176,52 +176,52 @@ aa.e.miss_type =type=>
 };
 
 
+aa.e.get_missing =type=>
+{
+  let {relays,keys} = aa.e.miss_type(type);
+  if (!relays) return;
+  let delay = 0;
+  keys = keys.filter(i=>!aa.em.has(i));
+  let chunks = aa.fx.chunks(keys,420);
+  for (const chunk of chunks)
+  {
+    let filters;
+    switch (type)
+    {
+      case 'a': 
+        filters = chunk.map(aa.fx.id_af);
+        break;
+      case 'p': 
+        filters = [{authors:chunk,kinds:[0,10002]}];
+        break;
+      case 'e':
+        filters = [{ids:chunk}];
+        break;
+    }
+    
+    for (const f of filters)
+    {
+      let [filter] = aa.q.filter(f);
+      if (!filter) continue;
+
+      let req_id = `${type}_${aa.fx.rands(6)}`;
+      setTimeout(()=>{aa.r.def_req(req_id,filter,relays)},delay*3);
+      delay++;
+    }
+    // delay++;
+  }
+
+  if (aa.e.miss_check(type)) 
+  {
+    setTimeout(()=>{ aa.e.get_missing(type) },420);
+  }
+};
+
+
 aa.e.miss_get =async type=>
 {
   if (!aa.temp.miss[type]) return;
-
-  const get_missing =type=>
-  {
-    let {relays,keys} = aa.e.miss_type(type);
-    if (!relays) return;
-    let delay = 0;
-    keys = keys.filter(i=>!aa.em.has(i));
-    let chunks = aa.fx.chunks(keys,420);
-    for (const chunk of chunks)
-    {
-      let filters;
-      switch (type)
-      {
-        case 'a': 
-          filters = chunk.map(aa.fx.id_af);
-          break;
-        case 'p': 
-          filters = [{authors:chunk,kinds:[0,10002]}];
-          break;
-        case 'e':
-          filters = [{ids:chunk}];
-          break;
-      }
-      
-      for (const f of filters)
-      {
-        let [filter] = aa.q.filter(f);
-        if (!filter) continue;
-
-        let req_id = `${type}_${aa.fx.rands(6)}`;
-        setTimeout(()=>{aa.r.def_req(req_id,filter,relays)},delay*3);
-        delay++;
-      }
-      // delay++;
-    }
-
-    if (aa.e.miss_check(type)) 
-    {
-      setTimeout(()=>{ get_missing(type) },0);
-    }
-  };
-
-  debt.add(()=>{get_missing(type)},420,'miss_'+type);
+  debt.add(()=>{aa.e.get_missing(type)},999,'miss_'+type);
 };
 
 

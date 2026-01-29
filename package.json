@@ -1,6 +1,0 @@
-{
-  "scripts": {
-    "build": "esbuild ./bundler.jsx --bundle --outfile=./dep/deps.js --platform=browser --format=iife --global-name=aa_deps --minify",
-    "store": "esbuild ./_local/gadget_store.ts --bundle --outfile=./dep/store.js --platform=browser --format=iife --global-name=store"
-  }
-}

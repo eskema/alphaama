@@ -36,9 +36,10 @@ aa.u =
   // [
   //   // '/u/mk.js?v='+aa_version,
   // ],
-  get p(){ return aa.db?.p[aa.u.o?.ls?.pubkey] },
+  get p(){ return aa.db?.p[aa.u.o?.pubkey] },
   butts:
   {
+    mod:[],
     init:
     [
       ['u setup','setup']
@@ -48,19 +49,44 @@ aa.u =
 
 
 // add user
-aa.u.add =async(pubkey='')=>
+aa.u.add_pubkey =async(pubkey='')=>
 {
   if (!aa.fx.is_key(pubkey)) return;
   if (aa.u.p?.pubkey === pubkey) return;
   
-  aa.u.o.ls = {pubkey:pubkey,npub:aa.fx.encode('npub',pubkey)};
+  aa.u.o.pubkey = pubkey;
+  aa.u.o.npub = aa.fx.encode('npub',pubkey);
+  aa.u.o.ls.u = pubkey;
+  if (aa.u.p?.follows.length) 
+    aa.u.o.ls.k3 = aa.u.p.follows.join(' ');
   await aa.mod.save(aa.u);
   await aa.u.start();
 };
 
 
+// add user
+aa.u.add =async(s='')=>
+{
+  let array = aa.fx.splitr(s);
+  let key = array.shift();
+  if (key === 'pubkey' || key === 'npub' || key === 'k3')
+  {
+    aa.log(`default keys cannot be changed: ${key}`);
+    return
+  }
+  if (aa.u.o.ls[key])
+  {
+    if (!window.confirm(`replace key: ${key}`))
+      return
+  }
+  aa.u.o.ls[key] = array.join(' ');
+  await aa.mod.save(aa.u);
+  aa.mod.ui(aa.u,key);
+};
+
+
 // if key is the same as the user
-aa.u.is_u =pubkey=> aa.u.o?.ls?.pubkey === pubkey;
+aa.u.is_u =pubkey=> aa.u.o?.pubkey === pubkey;
 
 
 // on load
@@ -131,12 +157,17 @@ aa.u.load =async()=>
       description:'generate nostr keys (secret_bytes,public,xsec,nsec)',
       exe:aa.fx.keypair
     },
-
     {
       action:[id,'setup'],
       optional:['<pubkey || nip05 || nprofile || npub>'],
       description:'setup pubkey, leave blank to use extension (nip07)',
       exe:mod.setup
+    },
+    {
+      action:[id,'add'],
+      required:['<key>','<value>'],
+      description:'add variables to use in queries',
+      exe:mod.add
     },
     {
       action:['e','pow'],
@@ -188,23 +219,25 @@ aa.u.reset =async()=>
 
 
 // make u mod item
-aa.u.mk =(k,v)=>
-{
-  let l;
-  switch (k)
-  {
-    case 'npub':
-      let link = aa.mk.nostr_link(v,'view');
-      link.classList.add('key');
-      link.title = 'view u';
-      l = make('li',{id:aa.u.def.id+'_'+k,cla:'item'});
-      l.append(link,' ',make('span',{cla:'val',con:v}));
-      break;
-      
-    default: l = aa.mk.item(k,v);
-  }
-  return l
-};
+// aa.u.mk =(k,v)=>
+// {
+//   let l;
+//   switch (k)
+//   {
+//     case 'npub':
+//       let link = aa.mk.nostr_link(v,'view profile');
+//       link.classList.add('key');
+//       link.title = 'view u';
+//       l = make('li',{id:aa.u.def.id+'_'+k,cla:'item'});
+//       l.append(link,' ',make('span',{cla:'val',con:v}));
+//       break;
+//     case 'pubkey':
+//       l = aa.mk.item('u',v);
+//       break;
+//     default: l = aa.mk.item(k,v);
+//   }
+//   return l
+// };
 
 
 
@@ -247,7 +280,7 @@ aa.u.setup =async(s='')=>
   aa.u.setup_sheet.relays = relays;
   aa.u.setup_sheet.mode = mode;
 
-  await aa.u.add(pubkey);
+  await aa.u.add_pubkey(pubkey);
 
   if (mode) aa.o.add(`mode ${mode}`);
   else
@@ -318,7 +351,7 @@ aa.u.setup_quick =async()=>
     aa.log('unable to get public key');
     return
   }
-  await aa.u.add(pubkey);
+  await aa.u.add_pubkey(pubkey);
 
   setTimeout(()=>{aa.q.stuff()},1000);
   // aa.fx.countdown('the page will reload in',21,1000)
@@ -340,22 +373,24 @@ aa.u.start =async()=>
 aa.u.load_u =async()=>
 {
   let needs_saving;
-  let ls = aa.u.o?.ls;
+  let mod = aa.u;
+
+  let ls = mod.o?.ls;
   if (!ls) 
   {
-    aa.u.setup_butt();
+    mod.setup_butt();
     return
   }
 
-  let pubkey = ls.pubkey;
-  if (!pubkey && ls.xpub)
+  let pubkey = mod.o.pubkey;
+  if (!pubkey && ls.pubkey)
   {
-    pubkey = ls.pubkey = ls.xpub;
+    pubkey = mod.o.pubkey = ls.pubkey;
     needs_saving = true;
   }
   if (!pubkey)
   {
-    aa.u.setup_butt();
+    mod.setup_butt();
     return
   }
   else document.getElementById('u_setup')?.parentElement.remove();
@@ -368,7 +403,16 @@ aa.u.load_u =async()=>
   }
   if (aa.fx.a_add(p.sets,['u'])) needs_saving = true;
   if (needs_saving) aa.p.save(p);
-
+  if (!ls.u && p)
+  {
+    ls.u = p.pubkey;
+    aa.mod.save(mod);
+  }
+  if (!ls.k3 && p.follows.length)
+  {
+    ls.k3 = p.follows.join(' ');
+    aa.mod.save(mod);
+  }
   return p
 };
 

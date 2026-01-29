@@ -142,15 +142,25 @@ dialog .mod > header
   text-align: right;
 }
 
-.mod .list
+.mod > .list
 {
   text-align: left;
 }
 
-.mod .item 
+.mod > .list > .item 
 {
   border-bottom: 1px solid rgba(var(--color-c),0);
   border-top: 1px solid rgba(var(--color-c),0);
+}
+
+.mod_actions
+{
+  align-items: start;
+  align-self: center;
+  display: grid;
+  grid-area: actions;
+  grid-auto-flow: column;
+  grid-gap: var(--padm);
 }
 
 .mod .item > .butts
@@ -209,5 +219,18 @@ dialog .mod > header
   {
     width: calc(100vw - calc(var(--line)*2));
   }
+
+  .mod > .list > .item
+  {
+    grid-gap: var(--padm) 0;
+    grid-template-areas: 
+      "k v s"
+      "bef bef bef"
+      "aft aft aft";
+    grid-template-columns: auto auto 1fr auto;
+    margin-bottom: var(--line);
+  }
+
+
 }
 

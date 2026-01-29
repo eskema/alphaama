@@ -253,8 +253,8 @@ aa.mk.help =async(s='')=>
 aa.mk.img =(src)=>
 {
   const l = make('img',{cla:'content-img'});
-  l.src = src;
   l.loading = 'lazy';
+  l.src = src;
   l.addEventListener('click',e=>{aa.mk.img_modal(src)});
   return l
 };
@@ -608,15 +608,19 @@ aa.mk.nostr_link =(s='',con=false)=>
     ref:'#'+s,
     // clk:aa.clk.a
   });
+  
+
   setTimeout(()=>{
     a.addEventListener('click',aa.clk.a)
   },200);
 
+  if (s && !con) a.classList.add('sliced');
   if (!s) 
   {
     a.removeAttribute('href');
     a.classList.add('empty');
   }
+  
   return a
 };
 

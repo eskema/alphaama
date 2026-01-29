@@ -12,7 +12,7 @@ aa.q =
   name:'queries',
   about:'manage and make nostr requests (REQ)',
   active:{},
-  def:{id:'q',ls:{}},
+  def:{id:'q',ls:{},subs:{}},
   ls:
   {
     a:
@@ -68,7 +68,11 @@ aa.q =
     [
       ['q stuff','stuff']
     ]
-  }
+  },
+  styles:
+  [
+    '/q/q.css',
+  ],
 };
 
 
@@ -162,15 +166,19 @@ aa.q.filter =filter=>
   if (!filter) return [];
 
   let var_map = new Map();
-  var_map.set('u', ()=>[aa.u.p.pubkey]);
-  var_map.set('k3', ()=>aa.u.p.follows);
+  // for (const key in aa.u.o.ls)
+  // {
+  //   var_map.set(key,aa.u.o.ls[key].split(' '));
+  // }
+  // var_map.set('u', ()=>[aa.u.p.pubkey]);
+  // var_map.set('k3', ()=>aa.u.p.follows);
 
   let options = {};
 
-  let p;
-  let x = aa.u.p.pubkey;
-  if (!x) aa.log('vars: no u');
-  else p = aa.db.p[x];
+  // let p;
+  // let x = aa.u.p.pubkey;
+  // if (!x) aa.log('vars: no u');
+  // else p = aa.db.p[x];
 
   let filter_keys = Object.keys(filter);
   for (const key of filter_keys)
@@ -201,19 +209,23 @@ aa.q.filter =filter=>
           {
             // filter[key] = value.filter(i=>i!==val);
             // if (p) filter[key].push(...p.follows);
-
-            switch (val)
+            if (Object.hasOwn(aa.u?.o?.ls,val))
             {
-              case 'u':
-              case 'x':
-                filter[key] = filter[key].filter(i=>i!==val);
-                if (x) filter[key].push(x);
-                break;
-              case 'k3':
-                filter[key] = filter[key].filter(i=>i!==val);
-                if (p) filter[key].push(...p.follows);
-                break;
+              filter[key] = filter[key].filter(i=>i!==val);
+              filter[key].push(...aa.u.o.ls[val].split(' '));
             }
+            // switch (val)
+            // {
+            //   case 'u':
+            //   case 'x':
+            //     filter[key] = filter[key].filter(i=>i!==val);
+            //     if (x) filter[key].push(x);
+            //     break;
+            //   case 'k3':
+            //     filter[key] = filter[key].filter(i=>i!==val);
+            //     if (p) filter[key].push(...p.follows);
+            //     break;
+            // }
           }
           if (!filter[key].length) 
           {
@@ -275,7 +287,7 @@ aa.q.get =async(fid,options)=>
 
   if (!as_outbox)
   {
-    let relays = aa.r.r;
+    let relays = options?.relays || aa.r.r;
     let request = {id,filter,relays,options};
 
     return new Promise(resolve=>
@@ -295,6 +307,7 @@ aa.q.get =async(fid,options)=>
       catch(er){ console.log(results,er) }
     })
   }
+
   // as outbox
   let outbox = aa.r.outbox(filter.authors);
   if (!outbox.length)
@@ -304,18 +317,6 @@ aa.q.get =async(fid,options)=>
   }
 
   delete filter.authors;
-  
-  // let {id,filter,relays,options} = dis;
-  // let requests = outbox.map(([url,authors])=>
-  // {
-  //   aa.r.get({
-  //     id:fid,
-  //     filter:{...filter,authors},
-  //     relays:[url],
-  //     options
-  //   })
-  // });
-  // let result = await Promise.all(requests);
   
   return new Promise(resolve=>
   {
@@ -449,16 +450,21 @@ aa.q.load =async()=>
       description:'run base queries to get things started',
       exe:mod.stuff
     },
-    // {
-    //   action:[id,'sub'],
-    //   required:['fid'],
-    //   optional:['relset'],
-    //   description:'testing new relay code',
-    //   exe:mod.sub
-    // },
+    {
+      action:[id,'sub'],
+      required:['fid'],
+      optional:['relset'],
+      description:'subscribe from last since',
+      exe:mod.sub
+    },
   );
 
   await aa.mod.load(mod);
+  if (!mod.o?.subs)
+  {
+    mod.o.subs = {};
+    aa.mod.save(mod);
+  }
   aa.mod.mk(mod);
 };
 
@@ -481,7 +487,7 @@ aa.q.log =(s,request,con)=>
   let l = aa.el.get(id);
   if (!l)
   {
-    l = aa.mk.details(id,0,1,'base');
+    l = aa.mk.details(id,0,0,'base');
     let close_butt = aa.mk.butt_action(`${aa.q.def.id} close ${fid}`);
     close_butt.addEventListener('click',e=>{('.l')?.remove()});
     l.append(close_butt);
@@ -524,7 +530,7 @@ aa.q.mk =(key,value) =>
   // element.dataset.state = 0;
   const texts = {};
 
-  texts.val = `${key} ${value.v}`;
+  texts.val = `${value.v}`;
   texts.del = `${id} del ${key}`;
   texts.run = `${id} run ${key}`;
   texts.out = `${id} out ${key}`;
@@ -546,13 +552,17 @@ aa.q.mk =(key,value) =>
   {
     butts.append(aa.mk.butt_action(texts[item],item),' ')
   }
-
-  let val = make('span',{cla:'val',con:texts.val});
   
   const element = make('li',
   {
     cla:'item query',
-    app:[val,' ',butts,' ',actions]
+    app:
+    [
+      make('span',{cla:'key',con:key}),
+      ' ',make('span',{cla:'val',con:texts.val}),
+      ' ',butts,
+      ' ',actions
+    ]
   });
   
   aa.el.set(key,element);
@@ -586,10 +596,10 @@ aa.q.out =async s=>
 
 
 // demand request as outbox
-aa.q.outbox =request=>
+aa.q.outbox =(request,more)=>
 {
   let [type,fid,filter,options] = request;
-  
+  // fid = `${fid}_out`;
   let authors_len = filter?.authors?.length;
   if (!authors_len) 
   {
@@ -605,7 +615,9 @@ aa.q.outbox =request=>
   }
   
   aa.r.add(`${outbox.map(i=>i[0]).join(' out,')} out`);
-  aa.r.on_sub.set(fid,aa.e.print_q);
+  
+  let callback = more?.on_sub || aa.e.print_q;
+  aa.r.on_sub.set(fid,callback);
   aa.r.send_out({request:['REQ',fid,filter],outbox,options});
 
   if (!options.eose || options.eose !== 'close')
@@ -643,7 +655,6 @@ aa.q.req =(s='')=>
   {
     aa.r.on_sub.set(fid,aa.e.print_q);
     aa.r.send_req({request,relays,options});
-    // request.push(options);
     aa.q.log('req',request,`to: ${relays}`);
   }
 };
@@ -809,6 +820,7 @@ aa.q.sub =async s=>
 {
   let txt = `${aa.q.def.id} run:`;
   let ls = aa.q.o.ls;
+  
   const tasks = s.split(',');
   for (const task of tasks)
   {
@@ -818,19 +830,54 @@ aa.q.sub =async s=>
       aa.log(`${txt} filter not found ${fid}`);
       continue
     }
-    txt += ` ${fid}`;
+
+    // txt += ` ${fid}`;
     let relays = aa.r.rel(rels);
-    if (!relays.length) relays = aa.r.r;
-    if (!relays.length)
-    {
-      aa.log(`${txt} no relays provided`);
-      continue
-    }
+    // if (!relays.length) relays = aa.r.r;
+    // if (!relays.length)
+    // {
+    //   aa.log(`${txt} no relays provided`);
+    //   continue
+    // }
 
     let [filter,options] = aa.q.filter(ls[fid].v);
-    let request = ['REQ',fid,filter,options];
-        
-    aa.r.w.postMessage([['req',request,relays]]);
+    
+    fid = `${fid}_sub`;
+
+    let since = aa.q.o.subs[fid];
+    if (since) 
+    {
+      if (!filter.since || filter.since < since) 
+        filter.since = since + 1;
+    }
+    
+    let request = ['REQ',fid,filter];
+    let more =
+    { 
+      on_sub: dat=>
+      {
+        if (!aa.q.o.subs[fid]) aa.q.o.subs[fid] = 1;
+        if (aa.q.o.subs[fid] < dat.event.created_at)
+        {
+          aa.q.o.subs[fid] = dat.event.created_at;
+          debt.add(()=>{ aa.mod.save(aa.q) },666,fid)
+        }
+        aa.e.print_q(dat)
+      } 
+    };
+
+    if (!relays.length)
+    {
+      request.push(options);
+      aa.q.outbox(request,more)
+    }
+    else
+    {
+      relays = aa.r.r;
+      aa.r.on_sub.set(fid,more.on_sub);
+      aa.r.send_req({request,relays,options});
+      aa.q.log('req',request,`to: ${relays}`);
+    }
 
     aa.q.log('sub',request,`to: ${relays}`);
   }

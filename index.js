@@ -2,12 +2,14 @@
 aa.load({
   // override defaults
   // styles:[], scripts:[], mods:[], 
-}).then(e=>{whateverthefuckyouwant()});
+}).then(e=>whateverthefuckyouwant());
 
-const whateverthefuckyouwant =async()=>
+const build_page =async()=>
 {
-  // console.log('on_loaded');
-  aa.mk.page();
+  aa.el.get('side')?.append(aa.mod_l);
+  aa.cli.on_collapse.push(aa.logs_read);
+  aa.log(aa.mk.status(),0,0);
+  
   let p_section;
   if (aa.p?.l) 
     p_section = aa.mk.section({id:'p',element:aa.p.l,filter:true});
@@ -49,5 +51,10 @@ const whateverthefuckyouwant =async()=>
   }
 
   aa.q?.last_butts();
+};
 
+const whateverthefuckyouwant =async()=>
+{
+  aa.mk.page();
+  await build_page();
 };

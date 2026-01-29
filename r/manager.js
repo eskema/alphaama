@@ -1,9 +1,12 @@
 // alphaama relay and db manager
 
 // nostr-tools
-importScripts('/dep/nostr-tools.js','/dep/store.js');
+importScripts('/dep/nostr-tools.js','/dep/store.js','./fx.js');
 
 
+
+// event store
+const db = new store.IDBEventStore;
 
 // relay manager
 const manager = 
@@ -12,19 +15,9 @@ const manager =
   relays:new Map(),
   subs:new Map(),
   events:new Map(),
-  worker_src:'/r/worker.js',
-  workers:new Map(),
 };
 
 
-// checks if array includes items
-// adds them if not and returns if anything was added
-const a_add =(a=[],b=[])=>
-{
-  let c;
-  for (const i of b) if (!a.includes(i)) {a.push(i); c=1}
-  return c
-};
 
 
 const auth =data=>
@@ -36,11 +29,28 @@ const auth =data=>
     console.log('manager auth: relay is invalid',url);
     return
   }
-  relay.worker.postMessage(['auth',{json:JSON.stringify(request)}]);
+  on_worker_message(relay,{data:['auth',{json:JSON.stringify(request)}]});
 };
 
 
-const db = new store.IDBEventStore;
+const mem_events =events_map=>
+{
+  let events = [];
+  if (limits_reached()) return events;
+
+  for (let [id,event] of events_map)
+  {
+    let dat;
+    if (!manager.events.has(id)) 
+    {
+      dat = mk_dat({event});
+      manager.events.set(id,dat);
+    }
+    else dat = manager.events.get(id);
+    events.push(dat);
+  }
+  return events
+};
 
 
 const db_filter =async filter=>
@@ -71,6 +81,8 @@ const db_ids =async ids=>
 };
 
 
+
+
 const fetch_info =async url=>
 {
   url = is_valid_url(url);
@@ -78,63 +90,21 @@ const fetch_info =async url=>
 
   let relay = manager.relays.get(url);
   
-  if (relay?.bad) return;
+  if (relay?.no_info) return;
   let info;
   try { info = await nip11(url) }
   catch(er)
   {
-    
+    console.log('error retrieving nip11', url)
   }
   
   info = info || null;
   if (relay)
   {
     if (info) relay.info = info;
-    else relay.bad = true;
+    else relay.no_info = true;
   }
   postMessage(['info',url,info]);
-};
-
-
-const fx_id_ae =event=>
-{
-  return fx_id_a(
-  {
-    kind:event.kind,
-    pubkey:event.pubkey,
-    identifier:event.tags.find(t=>t[0]==='d')[1],
-  })
-};
-
-
-const fx_id_a =o=>
-{
-  if (!o.kind || typeof o.kind !== 'number') return;
-  if (!o.pubkey || !is_key(o.pubkey)) return;
-  if (!o.identifier || typeof o.identifier !== 'string') return;
-  return `${o.kind}:${o.pubkey}:${o.identifier}`;
-};
-
-
-// make request filter from addressable string
-const fx_id_af =string=>
-{
-  let [kind,pubkey,identifier] = fx_split_ida(string);
-  return {
-    kinds:[parseInt(kind)],
-    authors:[pubkey],
-    '#d':[identifier]
-  }
-};
-
-
-const fx_split_ida =ida=>
-{
-  let a = ida.split(':');
-  let kind = a.shift();
-  let pubkey = a.shift();
-  let identifier = a.length > 1 ? a.join(':') : a[0];
-  return [kind,pubkey,identifier]
 };
 
 
@@ -197,10 +167,10 @@ const sub_close =(relay,id)=>
 {
   let dis = 
   {
-    close:id,
-    json:JSON.stringify(['CLOSE',id]),
+    close: id,
+    json: JSON.stringify(['CLOSE',id]),
   };
-  relay.worker.postMessage(['request',dis]);
+  on_worker_message(relay,{data:['request',dis]});
 };
 
 
@@ -212,131 +182,69 @@ const hires =(url)=>
     console.trace(`manager.hires: no url`);
     return
   }
-  let hired;
-  if (manager.workers.has(url))
+
+  let relay = manager.relays.get(url);
+  if (!relay)
   {
-    hired = manager.workers.get(url);
-    if (hired?.terminated)
+    console.trace(`manager.hires: no relay`);
+    return
+  }
+
+  if (relay.worker)
+  {
+    if (relay.worker.terminated)
     {
       console.log(`manager.hires: relay is terminated`,url);
       return
-    }
+    } 
+    else return relay
   }
-  else
-  {
-    url = is_valid_url(url);
-    if (!url)
-    {
-      console.log(`url is invalid`,url);
-      return
-    }
-    hired =
-    {
-      url,
-      worker:new Worker(manager.worker_src+'?v=3&r='+encodeURIComponent(url)),
-      subs:new Map(),
-      closed:new Map(),
-      key:NostrTools.generateSecretKey(),
-      count:0,
-    };
 
-    manager.workers.set(url,hired);
-    hired.worker.onerror =e=>
-    { console.log('manager: error',url,e) };
-    hired.worker.onmessage =e=>
-    { on_message(e.data,url) };
-    let relay = manager.relays.get(url);
-    let has_auth;
-    if (!relay?.sets || !Array.isArray(relay.sets))
-    {
-      console.log('no relay sets',relay)
-    }
-    else has_auth = relay.sets.includes('auth');
-    let options = { sets: relay.sets };
-    hired.worker.postMessage(['open',url,has_auth,options]);
-    ping(url);
+  url = is_valid_url(url);
+  if (!url)
+  {
+    console.log(`url is invalid`,url);
+    return
   }
-  return hired
+
+  relay.worker =
+  {
+    url,
+    errors:[],
+    open:new Map(),
+    queue:[],
+    subs: new Map(),
+    successes:[],
+  };
+  
+  relay.key = NostrTools.generateSecretKey();
+
+  connect(relay)
+
+  return relay
 };
 
 
 const init =(options)=>
 {
-  console.log('manager init',options);
+  // console.log('manager init',options);
   if (options.limit) manager.limit = options.limit;
-  for (const url in options.relays)
-  {
-    let relay = manager.relays.set(url,options.relays[url]).get(url);
-    if (!Object.hasOwn(relay,'info')) fetch_info(url);
-  }
+  if (options.relays) set_relays(options.relays)
 };
-
-
-// converts string to URL and returns it or false
-const is_valid_url =(s='')=>
-{
-  if (!s) return;
-  let url;
-  try { url = new URL(s) }
-  catch(er) { console.error(s); return }
-  let protocol_whitelist = [
-    // 'http:','https:',
-    'ws:','wss:'];
-  if(!url.hostname.length
-  || url.hostname.includes('.local')
-  || url.hostname.includes('127.0.')
-  || url.pathname.includes('://')
-  || !protocol_whitelist.includes(url.protocol)
-  ) return;
-  else return url?.href
-};
-
-// is hexadecimal
-const is_x =s=> /^[A-F0-9]+$/i.test(s);
-
-
-// is a valid nostr key
-const is_key =x=> is_x(x) && x.length === 64;
 
 
 const limits_reached =()=>
 {
+  if (manager.locked) return true;
+
   if (manager.events.size < manager.limit) return false;
   manager.locked = true;
-  for (const [url,worker] of manager.workers)
-    terminate({url})
   
+  for (const url in manager.relays)
+    terminate(url)
+
   postMessage(['limit','too many events'])
-  
   return true
-};
-
-
-// return kind information
-const kind_type =kind=> 
-{
-  if (typeof kind === 'string') kind = parseInt(kind.trim());
-  return NostrTools.kinds.classifyKind(kind);
-}
-
-
-const mem_events =events_map=>
-{
-  let dats = [];
-  if (limits_reached()) return dats;
-
-  for (let [id,event] of events_map)
-  {
-    let dat;
-    if (!manager.events.has(id)) 
-    {
-      dat = mk_dat({event});
-      manager.events.set(id,dat);
-    }
-    else dat = manager.events.get(id);
-    dats.push(dat);
-  }
-  return dats
 };
 
 
@@ -347,7 +255,7 @@ const mk_dat =(o={})=>
   if (o.event) 
   {
     dat.event = o.event;
-    if (kind_type(dat.event.kind) === 'parameterized')
+    if (NostrTools.kinds.classifyKind(dat.event.kind) === 'parameterized')
     {
       let id_a = fx_id_ae(dat.event);
       if (id_a) dat.id_a = id_a;
@@ -388,7 +296,7 @@ onmessage =e=>
   if (!Array.isArray(data)
   || !data?.length)
   {
-    console.log('invalid data',data);
+    console.log('manager onmessage: invalid data',data);
     return
   }
   const [type,dis] = data;
@@ -404,7 +312,8 @@ onmessage =e=>
     case 'events': get_events(dis); break;
     case 'filter': get_filter(dis); break;
     case 'outbox': get_outbox(dis); break;
-    default: console.log('invalid operation',data)
+    default: 
+      console.log('manager onmessage: invalid operation',data)
   }
 };
 
@@ -420,28 +329,31 @@ const on_auth =async(challenge,url)=>
   
   let relay = hires(url);
   if (!relay) return;
+
   relay.challenge = challenge;
 
   let unsigned = NostrTools.nip42.makeAuthEvent(url,challenge);
   
-  
-  if (!manager.relays.get(url)?.sets.includes('auth'))
+  if (relay.sets.includes('auth'))
   {
-    // console.log(relay);
-    let event = NostrTools.finalizeEvent(unsigned,relay.key);
-    if (event)
-    {
-      dat = mk_dat({event});
-      manager.events.set(event.id,dat);
-      let dis = {json:JSON.stringify(['AUTH',event])};
-      relay.worker.postMessage(['auth',dis]);
-      
-    }
-  }
-  else 
-  {
-    // relay.worker.postMessage(['waiting',challenge]);
     postMessage(['auth',unsigned,url]);
+    return
+  }
+
+  let event = NostrTools.finalizeEvent(unsigned,relay.key);
+  if (event)
+  {
+    manager.events.set(event.id,mk_dat({event}));
+    on_worker_message(relay,
+    {
+      data:
+      [
+        'auth',
+        {
+          json: JSON.stringify(['AUTH',event])
+        }
+      ]
+    });
   }
 };
 
@@ -460,7 +372,7 @@ const on_closed =async(a,url)=>
     case 'restricted':
     case 'auth-required':
       console.log(url,sub_id,reason);
-      terminate({url});
+      terminate(url);
       break;
     // case 'pow':
     // case 'duplicate':
@@ -478,7 +390,7 @@ const on_eose =async(id,url)=>
 {
   let relay = hires(url);
   
-  let sub = relay.subs.get(id);
+  let sub = relay.worker.subs.get(id);
   if (!sub) return;
   sub.done = true;
   if (sub.options 
@@ -494,7 +406,6 @@ const on_eose =async(id,url)=>
     sub_close(relay,id)
   }
   postMessage(['eose',sub.id,url]);
-  // console.log(manager.subs)
 };
 
 
@@ -511,17 +422,18 @@ const on_event =(a,url)=>
   {
     seen.push(url);
     let relay = hires(url);
-    let sub = relay.subs.get(sub_id);
+    let sub = relay.worker.subs.get(sub_id);
     subs.push(sub.id);
-    relay.count++;
   }
   else subs.push(sub_id);
 
   let dat = manager.events.get(event.id);
   if (dat)
   {
-    a_add(dat.seen,seen);
-    a_add(dat.subs,subs);
+    dat.seen = [...new Set([...dat.seen,...seen])];
+    dat.subs = [...new Set([...dat.subs,...subs])];
+    // a_add(dat.seen,seen);
+    // a_add(dat.subs,subs);
     postMessage(['event',dat,url]);
   }
   else
@@ -540,21 +452,27 @@ const on_event =(a,url)=>
 };
 
 
+const on_open =data=>
+{
+  console.log(data)
+};
+
+
 // relay worker message
 const on_message =(a,url)=>
 {
   switch (a[0].toLowerCase())
   {
     case 'auth': on_auth(a[1],url); break;
+    case 'open': on_open(a); break;
     case 'closed': on_closed(a,url); break;
     case 'eose': on_eose(a[1],url); break;
     case 'event': on_event(a,url); break;
     case 'ok': on_ok(a,url); break;
-    case 'pong': ping(url); break;
-    case 'state': on_state(a,url); break;
     case 'aborted':
-    case 'terminated': terminate({url}); break;
-    default:postMessage([...a,url])
+    case 'terminated': terminate(url); break;
+    default:
+      postMessage([...a,url])
   }
 };
 
@@ -562,7 +480,7 @@ const on_message =(a,url)=>
 // relay worker ok response
 const on_ok =async(a,url)=>
 {
-  postMessage([...a,url])
+  postMessage([...a,url]);
   if (a[2] === false) on_not_ok(a[3],url);
 };
 
@@ -578,7 +496,7 @@ const on_not_ok =(reason,url)=>
     case 'block':
     case 'blocked':
     case 'auth-required':
-      terminate({url});
+      terminate(url);
       break;
     // case 'pow':
     // case 'duplicate':
@@ -591,28 +509,13 @@ const on_not_ok =(reason,url)=>
 };
 
 
-const on_state =async([s,state,worker],url)=>
+const on_state =async relay=>
 {
-  let relay = hires(url);
-  relay.state = state;
-  relay.o = worker;
-  let subs = relay.subs;
-  let dis = {state,...worker,subs,url};
-  postMessage([s,dis]);
-};
-
-
-const ping =async url=>
-{
-  let relay = hires(url);
-  if (relay.ping) clearTimeout(relay.ping);
-  relay.ping = setTimeout(()=>
-    {
-      if (!relay.terminated) console.log('no pong',relay);
-    },
-    9999
-  );
-  setTimeout(()=>{relay.worker.postMessage(['ping'])},6666);
+  postMessage(['state',
+  {
+    state: relay.ws?.readyState || 0,
+    ...relay.worker
+  }]);
 };
 
 
@@ -640,12 +543,11 @@ const process_request =async data=>
   let {relays,request,options} = data;
   if (!options?.db === false)
     setTimeout(()=>{pre_process_request(request)})
-  // if (!options?.db === false) request = await pre_process_request(request);
+  
   setTimeout(()=>
   {
     for (const url of relays) relay_request({url,request,options});
   },420);
-  // if (!options?.db === false) pre_process_request(request);
 };
 
 
@@ -678,11 +580,11 @@ const relay_request =async({url,request,options})=>
   {
     case 'req':
       let id = request[1];
-      let sub_id = 'sub:'+(relay.subs.size+1);
+      let sub_id = 'sub:'+(relay.worker.subs.size+1);
       request[1] = sub_id;
       dis.id = sub_id;
       dis.request = request;
-      relay.subs.set(sub_id,{id,request,options});
+      relay.worker.subs.set(sub_id,{id,request,options});
       if (!manager.subs.has(id)) manager.subs.set(id,new Map());
       let r_sub = manager.subs.get(id);
       if (!r_sub.has(url)) r_sub.set(url,new Set());
@@ -696,32 +598,227 @@ const relay_request =async({url,request,options})=>
       break;
   }
   dis.json = JSON.stringify(request);
-  relay.worker.postMessage(['request',dis]);
+  on_worker_message(relay,{data:['request',dis]});
 };
 
 
 const set_relays =relays=>
 {
-  for (const url in relays)
+  for (let url in relays)
   {
-    manager.relays.set(url,relays[url])
+    url = is_valid_url(url);
+    if (!url) continue;
+
+    let relay = manager.relays.get(url);
+    if (!relay) relay = manager.relays.set(url,relays[url]);
+    else 
+    {
+      for (const key in relays[url])
+        relay[key] = relays[url][key];
+    }
   }
 };
 
 
 // order to terminate workers
-const terminate =async o=>
+const terminate =async url=>
 {
-  let relay = hires(o.url);
+  let relay = hires(url);
   if (!relay)
   {
-    console.error('!relay',o)
+    console.error('!relay',url)
     return;
   }
+  postMessage(['state',{state:3,url,subs:relay.worker.subs}]);
+};
+
+
+
+const connect =(relay)=>
+{
+  // let [s,url,has_auth,options] = a;
+
+  if (relay.worker.terminated)
+  {
+    console.log('terminated',worker,url);
+    return
+  }
+
+  if (relay.ws?.readyState === 1) return;
+
+  try { relay.ws = new WebSocket(relay.worker.url) }
+  catch(er)
+  {
+
+  }
   
-  relay.o = o;
-  relay.worker.terminate();
-  let state = 3;
-  let subs = relay.subs;
-  postMessage(['state',{state,...o,subs}]);
+  if (!relay.ws)
+  {
+    console.log('could not connect to',relay.worker.url)
+    return
+  } 
+  
+  relay.ws.onerror =e=>
+  {
+    relay.worker.errors.push(now());
+    // console.log('error',worker)
+  };
+
+  relay.ws.onclose =e=>
+  {
+    if ((relay.worker.errors.length - relay.worker.successes.length) < 21)
+    {
+      relay.worker.errors.push(now());
+      setTimeout(()=>{connect(relay)},420*(relay.worker.errors.length+1))
+    }
+    else terminate_worker(relay);
+  };
+
+  relay.ws.onmessage =e=>
+  {
+    // worker.received.push(e.data);
+    let data;
+    try { data = JSON.parse(e.data) }
+    catch(er)
+    {
+      console.log('unknown data',er);
+      return
+    }
+    if (Array.isArray(data))
+    {
+      switch (data[0])
+      {
+        case 'AUTH': 
+          relay.waiting = data[1];
+          break;
+        case 'EVENT':
+          let date = data[2].created_at;
+          let sub = relay.worker.open.get(data[1]);
+          if ((sub && !sub.stamp) || sub?.stamp < date) 
+            sub.stamp = date;
+          break;
+      }
+      on_message(data,relay.worker.url)
+    }
+    else console.log('bad data from ws',e.data);
+  };
+  relay.ws.onopen =()=>
+  {
+    if (!relay.worker.successes.length)
+    {
+      on_message(['open',relay.worker.url]);
+    }
+
+    relay.worker.successes.push(now());
+    
+    if (relay.worker.open.size)
+    {
+      for (const [id,request] of relay.worker.open)
+      {
+        if (request.stamp) 
+          request.request[2].since = request.stamp;
+        request.json = JSON.stringify(request.request);
+        relay.worker.queue.push(request);
+        // worker.open.delete(id)
+        // setTimeout(()=>{worker.open.delete(id)},10);
+      }
+      relay.worker.open.clear();
+    }
+    // console.log('worker connected to '+worker.url,worker);
+    // delay to give time for auth
+    setTimeout(()=>{process_requests(relay)},1111);
+    on_state(relay)
+  }
+};
+
+
+// on worker message
+const on_worker_message =async(relay,e)=>
+{
+  let data = e.data;
+  if (!Array.isArray(data)
+  || !data?.length)
+  {
+    console.log('invalid data',data);
+    return
+  }
+  switch (data[0].toLowerCase())
+  {
+    case 'open' : connect(relay); break;
+    case 'auth':
+      relay.authed = true;
+      // console.log(data);
+      if (Object.hasOwn(relay,'waiting')) delete relay.waiting;
+      send_request(relay,data[1]);
+      setTimeout(()=>{process_requests(relay)},500);
+      break;
+    case 'request': process_requests(relay,data[1]); break;
+    case 'waiting': relay.waiting = data[1]; break;
+    default: console.log('invalid operation',data)
+  }
+};
+
+
+const process_requests =(relay,request)=>
+{
+  if (request) 
+    relay.worker.queue.push(request);
+    
+  let is_ready = relay.sets.includes('auth') 
+    ? relay.authed 
+    : true;
+
+  if (is_ready)
+  {
+    while (relay.worker.queue.length)
+    {
+      if (relay.worker.open.size < 19)
+        send_request(relay,relay.worker.queue.shift())
+      else 
+      {
+        setTimeout(()=>{process_requests(relay)},1000)
+        return
+      }
+    }
+  }
+  else if (relay.waiting)
+  {
+    console.log(relay.worker.url+' is waiting');
+    setTimeout(()=>{process_requests(relay)},1000)
+  }
+};
+
+
+const send_request =(relay,request)=>
+{
+  if (relay.ws?.readyState === 1)
+  {
+    if (Object.hasOwn(request,'close'))
+    {
+      if (relay.worker.open.has(request.close))
+        relay.worker.open.delete(request.close);
+    }
+    else if (Object.hasOwn(request,'id'))
+    {
+      relay.worker.open.set(request.id,request);
+    }
+    relay.ws.send(request.json);
+    // relay.worker.sent.push(request.json);
+    on_state(relay)
+    return
+  }
+  // try again later
+  if (!Object.hasOwn(relay.worker,'terminated')
+  && relay.worker.errors < 21)  
+    setTimeout(()=>{send_request(relay,request)},
+      420*(relay.worker.errors.length+1))
+};
+
+
+// terminate worker
+const terminate_worker =(relay,s='terminated')=>
+{
+  delete relay.ws;
+  relay.worker.terminated = now();
+  terminate(relay.worker.url)
 };

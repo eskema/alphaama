@@ -46,8 +46,7 @@
   margin-left: 0;
 }
 
-.mod .relay .sets,
-.mod .relay .mod_actions
+.mod .relay .sets
 {
   align-items: start;
   align-self: center;
@@ -70,6 +69,7 @@
 
 .mod .relay .sets .butt
 {
+  justify-self: start;
   display: inline;
 }
 
@@ -110,4 +110,16 @@
 .mod .toggles .butt:focus:not(.active)
 {
   color: rgb(var(--color-d));
+}
+
+@media screen and (max-width: 768px) 
+{
+  .mod .item.relay
+  {
+    grid-template-areas: 
+      "info state"
+      "sets sets"
+      "actions actions";
+    grid-template-columns: 1fr auto;
+  }
 }

@@ -731,7 +731,13 @@ aa.p.process_k3_tags_upd =(event)=>
   
   if (is_u)
   {
-    setTimeout(()=>{ aa.p.load_profiles(op.follows) },420)
+    setTimeout(()=>
+    { 
+      aa.p.load_profiles(op.follows);
+      ls.k3 = op.follows.join(' ');
+      aa.mod.save(aa.u);
+      aa.mod.ui(aa.u,'k3');
+    },420)
   }
 };
 

@@ -333,20 +333,35 @@ aa.fx.src_type =url=>
   // return dis
 };
 
-aa.mk.file_input =()=>
-{
-  let dialog = aa.el.get('dialog');
-  let input = make('input',{typ:'file'});
-  input.onclick = aa.clk.file_input;
-  // let butt = aa.mk.butt_clk('file_input');
-  dialog.append(input);
-  dialog.showModal();
-};
-
-aa.clk.file_input =e=>
-{
-  console.log(e)
-};
+// upload images (wip)
+// aa.mk.file_input =()=>
+// {
+//   let dialog = aa.el.get('dialog');
+//   let input = make('input',{typ:'file'});
+//   input.toggleAttribute('multiple');
+  
+//   // input.onclick = aa.clk.file_input;
+  
+//   let info = make('div');
+//   input.addEventListener('change',e=>
+//   {
+//     info.textContent = '';
+//     const file_list = e.target.files;
+//     if (file_list.length)
+//     {
+//       for (const file of file_list)
+//       {
+//         let img = make('img');
+//         img.src = URL.createObjectURL(file);
+//         img.height = 100;
+//         info.append(img, make('p',{con:JSON.stringify(file)}))
+//       }
+//     }
+//     console.log(file_list)
+//   });
+//   dialog.append(input,' ',butt,' ',info);
+//   dialog.showModal();
+// };
 
 
 // media observer for lazy cache fetching

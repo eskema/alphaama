@@ -602,6 +602,12 @@ aa.fx.sorts =
 };
 
 
+aa.fx.scrolled =element=>
+{
+  return element.scrollTop + element.clientHeight >= element.scrollHeight - 1;
+};
+
+
 // shorten string to only <start>…<end>
 aa.fx.short_key =(key,len=6,separator='…')=>
 {

@@ -256,11 +256,11 @@ aa.pj =(string='')=>
 
 
 // default page layout
-aa.mk.page =(o={})=>
+aa.mk.page =()=>
 {
   let elements = new DocumentFragment();
-  let side = aa.el.get('side');
-  side.append(aa.mod_l);
+  // let side = aa.el.get('side');
+  // side.append(aa.mod_l);
   elements.append
   (
     aa.el.get('header'),
@@ -271,15 +271,15 @@ aa.mk.page =(o={})=>
   );
   let classes = ['aa'];
   if (aa.framed) classes.push('framed');
-  fastdom.mutate(()=>
-  {
+  // fastdom.mutate(()=>
+  // {
     aa.l.classList.add(...classes);
     aa.bod.prepend(elements);
-  });
+  // });
   
-  aa.cli.on_collapse.push(aa.logs_read);
+  // aa.cli.on_collapse.push(aa.logs_read);
   
-  aa.log(aa.mk.status(),0,0);
+  // aa.log(aa.mk.status(),0,0);
 
   setTimeout(aa.view.pop,100);
 };

@@ -31,4 +31,4 @@ aa.wakelock.release =()=>
   aa.wakelock.locked = null;
 };
 
-window.addEventListener('load',aa.wakelock.lock)
+document.addEventListener('visibilitychange',aa.wakelock.lock)

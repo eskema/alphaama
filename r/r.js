@@ -422,7 +422,7 @@ aa.r.found =async({url,request,options,reason})=>
 // force close relay connection
 aa.r.force_close =(a=[])=>
 {
-  for (const url of a) aa.r.manager.postMessage(['terminate',{url}])
+  for (const url of a) aa.r.manager.postMessage(['terminate',url])
 };
 
 
@@ -613,12 +613,12 @@ aa.r.mk =(k,v)=>
 
 
 // return sorted relay list for outbox
-aa.r.outbox =(a=[],sets=[])=>
+aa.r.outbox =(authors=[],sets=[])=>
 {
   if (!sets.length) sets = ['write','k10002'];
-  if (!a?.length) return [];
-  let relays = aa.r.common(a,sets);
-  let outbox = aa.fx.intersect(relays,a,parseInt(localStorage.outbox_max));
+  if (!authors?.length) return [];
+  let relays = aa.r.common(authors,sets);
+  let outbox = aa.fx.intersect(relays,authors,parseInt(localStorage.outbox_max));
   
   let none;
   if (outbox.none)
@@ -626,12 +626,22 @@ aa.r.outbox =(a=[],sets=[])=>
     none = [...outbox.none];
     delete outbox.none;
   }
+  
+  // use read relays to ask for everything
+  for (const r of aa.r.r) outbox[r] = authors;
 
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
   if (none) 
   {
-    for (const item of sorted_outbox) item[1].push(...none)
+    for (const item of sorted_outbox)
+    {
+      item[1].push(...none);
+      item[1] = [...new Set(item[1])];
+    }
   }
+
+  
+  
   return sorted_outbox;
 };
 

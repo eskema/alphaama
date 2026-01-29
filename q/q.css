@@ -1,0 +1,9 @@
+.section_mod_q .item .mod_actions
+{
+  grid-area: aft;
+}
+
+.section_mod_q .item .butts
+{
+  grid-area: bef;
+}
