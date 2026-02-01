@@ -497,7 +497,7 @@ aa.p.md =(s='')=>
   let p;
   if (aa.fx.is_key(s) && aa.db.p[s]) p = aa.db.p[s];
   else p = aa.u?.p;
-  if (p.metadata) return JSON.stringify(p.metadata);
+  if (p.metadata) return JSON.stringify(p.metadata,null,2);
   return ''
 };
 
@@ -731,10 +731,10 @@ aa.p.process_k3_tags_upd =(event)=>
   
   if (is_u)
   {
+    aa.u.o.ls.k3 = op.follows.join(' ');
     setTimeout(()=>
     { 
       aa.p.load_profiles(op.follows);
-      ls.k3 = op.follows.join(' ');
       aa.mod.save(aa.u);
       aa.mod.ui(aa.u,'k3');
     },420)

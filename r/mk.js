@@ -28,21 +28,6 @@ aa.mk.k10002 =(string='')=>
     }
     return tag
   })
-  // for (const url of relays)
-  // { 
-  //   let read, write;
-  //   const tag = [url];
-  //   if (ls[url].sets.includes('read')) read = true;
-  //   if (ls[url].sets.includes('write')) write = true;
-  //   if (read || write)
-  //   {
-  //     if (read && !write) tag.push('read');
-  //     if (!read && write) tag.push('write');
-  //     relay_list.push(tag.join(' ').trim())
-  //   }
-  // }
-
-  // const relays = [];
 
   if (tags.length)
   {
@@ -60,9 +45,8 @@ aa.mk.k10002 =(string='')=>
 aa.actions.push(
   {
     action:['mk','10002'],
-    required:['<url>'],
-    optional:['<url>'],
-    description:'create a relay list (kind-10002)',
+    required:['<url,url>'],
+    description:'create a relay list (kind-10002), permissions come from global settings for that relay',
     exe:aa.mk.k10002
   },
 );

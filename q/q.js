@@ -165,7 +165,7 @@ aa.q.filter =filter=>
     filter = aa.pj(filter);
   if (!filter) return [];
 
-  let var_map = new Map();
+  // let var_map = new Map();
   // for (const key in aa.u.o.ls)
   // {
   //   var_map.set(key,aa.u.o.ls[key].split(' '));
@@ -227,10 +227,24 @@ aa.q.filter =filter=>
             //     break;
             // }
           }
-          if (!filter[key].length) 
+        }
+        if (!filter[key].length) 
+        {
+          aa.log('vars: invalid filter');
+          return []
+        }
+        else
+        {
+          if (key === 'authors' 
+          || key === 'ids'
+          || key === '#p'
+          || key === '#e')
           {
-            aa.log('vars: invalid filter');
-            return []
+            if (filter[key].some(val=>!aa.fx.is_hex(val)))
+            {
+              aa.log(`invalid filter: ${filter[key]}`);
+              return []
+            }
           }
         }
     }

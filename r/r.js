@@ -460,7 +460,7 @@ aa.r.ls =(s='')=>
   let ls = aa.r.o.ls;
   if (!a.length) relay_list.push(...Object.keys(ls));
   else relay_list.push(...aa.fx.in_sets(ls,a,false));
-  let result = relay_list.join();
+  let result = relay_list.join(', ');
   aa.log(relay_list.length+' relays in '+a);
   return result 
 };
