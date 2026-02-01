@@ -7,6 +7,14 @@ aa.db.cash = new Worker(aa.db.srcs.get('cash'));
 aa.db.srcs.set('idb','/db/idb.js');
 aa.db.idb = new Worker(aa.db.srcs.get('idb'));
 
+// Track pending requests
+aa.db.pending = new Map(); // request_id -> {resolve, reject, timeout}
+aa.db.request_id = 0;
+
+// Set up persistent message handlers
+aa.db.cash.onmessage = e => aa.db.handle_response('cash', e);
+aa.db.idb.onmessage = e => aa.db.handle_response('idb', e);
+
 // shared worker
 // aa.db.worker.sdb = '/db/sdb.js';
 // aa.db.sdb = new SharedWorker(aa.db.worker.sdb).port;
@@ -63,6 +71,26 @@ if ('serviceWorker' in navigator)
 // };
 
 
+// Handle responses from worker
+aa.db.handle_response = (_worker_name, e) =>
+{
+  const {request_id, data, error} = e.data;
+
+  const pending = aa.db.pending.get(request_id);
+  if (!pending)
+  {
+    console.warn(`db: no pending request for ${request_id}`);
+    return;
+  }
+
+  clearTimeout(pending.timeout);
+  aa.db.pending.delete(request_id);
+
+  if (error) pending.reject(error);
+  else pending.resolve(data);
+};
+
+
 // count items in db store
 aa.db.count =async(s='')=>
 {
@@ -71,46 +99,38 @@ aa.db.count =async(s='')=>
 };
 
 
-// pass operations to worker and await results
-// kills the worker when finished
-// aa.db.ops =async(worker_src,ops)=>
-// {
-//   return new Promise((resolve,reject)=>
-//   {
-//     const db = new Worker(aa.db.worker[worker_src]);
-//     const abort = setTimeout(()=>{ db?.terminate(); resolve() },6666);
-//     db.onmessage =e=> 
-//     {
-//       clearTimeout(abort);
-//       setTimeout(()=>{db?.terminate()},10);
-//       resolve(e.data);
-//     }
-//     db.postMessage(ops);
-//   });
-// };
-
-// pass operations to worker and await results
-// kills the worker when finished
-// const db = new Worker(aa.db.worker[worker_src]);
-aa.db.ops =async(worker,ops)=>
+// Send operation to worker with request tracking
+aa.db.ops = async(worker, ops) =>
 {
-  if (typeof worker === 'string'
-    && aa.db.srcs.has(worker)
-  ) worker = new Worker(aa.db.srcs.get(worker));
-
-  const term =()=>{ worker?.terminate() };
-
-  return new Promise(resolve=>
+  // Get the persistent worker
+  if (typeof worker === 'string')
   {
-    const abort = setTimeout(()=>{ term(); resolve() }, 6666);
+    worker = aa.db[worker]; // Use persistent worker
+  }
 
-    worker.onmessage =e=>
+  if (!worker)
+  {
+    console.error('db.ops: invalid worker');
+    return Promise.resolve(null);
+  }
+
+  // Generate unique request ID
+  const request_id = ++aa.db.request_id;
+
+  return new Promise((resolve, reject) =>
+  {
+    // Store pending request
+    const timeout = setTimeout(() =>
     {
-      clearTimeout(abort);
-      setTimeout(term,21);
-      resolve(e.data);
-    }
-    worker.postMessage(ops);
+      aa.db.pending.delete(request_id);
+      resolve(null); // Timeout resolves to null
+      console.warn(`db.ops: request ${request_id} timed out`);
+    }, 6666);
+
+    aa.db.pending.set(request_id, {resolve, reject, timeout});
+
+    // Send message with request_id
+    worker.postMessage({request_id, ops});
   });
 };
 

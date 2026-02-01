@@ -823,8 +823,7 @@ aa.p.save_to =()=>
   const chunks = aa.fx.chunks(all,100);
   for (const a of chunks)
   {
-    let data = {put:{store:'authors',a}};
-    setTimeout(()=>{aa.db.idb.postMessage(data)}, times*21);
+    setTimeout(()=>{aa.db.ops('idb', {put:{store:'authors',a}})}, times*21);
     // times++;
     console.log(q_id,a.length)
   }

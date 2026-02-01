@@ -10,16 +10,16 @@ const cash = {id:'cash'};
 
 
 // add items to cache
-cash.add =async(keys=[])=>
+cash.add =async(keys=[], request_id)=>
 {
   const cache = await caches.open(cash.id);
   cache.addAll(keys);
-  postMessage(true);
+  postMessage({request_id, data: true});
 };
 
 
 // cash add all with options
-cash.all =async(keys=[])=>
+cash.all =async(keys=[], request_id)=>
 {
   const cache = await caches.open(cash.id);
   for (const key of keys)
@@ -33,23 +33,23 @@ cash.all =async(keys=[])=>
     }
     catch{}
   }
-  postMessage(true);
+  postMessage({request_id, data: true});
 };
 
 
 // delete key from cache or clear all
-cash.clear =async key=>
+cash.clear =async(key, request_id)=>
 {
   const cache = await caches.open(cash.id);
   let results;
-  if (key === 'ALL') 
+  if (key === 'ALL')
   {
     results = await cache.matchAll();
   }
   else if (Array.isArray(key))
   {
     results = [];
-    for (const k of key) 
+    for (const k of key)
     {
       const result = await cache.matchAll(k);
       results.push(...result)
@@ -58,7 +58,7 @@ cash.clear =async key=>
   else results = await cache.matchAll(key);
   // console.log(results);
   for (const result of results) await cache.delete(result);
-  postMessage(true);
+  postMessage({request_id, data: true});
 };
 
 
@@ -116,7 +116,7 @@ cash.grab =async request=>
 };
 
 
-cash.in =async array=>
+cash.in =async(array, request_id)=>
 {
   let [key,response,options] = array;
   if (!key || !response) return;
@@ -124,14 +124,14 @@ cash.in =async array=>
   // {
   //   headers:{'Content-Type':'application/json'}
   // };
-  let result = await cash.put(new Request(key), 
+  let result = await cash.put(new Request(key),
     new Response(response,options));
-  postMessage(result);
+  postMessage({request_id, data: result});
 };
 
 
 // get from cache
-cash.out =async a=> 
+cash.out =async(a, request_id)=>
 {
   const cache = await caches.open(cash.id);
   const results = [];
@@ -140,7 +140,7 @@ cash.out =async a=>
   {
     let result;
     const response = await cache.match(item);
-    if (response) 
+    if (response)
     {
       let content_type = response.headers.get('Content-Type');
       switch (content_type)
@@ -151,13 +151,13 @@ cash.out =async a=>
         case 'application/json':
           result = await response.json();
           break;
-        default: 
+        default:
           result = await response.blob();
       }
     }
     if (result) results.push(result);
   }
-  postMessage(results);
+  postMessage({request_id, data: results});
 };
 
 
@@ -190,9 +190,10 @@ oninstall =e=>
 
 onmessage =e=>
 {
-  for (const key in e.data)
+  const {request_id, ops} = e.data;
+  for (const key in ops)
     if (Object.hasOwn(cash,key))
-      cash[key](e.data[key])
+      cash[key](ops[key], request_id)
 };
 
 

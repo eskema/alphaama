@@ -190,14 +190,11 @@ aa.mod.dialog =(id='')=>
 // save mod
 aa.mod.save =async mod=>
 {
-  return new Promise(resolve=>
+  if (mod && mod.o && mod.o.id)
   {
-    if (mod && mod.o && mod.o.id)
-    {
-      aa.db.idb.postMessage({put:{store:'stuff',a:[mod.o]}});
-    }
-    resolve(mod)
-  })
+    await aa.db.ops('idb', {put:{store:'stuff',a:[mod.o]}});
+  }
+  return mod;
 };
 
 

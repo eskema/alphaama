@@ -5,24 +5,24 @@ const indexed_db =
 };
 
 
-indexed_db.ops.stores =async(db,o)=>
+indexed_db.ops.stores =async(db,o,request_id)=>
 {
   // console.log(db.objectStoreNames);
-  postMessage(db.objectStoreNames);
+  postMessage({request_id, data: db.objectStoreNames});
 };
 
 
-indexed_db.ops.clear =async(db,o)=>
+indexed_db.ops.clear =async(db,o,request_id)=>
 {
   let times = 0;
   for (const store of o.stores)
   {
     const odb = db.transaction(store,'readwrite').objectStore(store);
     const store_clear = odb.clear();
-    store_clear.onsuccess =e=> 
+    store_clear.onsuccess =e=>
     {
       times++;
-      if (times === o.stores.length) postMessage('db '+o.store+' cleared');
+      if (times === o.stores.length) postMessage({request_id, data: 'db '+o.store+' cleared'});
     }
   }
 };
@@ -38,8 +38,8 @@ const chunker =(a,n)=>
 };
 
 
-indexed_db.ops.dex =async(db,o)=>
-{ 
+indexed_db.ops.dex =async(db,o,request_id)=>
+{
   const dex = db.transaction(o.store)
   .objectStore(o.store)
   .index(o.index);
@@ -50,15 +50,15 @@ indexed_db.ops.dex =async(db,o)=>
   {
     dex.get(item).onsuccess=e=>
     {
-      const result = e.target.result; 
-      done++; 
-      if (done === o.a.length) postMessage(a);
+      const result = e.target.result;
+      done++;
+      if (done === o.a.length) postMessage({request_id, data: a});
     };
   }
 };
 
 
-indexed_db.ops.dex_all =async(db,o)=>
+indexed_db.ops.dex_all =async(db,o,request_id)=>
 {
   const dex = db.transaction(o.store)
   .objectStore(o.store)
@@ -67,25 +67,25 @@ indexed_db.ops.dex_all =async(db,o)=>
   const a = [];
   dex.openCursor(o.key).onsuccess=e=>
   {
-    const cursor = e.target.result; 
-    if (cursor) 
-    { 
+    const cursor = e.target.result;
+    if (cursor)
+    {
       a.push(cursor.value);
       cursor.continue();
     }
-    else postMessage(a)
+    else postMessage({request_id, data: a})
   }
 };
 
 
-indexed_db.ops.get =async(db,o)=>
+indexed_db.ops.get =async(db,o,request_id)=>
 { // o = {store:'',key:'id'}
   const odb = db.transaction(o.store).objectStore(o.store);
-  odb.get(o.key).onsuccess=e=> postMessage(e.target.result);
+  odb.get(o.key).onsuccess=e=> postMessage({request_id, data: e.target.result});
 };
 
 
-indexed_db.ops.get_a =async(db,o)=>
+indexed_db.ops.get_a =async(db,o,request_id)=>
 { // o = {store:'',a:[]}
   const odb = db.transaction(o.store).objectStore(o.store);
   const a = [];
@@ -97,23 +97,23 @@ indexed_db.ops.get_a =async(db,o)=>
       done++;
       let result = e.target.result
       if (result) a.push(result);
-      if (done === o.a.length) postMessage(a);
+      if (done === o.a.length) postMessage({request_id, data: a});
     }
   }
 };
 
 
-indexed_db.ops.get_all =async(db,store)=>
+indexed_db.ops.get_all =async(db,store,request_id)=>
 {
   const odb = db.transaction(store).objectStore(store);
-  odb.getAll().onsuccess=e=> postMessage(e.target.result);
+  odb.getAll().onsuccess=e=> postMessage({request_id, data: e.target.result});
 };
 
 
-indexed_db.ops.keys =async(db,store)=>
+indexed_db.ops.keys =async(db,store,request_id)=>
 {
   const odb = db.transaction(store).objectStore(store);
-  odb.getAllKeys().onsuccess=e=> postMessage(e.target.result);
+  odb.getAllKeys().onsuccess=e=> postMessage({request_id, data: e.target.result});
 };
 
 const merge =(dis,dat)=>
@@ -131,53 +131,83 @@ const merge =(dis,dat)=>
 };
 
 
-indexed_db.ok =(db,o)=> 
+indexed_db.ok =(db,o,request_id)=>
 {
+  if (!o || typeof o !== 'object')
+  {
+    console.error('indexed_db.ok: invalid ops object', o);
+    postMessage({request_id, error: 'Invalid ops object'});
+    db.close();
+    return;
+  }
+
   const total = Object.keys(o).length;
   let done = 0;
   for (const k in o)
   {
-    try { indexed_db.ops[k](db,o[k]).then(()=>{done++}) }
+    try { indexed_db.ops[k](db,o[k],request_id).then(()=>{done++}) }
     catch (er) {console.error(er);done++}
     if (done === total) setTimeout(db.close,200)
   }
 }
 
 
-onmessage =m=> 
+onmessage =m=>
 {
-  // console.log('db onmessage',m.data);
+  const {request_id, ops} = m.data;
+
+  if (!ops)
+  {
+    console.error('idb worker: ops is undefined', m.data);
+    postMessage({request_id, error: 'Invalid message format: ops is undefined'});
+    return;
+  }
+
   const db = indexedDB.open("alphaama", 16);
-  db.onerror =e=>{ console.log('db error',e)};
+  db.onerror =e=>
+  {
+    console.log('db error',e);
+    postMessage({request_id, error: e.target.error?.message || 'Database error'});
+  };
   db.onupgradeneeded = indexed_db.upg;
-  db.onsuccess =e=> indexed_db.ok(e.target.result,m.data);  
+  db.onsuccess =e=> indexed_db.ok(e.target.result, ops, request_id);
 }
 
 
-indexed_db.ops.put =async(db,o)=>
+indexed_db.ops.put =async(db,o,request_id)=>
 { // o = {store:'',a:[]}
   // const chunks = chunker(o.a,indexed_db.chunks);
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  
+
+  let done = 0;
+  const total = o.a.length;
+
   // for (const chunk of chunks) for (const item of chunk) odb.put(item)
-  for (const item of o.a) 
+  for (const item of o.a)
   {
     const put = odb.put(item);
     put.onerror =e=>{console.log(e.target.error,item)};
+    put.onsuccess =()=>
+    {
+      done++;
+      if (done === total) postMessage({request_id, data: true});
+    };
   }
+
+  if (total === 0) postMessage({request_id, data: true});
 };
 
 
-indexed_db.ops.count =async(db,o)=>
+indexed_db.ops.count =async(db,o,request_id)=>
 { // o = {store:'',key:''}
   const odb = db.transaction(o.store,'readonly').objectStore(o.store);
   // if (o.key) odb.count(IDBKeyRange.bound('startKey', 'endKey'));
   const count = odb.count();
-  count.onsuccess =e=> postMessage(count.result);
+  count.onsuccess =e=> postMessage({request_id, data: count.result});
 };
 
 
-indexed_db.ops.req =async(db,o)=>
+indexed_db.ops.req =async(db,o,request_id)=>
 {
   console.log(o);
 
@@ -188,36 +218,36 @@ indexed_db.ops.req =async(db,o)=>
   const idx = odb.index('created_at');
   let done = 0;
   const a = [];
-  
+
   idx.openCursor(kr).onsuccess=e=>
   {
-    const cursor = e.target.result; 
-    if (cursor) 
-    { 
+    const cursor = e.target.result;
+    if (cursor)
+    {
       done++;
       a.push(cursor.value);
       cursor.continue();
     }
-    else postMessage(a)
+    else postMessage({request_id, data: a})
   }
 };
 
-indexed_db.ops.some =async(db,o)=>
+indexed_db.ops.some =async(db,o,request_id)=>
 {
   const odb = db.transaction('events').objectStore('events');
   const idx = odb.index('created_at');
   const a = [];
-  
+
   idx.openCursor(null,o.direction).onsuccess=e=>
   {
     const cursor = e.target.result;
-    if (cursor) 
-    { 
+    if (cursor)
+    {
       a.push(cursor.value);
       if (a.length < o.n) cursor.continue();
-      else postMessage(a)
+      else postMessage({request_id, data: a})
     }
-    else postMessage(a)
+    else postMessage({request_id, data: a})
   }
 };
 
@@ -258,35 +288,51 @@ indexed_db.upg =(e) =>
 };
 
 
-indexed_db.ops.upd_e =async(db,o)=>
+indexed_db.ops.upd_e =async(db,o,request_id)=>
 {
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
+  let done = 0;
+  const total = o.a.length;
+
   for (const item of o.a)
   {
     odb.openCursor(item.event.id).onsuccess=e=>
     {
-      const cursor = e.target.result; 
-      if (cursor) 
+      const cursor = e.target.result;
+      if (cursor)
       {
         const merged = merge(cursor.value,item);
         if (merged) cursor.update(merged);
       }
-      else odb.put(item)
+      else odb.put(item);
+
+      done++;
+      if (done === total) postMessage({request_id, data: true});
     }
   }
+
+  if (total === 0) postMessage({request_id, data: true});
 };
 
 
-indexed_db.ops.upd_p =async(db,o)=>
+indexed_db.ops.upd_p =async(db,o,request_id)=>
 {
   const odb = db.transaction(o.store,'readwrite').objectStore(o.store);
-  for (const item of o.a) 
+  let done = 0;
+  const total = o.a.length;
+
+  for (const item of o.a)
   {
     odb.openCursor(item.pubkey).onsuccess=e=>
     {
-      const cursor = e.target.result; 
+      const cursor = e.target.result;
       if (cursor) cursor.update(item);
-      else odb.put(item)
+      else odb.put(item);
+
+      done++;
+      if (done === total) postMessage({request_id, data: true});
     }
   }
+
+  if (total === 0) postMessage({request_id, data: true});
 };
