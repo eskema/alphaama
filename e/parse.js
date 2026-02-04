@@ -43,7 +43,6 @@ aa.parse.nostr =match=>
   if (match.index)
   {
     result.before = match.input.slice(0,match.index);
-    // fragment.append(contente(match.input.slice(0,match.index)))
   }
 
   for (const entity of entities)
@@ -70,7 +69,6 @@ aa.parse.nostr =match=>
   if (match[0].length < (match.input.length - match.index))
   {
     result.after = match.input.slice(match[0].length + match.index);
-    // fragment.append(contente(match.input.slice(match[0].length + match.index)),' ')
   }
 
   return result
@@ -84,12 +82,23 @@ aa.parse.url =(match,is_trusted)=>
   if (!url) return;
   let result = { parsed: match[0], type: 'inline' };
 
+  if (match.index)
+  {
+    result.before = match.input.slice(0,match.index);
+  }
+
+  if (match[0].length < (match.input.length - match.index))
+  {
+    result.after = match.input.slice(match[0].length + match.index);
+  }
+
   const [src,type] = aa.fx.src_type(url);
 
   if (!is_trusted || !type) result.parsed = aa.mk.link(src);
   else if (type === 'image') result.parsed = aa.mk.img(src);
   else if (type === 'audio' || type === 'video')
     result.parsed = aa.mk.av(src,false,type==='audio'?true:false);
+
   
   return result
 };

@@ -165,20 +165,7 @@ aa.q.filter =filter=>
     filter = aa.pj(filter);
   if (!filter) return [];
 
-  // let var_map = new Map();
-  // for (const key in aa.u.o.ls)
-  // {
-  //   var_map.set(key,aa.u.o.ls[key].split(' '));
-  // }
-  // var_map.set('u', ()=>[aa.u.p.pubkey]);
-  // var_map.set('k3', ()=>aa.u.p.follows);
-
   let options = {};
-
-  // let p;
-  // let x = aa.u.p.pubkey;
-  // if (!x) aa.log('vars: no u');
-  // else p = aa.db.p[x];
 
   let filter_keys = Object.keys(filter);
   for (const key of filter_keys)
@@ -207,25 +194,11 @@ aa.q.filter =filter=>
 
           if (typeof val === 'string')
           {
-            // filter[key] = value.filter(i=>i!==val);
-            // if (p) filter[key].push(...p.follows);
             if (Object.hasOwn(aa.u?.o?.ls,val))
             {
               filter[key] = filter[key].filter(i=>i!==val);
               filter[key].push(...aa.u.o.ls[val].split(' '));
             }
-            // switch (val)
-            // {
-            //   case 'u':
-            //   case 'x':
-            //     filter[key] = filter[key].filter(i=>i!==val);
-            //     if (x) filter[key].push(x);
-            //     break;
-            //   case 'k3':
-            //     filter[key] = filter[key].filter(i=>i!==val);
-            //     if (p) filter[key].push(...p.follows);
-            //     break;
-            // }
           }
         }
         if (!filter[key].length) 
@@ -738,66 +711,31 @@ aa.q.print =async(id,options)=>
 // fetch basic stuff to get things started
 aa.q.stuff =async()=>
 {
-  let options = {eose:'close'};
+  const options = {eose:'close'};
+  
+  // Phase 1: Bootstrap with initial relays
   aa.log('getting your stuff (relays, metadata, follows, etc…)');
   await aa.q.print('a',{options});
-  setTimeout(async()=>
-  {
-    aa.log('getting your stuff again now that we might have more relays…');
-    await aa.q.print('a',{options});
-    setTimeout(async()=>
-    {
-      aa.log('getting your follows stuff');
-      await aa.q.print('b',{options});
-      setTimeout(async()=>
-      {
-        aa.log('getting your follows stuff again but now in outbox mode');
-        await aa.q.print('b',{options, mode:'outbox'});
-        aa.log(make('p',{ content: 'all done ', app: aa.mk.reload_butt() }))
-        sessionStorage.q_out = 'f';
-        sessionStorage.q_run = 'n';
-      },999);
-    },666);
-  },420)
-
-  // for (const dat of sheet_1.events) aa.e.print_q(dat);
-  // let sheet_2 = await aa.q.get('a',{options});
-  // for (const dat of sheet_2.events) aa.e.print_q(dat);
-  // let sheet_3 = await aa.q.get('b',{options});
-  // for (const dat of sheet_3.events) aa.e.print_q(dat);
-  // let sheet_4 = await aa.q.get('b',{options,mode:'outbox'});
-  // for (const dat of sheet_4.events) aa.e.print_q(dat);
   
-  // sessionStorage.q_out = 'f';
-  // sessionStorage.q_run = 'n';
-  // aa.log('getting your stuff (relays, metadata, follows, etc…)');
-  // aa.q.run('a');
-  // setTimeout(()=>
-  // {
-  //   aa.log('again now that we might have more relays…');
-  //   aa.q.run('a') 
-  // },1400);
-  // setTimeout(()=>
-  // {
-  //   aa.log('getting your follows stuff');
-  //   aa.q.run('b') 
-  // },3000);
-  // setTimeout(()=>
-  // {
-  //   console.log(JSON.stringify(aa.u.p));
-  //   aa.log('getting your follows stuff again but now in outbox mode');
-  //   aa.q.out('b');
-  //   sessionStorage.q_out = 'f';
-  //   sessionStorage.q_run = 'n';
-  //   setTimeout(()=>
-  //   {
-  //     aa.log(make('p',
-  //     {
-  //       con:'wait a bit while events load, then ',
-  //       app:aa.mk.reload_butt()
-  //     }))
-  //   },2000);
-  // },8000);
+  // Phase 2: Refetch after relay connections established
+  await aa.fx.delay(420);
+  aa.log('getting your stuff again now that we might have more relays…');
+  await aa.q.print('a',{options});
+  
+  // Phase 3: Load follows data
+  await aa.fx.delay(666);
+  aa.log('getting your follows stuff');
+  await aa.q.print('b',{options});
+  
+  // Phase 4: Load follows via outbox model
+  await aa.fx.delay(999);
+  aa.log('getting your follows stuff again but now in outbox mode');
+  await aa.q.print('b',{options, mode:'outbox'});
+  
+  // Finalize
+  aa.log(make('p',{ content: 'all done ', app: aa.mk.reload_butt() }));
+  sessionStorage.q_out = 'f';
+  sessionStorage.q_run = 'n';
 };
 
 

@@ -52,7 +52,7 @@ aa.clk.expand =e=>
       element.classList.add(cla)
     })
   }
-  sessionStorage[id] = storage_value;
+  aa.fx.storage.set(id, storage_value);
 };
 
 
@@ -83,25 +83,25 @@ aa.clk.mark =e=>
     e.preventDefault();
     for (const l of new_stuff)
     {
-      sessionStorage[l.dataset.id] = 'is_read';
+      aa.fx.storage.set(l.dataset.id, 'is_read');
       l.classList.remove(...classes);
     }
-    if (replies.classList.contains('expanded')) 
+    if (replies.classList.contains('expanded'))
     {
-      sessionStorage[rid] = '';
+      aa.fx.storage.set(rid, '');
       replies.classList.remove('expanded');
     }
   }
-  else 
+  else
   {
-    if (replies.classList.contains('expanded')) 
+    if (replies.classList.contains('expanded'))
     {
-      sessionStorage[rid] = '';
+      aa.fx.storage.set(rid, '');
       replies.classList.remove('expanded');
     }
-    else 
+    else
     {
-      sessionStorage[rid] = 'expanded';
+      aa.fx.storage.set(rid, 'expanded');
       replies.classList.add('expanded');
     }
   }

@@ -73,7 +73,7 @@ aa.e.clear_events =s=>
 
 aa.e.content =(content,is_trusted)=>
 {
-  let items = 
+  let items =
   [
     {id:'url', regex:aa.regex.url, exe:aa.parse.url},
     {id:'nostr', regex:aa.regex.nostr, exe:aa.parse.nostr},
@@ -744,11 +744,25 @@ aa.e.view =element=>
   {
     if (element.classList.contains('not_yet')) 
       aa.e.note_yet(element);
+    
+    // Check if element is actually connected to the document
+    if (!element.isConnected)
+    {
+      let root = element;
+      if (!element.classList.contains('root'))
+      {
+        root = element.closest('.root');
+      }
+      aa.e.l.append(root)
+    }
+
     aa.l.classList.add('viewing','view_e');
     element.classList.add('in_view');
     aa.view.in_view = element;
-    aa.clk.time({target:element.querySelector('.by .created_at')});
     sift.path_add(element,'note');
+
+    aa.clk.time({target:element.querySelector('.by .created_at')});
+    
     setTimeout(()=>{aa.fx.scroll(element)},200);
   });
 };

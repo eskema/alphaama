@@ -124,7 +124,6 @@ const parse_all =(options)=>
       {
         let word = words[ii].trim();
         if (!word.length) continue;
-        
         let found;
         for (const item of in_line)
         {
@@ -145,7 +144,6 @@ const parse_all =(options)=>
           if (before) element.append(before,' ');
           if (type === 'block')
           {
-            
             element = parse_another({parent,element});
             parent.append(parsed);
           }

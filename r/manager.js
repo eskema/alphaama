@@ -9,7 +9,7 @@ importScripts('/dep/nostr-tools.js','/dep/store.js','./fx.js');
 const db = new store.IDBEventStore;
 
 // relay manager
-const manager = 
+const manager =
 {
   limit:99999,
   relays:new Map(),
@@ -18,6 +18,43 @@ const manager =
 };
 
 
+// event batching to reduce postMessage overhead
+const event_batcher = (() => {
+  const batches = new Map(); // url → [events]
+  let scheduled = false;
+
+  const flush = () => {
+    for (const [url, events] of batches) {
+      if (events.length === 1) {
+        // Single event - send normally for backward compatibility
+        postMessage(['event', events[0], url]);
+      } else {
+        // Multiple events - send as batch
+        postMessage(['events', events, url]);
+      }
+    }
+    batches.clear();
+    scheduled = false;
+  };
+
+  return {
+    add: (dat, url) => {
+      if (!batches.has(url)) batches.set(url, []);
+      batches.get(url).push(dat);
+
+      if (!scheduled) {
+        scheduled = true;
+        // Batch within single microtask (immediate, but allows accumulation)
+        Promise.resolve().then(flush);
+      }
+    },
+
+    // Force immediate flush (for critical events)
+    flushNow: () => {
+      if (scheduled) flush();
+    }
+  };
+})();
 
 
 const auth =data=>
@@ -434,7 +471,7 @@ const on_event =(a,url)=>
     dat.subs = [...new Set([...dat.subs,...subs])];
     // a_add(dat.seen,seen);
     // a_add(dat.subs,subs);
-    postMessage(['event',dat,url]);
+    event_batcher.add(dat, url);
   }
   else
   {
@@ -445,7 +482,7 @@ const on_event =(a,url)=>
     {
       dat = mk_dat({event,seen,subs});
       manager.events.set(event.id,dat);
-      postMessage(['event',dat,url]);
+      event_batcher.add(dat, url);
       setTimeout(()=>{db.saveEvent(event)},0)
     }
   }
@@ -454,7 +491,7 @@ const on_event =(a,url)=>
 
 const on_open =data=>
 {
-  console.log(data)
+  // console.log(data)
 };
 
 
@@ -616,6 +653,8 @@ const set_relays =relays=>
       for (const key in relays[url])
         relay[key] = relays[url][key];
     }
+
+    if (!relay.info) fetch_info(url)
   }
 };
 
@@ -626,8 +665,8 @@ const terminate =async url=>
   let relay = hires(url);
   if (!relay)
   {
-    console.error('!relay',url)
-    return;
+    // console.error('!relay',url)
+    return
   }
   postMessage(['state',{state:3,url,subs:relay.worker.subs}]);
 };
@@ -661,6 +700,7 @@ const connect =(relay)=>
   relay.ws.onerror =e=>
   {
     relay.worker.errors.push(now());
+    postMessage(['update_stats', relay.worker.url, 'error']);
     // console.log('error',worker)
   };
 
@@ -669,6 +709,7 @@ const connect =(relay)=>
     if ((relay.worker.errors.length - relay.worker.successes.length) < 21)
     {
       relay.worker.errors.push(now());
+      // Don't track error stats here - onerror already handles it
       setTimeout(()=>{connect(relay)},420*(relay.worker.errors.length+1))
     }
     else terminate_worker(relay);
@@ -710,7 +751,8 @@ const connect =(relay)=>
     }
 
     relay.worker.successes.push(now());
-    
+    postMessage(['update_stats', relay.worker.url, 'success']);
+
     if (relay.worker.open.size)
     {
       for (const [id,request] of relay.worker.open)
@@ -820,5 +862,6 @@ const terminate_worker =(relay,s='terminated')=>
 {
   delete relay.ws;
   relay.worker.terminated = now();
+  postMessage(['update_stats', relay.worker.url, 'terminated']);
   terminate(relay.worker.url)
 };

@@ -28,6 +28,17 @@ aa.r.event =async data=>
 };
 
 
+// batch event handler - processes multiple events at once
+aa.r.events =async data=>
+{
+  let [type,events,url] = data;
+  for (const dat of events)
+  {
+    await aa.r.event(['event', dat]);
+  }
+};
+
+
 aa.r.notice =async data=>
 {
   let url = data.pop();
@@ -152,9 +163,37 @@ aa.r.state =async data=>
     console.log('aa.r.state: no element found',relay);
     return
   }
+  const score = aa.r.score(url);
   fastdom.mutate(()=>
   {
     element.dataset.state = relay.state;
     element.dataset.subs = aa.r.subs_open(relay.subs);
+    element.dataset.score = Math.round(score);
+    element.title = `Reliability: ${Math.round(score)}/100`;
   })
+};
+
+
+// update relay reliability stats in persistent storage
+aa.r.update_stats =async data=>
+{
+  let [type,url,stat_type] = data;
+  if (!aa.r.o.ls[url]) return;
+
+  switch(stat_type)
+  {
+    case 'terminated':
+      aa.r.o.ls[url].terminated_count = (aa.r.o.ls[url].terminated_count || 0) + 1;
+      aa.r.o.ls[url].last_terminated = Math.floor(Date.now() / 1000);
+      break;
+    case 'error':
+      aa.r.o.ls[url].error_count = (aa.r.o.ls[url].error_count || 0) + 1;
+      break;
+    case 'success':
+      aa.r.o.ls[url].success_count = (aa.r.o.ls[url].success_count || 0) + 1;
+      break;
+  }
+
+  // Save to DB
+  aa.mod.save_to(aa.r);
 };

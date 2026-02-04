@@ -794,7 +794,26 @@ aa.p.relays =(p,set='write')=>
 {
   return Object.entries(p.relays)
     .filter(r=>r[1].sets.includes(set))
-    .sort(aa.fx.sorts.sets)
+    .filter(r=> {
+      // Filter out recently terminated relays
+      const relay = aa.r.o.ls[r[0]];
+      if (!relay) return true; // Unknown relay = include
+      const term_count = relay.terminated_count || 0;
+      if (term_count === 0) return true; // Never terminated = include
+
+      // Allow if last termination was >24h ago
+      const hours_since = (Date.now()/1000 - (relay.last_terminated || 0)) / 3600;
+      return hours_since > 24;
+    })
+    .sort((a, b) => {
+      // Primary sort: by reliability score
+      const score_a = aa.r.score(a[0]);
+      const score_b = aa.r.score(b[0]);
+      if (score_a !== score_b) return score_b - score_a;
+
+      // Secondary sort: by sets (existing logic)
+      return aa.fx.sorts.sets(a, b);
+    })
     .map(r=>r[0])
 }
 
@@ -825,7 +844,7 @@ aa.p.save_to =()=>
   {
     setTimeout(()=>{aa.db.ops('idb', {put:{store:'authors',a}})}, times*21);
     // times++;
-    console.log(q_id,a.length)
+    // console.log(q_id,a.length)
   }
 };
 

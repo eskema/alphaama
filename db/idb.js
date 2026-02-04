@@ -88,18 +88,23 @@ indexed_db.ops.get =async(db,o,request_id)=>
 indexed_db.ops.get_a =async(db,o,request_id)=>
 { // o = {store:'',a:[]}
   const odb = db.transaction(o.store).objectStore(o.store);
-  const a = [];
-  let done = 0;
-  for (const item of o.a)
-  {
-    odb.get(item).onsuccess=e=>
-    {
-      done++;
-      let result = e.target.result
-      if (result) a.push(result);
-      if (done === o.a.length) postMessage({request_id, data: a});
-    }
-  }
+  
+  // Create promises for all get operations
+  const promises = o.a.map(item => 
+    new Promise((resolve, reject) => {
+      const request = odb.get(item);
+      request.onsuccess = e => resolve(e.target.result);
+      request.onerror = () => resolve(null);  // Resolve with null on error
+    })
+  );
+  
+  // Wait for all to complete
+  const results = await Promise.all(promises);
+  
+  // Filter out null results
+  const a = results.filter(result => result && result !== null);
+  
+  postMessage({request_id, data: a});
 };
 
 

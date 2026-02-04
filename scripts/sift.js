@@ -12,7 +12,6 @@ sift.insert =(item,options)=>
   { 
     items,
     element,
-    map,
     max,
     order,
     page,

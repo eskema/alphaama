@@ -174,8 +174,8 @@ aa.r.common =(pubkeys=[],sets=[])=>
     {
       url = aa.fx.is_valid_relay(aa.fx.url(url));
       if (!url || offed.includes(url)) continue;
-      if (!common[url]) common[url] = [];
-      if (!common[url].includes(pubkey)) common[url].push(pubkey)
+      if (!common[url]) common[url] = new Set();  // Use Set for O(1) deduplication
+      common[url].add(pubkey);  // Set automatically handles duplicates
     }
 
     if (!has_set)
@@ -184,6 +184,13 @@ aa.r.common =(pubkeys=[],sets=[])=>
       aa.fx.a_add(common.none,[pubkey]);
     }
   }
+
+  // Convert Sets back to arrays
+  for (const url in common)
+  {
+    if (common[url] instanceof Set) common[url] = [...common[url]];
+  }
+
   return common
 };
 
@@ -599,12 +606,14 @@ aa.r.mk =(k,v)=>
       ' ',aa.mk.butt_action(edit_text,'edit','add')
     ]
   });
-  
+
+  const score = Math.round(aa.r.score(k));
   const element = make('li',
   {
     cla:'item relay',
-    dat:{state:0,sets:v.sets},
-    app:[info,' ',sets,' ',actions]
+    dat:{state:0,sets:v.sets,score},
+    app:[info,' ',sets,' ',actions],
+    title: `Reliability: ${score}/100`
   });
   
   aa.el.set(k,element);
@@ -745,6 +754,44 @@ aa.r.setrm =(s="")=>
 // {
 //   let {con,} 
 // };
+
+
+// calculate relay reliability score from persistent data (higher = better)
+aa.r.score =(url)=>
+{
+  const relay = aa.r.o.ls[url];
+  if (!relay) return 0;
+
+  let score = 100; // Start perfect
+
+  // Termination penalty
+  const term_count = relay.terminated_count || 0;
+  if (term_count > 0)
+  {
+    score -= term_count * 20; // -20 per termination
+
+    // Decay penalty over time (forgive after 24h)
+    const last_term = relay.last_terminated || 0;
+    const hours_since = (Date.now()/1000 - last_term) / 3600;
+    if (hours_since < 24) score -= (24 - hours_since);
+  }
+
+  const errors = relay.error_count || 0;
+  const successes = relay.success_count || 0;
+  const total = errors + successes;
+
+  if (total === 0) return score * 0.5; // No history = neutral
+
+  // Error rate penalty (0-30 points)
+  const error_rate = errors / total;
+  score -= error_rate * 30;
+
+  // Success bonus (0-20 points)
+  const success_rate = successes / total;
+  score += success_rate * 20;
+
+  return Math.max(0, score);
+};
 
 
 // toggles for relay mod l

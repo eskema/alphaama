@@ -10,8 +10,17 @@ fun stuff
 // adds them if not and returns if anything was added
 aa.fx.a_add =(a,items_to_add)=>
 {
+  const existing = new Set(a);  // O(n) once instead of O(n²)
   let b = 0;
-  for (const item of items_to_add) if (!a.includes(item)){a.push(item);b=1}
+  for (const item of items_to_add)
+  {
+    if (!existing.has(item))  // O(1) lookup instead of O(n)
+    {
+      a.push(item);
+      existing.add(item);  // Keep Set in sync for subsequent checks
+      b = 1;
+    }
+  }
   return b
 };
 
@@ -19,9 +28,8 @@ aa.fx.a_add =(a,items_to_add)=>
 // returns filtered array
 aa.fx.a_rm =(a,items_to_rm)=>
 {
-  for (const item of items_to_rm) 
-    if (a.includes(item)) a=a.filter(i=>i!==item);
-  return a
+  const to_remove = new Set(items_to_rm);  // O(n) once
+  return a.filter(i => !to_remove.has(i))  // O(1) lookup, single pass
 };
 
 
@@ -37,11 +45,23 @@ aa.fx.a_o =a=>
   return o
 };
 
-// array of unique arrays 
+// array of unique arrays
 aa.fx.a_u =a=>
 {
-  let ar = [...new Set(a.map(i=>JSON.stringify(i)))];
-  return ar.map(i=>JSON.parse(i))
+  const seen = new Map();
+  const result = [];
+
+  for (const item of a)
+  {
+    const key = JSON.stringify(item);  // Stringify once for lookup key
+    if (!seen.has(key))
+    {
+      seen.set(key, true);
+      result.push(item);  // Use original item - no parse needed!
+    }
+  }
+
+  return result
 };
 
 
@@ -264,6 +284,56 @@ aa.fx.decrypt_parse =async event=>
   }
   return a
 };
+
+
+// await a delay
+aa.fx.delay =ms=> new Promise(resolve=> setTimeout(resolve,ms));
+
+
+// batched storage manager to prevent jank from synchronous writes
+aa.fx.storage = (() => {
+  const pending = new Map();
+  let scheduled = false;
+
+  const flush = () => {
+    for (const [key, value] of pending) {
+      if (value === null) {
+        delete sessionStorage[key];
+      } else {
+        sessionStorage[key] = value;
+      }
+    }
+    pending.clear();
+    scheduled = false;
+  };
+
+  return {
+    // Schedule a write (batched until next frame)
+    set: (key, value) => {
+      pending.set(key, value);
+      if (!scheduled) {
+        scheduled = true;
+        requestAnimationFrame(flush);
+      }
+    },
+
+    // Immediate write (use sparingly)
+    setImmediate: (key, value) => {
+      sessionStorage[key] = value;
+    },
+
+    // Get (checks pending writes first, then storage)
+    get: (key) => {
+      if (pending.has(key)) return pending.get(key);
+      return sessionStorage[key];
+    },
+
+    // Force flush now (useful before navigation)
+    flush: () => {
+      if (scheduled) flush();
+    }
+  };
+})();
 
 
 // for selector in element do

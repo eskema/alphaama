@@ -86,12 +86,12 @@ aa.is_read =options=>
   {
     for (const element of new_stuff)
     {
-      if (element.dataset.id) sessionStorage[element.dataset.id] = 'is_read';
+      if (element.dataset.id) aa.fx.storage.set(element.dataset.id, 'is_read');
       element.classList.remove(...classes);
     }
     if (section.classList.contains('expanded'))
     {
-      if (id) sessionStorage[id] = '';
+      if (id) aa.fx.storage.set(id, '');
       section.classList.remove('expanded');
     }
   }
@@ -99,12 +99,12 @@ aa.is_read =options=>
   {
     if (section.classList.contains('expanded'))
     {
-      if (id) sessionStorage[id] = '';
+      if (id) aa.fx.storage.set(id, '');
       section.classList.remove('expanded');
     }
     else
     {
-      if (id) sessionStorage[id] = 'expanded';
+      if (id) aa.fx.storage.set(id, 'expanded');
       section.classList.add('expanded');
     }
   }
@@ -292,14 +292,14 @@ aa.clk.sign =async e=>
 };
 
 
-// toggle tiny note 
+// toggle tiny note
 aa.clk.tiny =e=>
 {
   const note = e.target.closest('[data-id]');
   note.classList.toggle('tiny');
   const is_tiny = note.classList.contains('tiny');
-  if (is_tiny) sessionStorage[note.dataset.id] = 'tiny';
-  else sessionStorage[note.dataset.id] = '';
+  if (is_tiny) aa.fx.storage.set(note.dataset.id, 'tiny');
+  else aa.fx.storage.set(note.dataset.id, '');
   // aa.fx.scroll(note,{behavior:'smooth',block:is_tiny?'start':'center'});
 };
 

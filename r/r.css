@@ -16,7 +16,7 @@
 
 .mod .relay::after
 {
-  content: "(" attr(data-state) ") " attr(data-subs);
+  content: attr(data-score) " (" attr(data-state) ") " attr(data-subs);
   grid-area: state;
   margin-right: var(--pad);
   max-width: 12rem;
@@ -111,6 +111,8 @@
 {
   color: rgb(var(--color-d));
 }
+
+
 
 @media screen and (max-width: 768px) 
 {
