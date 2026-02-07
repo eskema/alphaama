@@ -20,15 +20,14 @@ aa.w =
     {
       def:'',
       mints:{},
-      privkey:'',
-      pubkey:'',
-      redeemable:[],
-      redeemed:[],
+      redeemable:new Set(),
+      redeemed:new Set(),
     },
   },
   active:{},
   scripts:
   [
+    '/w/cashu-ts.iife.js',
     '/w/clk.js',
     '/w/kinds.js',
     '/w/mk.js',
@@ -47,6 +46,8 @@ aa.w =
 };
 
 
+
+
 // add mint to walLNut
 aa.w.add =(string='')=>
 {
@@ -62,7 +63,7 @@ aa.w.add =(string='')=>
       let mint = aa.w.get_mint(url);
       if (!mint && url)
       {
-        mint = aa.w.o.ls.mints[url] = {proofs:[],quotes:[],url};
+        mint = aa.w.o.ls.mints[url] = {proofs:[],quotes:{},url};
         if (aa.w.o.ls.def === '') aa.w.o.ls.def = url;
         needs_saving = true;
       }
@@ -90,33 +91,37 @@ aa.w.balance =()=>
 aa.w.get_active =async url=>
 {
   if (!url) url = aa.w.get_def();
-  if (!url) return [];
-  
-  let active = aa.w.active[url] || {};
-  
-  if (!active.wallet)
+  if (!url) 
   {
-    active.mint = new cashuts.CashuMint(url);
-    let haz_keys;
-    let options = {};
-    let mint = aa.w.get_mint(url); //aa.w.o.ls.mints[url];
-    if (mint?.keys)
-    {
-      options.keys = mint.keys;
-      options.keysets = mint.keysets;
-      haz_keys = true;
-    }
-    active.wallet = new cashuts.CashuWallet(active.mint,options);
-    if (!haz_keys)
-    {
-      await active.wallet.loadMint();
-      mint.keys = active.wallet.keys;
-      mint.keysets = active.wallet.keysets;
-      aa.w.save();
-    }
-    aa.w.active[url] = active;
+    aa.log('no mints defined yet, use `w add` first');
+    return []
   }
-  return [active.wallet,mint]
+  // check for already initialized wallet
+  let active = aa.w.active[url] || {};
+  if (active.wallet) return active;
+  
+  active.url = url;
+  // instantiate a new wallet
+  // check if mint is cached
+  active.wallet = new cashuts.Wallet(url);
+  let mint = aa.w.get_mint(url);
+  if (mint.cache)
+  {
+    active.wallet.loadMintFromCache(mint.cache.info,mint.cache.keys);
+  }
+  else
+  {
+    await active.wallet.loadMint();
+    let keys = active.wallet.keyChain.cache;
+    let info = active.wallet.getMintInfo().cache;
+    mint.cache = {keys,info};
+    aa.w.save();
+  }
+  active.mint = mint;
+
+  aa.w.active[url] = active;
+
+  return active
 };
 
 
@@ -152,7 +157,7 @@ aa.w.import =async(id='')=>
   }
 
   let kind_17375 = aa.w.o?.kind_17375;
-  if (dat.event.created_at <= kind_17375.created_at)
+  if (kind_17375 && dat.event.created_at <= kind_17375.created_at)
   {
     aa.log('w import: event is not newer');
     return
@@ -189,7 +194,7 @@ aa.w.import_7375 =async(id='')=>
   }
   
   let {mint,proofs} = await aa.fx.decrypt_parse(dat.event);
-  url = aa.fx.url(mint)?.href;
+  let url = aa.fx.url(mint)?.href;
   if (!url) 
   {
     aa.log('w import: invalid mint url');
@@ -209,12 +214,12 @@ aa.w.import_7375 =async(id='')=>
 aa.w.is_redeemed =async id=>
 {
   let ls = aa.w.o.ls;
-  if (ls.redeemed.includes(id)) return true;
+  if (ls.redeemed.has(id)) return true;
   else
   {
     let dat = await aa.e.get(id);
     let amount = aa.fx.tag_value(dat.event.tags,'amount');
-    ls.redeemable.push([amount,dat.event]);
+    ls.redeemable.set(dat.event.id,{amount,event:dat.event});
     aa.w.save();
   }
   return false
@@ -222,47 +227,19 @@ aa.w.is_redeemed =async id=>
 
 
 // add keypair to walLNut
-aa.w.key =(privkey='',confirm=true)=>
+aa.w.key =async(privkey='',confirm=true)=>
 {
-  if ( aa.w.privkey 
-    && confirm 
-    && !window.confirm('replace walLNut keys?') 
-  ) return;
-
-  let keys = aa.fx.keypair(privkey);
-  if (keys)
-  {
-    
-    aa.w.privkey = keys[2];
-    aa.w.pubkey = keys[1];
-    aa.log('wip, use the console to access keys\naa.w.privkey & aa.w.pubkey');
-    // aa.w.save();
+  const has_keys = (await aa.u.decrypt_cache.size()).keys > 0;
+  if (has_keys && confirm && !window.confirm('Add another private key?')) {
+    return;
   }
-  return keys
+
+  const pubkey = await aa.u.decrypt_cache.add_key(privkey);
+  if (pubkey) {
+    aa.log(`Added wallet key: ${pubkey}`);
+  }
+  return pubkey;
 };
-
-
-// aa.w.key =(privkey='',confirm=true)=>
-// {
-//   let ls = aa.w.o.ls;
-//   if (!ls)
-//   {
-//     aa.log('w key: wallet not found');
-//     return
-//   }
-//   if (ls.privkey?.length 
-//   && confirm 
-//   && !window.confirm('replace walLNut keys?')) return;
-
-//   let keys = aa.fx.keypair(privkey);
-//   if (keys)
-//   {
-//     ls.privkey = keys[2];
-//     ls.pubkey = keys[1];
-//     aa.w.save();
-//   }
-//   return keys
-// };
 
 
 // on load
@@ -275,8 +252,6 @@ aa.w.load =async()=>
     localStorage.zap = '21';
   if (!Object.hasOwn(localStorage,'zap_memo'))
     localStorage.zap_memo = '<3';
-
-  // await aa.add_scripts(mod.scripts);
 
   // extend queries
   if (aa.q?.ls)
@@ -376,49 +351,45 @@ aa.w.load =async()=>
   await aa.mod.load(mod);
   await aa.mod.mk(mod);
   mod.start(mod);
-
-  // w css styles
-  // aa.add_styles(['/w/w.css']);
 };
 
 
 // melt proofs
 aa.w.melt =async(invoice='')=>
 {
-  // let [invoice,w_id] = s.split(aa.regex.fw);
-  let [wallnut,w] = await aa.w.get_active();
-  if (!wallnut)
+  let {wallet,mint} = await aa.w.get_active();
+  if (!wallet)
   {
-    aa.log('w melt: no walLNut found')
+    aa.log('w melt: no wallet found')
     return
   }
-  const quote = await wallnut.createMeltQuote(invoice);
+  const quote = await wallet.createMeltQuoteBolt11(invoice);
   if (!quote)
   {
     aa.log('w melt: no quote created')
     return
   }
   const amount = quote.amount + quote.fee_reserve;
-  const {keep,send} = await wallnut.send(amount,w.proofs,{includeFees:true});
-  const melt_response = await wallnut.meltProofs(quote,send);
+  const {keep,send} = await wallet.send(amount,mint.proofs,{includeFees:true});
+  const melt_response = await wallet.meltProofs(quote,send);
   aa.log(aa.mk.ls({ls:melt_response}));
   console.log(melt_response);
   keep.push(...melt_response.change);
 
-  aa.w.tx_out(keep,w.url);
+  aa.w.tx_out(keep,mint.url);
 };
 
 
 // mint proofs from quote
 aa.w.mint =async(quote_id='')=>
 {
-  let [wallet,w] = await aa.w.get_active();
+  let {wallet,mint} = await aa.w.get_active();
   if (!wallet) 
   {
     aa.log('no walLNut found');
     return
   }
-  let amount = w.quotes[quote_id]?.amount;
+  let amount = mint.quotes[quote_id]?.amount;
   if (!amount) 
   {
     aa.log('no amount for quote')
@@ -426,8 +397,8 @@ aa.w.mint =async(quote_id='')=>
   }
   aa.log(`minting proofs for ${aa.fx.units(amount)} from ${quote_id}`);
   
-  let proofs = await wallet.mintProofs(amount,quote_id);
-  aa.w.tx_in({proofs,url:w.url});
+  let proofs = await wallet.mintProofsBolt11(amount,quote_id);
+  aa.w.tx_in({proofs,url:mint.url});
 };
 
 
@@ -448,6 +419,7 @@ aa.w.mk =(key,value)=>
 
 aa.w.mod_butts =async(used)=>
 {
+  let mod = aa.w;
   if (used)
   {
     let df = new DocumentFragment();
@@ -502,18 +474,18 @@ aa.w.quote =async(string='')=>
 {
   let [amount,url] = aa.fx.splitr(string)//string.split(' ');
   amount = parseInt(amount);
-  let [wallnut,w] = await aa.w.get_active(url);
-  if (!wallnut)
+  let {wallet,mint} = await aa.w.get_active(url);
+  if (!wallet)
   {
-    aa.log('no wallnut found');
+    aa.log('no wallet found');
     return ''
   }
   
-  const quote = await wallnut.createMintQuote(amount);
+  const quote = await wallet.createMintBolt11(amount);
   if (quote)
   {
     quote.amount = amount;
-    w.quotes[quote.quote] = quote;//{amount:amount,quote:quote};
+    mint.quotes[quote.quote] = quote;//{amount:amount,quote:quote};
     aa.w.save();
     aa.log('quote for '+aa.fx.units(amount)+' from mint '+url);
     return quote.quote
@@ -523,73 +495,77 @@ aa.w.quote =async(string='')=>
 
 
 // check quote state
-aa.w.quote_check =async(string='')=>
-{
-  let [quote_id,url] = aa.fx.splitr(string);
-  let [wallnut,w] = await aa.w.get_active(url);
-  if (!wallnut)
-  {
-    aa.log('no wallnut found');
-    return ''
-  }
-  let checks = 0;
-  let log = make('div',{cla:'quote_check'});
-  let butt = make('button',
-  {
-    con:'stop checking '+quote_id,
-    clk:e=>{log.remove()}
-  });
+// aa.w.quote_check =async(string='')=>
+// {
+//   let [quote_id,url] = aa.fx.splitr(string);
+//   let {wallet,mint} = await aa.w.get_active(url);
+//   if (!wallet)
+//   {
+//     aa.log('no wallet found');
+//     return ''
+//   }
+//   let checks = 0;
+//   let log = make('div',{cla:'quote_check'});
+//   let butt = make('button',
+//   {
+//     con:'stop checking '+quote_id,
+//     clk:e=>{log.remove()}
+//   });
 
-  const re_check =async(quote_id)=>
-  {
-    if (!log || checks > 21) return;
-    let amount = w.quotes[quote_id].amount;
-    const quote = await wallnut.checkMintQuote(quote_id);
-    quote.amount = amount;
-    let state = quote.state.toLowerCase();
-    switch (state)
-    {
-      case 'unpaid':
-        if (!log.classList.contains(state)) 
-        {
-          log.append(state);
-          log.append(aa.mk.qr(quote.request));
-        }
-        setTimeout(()=>{re_check(quote_id)},3000);
-        break;
-      case 'paid':
-        if (!log.classList.contains(state)) 
-        {
-          log.classList.remove('unpaid');
-          aa.w.mint(quote_id+' '+mint);
-        }
-        setTimeout(()=>{re_check(quote_id)},5000);
-        break;
-      case 'issued':
-        log.remove();
-        aa.log(quote_id+' '+state);
-        break;
-    }
-    log.classList.add(state);
-  };
-  log.append(butt);
-  aa.log(log);
-  re_check(quote_id);
-};
+//   const re_check =async(quote_id)=>
+//   {
+//     if (!log || checks > 21) return;
+//     let amount = w.quotes[quote_id].amount;
+//     const quote = await wallnut.checkMintQuoteBolt11(quote_id);
+//     quote.amount = amount;
+//     let state = quote.state.toLowerCase();
+//     switch (state)
+//     {
+//       case 'unpaid':
+//         if (!log.classList.contains(state)) 
+//         {
+//           log.append(state);
+//           log.append(aa.mk.qr(quote.request));
+//         }
+//         setTimeout(()=>{re_check(quote_id)},3000);
+//         break;
+//       case 'paid':
+//         if (!log.classList.contains(state)) 
+//         {
+//           log.classList.remove('unpaid');
+//           aa.w.mint(quote_id+' '+mint);
+//         }
+//         setTimeout(()=>{re_check(quote_id)},5000);
+//         break;
+//       case 'issued':
+//         log.remove();
+//         aa.log(quote_id+' '+state);
+//         break;
+//     }
+//     log.classList.add(state);
+//   };
+//   log.append(butt);
+//   aa.log(log);
+//   re_check(quote_id);
+// };
 
 
 // receive token
-aa.w.receive =async(string='')=>
+aa.w.receive =async(string='',pubkey)=>
 {
   let [token,url] = string.split(aa.regex.fw);
-  let [wallnut,w] = await aa.w.get_active(url);
-  if (!wallnut)
+  let {wallet,mint} = await aa.w.get_active(url);
+  if (!wallet)
   {
-    aa.log('no wallnut found');
+    aa.log('no wallet found');
     return ''
   }
-  const proofs = await wallnut.receive(token,{privkey:w.privkey});
-  aa.w.tx_in({proofs,url});
+
+  // Get the specific privkey if pubkey is provided
+  let privkey = pubkey ? await aa.u.decrypt_cache.get_key(pubkey) : null;
+  const proofs = await wallet.receive(token, privkey ? {privkey} : {});
+  aa.w.tx_in({proofs, url: mint.url});
+  return proofs;
 };
 
 
@@ -599,7 +575,6 @@ aa.w.redeem =async(string='')=>
 {
   let ids = aa.fx.splitr(string).filter(aa.fx.is_key);
   return ids
-
 };
 
 
@@ -614,36 +589,36 @@ aa.w.save =async()=>
 // instantiate walLNut
 aa.w.start =async mod=>
 {
-  // aa.w.mod_butts(mod.used);
-  if (!mod.used) return;
-  // if (mod.o.events) delete mod.o.events;
-  let id = 'w_start';
-  let filter = {...aa.q.ls.w};
-  let old_since = mod.o.since;
-  if (old_since) filter.since = mod.o.since + 1;
-  [filter] = aa.q.filter(JSON.stringify(filter));
+  // // aa.w.mod_butts(mod.used);
+  // if (!mod.used) return;
+  // // if (mod.o.events) delete mod.o.events;
+  // let id = 'w_start';
+  // let filter = {...aa.q.ls.w};
+  // let old_since = mod.o.since;
+  // if (old_since) filter.since = mod.o.since + 1;
+  // [filter] = aa.q.filter(JSON.stringify(filter));
   
-  if (!mod.o.events?.size) mod.o.events = new Map();
-  else if (old_since) filter.since = mod.o.since + 1;
+  // if (!mod.o.events?.size) mod.o.events = new Map();
+  // else if (old_since) filter.since = mod.o.since + 1;
 
-  let {events} = await aa.r.get({id,filter});
+  // let {events} = await aa.r.get({id,filter});
   
-  let new_since = old_since || 1;
-  for (const [id,dat] of events)
-  {
-    if (!mod.o.events[id])
-    {
-      mod.o.events[id] = dat;
-      if (dat.event.created_at > new_since) 
-        new_since = dat.event.created_at;
-    }
-    aa.e.print_q(dat)
-  }
-  if (new_since !== old_since) 
-  {
-    mod.o.since = new_since;
-    mod.save()
-  }
+  // let new_since = old_since || 1;
+  // for (const [id,dat] of events)
+  // {
+  //   if (!mod.o.events[id])
+  //   {
+  //     mod.o.events[id] = dat;
+  //     if (dat.event.created_at > new_since) 
+  //       new_since = dat.event.created_at;
+  //   }
+  //   aa.e.print_q(dat)
+  // }
+  // if (new_since !== old_since) 
+  // {
+  //   mod.o.since = new_since;
+  //   mod.save()
+  // }
 };
 
 
@@ -663,33 +638,24 @@ aa.w.token =async(string='')=>
   amount = parseInt(amount);
   let pubkey,memo;
   if (s) [pubkey,memo] = aa.fx.splitr(s,aa.regex.fw);
-  let [wallet,w] = await aa.w.get_active();
+  let {wallet,mint} = await aa.w.get_active();
   let opts = {};
 
   if (pubkey && aa.fx.is_key(pubkey)) opts.pubkey = '02'+pubkey;
   if (!memo) memo = localStorage.zap_memo;
   
-  const {keep,send} = await wallet.send(amount,w.proofs,opts);
+  const {keep,send} = await wallet.send(amount,mint.proofs,opts);
   
-  const mint = w.url;
-  aa.w.tx_out(keep,mint);
+  aa.w.tx_out(keep,mint.url);
   
   return cashuts.getEncodedTokenV4(
   {
     memo,
-    mint,
+    mint:mint.url,
     proofs:send,
     unit:'sat',
   })
 };
-
-
-// start mod
-// aa.w.start =mod=>
-// {
-//   aa.mod.mk(mod);
-//   aa.w.mod_butts();
-// };
 
 
 aa.w.tx_in =async({proofs,url,o})=>

@@ -48,6 +48,98 @@ aa.u =
 };
 
 
+// decrypt cache
+// aa.u.o.decrypt_cache stores encrypted string in IndexedDB
+// aa.u.decrypt_cache._data stores decrypted {events, keys} in memory
+// lazy loaded on first decrypt
+aa.u.decrypt_cache = {
+  _data: { events: {}, keys: {} },
+  _loaded: false,
+
+  // decrypt cache blob from aa.u.o (lazy, on first use)
+  load: async () => {
+    if (aa.u.decrypt_cache._loaded) return;
+    aa.u.decrypt_cache._loaded = true;
+    if (!aa.u.o.decrypt_cache) return;
+    try {
+      let decrypted = await aa.fx.decrypt(aa.u.o.decrypt_cache);
+      aa.u.decrypt_cache._data = aa.pj(decrypted) || { events: {}, keys: {} };
+    } catch(e) {
+      aa.log('decrypt cache: failed to load');
+      aa.u.decrypt_cache._data = { events: {}, keys: {} };
+    }
+  },
+
+  // encrypt and save cache to aa.u.o
+  save: async () => {
+    try {
+      aa.u.o.decrypt_cache = await aa.fx.encrypt44(JSON.stringify(aa.u.decrypt_cache._data));
+      await aa.mod.save(aa.u);
+    } catch(e) {
+      aa.log('decrypt cache: failed to save');
+    }
+  },
+
+  add_key: async (privkey) => {
+    await aa.u.decrypt_cache.load();
+    const keypair = aa.fx.keypair(privkey);
+    if (!keypair) {
+      aa.log('Invalid private key');
+      return null;
+    }
+    const [pubkey_npub, pubkey_hex, privkey_hex] = keypair;
+    aa.u.decrypt_cache._data.keys[pubkey_hex] = privkey_hex;
+    debt.add(() => aa.u.decrypt_cache.save(), 1000, 'save_decrypt_cache');
+    return pubkey_hex;
+  },
+
+  get: async (event_id) => {
+    await aa.u.decrypt_cache.load();
+    return aa.u.decrypt_cache._data.events[event_id]?.decrypted;
+  },
+
+  add: async (event_id, decrypted, pubkey) => {
+    await aa.u.decrypt_cache.load();
+    aa.u.decrypt_cache._data.events[event_id] = { decrypted, pubkey };
+    debt.add(() => aa.u.decrypt_cache.save(), 1000, 'save_decrypt_cache');
+  },
+
+  get_key: async (pubkey) => {
+    await aa.u.decrypt_cache.load();
+    return aa.u.decrypt_cache._data.keys[pubkey];
+  },
+
+  has: async (event_id) => {
+    await aa.u.decrypt_cache.load();
+    return aa.u.decrypt_cache._data.events.hasOwnProperty(event_id);
+  },
+
+  has_key: async (pubkey) => {
+    await aa.u.decrypt_cache.load();
+    return aa.u.decrypt_cache._data.keys.hasOwnProperty(pubkey);
+  },
+
+  get_event_pubkey: async (event_id) => {
+    await aa.u.decrypt_cache.load();
+    return aa.u.decrypt_cache._data.events[event_id]?.pubkey;
+  },
+
+  clear: async () => {
+    aa.u.decrypt_cache._data = { events: {}, keys: {} };
+    aa.u.decrypt_cache._loaded = true;
+    await aa.u.decrypt_cache.save();
+  },
+
+  size: async () => {
+    await aa.u.decrypt_cache.load();
+    return {
+      events: Object.keys(aa.u.decrypt_cache._data.events || {}).length,
+      keys: Object.keys(aa.u.decrypt_cache._data.keys || {}).length
+    };
+  }
+};
+
+
 // add user
 aa.u.add_pubkey =async(pubkey='')=>
 {
@@ -386,6 +478,13 @@ aa.u.load_u =async()=>
   if (!pubkey && ls.pubkey)
   {
     pubkey = mod.o.pubkey = ls.pubkey;
+    delete ls.pubkey;
+
+    if (ls.npub) 
+    {
+      mod.o.npub = ls.npub;
+      delete ls.npub
+    }
     needs_saving = true;
   }
   if (!pubkey)

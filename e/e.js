@@ -133,24 +133,16 @@ aa.e.decrypt =async id=>
     aa.log('invalid id');
     return
   }
-  
+
   let dat = await aa.e.get(id);
-  if (!dat) 
+  if (!dat)
   {
     aa.log('event not found');
     return
   }
 
-  let wn = window.nostr;
-  if (!wn)
-  {
-    aa.log('no extension found');
-    return
-  }
-
-  let decrypted;
   let {kind,tags,content,pubkey} = dat.event;
-  if (kind === 4) 
+  if (kind === 4)
   {
     let pub_to = aa.fx.tag_value(tags,'p');
     if (aa.u.is_u(pub_to))
@@ -158,15 +150,15 @@ aa.e.decrypt =async id=>
       aa.log('content not for you');
       return
     }
-    decrypted = await wn.nip04.decrypt(pubkey,content);
   }
-  else decrypted = await wn.nip44.decrypt(pubkey,content);
+
+  let decrypted = await aa.fx.decrypt(content+' '+pubkey, id);
   if (!decrypted)
   {
     aa.log('decrypt failed');
     return
   }
-  
+
   aa.e.decrypted_content(id,decrypted);
   return decrypted
 };
