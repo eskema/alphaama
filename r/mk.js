@@ -31,13 +31,13 @@ aa.mk.k10002 =(string='')=>
 
   if (tags.length)
   {
-    const event = aa.e.normalise({kind:10002,tags});
+    const event = aa.fx.normalise_event({kind:10002,tags});
     aa.mk.confirm(
     {
       title:'new relay list',
       l:aa.mk.tag_list(tags),
       no:{exe:()=>{}},
-      yes:{exe:()=>{ aa.e.finalize(event) }}
+      yes:{exe:()=>{ aa.bus.emit('e:finalize', event) }}
     });
   }
 };

@@ -3,10 +3,10 @@ aa.r.auth =async data=>
 {
   // console.log(data);
   let [type,event,relay] = data;
-  event = aa.e.normalise(event);
+  event = aa.fx.normalise_event(event);
   event.tags = aa.fx.a_u(event.tags);
   if (!event.id) event.id = aa.fx.hash(event);
-  let signed = await aa.e.sign(event);
+  let signed = await aa.bus.request('e:sign', event);
   
   data = {relays:[relay],request:['AUTH',signed]};
   if (signed) aa.r.manager.postMessage(['auth',data]);
@@ -19,7 +19,7 @@ aa.r.event =async data=>
   // console.log(data);
   for (const sub of dat?.subs)
   {
-    aa.q.stamp(sub,dat.event.created_at);
+    aa.bus.emit('q:stamp', sub, dat.event.created_at);
     if (aa.r.on_sub.has(sub))
     {
       aa.r.on_sub.get(sub)(dat);
@@ -90,7 +90,7 @@ aa.r.ok =async data=>
 {
   const [type,id,is_ok,reason,url] = data;
   let key = `["${type}","${url}"]`;
-  let dat = await aa.e.get(id);
+  let dat = await aa.bus.request('e:get', id);
   let kind = dat ? dat.event.kind : '?'
   let text = `${kind} ${id} ${is_ok} ${reason}`;
   aa.log_key(key,text)
@@ -104,14 +104,14 @@ aa.r.ok =async data=>
 aa.r.ok_ok =async(id,url)=>
 {
   // const [s,id,is_ok,reason,url] = a;
-  let dat = await aa.e.get(id);
+  let dat = await aa.bus.request('e:get', id);
   if (!dat) return;
 
   const classes = ['not_sent','draft'];
   dat.clas = aa.fx.a_rm(dat.clas,classes);
   aa.fx.a_add(dat.seen,[url]);
   // aa.db.upd_e(dat);
-  let note = aa.e.printed.get(id);
+  let note = aa.bus.request('e:printed_get', id);
   if (note)
   {
     fastdom.mutate(()=>
@@ -121,7 +121,7 @@ aa.r.ok_ok =async(id,url)=>
       {
         note.classList.remove('not_sent','draft');
         note.querySelector('.by > .actions')
-          ?.replaceWith(aa.e.note_actions(dat))
+          ?.replaceWith(aa.bus.request('e:note_actions', dat))
       }
 
       let seen = note.dataset.seen 

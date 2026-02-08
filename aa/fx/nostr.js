@@ -184,3 +184,15 @@ aa.fx.clz =x=>
   }
   return c
 };
+
+
+// fill missing event fields
+aa.fx.normalise_event =(event={})=>
+{
+  if (!event.pubkey) event.pubkey = aa.bus.request('u:pubkey');
+  if (!event.kind) event.kind = 1;
+  if (!event.created_at) event.created_at = aa.now;
+  if (!event.tags) event.tags = [];
+  if (!event.content) event.content = '';
+  return event
+};

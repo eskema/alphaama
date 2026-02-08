@@ -28,7 +28,7 @@ const aa =
   [
     '/dep/fastdom.js?v=1.0.4',
     '/dep/nostr-tools.js?v=2.15.0',
-    '/dep/store.js',
+    // '/dep/store.js',
     '/dep/qrcode.js',
     // '/dep/asciidoctor.min.js?v=3.0.4',
     // '/dep/bolt11.js',
@@ -47,7 +47,7 @@ const aa =
   mods:
   [
     ['cli','/cli/cli.js'],
-    ['o','/o/o.js'],
+    ['o','/o/o.js','esm'],
     ['p','/p/p.js'],
     ['e','/e/e.js'],
     ['r','/r/r.js'],
@@ -57,7 +57,7 @@ const aa =
   ],
   scripts:
   [
-
+    '/aa/bus.js',
     '/aa/mk.js',
     '/aa/mod.js',
     '/aa/view.js',
@@ -74,7 +74,6 @@ const aa =
     '/aa/fx/util.js',
     '/aa/log.js',
     '/aa/wakelock.js',
-    '/av/av.js',
   ],
   styles:
   [
@@ -117,11 +116,21 @@ const aa =
 aa.add_mods =async(mods,target)=>
 {
   if (!target) target = aa;
-  await aa.add_scripts(mods.map(i=>i[1]));
-  for (const id of mods.map(i=>i[0]))
+  for (const entry of mods)
   {
-    if (!Object.hasOwn(target,id)) continue;
-    
+    let [id, src, type] = entry;
+
+    if (type === 'esm')
+    {
+      let module = await import(src);
+      target[id] = module.default;
+    }
+    else
+    {
+      await aa.add_scripts([src]);
+      if (!Object.hasOwn(target,id)) continue;
+    }
+
     let mod = target[id];
 
     if (Object.hasOwn(mod,'styles'))
@@ -240,6 +249,12 @@ aa.load =async(options={})=>
 
   let regex_module = await import('./regex.js');
   aa.regex = regex_module.default;
+
+  let av_module = await import('/av/av.js');
+  let av = av_module.default;
+  aa.mk.av = av.av;
+  aa.fx.generate_waveform = av.generate_waveform;
+  aa.add_styles(av.styles);
 
   await aa.add_scripts(deps);
   await aa.add_scripts(scripts);

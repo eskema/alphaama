@@ -214,7 +214,9 @@ aa.e.render_video =async(element,dat)=>
   let url = aa.fx.url_from_tags(dat.event.tags);
   if (url)
   {
-    let app = trusted?aa.mk.av(url):aa.mk.link(url);
+    let app = trusted
+      ? aa.mk.av(url,{on_grab:s=>aa.log(aa.mk.img(s))})
+      : aa.mk.link(url);
     element.prepend(make('p',{cla:'paragraph',app}));
     setTimeout(()=>
     {

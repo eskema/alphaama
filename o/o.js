@@ -7,7 +7,7 @@ options using localStorage key:value
 */
 
 
-aa.o =
+const o =
 {
   name:'options',
   about:'manage options',
@@ -24,7 +24,7 @@ aa.o =
       'theme': 'dark', // 'light'
       'score': '11', // user score needed for loading media
       'ext_image': 'gif heic jpeg jpg png webp',
-      'ext_video': 'mp4 webm', // fuck mov 
+      'ext_video': 'mp4 webm', // fuck mov
       'ext_audio': '3ga aac aiff flac m4a mp3 ogg wav',
     },
 // todo
@@ -49,7 +49,7 @@ aa.o =
 };
 
 // options actions
-aa.o.defaults =
+o.defaults =
 {
   cash:
   {
@@ -58,7 +58,7 @@ aa.o.defaults =
     {
       // aa.log('reload page for cache options to take effect')
     },
-    fx:s=> aa.fx.pick_other(s,aa.o.defaults.cash.options),
+    fx:s=> aa.fx.pick_other(s,o.defaults.cash.options),
     pre:s=>
     {
       if (s === 'on') return window.confirm('turn cache on?');
@@ -72,13 +72,13 @@ aa.o.defaults =
     {
       if (aa.l.dataset.theme !== s) aa.l.dataset.theme = s;
     },
-    fx:s=> aa.fx.pick_other(s,aa.o.defaults.theme.options)
+    fx:s=> aa.fx.pick_other(s,o.defaults.theme.options)
   }
 };
 
 
 // add key as value
-aa.o.add =(s='')=>
+o.add =(s='')=>
 {
   const as = s.split(',').map(i=>i.trim());
   if (as.length)
@@ -90,8 +90,8 @@ aa.o.add =(s='')=>
       {
         let oldValue = localStorage[key];
         localStorage[key] = newValue;
-        aa.mod.ui(aa.o,key);
-        aa.o.on_upd({key,newValue,oldValue})
+        aa.mod.ui(o,key);
+        o.on_upd({key,newValue,oldValue})
       }
     }
   }
@@ -99,9 +99,9 @@ aa.o.add =(s='')=>
 
 
 // remove option (if not default)
-aa.o.del =(s='')=>
+o.del =(s='')=>
 {
-  let mod = aa.o;
+  let mod = o;
   const id = mod.def.id;
   const log = localStorage.ns+' '+id+' rm';
 
@@ -111,7 +111,7 @@ aa.o.del =(s='')=>
     let keys = aa.fx.splitr(i);
 
     const key = keys.shift();
-    
+
     if (!key || !localStorage[key])
     {
       aa.log(`${log} key not found`);
@@ -123,45 +123,25 @@ aa.o.del =(s='')=>
       aa.log(`${log} key cannot be deleted`);
       continue;
     }
-    
+
     localStorage.removeItem(key);
 
     let l_id = id+'_'+key;
-    let l = aa.el.get(l_id); 
+    let l = aa.el.get(l_id);
     if (l)
     {
       l.remove();
       aa.el.delete(l_id)
     }
     aa.log(`${log} ${key}`);
-
-
-    // if (key && localStorage[key])
-    // {
-      // if (!Object.hasOwn(mod.def,key))
-      // {
-        // localStorage.removeItem(key);
-
-        // let l_id = id+'_'+key;
-        // let l = aa.el.get(l_id); 
-        // if (l)
-        // {
-        //   l.remove();
-        //   aa.el.delete(l_id)
-        // }
-        // aa.log(`${log} ${key}`);
-      // }
-      // else aa.log(`${log} key cannot be deleted`);
-    // }
-    // else aa.log(`${log} key not found`);
   }
 };
 
 
 // on load
-aa.o.load =async()=>
+o.load =async()=>
 {
-  const mod = aa.o;
+  const mod = o;
   const id = mod.def.id;
   // ensure default options are set
   for (const k in mod.def.ls)
@@ -178,76 +158,77 @@ aa.o.load =async()=>
     },
     {
       action:[id,'reset'],
-      optional:['<key>'], 
+      optional:['<key>'],
       description:'reset all or just a single option',
       exe:mod.reset
     },
     {
       action:[id,'del'],
-      optional:['<key>'], 
+      optional:['<key>'],
       description:'delete option',
       exe:mod.del
     },
   );
   mod.o = {id:id,ls:localStorage};
 
-  if (mod.o.ls.team) 
+  if (mod.o.ls.team)
   {
     mod.o.ls.theme = mod.o.ls.team;
-    aa.o.del('team');
+    o.del('team');
   }
 
+  // expose allowed extensions as getter on aa
+  Object.defineProperty(aa,'allowed_extensions',{get:o.allowed_extensions});
+
   // detect when changes happen on other tabs
-  window.onstorage = aa.o.on_storage;
+  window.onstorage = o.on_storage;
   // load mod
   await aa.mod.load(mod);
   aa.mod.mk(mod);
 };
 
 
-aa.o.on_storage =async o=>
+o.on_storage =async ev=>
 {
-  // aa.o.on_upd(o);
-  let con = `options changed in another tab: ${o.key} ${o.newValue}`;
+  let con = `options changed in another tab: ${ev.key} ${ev.newValue}`;
   let log = make('p',{con});
   let clk =e=>
   {
-    aa.mod.ui(aa.o,o.key);
+    aa.mod.ui(o,ev.key);
     let mom = e.target.parentElement;
     e.target.remove();
-    // mom.textContent = '';
-    mom.append(aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo'))
+    mom.append(aa.mk.butt_action(o.def.id+' add '+ev.key+' '+ev.oldValue,'undo'))
   };
   con = 'apply on this tab';
   let apply_butt = make('button',{cla:'butt plug',con,clk});
-  if (o.oldValue?.length) log.append(' ',apply_butt);
+  if (ev.oldValue?.length) log.append(' ',apply_butt);
   aa.log(log);
 };
 
 
-aa.o.on_upd =async o=>
+o.on_upd =async ev=>
 {
-  let log = make('p',{con:o.key+' '+o.newValue});
-  let undo_butt = aa.mk.butt_action(aa.o.def.id+' add '+o.key+' '+o.oldValue,'undo');
-  if (o.oldValue?.length) log.append(' ',undo_butt);
+  let log = make('p',{con:ev.key+' '+ev.newValue});
+  let undo_butt = aa.mk.butt_action(o.def.id+' add '+ev.key+' '+ev.oldValue,'undo');
+  if (ev.oldValue?.length) log.append(' ',undo_butt);
   log = aa.log(log);
   return log
 };
 
 
 // makes a mod option item, to use with aa.mod.mk()
-aa.o.mk =(k,v)=>
+o.mk =(k,v)=>
 {
-  const id = aa.o.def.id;
+  const id = o.def.id;
   const l = make('li',{cla:'item'});
   let s = id+' add '+k+' '+v;
-  if (k in aa.o.defaults)
+  if (k in o.defaults)
   {
-    let dis = aa.o.defaults[k];
-    if ('options' in dis) 
+    let dis = o.defaults[k];
+    if ('options' in dis)
     {
       l.dataset.after = dis.options.join()
-      if (!dis.options.includes(v)) 
+      if (!dis.options.includes(v))
         v = dis.options[0];
     }
     if ('exe' in dis) dis.exe(v);
@@ -260,53 +241,48 @@ aa.o.mk =(k,v)=>
 
 
 // reset one, multiple or all values
-aa.o.reset =(s='')=>
+o.reset =(s='')=>
 {
   if (s)
   {
-    // const as = s.split(',');
-    // if (as.length)
-    // {
-      for (const i of s.split(',')) 
+    for (const i of s.split(','))
+    {
+      let a = i.trim().split(' ');
+      const v = a[0];
+      if (o.def.ls[v])
       {
-        let a = i.trim().split(' ');
-        const v = a[0];
-        if (aa.o.def.ls[v])
-        {
-          localStorage[v] = aa.o.def.ls[v];
-          aa.mod.ui(aa.o,k);
-        }
-        else localStorage.removeItem(v);
+        localStorage[v] = o.def.ls[v];
+        aa.mod.ui(o,k);
       }
-    // }
-    // aa.log(aa.mk.butt_action(aa.o.def.id+' reset '+s));
+      else localStorage.removeItem(v);
+    }
   }
-  else if (window.confirm('reset all options?')) 
+  else if (window.confirm('reset all options?'))
   {
     localStorage.clear();
-    for (const k in aa.o.def.ls) localStorage[k] = aa.o.def.ls[k];
-    aa.mod.ui(aa.o);
+    for (const k in o.def.ls) localStorage[k] = o.def.ls[k];
+    aa.mod.ui(o);
   }
 };
 
 
 // save and update ui
-aa.o.save =()=>
+o.save =()=>
 {
-  aa.o.o = {id:'o',ls:localStorage};
-  aa.mod.mk(aa.o); 
+  o.o = {id:'o',ls:localStorage};
+  aa.mod.mk(o);
 };
 
 
-aa.fx.pick_other =(s,a)=>
+// allowed media extensions from options
+o.allowed_extensions =()=>
 {
-  return a.find(i=>i!==s)
+  return {
+    image: localStorage.ext_image.split(' '),
+    video: localStorage.ext_video.split(' '),
+    audio: localStorage.ext_audio.split(' '),
+  }
 };
 
-aa.fx.cycle =(s,a)=>
-{
-  let index = a.indexOf(s);
-  if (index === a.length-1) index = 0
-  else index++;
-  return a[index]
-};
+
+export default o;

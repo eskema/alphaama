@@ -108,7 +108,7 @@ aa.mk.metadata =(key,value,p)=>
 };
 
 
-aa.mk.metadata_about =(k,v)=> make('p',{app:aa.e.content(v)});
+aa.mk.metadata_about =(k,v)=> make('p',{app:aa.fx.parse(v)});
 
 
 aa.mk.metadata_banner =(k,v,p)=> aa.mk.metadata_picture(k,v,p);

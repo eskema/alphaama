@@ -290,6 +290,9 @@ aa.u.load =async()=>
   
   await aa.mod.load(mod);
   await mod.start(mod);
+
+  // bus provider (breaks dependency on aa.u.p.pubkey from other modules)
+  aa.bus.provide('u:pubkey', () => aa.u.o?.pubkey);
 };
 
 

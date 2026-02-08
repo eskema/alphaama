@@ -141,3 +141,19 @@ aa.fx.intersect =(o={},a=[],n=2)=>
   }
   return dis
 };
+
+
+// pick the other item from a 2-element array
+aa.fx.pick_other =(s,a)=>
+{
+  return a.find(i=>i!==s)
+};
+
+// cycle to next item in array
+aa.fx.cycle =(s,a)=>
+{
+  let index = a.indexOf(s);
+  if (index === a.length-1) index = 0
+  else index++;
+  return a[index]
+};

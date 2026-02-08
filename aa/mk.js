@@ -184,7 +184,7 @@ aa.mk.doc =text=>
   let article = make('article',
   {
     cla:'content parsed',
-    app:aa.e.content(text,aa.fx.is_trusted(4))
+    app:aa.fx.parse(text,aa.fx.is_trusted(4))
   });
 
   let title = text.slice(0,text.indexOf('\n'));
@@ -233,7 +233,7 @@ aa.mk.help =async(s='')=>
   let article = make('article',
   {
     cla:'content parsed',
-    app:aa.e.content(o.readme,1)
+    app:aa.fx.parse(o.readme,1)
   });
 
   // let title = text.slice(0,text.indexOf('\n'));
@@ -928,6 +928,35 @@ aa.mk.time =timestamp=>
   l.title = title;
   l.dataset.elapsed = aa.fx.time_elapsed(d);
   return l
+};
+
+
+// upload images (wip)
+aa.mk.file_input =()=>
+{
+  let dialog = aa.el.get('dialog');
+  let input = make('input',{typ:'file'});
+  input.toggleAttribute('multiple');
+
+  let info = make('div');
+  input.addEventListener('change',e=>
+  {
+    info.textContent = '';
+    const file_list = e.target.files;
+    if (file_list.length)
+    {
+      for (const file of file_list)
+      {
+        let img = make('img');
+        img.src = URL.createObjectURL(file);
+        img.height = 100;
+        info.append(img, make('p',{con:JSON.stringify(file)}))
+      }
+    }
+    console.log(file_list)
+  });
+  dialog.append(input,' ',info);
+  dialog.showModal();
 };
 
 

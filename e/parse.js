@@ -92,13 +92,17 @@ aa.parse.url =(match,is_trusted)=>
     result.after = match.input.slice(match[0].length + match.index);
   }
 
-  const [src,type] = aa.fx.src_type(url);
+  const [src,type] = aa.fx.src_type(url,aa.allowed_extensions);
 
   if (!is_trusted || !type) result.parsed = aa.mk.link(src);
   else if (type === 'image') result.parsed = aa.mk.img(src);
   else if (type === 'audio' || type === 'video')
-    result.parsed = aa.mk.av(src,false,type==='audio'?true:false);
-
+  {
+    let options = {};
+    if (type === 'audio') options.audio = true;
+    else options.on_grab = s=>aa.log(aa.mk.img(s));
+    result.parsed = aa.mk.av(src,options);
+  }
   
   return result
 };

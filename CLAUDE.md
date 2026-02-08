@@ -40,7 +40,7 @@ Everything hangs off a single global `aa` object. Each module extends it.
 | `r/` | `aa.r` | Relays: WebSocket mgmt via worker, scoring, batching, outbox model | r.js, manager.js (worker), msg.js, fx.js |
 | `u/` | `aa.u` | User: auth (NIP-07), setup, variable system (`u`, `k3`) | u.js |
 | `w/` | `aa.w` | Wallet (walLNut): Cashu ecash, mints, proofs. **Experimental/unfinished** | w.js, mk.js, kinds.js |
-| `db/` | `aa.db` | Database: IndexedDB + Cache via persistent workers | db.js, idb.js (worker), cash.js (service worker) |
+| `db/` | `aa.db` | Database: RedEventStore (WASM/OPFS via `@nostr/gadgets/redstore`) + Cache. Migrating from IndexedDB | db.js, cash.js (service worker) |
 | `o/` | `aa.o` | Options: localStorage settings (theme, pow, score, pagination) | o.js |
 | `av/` | — | Audio/video player | av.js |
 
@@ -99,7 +99,7 @@ Phase 4: Follows via outbox model (999ms delay)
 ## Key Design Decisions
 
 ### DB workers (persistent)
-IDB operations in workers to avoid UI jank. Workers created once, reused forever (no thrashing). Request-ID correlation pattern for async multiplexing. 6.6s timeout resolves to null (graceful degradation).
+Event storage uses RedEventStore (`@nostr/gadgets/redstore`) — a WASM-backed store using OPFS (Origin Private File System). The manager worker spawns a nested module worker (`dep/redstore-worker.js`) that owns the WASM/OPFS file handle. Leader election via BroadcastChannel ensures only one tab writes. Old IndexedDB store (`store.IDBEventStore`) code is commented out in `r/manager.js` for rollback.
 
 ### Relay scoring (0-100)
 Born from real-world unreliability: users put bad relays in their kind-10002 lists, and the outbox model needs to choose which to actually use. Scores based on terminations (-20 each, 24h decay), error rates, success rates. No-history relays get 50.
@@ -123,11 +123,16 @@ Query filters use shortcuts: `"u"` = your pubkey, `"k3"` = your follows. Time sh
 
 - **localStorage**: User preferences that survive reloads (options, relay sets, user pubkey/variables)
 - **sessionStorage**: Tab-specific UI state (expand/collapse, active queries, last query)
-- **IndexedDB**: Persistent data (events, author profiles, module config via "stuff" store)
+- **OPFS (RedEventStore)**: Persistent event storage via WASM. Replaces IndexedDB for events (migration in progress)
 - **Memory Maps**: Session cache (events in `aa.e.em`/`aa.e.em_a`, profiles in `aa.p`, printed elements in `aa.e.printed`)
 
-## Database Schema (IndexedDB: "alphaama", v16)
+## Database
 
+### RedEventStore (current)
+WASM/OPFS-backed via `@nostr/gadgets/redstore`. Bundled in `dep/` as three files: `redstore.js` (IIFE, main class), `redstore-worker.js` (ESM, nested worker), `gadgets_redstore_bg.wasm`. API: `queryEvents(filter)` returns `Promise<Array>`, `saveEvent(event)`, `deleteEvents(ids)`, `loadReplaceables(specs)`. Rebuild via `npm run redstore` in `_local/`.
+
+### IndexedDB (legacy, commented out)
+Old schema ("alphaama", v16):
 - **events**: keyPath `event.id`, indexes: pubkey, kind, created_at, refs (multiEntry), id_a
 - **authors**: keyPath `pubkey`, indexes: npub (unique), name, nip05
 - **stuff**: keyPath `id` (general module data)

@@ -103,6 +103,35 @@ aa.fx.rands =(length=6,sample)=>
 };
 
 
+// check if url matches any extension in list
+aa.fx.url_ext =(url,extensions)=>
+{
+  const src = (url.origin + url.pathname).toLowerCase();
+  for (const ext of extensions)
+  {
+    if (src.endsWith(`.${ext}`)
+    || url.searchParams.get('format') === ext) return true
+  }
+  return false
+};
+
+
+// detect media type from url and extensions map
+aa.fx.src_type =(url,extensions)=>
+{
+  let result = [url.href];
+  for (const id in extensions)
+  {
+    if (aa.fx.url_ext(url,extensions[id]))
+    {
+      result.push(id);
+      break;
+    }
+  }
+  return result
+};
+
+
 aa.fx.format_bytes =(bytes,decimals=2)=>
 {
   if (!+bytes) return '0 Bytes';

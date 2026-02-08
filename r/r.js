@@ -143,8 +143,8 @@ aa.r.add_from_o =relays=>
 aa.r.bro =async(s='')=>
 {
   let [id,...relays] = s.split(' ');
-  let dat = await aa.e.get(id);
-  if (dat) 
+  let dat = await aa.bus.request('e:get', id);
+  if (dat)
   {
     aa.r.send_event({event:dat.event,relays});
   }
@@ -208,7 +208,7 @@ aa.r.def_req =(id,filter,relays)=>
   const request = ['REQ',id,filter];
   const options = {eose:'close'};
   if (!relays?.length) relays = aa.r.r;
-  if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id,aa.e.print_q);
+  if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id, dat => aa.bus.emit('e:print_q', dat));
   aa.r.on_eose.set(id,()=>
   {
     aa.r.on_eose.delete(id);

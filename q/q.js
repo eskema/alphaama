@@ -151,7 +151,7 @@ aa.q.db =async(s='')=>
       
       times++;
       let [get_id,events] = await aa.r.get_filter(filtered);
-      for (const dat of events) aa.e.print_q(dat);
+      for (const dat of events) aa.bus.emit('e:print_q', dat);
     } 
   }
 };
@@ -453,6 +453,9 @@ aa.q.load =async()=>
     aa.mod.save(mod);
   }
   aa.mod.mk(mod);
+
+  // bus listener (breaks r -> q circular dependency)
+  aa.bus.on('q:stamp', (sub, ts) => aa.q.stamp(sub, ts));
 };
 
 
@@ -603,7 +606,7 @@ aa.q.outbox =(request,more)=>
   
   aa.r.add(`${outbox.map(i=>i[0]).join(' out,')} out`);
   
-  let callback = more?.on_sub || aa.e.print_q;
+  let callback = more?.on_sub || (dat => aa.bus.emit('e:print_q', dat));
   aa.r.on_sub.set(fid,callback);
   aa.r.send_out({request:['REQ',fid,filter],outbox,options});
 
@@ -640,7 +643,7 @@ aa.q.req =(s='')=>
   }
   else
   {
-    aa.r.on_sub.set(fid,aa.e.print_q);
+    aa.r.on_sub.set(fid, dat => aa.bus.emit('e:print_q', dat));
     aa.r.send_req({request,relays,options});
     aa.q.log('req',request,`to: ${relays}`);
   }
@@ -684,7 +687,7 @@ aa.q.run =async(s='')=>
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
       if (!relays.length) relays = aa.r.r;
-      aa.r.on_sub.set(fid,aa.e.print_q);
+      aa.r.on_sub.set(fid, dat => aa.bus.emit('e:print_q', dat));
       setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
       
@@ -703,7 +706,7 @@ aa.q.print =async(id,options)=>
   for (const sheet of sheets)
   {
     for (const [id,dat] of sheet.events)
-      aa.e.print_q(dat)
+      aa.bus.emit('e:print_q', dat)
   }
 };
 
@@ -814,8 +817,8 @@ aa.q.sub =async s=>
           aa.q.o.subs[fid] = dat.event.created_at;
           debt.add(()=>{ aa.mod.save(aa.q) },666,fid)
         }
-        aa.e.print_q(dat)
-      } 
+        aa.bus.emit('e:print_q', dat)
+      }
     };
 
     if (!relays.length)

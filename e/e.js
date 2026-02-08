@@ -71,17 +71,8 @@ aa.e.clear_events =s=>
 };
 
 
-aa.e.content =(content,is_trusted)=>
-{
-  let items =
-  [
-    {id:'url', regex:aa.regex.url, exe:aa.parse.url},
-    {id:'nostr', regex:aa.regex.nostr, exe:aa.parse.nostr},
-    {id:'hashtag', regex:aa.regex.hashtag, exe:aa.parse.hashtag},
-  ];
-
-  return parse_all({ content, items, is_trusted })
-};
+// content parsing (delegated to aa.fx)
+aa.e.content = aa.fx.parse;
 
 
 // parse content as object
@@ -552,6 +543,14 @@ aa.e.load =async()=>
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
   aa.mod.help_setup(aa.e);
   aa.cli.on_upd.push(aa.e.draft_upd);
+
+  // bus providers (breaks r -> e circular dependency)
+  aa.bus.provide('e:sign', aa.e.sign);
+  aa.bus.provide('e:get', aa.e.get);
+  aa.bus.provide('e:printed_get', id => aa.e.printed.get(id));
+  aa.bus.provide('e:note_actions', aa.e.note_actions);
+  aa.bus.on('e:print_q', aa.e.print_q);
+  aa.bus.on('e:finalize', (event, relays) => aa.e.finalize(event, relays));
 };
 
 
@@ -847,16 +846,8 @@ aa.e.finalize =async(event,relays)=>
 };
 
 
-// fill missing event fields
-aa.e.normalise =(event={})=>
-{
-  if (!event.pubkey) event.pubkey = aa.u.p.pubkey;
-  if (!event.kind) event.kind = 1;
-  if (!event.created_at) event.created_at = aa.now;
-  if (!event.tags) event.tags = [];
-  if (!event.content) event.content = '';
-  return event
-};
+// fill missing event fields (delegated to aa.fx)
+aa.e.normalise = aa.fx.normalise_event;
 
 
 // sign event

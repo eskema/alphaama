@@ -41,7 +41,10 @@ aa.parse.url =(match,is_trusted)=>
   if (type === 'image') return aa.mk.img(src);
   else if (type === 'audio' || type === 'video')
   {
-    let l = aa.mk.av(src,false,type==='audio'?true:false);
+    let options = {};
+    if (type === 'audio') options.audio = true;
+    else options.on_grab = s=>aa.log(aa.mk.img(s));
+    let l = aa.mk.av(src,options);
     return l
   }
   return match[0]
