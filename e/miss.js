@@ -198,6 +198,12 @@ aa.e.get_missing =type=>
         filters = [{ids:chunk}];
         break;
     }
+
+    if (!filters)
+    {
+      console.error('no filters', type, filters);
+      return
+    }
     
     for (const f of filters)
     {

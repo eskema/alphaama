@@ -33,7 +33,7 @@ Everything hangs off a single global `aa` object. Each module extends it.
 | Dir | Namespace | What | Key files |
 |-----|-----------|------|-----------|
 | `aa/` | `aa.*` | Core framework, init, element registry (Map), utilities | aa.js, mk.js, fx/ (array, string, color, time, nostr, tags, validate, dom, util), clk.js, view.js, mod.js, log.js |
-| `cli/` | `aa.cli` | CLI input (`.aa` prefix), command parsing, history, autocomplete | cli.js, mk.js |
+| `cli/` | `aa.cli` | CLI input (`.` prefix, customizable), command parsing, history, autocomplete | cli.js, mk.js |
 | `e/` | `aa.e` | Events: creation, signing, rendering, threading, orphan handling | e.js, kinds.js, printer.js, render.js, parse.js, mk.js, miss.js, miner.js |
 | `p/` | `aa.p` | Profiles: metadata, follows/followers, Web-of-Trust, relay hints | p.js, mk.js, clk.js, view.js |
 | `q/` | `aa.q` | Queries: filter templates, variable expansion, subscriptions, outbox | q.js |

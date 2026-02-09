@@ -1,4 +1,4 @@
 = u => user / you
 
-* to setup a user via browser extension, type: `.aa u setup` and follow instructions.
-* if you just want to read stuff, you can setup a user in read-only mode via nip05, nprofile or npub by appending it to the setup command: `.aa u setup <your_nip05>`
+* to setup a user via browser extension, type: `. u setup` and follow instructions.
+* if you just want to read stuff, you can setup a user in read-only mode via nip05, nprofile or npub by appending it to the setup command: `. u setup <your_nip05>`
