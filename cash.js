@@ -36,7 +36,7 @@ cash.all =async(keys=[], request_id)=>
     {
       let response = await cash.grab(request);
       // let response = await fetch(request);
-      if (response?.ok) await cache.put(request,new Response(response.clone()))
+      if (response) await cache.put(request, response.clone())
     }
     catch{}
   }
@@ -80,7 +80,11 @@ cash.enable =async()=>
 // should this response be cached?
 cash.cacheable =response=>
 {
-  if (!response?.ok) return false;
+  if (!response) return false;
+  // opaque responses (cross-origin no-cors) have ok=false
+  // and inaccessible headers — cache them anyway
+  if (response.type === 'opaque') return true;
+  if (!response.ok) return false;
   let type = response.headers.get('Content-Type') || '';
   return type.startsWith('image/')
 };
@@ -89,6 +93,9 @@ cash.cacheable =response=>
 // clone response with a fresh Date header (marks as recently used)
 cash.touch =async(cache, request, response)=>
 {
+  // opaque responses can't be reconstructed (status=0 is invalid)
+  if (response.type === 'opaque')
+    return cache.put(request, response.clone());
   let headers = new Headers(response.headers);
   headers.set('Date', new Date().toUTCString());
   let fresh = new Response(await response.clone().blob(),
@@ -106,7 +113,11 @@ cash.touch =async(cache, request, response)=>
 cash.flow =async e=>
 {
   let is_app = new URL(e.request.url).origin === self.location.origin;
-  if (is_app && cash.dev) return fetch(e.request);
+  if (is_app && cash.dev)
+  {
+    try { return await fetch(e.request) }
+    catch { return Response.error() }
+  }
 
   const cache = await caches.open(cash.id);
   let response = await cache.match(e.request);
@@ -117,7 +128,11 @@ cash.flow =async e=>
   }
 
   response = await e.preloadResponse;
-  if (!response) response = await fetch(e.request);
+  if (!response)
+  {
+    try { response = await fetch(e.request) }
+    catch { return Response.error() }
+  }
   if (cash.cacheable(response))
     cache.put(e.request, response.clone());
   return response
@@ -127,16 +142,10 @@ cash.flow =async e=>
 // fetch
 cash.grab =async request=>
 {
-  return new Promise(async(resolve,reject)=>
-  {
-    let response;
-    try
-    {
-      response = await fetch(request);
-      if (response?.ok) resolve(response.clone())
-    }
-    catch { reject(response) }
-  })
+  let response = await fetch(request);
+  if (response?.ok || response?.type === 'opaque')
+    return response.clone();
+  return null
 };
 
 
@@ -205,6 +214,8 @@ cash.evict =async()=>
   for (const req of requests)
   {
     const res = await cache.match(req);
+    // opaque responses have no accessible headers — skip them
+    if (res.type === 'opaque') continue;
     let date = new Date(res.headers.get('Date') || 0).getTime();
     let size = +(res.headers.get('Content-Length') || 0);
     entries.push({req, date, size});
@@ -225,20 +236,14 @@ cash.evict =async()=>
 onactivate =e=>
 {
   e.waitUntil(
-    cash.enable().then(()=> cash.evict())
+    cash.enable()
+    .then(()=> cash.evict())
+    .then(()=> self.clients.claim())
   )
 };
 
 
-oninstall =e=>
-{
-  e.waitUntil(async()=>
-  {
-    await cash.add(['/','/index.html'])
-    // const cache = await caches.open(cash.id);
-    // await cache.addAll(['/','/index.html']);
-  })
-};
+oninstall =()=> self.skipWaiting();
 
 
 onmessage =e=>

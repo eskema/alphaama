@@ -1,6 +1,6 @@
 aa.db.srcs = new Map();
 // cache
-aa.db.srcs.set('cash','/db/cash.js');
+aa.db.srcs.set('cash','/cash.js');
 aa.db.cash = new Worker(aa.db.srcs.get('cash'));
 
 // indexedDB
@@ -23,11 +23,11 @@ aa.db.idb.onmessage = e => aa.db.handle_response('idb', e);
 // web cache navigation for offline use
 if ('serviceWorker' in navigator)
 {
-  if (localStorage.cash === 'on')
-  {
+  // if (localStorage.cash === 'on')
+  // {
     navigator.serviceWorker
     .register(aa.db.srcs.get('cash'),{scope:'/'});
-  }
+  // }
   // else
   // {
   //   navigator.serviceWorker

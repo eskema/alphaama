@@ -78,6 +78,26 @@ indexed_db.ops.dex_all =async(db,o,request_id)=>
 };
 
 
+// return all records from a store
+indexed_db.ops.all =async(db,o,request_id)=>
+{
+  const odb = db.transaction(o.store)
+  .objectStore(o.store);
+
+  const a = [];
+  odb.openCursor().onsuccess=e=>
+  {
+    const cursor = e.target.result;
+    if (cursor)
+    {
+      a.push(cursor.value);
+      cursor.continue();
+    }
+    else postMessage({request_id, data: a})
+  }
+};
+
+
 indexed_db.ops.get =async(db,o,request_id)=>
 { // o = {store:'',key:'id'}
   const odb = db.transaction(o.store).objectStore(o.store);

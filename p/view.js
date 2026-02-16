@@ -46,5 +46,19 @@ aa.view.ls.npub1 =async npub=>
 // view for nprofile
 aa.view.ls.nprofile1 =async nprofile=>
 {
-
+  let data = aa.fx.decode(nprofile);
+  if (!data?.pubkey) return;
+  if (data.relays?.length)
+  {
+    let p = await aa.p.author(data.pubkey);
+    let relays = {};
+    for (const url of data.relays)
+    {
+      relays[url] = {sets:['nprofile']};
+    }
+    aa.p.relays_add(relays,p);
+    aa.p.save(p);
+  }
+  let npub = aa.fx.encode('npub',data.pubkey);
+  aa.view.ls.npub1(npub);
 };

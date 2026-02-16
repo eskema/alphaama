@@ -98,8 +98,8 @@ aa.mk.details =(con,l=false,open=false,cla='')=>
   const summary = make('summary',{con});
   details.append(summary);
   if (!l) return details;
-  // if (l.classList.contains('list'))
-  summary.dataset.count = l.children.length;
+  if (l instanceof HTMLElement)
+    summary.dataset.count = l.children.length;
   details.append(l);
   return details
 };

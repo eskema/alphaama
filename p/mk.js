@@ -32,7 +32,6 @@ aa.mk.profile_data =p=>
       'score',
       'updated',
       'verified',
-      'xpub',
     ];
     if (k && !excl.includes(k)) 
     {
@@ -47,6 +46,34 @@ aa.mk.profile_data =p=>
       else l.append(item,' ');
     }
   }
+  return l
+};
+
+
+aa.mk.mention_item =(p,w)=>
+{
+  const l = make('li',{cla:'item mention',dat:{before:p.metadata.name??''}});
+  let after = (p.petname?p.petname:p.petnames[0])+' '+(p.metadata.nip05??'');
+  l.append(
+    make('span',{cla:'description',con:after,}),
+    make('span',{cla:'val',con:p.npub})
+  );
+  l.tabIndex = '1';
+  
+  const clk =e=>
+  {
+    aa.cli.upd_from_oto('nostr:'+e.target.querySelector('.val').textContent,w);
+  };
+  l.onclick = clk;
+  l.onkeydown =e=>
+  {
+    if (e.key === 'Enter')
+    {
+      e.stopPropagation();
+      e.preventDefault();
+      clk(e)
+    }
+  };
   return l
 };
 
@@ -122,7 +149,7 @@ aa.mk.metadata_lud06 =(k,v)=> aa.mk.metadata_lud16(k,v);
 
 aa.mk.metadata_nip05 =(k,v,p)=>
 {
-  l = make('a',{con:v});
+  let l = make('a',{con:v});
   let [username,domain] = v.split('@');
   if (!username || !domain) return l;
   

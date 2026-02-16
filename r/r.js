@@ -246,31 +246,19 @@ aa.r.del =s=>
 };
 
 
-// aa.r.eose =async data=>
+// aa.r.eose_log =([id,url])=>
 // {
-//   let [eose,sub_id,url] = data;
-//   if (aa.r.on_eose.has(sub_id))
+//   let cla = 'eose';
+//   let log = aa.el.get(cla);
+//   if (!log) 
 //   {
-//     aa.r.on_eose.get(sub_id)(url);
-//     return
+//     log = aa.mk.details(cla);
+//     aa.el.set(cla,log);
+//     aa.log(log);
 //   }
-//   else aa.log_details('r.eose','["EOSE","…"]',sub_id,url)
+//   log.append()
+//   aa.log(data.join(' '))
 // };
-
-
-aa.r.eose_log =([id,url])=>
-{
-  let cla = 'eose';
-  let log = aa.el.get(cla);
-  if (!log) 
-  {
-    log = aa.mk.details(cla);
-    aa.el.set(cla,log);
-    aa.log(log);
-  }
-  log.append()
-  aa.log(data.join(' '))
-};
 
 
 // make request and await eose

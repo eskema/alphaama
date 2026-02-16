@@ -101,9 +101,7 @@ aa.clk.p_req =e=>
   const xid = profile?.dataset.pubkey;
   const p = aa.db.p[xid];
   const filter = `{"authors":["${p.pubkey}"],"kinds":[1],"limit":100}`;
-  let relay = p.relay;
-  if (!relay && p.relays.length) 
-  relay = p.relays.filter(r=>r.sets.includes('write'))[0];
+  let relay = aa.p.relays(p,'write')[0];
   if (!relay) relay = 'read';
   aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req ${relay} ${filter}`);
 };

@@ -21,33 +21,6 @@ aa.mk.item_action =(k,v,s)=>
 };
 
 
-aa.mk.mention_item =(p,w)=>
-{
-  const l = make('li',{cla:'item mention',dat:{before:p.metadata.name??''}});
-  let after = (p.petname?p.petname:p.petnames[0])+' '+(p.metadata.nip05??'');
-  l.append(
-    make('span',{cla:'description',con:after,}),
-    make('span',{cla:'val',con:p.npub})
-  );
-  l.tabIndex = '1';
-  
-  const clk =e=>
-  {
-    aa.cli.upd_from_oto('nostr:'+e.target.querySelector('.val').textContent,w);
-  };
-  l.onclick = clk;
-  l.onkeydown =e=>
-  {
-    if (e.key === 'Enter')
-    {
-      e.stopPropagation();
-      e.preventDefault();
-      clk(e)
-    }
-  };
-  return l
-};
-
 
 // makes an action item for otocomplete
 aa.mk.oto_act_item =(o,s)=>

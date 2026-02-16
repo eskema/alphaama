@@ -15,9 +15,6 @@ aa.p =
   def:
   {
     id:'p',
-    ls:{},
-    followed:[],
-    data: new Map()
   },
   name:'profiles',
   about:'manage user profiles',
@@ -41,7 +38,6 @@ aa.p =
       ['@','mention'],
     ]
   },
-  db: new Map(),
   profiles: new Map()
 };
 
@@ -464,9 +460,15 @@ aa.p.load =async()=>
     },
     {
       action:[id,'follows'],
-      optional:['<pubkey>'], 
+      optional:['<pubkey>'],
       description:'followed by pubkey',
       exe:aa.p.follows
+    },
+    {
+      action:[id,'search'],
+      required:['<text>'],
+      description:'search stored profiles by name, nip05, or petname',
+      exe:aa.p.search
     },
   );
   // oto complete profiles
@@ -519,7 +521,7 @@ aa.p.migrate_p_fields =p=>
     p.petnames = [];
     upd = 1;
   }
-  if (p.extradata && (p.extradata.petnames.length !== !p.petnames.length))
+  if (p.extradata && (p.extradata.petnames.length !== p.petnames.length))
   {
     p.petnames = p.extradata.petnames;
     upd = 1;
@@ -567,37 +569,27 @@ aa.p.migrate_p_fields =p=>
 
 
 
-// creates a mention when composing a note
-aa.p.oto =text=>
+// find profiles matching string s (case-insensitive substring)
+aa.p.find =s=>
 {
-  const w = text.split(' ').pop();
-  if (!w.startsWith('@') || w.length < 2) return
-  // remove @ from start of word string
-  let s = w.slice(1).toLowerCase();
-  // filter p conditions
-  const for_mentions =p=> 
+  s = s.toLowerCase();
+  return Object.values(aa.db.p)
+  .filter(p=>
   {
-    if (p.hasOwnProperty('metadata'))
+    if (!p.metadata) return false;
+    if (p.metadata?.name?.toLowerCase().includes(s)) return true;
+    if (p.petnames?.some(n => n?.toLowerCase().includes(s))) return true;
+    if (s > 3)
     {
-      if (p.metadata.hasOwnProperty('name') && p.metadata.name?.length
-      && p.metadata.name.toLowerCase().includes(s)) 
-        return true;
-      if (p.metadata.hasOwnProperty('nip05') && p.metadata.nip05?.length
-      && p.metadata.nip05.toLowerCase().includes(s)) 
-        return true;
+      if (p.metadata?.nip05?.toLowerCase().includes(s)) return true;
+      if (p.petname?.toLowerCase().includes(s)) return true;
     }
-    for (const petname of [p.petname,...p.petnames])
-    {
-      if (petname?.toLowerCase().includes(s)) return true
-    }
-  };
-  // 
-  const a = Object.values(aa.db.p).filter(for_mentions)
+  })
   .sort((c,d)=>
   {
-    let a_name = c.metadata.name || '';
-    let b_name = d.metadata.name || '';
-    
+    let a_name = c.metadata?.name?.toLowerCase() || '';
+    let b_name = d.metadata?.name?.toLowerCase() || '';
+
     if (a_name === s) return -1;
     if (b_name === s) return 1;
 
@@ -607,9 +599,23 @@ aa.p.oto =text=>
     if (a_name < b_name) return -1;
     if (a_name > b_name) return 1;
     return 0
-  }).map(p=>aa.mk.mention_item(p,w));
-  // for (const p of a) aa.cli.oto.append(...a);
-  aa.cli.oto.append(...a);
+  })
+};
+
+
+// creates a mention when composing a note
+aa.p.oto =text=>
+{
+  const w = text.split(' ').pop();
+  console.log('aa.p.oto',w.length)
+  if (!w.startsWith('@') || w.length < 2) return
+  let s = w.slice(1);
+  if (!s) return;
+  debt.add(()=>
+  {
+    let a = aa.p.find(s).map(p=>aa.mk.mention_item(p,w));
+    fastdom.mutate(()=>{aa.cli.oto.append(...a)});
+  }, 420, 'p.oto')
 };
 
 
@@ -633,7 +639,6 @@ aa.p.p =pubkey=>
     score:0, // score
     updated:0, // last updated timestamp
     verified:[], // nip05 verification result [result,date]
-    xpub:pubkey, // hex pubkey — to be deprecated
   }
 };
 
@@ -676,14 +681,8 @@ aa.p.process_k3_tags_upd =(event)=>
     if (!p)
     {
       p = aa.p.p(pubkey);
-      // console.log('no p for',pubkey);
-      // continue;
+      if (!p) continue;
       upd = true;
-    }
-
-    if (!p)
-    {
-      console.log('no p',pubkey)
     }
 
     if (relay)
@@ -843,8 +842,7 @@ aa.p.save_to =()=>
   for (const a of chunks)
   {
     setTimeout(()=>{aa.db.ops('idb', {put:{store:'authors',a}})}, times*21);
-    // times++;
-    // console.log(q_id,a.length)
+    times++;
   }
 };
 
@@ -872,11 +870,50 @@ aa.p.score =async s=>
   if (aa.fx.is_hex(pubkey) && Number.isInteger(score))
   {
     aa.cli.fuck_off();
-    const p = await aa.p.get(pubkey);
+    let p = await aa.p.get(pubkey);
     if (!p) p = aa.p.p(pubkey);
     p.score = score;
     aa.p.profile_upd(p);
     setTimeout(()=>{aa.p.save(p)},200)
   }
   else aa.log('invalid data to score')
+};
+
+
+// search stored profiles by name, nip05, or petname
+aa.p.search =async(s='')=>
+{
+  s = s.trim();
+  if (!s) return;
+
+  if (!aa.p.search_loaded)
+  {
+    let all = await aa.db.ops('idb',{all:{store:'authors'}});
+    if (all?.length)
+    {
+      for (const p of all)
+      {
+        if (!aa.db.p[p.pubkey]) aa.db.p[p.pubkey] = p;
+      }
+    }
+    aa.p.search_loaded = true;
+  }
+
+  let results = aa.p.find(s);
+  if (!results.length)
+  {
+    aa.log(`no profiles found for "${s}"`);
+    return;
+  }
+
+  let lines = results.map(p=>
+  {
+    let name = p.metadata?.name || p.petname || p.petnames?.[0] || '';
+    let nip05 = p.metadata?.nip05 || '';
+    return `${name} ${nip05} ${p.pubkey} ${p.npub}`
+  });
+
+  let details = aa.mk.details(`${results.length} results for "${s}":`,make('p',{con:`${lines.join('\n')}`}),1)
+  aa.log(details,false,false);
+  // aa.log(`${results.length} results for "${s}":\n${lines.join('\n')}`,false,false);
 };
