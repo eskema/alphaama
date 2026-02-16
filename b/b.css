@@ -1,0 +1,40 @@
+.section_mod_b > .list > .item.def .key::after
+{
+  content: ' (default)';
+  opacity: .5;
+}
+
+.b_upload .butts
+{
+  font-size: var(--font-size-s);
+}
+
+.b_list
+{
+  /* width: 60vw; */
+  /* max-width: 100%; */
+}
+
+.b_list .list
+{
+  /* display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); */
+}
+
+.b_list .item 
+{
+  margin-bottom: var(--pad);
+  align-items: center;
+}
+
+.b_list .item > img
+{
+  width: var(--line);
+  height: var(--line);
+  margin-right: var(--pad);
+}
+
+.b_list .item details
+{
+  font-size: var(--font-size-s);
+}

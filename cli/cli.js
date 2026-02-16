@@ -254,6 +254,11 @@ aa.cli.keydown =async e=>
     setTimeout(()=>{aa.cli.history_next()},0);
   }
   if (e.key === 'Escape') setTimeout(()=>{aa.cli.collapse()},0);
+  if (e.key === 'b' && e.ctrlKey)
+  {
+    e.preventDefault();
+    aa.mk.b_upload();
+  }
 };
 
 

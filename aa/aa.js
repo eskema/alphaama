@@ -53,6 +53,7 @@ const aa =
     ['r','/r/r.js'],
     ['q','/q/q.js'],
     ['u','/u/u.js'],
+    ['b','/b/b.js','esm'],
     // ['w','/w/w.js'],
   ],
   scripts:

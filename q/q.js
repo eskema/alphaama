@@ -501,23 +501,6 @@ aa.q.mk =(key,value) =>
   const mod = aa.q;
   const id = mod.def.id;
 
-
-  // const l = make('li',{id:`${id}_${key}`,cla:'item filter'});
-  // let butts = make('span',{cla:'butts'});
-  // butts.append(
-  //   aa.mk.butt_action(`${id} del ${key}`,'del'),' ',
-  //   aa.mk.butt_action(`${id} run ${key}`,'run'),' ',
-  //   aa.mk.butt_action(`${id} out ${key}`,'out'),' ',
-  // );
-  // let l_k = make('span',{cla:'key',app:aa.mk.butt_action(`${id} add ${key} ${value.v}`,key,'add')});
-  // let l_v = make('span',{cla:'val',con:value.v});
-  // l.append(l_k,' ',l_v,' ',butts);
-  // return l
-
-    // k = url
-  // v = {sets:[]}
-
-  // element.dataset.state = 0;
   const texts = {};
 
   texts.val = `${value.v}`;

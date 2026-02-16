@@ -10,7 +10,7 @@
 .item
 {
   display: grid;
-  grid-template-areas: "bef k v s aft";
+  grid-template-areas: "bef k v s aft actions";
   grid-template-columns: auto auto 1fr auto;
   padding: 0 var(--pad);
   overflow-x:  scroll;
@@ -52,7 +52,7 @@
 
 .item .del
 {
-  color: rgb(var(--color-no));
+  color: rgb(var(--color-light));
   /* color: rgb(var(--color-a)); */
   /* margin-left: var(--pad); */
 }
@@ -70,6 +70,11 @@
 .item > details > summary
 {
   color: rgb(var(--color-e));
+  display: grid;
+  justify-content: start;
+  grid-auto-flow: column;
+  grid-gap: var(--pad);
+  align-items: center;
 }
 
 .item > details[open] > summary

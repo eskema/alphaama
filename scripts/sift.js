@@ -1,4 +1,4 @@
-const sift = 
+const sift =
 {
   name: 'sift.js',
   about: 'simple item filtering thing',
@@ -9,7 +9,7 @@ const sift =
 sift.insert =(item,options)=>
 {
   let
-  { 
+  {
     items,
     element,
     max,
@@ -18,67 +18,61 @@ sift.insert =(item,options)=>
     sort_by
   } = options;
 
+  if (!element || !sort_by) return;
+
   let finder = order === 'desc'
     ? i=> sort_by(i) < sort_by(item)
     : i=> sort_by(i) > sort_by(item);
-  
-  let sorter = order === 'desc'
-    ? (a,b)=> sort_by(a) < sort_by(b) ? 1 : -1
-    : (a,b)=> sort_by(a) > sort_by(b) ? 1 : -1;
-  
-  items.sort(sorter);
+
   let last = items.find(finder) || null;
-  let index = last 
-    ? items.indexOf(last) 
-    : items.length 
-      ? items.length - 1
-      : 0;
-  if (!items.includes(item)) items.splice(index,0,item);
+  let index = last
+    ? items.indexOf(last)
+    : items.length;
+
+  if (!items.includes(item))
+    items.splice(index,0,item);
+
+  if (options.value)
+  {
+    let match = item.textContent.toLowerCase()
+      .includes(options.value.toLowerCase());
+    if (!match)
+    {
+      item.classList.add('sifted_out');
+      return
+    }
+    item.classList.add('sifted_in');
+  }
+
+  if (options.solo?.match?.(item))
+  {
+    item.classList.add('solo');
+    sift.path_add(item,options.solo.cla,options.solo.value,['solo']);
+  }
+
+  if (!max)
+  {
+    sift.move(item,last,element);
+    return
+  }
+
+  if (!page) page = 1;
   let upper = max * page;
   let lower = upper - max;
-  if (index >= lower && index <= upper)
+
+  if (index >= lower && index < upper)
   {
     sift.move(item,last,element)
   }
-  // if (page === 1)
-  // {
-  //   let last =
-  //     [...element.children].find(compare) 
-  //     || null;
-  
-  //   if (last 
-  //   || !max 
-  //   || max && element.childElementCount < max
-  //   ) sift.move(item,last,element);
-  // }
-  // else 
-  // {
-  //   if (map)
-  //   {
-  //     let items = sift.items(options);
 
-  //     if (items && items.length && items.find(item))
-  //     {
-  //       let last =
-  //         [...element.children].find(compare) 
-  //         || null;
-      
-  //       if (last 
-  //       || !max 
-  //       || max && element.childElementCount < max
-  //       ) sift.move(item,last,element);
-  //     }
-  //   }
-  // }
-
-
-  // keep items at max
-  if (max && element.childElementCount > max)
+  if (element.childElementCount > max)
   {
-    for(const i of [...element.children].slice(max))
-      if(!i.classList.contains('in_path')
+    for (const i of [...element.children].slice(max))
+    {
+      if (!i.classList.contains('in_path')
       && !i.classList.contains('sifted_in')
       ) i.remove()
+    }
   }
 };
 
@@ -94,8 +88,146 @@ sift.move =(element,before=null,parent=false)=>
   || !('moveBefore' in Element.prototype)
   )
     parent.insertBefore(element,before);
-  else 
+  else
     parent.moveBefore(element,before);
+};
+
+
+sift.items =options=>
+{
+  let
+  {
+    items,
+    element,
+    filter_by,
+    sort_by,
+    page,
+    max,
+    order,
+  } = options;
+
+  if (!element) return [];
+
+  let skip = new Set(['HEADER','FOOTER']);
+  let result = (items && items.length)
+    ? [...items]
+    : [...element.children].filter(i=> !skip.has(i.tagName));
+
+  if (!options.counts) options.counts = {};
+  options.counts.total = result.length;
+
+  if (filter_by)
+  {
+    result = result.filter(filter_by);
+    options.counts.filtered = result.length;
+  }
+
+  if (order && sort_by)
+  {
+    let sort = order === 'desc'
+      ? (a,b)=> sort_by(a) < sort_by(b) ? 1 : -1
+      : (a,b)=> sort_by(a) > sort_by(b) ? 1 : -1;
+    result = result.sort(sort);
+  }
+
+  if (max)
+  {
+    max = parseInt(max);
+    page = parseInt(page) || 1;
+
+    let pages = result.reduce((res,_,i,array)=>
+    {
+      if (i % max === 0) res.push(array.slice(i,i + max));
+      return res;
+    },[]);
+
+    let page_index = page > 0 ? page - 1 : 0;
+    result = pages[page_index] || [];
+    options.counts.pages = pages.length;
+  }
+
+  return result
+};
+
+
+sift.paginate =(options,items)=>
+{
+  let { element } = options;
+  if (!element) return;
+  if (!items) items = sift.items(options);
+  element.textContent = '';
+  if (items) for (const item of items) element.append(item);
+};
+
+
+sift.content =options=>
+{
+  let element = options.element;
+  let value = options.value || '';
+  let class_name = options.class_name || 'sifted';
+  let class_in = options.class_in || `sifted_in`;
+  let class_out = options.class_out || `sifted_out`;
+
+  if (!value)
+  {
+    element.classList.remove(class_name);
+    for (const item of element.children)
+      item.classList.remove(class_in,class_out);
+    return
+  }
+
+  element.classList.add(class_name);
+
+  for (const child of element.children)
+  {
+    let included = child.textContent.toLowerCase().includes(value);
+    child.classList.add(included ? class_in : class_out);
+    child.classList.remove(included ? class_out : class_in);
+  }
+};
+
+
+sift.map =options=>
+{
+  let element = options.element;
+  let value = options.value;
+  let class_name = options.class_name || 'sifted';
+  let class_in = options.class_in || 'sifted_in';
+  let class_out = options.class_out || 'sifted_out';
+
+  let items = sift.items(options);
+  let has_managed_items = options.items?.length > 0;
+
+  if (!value)
+  {
+    element.classList.remove(class_name);
+    for (const item of items)
+      item.classList.remove(class_in,class_out);
+    if (has_managed_items) sift.paginate(options,items);
+    return
+  }
+
+  element.classList.add(class_name);
+  let lower_value = value.toLowerCase();
+
+  for (const item of items)
+  {
+    let included = item.textContent.toLowerCase().includes(lower_value);
+    item.classList.add(included ? class_in : class_out);
+    item.classList.remove(included ? class_out : class_in);
+
+    if (has_managed_items)
+    {
+      if (included && item.parentElement !== element)
+      {
+        sift.insert(item,options)
+      }
+      else if (!included && item.parentElement === element)
+      {
+        item.remove()
+      }
+    }
+  }
 };
 
 
@@ -120,15 +252,16 @@ sift.less =(element,value='',options={})=>
 {
   let setname = options.setname || 'sift';
   let classname = options.classname || 'sifted_out';
-  let set = element.dataset[setname];
-  // let values = sift.set_del(set,value);
-  // if (values)
-  //   element.dataset[setname] = values;
-  // else
-  // {
+  let values = sift.set_del(element.dataset[setname],value);
+  if (values)
+  {
+    element.dataset[setname] = values;
+  }
+  else
+  {
     delete element.dataset[setname];
     element.classList.remove(classname);
-  // }
+  }
 };
 
 
@@ -142,210 +275,20 @@ sift.more =(element,value='',options={})=>
 };
 
 
-sift.content =options=>
-{
-  let element = options.element;
-  let value = options.value || '';
-  let class_name = options.class_name || 'sifted';
-  let class_in = options.class_in || `sifted_in`;
-  let class_out = options.class_out || `sifted_out`;
-  
-  if (!value)
-  {
-    element.classList.remove(class_name);
-    for (const item of element.children)
-      item.classList.remove(class_in,class_out);
-    return
-  }
-
-  element.classList.add(class_name);
-
-  for (const child of element.children)
-  {
-    let included = child.textContent.toLowerCase().includes(value);
-    child.classList.add(included ? class_in : class_out);
-    child.classList.remove(included ? class_out : class_in);
-  }
-};
-
-
-sift.map =options=>
-{
-  let element = options.element;
-  let map = options.map;
-  let items = options.items;
-  let value = options.value;
-  let class_name = options.class_name || 'sifted';
-  let class_in = options.class_in || `sifted_in`;
-  let class_out = options.class_out || `sifted_out`;
-  
-  if (!items) items = sift.items(options);
-  if (!value)
-  {
-    element.classList.remove(class_name);
-    for (const item of items)
-      item.classList.remove(class_in,class_out);
-    sift.paginate(options,items)
-    return
-  }
-
-  element.classList.add(class_name);
-
-  for (const item of items)
-  {
-    let included = item.textContent.toLowerCase().includes(value);
-    item.classList.add(included ? class_in : class_out);
-    item.classList.remove(included ? class_out : class_in);
-    // if (options.map)
-    // {
-      if (included && item.parentElement !== element)
-      {
-        sift.insert(item,options)
-      }
-      else if (!included && item.parentElement === element)
-      {
-        item.remove()
-      }
-    // }
-  }
-};
-
-
-sift.items =options=>
-{
-  let
-  {
-    items,
-    element,
-    map,
-    filter_by,
-    sort_by,
-    page,
-    max,
-    order,
-  } = options;
-
-  if (!element || !map) return;
-
-  // let items = map
-  //   ? [...map.values()]
-  //   : [...element.children];
-  
-  if (!options.counts) options.counts = {};
-  options.counts.total = items.length;
-  
-  // if (filter_by)
-  // {
-  //   items = items.filter(filter_by);
-  //   options.counts.filtered = items.length;
-  // }
-
-  // if (order && sort_by)
-  // {
-  //   let sort = order === 'desc'
-  //     ? (a,b)=> sort_by(a) < sort_by(b) ? 1 : -1
-  //     : (a,b)=> sort_by(a) > sort_by(b) ? 1 : -1;
-  //   items = items.sort(sort);
-  // }
-
-  if (max)
-  {
-    // let pages = Math.floor(items.length / max);
-    let pages = items.reduce((res,_,i,array)=>
-    {
-      if (i % max === 0) res.push(array.slice(i, i + max));
-      return res;
-    },[]);
-
-    if (!page) page = 0;
-    else if (page > 0) page = page - 1;
-    
-    items = pages[page];
-    options.counts.pages = pages.length;
-  }
-
-  return items
-};
-
-
-sift.items_old =options=>
-{
-  let
-  {
-    element,
-    map,
-    filter_by,
-    sort_by,
-    page,
-    max,
-    order,
-  } = options;
-
-  if (!element || !map) return;
-
-  let items = map
-    ? [...map.values()]
-    : [...element.children];
-  
-  if (!options.counts) options.counts = {};
-  options.counts.total = items.length;
-  
-  if (filter_by)
-  {
-    items = items.filter(filter_by);
-    options.counts.filtered = items.length;
-  }
-
-  if (order && sort_by)
-  {
-    let sort = order === 'desc'
-      ? (a,b)=> sort_by(a) < sort_by(b) ? 1 : -1
-      : (a,b)=> sort_by(a) > sort_by(b) ? 1 : -1;
-    items = items.sort(sort);
-  }
-
-  if (max)
-  {
-    let pages = items.reduce((res,_,i,array)=>
-    {
-      if (i % max === 0) res.push(array.slice(i, i + max));
-      return res;
-    },[]);
-
-    if (!page) page = 0;
-    else if (page > 0) page = page - 1;
-    
-    items = pages[page];
-    options.counts.pages = pages.length;
-  }
-
-  return items
-};
-
-
-sift.paginate =(options,items)=>
-{
-  let { element, map } = options;
-  if (!element || !map) return;
-  if (!items) items = sift.items(options);
-  element.textContent = '';
-  if (items) for (const item of items) element.append(item);
-};
-
-
 // adds class to elements up the parent tree from starting_element
 // if a value is given, it will be added to a dataset
-sift.path_add =(starting_element,cla='',value='')=>
+// classes: additional classes to add alongside in_path (e.g. ['solo'])
+sift.path_add =(starting_element,cla='',value='',classes=[])=>
 {
   let element = starting_element;
-  for (; element && element!==document; element=element.parentNode) 
+  for (; element && element!==document; element=element.parentNode)
   {
     if (cla && !element.classList.contains(cla)) continue;
 
     sift.in_path.add(element);
-    
-    element.classList.add('in_path');
-    
+
+    element.classList.add('in_path',...classes);
+
     let new_value;
     if (value) new_value = sift.set_add(element.dataset.path,value);
     if (new_value > element.dataset.path)
@@ -364,7 +307,7 @@ sift.in_path_remove =value=>
     {
       let set = sift.set_del(element.dataset.path,value);
       if (set) element.dataset.path = set;
-      else 
+      else
       {
         sift.path_remove(element);
         sift.in_path.delete(element)
@@ -388,6 +331,7 @@ sift.path_remove =element=>
 
 sift.solo_clear =options=>
 {
+  delete options?.solo;
   let element = options?.element;
   if (!element) return;
   let solo = element.dataset.solo;
@@ -419,7 +363,7 @@ sift.solo_remove =(elements,value,scope)=>
   {
     element.classList.remove('solo');
   }
-  
+
   sift.in_path_remove(value);
 };
 
@@ -430,12 +374,12 @@ sift.solo_add =(elements,value,scope,cla)=>
   scope.classList.add('haz_solo');
   if (!scope.dataset.solo)
     scope.dataset.solo = value;
-  else 
+  else
     scope.dataset.solo = sift.set_add(scope.dataset.solo,value);
 
   for (const element of elements)
   {
     element.classList.add('solo');
-    sift.path_add(element,cla,value);
+    sift.path_add(element,cla,value,['solo']);
   };
 };

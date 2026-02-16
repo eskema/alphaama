@@ -16,7 +16,7 @@ const o =
     id:'o',
     ls:
     {
-      'cash': 'off',
+      'cash': 'on',
       'ns': '.', // used as the prefix for actions
       'pagination': '100', // number of root events displayed
       'pow': '0', // proof of work difficulty

@@ -427,14 +427,23 @@ img:not([src]) {
 }
 
 .butt.cancel,
+.butt.del,
 .butt.no 
 {
-  color: rgb(var(--color-no));
+  /* color: rgb(var(--color-no)); */
+  background-color: rgb(var(--color-no));
 }
 
 .butt.maybe
 {
   color: rgb(var(--color-sad));
+}
+
+.butt.disabled
+{
+  color: rgb(var(--color-c));
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
 @keyframes clk
@@ -522,6 +531,19 @@ img:not([src]) {
 }
 
 /* #endregion created_at */
+
+.drop 
+{
+  align-content: center;
+  box-sizing: border-box;
+  border: 1px rgb(var(--color-d)) dashed;
+  display: grid;
+  justify-content: center;
+  margin: var(--pad) 0;
+  /* position: absolute; */
+  min-height: 120px;
+  width: calc(100%);
+}
 
 .aa:not(.viewing) .sifted > .sifted_out
 {

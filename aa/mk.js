@@ -250,13 +250,45 @@ aa.mk.help =async(s='')=>
 
 
 // make generic image
-aa.mk.img =(src)=>
+aa.mk.img =(src,thumb=false)=>
 {
-  const l = make('img',{cla:'content-img'});
+  const l = make('img');
   l.loading = 'lazy';
   l.src = src;
-  l.addEventListener('click',e=>{aa.mk.img_modal(src)});
+  if (!thumb) 
+  {
+    l.addEventListener('click',e=>{aa.mk.img_modal(src)});
+    l.classList.add('content-img');
+  }
+  else
+  {
+    l.classList.add('thumb');
+    l.height = 80;
+  }
   return l
+};
+
+
+// reusable drop zone — on_drop receives FileList
+aa.mk.drop =(on_drop, text='drop files here')=>
+{
+  let el = make('div', {cla: 'drop', con: text});
+  el.addEventListener('dragover', e =>
+  {
+    e.preventDefault();
+    el.classList.add('over');
+  });
+  el.addEventListener('dragleave', () =>
+  {
+    el.classList.remove('over');
+  });
+  el.addEventListener('drop', e =>
+  {
+    e.preventDefault();
+    el.classList.remove('over');
+    if (e.dataTransfer.files.length) on_drop(e.dataTransfer.files);
+  });
+  return el
 };
 
 
@@ -648,7 +680,7 @@ aa.mk.pagination =options=>
     {
       'change': async e=>
       {
-        options.page = e.target.value;
+        options.page = parseInt(e.target.value);
         sift.paginate(options)
       }
     }
@@ -721,7 +753,7 @@ aa.mk.pagination =options=>
 
   max_input.addEventListener('change',async e=>
   {
-    options.max = e.target.value;
+    options.max = parseInt(e.target.value);
     sift.paginate(options);
   });
 

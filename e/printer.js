@@ -74,8 +74,8 @@ aa.e.append_as_rep =(note,rep)=>
     rep_add.push('haz_new_reply');
   }
   
-  if (note.classList.contains('in_path')) 
-    rep_add.push('in_path');
+  // setTimeout(()=>{
+
 
   fastdom.mutate(()=>
   {
@@ -83,13 +83,41 @@ aa.e.append_as_rep =(note,rep)=>
     note.classList.remove(...note_rm);
     let last = [...rep.children]
     .find(i=>
-      i.tagName==='ARTICLE' 
+      i.tagName==='ARTICLE'
       && i.dataset.created_at > note.dataset.created_at)
     || null;
     rep.insertBefore(note,last);
     rep.parentElement.classList.add(...rep_add);
     aa.e.upd_note_path(note);
+
+    let e_opts = aa.temp.section_e;
+    if (e_opts?.solo?.match?.(note))
+    {
+      note.classList.add('solo');
+      sift.path_add(note,e_opts.solo.cla,e_opts.solo.value,['solo']);
+    }
+
+    // propagate path from note to parent chain via sift.path_add
+    // so ancestors are tracked in sift.in_path and get cleaned up
+    if (note.classList.contains('in_path'))
+    {
+      let classes = note.classList.contains('solo') ? ['solo'] : [];
+      let path = note.dataset.path?.trim();
+      if (path)
+      {
+        for (const value of path.split(/\s+/))
+        {
+          sift.path_add(rep.parentElement,'note',value,classes);
+        }
+      }
+      else
+      {
+        sift.path_add(rep.parentElement,'note','',classes);
+      }
+    }
   });
+
+  // },800);
 
   
   // setTimeout(()=>

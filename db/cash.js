@@ -6,7 +6,14 @@ cash
 
 */
 
-const cash = {id:'cash'};
+const cash =
+{
+  id:'cash',
+  dev: self.location.hostname === 'localhost'
+    || self.location.hostname.startsWith('wip.'),
+  max_age: 7 * 24 * 60 * 60 * 1000,
+  max_size: 500 * 1024 * 1024,
+};
 
 
 // add items to cache
@@ -70,33 +77,50 @@ cash.enable =async()=>
 };
 
 
+// should this response be cached?
+cash.cacheable =response=>
+{
+  if (!response?.ok) return false;
+  let type = response.headers.get('Content-Type') || '';
+  return type.startsWith('image/')
+};
+
+
+// clone response with a fresh Date header (marks as recently used)
+cash.touch =async(cache, request, response)=>
+{
+  let headers = new Headers(response.headers);
+  headers.set('Date', new Date().toUTCString());
+  let fresh = new Response(await response.clone().blob(),
+  {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+  cache.put(request, fresh);
+};
+
+
 // if we have the request cached, serve that,
-// if not, then fetch, cache and serve it
+// if not, fetch and selectively cache
 cash.flow =async e=>
 {
-  console.log('cash');
+  let is_app = new URL(e.request.url).origin === self.location.origin;
+  if (is_app && cash.dev) return fetch(e.request);
+
   const cache = await caches.open(cash.id);
   let response = await cache.match(e.request);
-  if (response) return response;
-  
+  if (response)
+  {
+    cash.touch(cache, e.request, response);
+    return response
+  }
+
   response = await e.preloadResponse;
-  if (response && response.ok)
-  {
-    cache.put(e.request,response.clone());
-    return response
-  }
-  try
-  {
-    response = await fetch(e.request);
-    cache.put(e.request,response.clone());
-    return response
-  }
-  catch (error)
-  {
-    response = await cache.match('/');
-    if (response) return response;
-    return new Response('wut?',{status:408,headers:{'Content-Type':'text/plain'}});
-  }
+  if (!response) response = await fetch(e.request);
+  if (cash.cacheable(response))
+    cache.put(e.request, response.clone());
+  return response
 };
 
 
@@ -171,9 +195,38 @@ cash.put =async(key,response)=>
 };
 
 
+// evict old/oversized entries
+cash.evict =async()=>
+{
+  const cache = await caches.open(cash.id);
+  const requests = await cache.keys();
+  let total = 0;
+  let entries = [];
+  for (const req of requests)
+  {
+    const res = await cache.match(req);
+    let date = new Date(res.headers.get('Date') || 0).getTime();
+    let size = +(res.headers.get('Content-Length') || 0);
+    entries.push({req, date, size});
+    total += size;
+  }
+  entries.sort((a,b) => a.date - b.date);
+  for (const e of entries)
+  {
+    if (Date.now() - e.date > cash.max_age || total > cash.max_size)
+    {
+      await cache.delete(e.req);
+      total -= e.size;
+    }
+  }
+};
+
+
 onactivate =e=>
 {
-  e.waitUntil(cash.enable)
+  e.waitUntil(
+    cash.enable().then(()=> cash.evict())
+  )
 };
 
 

@@ -24,9 +24,20 @@ aa.view.ls.npub1 =async npub=>
     let note = i.closest('.note');
     if (note && !ids.includes(note.dataset.id)) items.push(note);
   }
+  let solo_value = 'pubkey_'+pubkey;
+  let e_opts = aa.temp.section_e;
+  if (e_opts)
+  {
+    e_opts.solo =
+    {
+      match: item=> item.dataset.pubkey === pubkey,
+      value: solo_value,
+      cla: 'note'
+    };
+  }
   if (items.length)
-  { 
-    sift.solo_add(items,'pubkey_'+pubkey,aa.e.l,'note');
+  {
+    sift.solo_add(items,solo_value,aa.e.l,'note');
   }
 
   setTimeout(()=>{aa.fx.scroll(profile)},400);

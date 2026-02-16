@@ -1,0 +1,46 @@
+= b => blossom
+
+blobs stored simply on mediaservers.
+content-addressed file storage using SHA256 hashes over HTTP.
+authentication via signed nostr events (kind 24242).
+
+== servers
+
+* servers are stored locally and synced from your published kind-10063 server list
+* to add a server: `. b add <url>`
+* to add multiple: `. b add https://server1.com https://server2.com`
+* to remove a server: `. b rm <url>`
+* the first server added becomes the default
+
+== upload
+
+* `. b upload` opens a file picker dialog
+* select files, pick a server, hit upload
+* files are hashed (SHA256) before upload — the hash is the blob identifier
+* returns a blob descriptor with the URL to the uploaded file
+
+== list & delete
+
+* `. b list` shows your blobs on the default server
+* `. b delete <sha256>` removes a blob (requires signer)
+
+== mirror
+
+* `. b mirror <url>` copies a blob from a remote URL to your default server
+* the URL must contain a 64-char hex SHA256 hash
+
+== server list (kind 10063)
+
+* `. mk 10063` publishes your server list as a kind-10063 replaceable event
+* other users' kind-10063 events are processed automatically and stored on their profile
+* same concept as kind-10002 for relays
+
+== protocol
+
+* https://github.com/hzrd149/blossom
+* BUD-01: server requirements, blob retrieval (`GET /<sha256>`)
+* BUD-02: upload (`PUT /upload`), list (`GET /list/<pubkey>`), delete (`DELETE /<sha256>`)
+* BUD-03: user server lists (kind 10063)
+* BUD-04: mirror (`PUT /mirror`)
+* BUD-05: media optimization (`PUT /media`)
+* BUD-06: upload pre-flight (`HEAD /upload`)
