@@ -200,7 +200,7 @@ aa.u.load =async()=>
   aa.resets.push(
     async()=>
     {
-      await aa.db.ops('cash',{clear:'ALL'});
+      await caches.delete('cash');
       aa.log('db cash: clear');
       let databases = await indexedDB.databases();
       for (const db of databases) indexedDB.deleteDatabase(db.name);

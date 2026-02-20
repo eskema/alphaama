@@ -1,7 +1,6 @@
 aa.db.srcs = new Map();
 // cache
 aa.db.srcs.set('cash','/cash.js');
-aa.db.cash = new Worker(aa.db.srcs.get('cash'));
 
 // indexedDB
 aa.db.srcs.set('idb','/db/idb.js');
@@ -12,7 +11,7 @@ aa.db.pending = new Map(); // request_id -> {resolve, reject, timeout}
 aa.db.request_id = 0;
 
 // Set up persistent message handlers
-aa.db.cash.onmessage = e => aa.db.handle_response('cash', e);
+// aa.db.cash.onmessage = e => aa.db.handle_response('cash', e);
 aa.db.idb.onmessage = e => aa.db.handle_response('idb', e);
 
 // shared worker
@@ -23,52 +22,9 @@ aa.db.idb.onmessage = e => aa.db.handle_response('idb', e);
 // web cache navigation for offline use
 if ('serviceWorker' in navigator)
 {
-  // if (localStorage.cash === 'on')
-  // {
     navigator.serviceWorker
     .register(aa.db.srcs.get('cash'),{scope:'/'});
-  // }
-  // else
-  // {
-  //   navigator.serviceWorker
-  //   .getRegistrations()
-  //   .then(
-  //     async a=> 
-  //     {
-  //       if (a.length && localStorage.cash === 'off')
-  //       {
-  //         await aa.db.ops('cash',{clear:'ALL'});
-  //         for (let r of a) r.unregister();
-  //       }
-  //     }
-  //   )
-  //   .catch(err=>{ console.log(err)});
-  // }
 };
-
-
-// on load
-// aa.db.load =()=>
-// {
-//   let mod = aa.db;
-//   let id = 'db';
-
-//   aa.actions.push(
-//     {
-//       action:[id,'count'],
-//       required:['<store>'],
-//       // optional:['key_range'],
-//       description:'get a count of items in a given store. (events,authors,stuff)',
-//       exe:mod.count
-//     }
-//   );
-//   fetch('/db/README.adoc')
-//   .then(dis=>dis?.text())
-//   .then(text=>
-//   { 
-//     if (text) mod.readme = text;
-//   });
-// };
 
 
 // Handle responses from worker

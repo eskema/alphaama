@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WebSocket Connection Limit Test</title>
+<style>
+body { background:#111; color:#ccc; font-family:monospace; padding:20px; }
+button { background:#333; color:#ccc; border:1px solid #555; padding:8px 16px; cursor:pointer; margin:4px; }
+button:hover { background:#444; }
+#log { white-space:pre-wrap; margin-top:20px; max-height:80vh; overflow-y:auto; }
+.ok { color:#0f0; }
+.err { color:#f44; }
+.info { color:#88f; }
+</style>
+</head>
+<body>
+<h3>WebSocket Connection Limit Test (main thread)</h3>
+<p>Enter relay URLs (one per line) or use the buttons to load from IndexedDB.</p>
+<textarea id="urls" rows="6" cols="80" style="background:#222;color:#ccc;font-family:monospace;"></textarea>
+<br>
+<button onclick="load_outbox()">Load relays from IndexedDB</button>
+<button onclick="start_test()">Connect all at once</button>
+<button onclick="start_batched(20,3000)">Batched (20 / 3s)</button>
+<button onclick="close_all()">Close all</button>
+<div id="stats"></div>
+<div id="log"></div>
+
+<script>
+const sockets = [];
+let counts = { total:0, connecting:0, open:0, closed:0, error:0 };
+
+function log(msg, cla)
+{
+  let el = document.getElementById('log');
+  let line = document.createElement('div');
+  if (cla) line.className = cla;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.prepend(line);
+}
+
+function update_stats()
+{
+  let el = document.getElementById('stats');
+  el.textContent = `total: ${counts.total} | connecting: ${counts.connecting} | open: ${counts.open} | closed: ${counts.closed} | errors: ${counts.error}`;
+}
+
+function connect(url)
+{
+  counts.total++;
+  counts.connecting++;
+  update_stats();
+
+  let ws;
+  try { ws = new WebSocket(url) }
+  catch(er)
+  {
+    counts.connecting--;
+    counts.error++;
+    log(`FAIL ${url}: ${er.message}`, 'err');
+    update_stats();
+    return
+  }
+
+  sockets.push(ws);
+
+  ws.onopen =()=>
+  {
+    counts.connecting--;
+    counts.open++;
+    log(`OPEN ${url}`, 'ok');
+    update_stats();
+  };
+
+  ws.onerror =()=>
+  {
+    counts.error++;
+    log(`ERROR ${url}`, 'err');
+    update_stats();
+  };
+
+  ws.onclose =()=>
+  {
+    counts.connecting = Math.max(0, counts.connecting - (ws.readyState === 1 ? 0 : 1));
+    if (ws._was_open) counts.open = Math.max(0, counts.open - 1);
+    counts.closed++;
+    log(`CLOSED ${url}`, 'err');
+    update_stats();
+  };
+
+  let orig_onopen = ws.onopen;
+  ws.onopen =()=>
+  {
+    ws._was_open = true;
+    counts.connecting--;
+    counts.open++;
+    log(`OPEN ${url}`, 'ok');
+    update_stats();
+  };
+}
+
+function get_urls()
+{
+  return document.getElementById('urls').value
+    .split('\n')
+    .map(s=> s.trim())
+    .filter(s=> s && (s.startsWith('ws://') || s.startsWith('wss://')));
+}
+
+function start_test()
+{
+  reset_counts();
+  let urls = get_urls();
+  log(`--- connecting to ${urls.length} relays at once ---`, 'info');
+  for (const url of urls) connect(url);
+}
+
+function start_batched(size, gap)
+{
+  reset_counts();
+  let urls = get_urls();
+  log(`--- connecting to ${urls.length} relays in batches of ${size}, ${gap}ms gap ---`, 'info');
+  let delay = 0;
+  for (let i = 0; i < urls.length; i += size)
+  {
+    let batch = urls.slice(i, i + size);
+    setTimeout(()=>
+    {
+      log(`batch ${Math.floor(i/size)+1}: ${batch.length} relays`, 'info');
+      for (const url of batch) connect(url);
+    }, delay);
+    delay += gap;
+  }
+}
+
+function close_all()
+{
+  log(`--- closing ${sockets.length} sockets ---`, 'info');
+  for (const ws of sockets)
+  {
+    try { ws.close() } catch {}
+  }
+  sockets.length = 0;
+}
+
+function reset_counts()
+{
+  close_all();
+  counts = { total:0, connecting:0, open:0, closed:0, error:0 };
+  update_stats();
+}
+
+async function load_outbox()
+{
+  try
+  {
+    let db = await new Promise((resolve, reject) =>
+    {
+      let req = indexedDB.open('alphaama');
+      req.onsuccess =()=> resolve(req.result);
+      req.onerror =()=> reject(req.error);
+    });
+
+    let tx = db.transaction('stuff', 'readonly');
+    let store = tx.objectStore('stuff');
+    let data = await new Promise((resolve, reject) =>
+    {
+      let req = store.get('r');
+      req.onsuccess =()=> resolve(req.result);
+      req.onerror =()=> reject(req.error);
+    });
+    db.close();
+
+    if (!data?.ls) { log('no relay data in IDB stuff/r', 'err'); return }
+    let urls = Object.keys(data.ls).filter(u=> u.startsWith('wss://') || u.startsWith('ws://'));
+    document.getElementById('urls').value = urls.join('\n');
+    log(`loaded ${urls.length} relay URLs from IndexedDB`, 'info');
+  }
+  catch(er) { log('error reading IndexedDB: ' + er.message, 'err') }
+}
+</script>
+</body>
+</html>

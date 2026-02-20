@@ -20,6 +20,11 @@ sift.insert =(item,options)=>
 
   if (!element || !sort_by) return;
 
+  // remove from old position if re-inserting (e.g. stamp changed)
+  let old_index = items.indexOf(item);
+  if (old_index !== -1)
+    items.splice(old_index, 1);
+
   let finder = order === 'desc'
     ? i=> sort_by(i) < sort_by(item)
     : i=> sort_by(i) > sort_by(item);
@@ -29,8 +34,7 @@ sift.insert =(item,options)=>
     ? items.indexOf(last)
     : items.length;
 
-  if (!items.includes(item))
-    items.splice(index,0,item);
+  items.splice(index, 0, item);
 
   if (options.value)
   {

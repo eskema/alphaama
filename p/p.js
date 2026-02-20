@@ -100,11 +100,9 @@ aa.p.authors_list =(a,cla,sort='text_asc')=>
 
 
 // clear profile filter
-aa.p.view_clear =element=>
+aa.p.view_clear =()=>
 {
-  // fastdom.mutate(()=>{ 
-    aa.l.classList.remove('view_p') 
-  // });
+  aa.l.classList.remove('view_p')
 };
 
 
@@ -112,20 +110,23 @@ aa.p.view_clear =element=>
 aa.p.check_nip05 =async(s,p)=>
 {
   let verified = false;
-  let dis = await NostrTools.nip05.queryProfile(s);
-  if (dis)
+  try
   {
-    if (!p) p = await aa.p.get(dis.pubkey);
-    if (p && dis.pubkey === p.pubkey) verified = true
+    let dis = await NostrTools.nip05.queryProfile(s);
+    if (dis)
+    {
+      if (!p) p = await aa.p.get(dis.pubkey);
+      if (p && dis.pubkey === p.pubkey) verified = true
+    }
   }
-  
+  catch (er) { aa.log(`nip05 check failed for ${s}`) }
+
   if (p)
   {
     p.verified.unshift([verified,aa.now]);
     aa.p.save(p);
   }
 
-  // aa.log('nip5 '+verified+' for '+s);
   return verified
 };
 
@@ -167,16 +168,6 @@ aa.p.data_link =async p=>
       let url = aa.fx.url(p.metadata.picture.trim())?.href;
       if (url)
       {
-        // let cached = await aa.db.ops('cash',{out:[url]});
-        // if (cached?.length) url = URL.createObjectURL(cached[0]);
-        // else
-        // {
-          // if (p.score > 3) await aa.db.ops('cash',{all:[url]});
-//     // {
-//     //   aa.db.ops('cash',{add:[p.metadata.picture]});
-//     //   src = p.metadata.picture;
-//     // }
-        // }
         options.src = url;
       }
     }
@@ -321,8 +312,14 @@ aa.p.events_newer =(p,event,param)=>
 // default p is u
 aa.p.following =(pubkey,p)=>
 {
-  if (!p) p = aa.u?.p;
-  if (p?.follows?.includes(pubkey)) return true;
+  if (!p)
+  {
+    if (!aa.p.k3 && aa.u?.p?.follows)
+      aa.p.k3 = new Set(aa.u.p.follows);
+    if (aa.p.k3?.has(pubkey)) return true;
+    return false
+  }
+  if (p.follows?.includes(pubkey)) return true;
   return false
 };
 
@@ -417,8 +414,17 @@ aa.p.links_upd =p=>
   debt.add(async()=>
   {
     let o = await aa.p.data(p,1);
-    for (const i of o.elements)
-      aa.p.data_link_upd(i,o.data);
+    let live = [];
+    for (const ref of o.elements)
+    {
+      let el = ref.deref();
+      if (el)
+      {
+        live.push(ref);
+        aa.p.data_link_upd(el,o.data);
+      }
+    }
+    o.elements = live;
   },420,'links_upd_'+p.pubkey);
 };
 
@@ -633,7 +639,6 @@ aa.p.p =pubkey=>
     petname:'', // petname in kind:3 p tag
     petnames:[], // [petname1,petname2,...]
     pubkey, // hex pubkey
-    relay:'', // relay in kind:3 p tag
     relays:{}, // url:{sets:[]}
     sets:[], // ['u','k3']
     score:0, // score
@@ -654,14 +659,14 @@ aa.p.process_k3_tags =async(event,p)=>
     .map(i=>i[1]));
   let unfollowed = old_follows.difference(new_follows);
   p.follows = [...new_follows];
+  if (aa.u.is_u(event.pubkey)) aa.p.k3 = new_follows;
 
   await aa.p.get_authors([...new_follows.union(old_follows)]);
   // update unfollowed
   setTimeout(()=>
   {
     aa.p.process_k3_tags_upd(event);
-    if (unfollowed.size) console.log(unfollowed);
-    // aa.p.unfollow([...unfollowed])
+    if (unfollowed.size) aa.p.unfollow([...unfollowed],event);
   },420);
 };
 
@@ -737,6 +742,44 @@ aa.p.process_k3_tags_upd =(event)=>
       aa.mod.save(aa.u);
       aa.mod.ui(aa.u,'k3');
     },420)
+  }
+};
+
+
+// remove event author from followers of unfollowed pubkeys
+// and clean up sets/scores for user unfollows
+aa.p.unfollow =(pubkeys,event)=>
+{
+  const op_pubkey = event.pubkey;
+  const is_u = aa.u.is_u(op_pubkey);
+
+  for (const pubkey of pubkeys)
+  {
+    let p = aa.db.p[pubkey];
+    if (!p) continue;
+
+    let upd;
+
+    if (p.followers?.includes(op_pubkey))
+    {
+      p.followers = aa.fx.a_rm(p.followers,[op_pubkey]);
+      upd = true;
+    }
+
+    if (is_u)
+    {
+      if (p.sets?.includes('k3'))
+      {
+        p.sets = aa.fx.a_rm(p.sets,['k3']);
+        upd = true;
+      }
+    }
+
+    if (upd)
+    {
+      aa.p.save(p);
+      debt.add(()=>{aa.p.links_upd(p)},200,'save_p_'+p.pubkey);
+    }
   }
 };
 

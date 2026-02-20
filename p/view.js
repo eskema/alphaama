@@ -19,9 +19,11 @@ aa.view.ls.npub1 =async npub=>
   let ids = [];
   let items = [];
   let refs = aa.temp.p_link.get(pubkey)?.elements;
-  if (refs) for (const i of refs)
+  if (refs) for (const ref of refs)
   {
-    let note = i.closest('.note');
+    let el = ref.deref();
+    if (!el) continue;
+    let note = el.closest('.note');
     if (note && !ids.includes(note.dataset.id)) items.push(note);
   }
   let solo_value = 'pubkey_'+pubkey;

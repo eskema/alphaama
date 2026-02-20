@@ -28,7 +28,6 @@ aa.mk.profile_data =p=>
       'npub',
       'petname',
       'pubkey',
-      'relay',
       'score',
       'updated',
       'verified',
@@ -77,27 +76,6 @@ aa.mk.mention_item =(p,w)=>
   return l
 };
 
-
-// make all other profile sections after metadata
-aa.mk.extradata =p=>
-{
-  let keys = [
-    'events',
-    'follows',
-    'followers',
-    'nprofiles',
-    'petnames',
-    'relays',
-    'sets',
-  ];
-
-  // const exc = ['metadata','pubkey','xpub','npub','verified'];
-  // const keys = Object.keys(p).filter(i=>!exc.includes(i));
-  let app = new DocumentFragment();
-  for (const k of keys) app.append(aa.mk.item(k,p[k]));
-
-  return make('section',{cla:'extradata',app});
-};
 
 
 // make metadata section
@@ -211,7 +189,7 @@ aa.mk.p_link =(pubkey,p)=>
 
   aa.p.data(p).then(dis=>
   {
-    dis.elements.push(element);
+    dis.elements.push(new WeakRef(element));
     aa.p.data_link_upd(element,dis.data);
   });
 

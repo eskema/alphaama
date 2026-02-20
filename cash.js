@@ -116,7 +116,7 @@ cash.flow =async e=>
   if (is_app && cash.dev)
   {
     try { return await fetch(e.request) }
-    catch { return Response.error() }
+    catch { return new Response('',{status:502}) }
   }
 
   const cache = await caches.open(cash.id);
@@ -131,7 +131,7 @@ cash.flow =async e=>
   if (!response)
   {
     try { response = await fetch(e.request) }
-    catch { return Response.error() }
+    catch { return new Response('',{status:502}) }
   }
   if (cash.cacheable(response))
     cache.put(e.request, response.clone());

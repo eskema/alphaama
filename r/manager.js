@@ -538,21 +538,37 @@ const process_request =async data=>
 
 const get_outbox =async({request,outbox,options})=>
 {
-  setTimeout(()=>
+  // ensure outbox relays are registered in manager
+  for (const [url] of outbox)
   {
-    let [fid,filter] = request.slice(1);
-    if (Object.hasOwn(filter,'authors')) delete filter.authors;
-    for (const [url,authors] of outbox)
+    let valid = is_valid_url(url);
+    if (valid && !manager.relays.has(valid))
+      manager.relays.set(valid,{sets:['out']});
+  }
+
+  let [fid,filter] = request.slice(1);
+  if (Object.hasOwn(filter,'authors')) delete filter.authors;
+
+  let batch_size = 20;
+  let delay = 420;
+  for (let i = 0; i < outbox.length; i += batch_size)
+  {
+    let batch = outbox.slice(i, i + batch_size);
+    setTimeout(()=>
     {
-      let dis =
+      for (const [url,authors] of batch)
       {
-        request:['REQ',fid,{...filter,authors}],
-        url,
-        options
-      };
-      relay_request(dis);
-    }
-  },420);
+        relay_request(
+        {
+          request:['REQ',fid,{...filter,authors}],
+          url,
+          options
+        });
+      }
+    }, delay);
+    delay += 3000;
+  }
+
   pre_process_request(request);
 };
 
