@@ -18,7 +18,7 @@ aa.q =
     a:
     {
       "authors":["u"],
-      "kinds":[0,3,10002]
+      "kinds":[0,3,10002,10063]
     },
     b:
     {
@@ -508,7 +508,7 @@ aa.q.mk =(key,value) =>
   texts.run = `${id} run ${key}`;
   texts.out = `${id} out ${key}`;
   texts.req = `${id} req read ${value.v}`;
-  texts.add = `${id} add ${texts.val}`;
+  texts.add = `${id} add ${key} ${texts.val}`;
   
 
   let actions = make('div',

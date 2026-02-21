@@ -872,22 +872,44 @@ aa.p.relays_add =(relays={},p={})=>
 
 
 // save p
-aa.p.save_to =()=>
+aa.p.save_to =(flush)=>
 {
   const q_id = 'author_save';
+  const q_pending = 'author_save_pending';
   let pubs = [...new Set(aa.temp[q_id])];
   aa.temp[q_id] = [];
   let all = [];
   for (const pub of pubs) all.push(aa.db.p[pub]);
-  
+
+  if (flush)
+  {
+    let pending = aa.temp[q_pending] || [];
+    let combined = [...pending,...all];
+    aa.temp[q_pending] = [];
+    if (combined.length) aa.db.ops('idb', {put:{store:'authors',a:combined}});
+    return
+  }
+
+  if (!all.length) return;
+  aa.temp[q_pending] = all;
+
   let times = 1;
   const chunks = aa.fx.chunks(all,100);
   for (const a of chunks)
   {
-    setTimeout(()=>{aa.db.ops('idb', {put:{store:'authors',a}})}, times*21);
+    setTimeout(()=>
+    {
+      aa.db.ops('idb', {put:{store:'authors',a}});
+      aa.temp[q_pending] = aa.fx.a_rm(aa.temp[q_pending],a);
+    }, times*21);
     times++;
   }
 };
+
+window.addEventListener('beforeunload',()=>
+{
+  aa.p.save_to(true);
+});
 
 
 aa.p.save = async p=>

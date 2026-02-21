@@ -426,11 +426,15 @@ img:not([src]) {
   color: rgb(var(--color-yes));
 }
 
-.butt.cancel,
+.butt.cancel
+{
+  color: rgb(var(--color-no));
+}
+
 .butt.del,
 .butt.no 
 {
-  /* color: rgb(var(--color-no)); */
+  
   background-color: rgb(var(--color-no));
 }
 

@@ -480,6 +480,26 @@ aa.e.inboxes =(event,relays=[])=>
 };
 
 
+// log kind definition(s)
+aa.e.kinds =(s='')=>
+{
+  let ls = aa.e.kinds_list;
+  if (!ls) return aa.log('kinds not loaded');
+  s = s.trim();
+  if (s.length)
+  {
+    let name = ls[s];
+    if (name) aa.log(`${s}: ${name}`);
+    else aa.log(`kind ${s} not found`);
+  }
+  else
+  {
+    let sorted = Object.fromEntries(Object.entries(ls).sort((a,b)=> parseInt(a[0]) - parseInt(b[0])));
+    aa.log(aa.mk.details('event kinds',aa.mk.ls({ls:sorted}),0,'base'));
+  }
+};
+
+
 // returns event raw json
 aa.e.json =async(s='')=>
 {
@@ -508,6 +528,12 @@ aa.e.load =async()=>
   // await aa.add_scripts(mod.scripts);
 
   aa.actions.push(
+    {
+      action:[id,'kinds'],
+      optional:['<number>'],
+      description:'list nostr event kinds or look up a specific kind',
+      exe:mod.kinds
+    },
     {
       action:[id,'clear'],
       description:'clear events section',

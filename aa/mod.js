@@ -139,12 +139,15 @@ aa.mod.mk =async mod=>
 
 aa.mod.append =mod_l=>
 {
-  if (aa.mod_l) 
+  if (aa.mod_l)
   {
-    // insert alphabetically
-    const last = [...aa.mod_l.children]
-    .find(i=> mod_l.dataset.id < i.dataset.id) || null;
-    fastdom.mutate(()=>{ sift.move(mod_l,last,aa.mod_l) });
+    fastdom.mutate(()=>
+    {
+      // insert alphabetically
+      const last = [...aa.mod_l.children]
+      .find(i=> mod_l.dataset.id < i.dataset.id) || null;
+      sift.move(mod_l,last,aa.mod_l);
+    });
   }
   else aa.log(mod_l)
 };

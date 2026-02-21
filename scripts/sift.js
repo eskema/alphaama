@@ -60,6 +60,8 @@ sift.insert =(item,options)=>
     return
   }
 
+  sift.update_total(options);
+
   if (!page) page = 1;
   let upper = max * page;
   let lower = upper - max;
@@ -154,6 +156,18 @@ sift.items =options=>
 };
 
 
+sift.update_total =options=>
+{
+  if (!options.total_pages_el || !options.max) return;
+  debt.add(()=>
+  {
+    let total = Math.ceil(options.items.length / options.max);
+    if (options.total_pages_el.textContent != total)
+      options.total_pages_el.textContent = total;
+  }, 500, 'sift_total');
+};
+
+
 sift.paginate =(options,items)=>
 {
   let { element } = options;
@@ -161,6 +175,8 @@ sift.paginate =(options,items)=>
   if (!items) items = sift.items(options);
   element.textContent = '';
   if (items) for (const item of items) element.append(item);
+  if (options.total_pages_el && options.counts?.pages)
+    options.total_pages_el.textContent = options.counts.pages;
 };
 
 

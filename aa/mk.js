@@ -686,6 +686,10 @@ aa.mk.pagination =options=>
     }
   });
 
+  let total_span = make('span',{classes:'pagination_total'});
+  options.page_input = page_input;
+  options.total_pages_el = total_span;
+
   let prev_butt = make('button',
   {
     classes: 'butt pagination_previous', 
@@ -738,7 +742,8 @@ aa.mk.pagination =options=>
   next_butt.addEventListener('click',async e=>
   {
     let new_page = options.page + 1;
-    // if (new_page > total_pages) new_page = total_pages;
+    let total_pages = options.counts?.pages;
+    if (total_pages && new_page > total_pages) new_page = total_pages;
     page_input.value = options.page = new_page;
     sift.paginate(options);
     setTimeout(()=>{element.scrollIntoView()},200);
@@ -760,7 +765,7 @@ aa.mk.pagination =options=>
   let page_controls = make('span',
   {
     classes: 'page_controls',
-    app: ['page ',page_input,' showing ',max_input,' root notes ordered by ', order_butt]
+    app: ['page ',page_input,' / ',total_span,' showing ',max_input,' root notes ordered by ', order_butt]
   });
   
   pagination.append( 
