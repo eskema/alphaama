@@ -176,6 +176,8 @@ b.list =async(server, pubkey, opts={})=>
     return
   }
 
+  if (server.endsWith('/')) server = server.slice(1,-1);
+
   let url = server + '/list/' + pubkey;
   const params = new URLSearchParams();
   if (opts.cursor) params.set('cursor', opts.cursor);
@@ -302,6 +304,7 @@ b.add =(string='')=>
   {
     url = aa.fx.url(url.trim())?.href;
     if (!url) continue;
+    if (url.endsWith('/')) url = url.slice(0,-1);
     if (!b.o.ls[url])
     {
       b.o.ls[url] = {url};

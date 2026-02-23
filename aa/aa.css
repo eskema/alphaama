@@ -313,14 +313,18 @@ select
   appearance: none;
   -webkit-appearance: none;
   background: none;
+  background: rgb(var(--color-a));
   border: none;
+  /* border-bottom: 1px dotted ; */
   color:  rgb(var(--color-d));
   font-family: inherit;
-  font-size: var(--font-size-s);
+  padding: var(--padm);
+  /* font-size: var(--font-size-s); */
 }
 
 input[type=text],
 input[type=number],
+input[type=file],
 textarea
 {
   appearance: none;
@@ -342,6 +346,17 @@ textarea:focus
 {
   background: rgb(var(--color-c));
   outline: none;
+}
+
+select:focus
+{
+  background: rgb(var(--color-a));
+  color: rgb(var(--color-f));
+}
+
+select option::selection
+{
+
 }
 
 [data-alt]::after

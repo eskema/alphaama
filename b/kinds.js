@@ -13,9 +13,9 @@ aa.e.kinds[10063] =dat=>
       let tags = dat.event.tags.filter(i=> i[0] === 'server');
       for (const tag of tags)
       {
-        let url = aa.fx.url(tag[1])?.href;
-        if (!url) continue;
-        servers.push(url);
+        // let url = aa.fx.url(tag[1])?.href;
+        if (!aa.fx.url(tag[1])) continue;
+        servers.push(tag[1]);
       }
       p.blossom = servers;
 

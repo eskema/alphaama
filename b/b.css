@@ -4,9 +4,73 @@
   opacity: .5;
 }
 
+
+.b_upload
+{
+  display: grid;
+  grid-gap: var(--pad);
+  min-width: 60vw;
+}
+
+.b_upload .drop
+{
+  cursor: pointer;
+  line-height: var(--line);
+  padding: var(--pad);
+  text-align: center;
+  white-space: pre;
+}
+
+.b_upload .file_name
+{
+  margin-bottom: 0;
+}
+
 .b_upload .butts
 {
+  display: grid;
   font-size: var(--font-size-s);
+  grid-template-columns: 1fr auto;
+  justify-items: start;
+}
+
+.b_preview
+{
+  border-top: 1px solid rgba(var(--color-c),.5);
+  display: grid;
+  grid-gap: var(--pad);
+  grid-template-areas: "img info" "img butts";
+  justify-items: start;
+  grid-template-columns: auto 1fr;
+  font-size: var(--font-size-s);
+  margin-top: var(--pad);
+  padding-top: var(--pad);
+  width: 100%;
+}
+
+.b_preview img
+{
+  grid-area: img;
+}
+
+.b_preview > p
+{
+  grid-area: info;
+}
+
+.b_preview .hash
+{
+  word-break: break-all;
+}
+
+.b_results
+{
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-gap: var(--pad);
+  width: 100%;
+  overflow-x: scroll;
+  word-break: break-all;
 }
 
 .b_list

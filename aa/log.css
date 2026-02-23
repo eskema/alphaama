@@ -196,7 +196,7 @@ details.base[open] > summary,
 
 .log > details[open] > summary
 {
-  top: calc(var(--line) - 2px);
+  top: 2em;
   z-index: 3;
 }
 

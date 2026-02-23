@@ -369,12 +369,17 @@ aa.q.last =(fid,filter)=>
 
 aa.q.last_butts =()=>
 {
-  aa.mk.butts_session('q','run');
-  aa.mk.butts_session('q','out');
-  
-  // if (!sessionStorage.q_last) return;
-  // let q_last = aa.pj(sessionStorage.q_last);
-  // console.log(q_last);
+  const butts = make('span');
+  const id = 'q';
+  for (const s of ['run','out','sub'])
+  {
+    let dis = `${id}_${s}`;
+    if (sessionStorage.getItem(dis))
+    {
+      butts.append(aa.mk.butt_action(`${id} ${s} ${sessionStorage[dis]}`),' ');
+    }
+  }
+  if (butts.childElementCount) aa.log(butts)
 };
 
 

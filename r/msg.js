@@ -180,6 +180,9 @@ aa.r.update_stats =async data=>
   let [type,url,stat_type] = data;
   if (!aa.r.o.ls[url]) return;
 
+  // don't penalize relays when we have no connectivity
+  if (!aa.online && stat_type !== 'success') return;
+
   switch(stat_type)
   {
     case 'terminated':

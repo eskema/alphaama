@@ -534,11 +534,6 @@ aa.r.load =async()=>
       description:'fetch relay information (nip11)',
       exe:mod.nip11
     },
-    // {
-    //   action:[id,'resume'],
-    //   description:'resume open queries',
-    //   exe:mod.resume
-    // },
     {
       action:['e','bro'],
       required:['<id>'],
@@ -705,16 +700,6 @@ aa.r.send_req =data=>
 
 // request from outbox
 aa.r.send_out =data=>{ aa.r.manager.postMessage(['outbox',data]) };
-
-
-// todo
-// resume subscriptions
-aa.r.resume =s=>
-{
-  let ids = aa.fx.splitr(s);
-  console.log(ids);
-  // for (const url in aa.r.active) { aa.r.c_on(url) } 
-};
 
 
 // remove set from server

@@ -24,6 +24,7 @@ db.init();
 const manager =
 {
   limit:99999,
+  paused:false,
   relays:new Map(),
   subs:new Map(),
   events:new Map(),
@@ -703,6 +704,8 @@ const connect =(relay)=>
 {
   // let [s,url,has_auth,options] = a;
 
+  if (manager.paused) return;
+
   if (relay.worker.terminated)
   {
     console.log('terminated',relay.worker.url);
@@ -732,6 +735,8 @@ const connect =(relay)=>
 
   relay.ws.onclose =e=>
   {
+    if (manager.paused) return;
+
     if ((relay.worker.errors.length - relay.worker.successes.length) < 21)
     {
       relay.worker.errors.push(now());
@@ -906,6 +911,32 @@ const terminate_worker =(relay,s='terminated')=>
 };
 
 
+// pause all relay activity (offline)
+const pause =()=>
+{
+  manager.paused = true;
+  for (const [url,relay] of manager.relays)
+  {
+    if (!relay.worker || relay.worker.terminated) continue;
+    // move open subs back so onopen can resume them
+    // ws will close on its own since we're offline
+  }
+};
+
+
+// resume relay activity (back online)
+const resume =()=>
+{
+  manager.paused = false;
+  for (const [url,relay] of manager.relays)
+  {
+    if (!relay.worker || relay.worker.terminated) continue;
+    if (!relay.ws || relay.ws.readyState > 1)
+      connect(relay);
+  }
+};
+
+
 // ─── 8. ENTRY POINT ───────────────────────────────────────
 
 // on manager message
@@ -931,6 +962,8 @@ onmessage =e=>
     case 'events': get_events(dis); break;
     case 'filter': get_filter(dis); break;
     case 'outbox': get_outbox(dis); break;
+    case 'pause': pause(); break;
+    case 'resume': resume(); break;
     default:
       console.log('manager onmessage: invalid operation',data)
   }

@@ -54,19 +54,6 @@ aa.mk.butt_clip =(content,options)=>
 };
 
 
-// buttons from sessionStorage state
-aa.mk.butts_session =async(id,s)=>
-{
-  let dis = `${id}_${s}`;
-  if (sessionStorage.getItem(dis))
-  {
-    let butt = aa.mk.butt_action(`${id} ${s} ${sessionStorage[dis]}`);
-    butt.addEventListener('click',e=>{e.target.closest('.l')?.remove()});
-    aa.log(butt)
-  }
-};
-
-
 // make event wrapper object
 aa.mk.dat =(o={})=>
 {
@@ -939,14 +926,28 @@ aa.mk.status =force=>
   let status = aa.el.get('status');
   if (!force && status) return status;
 
-  let on_off = navigator.onLine ? 'on' : 'off';
+  let on_off = aa.online ? 'on' : 'off';
   status = make('p',
   {
     con: `${on_off}line at ${location.origin} since `,
     app: aa.mk.time(aa.now)
   });
-  aa.el.set('status',status)
-  return status 
+  aa.el.set('status',status);
+
+  // verify with a real fetch — update if navigator.onLine lied
+  aa.check_online().then(real=>
+  {
+    let new_off = real ? 'on' : 'off';
+    if (new_off !== on_off)
+    {
+      fastdom.mutate(()=>
+      {
+        status.firstChild.textContent = `${new_off}line at ${location.origin} since `;
+      })
+    }
+  });
+
+  return status
 };
 
 

@@ -109,6 +109,7 @@ const aa =
   //   get str(){ return /"([^"]+)"/ }, // text in quotes ""
   //   get fw(){ return /(?<=^\S+)\s/ }, // first word
   // },
+  online: navigator.onLine,
   resets:[]
 };
 
@@ -262,6 +263,42 @@ aa.load =async(options={})=>
   aa.add_stuff(page);
   await aa.add_mods(mods);
   // window.addEventListener('beforeunload',aa.unload);
+
+  window.addEventListener('online', async()=>
+  {
+    if (await aa.check_online() && aa.r?.manager)
+      aa.r.manager.postMessage(['resume']);
+  });
+  window.addEventListener('offline', ()=>
+  {
+    aa.online = false;
+    if (aa.r?.manager) aa.r.manager.postMessage(['pause']);
+    aa.mk.status(true);
+  });
+};
+
+
+// real connectivity check — HEAD fetch to origin
+// navigator.onLine lies when wifi has no internet
+aa.check_online =async()=>
+{
+  if (!navigator.onLine)
+    return aa.online = false;
+
+  try
+  {
+    await fetch('/site.webmanifest',
+    {
+      method: 'HEAD',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(5000)
+    });
+    return aa.online = true;
+  }
+  catch (e)
+  {
+    return aa.online = false;
+  }
 };
 
 

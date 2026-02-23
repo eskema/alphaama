@@ -2,8 +2,8 @@
 aa.mk.k10063 =(string='')=>
 {
   let servers = string
-  ? aa.fx.splitr(string, ',')
-  : Object.keys(aa.b.o.ls);
+    ? aa.fx.splitr(string)
+    : Object.keys(aa.b.o.ls);
 
   if (!servers.length)
   {
@@ -14,13 +14,13 @@ aa.mk.k10063 =(string='')=>
   let tags = [];
   for (let s of servers)
   {
-    let url = aa.fx.url(s.trim())?.href;
-    if (!url)
+    // let url = aa.fx.url(s.trim())?.href;
+    if (!aa.fx.url(s))
     {
       aa.log(`mk 10063: invalid url: ${s}`);
       continue
     }
-    tags.push(['server', url]);
+    tags.push(['server', s]);
   }
 
   if (tags.length)
@@ -65,6 +65,7 @@ aa.mk.b_upload =()=>
 
   let input = make('input', {typ: 'file'});
   input.toggleAttribute('multiple');
+  input.hidden = true;
 
   let files = [];
   let info = make('div', {cla: 'b_info'});
@@ -88,15 +89,21 @@ aa.mk.b_upload =()=>
 
       let name = make('p',
       {
-        con: `${file.name.slice(0,16)} (${aa.fx.format_bytes(file.size)})`
+        cla: 'file_name',
+        con: `${file.name.slice(0,16)}`
       });
       let hash = await aa.fx.blob_sha256(file);
-      name.append(make('span', {con: hash, cla: 'hash'}));
+      name.append(
+        make('br'),
+        aa.fx.format_bytes(file.size),
+        make('br'),
+        make('span', {con: hash, cla: 'hash'})
+      );
 
       let del_butt = make('button',
       {
-        cla: 'butt exe',
-        con: 'x',
+        cla: 'butt exe del',
+        con: 'remove',
         clk: ()=>
         {
           let i = files.indexOf(file);
@@ -112,7 +119,7 @@ aa.mk.b_upload =()=>
 
   let clear_butt = make('button',
   {
-    cla: 'butt exe',
+    cla: 'butt exe del',
     con: 'clear',
     clk: ()=>
     {
@@ -193,13 +200,14 @@ aa.mk.b_upload =()=>
     },
   });
 
-  let butts = make('span',{cla:'butts',app:[upload_butt, ' ', clear_butt]})
+  let butts = make('span',{cla:'butts',app:[clear_butt, ' ',upload_butt]})
 
   input.addEventListener('change', e=> add_files(e.target.files));
 
-  let drop = aa.mk.drop(add_files);
+  let drop = aa.mk.drop(add_files, 'drop files here\nor click to select');
+  drop.addEventListener('click', ()=> input.click());
 
-  wrap.append(title, server_select, ' ', input, ' ',butts, drop, info, results);
+  wrap.append(title, 'to: ',server_select, input, drop, ' ', butts, info, results);
   dialog.textContent = '';
   dialog.append(wrap);
   dialog.showModal();
