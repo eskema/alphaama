@@ -541,6 +541,12 @@ aa.r.load =async()=>
       description:'broadcast note to relay(s)',
       exe:mod.bro
     },
+    {
+      action:[id,'score_reset'],
+      optional:['<url>'],
+      description:'reset relay score(s) to default',
+      exe:mod.score_reset
+    },
   );
 
   // load saved data and make ui
@@ -764,6 +770,26 @@ aa.r.score =(url)=>
   score += success_rate * 20;
 
   return Math.max(0, score);
+};
+
+
+// reset relay score(s) to default
+aa.r.score_reset =(s='')=>
+{
+  const keys = ['terminated_count','last_terminated','error_count','success_count'];
+  let urls = s.trim() ? [aa.fx.url(s.trim())?.href].filter(Boolean) : Object.keys(aa.r.o.ls);
+
+  let count = 0;
+  for (const url of urls)
+  {
+    let relay = aa.r.o.ls[url];
+    if (!relay) continue;
+    for (const k of keys) delete relay[k];
+    count++;
+  }
+
+  aa.mod.save_to(aa.r);
+  aa.log(`score reset: ${count} relay${count !== 1 ? 's' : ''}`);
 };
 
 
