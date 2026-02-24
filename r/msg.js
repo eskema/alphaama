@@ -200,3 +200,12 @@ aa.r.update_stats =async data=>
   // Save to DB
   aa.mod.save_to(aa.r);
 };
+
+
+// manager detected mass relay failures — we're offline
+aa.r.offline =()=>
+{
+  aa.online = false;
+  aa.mk.status(true);
+  for (const fn of aa.on_offline) fn();
+};

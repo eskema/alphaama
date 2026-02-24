@@ -176,11 +176,9 @@ aa.mk.b_upload =()=>
           con: 'paste',
           clk: ()=>
           {
-            let t = aa.cli.t;
-            let v = t.value;
-            t.value = v ? v + ' ' + text : text;
+            let v = aa.bus.request('cli:value') || '';
+            aa.bus.emit('cli:set', v ? v + ' ' + text : text);
             dialog.close();
-            t.focus();
           },
         });
         // let copy_butt = make('button',

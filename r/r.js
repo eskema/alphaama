@@ -390,7 +390,7 @@ aa.r.found =async({url,request,options,reason})=>
       aa.r.add(url);
       if (request) aa.r.manager.postMessage(dis);
       // aa.r.c_on(url,opts);
-      aa.cli.add(title);
+      aa.bus.emit('cli:stage',title);
       cleanup(e);
     }
   };
@@ -558,7 +558,15 @@ aa.r.load =async()=>
     setTimeout(()=>{aa.r.manager_setup()},200);
   });
 
-  // aa.add_styles(mod.styles);
+  // pause/resume relays on connectivity changes
+  aa.on_offline.push(()=>
+  {
+    if (mod.manager) mod.manager.postMessage(['pause']);
+  });
+  aa.on_online.push(()=>
+  {
+    if (mod.manager) mod.manager.postMessage(['resume']);
+  });
 };
 
 

@@ -109,6 +109,8 @@ const aa =
   //   get str(){ return /"([^"]+)"/ }, // text in quotes ""
   //   get fw(){ return /(?<=^\S+)\s/ }, // first word
   // },
+  on_online:[],
+  on_offline:[],
   online: navigator.onLine,
   resets:[]
 };
@@ -151,6 +153,7 @@ aa.add_mods =async(mods,target)=>
 // head scripts
 aa.add_scripts =async array=>
 {
+  if (!array.length) return;
   return new Promise(resolve=>
   {
     let done = 0;
@@ -264,41 +267,29 @@ aa.load =async(options={})=>
   await aa.add_mods(mods);
   // window.addEventListener('beforeunload',aa.unload);
 
-  window.addEventListener('online', async()=>
+  window.addEventListener('online', ()=>
   {
-    if (await aa.check_online() && aa.r?.manager)
-      aa.r.manager.postMessage(['resume']);
+    aa.check_online();
+    if (aa.online)
+    {
+      aa.mk.status(true);
+      for (const fn of aa.on_online) fn();
+    }
   });
   window.addEventListener('offline', ()=>
   {
     aa.online = false;
-    if (aa.r?.manager) aa.r.manager.postMessage(['pause']);
     aa.mk.status(true);
+    for (const fn of aa.on_offline) fn();
   });
 };
 
 
-// real connectivity check — HEAD fetch to origin
-// navigator.onLine lies when wifi has no internet
-aa.check_online =async()=>
+// sync connectivity check from browser state
+// real detection comes from manager (mass relay failure)
+aa.check_online =()=>
 {
-  if (!navigator.onLine)
-    return aa.online = false;
-
-  try
-  {
-    await fetch('/site.webmanifest',
-    {
-      method: 'HEAD',
-      cache: 'no-store',
-      signal: AbortSignal.timeout(5000)
-    });
-    return aa.online = true;
-  }
-  catch (e)
-  {
-    return aa.online = false;
-  }
+  return aa.online = navigator.onLine;
 };
 
 

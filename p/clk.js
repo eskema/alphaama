@@ -25,12 +25,12 @@ aa.clk.k3 =async e=>
   
   if (e.target.textContent === 'del') 
   {
-    aa.cli.add(`p del ${pubkey}`);
+    aa.bus.emit('cli:stage',`p del ${pubkey}`);
   }
   else
   {
     let p = await aa.p.author(pubkey);
-    aa.cli.add(`p add ${aa.fx.follow(p)}`)
+    aa.bus.emit('cli:stage',`p add ${aa.fx.follow(p)}`)
   }
 };
 
@@ -47,9 +47,10 @@ aa.clk.mention =async e=>
     relays: aa.p.relays(p).slice(0,3)
   });
 
-  let result = aa.cli.t.value.length ? `${aa.cli.t.value} nostr:${encoded}` 
+  let cv = aa.bus.request('cli:value') || '';
+  let result = cv.length ? `${cv} nostr:${encoded}`
   : `nostr:${encoded}`;
-  aa.cli.v(result);
+  aa.bus.emit('cli:set',result);
 };
 
 
@@ -90,7 +91,7 @@ aa.clk.p_score =async e=>
 {
   const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   const p = await aa.p.get(pubkey);
-  if (p) aa.cli.v(localStorage.ns+' p score '+pubkey+' '+p.score);
+  if (p) aa.bus.emit('cli:set',localStorage.ns+' p score '+pubkey+' '+p.score);
 };
 
 
@@ -103,5 +104,5 @@ aa.clk.p_req =e=>
   const filter = `{"authors":["${p.pubkey}"],"kinds":[1],"limit":100}`;
   let relay = aa.p.relays(p,'write')[0];
   if (!relay) relay = 'read';
-  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req ${relay} ${filter}`);
+  aa.bus.emit('cli:set',`${localStorage.ns} ${aa.q.def.id} req ${relay} ${filter}`);
 };

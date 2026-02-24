@@ -327,7 +327,7 @@ aa.e.follows_del =async string=>
     return
   }
 
-  aa.cli.fuck_off();
+  aa.bus.emit('cli:dismiss');
 
   let {kind,content,tags} = dat.event;
 
@@ -568,7 +568,7 @@ aa.e.load =async()=>
   mod.section_observer = new MutationObserver(mod.section_mutated);
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
   aa.mod.help_setup(aa.e);
-  aa.cli.on_upd.push(aa.e.draft_upd);
+  aa.bus.on('cli:upd',aa.e.draft_upd);
 
   // bus providers (breaks r -> e circular dependency)
   aa.bus.provide('e:sign', aa.e.sign);
@@ -812,6 +812,7 @@ aa.e.draft =async dat=>
   aa.log(make('button',
   {
     cla:'butt exe',
+    dat:{draft:dat.event.id},
     con:`draft: ${dat.event.content.slice(0,12)}…`,
     clk:e=>
     {
@@ -840,7 +841,7 @@ aa.e.draft_dat =async(content,reply_to)=>
 aa.e.draft_upd =async(s='')=>
 {
   if (!aa.u.p)  return
-  if (!s) s = aa.cli.t.value;
+  if (!s) s = aa.bus.request('cli:value') || '';
   if (s.length)
   {
     const reply_to = aa.view.active;

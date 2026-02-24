@@ -168,7 +168,7 @@ aa.mk.post =async(s='')=>
     }
     aa.e.draft(aa.temp.dat);
     delete aa.temp.dat;
-    aa.cli.fuck_off();
+    aa.bus.emit('cli:dismiss');
   }
   else
   {
@@ -293,7 +293,7 @@ aa.mk.e =(s='')=>
   if (event)
   {
     aa.e.draft(aa.mk.dat({event:aa.e.normalise(event)}));
-    aa.cli.fuck_off();
+    aa.bus.emit('cli:dismiss');
   }
 };
 
@@ -416,8 +416,8 @@ aa.mk.k7 =async(s='')=>
     aa.log('reaction failed: event id not found');
     return
   }
-  aa.cli.fuck_off();
-  
+  aa.bus.emit('cli:dismiss');
+
   const seen = dat.seen[0];
   let tag_e = ['e',id];
   if (seen) tag_e.push(seen);

@@ -4,11 +4,13 @@
   display: grid;
   grid-template-areas: "by" "content";
   margin: var(--font-size) var(--padm);
+  margin-right: 0;
   max-height: var(--media-height);
   max-width: 960px;
   overflow: hidden;
   overflow-y: scroll;
   position: relative;
+  
 }
 
 .note_quote .content

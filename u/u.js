@@ -189,13 +189,13 @@ aa.u.load =async()=>
   // await aa.add_scripts(mod.scripts);
   // aa.add_styles(aa.u.styles);
 
-  aa.cli.def.action = 
+  aa.bus.emit('cli:set_default',
   {
     action:['mk','note'],
     required:['<text>'],
     description:'make a nostr note',
     exe:aa.mk.post
-  };
+  });
 
   aa.resets.push(
     async()=>
@@ -280,7 +280,7 @@ aa.u.load =async()=>
       description:'unfollow account (pubkey or npub)',
       exe:aa.e.follows_del
     },
-    aa.cli.def.action
+    aa.bus.request('cli:default')
   );
 
   let u_u = aa.el.get('side').firstElementChild.firstElementChild;

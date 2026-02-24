@@ -23,6 +23,7 @@ db.init();
 
 const manager =
 {
+  closes:[],
   limit:99999,
   paused:false,
   relays:new Map(),
@@ -737,6 +738,11 @@ const connect =(relay)=>
   {
     if (manager.paused) return;
 
+    manager.closes.push(now());
+    check_connectivity();
+
+    if (manager.paused) return;
+
     if ((relay.worker.errors.length - relay.worker.successes.length) < 21)
     {
       relay.worker.errors.push(now());
@@ -908,6 +914,29 @@ const terminate_worker =(relay,s='terminated')=>
   relay.worker.terminated = now();
   postMessage(['update_stats', relay.worker.url, 'terminated']);
   terminate(relay.worker.url)
+};
+
+
+// detect mass relay closures — if many drop at once, we're offline
+const check_connectivity =()=>
+{
+  const recent = now() - 5;
+  const recent_closes = manager.closes.filter(t => t > recent);
+
+  let active = 0;
+  for (const [,relay] of manager.relays)
+  {
+    if (relay.worker && !relay.worker.terminated) active++;
+  }
+
+  if (recent_closes.length >= Math.min(3, active)
+  && recent_closes.length >= active * 0.5)
+  {
+    pause();
+    postMessage(['offline']);
+  }
+
+  manager.closes = recent_closes;
 };
 
 

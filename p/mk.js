@@ -61,7 +61,7 @@ aa.mk.mention_item =(p,w)=>
   
   const clk =e=>
   {
-    aa.cli.upd_from_oto('nostr:'+e.target.querySelector('.val').textContent,w);
+    aa.bus.emit('cli:upd_from_oto','nostr:'+e.target.querySelector('.val').textContent,w);
   };
   l.onclick = clk;
   l.onkeydown =e=>

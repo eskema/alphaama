@@ -2,7 +2,7 @@
 aa.clk.bro =e=>
 {
   const note = e.target.closest('[data-id]');
-  aa.cli.v(`${localStorage.ns} e bro ${note.dataset.id}`);
+  aa.bus.emit('cli:set',`${localStorage.ns} e bro ${note.dataset.id}`);
 };
 
 
@@ -23,7 +23,7 @@ aa.clk.edit =async e=>
   let dat = await aa.e.get(note.dataset.id);
   if (!dat) dat = aa.temp.dat;
   aa.e.note_rm(note);
-  aa.cli.v(dat.event.content);
+  aa.bus.emit('cli:set',dat.event.content);
 };
 
 
@@ -70,7 +70,7 @@ aa.clk.fetch =e=>
       if (url) relset = url+' ';
     }
   }
-  aa.cli.v(localStorage.ns+' '+aa.q.def.id+' req '+relset+filter);
+  aa.bus.emit('cli:set',localStorage.ns+' '+aa.q.def.id+' req '+relset+filter);
 };
 
 
@@ -197,9 +197,10 @@ aa.clk.quote =async e=>
   }
   else encoded = aa.fx.encode('nevent',data);
 
-  let result = aa.cli.t.value.length ? `${aa.cli.t.value} nostr:${encoded}` 
+  let cv = aa.bus.request('cli:value') || '';
+  let result = cv.length ? `${cv} nostr:${encoded}`
   : `nostr:${encoded}`;
-  aa.cli.v(result);
+  aa.bus.emit('cli:set',result);
 };
 
 
@@ -224,7 +225,7 @@ aa.clk.post =async e=>
 aa.clk.pow =e=>
 {
   let id = e.target.closest('[data-id]')?.dataset.id;
-  aa.cli.add(`e pow ${id} ${localStorage.pow}`);
+  aa.bus.emit('cli:stage',`e pow ${id} ${localStorage.pow}`);
 };
 
 
@@ -232,7 +233,7 @@ aa.clk.pow =e=>
 aa.clk.react =e=>
 {
   const id = e.target.closest('[data-id]')?.dataset.id;
-  aa.cli.add(`mk 7 ${id} ${localStorage.reaction}`);
+  aa.bus.emit('cli:stage',`mk 7 ${id} ${localStorage.reaction}`);
 };
 
 
@@ -263,7 +264,7 @@ aa.clk.req =e=>
 {
   const note = e.target.closest('[data-id]');
   const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
-  aa.cli.v(`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
+  aa.bus.emit('cli:set',`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
 };
 
 

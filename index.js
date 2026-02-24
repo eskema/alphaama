@@ -7,7 +7,7 @@ aa.load({
 const build_page =async()=>
 {
   aa.el.get('side')?.append(aa.mod_l);
-  aa.cli.on_collapse.push(aa.logs_read);
+  aa.bus.on('cli:collapse',aa.logs_read);
   aa.log(aa.mk.status(),0,0);
   
   let p_section;

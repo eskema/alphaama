@@ -8,7 +8,7 @@ aa.clk.nzap =e=>
   let t = `${localStorage.ns} mk 9321 ${localStorage.zap}`;
   t = `${t} ${pubkey} "${localStorage.zap_memo}"`;
   if (note.dataset.id) t += ` ${note.dataset.id}`;
-  aa.cli.v(t);
+  aa.bus.emit('cli:set',t);
 };
 
 

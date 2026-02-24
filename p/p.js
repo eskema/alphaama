@@ -478,7 +478,7 @@ aa.p.load =async()=>
     },
   );
   // oto complete profiles
-  aa.cli.on_upd.push(mod.oto);
+  aa.bus.on('cli:upd',mod.oto);
   aa.p.l = make('div',{cla:'authors'});
   aa.mod.help_setup(mod);
   await aa.mod.load(mod);
@@ -620,7 +620,7 @@ aa.p.oto =text=>
   debt.add(()=>
   {
     let a = aa.p.find(s).map(p=>aa.mk.mention_item(p,w));
-    fastdom.mutate(()=>{aa.cli.oto.append(...a)});
+    fastdom.mutate(()=>{ for (const el of a) aa.bus.emit('cli:oto_append',el) });
   }, 420, 'p.oto')
 };
 
@@ -934,7 +934,7 @@ aa.p.score =async s=>
   score = parseInt(score);
   if (aa.fx.is_hex(pubkey) && Number.isInteger(score))
   {
-    aa.cli.fuck_off();
+    aa.bus.emit('cli:dismiss');
     let p = await aa.p.get(pubkey);
     if (!p) p = aa.p.p(pubkey);
     p.score = score;

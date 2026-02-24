@@ -215,33 +215,44 @@ aa.e.note_yet =element=>
 aa.e.note_replace =(old_note,dat)=>
 {
   console.log('note replaced');
+  let had_in_path = old_note.classList.contains('in_path');
   dat.clas = aa.fx.a_rm(dat.clas,['draft']);
+
+  // remove old note from sift items before creating replacement
+  let e_opts = aa.temp.section_e;
+  if (e_opts?.items)
+  {
+    let idx = e_opts.items.indexOf(old_note);
+    if (idx !== -1) e_opts.items.splice(idx,1);
+  }
+
   let note = aa.e.note_by_kind(dat);
   note.querySelector('.replies').replaceWith(old_note.querySelector('.replies'));
 
   note.className = old_note.className;
-  
+
   aa.e.printed.set(dat.event.id,note);
-  
+
   note.classList.remove('blank','tiny','draft','not_sent');
-  if (in_path) note.classList.add('in_path');
+  if (had_in_path) note.classList.add('in_path');
   if (!sessionStorage.getItem(dat.event.id)) note.classList.add('is_new');
   else note.classList.remove('is_new');
   if (dat.clas) note.classList.add(...dat.clas);
-  
+
   let is_root = note.classList.contains('root');
-  if (!is_root && note.parentElement?.closest('.note')) 
+  if (!is_root && note.parentElement?.closest('.note'))
   {
     note.classList.remove('root','not_yet');
   }
-  
+
   let is_reply = note.classList.contains('reply');
   if (!is_reply && !note.parentElement?.closest('.note')) note.classList.remove('reply');
   note.classList.add('replaced');
-  if (note.classList.contains('not_yet')) 
+  if (note.classList.contains('not_yet'))
   {
-    note_replies.removeAttribute('open');
-    aa.e.note_observer.observe(b);
+    let replies = note.querySelector('.replies');
+    if (replies) replies.removeAttribute('open');
+    aa.e.note_observer.observe(note);
   }
   old_note.remove();
   return note
@@ -254,6 +265,15 @@ aa.e.note_rm =note=>
   if (aa.view.active === note.id) aa.view.clear();
   aa.em.delete(note.dataset.id);
   if (note.dataset.id_a) aa.em_a.delete(note.dataset.id_a);
+  aa.e.printed.delete(note.dataset.id);
+  let e_opts = aa.temp.section_e;
+  if (e_opts?.items)
+  {
+    let idx = e_opts.items.indexOf(note);
+    if (idx !== -1) e_opts.items.splice(idx,1);
+  }
+  let draft_butt = document.querySelector(`[data-draft="${note.dataset.id}"]`);
+  if (draft_butt) draft_butt.remove();
   note.remove();
   aa.fx.count_upd(aa.el.get('butt_section_e'),false);
 };

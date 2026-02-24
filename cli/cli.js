@@ -18,7 +18,6 @@ aa.cli =
     history:[],
     index:0,
   },
-  scripts:['/cli/mk.js'],
   styles:
   [
     '/cli/cli.css',
@@ -86,8 +85,9 @@ aa.cli.collapse =e=>
     
     // aa.fx.read_all(aa.logs);
   });
-  for (const fun of aa.cli.on_collapse) 
+  for (const fun of aa.cli.on_collapse)
     setTimeout(()=>{fun()},0)
+  aa.bus.emit('cli:collapse')
 };
 
 
@@ -265,9 +265,16 @@ aa.cli.keydown =async e=>
 // on load
 aa.cli.load =async e=>
 {
-  // aa.add_styles(aa.cli.styles);
-  // await aa.add_scripts(aa.cli.scripts);
   aa.cli.mk();
+
+  aa.bus.on('cli:stage', s =>{ aa.cli.add(s); aa.cli.foc() });
+  aa.bus.on('cli:set', s =>{ aa.cli.v(s) });
+  aa.bus.on('cli:dismiss', reason =>{ aa.cli.fuck_off(reason) });
+  aa.bus.on('cli:oto_append', el =>{ aa.cli.oto.append(el) });
+  aa.bus.on('cli:upd_from_oto', (s,w) =>{ aa.cli.upd_from_oto(s,w) });
+  aa.bus.on('cli:set_default', action =>{ aa.cli.def.action = action });
+  aa.bus.provide('cli:value', () => aa.cli.t.value);
+  aa.bus.provide('cli:default', () => aa.cli.def.action);
 };
 
 
@@ -445,7 +452,11 @@ aa.cli.upd =e=>
       if (aa.cli.def.action) aa.cli.oto.append(aa.mk.oto_act_item(aa.cli.def.action,'pinned'));
       aa.cli.oto.dataset.s = '';
     }
-    if (s) for (const fun of aa.cli.on_upd) fun(s);
+    if (s)
+    {
+      for (const fun of aa.cli.on_upd) fun(s);
+      aa.bus.emit('cli:upd',s);
+    }
     aa.cli.h();
   });
 };

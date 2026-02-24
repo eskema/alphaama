@@ -1,3 +1,78 @@
+// a button that will populate the input with a command text
+aa.mk.butt_action =(s,con=false,cla='')=>
+{
+  con = con||s;
+  cla = 'butt plug'+(cla?' '+cla:'');
+  let clk =e=>{ aa.bus.emit('cli:stage',s) };
+  return make('button',{con,cla,clk})
+};
+
+
+// item content with key as butt_action
+aa.mk.item_action =(k,v,s)=>
+{
+  const df = new DocumentFragment();
+  df.append(
+    aa.mk.butt_action(s,k,'key'),
+    ' ',
+    make('span',{cla:'val',con:v})
+  )
+  return df
+};
+
+
+// makes an action item for otocomplete
+aa.mk.oto_act_item =(o,s)=>
+{
+  const l = make('li',{cla:'item',dat:{before:localStorage.ns}});
+  l.append(make('span',{cla:'val',con:o.action.join(' ')}));
+  l.tabIndex = '1';
+  if (o.required) l.append(' ',make('span',{cla:'required',con:o.required.join(' ')}));
+  if (o.optional) l.append(' ',make('span',{cla:'optional',con:o.optional.join(' ')}));
+  if (o.description) l.append(' ',make('span',{cla:'description',con:o.description}));
+  if (o.acts?.length)
+  {
+    let acts = make('span',{cla:'acts'})
+    l.append(' ',acts);
+    for (const act of o.acts)
+    {
+      let butt = make('button',{cla:'butt acts',con:act,clk:e=>
+      {
+        e.stopPropagation();
+        e.preventDefault();
+        let text = localStorage.ns+' ';
+        text += e.target.closest('.item').querySelector('.val').textContent+' ';
+        text += act+' ';
+        aa.bus.emit('cli:upd_from_oto',text);
+      }});
+      acts.append(butt);
+    }
+  }
+
+  if (s === 'pinned' || s === 'invalid') l.classList.add(s);
+  else
+  {
+    const clk =e=>
+    {
+      e.stopPropagation();
+      e.preventDefault();
+      aa.bus.emit('cli:upd_from_oto',localStorage.ns+' '+e.target.closest('.item').querySelector('.val').textContent);
+    };
+    l.onclick = clk;
+    l.onkeydown =e=>
+    {
+      if (e.key === 'Enter')
+      {
+        e.stopPropagation();
+        e.preventDefault();
+        clk(e)
+      }
+    };
+  }
+  return l
+};
+
+
 // make button with a clk
 aa.mk.butt_clk =sa=>
 {
@@ -933,20 +1008,6 @@ aa.mk.status =force=>
     app: aa.mk.time(aa.now)
   });
   aa.el.set('status',status);
-
-  // verify with a real fetch — update if navigator.onLine lied
-  aa.check_online().then(real=>
-  {
-    let new_off = real ? 'on' : 'off';
-    if (new_off !== on_off)
-    {
-      fastdom.mutate(()=>
-      {
-        status.firstChild.textContent = `${new_off}line at ${location.origin} since `;
-      })
-    }
-  });
-
   return status
 };
 
