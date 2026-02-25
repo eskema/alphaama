@@ -324,7 +324,10 @@ img.thumb
   .viewing .root:not(.in_path) 
     > .content,
 
-  .view_p .root.in_path 
+  /* .view_p .root.in_path 
+    > .content, */
+  
+  .root.sifted_in:not(.in_view)
     > .content,
 
   .root:not(.in_view):not(.in_path) 

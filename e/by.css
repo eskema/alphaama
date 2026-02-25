@@ -35,8 +35,10 @@
 }
 
 .in_view > .by,
-.haz_solo .root.in_path:not(.in_view) > .by,
-.root:not(.in_path) > .by
+
+/* .haz_solo .root.in_path:not(.in_view) > .by, */
+.root:not(.in_path) > .by,
+.root.sifted_in > .by
 {
   position: sticky;
   top: 0;

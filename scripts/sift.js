@@ -3,6 +3,135 @@ const sift =
   name: 'sift.js',
   about: 'simple item filtering thing',
   in_path: new Set(),
+  keywords: ['kind','by'],
+};
+
+
+// parse filter string into criteria object
+// e.g. 'kind:1 by:alice hello' → {kind:'1', by:'alice', text:'hello'}
+sift.parse =value=>
+{
+  let r = {text:''};
+  if (!value) return r;
+  let text = [];
+  for (const part of value.trim().split(/\s+/))
+  {
+    let [k,...rest] = part.split(':');
+    let v = rest.join(':');
+    if (v && sift.keywords.includes(k))
+      r[k] = v;
+    else
+      text.push(part);
+  }
+  r.text = text.join(' ').toLowerCase();
+  return r
+};
+
+
+// test a single item against criteria
+sift.match =(item,criteria)=>
+{
+  for (const [k,v] of Object.entries(criteria))
+  {
+    if (!v) continue;
+    let m = sift.matchers[k];
+    if (m && !m(item,v)) return false;
+  }
+  return true
+};
+
+sift.matchers =
+{
+  kind: (item,v)=> item.dataset.kind === v,
+  by: (item,v)=>
+  {
+    let p = aa.db?.p?.[item.dataset.pubkey];
+    if (!p) return false;
+    let name = (p.metadata?.name || p.petname || '').toLowerCase();
+    return name.includes(v.toLowerCase())
+  },
+  pubkey: (item,v)=> item.dataset.pubkey === v,
+  text: (item,v)=> item.textContent.toLowerCase().includes(v),
+};
+
+
+// apply structured filter to a section
+// searches all notes including nested replies
+// input: string (parsed) or criteria object (programmatic)
+sift.filter =(options, input)=>
+{
+  let criteria = typeof input === 'string'
+    ? sift.parse(input)
+    : input;
+
+  let has_filter = Object.values(criteria).some(v=> v);
+  if (!has_filter)
+  {
+    sift.filter_clear(options);
+    return
+  }
+
+  options.criteria = criteria;
+  let element = options.element;
+  if (!element) return;
+
+  element.classList.add('sifted');
+
+  // search ALL printed notes (options.map), not just root items
+  // find matching notes, then surface their root ancestors
+  let matched_roots = new Set();
+
+  let all_notes = options.map
+    ? options.map.values()
+    : element.querySelectorAll('[data-kind]');
+
+  let matched_notes = [];
+  for (const note of all_notes)
+  {
+    if (!sift.match(note,criteria)) continue;
+    matched_notes.push(note);
+    // walk up to root note (direct child of element)
+    let root = note;
+    while (root.parentElement && root.parentElement !== element)
+    {
+      let parent = root.parentElement.closest('[data-kind]');
+      if (parent) root = parent;
+      else break;
+    }
+    matched_roots.add(root);
+  }
+
+  // mark individual matching notes
+  for (const note of matched_notes)
+    note.classList.add('sift_match');
+
+  // apply to root-level items
+  let items = options.items?.length
+    ? options.items
+    : [...element.children].filter(i=> i.classList?.contains('note'));
+
+  for (const item of items)
+  {
+    let has_match = matched_roots.has(item);
+    item.classList.toggle('sifted_in',has_match);
+    item.classList.toggle('sifted_out',!has_match);
+    // reinsert items removed by prior plain-text sift.map passes
+    if (has_match && item.parentElement !== element)
+      element.append(item);
+  }
+};
+
+sift.filter_clear =options=>
+{
+  delete options.criteria;
+  let element = options?.element;
+  if (!element) return;
+  element.classList.remove('sifted');
+  let items = options.items?.length ? options.items : [...element.children];
+  for (const item of items)
+    item.classList.remove('sifted_in','sifted_out');
+  for (const el of element.querySelectorAll('.sift_match'))
+    el.classList.remove('sift_match');
 };
 
 
@@ -36,22 +165,31 @@ sift.insert =(item,options)=>
 
   items.splice(index, 0, item);
 
-  if (options.value)
+  if (options.criteria)
   {
-    let match = item.textContent.toLowerCase()
-      .includes(options.value.toLowerCase());
-    if (!match)
+    let has_match = sift.match(item,options.criteria)
+      || [...item.querySelectorAll('[data-kind]')]
+        .some(n=> sift.match(n,options.criteria));
+    if (!has_match)
     {
       item.classList.add('sifted_out');
       return
     }
     item.classList.add('sifted_in');
   }
-
-  if (options.solo?.match?.(item))
+  else if (options.value)
   {
-    item.classList.add('solo');
-    sift.path_add(item,options.solo.cla,options.solo.value,['solo']);
+    let criteria = sift.parse(options.value);
+    let has_keywords = Object.keys(criteria).some(k=> k !== 'text' && criteria[k]);
+    let match = has_keywords
+      ? sift.match(item,criteria)
+      : item.textContent.toLowerCase().includes(options.value.toLowerCase());
+    if (!match)
+    {
+      item.classList.add('sifted_out');
+      return
+    }
+    item.classList.add('sifted_in');
   }
 
   if (!max)
@@ -197,10 +335,14 @@ sift.content =options=>
   }
 
   element.classList.add(class_name);
+  let criteria = sift.parse(value);
+  let has_keywords = Object.keys(criteria).some(k=> k !== 'text' && criteria[k]);
 
   for (const child of element.children)
   {
-    let included = child.textContent.toLowerCase().includes(value);
+    let included = has_keywords
+      ? sift.match(child,criteria)
+      : child.textContent.toLowerCase().includes(value);
     child.classList.add(included ? class_in : class_out);
     child.classList.remove(included ? class_out : class_in);
   }
@@ -220,6 +362,7 @@ sift.map =options=>
 
   if (!value)
   {
+    if (options.criteria) sift.filter_clear(options);
     element.classList.remove(class_name);
     for (const item of items)
       item.classList.remove(class_in,class_out);
@@ -227,12 +370,20 @@ sift.map =options=>
     return
   }
 
+  // keywords → delegate to sift.filter (deep search including replies)
+  let criteria = sift.parse(value);
+  let has_keywords = Object.keys(criteria).some(k=> k !== 'text' && criteria[k]);
+  if (has_keywords)
+  {
+    sift.filter(options,criteria);
+    return
+  }
+
   element.classList.add(class_name);
-  let lower_value = value.toLowerCase();
 
   for (const item of items)
   {
-    let included = item.textContent.toLowerCase().includes(lower_value);
+    let included = item.textContent.toLowerCase().includes(value.toLowerCase());
     item.classList.add(included ? class_in : class_out);
     item.classList.remove(included ? class_out : class_in);
 

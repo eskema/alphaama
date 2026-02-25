@@ -564,7 +564,7 @@ img:not([src]) {
   width: calc(100%);
 }
 
-.aa:not(.viewing) .sifted > .sifted_out
+.sifted > .sifted_out
 {
   display: none;
 }

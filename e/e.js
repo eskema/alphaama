@@ -792,7 +792,7 @@ aa.e.view_clear =in_view=>
     delete aa.view.id_a;
 
   aa.l.classList.remove('view_e');
-  sift.solo_clear(aa.temp[`section_e`]);
+  sift.filter_clear(aa.temp[`section_e`]);
 };
 
 
