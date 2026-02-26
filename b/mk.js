@@ -45,6 +45,14 @@ aa.mk.b_upload =()=>
 
   let wrap = make('div', {cla: 'b_upload'});
   let title = make('h3', {con: 'blossom upload'});
+  let close_butt = make('button',
+  {
+    cla: 'butt exe',
+    con: 'close',
+    clk: ()=> dialog.close(),
+  });
+  let header = make('header',{app:[title,' ',close_butt]});
+  
 
   // server selector
   let servers = Object.keys(aa.b.o.ls);
@@ -63,12 +71,12 @@ aa.mk.b_upload =()=>
     server_select.append(opt);
   }
 
-  let input = make('input', {typ: 'file'});
-  input.toggleAttribute('multiple');
-  input.hidden = true;
+  let input = make('input', {typ: 'file',att:['multiple','hidden']});
+  // input.hidden = true;
 
   let files = [];
-  let info = make('div', {cla: 'b_info'});
+  let rows = new Map();
+  let b_info = make('div', {cla: 'b_info'});
   let results = make('div', {cla: 'b_results'});
 
   // add files to list and render previews
@@ -77,28 +85,31 @@ aa.mk.b_upload =()=>
     for (const file of new_files)
     {
       files.push(file);
+      
       let row = make('div', {cla: 'b_preview'});
-
+      let hash = await aa.fx.blob_sha256(file);
+      
       if (file.type.startsWith('image/'))
       {
         let img = make('img');
         img.src = URL.createObjectURL(file);
         img.height = 80;
-        row.append(img,' ');
+        let thumb = make('span',
+        {
+          cla:'thumb', app:img
+        });
+        row.append(thumb,' ');
       }
 
-      let name = make('p',
+      let info = make('p',
       {
-        cla: 'file_name',
-        con: `${file.name.slice(0,16)}`
+        cla: 'file_info',
+        app: [
+          make('span',{cla:'name',con:`${file.name.slice(0,16)}`}),
+          make('span',{cla:'size',con:aa.fx.format_bytes(file.size)}),
+          make('span', {cla: 'hash',con: hash})
+        ]
       });
-      let hash = await aa.fx.blob_sha256(file);
-      name.append(
-        make('br'),
-        aa.fx.format_bytes(file.size),
-        make('br'),
-        make('span', {con: hash, cla: 'hash'})
-      );
 
       let del_butt = make('button',
       {
@@ -108,13 +119,17 @@ aa.mk.b_upload =()=>
         {
           let i = files.indexOf(file);
           if (i > -1) files.splice(i, 1);
+          rows.delete(file);
           row.remove();
+          if (!files.length) butts.classList.add('hidden');
         },
       });
 
-      row.append(name, ' ', del_butt);
-      info.append(row);
+      row.append(info, ' ', del_butt);
+      rows.set(file, {row, del_butt});
+      b_info.append(row);
     }
+    butts.classList.remove('hidden');
   };
 
   let clear_butt = make('button',
@@ -124,7 +139,9 @@ aa.mk.b_upload =()=>
     clk: ()=>
     {
       files.length = 0;
-      info.textContent = '';
+      rows.clear();
+      b_info.textContent = '';
+      butts.classList.add('hidden');
     },
   });
 
@@ -145,31 +162,52 @@ aa.mk.b_upload =()=>
         aa.log('b upload: no server');
         return
       }
-      upload_butt.disabled = true;
-      upload_butt.textContent = 'uploading...';
-      results.textContent = '';
+      butts.textContent = 'uploading...';
 
+      let urls = [];
       for (const file of files)
       {
+        let entry = rows.get(file);
         let descriptor = await aa.b.upload(server, file);
         if (descriptor)
         {
-          results.append(make('a',
-          {
-            ref: descriptor.url,
-            con: descriptor.url,
-            target: '_blank'
-          }))
+          let link = make('p',
+          { 
+            app: make('a',
+            {
+              ref: descriptor.url,
+              con: descriptor.url,
+              target: '_blank'
+            })
+          })
+          // let link = make('a',
+          // {
+          //   ref: descriptor.url,
+          //   con: descriptor.url,
+          //   target: '_blank'
+          // });
+          if (entry) entry.del_butt.replaceWith(link);
+          urls.push(descriptor.url);
         }
         else
         {
-          results.append(make('span',{con:`upload failed for: ${file.name}`}))
+          let fail = make('span', {con: 'failed'});
+          if (entry) entry.del_butt.replaceWith(fail);
         }
       }
-      let urls = [...results.querySelectorAll('a')].map(a=> a.href);
       if (urls.length)
       {
         let text = urls.join(' ');
+        let copy_butt = make('button',
+        {
+          cla: 'butt exe',
+          con: 'copy',
+          clk: ()=>
+          {
+            navigator.clipboard.writeText(text);
+            copy_butt.textContent = 'copied';
+          },
+        });
         let paste_butt = make('button',
         {
           cla: 'butt exe',
@@ -181,31 +219,33 @@ aa.mk.b_upload =()=>
             dialog.close();
           },
         });
-        // let copy_butt = make('button',
-        // {
-        //   cla: 'butt exe',
-        //   con: 'copy all',
-        //   clk: ()=>
-        //   {
-        //     navigator.clipboard.writeText(text);
-        //     copy_butt.textContent = 'copied';
-        //     dialog.close()
-        //   },
-        // });
-        results.append(paste_butt);
+        
+        results.textContent = '';
+        results.append(copy_butt, ' ', paste_butt);
       }
-      upload_butt.textContent = 'done';
+      server_select.remove();
+      drop.remove();
+      butts.remove();
     },
   });
 
-  let butts = make('span',{cla:'butts',app:[clear_butt, ' ',upload_butt]})
+  let butts = make('span', {cla: 'butts hidden', app: [clear_butt,' ', upload_butt]});
 
-  input.addEventListener('change', e=> add_files(e.target.files));
+  input.addEventListener('change',e=> { add_files(e.target.files); input.value = '' });
 
-  let drop = aa.mk.drop(add_files, 'drop files here\nor click to select');
+  let drop = aa.mk.drop(add_files, 'drop files here\nor click to add');
   drop.addEventListener('click', ()=> input.click());
 
-  wrap.append(title, 'to: ',server_select, input, drop, ' ', butts, info, results);
+  wrap.append(
+    header, 
+    server_select, 
+    input, 
+    drop, 
+    butts, 
+    b_info, 
+    results
+  );
+  
   dialog.textContent = '';
   dialog.append(wrap);
   dialog.showModal();
@@ -213,7 +253,7 @@ aa.mk.b_upload =()=>
 
 
 // render blob descriptor list in logs
-aa.mk.b_list =descriptors=>
+aa.mk.b_list =(descriptors,server)=>
 {
   let key = 'b_list';
   let element = aa.el.get(key);
@@ -236,18 +276,22 @@ aa.mk.b_list =descriptors=>
         if (ok) item.remove();
       },
     });
-    let preview = aa.mk.img(d.url, true);
+    let preview = make('span',
+    {
+      cla:'img_thumb',
+      app:aa.mk.img(d.url, true)
+    });
     let butts = make('span', {cla:'butts',app:
     [
        ' ', del_butt
     ]});
-    item.append(preview, link, meta, ' ', time,butts);
+    item.append(preview, ' ', link, meta, ' ', time,butts);
     list.append(item);
   }
 
   if (!element)
   {
-    let summary = make('summary', {con: `blobs (${descriptors.length})`});
+    let summary = make('summary', {con: `blobs (${descriptors.length}) in ${server}`});
     element = make('details',
     {
       cla: 'b_list',

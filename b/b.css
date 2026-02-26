@@ -12,6 +12,17 @@
   min-width: 60vw;
 }
 
+.b_upload .butt
+{
+  font-size: var(--font-size-s);
+}
+
+.b_upload header
+{
+  display: grid;
+  grid-template-columns: 1fr auto;;
+}
+
 .b_upload .drop
 {
   cursor: pointer;
@@ -21,17 +32,17 @@
   white-space: pre;
 }
 
-.b_upload .file_name
-{
-  margin-bottom: 0;
-}
-
 .b_upload .butts
 {
   display: grid;
-  font-size: var(--font-size-s);
+  
   grid-template-columns: 1fr auto;
   justify-items: start;
+}
+
+.b_upload .butts.hidden
+{
+  display: none;
 }
 
 .b_preview
@@ -45,7 +56,8 @@
   font-size: var(--font-size-s);
   margin-top: var(--pad);
   padding-top: var(--pad);
-  width: 100%;
+  /* width: 100%; */
+  overflow-x: scroll;
 }
 
 .b_preview img
@@ -53,14 +65,18 @@
   grid-area: img;
 }
 
-.b_preview > p
+.b_preview .file_info
 {
+  display: grid;
   grid-area: info;
+  margin-bottom: 0;
 }
 
-.b_preview .hash
+.b_preview .hash,
+.b_preview a
 {
-  word-break: break-all;
+  white-space: pre;
+  overflow-x: scroll;
 }
 
 .b_results
@@ -68,9 +84,14 @@
   display: grid;
   font-size: var(--font-size-s);
   grid-gap: var(--pad);
-  width: 100%;
-  overflow-x: scroll;
-  word-break: break-all;
+  grid-template-columns: 1fr 1fr;
+  
+}
+
+.b_results .butt
+{
+  text-align: center;
+  cursor: pointer;
 }
 
 .b_list
@@ -87,16 +108,19 @@
 
 .b_list .item 
 {
-  margin-bottom: var(--pad);
   align-items: center;
+  grid-gap: var(--pad);
+  grid-template-columns: auto 1fr auto;
+  margin-bottom: var(--pad);
+  
 }
 
-.b_list .item > img
+/* .b_list .item > img
 {
   width: var(--line);
   height: var(--line);
   margin-right: var(--pad);
-}
+} */
 
 .b_list .item details
 {

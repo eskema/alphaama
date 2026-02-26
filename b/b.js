@@ -407,16 +407,18 @@ b.cli_upload =async()=>
 
 
 // CLI: b list
-b.cli_list =async()=>
+b.cli_list =async(string='')=>
 {
-  const descriptors = await b.list();
+  let [server,pubkey] = aa.fx.splitr(string);
+  if (!server) server = b.get_def();
+  const descriptors = await b.list(server,pubkey);
   if (!descriptors) return;
   if (!descriptors.length)
   {
     aa.log('b list: no blobs found');
     return
   }
-  aa.mk.b_list(descriptors);
+  aa.mk.b_list(descriptors,server);
 };
 
 

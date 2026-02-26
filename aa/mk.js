@@ -324,8 +324,7 @@ aa.mk.img =(src,thumb=false)=>
   }
   else
   {
-    l.classList.add('thumb');
-    l.height = 80;
+    l.classList.add('img');
   }
   return l
 };

@@ -124,6 +124,7 @@ sift.filter =(options, input)=>
 sift.filter_clear =options=>
 {
   delete options.criteria;
+  sift.in_path_remove();
   let element = options?.element;
   if (!element) return;
   element.classList.remove('sifted');
