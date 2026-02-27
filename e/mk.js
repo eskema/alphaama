@@ -354,7 +354,7 @@ aa.mk.k4 =async(s='')=>
 {
   let [pubkey,text] = s.split(aa.regex.fw);
   let event = {kind:4,tags:[['p',pubkey]]};
-  event.content = await window.nostr.nip04.encrypt(pubkey,text);
+  event.content = await aa.signer.nip04.encrypt(pubkey,text);
   aa.e.draft(aa.mk.dat(
   {
     event:aa.e.normalise(event),
@@ -388,7 +388,7 @@ aa.mk.k5 =async(s='')=>
         kind = dat.event.kind+'';
         aa.fx.a_add(relays,dat.seen);
         // dat.clas.push('k5');
-        // aa.db.upd_e(dat);
+        aa.bus.emit('db:save', dat.event);
       }
     }
     else tag.unshift('a');

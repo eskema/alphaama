@@ -13,6 +13,7 @@
 {
   --who: attr(data-who);
   align-self: stretch;
+  anchor-name: --note;
   background: rgb(var(--color-b));
   box-sizing: border-box;
   /* contain:paint; */

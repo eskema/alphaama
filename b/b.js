@@ -42,7 +42,7 @@ const b =
 // returns Authorization header value
 b.auth =async(action, opts={})=>
 {
-  if (!window.nostr)
+  if (!aa.signer.available())
   {
     aa.log('b: you need a signer');
     return
@@ -67,7 +67,7 @@ b.auth =async(action, opts={})=>
     content: action,
     tags,
   };
-  const signed = await window.nostr.signEvent(event);
+  const signed = await aa.signer.signEvent(event);
   if (!signed) return;
   return 'Nostr ' + btoa(JSON.stringify(signed))
 };

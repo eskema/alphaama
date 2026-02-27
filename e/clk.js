@@ -34,7 +34,7 @@ aa.clk.encrypt =async e=>
   const id = note.dataset.id;
   let dat = await aa.e.get(id);
   let peer = aa.fx.tag_value(dat.event.tags,'p');
-  let encrypted = await window.nostr.nip04.encrypt(peer,dat.event.content);
+  let encrypted = await aa.signer.nip04.encrypt(peer,dat.event.content);
   let event = {...dat.event};
   event.content = encrypted;
   delete event.id;
@@ -205,20 +205,6 @@ aa.clk.quote =async e=>
 
 
 // post event
-aa.clk.post =async e=>
-{
-  let dat = await aa.e.get(e.target.closest('[data-id]').dataset.id);
-  if (!dat) 
-  {
-    console.log('event not found in local db');
-    return
-  }
-  // dat.clas = aa.fx.a_rm(dat.clas,['draft']);
-  // aa.fx.a_add(dat.clas,['not_sent']);
-  const event = dat.event;
-  let relays = aa.r.r.filter(r=>!dat.seen.includes(r));
-  aa.r.send_event({event,relays});
-};
 
 
 // pow event
@@ -288,7 +274,7 @@ aa.clk.sign =async e=>
   dat.event = signed;
   dat.clas = aa.fx.a_rm(dat.clas,['draft']);
   aa.fx.a_add(dat.clas,['not_sent']);
-  aa.db.upd_e(dat);
+  aa.bus.emit('db:save', dat.event);
   aa.e.print(dat);
 };
 

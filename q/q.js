@@ -612,17 +612,27 @@ aa.q.outbox =(request,more)=>
 aa.q.req =(s='')=>
 {
   let [rels,f] = s.split(aa.regex.fw);
-  // let rels = a.shift();
-  let relays = aa.r.rel(rels);
   let fid = 'req_'+aa.now;
 
-  // const f = a.join('').replace(' ','');
   let [filter,options] = aa.q.filter(f.replace(' ',''));
   if (!filter)
   {
     aa.log('invalid filter: '+filter);
     return false
   }
+
+  // db-only query
+  if (rels === 'db')
+  {
+    aa.r.get_filter(filter).then(([get_id,events])=>
+    {
+      for (const dat of events) aa.bus.emit('e:print_q', dat);
+    });
+    aa.q.log('req',['REQ',fid,filter],'to: db');
+    return
+  }
+
+  let relays = aa.r.rel(rels);
   let request = ['REQ',fid,filter];
   if (!relays.length)
   {

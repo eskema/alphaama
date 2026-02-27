@@ -70,6 +70,12 @@ aa.r.add =s=>
       invalid.add(url_to_check);
       continue;
     }
+    if (a.includes('db'))
+    {
+      a = a.filter(s => s !== 'db');
+      aa.log("'db' is a reserved set name");
+      if (!a.length) continue;
+    }
 
     if (!Object.hasOwn(mod.o.ls,url))
     {
@@ -144,11 +150,14 @@ aa.r.bro =async(s='')=>
 {
   let [id,...relays] = s.split(' ');
   let dat = await aa.bus.request('e:get', id);
-  if (dat)
+  if (!dat)
   {
-    aa.r.send_event({event:dat.event,relays});
+    aa.log('r bro: event not found');
+    return
   }
-  else aa.log('r bro: event not found')
+  if (!relays.length && dat.seen?.length)
+    relays = aa.r.w.filter(r => !dat.seen.includes(r));
+  aa.r.send_event({event:dat.event,relays});
 };
 
 
@@ -464,6 +473,8 @@ aa.r.ls =(s='')=>
 // on load
 aa.r.load =async()=>
 {
+  aa.bus.on('db:save', event => aa.r.manager.postMessage(['save', event]));
+
   // relay options
   aa.o.defaults.relays_ask = 
   {

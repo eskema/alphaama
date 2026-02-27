@@ -152,12 +152,22 @@ const mem_events =events_map=>
 };
 
 
+// workaround: redstore ignores #d filter when authors is absent
+const db_tag_filter =(events, filter)=>
+{
+  if (!filter['#d'] || filter.authors) return events;
+  const values = filter['#d'];
+  return events.filter(ev =>
+    ev.tags.some(t => t[0] === 'd' && values.includes(t[1]))
+  );
+};
+
 const db_filter =async filter=>
 {
   let events = new Map();
   try
   {
-    let results = await db.queryEvents(filter);
+    let results = db_tag_filter(await db.queryEvents(filter), filter);
     for (let event of results)
       events.set(event.id,event);
     // for await (let event of db.queryEvents(filter))
@@ -506,7 +516,7 @@ const pre_process_request =async request=>
   let [type,sub_id,filter] = request;
   if (type === 'REQ')
   {
-    let results = await db.queryEvents(filter);
+    let results = db_tag_filter(await db.queryEvents(filter), filter);
     for (let event of results)
     {
       let dat = mk_dat({event});
@@ -993,6 +1003,7 @@ onmessage =e=>
     case 'outbox': get_outbox(dis); break;
     case 'pause': pause(); break;
     case 'resume': resume(); break;
+    case 'save': db.saveEvent(dis); break;
     default:
       console.log('manager onmessage: invalid operation',data)
   }

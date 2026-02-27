@@ -44,8 +44,8 @@ aa.fx.decrypt =async(s='',event_id)=>
   if (text) text = text.trim();
   if (!pubkey) pubkey = aa.u.p.pubkey;
   let result;
-  if (aa.fx.is_nip4(text)) result = await window.nostr.nip04.decrypt(pubkey,text);
-  else result = await window.nostr.nip44.decrypt(pubkey,text);
+  if (aa.fx.is_nip4(text)) result = await aa.signer.nip04.decrypt(pubkey,text);
+  else result = await aa.signer.nip44.decrypt(pubkey,text);
 
   // cache result
   if (event_id && result) await aa.u.decrypt_cache.add(event_id, result, pubkey);
@@ -61,13 +61,13 @@ aa.fx.decrypt_parse =async event=>
   let cached = await aa.u.decrypt_cache.get(event.id);
   if (cached) return aa.pj(cached);
 
-  if (!window.nostr)
+  if (!aa.signer.available())
   {
     aa.log('signer not found');
     return
   }
   let {pubkey,content} = event;
-  let a = await window.nostr.nip44.decrypt(pubkey,content);
+  let a = await aa.signer.nip44.decrypt(pubkey,content);
   if (!a)
   {
     aa.log(event.id+' decrypt failed');
@@ -92,8 +92,8 @@ aa.fx.decrypt_parse =async event=>
 aa.fx.encrypt44 =async(text,pubkey)=>
 {
   if (!pubkey) pubkey = aa.u.p.pubkey;
-  if (window.nostr)
-    return await window.nostr.nip44.encrypt(pubkey,text)
+  if (aa.signer.available())
+    return await aa.signer.nip44.encrypt(pubkey,text)
   else
   {
     aa.log('you need a signer');

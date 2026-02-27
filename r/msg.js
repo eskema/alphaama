@@ -110,7 +110,6 @@ aa.r.ok_ok =async(id,url)=>
   const classes = ['not_sent','draft'];
   dat.clas = aa.fx.a_rm(dat.clas,classes);
   aa.fx.a_add(dat.seen,[url]);
-  // aa.db.upd_e(dat);
   let note = aa.bus.request('e:printed_get', id);
   if (note)
   {

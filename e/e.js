@@ -45,7 +45,7 @@ aa.e =
     na:[[localStorage.reaction,'react'],'req','bro','render','quote'],
     // k4:['encrypt'],
     draft:['yolo','sign','pow','edit','cancel'],
-    not_sent:['post','bro','cancel'],
+    not_sent:['bro','cancel'],
     blank:['fetch']
   }
 };
@@ -866,7 +866,7 @@ aa.e.finalize =async(event,relays)=>
     event = signed;
     let dat = aa.mk.dat({event});
     // aa.em.set(event.id,dat);
-    // aa.db.upd_e(dat);
+    aa.bus.emit('db:save', event);
     aa.e.print(dat);
     aa.r.send_event({event,relays});
   }
@@ -882,11 +882,11 @@ aa.e.sign =async event=>
 {
   return new Promise(resolve=>
   {
-    if (!window.nostr) 
+    if (!aa.signer.available())
     {
       aa.log('you need a signer');
       resolve(false)
     }
-    window.nostr.signEvent(event).then(resolve);
+    aa.signer.signEvent(event).then(resolve);
   });
 };

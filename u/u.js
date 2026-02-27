@@ -48,6 +48,134 @@ aa.u =
 };
 
 
+// signer — nip07 (window.nostr) and nip46 (bunker) abstraction
+aa.signer =
+{
+  type: null,
+  _backend: null,
+};
+
+
+aa.signer.set =(type, backend)=>
+{
+  aa.signer.type = type;
+  aa.signer._backend = backend;
+};
+
+
+aa.signer.available =()=> !!aa.signer._backend;
+
+
+aa.signer.signEvent =async event=>
+{
+  return aa.signer._backend.signEvent(event);
+};
+
+
+aa.signer.getPublicKey =async()=>
+{
+  return aa.signer._backend.getPublicKey();
+};
+
+
+// nip04 encrypt/decrypt
+// window.nostr uses nested objects: nip04.encrypt(pubkey, text)
+// BunkerSigner uses methods: nip04Encrypt(pubkey, text)
+aa.signer.nip04 =
+{
+  encrypt: (pubkey, text)=>
+  {
+    if (aa.signer.type === 'nip46')
+      return aa.signer._backend.nip04Encrypt(pubkey, text);
+    return aa.signer._backend.nip04.encrypt(pubkey, text);
+  },
+  decrypt: (pubkey, text)=>
+  {
+    if (aa.signer.type === 'nip46')
+      return aa.signer._backend.nip04Decrypt(pubkey, text);
+    return aa.signer._backend.nip04.decrypt(pubkey, text);
+  },
+};
+
+
+// nip44 encrypt/decrypt
+aa.signer.nip44 =
+{
+  encrypt: (pubkey, text)=>
+  {
+    if (aa.signer.type === 'nip46')
+      return aa.signer._backend.nip44Encrypt(pubkey, text);
+    return aa.signer._backend.nip44.encrypt(pubkey, text);
+  },
+  decrypt: (pubkey, text)=>
+  {
+    if (aa.signer.type === 'nip46')
+      return aa.signer._backend.nip44Decrypt(pubkey, text);
+    return aa.signer._backend.nip44.decrypt(pubkey, text);
+  },
+};
+
+
+// init signer from stored state or window.nostr
+aa.signer.init =async()=>
+{
+  let stored = aa.u.o?.signer;
+  if (stored?.type === 'nip46')
+  {
+    try
+    {
+      await aa.signer.connect_bunker(stored);
+      return
+    }
+    catch (er)
+    {
+      console.error('signer init', er);
+      delete aa.u.o.signer;
+      aa.mod.save(aa.u);
+    }
+  }
+  if (window.nostr) aa.signer.set('nip07', window.nostr);
+};
+
+
+// connect to bunker
+aa.signer.connect_bunker =async({pubkey, relays, secret, client_secret})=>
+{
+  let sk = client_secret
+    ? NostrTools.utils.hexToBytes(client_secret)
+    : NostrTools.generateSecretKey();
+
+  let bp = {pubkey, relays, secret};
+  let bunker = NostrTools.nip46.BunkerSigner.fromBunker(sk, bp);
+  await bunker.connect();
+  aa.signer.set('nip46', bunker);
+
+  // persist for reconnection across reloads
+  aa.u.o.signer =
+  {
+    type: 'nip46',
+    pubkey,
+    relays,
+    secret,
+    client_secret: NostrTools.utils.bytesToHex(sk),
+  };
+  await aa.mod.save(aa.u);
+};
+
+
+// disconnect bunker
+aa.signer.disconnect =async()=>
+{
+  if (aa.signer.type === 'nip46' && aa.signer._backend?.close)
+    aa.signer._backend.close();
+  aa.signer.set(null, null);
+  delete aa.u.o.signer;
+  await aa.mod.save(aa.u);
+  // fall back to nip07 if available
+  if (window.nostr) aa.signer.set('nip07', window.nostr);
+};
+
+
 // decrypt cache
 // aa.u.o.decrypt_cache stores encrypted string in IndexedDB
 // aa.u.decrypt_cache._data stores decrypted {events, keys} in memory
@@ -251,8 +379,8 @@ aa.u.load =async()=>
     },
     {
       action:[id,'setup'],
-      optional:['<pubkey || nip05 || nprofile || npub>'],
-      description:'setup pubkey, leave blank to use extension (nip07)',
+      optional:['<pubkey || nip05 || nprofile || npub || bunker://>'],
+      description:'setup pubkey (nip07, npub, nprofile, nip05, bunker://)',
       exe:mod.setup
     },
     {
@@ -286,9 +414,9 @@ aa.u.load =async()=>
   let u_u = aa.el.get('side').firstElementChild.firstElementChild;
   u_u.classList.add('u_u');
   aa.el.set('butt_u_u',u_u);
-  aa.mk.nip7_butt();
-  
   await aa.mod.load(mod);
+  await aa.signer.init();
+  aa.mk.nip7_butt();
   await mod.start(mod);
 
   // bus provider (breaks dependency on aa.u.p.pubkey from other modules)
@@ -341,18 +469,44 @@ aa.u.reset =async()=>
 aa.u.setup =async(s='')=>
 {
   aa.u.setup_sheet = {s};
-  aa.log('u re beeing set up… '+(aa.u.setup_sheet.s||'via nip07 extension using window.nostr'));
+  aa.log('u re beeing set up… '+(aa.u.setup_sheet.s||'via signer'));
   let [pubkey,mode] = s.split(aa.regex.fw).map(i=>i.trim());
   let relays = [];
 
-  if (!s && !window.nostr)
+  if (!s && !aa.signer.available() && !window.nostr)
   {
-    aa.log('nip07 extension not found');
-    aa.log('make sure it is active and try again');
+    aa.log('signer not found (nip07 extension or bunker:// url)');
     aa.log('(tip)=> press control + shift + (arrow_up (↑) or arrow_down (↓)) to access prompt history')
     return
   }
-  else if (!s && window.nostr) pubkey = await window.nostr.getPublicKey();
+  else if (!s && aa.signer.available()) pubkey = await aa.signer.getPublicKey();
+  else if (!s && window.nostr)
+  {
+    aa.signer.set('nip07', window.nostr);
+    pubkey = await aa.signer.getPublicKey();
+  }
+  else if (s.startsWith('bunker://'))
+  {
+    let bp = await NostrTools.nip46.parseBunkerInput(s);
+    if (!bp || !bp.relays?.length)
+    {
+      aa.log('invalid bunker url');
+      return
+    }
+    aa.log('connecting to bunker…');
+    try
+    {
+      await aa.signer.connect_bunker(bp);
+      pubkey = await aa.signer.getPublicKey();
+      aa.log('bunker connected');
+    }
+    catch (er)
+    {
+      aa.log('bunker connection failed: ' + er.message);
+      console.error('bunker', er);
+      return
+    }
+  }
   else if (aa.fx.is_key(s)) pubkey = s;
   else if (s.startsWith('npub1')) pubkey = aa.fx.decode(s);
   else
@@ -440,7 +594,9 @@ aa.u.setup_quick =async()=>
   aa.r.add(relays);
   aa.q.reset();
 
-  let pubkey = await window.nostr?.getPublicKey();
+  let pubkey = aa.signer.available()
+    ? await aa.signer.getPublicKey()
+    : await window.nostr?.getPublicKey();
   if (!pubkey)
   {
     aa.log('unable to get public key');

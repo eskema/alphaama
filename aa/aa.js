@@ -27,7 +27,7 @@ const aa =
   deps:
   [
     '/dep/fastdom.js?v=1.0.4',
-    '/dep/nostr-tools.js?v=2.15.0',
+    '/dep/nostr-tools.js?v=2.23.1',
     // '/dep/store.js',
     '/dep/qrcode.js',
     // '/dep/asciidoctor.min.js?v=3.0.4',

@@ -623,21 +623,21 @@ aa.mk.manifest =()=>
 };
 
 
-// check for nip7 extension (window.nostr) availability
+// check for signer availability (nip07 or nip46)
 // and log the result
 aa.mk.nip7_butt =()=>
 {
-  let s = 'window.nostr: ok';
-  if (window.nostr) return true
+  let s = 'signer: ok';
+  if (aa.signer.available() || window.nostr) return true
 
   aa.log(make('button',
   {
-    con:'window.nostr: not found, you need it for signing',
+    con:'signer not found (nip07 extension or bunker:// url)',
     cla:'butt nip07_check',
     clk:e=>
     {
       aa.clk.clkd(e);
-      if (window.nostr)
+      if (aa.signer.available() || window.nostr)
       {
         let parent = e.target.parentElement;
         parent.textContent = '';

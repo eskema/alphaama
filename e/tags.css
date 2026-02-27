@@ -90,7 +90,10 @@
 .note > .tags_wrapper > .tags 
 {
   position: absolute;
-  transform: translateY(calc(-100% - 1.5rem));
+  position-anchor: --note;
+  top: anchor(--note top);
+  left: anchor(--note left);
+  /* transform: translateY(calc(-100% - 1.5rem)); */
   transform-origin: bottom;
   width: max-content;
 }
@@ -108,7 +111,7 @@
   transform: none;
 }
 
-.note [open] > .tags
+.note .tags_wrapper[open] > .tags
 {
   background: rgba(var(--color-a),.82);
   box-shadow: 0px 0px var(--pad) rgb(var(--color-b));

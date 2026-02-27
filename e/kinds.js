@@ -263,7 +263,6 @@ aa.e.kinds[10002] =dat=>
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
-      let sets = ['k10002'];
 
       let old = aa.fx.in_set(p.relays,'k10002','');
 
@@ -273,8 +272,8 @@ aa.e.kinds[10002] =dat=>
         let [type,url,permission] = tag;
         url = aa.fx.url(url)?.href;
         if (!url) continue;
-        
-        let relay = relays[url] = {sets};
+
+        let relay = relays[url] = {sets: ['k10002']};
         if (permission === 'read') 
           aa.fx.a_add(relay.sets,['read']);
         else if (permission === 'write') 
@@ -288,7 +287,7 @@ aa.e.kinds[10002] =dat=>
       {
         if (!Object.hasOwn(relays,i))
         {
-          p.relays[i].sets = aa.fx.a_rm(p.relays[i].sets,sets);
+          p.relays[i].sets = aa.fx.a_rm(p.relays[i].sets,['k10002']);
           if (!p.relays[i].sets.length)
             delete p.relays[i];
         }
@@ -301,7 +300,7 @@ aa.e.kinds[10002] =dat=>
         {
           if (!Object.hasOwn(relays,i))
           {
-            aa.r.o.ls[i].sets = aa.fx.a_rm(aa.r.o.ls[i].sets,sets);
+            aa.r.o.ls[i].sets = aa.fx.a_rm(aa.r.o.ls[i].sets,['k10002']);
             aa.mod.ui(mod,i);
           }
         }
