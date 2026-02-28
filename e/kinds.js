@@ -334,3 +334,14 @@ aa.e.kinds[34235] =dat=>
   let note = aa.e.note_pre(dat);
   return note
 };
+
+
+// spell (NIP-A7)
+aa.e.kinds[777] =dat=>
+{
+  const note = aa.e.note_regular(dat);
+  note.classList.add('root');
+  return note
+};
+
+

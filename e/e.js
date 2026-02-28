@@ -577,6 +577,7 @@ aa.e.load =async()=>
   aa.bus.provide('e:note_actions', aa.e.note_actions);
   aa.bus.on('e:print_q', aa.e.print_q);
   aa.bus.on('e:finalize', (event, relays) => aa.e.finalize(event, relays));
+  aa.bus.on('e:render_add', (key, kinds, fn) => aa.e.render_add(key, kinds, fn));
 };
 
 

@@ -12,6 +12,18 @@ aa.e.rnd =
 };
 
 
+// register a render function for specific kinds
+aa.e.render_add =(key, kinds, fn)=>
+{
+  if (!aa.e.rnd[key]) aa.e.rnd[key] = [];
+  for (const k of kinds)
+  {
+    if (!aa.e.rnd[key].includes(k)) aa.e.rnd[key].push(k);
+  }
+  aa.e['render_'+key] = fn;
+};
+
+
 // do additional ui enhancements  to event element
 // based on kind
 aa.e.render =async(dat,options)=>
@@ -226,3 +238,5 @@ aa.e.render_video =async(element,dat)=>
     },200);
   }
 };
+
+

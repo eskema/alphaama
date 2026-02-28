@@ -120,7 +120,7 @@ aa.mk.note =dat=>
 
   if (tags?.length)
   {
-    let opened = dat.event.content.length ? false : true;
+    let opened = false; //dat.event.content.length ? false : true;
     const tags_section = aa.mk.details('tags',aa.mk.tag_list(tags),opened);
     tags_section.classList.add('tags_wrapper');
     tags_section.querySelector('summary').dataset.count = tags.length;

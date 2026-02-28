@@ -61,6 +61,10 @@ aa.q =
     tag:{"#t":["s"],"limit":200},
     u:{"authors":["u"],"since":"n_7","limit":500},
   },
+  scripts:
+  [
+    '/q/spells.js',
+  ],
   butts:
   {
     mod:[],
@@ -240,7 +244,8 @@ aa.q.del =s=>
     aa.log(make('p',{con,app}));
 
     delete mod.o.ls[k];
-    document.getElementById(mod.def.id+'_'+aa.fx.an(k))?.remove();
+    aa.el.get(`mod_q_query_${k}`).remove();
+    // document.getElementById(mod.def.id+'_'+aa.fx.an(k))?.remove();
     aa.mod.save(mod);
   }
   else aa.log(mod.def.id+' '+k+' not found')
@@ -449,6 +454,12 @@ aa.q.load =async()=>
       description:'subscribe from last since',
       exe:mod.sub
     },
+    {
+      action:['mk','777'],
+      required:['<query_id>'],
+      description:'create spell event (kind:777) from query',
+      exe:aa.mk.k777
+    },
   );
 
   await aa.mod.load(mod);
@@ -458,6 +469,9 @@ aa.q.load =async()=>
     aa.mod.save(mod);
   }
   aa.mod.mk(mod);
+
+  // register spell render
+  aa.bus.emit('e:render_add', 'spell', [777], aa.q.render_spell);
 
   // bus listener (breaks r -> q circular dependency)
   aa.bus.on('q:stamp', (sub, ts) => aa.q.stamp(sub, ts));
@@ -543,7 +557,7 @@ aa.q.mk =(key,value) =>
     ]
   });
   
-  aa.el.set(key,element);
+  aa.el.set(`mod_q_query_${key}`,element);
   return element 
 
 };
