@@ -2,9 +2,9 @@
 // render event type kinds
 aa.e.rnd =
 {
-  content:[1,11,1111,30023],
+  content:[1,11,14,1111,30023],
   emojii:[7],
-  encrypted:[4],
+  encrypted:[4,1059],
   highlight:[9802],
   image:[20],
   object:[0,30166],

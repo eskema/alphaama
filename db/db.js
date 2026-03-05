@@ -90,6 +90,17 @@ aa.db.ops = async(worker, ops) =>
   });
 };
 
+aa.resets.push(
+    async()=>
+    {
+      await caches.delete('cash');
+      aa.log('db cash: clear');
+      let databases = await indexedDB.databases();
+      for (const db of databases) indexedDB.deleteDatabase(db.name);
+      aa.log('indexedDB: clear');
+    }
+  );
+
 
 // shared db
 // aa.db.sdb.addEventListener('message',e=>

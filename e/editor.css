@@ -1,0 +1,59 @@
+.e_editor
+{
+  display: grid;
+  grid-gap: var(--pad);
+  padding: var(--pad);
+}
+
+.e_editor > label
+{
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-s);
+  margin-top: var(--pad);
+}
+
+.editor_content
+{
+  box-sizing: border-box;
+  min-height: var(--size);
+  resize: vertical;
+  width: 100%;
+}
+
+.editor_kind,
+.editor_ca
+{
+  max-width: 12rem;
+}
+
+.editor_ca_display
+{
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-s);
+}
+
+.editor_tags
+{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.editor_tag
+{
+  display: grid;
+  grid-gap: var(--pad);
+  grid-template-columns: 1fr auto;
+  margin: var(--padm) 0;
+}
+
+.editor_tag_input
+{
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.editor_tag_add
+{
+  margin-top: var(--padm);
+}

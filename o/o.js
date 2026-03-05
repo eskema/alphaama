@@ -16,6 +16,7 @@ const o =
     id:'o',
     ls:
     {
+      'auto_decrypt': 'off',
       'cash': 'on',
       'ns': '.', // used as the prefix for actions
       'pagination': '100', // number of root events displayed
@@ -64,6 +65,11 @@ o.defaults =
       if (s === 'on') return window.confirm('turn cache on?');
       else return true
     }
+  },
+  auto_decrypt:
+  {
+    options:['on','off'],
+    fx:s=>aa.fx.pick_other(s,o.defaults.auto_decrypt.options)
   },
   theme:
   {

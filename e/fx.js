@@ -389,10 +389,10 @@ aa.fx.tags_for_comment =async event=>
   const is_reply =kind=>[11,1111].includes(kind);
  
   let reply_tag = ['e',event.id,seen,event.pubkey];
-  let reply_kind = ['k',event.kind];
+  let reply_kind = ['k',`${event.kind}`];
 
   let root_tag = aa.fx.tag_comment_root(event.tags);
-  let root_kind = ['K',event.kind];
+  let root_kind = ['K',`${event.kind}`];
 
   
   const p_tags = [];
@@ -446,4 +446,14 @@ aa.fx.p_tags =event=>
   
   if (not_u && not_in_tags) tags.push(aa.fx.tag_p(event.pubkey));
   return tags
+};
+
+
+// get DM relays for pubkey (kind 10050), fallback to read relays
+aa.fx.dm_relays =pubkey=>
+{
+  let p = aa.db.p[pubkey];
+  if (!p?.relays) return [];
+  let dm = aa.fx.in_set(p.relays,'k10050');
+  return dm.length ? dm : aa.fx.in_set(p.relays,'read');
 };

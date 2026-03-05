@@ -98,7 +98,7 @@ aa.signer.nip04 =
 };
 
 
-// nip44 encrypt/decrypt
+// nip44 encrypt/decrypt — order: (pubkey, text)
 aa.signer.nip44 =
 {
   encrypt: (pubkey, text)=>
@@ -325,17 +325,6 @@ aa.u.load =async()=>
     exe:aa.mk.post
   });
 
-  aa.resets.push(
-    async()=>
-    {
-      await caches.delete('cash');
-      aa.log('db cash: clear');
-      let databases = await indexedDB.databases();
-      for (const db of databases) indexedDB.deleteDatabase(db.name);
-      aa.log('indexedDB: clear');
-    }
-  );
-
   aa.actions.push(
     {
       action:['help','aa'],
@@ -361,7 +350,7 @@ aa.u.load =async()=>
     },
     {
       action:['fx','decrypt'],
-      required:['<pubkey>','<text>'],
+      required:['<text>','<pubkey>'],
       description:'decrypt cyphertext',
       exe:aa.fx.decrypt
     },

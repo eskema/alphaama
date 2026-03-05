@@ -27,6 +27,22 @@ aa.clk.edit =async e=>
 };
 
 
+// open editor dialog for draft event
+aa.clk.editor =e=>
+{
+  const note = e.target.closest('[data-id]');
+  const id = note.dataset.id;
+  let dat = aa.em.get(id);
+  if (!dat) dat = aa.temp.dat;
+  if (!dat)
+  {
+    aa.log('editor: event not found');
+    return
+  }
+  aa.mk.editor_dialog(dat);
+};
+
+
 // encrypt note
 aa.clk.encrypt =async e=>
 {

@@ -314,6 +314,70 @@ aa.e.kinds[10002] =dat=>
 };
 
 
+// DM relay list (NIP-17)
+aa.e.kinds[10050] =dat=>
+{
+  const note = aa.e.note_regular(dat);
+  note.classList.add('root','tiny');
+  aa.p.get(dat.event.pubkey).then(p=>
+  {
+    if (!p) p = aa.p.p(dat.event.pubkey);
+    if (aa.p.events_newer(p,dat.event))
+    {
+      let relays = {};
+      let old = aa.fx.in_set(p.relays,'k10050','');
+      let tags = dat.event.tags.filter(i=>i[0]==='relay');
+      for (const tag of tags)
+      {
+        let url = aa.fx.url(tag[1])?.href;
+        if (!url) continue;
+        relays[url] = {sets:['k10050']};
+      }
+      aa.p.relays_add(relays,p);
+      for (const i of old)
+      {
+        if (!Object.hasOwn(relays,i))
+        {
+          p.relays[i].sets = aa.fx.a_rm(p.relays[i].sets,['k10050']);
+          if (!p.relays[i].sets.length) delete p.relays[i];
+        }
+      }
+      aa.p.save(p);
+    }
+  });
+  return note
+};
+
+
+// chat message rumor (NIP-17)
+aa.e.kinds[14] =dat=>
+{
+  let note = aa.mk.note(dat);
+  note.classList.add('dm');
+  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
+  authors.push(['p',dat.event.pubkey]);
+  aa.e.authors(authors);
+  aa.e.append_to(dat,note,aa.fx.tag_reply(dat.event.tags));
+  return note
+};
+
+
+// gift wrap (NIP-17)
+aa.e.kinds[1059] =dat=>
+{
+  let note = aa.mk.note(dat);
+  note.classList.add('gift_wrap');
+  aa.e.append_as_root(note);
+  if (localStorage.auto_decrypt === 'on')
+  {
+    let p_tag = aa.fx.tag_value(dat.event.tags,'p');
+    if (p_tag && aa.u.is_u(p_tag))
+      setTimeout(()=>{ aa.e.unwrap(dat) },0);
+  }
+  return note
+};
+
+
 // long-form template
 aa.e.kinds[30023] =dat=>
 {

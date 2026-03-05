@@ -39,12 +39,13 @@ aa.e =
     '/e/actions.css',
     '/e/kind_7.css',
     '/e/follows.css',
+    '/e/editor.css',
   ],
   butts:
   {
     na:[[localStorage.reaction,'react'],'req','bro','render','quote'],
     // k4:['encrypt'],
-    draft:['yolo','sign','pow','edit','cancel'],
+    draft:['yolo','sign','pow','editor','edit','cancel'],
     not_sent:['bro','cancel'],
     blank:['fetch']
   }
@@ -133,10 +134,13 @@ aa.e.decrypt =async id=>
   }
 
   let {kind,tags,content,pubkey} = dat.event;
+
+  if (kind === 1059) return aa.e.unwrap(dat);
+
   if (kind === 4)
   {
     let pub_to = aa.fx.tag_value(tags,'p');
-    if (aa.u.is_u(pub_to))
+    if (!aa.u.is_u(pub_to))
     {
       aa.log('content not for you');
       return
@@ -176,6 +180,74 @@ aa.e.decrypted_content =async(id,decrypted)=>
     })
   }
 };
+
+
+// unwrap gift wrap (kind 1059) -> seal (kind 13) -> rumor (kind 14)
+aa.e.unwrap =async dat=>
+{
+  let wrap = dat.event;
+  let cached = await aa.u.decrypt_cache.get(wrap.id);
+  if (cached)
+  {
+    let rumor = aa.pj(cached);
+    if (rumor) aa.e.unwrap_show(rumor,dat);
+    return
+  }
+  if (!aa.signer.available()) return;
+
+  // layer 1: decrypt gift wrap -> seal
+  let seal_json;
+  try { seal_json = await aa.signer.nip44.decrypt(wrap.pubkey,wrap.content) }
+  catch(er) { console.error('unwrap l1',er); return }
+  if (!seal_json) return;
+
+  let seal = aa.pj(seal_json);
+  if (!seal || seal.kind !== 13) return;
+  if (!await aa.fx.verify_event(seal)) return;
+
+  // layer 2: decrypt seal -> rumor
+  let rumor_json;
+  try { rumor_json = await aa.signer.nip44.decrypt(seal.pubkey,seal.content) }
+  catch(er) { console.error('unwrap l2',er); return }
+  if (!rumor_json) return;
+
+  let rumor = aa.pj(rumor_json);
+  if (!rumor || rumor.pubkey !== seal.pubkey) return;
+
+  await aa.u.decrypt_cache.add(wrap.id,rumor_json,seal.pubkey);
+  aa.e.unwrap_show(rumor,dat);
+};
+
+
+// display unwrapped rumor as quote inside the gift wrap note
+aa.e.unwrap_show =(rumor,wrap_dat)=>
+{
+  if (!rumor.id) rumor.id = aa.fx.hash(rumor);
+  let note = aa.e.printed.get(wrap_dat.event.id);
+  if (!note)
+  {
+    aa.log('unwrapped:');
+    aa.log(rumor.content);
+    return
+  }
+  let dat = aa.mk.dat({event:rumor, seen:wrap_dat.seen, subs:['dm']});
+  aa.em.set(rumor.id,dat);
+  let quote = make('blockquote',{cla:'note_quote dm'});
+  aa.e.quote_note(quote,dat);
+  fastdom.mutate(()=>
+  {
+    let content = note.querySelector('.content');
+    content.classList.remove('encrypted');
+    content.classList.add('decrypted');
+    content.querySelector('.butt.decrypt')?.remove();
+    // content.querySelector('.cypher')?.remove();
+    content.append(quote);
+  });
+};
+
+
+// randomise timestamp 0-48h into the past for privacy (NIP-59)
+aa.e.rand_ts =ts=> ts - Math.floor(Math.random() * 172800);
 
 
 aa.e.anal =()=>
@@ -822,6 +894,42 @@ aa.e.draft =async dat=>
       else aa.log('draft not found');
     }
   }))
+};
+
+
+// apply editor dialog changes to draft and re-render
+aa.e.editor_apply =(dat,fields)=>
+{
+  const old_id = dat.event.id;
+
+  // remove old note
+  let old_note = aa.e.printed.get(old_id);
+  if (old_note) aa.e.note_rm(old_note);
+  else aa.em.delete(old_id);
+
+  // update fields
+  dat.event.kind = fields.kind;
+  dat.event.created_at = fields.created_at;
+  dat.event.content = fields.content;
+
+  // parse tags from editor inputs
+  let new_tags = [];
+  for (const li of fields.tags_ol.children)
+  {
+    let input = li.querySelector('input');
+    if (!input) continue;
+    let val = input.value.trim();
+    if (!val.length) continue;
+    new_tags.push(val.split(',').map(s=>s.trim()));
+  }
+  dat.event.tags = new_tags;
+
+  // rehash
+  delete dat.event.id;
+  delete dat.event.sig;
+  dat.event.id = aa.fx.hash(dat.event);
+
+  aa.e.draft(dat);
 };
 
 

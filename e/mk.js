@@ -363,6 +363,62 @@ aa.mk.k4 =async(s='')=>
 };
 
 
+// private DM (NIP-17 gift wrap)
+aa.mk.dm =async(s='')=>
+{
+  let [recipient,...rest] = s.split(aa.regex.fw);
+  let text = rest.join(' ');
+  if (!recipient || !text) return aa.log('dm <pubkey> <text>');
+
+  if (recipient.startsWith('npub')) recipient = aa.fx.decode(recipient);
+  if (!aa.fx.is_key(recipient)) return aa.log('invalid pubkey');
+  if (!aa.signer.available()) return aa.log('signer needed');
+
+  let sender = aa.u.p.pubkey;
+
+  // 1. create rumor (unsigned kind 14)
+  let rumor =
+  {
+    kind:14, pubkey:sender,
+    created_at:aa.now,
+    content:text, tags:[['p',recipient]]
+  };
+  rumor.id = aa.fx.hash(rumor);
+
+  // 2. create seal (kind 13, signed)
+  let seal_content = await aa.signer.nip44.encrypt(recipient,JSON.stringify(rumor));
+  let seal = await aa.e.sign(
+  {
+    kind:13, content:seal_content,
+    created_at:aa.e.rand_ts(aa.now), tags:[]
+  });
+  if (!seal) return aa.log('seal sign failed');
+
+  // 3. gift wrap for each recipient + self
+  for (const pub of [recipient,sender])
+  {
+    let wrap = NostrTools.nip59.createWrap(seal,pub);
+    let relays = aa.fx.dm_relays(pub);
+    if (!relays.length) relays = aa.r.w;
+    aa.r.send_event({event:wrap,relays});
+  }
+
+  // show locally
+  aa.e.print_q(aa.mk.dat({event:rumor, subs:['dm'], clas:['dm','sent']}));
+};
+
+
+// DM relay list (kind 10050)
+aa.mk.k10050 =(s='')=>
+{
+  let urls = s.split(',').map(i=>aa.fx.url(i.trim())?.href).filter(Boolean);
+  if (!urls.length) return aa.log('provide relay URLs, comma separated');
+  let tags = urls.map(url=>['relay',url]);
+  let event = aa.e.normalise({kind:10050,tags,content:''});
+  aa.e.finalize(event);
+};
+
+
 aa.mk.k5 =async(s='')=>
 {
   let [content,rest] = aa.fx.split_str(s);
@@ -458,6 +514,18 @@ aa.actions.push(
     exe:aa.mk.k4
   },
   {
+    action:['dm'],
+    required:['<pubkey>','<text>'],
+    description:'send private DM (NIP-17 gift wrap)',
+    exe:aa.mk.dm
+  },
+  {
+    action:['mk','10050'],
+    required:['<relay,relay>'],
+    description:'set DM relay list (kind 10050)',
+    exe:aa.mk.k10050
+  },
+  {
     action:['mk','5'],
     required:['<reason>','<id>'],
     optional:['<id>'],
@@ -466,8 +534,137 @@ aa.actions.push(
   },
   {
     action:['mk','7'],
-    required:['<id>','<reaction>'], 
+    required:['<id>','<reaction>'],
     description:'react to a note',
     exe:aa.mk.k7
   },
 );
+
+
+// editor dialog for draft events
+aa.mk.editor_dialog =dat=>
+{
+  const event = dat.event;
+
+  const mk_tag_item =tag_array=>
+  {
+    let li = make('li',{cla:'editor_tag'});
+    let input = make('input',
+    {
+      typ:'text',
+      val:tag_array.join(', '),
+      pla:'t, asknostr',
+      cla:'editor_tag_input'
+    });
+    let rm_butt = make('button',
+    {
+      con:'x',
+      cla:'butt editor_tag_rm',
+      clk:()=>{ li.remove() }
+    });
+    li.append(input,' ',rm_butt);
+    return li
+  };
+
+  // kind
+  let kind_input = make('input',
+  {
+    typ:'number',
+    val:event.kind,
+    cla:'editor_kind'
+  });
+
+  // created_at
+  let ca_display = make('span',
+  {
+    cla:'editor_ca_display',
+    con:aa.fx.time_display(event.created_at)
+  });
+  let ca_input = make('input',
+  {
+    typ:'number',
+    val:event.created_at,
+    cla:'editor_ca',
+    listeners:
+    {
+      input:e=>
+      {
+        let ts = parseInt(e.target.value);
+        ca_display.textContent = ts ? aa.fx.time_display(ts) : '';
+      }
+    }
+  });
+
+  // content
+  let content_input = make('textarea',
+  {
+    cla:'editor_content',
+    val:event.content
+  });
+  setTimeout(()=>
+  {
+    content_input.style.height = content_input.scrollHeight+'px';
+  },0);
+  content_input.addEventListener('input',e=>
+  {
+    e.target.style.height = 'auto';
+    e.target.style.height = e.target.scrollHeight+'px';
+  });
+
+  // tags
+  let tags_ol = make('ol',{cla:'editor_tags'});
+  tags_ol.start = 0;
+  for (const tag of event.tags)
+    tags_ol.append(mk_tag_item(tag));
+
+  let add_tag_butt = make('button',
+  {
+    con:'+',
+    cla:'butt editor_tag_add',
+    clk:()=>
+    {
+      let li = mk_tag_item([]);
+      tags_ol.append(li);
+      li.querySelector('input').focus();
+    }
+  });
+
+  // assemble
+  let l = make('div',
+  {
+    cla:'e_editor',
+    app:
+    [
+      make('label',{con:'kind'}),
+      kind_input,
+      make('label',{con:'created_at'}),
+      make('span',{app:[ca_input,' ',ca_display]}),
+      make('label',{con:'content'}),
+      content_input,
+      make('label',{con:'tags'}),
+      tags_ol,
+      add_tag_butt
+    ]
+  });
+
+  aa.mk.confirm(
+  {
+    title:'editor',
+    l,
+    no:{exe:()=>{}},
+    yes:
+    {
+      title:'apply',
+      exe:()=>
+      {
+        aa.e.editor_apply(dat,
+        {
+          kind:parseInt(kind_input.value),
+          created_at:parseInt(ca_input.value),
+          content:content_input.value,
+          tags_ol
+        });
+      }
+    }
+  });
+};
