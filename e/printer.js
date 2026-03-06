@@ -141,8 +141,21 @@ aa.e.append_check =async(dat,note,tag)=>
     aa.e.append_as_root(note);
     return
   }
-  const [type,id,relay] = tag;
+  let [type,id,relay] = tag;
   let is_a = type === 'a';
+  let is_ext = type === 'i' || type === 'I';
+
+  // normalize external URL references
+  if (is_ext)
+  {
+    let href = aa.fx.url(id)?.href;
+    if (href)
+    {
+      id = href;
+      tag = [type,href,relay];
+    }
+  }
+
   let reply = is_a
   ? aa.e.by_ida(id)
   : aa.e.printed.get(id);
@@ -152,9 +165,16 @@ aa.e.append_check =async(dat,note,tag)=>
     aa.e.append_as_rep(note,reply.querySelector('.replies'));
     return
   }
-  
+
   aa.e.orphan(dat,note,tag);
-  
+
+  // external reference (URL) — create stub parent
+  if (is_ext)
+  {
+    await aa.e.stub_url(id);
+    return
+  }
+
   let miss_dat;
   if (is_a) miss_dat = await aa.e.get_a(id);
   else miss_dat = await aa.e.get(id);
@@ -283,14 +303,73 @@ aa.e.note_rm =note=>
 aa.e.orphan =(dat,note,tag)=>
 {
   const id = tag[1];
-  
+
   if (!aa.temp.refs.has(id)) aa.temp.refs.set(id,new Map());
   let refs = aa.temp.refs.get(id);
   if (!refs.has(dat.event.id))
   {
     refs.set(dat.event.id,[dat,note,tag]);
     aa.temp.orphan.set(dat.event.id,id);
+    aa.e.stashed_upd();
   }
+};
+
+
+// create stub note for external URL reference
+aa.e.stub_url =async url=>
+{
+  if (aa.e.printed.has(url)) return;
+
+  let parsed = aa.fx.url(url);
+  let hostname = parsed?.hostname || url;
+  let pubkey = await aa.fx.sha256(hostname);
+
+  // pre-create profile with stub marker
+  let p = aa.p.p(pubkey);
+  if (p)
+  {
+    p.type = 'url';
+    p.metadata = {name:hostname};
+    aa.db.p[pubkey] = p;
+  }
+
+  let event =
+  {
+    pubkey,
+    created_at:0,
+    kind:1,
+    tags:[],
+    content:url,
+    sig:''
+  };
+  event.id = aa.fx.hash(event);
+
+  let dat = aa.mk.dat({event,clas:['stub']});
+  aa.e.print(dat);
+
+  let note = aa.e.printed.get(event.id);
+  if (note)
+  {
+    aa.e.printed.set(url,note);
+    aa.e.refs(url);
+  }
+};
+
+
+// update stashed orphan count on section button
+aa.e.stashed_upd =()=>
+{
+  debt.add(()=>
+  {
+    let butt = aa.el.get('butt_section_e');
+    if (!butt) return;
+    let n = aa.temp.orphan.size;
+    fastdom.mutate(()=>
+    {
+      if (n) butt.dataset.stashed = n;
+      else delete butt.dataset.stashed;
+    })
+  },200,'stashed_upd');
 };
 
 
@@ -442,6 +521,7 @@ aa.e.refs =id=>
     aa.e.append_check(...array[1]);
   }
   aa.temp.refs.delete(id);
+  aa.e.stashed_upd();
 };
 
 

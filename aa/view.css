@@ -51,6 +51,11 @@
   content: ":" attr(data-count) "]";
 }
 
+#view > section > header > .butt[data-stashed]::after
+{
+  content: ":" attr(data-count) "/" attr(data-stashed) "]";
+}
+
 #view > section > footer
 {
   bottom: calc(var(--size) - var(--pad));
@@ -86,6 +91,11 @@
 #view > section.expanded > header > .butt::after
 {
   content: ":" attr(data-count) "";
+}
+
+#view > section.expanded > header > .butt[data-stashed]::after
+{
+  content: ":" attr(data-count) "/" attr(data-stashed) "";
 }
 
 #view > details

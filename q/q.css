@@ -7,3 +7,24 @@
 {
   grid-area: bef;
 }
+
+.section_mod_q .q_about_preview
+{
+  color:rgb(var(--color-d));
+}
+
+.section_mod_q .q_about_preview::before
+{
+  content: "// ";
+  /* white-space: pre; */
+}
+
+.section_mod_q details[open] .q_about_preview
+{
+  display: none;
+}
+
+
+
+.section_mod_q > .list > .item > details > summary::after
+{display: none;}

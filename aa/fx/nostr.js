@@ -158,6 +158,16 @@ aa.fx.kinds_type =kind=>
 };
 
 
+// SHA256 from string
+aa.fx.sha256 =async string=>
+{
+  const buffer = new TextEncoder().encode(string);
+  const hash_buffer = await crypto.subtle.digest('SHA-256',buffer);
+  return Array.from(new Uint8Array(hash_buffer))
+    .map(b=> b.toString(16).padStart(2,'0')).join('')
+};
+
+
 // SHA256 from blob
 aa.fx.blob_sha256 =async blob=>
 {

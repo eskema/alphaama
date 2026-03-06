@@ -94,7 +94,7 @@ aa.mk.note =dat=>
   
   if (!id) console.log('no id',dat);
   if (!pubkey) console.log('no pubkey',dat);
-  aa.p.get(pubkey);
+  aa.p.author(pubkey);
 
   if (typeof kind !== 'number') console.log('no kind',dat);
 

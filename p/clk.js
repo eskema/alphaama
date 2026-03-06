@@ -10,7 +10,7 @@ aa.clk.pa =e=>
   if (!aa.u.is_u(pubkey)) 
     butts.unshift([aa.p.following(pubkey)?'del':'add','k3']);
  
-  butts.unshift([`${aa.db.p[pubkey].score}`,'p_score']);
+  butts.unshift([`${aa.db.p[pubkey]?.score??0}`,'p_score']);
   
   for (const array of butts) 
     l.append(' ',aa.mk.butt_clk(array));

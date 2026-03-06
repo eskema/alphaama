@@ -81,6 +81,24 @@ aa.q =
 };
 
 
+// set query description
+aa.q.about_set =s=>
+{
+  let [fid,...rest] = s.trim().split(aa.regex.fw);
+  let about = rest.join(' ').trim();
+  let mod = aa.q;
+  if (!Object.hasOwn(mod.o.ls,fid))
+  {
+    aa.log(`${mod.def.id} about: filter not found ${fid}`);
+    return
+  }
+  mod.o.ls[fid].about = about || undefined;
+  aa.mod.save(mod);
+  aa.mod.ui(mod,fid);
+  aa.log(`${mod.def.id} ${fid} about: ${about || '(cleared)'}`);
+};
+
+
 // add filter
 aa.q.add =(s='',silent)=>
 {
@@ -396,6 +414,12 @@ aa.q.load =async()=>
   let id = mod.def.id;
   aa.actions.push(
     {
+      action:[id,'about'],
+      required:['<query_id>','<text>'],
+      description:'set query description',
+      exe:mod.about_set
+    },
+    {
       action:[id,'add'],
       required:['<query_id>','<JSON_filter>'],
       description:'add new query (request filter)',
@@ -526,10 +550,21 @@ aa.q.mk =(key,value) =>
   texts.val = `${value.v}`;
   texts.del = `${id} del ${key}`;
   texts.run = `${id} run ${key}`;
+  texts.sub = `${id} sub ${key}`;
   texts.out = `${id} out ${key}`;
   texts.req = `${id} req read ${value.v}`;
   texts.add = `${id} add ${key} ${texts.val}`;
-  
+
+  let preview_text = value.about || texts.val;
+  let about_preview = preview_text.length > 30
+    ? preview_text.slice(0,30) + '…'
+    : preview_text;
+
+  let butts = make('span',{cla:'butts'});
+  for (const item of ['req','sub','run','out'])
+  {
+    butts.append(aa.mk.butt_action(texts[item],item),' ')
+  }
 
   let actions = make('div',
   {
@@ -540,26 +575,26 @@ aa.q.mk =(key,value) =>
     ]
   });
 
-  let butts = make('span',{cla:'butts'});
-  for (const item of ['req','run','out'])
+  let content = make('div',
   {
-    butts.append(aa.mk.butt_action(texts[item],item),' ')
-  }
-  
+    app:[
+      value.about ? make('p',{cla:'about',con:value.about}) : '',
+      make('p',{cla:'val',con:texts.val}),
+      butts
+    ]
+  });
+
+  let details = aa.mk.details(key,content,0,'mod_details');
+  details.firstElementChild.append(' ',make('span',{cla:'q_about_preview',con:about_preview}));
+
   const element = make('li',
   {
     cla:'item query',
-    app:
-    [
-      make('span',{cla:'key',con:key}),
-      ' ',make('span',{cla:'val',con:texts.val}),
-      ' ',butts,
-      ' ',actions
-    ]
+    app:[details,' ',actions]
   });
-  
+
   aa.el.set(`mod_q_query_${key}`,element);
-  return element 
+  return element
 
 };
 

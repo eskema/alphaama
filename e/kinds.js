@@ -1,12 +1,23 @@
+// kinds that should load p-tagged profiles
+aa.e.p_tag_kinds = new Set([1,7,11,14,16,20,1063,1111,9735,9802,30023,34235]);
+
+
 // process note by kind if available, otherwise default
 aa.e.note_by_kind =dat=>
 {
   let kind = dat.event.kind;
-  // k>=1000  && k<=9999 : regular
-  // k>=10000 && k<=19999 || k===0 || k===3: replaceable
-  // k>=20000 && k<=29999 : ephemeral
-  // k>=30000 && k<=39999 : replaceable_parameterized
-  let type = aa.fx.kind_type(dat.event.kind); 
+  let type = aa.fx.kind_type(kind);
+
+  // always ensure author profile exists
+  aa.p.author(dat.event.pubkey);
+
+  // load p-tagged profiles for selected kinds
+  if (aa.e.p_tag_kinds.has(kind))
+  {
+    const p_tags = dat.event.tags.filter(aa.fx.is_tag_p);
+    if (p_tags.length) aa.e.authors(p_tags);
+  }
+
   if (Object.hasOwn(aa.e.kinds,kind)) return aa.e.kinds[kind](dat);
   switch (type)
   {
@@ -111,9 +122,6 @@ aa.e.kinds[0] =dat=>
 aa.e.kinds[1] =dat=>
 {
   let note = aa.mk.note(dat);
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   aa.e.append_to(dat,note,aa.fx.tag_reply(dat.event.tags));
   return note
 };
@@ -187,9 +195,6 @@ aa.e.kinds[6] =dat=>
 aa.e.kinds[7] =dat=>
 {
   let note = aa.mk.note(dat);
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   note.classList.add('tiny');
 
   let tag_reply = aa.fx.tag_e_last(dat.event.tags);
@@ -203,9 +208,6 @@ aa.e.kinds[7] =dat=>
 // image template
 aa.e.kinds[20] =dat=>
 {
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   let note = aa.mk.note(dat);
   aa.e.append_as_root(note);
   return note
@@ -219,9 +221,6 @@ aa.e.kinds[1063] = aa.e.kinds[20];
 // repost of generic note
 aa.e.kinds[16] =dat=>
 {
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   let note = aa.mk.note(dat);
   note.classList.add('tiny'); // 'is_new',
   aa.e.append_check(dat,note,aa.fx.tag_reply(dat.event.tags));
@@ -232,9 +231,6 @@ aa.e.kinds[16] =dat=>
 // generic comment
 aa.e.kinds[1111] =dat=>
 {
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   let note = aa.mk.note(dat);
   aa.e.append_to(dat,note,aa.fx.tag_comment_reply(dat.event.tags));
   return note
@@ -354,9 +350,6 @@ aa.e.kinds[14] =dat=>
 {
   let note = aa.mk.note(dat);
   note.classList.add('dm');
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   aa.e.append_to(dat,note,aa.fx.tag_reply(dat.event.tags));
   return note
 };
@@ -381,9 +374,6 @@ aa.e.kinds[1059] =dat=>
 // long-form template
 aa.e.kinds[30023] =dat=>
 {
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   let note = aa.e.note_pre(dat);
   return note
 };
@@ -392,9 +382,6 @@ aa.e.kinds[30023] =dat=>
 // video
 aa.e.kinds[34235] =dat=>
 {
-  const authors = dat.event.tags.filter(aa.fx.is_tag_p);
-  authors.push(['p',dat.event.pubkey]);
-  aa.e.authors(authors);
   let note = aa.e.note_pre(dat);
   return note
 };
