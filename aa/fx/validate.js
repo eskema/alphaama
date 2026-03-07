@@ -30,6 +30,23 @@ aa.fx.is_nip4 =string=>
 };
 
 
+// is nip44 cyphertext — version byte 0x02, base64 starts with 'A', pure base64 chars, reasonable length
+aa.fx.is_nip44 =string=>
+{
+  if (!string || string.length < 32) return false;
+  if (string[0] !== 'A') return false;
+  return /^[A-Za-z0-9+/]+=*$/.test(string);
+};
+
+
+// is nip4 or nip44 cyphertext
+aa.fx.is_cypher =string=>
+{
+  if (!string) return false;
+  return aa.fx.is_nip4(string) || aa.fx.is_nip44(string);
+};
+
+
 // returns wether or not a given level is trusted
 aa.fx.is_trusted =number=>
 {

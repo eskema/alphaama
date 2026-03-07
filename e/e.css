@@ -138,6 +138,22 @@
   position: absolute;
 }
 
+.orphan_group
+{
+  margin-bottom: var(--line);
+}
+
+.orphan_group .note:not(.in_path) > .by
+{
+  z-index: 13;
+}
+
+.orphan_group .replies > .note:not(.in_path) > .by 
+{
+  top: calc(1rem);
+  z-index: 28;
+}
+
 .root.not_yet > .replies > .note,
 .note:not(.in_view) > .sig,
 
@@ -316,6 +332,8 @@
 } */
 
 /* #endregion pagination */
+
+
 
 @media screen and (min-width: 1025px) 
 {

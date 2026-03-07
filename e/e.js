@@ -174,7 +174,7 @@ aa.e.decrypted_content =async(id,decrypted)=>
       let content = note.querySelector('.content');
       content.classList.remove('encrypted');
       content.classList.add('decrypted');
-      content.querySelector('.butt.decrypt')?.remove();
+      // content.querySelector('.butt.decrypt')?.remove();
       
       content.append('\n',aa.e.content(decrypted));
     })
@@ -635,6 +635,11 @@ aa.e.load =async()=>
       description:'view event by id (hex)',
       exe:(s)=>{ aa.view.state('#'+aa.fx.encode('note',s)) }
     },
+    {
+      action:[id,'orphans'],
+      description:'show orphaned events waiting for missing parents',
+      exe:mod.orphans
+    },
   );
   mod.l = make('div',{cla:'notes'});
   mod.section_observer = new MutationObserver(mod.section_mutated);
@@ -802,6 +807,47 @@ aa.e.search =async s=>
     }
   }
   aa.log(aa.mk.details(`e (s)earch results for ${s}`,df,1))
+};
+
+
+// show orphaned events in dialog
+aa.e.orphans =()=>
+{
+  let dialog = aa.el.get('dialog');
+  if (!dialog) return;
+
+  if (!aa.temp.refs.size)
+  {
+    aa.log('no orphaned events');
+    return
+  }
+
+  let wrap = make('div',{cla:'orphans'});
+  let close_butt = make('button',
+  {
+    cla:'butt exe',
+    con:'close',
+    clk:()=> dialog.close(),
+  });
+  let header = make('header',{app:[make('h3',{con:'orphans'}),' ',close_butt]});
+  wrap.append(header);
+
+  for (const [parent_id,refs] of aa.temp.refs)
+  {
+    let group = make('div',{cla:'orphan_group'});
+    for (const [,[,note]] of refs)
+    {
+      group.append(note);
+    }
+    wrap.append(group);
+  }
+
+  fastdom.mutate(()=>
+  {
+    dialog.textContent = '';
+    dialog.append(wrap);
+    dialog.showModal();
+  });
 };
 
 

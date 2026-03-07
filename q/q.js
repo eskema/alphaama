@@ -580,7 +580,7 @@ aa.q.mk =(key,value) =>
     app:[
       value.about ? make('p',{cla:'about',con:value.about}) : '',
       make('p',{cla:'val',con:texts.val}),
-      butts
+      actions
     ]
   });
 
@@ -590,7 +590,7 @@ aa.q.mk =(key,value) =>
   const element = make('li',
   {
     cla:'item query',
-    app:[details,' ',actions]
+    app:[details,' ',butts]
   });
 
   aa.el.set(`mod_q_query_${key}`,element);

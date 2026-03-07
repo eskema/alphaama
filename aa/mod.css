@@ -193,6 +193,11 @@ dialog .mod > header
   padding: var(--line) 0;
 }
 
+.mod details
+{
+  grid-area: v;
+}
+
 .mod details.base[open]
 {
   background: rgb(var(--color-a));

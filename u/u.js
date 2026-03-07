@@ -66,14 +66,28 @@ aa.signer.set =(type, backend)=>
 aa.signer.available =()=> !!aa.signer._backend;
 
 
+aa.signer._require =()=>
+{
+  if (!aa.signer._backend)
+  {
+    if (window.nostr)
+      aa.signer.set('nip07', window.nostr);
+    else
+      throw new Error('signer not available — log in first');
+  }
+};
+
+
 aa.signer.signEvent =async event=>
 {
+  aa.signer._require();
   return aa.signer._backend.signEvent(event);
 };
 
 
 aa.signer.getPublicKey =async()=>
 {
+  aa.signer._require();
   return aa.signer._backend.getPublicKey();
 };
 
@@ -85,12 +99,14 @@ aa.signer.nip04 =
 {
   encrypt: (pubkey, text)=>
   {
+    aa.signer._require();
     if (aa.signer.type === 'nip46')
       return aa.signer._backend.nip04Encrypt(pubkey, text);
     return aa.signer._backend.nip04.encrypt(pubkey, text);
   },
   decrypt: (pubkey, text)=>
   {
+    aa.signer._require();
     if (aa.signer.type === 'nip46')
       return aa.signer._backend.nip04Decrypt(pubkey, text);
     return aa.signer._backend.nip04.decrypt(pubkey, text);
@@ -103,12 +119,14 @@ aa.signer.nip44 =
 {
   encrypt: (pubkey, text)=>
   {
+    aa.signer._require();
     if (aa.signer.type === 'nip46')
       return aa.signer._backend.nip44Encrypt(pubkey, text);
     return aa.signer._backend.nip44.encrypt(pubkey, text);
   },
   decrypt: (pubkey, text)=>
   {
+    aa.signer._require();
     if (aa.signer.type === 'nip46')
       return aa.signer._backend.nip44Decrypt(pubkey, text);
     return aa.signer._backend.nip44.decrypt(pubkey, text);
@@ -184,23 +202,38 @@ aa.u.decrypt_cache = {
   _data: { events: {}, keys: {} },
   _loaded: false,
 
+  _ss_key: 'decrypt_cache',
+
   // decrypt cache blob from aa.u.o (lazy, on first use)
+  // tries sessionStorage first (fast, no signer needed)
   load: async () => {
     if (aa.u.decrypt_cache._loaded) return;
     aa.u.decrypt_cache._loaded = true;
+    let ss = sessionStorage.getItem(aa.u.decrypt_cache._ss_key);
+    if (ss)
+    {
+      let parsed = aa.pj(ss);
+      if (parsed)
+      {
+        aa.u.decrypt_cache._data = parsed;
+        return
+      }
+    }
     if (!aa.u.o.decrypt_cache) return;
     try {
       let decrypted = await aa.fx.decrypt(aa.u.o.decrypt_cache);
       aa.u.decrypt_cache._data = aa.pj(decrypted) || { events: {}, keys: {} };
+      sessionStorage.setItem(aa.u.decrypt_cache._ss_key, JSON.stringify(aa.u.decrypt_cache._data));
     } catch(e) {
       aa.log('decrypt cache: failed to load');
       aa.u.decrypt_cache._data = { events: {}, keys: {} };
     }
   },
 
-  // encrypt and save cache to aa.u.o
+  // encrypt and save cache to aa.u.o + sessionStorage
   save: async () => {
     try {
+      sessionStorage.setItem(aa.u.decrypt_cache._ss_key, JSON.stringify(aa.u.decrypt_cache._data));
       aa.u.o.decrypt_cache = await aa.fx.encrypt44(JSON.stringify(aa.u.decrypt_cache._data));
       await aa.mod.save(aa.u);
     } catch(e) {
@@ -255,6 +288,7 @@ aa.u.decrypt_cache = {
   clear: async () => {
     aa.u.decrypt_cache._data = { events: {}, keys: {} };
     aa.u.decrypt_cache._loaded = true;
+    sessionStorage.removeItem(aa.u.decrypt_cache._ss_key);
     await aa.u.decrypt_cache.save();
   },
 

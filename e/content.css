@@ -144,6 +144,29 @@
   font-size: var(--font-size);
 }
 
+.in_view > .content.decrypted > .paragraph.cypher
+{
+  font-size: var(--font-size-xs);
+}
+
+
+
+.decrypted > .paragraph.cypher
+{
+  /* display: none; */
+}
+
+.decrypted > .butt.decrypt
+{
+  pointer-events: none;
+  opacity: .4;
+}
+
+.decrypted > .butt.decrypt::after
+{
+  content: 'ed';
+}
+
 .in_view > .content > .paragraph,
 .in_view > .content > .list
 {

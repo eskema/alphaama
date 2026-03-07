@@ -4,7 +4,7 @@ aa.e.rnd =
 {
   content:[1,11,14,1111,30023],
   emojii:[7],
-  encrypted:[4,1059],
+  encrypted:[4,1059,33301],
   highlight:[9802],
   image:[20],
   object:[0,30166],
@@ -49,11 +49,20 @@ aa.e.render =async(dat,options)=>
   {
     if (dat.event.content.length)
     {
-      element.append(make('p',
+      if (aa.fx.is_cypher(dat.event.content))
       {
-        cla:'paragraph',
-        con:dat.event.content
-      }))
+        renders++;
+        aa.e.render_encrypted(element,dat);
+        classes.push('render_encrypted');
+      }
+      else
+      {
+        element.append(make('p',
+        {
+          cla:'paragraph',
+          con:dat.event.content
+        }))
+      }
     }
     else
     {
@@ -112,14 +121,18 @@ aa.e.render_encrypted =async(element,dat)=>
   });
   element.append(paragraph);
 
-  let p_x = aa.fx.tag_value(dat.event.tags,'p') || dat.event.pubkey;
-  if (aa.u.is_u(p_x))
+  let p_tag = aa.fx.tag_value(dat.event.tags,'p');
+  let for_u = p_tag && aa.u.is_u(p_tag);
+  let from_u = aa.u.is_u(dat.event.pubkey);
+  if (for_u || from_u)
   {
     element.classList.add('for_u');
     element.append(
       ' ',
-      aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt')
+      aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt')
     );
+    if (aa.signer.available())
+      setTimeout(()=>{ aa.e.decrypt(dat.event.id) },0);
   }
 };
 
