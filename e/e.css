@@ -138,6 +138,18 @@
   position: absolute;
 }
 
+.orphans > header
+{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  margin-bottom: var(--pad);
+}
+
+.orphans > header > h3
+{
+  font-size: var(--font-size-m);
+}
+
 .orphan_group
 {
   margin-bottom: var(--line);
@@ -164,18 +176,18 @@
 .view_e .note.root:not(.in_path),
 .view_e .note:not(.in_path),
 
-.section_e:not(.expanded) .note:not(.in_path)
+.section:not(.expanded) .note:not(.in_path)
 {
   display: none;
 }
 
 .view_e .note.in_view .note,
-.section_e:not(.expanded) .note.in_view .note
+.section:not(.expanded) .note.in_view .note
 {
   display: grid;
 }
 
-.section_e.expanded .notes > .note:last-child
+.section.expanded .notes > .note:last-child
 {
   margin-bottom: var(--line);
 }
@@ -386,18 +398,37 @@
   }
 }
 
-@media screen and (max-width: 768px) 
+/* gift wrap styling */
+
+.gift_wrap.decrypt_fail.tiny
+{
+  opacity: .5;
+}
+
+.gift_wrap.decrypt_fail .butt.decrypt
+{
+  display: none;
+}
+
+.gift_wrap.decrypt_fail:not(.tiny) .content::after
+{
+  content: "decrypt failed"!important;
+  padding: var(--pad);
+  font-size: var(--font-size)!important;
+}
+
+@media screen and (max-width: 768px)
 {
   .aa:not(.view_e) .notes
   {
     margin-left: var(--padm);
   }
-  
+
   .note,
   .note.root:not(.in_path),
   .note.in_view > .replies > .note
   {
-    grid-template-areas: 
+    grid-template-areas:
       "by      by"
       "content content"
       "tags    tags"

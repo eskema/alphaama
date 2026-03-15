@@ -135,8 +135,6 @@ aa.e.decrypt =async id=>
 
   let {kind,tags,content,pubkey} = dat.event;
 
-  if (kind === 1059) return aa.e.unwrap(dat);
-
   if (kind === 4)
   {
     let pub_to = aa.fx.tag_value(tags,'p');
@@ -180,74 +178,6 @@ aa.e.decrypted_content =async(id,decrypted)=>
     })
   }
 };
-
-
-// unwrap gift wrap (kind 1059) -> seal (kind 13) -> rumor (kind 14)
-aa.e.unwrap =async dat=>
-{
-  let wrap = dat.event;
-  let cached = await aa.u.decrypt_cache.get(wrap.id);
-  if (cached)
-  {
-    let rumor = aa.pj(cached);
-    if (rumor) aa.e.unwrap_show(rumor,dat);
-    return
-  }
-  if (!aa.signer.available()) return;
-
-  // layer 1: decrypt gift wrap -> seal
-  let seal_json;
-  try { seal_json = await aa.signer.nip44.decrypt(wrap.pubkey,wrap.content) }
-  catch(er) { console.error('unwrap l1',er); return }
-  if (!seal_json) return;
-
-  let seal = aa.pj(seal_json);
-  if (!seal || seal.kind !== 13) return;
-  if (!await aa.fx.verify_event(seal)) return;
-
-  // layer 2: decrypt seal -> rumor
-  let rumor_json;
-  try { rumor_json = await aa.signer.nip44.decrypt(seal.pubkey,seal.content) }
-  catch(er) { console.error('unwrap l2',er); return }
-  if (!rumor_json) return;
-
-  let rumor = aa.pj(rumor_json);
-  if (!rumor || rumor.pubkey !== seal.pubkey) return;
-
-  await aa.u.decrypt_cache.add(wrap.id,rumor_json,seal.pubkey);
-  aa.e.unwrap_show(rumor,dat);
-};
-
-
-// display unwrapped rumor as quote inside the gift wrap note
-aa.e.unwrap_show =(rumor,wrap_dat)=>
-{
-  if (!rumor.id) rumor.id = aa.fx.hash(rumor);
-  let note = aa.e.printed.get(wrap_dat.event.id);
-  if (!note)
-  {
-    aa.log('unwrapped:');
-    aa.log(rumor.content);
-    return
-  }
-  let dat = aa.mk.dat({event:rumor, seen:wrap_dat.seen, subs:['dm']});
-  aa.em.set(rumor.id,dat);
-  let quote = make('blockquote',{cla:'note_quote dm'});
-  aa.e.quote_note(quote,dat);
-  fastdom.mutate(()=>
-  {
-    let content = note.querySelector('.content');
-    content.classList.remove('encrypted');
-    content.classList.add('decrypted');
-    content.querySelector('.butt.decrypt')?.remove();
-    // content.querySelector('.cypher')?.remove();
-    content.append(quote);
-  });
-};
-
-
-// randomise timestamp 0-48h into the past for privacy (NIP-59)
-aa.e.rand_ts =ts=> ts - Math.floor(Math.random() * 172800);
 
 
 aa.e.anal =()=>
@@ -666,17 +596,7 @@ aa.e.note_actions =dat=>
   let butts = [];
   if (dat.clas.includes('draft'))
   {
-    switch (dat.event.kind)
-    {
-      case 4: 
-        if (!dat.clas.includes('encrypted'))
-        {
-          aa.fx.a_add(butts,aa.e.butts.k4);
-          break;
-        }
-      default: 
-        aa.fx.a_add(butts,aa.e.butts.draft);
-    }
+    aa.fx.a_add(butts,aa.e.butts.draft);
     l.setAttribute('open','')
   }
   else if (dat.clas.includes('not_sent')) aa.fx.a_add(butts,aa.e.butts.not_sent);
@@ -889,7 +809,8 @@ aa.e.view =element=>
       {
         root = element.closest('.root');
       }
-      aa.e.l.append(root)
+      let container = aa.e.l;
+      container.append(root)
     }
 
     aa.l.classList.add('viewing','view_e');
@@ -911,7 +832,7 @@ aa.e.view_clear =in_view=>
     delete aa.view.id_a;
 
   aa.l.classList.remove('view_e');
-  sift.filter_clear(aa.temp[`section_e`]);
+  sift.filter_clear(aa.temp.section_e);
 };
 
 
@@ -924,10 +845,14 @@ aa.e.draft =async dat=>
   aa.em.set(dat.event.id,dat);
   aa.e.print(dat);
   
-  let section = aa.el.get('section_e');//document.getElementById('e');
-  if (section && !section.classList.contains('expanded')) 
+  let note = aa.e.printed.get(dat.event.id);
+  let sk = note?.dataset.section || 'e';
+  let section = aa.el.get(`section_${sk}`);
+  if (section && !section.classList.contains('expanded'))
     aa.clk.expand({target:section});
-  
+
+  if (note) setTimeout(()=>{ aa.fx.scroll(note) },200);
+
   aa.log(make('button',
   {
     cla:'butt exe',
@@ -995,18 +920,37 @@ aa.e.draft_dat =async(content,reply_to)=>
 // creates / updates / deletes dat event from input
 aa.e.draft_upd =async(s='')=>
 {
-  if (!aa.u.p)  return
+  if (!aa.u.p) return
   if (!s) s = aa.bus.request('cli:value') || '';
   if (s.length)
   {
     const reply_to = aa.view.active;
-    if (reply_to 
-    && aa.temp.dat?.replying !== reply_to) 
+
+    if (reply_to
+    && aa.temp.dat?.replying !== reply_to)
       delete aa.temp.dat;
     if (!aa.temp.dat) aa.e.draft_dat(s,reply_to)
     else aa.temp.dat.event.content = s;
   }
   else if (aa.temp.dat) delete aa.temp.dat;
+  aa.e.cli_note_type();
+};
+
+
+// update CLI dataset with current note type
+aa.e.cli_note_type =()=>
+{
+  if (!aa.cli?.t) return;
+  let type;
+  if (!aa.temp.dat || !aa.temp.dat.replying)
+    type = 'kind-1 root';
+  else
+  {
+    let k = aa.temp.dat.event.kind;
+    if (k === 1) type = 'kind-1 reply';
+    else type = 'kind-' + k + ' comment';
+  }
+  fastdom.mutate(()=>{ aa.cli.t.dataset.note_type = type });
 };
 
 

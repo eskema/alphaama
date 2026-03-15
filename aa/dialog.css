@@ -5,7 +5,7 @@ dialog
   color: rgb(var(--color-d));
   display: grid;
   max-height: 100vh;
-  max-width: 60vw;
+  max-width: 80vw;
   padding: 0;
 }
 

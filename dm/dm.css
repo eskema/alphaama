@@ -1,0 +1,383 @@
+/* dm module styles */
+
+/* place after section_e in grid */
+.section_dm
+{
+  grid-area: dm;
+}
+
+/* always show header button (no count needed) */
+#view .section_dm:not(.expanded) > header > .section_butt
+{
+  /* display: block!important; */
+}
+
+/* hide panel when section is collapsed */
+.section_dm:not(.expanded) > .dm_panel
+{
+  display: none;
+}
+
+/* split panel */
+.dm_panel
+{
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 200px;
+  background: rgb(var(--color-b));
+  position: relative;
+  z-index: 1;
+}
+
+/* left panel: conversation list */
+.dm_list
+{
+  overflow-y: auto;
+  border-right: 1px solid rgba(var(--color-c),1);
+  max-height: 80vh;
+}
+
+.dm_convo_item
+{
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: var(--padm);
+  padding: var(--padm) var(--pad);
+  border-bottom: 1px dotted rgba(var(--color-c),.5);
+}
+
+.dm_convo_item:hover
+{
+  background: rgba(var(--color-c),.3);
+}
+
+.dm_convo_item.active
+{
+  background: rgba(var(--color-c),.5);
+  border-left: 2px solid rgb(var(--color-e));
+}
+
+.dm_convo_item > .a.author
+{
+  font-size: var(--font-size-s);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.dm_convo_item.active > .a.author
+{
+  pointer-events: auto;
+}
+
+.dm_convo_time
+{
+  font-size: var(--font-size-s);
+  opacity: .6;
+  justify-self: end;
+}
+
+.dm_convo_preview
+{
+  grid-column: 1;
+  font-size: var(--font-size-s);
+  opacity: .7;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm_convo_unread
+{
+  font-size: var(--font-size-s);
+  justify-self: end;
+  color: rgb(var(--color-e));
+}
+
+.dm_convo_unread::before
+{
+  content: "[";
+}
+
+.dm_convo_unread::after
+{
+  content: "]";
+}
+
+.dm_convo_unread.hidden
+{
+  display: none;
+}
+
+/* right panel */
+.dm_view
+{
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  overflow: hidden;
+}
+
+.dm_header
+{
+  border-bottom: 1px solid rgba(var(--color-c),1);
+  padding: var(--padm) var(--pad);
+  display: flex;
+  align-items: center;
+  gap: var(--pad);
+}
+
+.dm_header .butt
+{
+  font-size: var(--font-size-s);
+}
+
+.dm_msg:last-child
+{
+  margin-bottom: 60vh;
+}
+
+.dm_back
+{
+  font-size: var(--font-size-s);
+  padding: 0 var(--padm);
+}
+
+/* mark read button — mirrors replies header pattern */
+.dm_mark_read
+{
+  font-size: var(--font-size-s);
+  margin-left: auto;
+}
+
+.dm_view:not(.dm_read) .dm_mark_read::before
+{
+  content: "// ";
+}
+
+.dm_view.dm_read .dm_mark_read
+{
+  color: rgb(var(--color-no));
+}
+
+.dm_view.dm_read .dm_mark_read::before
+{
+  content: "/* ";
+}
+
+.dm_view.dm_read .dm_mark_read::after
+{
+  content: " read */";
+}
+
+@media screen and (min-width: 1025px)
+{
+  .dm_mark_read:hover
+  {
+    background-color: rgba(var(--color-a),1);
+  }
+
+  .dm_view:not(.dm_read) .dm_mark_read:hover::after
+  {
+    content: " mark read";
+  }
+}
+
+.dm_messages
+{
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--padm);
+}
+
+/* hide read messages when marked read */
+.dm_view.dm_read .dm_messages > .dm_msg:not(.dm_new)
+{
+  display: none;
+}
+
+/* messages */
+.dm_msg
+{
+  max-width: 80%;
+  padding: var(--padm) var(--pad);
+  border-radius: 4px;
+  background: rgba(var(--color-c),.2);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--padm);
+}
+
+.dm_msg.from_u
+{
+  margin-left: auto;
+  background: rgba(var(--color-e),.15);
+}
+
+.dm_content
+{
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.dm_time
+{
+  font-size: var(--font-size-s);
+  opacity: .4;
+  white-space: nowrap;
+}
+
+.dm_inspect
+{
+  opacity: .2;
+  font-size: var(--font-size-s);
+  padding: 0 var(--padm);
+}
+
+.dm_inspect:hover
+{
+  opacity: 1;
+}
+
+/* draft */
+.dm_draft
+{
+  border: 1px dashed rgba(var(--color-main),1);
+}
+
+.dm_actions
+{
+  display: flex;
+  gap: var(--padm);
+  width: 100%;
+  justify-content: flex-end;
+}
+
+/* sending state */
+.dm_sending
+{
+  opacity: .6;
+}
+
+.dm_sent
+{
+  opacity: 1;
+}
+
+.dm_failed
+{
+  border: 1px solid red;
+}
+
+.dm_error
+{
+  color: red;
+  font-size: var(--font-size-s);
+}
+
+/* inspect dialog */
+.dm_inspect_wrap
+{
+  max-width: 80vw;
+}
+
+.dm_inspect_wrap > header
+{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--pad);
+}
+
+.chain_section
+{
+  margin-bottom: var(--pad);
+}
+
+.chain_section > h4
+{
+  font-size: var(--font-size-s);
+  opacity: .7;
+  margin-bottom: var(--padm);
+}
+
+.chain_section > pre
+{
+  background: rgba(var(--color-a),.5);
+  font-size: var(--font-size-s);
+  max-height: 200px;
+  overflow: auto;
+  padding: var(--padm);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* pending convo item */
+.dm_pending_convo
+{
+  font-style: italic;
+  opacity: .8;
+}
+
+.dm_pending_label
+{
+  font-size: var(--font-size-s);
+}
+
+/* pending wrap items */
+.dm_pending_list
+{
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--pad);
+}
+
+.dm_pending_wrap
+{
+  display: flex;
+  align-items: center;
+  gap: var(--pad);
+  padding: var(--padm) var(--pad);
+  border-bottom: 1px dotted rgba(var(--color-c),.3);
+  font-size: var(--font-size-s);
+}
+
+.dm_pending_id,
+.dm_pending_pk
+{
+  opacity: .6;
+}
+
+/* empty state */
+.dm_view:empty::after
+{
+  content: "select a conversation";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  opacity: .3;
+}
+
+/* responsive */
+@media screen and (max-width: 768px)
+{
+  .dm_panel
+  {
+    grid-template-columns: 1fr;
+  }
+
+  .dm_list
+  {
+    max-height: 30vh;
+  }
+}

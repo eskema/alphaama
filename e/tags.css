@@ -196,6 +196,12 @@ dialog .tag
   width: auto;
 }
 
+.versions .tags_wrapper,
+.wraps .tags_wrapper
+{
+  bottom: 0
+}
+
 @media screen and (min-width: 1025px) 
 {
   .tags_wrapper:not([open]) summary:hover

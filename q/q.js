@@ -768,10 +768,9 @@ aa.q.stuff =async()=>
   aa.log('getting your stuff (relays, metadata, follows, etc…)');
   await aa.q.print('a',{options});
   
-  // Phase 2: Refetch after relay connections established
+  // Phase 2: start on_load subs (persistent)
   await aa.fx.delay(420);
-  aa.log('getting your stuff again now that we might have more relays…');
-  await aa.q.print('a',{options});
+  aa.u.on_load_sub();
   
   // Phase 3: Load follows data
   await aa.fx.delay(666);
@@ -834,29 +833,24 @@ aa.q.sub =async s=>
       continue
     }
 
-    // txt += ` ${fid}`;
-    let relays = aa.r.rel(rels);
-    // if (!relays.length) relays = aa.r.r;
-    // if (!relays.length)
-    // {
-    //   aa.log(`${txt} no relays provided`);
-    //   continue
-    // }
+    let as_outbox = rels === 'out';
+    let relays = as_outbox ? [] : aa.r.rel(rels);
+    if (!relays.length && !as_outbox) relays = aa.r.r;
 
     let [filter,options] = aa.q.filter(ls[fid].v);
-    
+
     fid = `${fid}_sub`;
 
     let since = aa.q.o.subs[fid];
-    if (since) 
+    if (since)
     {
-      if (!filter.since || filter.since < since) 
+      if (!filter.since || filter.since < since)
         filter.since = since + 1;
     }
-    
+
     let request = ['REQ',fid,filter];
     let more =
-    { 
+    {
       on_sub: dat=>
       {
         if (!aa.q.o.subs[fid]) aa.q.o.subs[fid] = 1;
@@ -869,19 +863,17 @@ aa.q.sub =async s=>
       }
     };
 
-    if (!relays.length)
+    if (as_outbox)
     {
       request.push(options);
       aa.q.outbox(request,more)
     }
     else
     {
-      relays = aa.r.r;
       aa.r.on_sub.set(fid,more.on_sub);
       aa.r.send_req({request,relays,options});
-      aa.q.log('req',request,`to: ${relays}`);
     }
 
-    aa.q.log('sub',request,`to: ${relays}`);
+    aa.q.log('sub',request,`to: ${as_outbox ? 'outbox' : relays}`);
   }
 };

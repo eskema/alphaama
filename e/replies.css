@@ -74,6 +74,12 @@
   z-index: 4;
 }
 
+.root:not(.in_view) > .replies
+{
+  position: sticky;
+  top: 0;
+}
+
 .root:not(.in_view) > .replies > header,
 .in_view > .replies .replies > header
 {

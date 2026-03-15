@@ -145,16 +145,33 @@ aa.r.add_from_o =relays=>
 
 
 // broadcast event from id to relays
-// s = 'id relay relay relay'
+// s = 'id relay|set relay|set'
 aa.r.bro =async(s='')=>
 {
-  let [id,...relays] = s.split(' ');
+  let [id,...args] = s.split(' ');
   let dat = await aa.bus.request('e:get', id);
   if (!dat)
   {
     aa.log('r bro: event not found');
     return
   }
+
+  let relays = [];
+  for (const arg of args)
+  {
+    let resolved = aa.r.rel(arg);
+    if (resolved.length) relays.push(...resolved);
+    else
+    {
+      let url = aa.fx.url(arg)?.href;
+      if (url)
+      {
+        if (!aa.r.o.ls[url]) aa.r.add(`${url} bro`);
+        relays.push(url);
+      }
+    }
+  }
+
   if (!relays.length && dat.seen?.length)
     relays = aa.r.w.filter(r => !dat.seen.includes(r));
   aa.r.send_event({event:dat.event,relays});
@@ -965,6 +982,7 @@ aa.r.manager_setup =()=>
 
   // initialize relay manager
   mod.manager.postMessage(['init',{relays,limit}]);
+  aa.mod.fire_ready('r:manager');
 };
 
 

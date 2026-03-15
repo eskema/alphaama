@@ -10,6 +10,33 @@ aa.mod_l = make('div',{id:'mods'});
 
 aa.mod = {};
 
+// module readiness hooks
+// aa.mod.ready(key, fn) — register callback for when key fires
+// if key already fired, fn runs immediately
+// aa.mod.fire_ready(key) — fire all callbacks for key
+aa.mod._ready = new Map();
+aa.mod._ready_fired = new Set();
+
+aa.mod.ready =(key, fn)=>
+{
+  if (aa.mod._ready_fired.has(key))
+  {
+    fn();
+    return
+  }
+  if (!aa.mod._ready.has(key)) aa.mod._ready.set(key, []);
+  aa.mod._ready.get(key).push(fn);
+};
+
+aa.mod.fire_ready =key=>
+{
+  aa.mod._ready_fired.add(key);
+  let cbs = aa.mod._ready.get(key);
+  if (!cbs) return;
+  for (let fn of cbs) fn();
+  aa.mod._ready.delete(key);
+};
+
 
 aa.mod.butts =mod=>
 {

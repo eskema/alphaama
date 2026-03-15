@@ -391,6 +391,10 @@ const on_eose =async(id,url)=>
 const on_closed =async(a,url)=>
 {
   let [sub_id,reason] = a.slice(1);
+
+  let relay = manager.relays.get(url);
+  if (relay) relay.worker.open.delete(sub_id);
+
   if (!reason) return;
 
   let [what,why] = reason.split(':');
@@ -399,9 +403,10 @@ const on_closed =async(a,url)=>
     // case 'block':
     // case 'blocked':
     case 'restricted':
-    case 'auth-required':
-      console.log(url,sub_id,reason);
       terminate(url);
+      break;
+    case 'auth-required':
+      if (!relay?.sets?.includes('auth')) terminate(url);
       break;
     // case 'pow':
     // case 'duplicate':
@@ -418,12 +423,12 @@ const on_closed =async(a,url)=>
 const on_ok =async(a,url)=>
 {
   postMessage([...a,url]);
-  if (a[2] === false) on_not_ok(a[3],url);
+  if (a[2] === false) on_not_ok(a[1],a[3],url);
 };
 
 
 // relay refused event
-const on_not_ok =(reason,url)=>
+const on_not_ok =(event_id,reason,url)=>
 {
   if (!reason) return;
 
@@ -432,8 +437,16 @@ const on_not_ok =(reason,url)=>
   {
     case 'block':
     case 'blocked':
-    case 'auth-required':
       terminate(url);
+      break;
+    case 'auth-required':
+      let relay = manager.relays.get(url);
+      if (!relay) break;
+      if (manager.events.has(event_id))
+      {
+        if (!relay.auth_queue) relay.auth_queue = new Set();
+        relay.auth_queue.add(event_id);
+      }
       break;
     // case 'pow':
     // case 'duplicate':
@@ -559,6 +572,9 @@ const get_outbox =async({request,outbox,options})=>
   }
 
   let [fid,filter] = request.slice(1);
+
+  pre_process_request(request);
+
   if (Object.hasOwn(filter,'authors')) delete filter.authors;
 
   let batch_size = 20;
@@ -580,8 +596,6 @@ const get_outbox =async({request,outbox,options})=>
     }, delay);
     delay += 3000;
   }
-
-  pre_process_request(request);
 };
 
 
@@ -623,6 +637,7 @@ const relay_request =async({url,request,options})=>
     case 'event':
       let dat = manager.events.get(request[1].id);
       if (dat && dat.seen.includes(url)) return;
+      if (!dat) manager.events.set(request[1].id, mk_dat({event: request[1]}));
       break;
   }
   dis.json = JSON.stringify(request);
@@ -836,9 +851,19 @@ const on_worker_message =async(relay,e)=>
     case 'open' : connect(relay); break;
     case 'auth':
       relay.authed = true;
-      // console.log(data);
       if (Object.hasOwn(relay,'waiting')) delete relay.waiting;
       send_request(relay,data[1]);
+      // send events that were rejected before auth
+      if (relay.auth_queue?.size)
+      {
+        for (const id of relay.auth_queue)
+        {
+          let dat = manager.events.get(id);
+          if (dat)
+            send_request(relay, {json: JSON.stringify(['EVENT', dat.event])});
+        }
+        relay.auth_queue.clear();
+      }
       setTimeout(()=>{process_requests(relay)},500);
       break;
     case 'request': process_requests(relay,data[1]); break;
@@ -853,11 +878,11 @@ const process_requests =(relay,request)=>
   if (request)
     relay.worker.queue.push(request);
 
-  let is_ready = relay.sets.includes('auth')
-    ? relay.authed
-    : true;
+  // block only while an auth challenge is pending response
+  let awaiting_auth = relay.sets?.includes('auth')
+    && relay.waiting && !relay.authed;
 
-  if (is_ready)
+  if (!awaiting_auth)
   {
     while (relay.worker.queue.length)
     {
@@ -870,9 +895,8 @@ const process_requests =(relay,request)=>
       }
     }
   }
-  else if (relay.waiting)
+  else if (relay.worker.queue.length)
   {
-    console.log(relay.worker.url+' is waiting');
     setTimeout(()=>{process_requests(relay)},1000)
   }
 };

@@ -139,6 +139,7 @@ aa.mk.note =dat=>
   });
   
 
+  if (pubkey && aa.u.is_u(pubkey)) note.classList.add('from_u');
   let stored = sessionStorage[id];
   if (stored && stored === 'tiny') note.classList.add('tiny');
   
@@ -363,51 +364,6 @@ aa.mk.k4 =async(s='')=>
 };
 
 
-// private DM (NIP-17 gift wrap)
-aa.mk.dm =async(s='')=>
-{
-  let [recipient,...rest] = s.split(aa.regex.fw);
-  let text = rest.join(' ');
-  if (!recipient || !text) return aa.log('dm <pubkey> <text>');
-
-  if (recipient.startsWith('npub')) recipient = aa.fx.decode(recipient);
-  if (!aa.fx.is_key(recipient)) return aa.log('invalid pubkey');
-  if (!aa.signer.available()) return aa.log('signer needed');
-
-  let sender = aa.u.p.pubkey;
-
-  // 1. create rumor (unsigned kind 14)
-  let rumor =
-  {
-    kind:14, pubkey:sender,
-    created_at:aa.now,
-    content:text, tags:[['p',recipient]]
-  };
-  rumor.id = aa.fx.hash(rumor);
-
-  // 2. create seal (kind 13, signed)
-  let seal_content = await aa.signer.nip44.encrypt(recipient,JSON.stringify(rumor));
-  let seal = await aa.e.sign(
-  {
-    kind:13, content:seal_content,
-    created_at:aa.e.rand_ts(aa.now), tags:[]
-  });
-  if (!seal) return aa.log('seal sign failed');
-
-  // 3. gift wrap for each recipient + self
-  for (const pub of [recipient,sender])
-  {
-    let wrap = NostrTools.nip59.createWrap(seal,pub);
-    let relays = aa.fx.dm_relays(pub);
-    if (!relays.length) relays = aa.r.w;
-    aa.r.send_event({event:wrap,relays});
-  }
-
-  // show locally
-  aa.e.print_q(aa.mk.dat({event:rumor, subs:['dm'], clas:['dm','sent']}));
-};
-
-
 // DM relay list (kind 10050)
 aa.mk.k10050 =(s='')=>
 {
@@ -512,12 +468,6 @@ aa.actions.push(
     required:['<pubkey>','<text>'],
     description:'encrypt text to pubkey',
     exe:aa.mk.k4
-  },
-  {
-    action:['dm'],
-    required:['<pubkey>','<text>'],
-    description:'send private DM (NIP-17 gift wrap)',
-    exe:aa.mk.dm
   },
   {
     action:['mk','10050'],

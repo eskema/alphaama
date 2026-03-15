@@ -5,7 +5,7 @@
   align-self: start;
   display: grid;  
   grid-area: main;
-  grid-template-areas: "p" "e";
+  grid-template-areas: "p" "dm" "e";
   position: relative;
   z-index: 1;
 }
@@ -54,6 +54,12 @@
 #view > section > header > .butt[data-stashed]::after
 {
   content: ":" attr(data-count) "/" attr(data-stashed) "]";
+}
+
+#view > section > header > .butts
+{
+  font-size: var(--font-size-s);
+  padding: 0 var(--pad);
 }
 
 #view > section > footer

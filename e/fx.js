@@ -277,6 +277,7 @@ aa.fx.reply_kinda =async(dat,reply_dat)=>
     tags = await aa.fx.tags_for_comment(reply_dat.event);
   }
   dat.event.tags.push(...tags);
+  aa.e.cli_note_type();
 };
 
 
@@ -319,9 +320,10 @@ aa.fx.tag_root =tags=>
 
 aa.fx.tag_comment_reply =tags=>
 {
-  return tags.find(t=>t[0]==='a') 
+  return tags.find(t=>t[0]==='a')
   || tags.find(t=>t[0]==='e')
   || tags.find(t=>t[0]==='i')
+  || aa.fx.tag_comment_root(tags)
 };
 
 
@@ -446,14 +448,4 @@ aa.fx.p_tags =event=>
   
   if (not_u && not_in_tags) tags.push(aa.fx.tag_p(event.pubkey));
   return tags
-};
-
-
-// get DM relays for pubkey (kind 10050), fallback to read relays
-aa.fx.dm_relays =pubkey=>
-{
-  let p = aa.db.p[pubkey];
-  if (!p?.relays) return [];
-  let dm = aa.fx.in_set(p.relays,'k10050');
-  return dm.length ? dm : aa.fx.in_set(p.relays,'read');
 };

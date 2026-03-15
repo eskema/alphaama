@@ -131,7 +131,8 @@ aa.e.render_encrypted =async(element,dat)=>
       ' ',
       aa.mk.butt_action('e decrypt '+dat.event.id,'decrypt','decrypt')
     );
-    if (aa.signer.available())
+    let ad = localStorage.auto_decrypt;
+    if ((ad === 'on' || ad === 'on_view') && aa.signer.available())
       setTimeout(()=>{ aa.e.decrypt(dat.event.id) },0);
   }
 };

@@ -1,0 +1,24 @@
+= dm => direct messages
+
+* private messages using NIP-17 (gift wrap / seal / rumor)
+* three-layer encryption: rumor (kind 14) wrapped in seal (kind 13) wrapped in gift wrap (kind 1059)
+* timestamps are randomised 0-48h into the past for privacy (NIP-59)
+* conversations are persisted locally — only wrap IDs are saved, content is fetched from the decrypt cache
+* the decrypt cache is only accessed when the dm section is opened, not on page load
+* conversations are restored from cache without needing to re-subscribe or re-decrypt
+
+to subscribe to DMs from relays, type: `. dm get`
+
+* uses your kind 10050 relays if available, falls back to read relays
+* set `dm_get` option to `on` to auto-subscribe on load: `. o add dm_get on`
+
+to start a new conversation, type: `. dm new <npub|pubkey>`
+
+* typing in the CLI while a conversation is open sends a DM to that person
+* by default a draft is shown for review before sending (send / cancel)
+* set `dm_auto_send` option to `on` to skip the draft step: `. o add dm_auto_send on`
+
+to decrypt a specific gift wrap by id, type: `. dm decrypt <id>`
+
+* the inspect button (i) on each message shows the full decrypt chain (rumor, seal, wrap ids)
+* the mark read button in the conversation header toggles visibility of older messages

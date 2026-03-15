@@ -345,12 +345,29 @@ aa.e.kinds[10050] =dat=>
 };
 
 
+// encrypted DM (NIP-04)
+aa.e.kinds[4] =dat=>
+{
+  let note = aa.mk.note(dat);
+  aa.e.append_as_root(note);
+  return note
+};
+
+
+// seal (NIP-17)
+aa.e.kinds[13] =dat=>
+{
+  let note = aa.mk.note(dat);
+  aa.e.append_as_root(note);
+  return note
+};
+
+
 // chat message rumor (NIP-17)
 aa.e.kinds[14] =dat=>
 {
   let note = aa.mk.note(dat);
-  note.classList.add('dm');
-  aa.e.append_to(dat,note,aa.fx.tag_reply(dat.event.tags));
+  aa.e.append_as_root(note);
   return note
 };
 
@@ -361,12 +378,6 @@ aa.e.kinds[1059] =dat=>
   let note = aa.mk.note(dat);
   note.classList.add('gift_wrap');
   aa.e.append_as_root(note);
-  if (localStorage.auto_decrypt === 'on')
-  {
-    let p_tag = aa.fx.tag_value(dat.event.tags,'p');
-    if (p_tag && aa.u.is_u(p_tag))
-      setTimeout(()=>{ aa.e.unwrap(dat) },0);
-  }
   return note
 };
 

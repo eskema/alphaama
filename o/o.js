@@ -18,7 +18,11 @@ const o =
     {
       'auto_decrypt': 'off',
       'cash': 'on',
-      'ns': '.', // used as the prefix for actions
+      'dm_auto_send': 'off',
+      'dm_decrypt': 'off',
+      'dm_get': 'off',
+      'ns': '.',
+      'on_load_sub': '', // used as the prefix for actions
       'pagination': '100', // number of root events displayed
       'pow': '0', // proof of work difficulty
       'reaction': '\uD83E\uDD18', // '🤘' default reaction emoji
@@ -68,8 +72,23 @@ o.defaults =
   },
   auto_decrypt:
   {
+    options:['on','on_view','off'],
+    fx:s=>aa.fx.cycle(s,o.defaults.auto_decrypt.options)
+  },
+  dm_auto_send:
+  {
     options:['on','off'],
-    fx:s=>aa.fx.pick_other(s,o.defaults.auto_decrypt.options)
+    fx:s=> aa.fx.pick_other(s,o.defaults.dm_auto_send.options)
+  },
+  dm_decrypt:
+  {
+    options:['on','off'],
+    fx:s=> aa.fx.pick_other(s,o.defaults.dm_decrypt.options)
+  },
+  dm_get:
+  {
+    options:['on','off'],
+    fx:s=> aa.fx.pick_other(s,o.defaults.dm_get.options)
   },
   theme:
   {

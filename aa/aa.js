@@ -50,6 +50,7 @@ const aa =
     ['o','/o/o.js','esm'],
     ['p','/p/p.js'],
     ['e','/e/e.js'],
+    ['dm','/dm/dm.js'],
     ['r','/r/r.js'],
     ['q','/q/q.js'],
     ['u','/u/u.js'],
@@ -146,6 +147,7 @@ aa.add_mods =async(mods,target)=>
     if (Object.hasOwn(mod,'load'))
       await mod.load();
     mod.loaded = true;
+    aa.mod.fire_ready(id);
   }
 };
 

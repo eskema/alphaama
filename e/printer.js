@@ -29,9 +29,10 @@ aa.e.last_child =(stamp,parent)=>
 };
 
 // append note to notes section
-aa.e.append_as_root =(note,parent)=>
+aa.e.append_as_root =(note,section)=>
 {
-  if (!parent) parent = aa.e.l;
+  if (!section) section = note.dataset.section || 'e';
+  note.dataset.section = section;
 
   let classes = 'root';
   // on first append
@@ -42,12 +43,12 @@ aa.e.append_as_root =(note,parent)=>
     aa.e.view_check(note);
   }
   // let stamp = parseInt(note.dataset.stamp);
-  let options = aa.temp[`section_e`];
-  if (options) 
+  let options = aa.temp[`section_${section}`];
+  if (options)
     // fastdom.mutate(()=>{
-      sift.insert(note,options) 
+      sift.insert(note,options)
     // });
-  else console.log('aa.e.append_as_root: no options')
+  else console.log('aa.e.append_as_root: no options for section_'+section)
 };
 
 
@@ -90,7 +91,8 @@ aa.e.append_as_rep =(note,rep)=>
     rep.parentElement.classList.add(...rep_add);
     aa.e.upd_note_path(note);
 
-    let e_opts = aa.temp.section_e;
+    let root = note.closest('.root');
+    let e_opts = aa.temp[`section_${root?.dataset.section || 'e'}`];
     if (e_opts?.solo?.match?.(note))
     {
       note.classList.add('solo');
@@ -239,7 +241,8 @@ aa.e.note_replace =(old_note,dat)=>
   dat.clas = aa.fx.a_rm(dat.clas,['draft']);
 
   // remove old note from sift items before creating replacement
-  let e_opts = aa.temp.section_e;
+  let sk = old_note.dataset.section || 'e';
+  let e_opts = aa.temp[`section_${sk}`];
   if (e_opts?.items)
   {
     let idx = e_opts.items.indexOf(old_note);
@@ -250,6 +253,7 @@ aa.e.note_replace =(old_note,dat)=>
   note.querySelector('.replies').replaceWith(old_note.querySelector('.replies'));
 
   note.className = old_note.className;
+  if (old_note.dataset.section) note.dataset.section = old_note.dataset.section;
 
   aa.e.printed.set(dat.event.id,note);
 
@@ -286,7 +290,8 @@ aa.e.note_rm =note=>
   aa.em.delete(note.dataset.id);
   if (note.dataset.id_a) aa.em_a.delete(note.dataset.id_a);
   aa.e.printed.delete(note.dataset.id);
-  let e_opts = aa.temp.section_e;
+  let sk = note.dataset.section || 'e';
+  let e_opts = aa.temp[`section_${sk}`];
   if (e_opts?.items)
   {
     let idx = e_opts.items.indexOf(note);
@@ -295,7 +300,7 @@ aa.e.note_rm =note=>
   let draft_butt = document.querySelector(`[data-draft="${note.dataset.id}"]`);
   if (draft_butt) draft_butt.remove();
   note.remove();
-  aa.fx.count_upd(aa.el.get('butt_section_e'),false);
+  aa.fx.count_upd(aa.el.get(`butt_section_${sk}`),false);
 };
 
 
@@ -426,7 +431,8 @@ aa.e.print =dat=>
   // get all stashed references
   setTimeout(()=>{ aa.e.references(dat) },0);
   // update section counter
-  setTimeout(()=>{ aa.fx.count_upd(aa.el.get('butt_section_e')) },0);
+  let sk = note.dataset.section || 'e';
+  setTimeout(()=>{ aa.fx.count_upd(aa.el.get(`butt_section_${sk}`)) },0);
   //setTimeout(()=>{ aa.fx.section_upd('section_e') },0);
   // aa.e.anal(dat);
 };
@@ -532,8 +538,8 @@ aa.e.replies_summary_upd =async element=>
   fastdom.mutate(()=>
   {
     const replies = element.querySelector('.replies');
-    const direct = replies.childNodes.length - 1;
-    const all = replies.querySelectorAll('.note').length;
+    const direct = replies.querySelectorAll(':scope > .note').length;
+    const all = replies.querySelectorAll('.note:not(.wraps *)').length;
     const button = replies.firstChild.firstChild;
     if (button && direct > 0)
       button.textContent = direct+(all>direct?'.'+all:'')

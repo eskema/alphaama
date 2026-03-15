@@ -29,6 +29,8 @@ aa.u =
       'score 0',
       'pow 17',
       'relays_ask off',
+      'auto_decrypt on_view',
+      'on_load_sub a',
     ]
   },
   styles:['/u/u.css'],
@@ -250,7 +252,7 @@ aa.u.decrypt_cache = {
     }
     const [pubkey_npub, pubkey_hex, privkey_hex] = keypair;
     aa.u.decrypt_cache._data.keys[pubkey_hex] = privkey_hex;
-    debt.add(() => aa.u.decrypt_cache.save(), 1000, 'save_decrypt_cache');
+    debt.add(() => aa.u.decrypt_cache.save(), 10000, 'save_decrypt_cache');
     return pubkey_hex;
   },
 
@@ -262,12 +264,23 @@ aa.u.decrypt_cache = {
   add: async (event_id, decrypted, pubkey) => {
     await aa.u.decrypt_cache.load();
     aa.u.decrypt_cache._data.events[event_id] = { decrypted, pubkey };
-    debt.add(() => aa.u.decrypt_cache.save(), 1000, 'save_decrypt_cache');
+    debt.add(() => aa.u.decrypt_cache.save(), 10000, 'save_decrypt_cache');
   },
 
   get_key: async (pubkey) => {
     await aa.u.decrypt_cache.load();
     return aa.u.decrypt_cache._data.keys[pubkey];
+  },
+
+  fail: async (event_id) => {
+    await aa.u.decrypt_cache.load();
+    aa.u.decrypt_cache._data.events[event_id] = { failed: true };
+    debt.add(() => aa.u.decrypt_cache.save(), 10000, 'save_decrypt_cache');
+  },
+
+  is_fail: async (event_id) => {
+    await aa.u.decrypt_cache.load();
+    return aa.u.decrypt_cache._data.events[event_id]?.failed === true;
   },
 
   has: async (event_id) => {
@@ -315,6 +328,7 @@ aa.u.add_pubkey =async(pubkey='')=>
     aa.u.o.ls.k3 = aa.u.p.follows.join(' ');
   await aa.mod.save(aa.u);
   await aa.u.start();
+  aa.mod.fire_ready('u:pubkey');
 };
 
 
@@ -444,6 +458,10 @@ aa.u.load =async()=>
 
   // bus provider (breaks dependency on aa.u.p.pubkey from other modules)
   aa.bus.provide('u:pubkey', () => aa.u.o?.pubkey);
+
+  aa.mod.ready('u:pubkey', aa.u.on_load_sub);
+
+  if (aa.u.p?.pubkey) aa.mod.fire_ready('u:pubkey');
 };
 
 
@@ -608,6 +626,13 @@ aa.u.setup_butt =()=>
 };
 
 
+aa.u.on_load_sub =()=>
+{
+  if (!localStorage.on_load_sub) return;
+  aa.mod.ready('r:manager', ()=> aa.q.sub(localStorage.on_load_sub));
+};
+
+
 // quick setup using defaults
 aa.u.setup_quick =async()=>
 {
@@ -628,8 +653,7 @@ aa.u.setup_quick =async()=>
   await aa.u.add_pubkey(pubkey);
 
   setTimeout(()=>{aa.q.stuff()},1000);
-  // aa.fx.countdown('the page will reload in',21,1000)
-  // .then(dis=>{if (dis) location.reload()});
+  aa.u.on_load_sub();
 };
 
 
