@@ -53,26 +53,39 @@ aa.mk.mention_item =(p,w)=>
 {
   const l = make('li',{cla:'item mention',dat:{before:p.metadata.name??''}});
   let after = (p.petname?p.petname:p.petnames[0])+' '+(p.metadata.nip05??'');
+
+  let relays = p.relays ? Object.keys(p.relays).slice(0,2) : [];
+  let nprofile = aa.fx.encode('nprofile', {pubkey:p.pubkey, relays}) || p.npub;
+
+  const insert =s=>
+  {
+    let compose = !aa.cli.t.value.startsWith(localStorage.ns);
+    let value = compose ? 'nostr:' + s : s;
+    aa.bus.emit('cli:upd_from_oto', value, w);
+  };
+
+  const mk_butt =value=>
+    make('button',{cla:'butt plug',con:value,clk:()=> insert(value)});
+
   l.append(
-    make('span',{cla:'description',con:after,}),
-    make('span',{cla:'val',con:p.npub})
+    make('span',{cla:'description',con:after}),
+    make('span',{cla:'butts',app:[
+      mk_butt(nprofile),
+      ' ',mk_butt(p.npub),
+      ' ',mk_butt(p.pubkey),
+    ]})
   );
   l.tabIndex = '1';
-  
-  const clk =e=>
-  {
-    aa.bus.emit('cli:upd_from_oto','nostr:'+e.target.querySelector('.val').textContent,w);
-  };
-  l.onclick = clk;
   l.onkeydown =e=>
   {
     if (e.key === 'Enter')
     {
       e.stopPropagation();
       e.preventDefault();
-      clk(e)
+      insert(nprofile);
     }
   };
+
   return l
 };
 

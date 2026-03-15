@@ -117,6 +117,29 @@ aa.e.em =dat=>
 };
 
 
+// queue auto-decrypt, spread crypto work across time
+aa.e.decrypt_q =id=>
+{
+  if (!aa.temp.decrypt_q) aa.temp.decrypt_q = [];
+  aa.temp.decrypt_q.push(id);
+  debt.add(aa.e.decrypt_q_run, 200, 'decrypt_q');
+};
+
+aa.e.decrypt_q_run =()=>
+{
+  let q = aa.temp.decrypt_q;
+  if (!q?.length) return;
+  aa.temp.decrypt_q = [];
+  let i = 0;
+  const step =()=>
+  {
+    if (i < q.length) aa.e.decrypt(q[i++]);
+    if (i < q.length) setTimeout(step, 100);
+  };
+  step();
+};
+
+
 // decrypt event from id
 aa.e.decrypt =async id=>
 {

@@ -87,20 +87,24 @@
 #oto .item.mention
 {
   background: rgb(var(--color-b));
+  grid-template-areas: "bef val description";
+  grid-template-columns: auto 1fr auto;
+  overflow-x: clip;
   position: relative;
   z-index: 2;
 }
 
-#oto .item.mention:focus
+#oto .item.mention .butts
 {
-  /*background: rgb(var(--color-a));*/
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
-#oto .item.mention:focus::before,
-#oto .item.mention:focus *
+#oto .item.mention .butts .butt
 {
-  /*color: rgb(var(--color-f));*/
+  overflow-x: scroll;
 }
+
 
 #oto .item.mention .val
 {
@@ -177,13 +181,15 @@
   color: rgb(var(--color-c));
 }
 
-#oto .item .acts
+#oto .item .acts,
+#oto .item .butts
 {
   border-bottom: 1px solid rgba(var(--color-c),0);
   pointer-events: auto;
 }
 
-#oto .item .acts .butt
+#oto .item .acts .butt,
+#oto .item .butts .butt
 {
   background: unset;
   color: rgb(var(--color-d));

@@ -739,13 +739,14 @@ aa.dm.restore =async()=>
   if (!saved) return;
 
   aa.dm._restoring = true;
+  await aa.u.decrypt_cache.load();
   for (let pubkey in saved)
   {
     let wrap_ids = saved[pubkey];
     if (!wrap_ids?.length) continue;
     for (let wrap_id of wrap_ids)
     {
-      let cached = await aa.u.decrypt_cache.get(wrap_id);
+      let cached = aa.u.decrypt_cache._data.events[wrap_id]?.decrypted;
       if (!cached) continue;
       let parsed = aa.pj(cached);
       if (!parsed) continue;

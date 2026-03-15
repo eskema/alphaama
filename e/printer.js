@@ -438,16 +438,19 @@ aa.e.print =dat=>
 };
 
 
-aa.e.print_kind =(map,kind,order,delay)=>
+aa.e.print_kind =(map,kind,order)=>
 {
   if (!map.has(kind)) return;
   let items = map.get(kind).sort(order);
   map.delete(kind);
-  for (const item of items)
-    setTimeout(()=>{
-      aa.e.print(item)
-    },21);
-  // return items
+  let i = 0;
+  const step =()=>
+  {
+    let end = Math.min(i + 5, items.length);
+    while (i < end) aa.e.print(items[i++]);
+    if (i < items.length) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 };
 
 
@@ -504,7 +507,7 @@ aa.e.print_q =dat=>
     // for (const dat of prints)
     //   setTimeout(()=>{aa.e.print(dat)},21);
   },
-  420,'brrrr');
+  150,'brrrr');
 };
 
 

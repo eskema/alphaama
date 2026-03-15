@@ -143,8 +143,7 @@ aa.mk.note =dat=>
   let stored = sessionStorage[id];
   if (stored && stored === 'tiny') note.classList.add('tiny');
   
-  setTimeout(()=>{ aa.fx.color(pubkey,note) },0);
-  // setTimeout(()=>{ aa.e.render(note) },10);
+  aa.fx.color(pubkey,note);
   aa.e.render(dat).then(content=>
   {
     fastdom.mutate(()=>{note.insertBefore(content,header.nextElementSibling)})
@@ -371,7 +370,13 @@ aa.mk.k10050 =(s='')=>
   if (!urls.length) return aa.log('provide relay URLs, comma separated');
   let tags = urls.map(url=>['relay',url]);
   let event = aa.e.normalise({kind:10050,tags,content:''});
-  aa.e.finalize(event);
+  aa.mk.confirm(
+  {
+    title:'new DM relay list',
+    l:aa.mk.tag_list(tags),
+    no:{exe:()=>{}},
+    yes:{exe:()=>{ aa.bus.emit('e:finalize', event) }}
+  });
 };
 
 

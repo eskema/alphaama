@@ -247,70 +247,70 @@ aa.e.kinds[9735] = aa.e.kinds[1];
 aa.e.kinds[9802] = aa.e.kinds[20];
 
 
-// event template for relay list
+// update profile relays and user relay sets from a relay list event
+// sets: string or array of set names (e.g. 'k10002', ['k10050'])
+aa.e.relay_list_upd =(p, dat, relays, sets)=>
+{
+  if (!Array.isArray(sets)) sets = [sets];
+  let old = aa.fx.in_set(p.relays,sets[0],'');
+  aa.p.relays_add(relays,p);
+  for (const i of old)
+  {
+    if (!Object.hasOwn(relays,i))
+    {
+      p.relays[i].sets = aa.fx.a_rm(p.relays[i].sets,sets);
+      if (!p.relays[i].sets.length) delete p.relays[i];
+    }
+  }
+  if (aa.u.is_u(dat.event.pubkey))
+  {
+    aa.r.add_from_o(relays);
+    let u_old = aa.fx.in_set(aa.r.o.ls,sets[0],'');
+    for (const i of u_old)
+    {
+      if (!Object.hasOwn(relays,i))
+      {
+        aa.r.o.ls[i].sets = aa.fx.a_rm(aa.r.o.ls[i].sets,sets);
+        aa.mod.ui(aa.r,i);
+      }
+    }
+    aa.mod.save(aa.r);
+  }
+  aa.p.save(p);
+};
+
+
+// relay list (kind-10002)
 aa.e.kinds[10002] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
-  
   aa.p.get(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
-
-      let old = aa.fx.in_set(p.relays,'k10002','');
-
-      let tags = dat.event.tags.filter(i=>i[0]==='r');
-      for (const tag of tags)
+      for (const tag of dat.event.tags.filter(i=>i[0]==='r'))
       {
         let [type,url,permission] = tag;
         url = aa.fx.url(url)?.href;
         if (!url) continue;
-
         let relay = relays[url] = {sets: ['k10002']};
-        if (permission === 'read') 
+        if (permission === 'read')
           aa.fx.a_add(relay.sets,['read']);
-        else if (permission === 'write') 
+        else if (permission === 'write')
           aa.fx.a_add(relay.sets,['write']);
         else aa.fx.a_add(relay.sets,['read','write']);
-        // if (aa.u.is_u(dat.event.pubkey)) aa.fx.a_add(relay.sets,['auth']);
       }
-      aa.p.relays_add(relays,p);
-      
-      for (const i of old)
-      {
-        if (!Object.hasOwn(relays,i))
-        {
-          p.relays[i].sets = aa.fx.a_rm(p.relays[i].sets,['k10002']);
-          if (!p.relays[i].sets.length)
-            delete p.relays[i];
-        }
-      }
-      if (aa.u.is_u(dat.event.pubkey))
-      {
-        aa.r.add_from_o(relays);
-        let u_old = aa.fx.in_set(aa.r.o.ls,'k10002','');
-        for (const i of u_old)
-        {
-          if (!Object.hasOwn(relays,i))
-          {
-            aa.r.o.ls[i].sets = aa.fx.a_rm(aa.r.o.ls[i].sets,['k10002']);
-            aa.mod.ui(mod,i);
-          }
-        }
-        aa.mod.save(aa.r);
-      }
-      aa.p.save(p);
+      aa.e.relay_list_upd(p,dat,relays,'k10002');
     }
   });
-  
   return note
 };
 
 
-// DM relay list (NIP-17)
+// DM relay list (NIP-17, kind-10050)
 aa.e.kinds[10050] =dat=>
 {
   const note = aa.e.note_regular(dat);
@@ -321,24 +321,13 @@ aa.e.kinds[10050] =dat=>
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
-      let old = aa.fx.in_set(p.relays,'k10050','');
-      let tags = dat.event.tags.filter(i=>i[0]==='relay');
-      for (const tag of tags)
+      for (const tag of dat.event.tags.filter(i=>i[0]==='relay'))
       {
         let url = aa.fx.url(tag[1])?.href;
         if (!url) continue;
         relays[url] = {sets:['k10050']};
       }
-      aa.p.relays_add(relays,p);
-      for (const i of old)
-      {
-        if (!Object.hasOwn(relays,i))
-        {
-          p.relays[i].sets = aa.fx.a_rm(p.relays[i].sets,['k10050']);
-          if (!p.relays[i].sets.length) delete p.relays[i];
-        }
-      }
-      aa.p.save(p);
+      aa.e.relay_list_upd(p,dat,relays,'k10050');
     }
   });
   return note

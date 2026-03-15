@@ -116,12 +116,10 @@ aa.mod.load =async mod=>
 // make mod
 aa.mod.mk =async mod=>
 {
-  let options = {ls:mod.o.ls,sort:'a',fun:[]};
-  if (mod.hasOwnProperty('mk')) options.mk = mod.mk;
-
   mod.mod_li = new Map();
-  options.fun.push((k,v,l)=>{mod.mod_li.set(k,l)});
-  mod.mod_ul = aa.mk.ls(options);
+  mod.mod_ul = aa.mk.ls({});
+  let keys = Object.keys(mod.o.ls).sort(aa.fx.sorts.a);
+  if (keys.length) aa.mod.ui(mod,keys);
   
   let mod_l_o =
   {
@@ -240,28 +238,37 @@ aa.mod.ui =(mod,keys)=>
 {
   let ul = mod.mod_ul;
   if (!ul) return;
-  
+
   if (keys && !Array.isArray(keys)) keys = [keys];
-  for (const k of keys)
+
+  let i = 0;
+  const step =()=>
   {
-    let v = mod.o.ls[k];
-    let cur = mod.mod_li.get(k);
-    let l = mod.hasOwnProperty('mk') 
-    ? mod.mk(k,v)
-    : aa.mk.item(k,v);
-    if (!l) continue;
-    mod.mod_li.set(k,l);
-    fastdom.mutate(()=>
+    let end = Math.min(i + 5, keys.length);
+    while (i < end)
     {
-      if (!cur) ul.append(l);
-      else  cur.replaceWith(l);
-    })
-  }
-  
+      let k = keys[i++];
+      let v = mod.o.ls[k];
+      let cur = mod.mod_li.get(k);
+      let l = mod.hasOwnProperty('mk')
+      ? mod.mk(k,v)
+      : aa.mk.item(k,v);
+      if (!l) continue;
+      mod.mod_li.set(k,l);
+      fastdom.mutate(()=>
+      {
+        if (!cur) ul.append(l);
+        else  cur.replaceWith(l);
+      })
+    }
+    if (i < keys.length) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+
   if (ul.classList.contains('empty'))
   {
     ul.classList.remove('empty');
-    ul.parentElement.classList.remove('empty');
+    ul.parentElement?.classList.remove('empty');
   }
 };
 

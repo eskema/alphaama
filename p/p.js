@@ -613,7 +613,7 @@ aa.p.find =s=>
 aa.p.oto =text=>
 {
   const w = text.split(' ').pop();
-  console.log('aa.p.oto',w.length)
+  // console.log('aa.p.oto',w.length)
   if (!w.startsWith('@') || w.length < 2) return
   let s = w.slice(1);
   if (!s) return;

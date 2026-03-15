@@ -403,7 +403,11 @@ aa.q.last_butts =()=>
       butts.append(aa.mk.butt_action(`${id} ${s} ${sessionStorage[dis]}`),' ');
     }
   }
-  if (butts.childElementCount) aa.log(butts)
+  if (butts.childElementCount)
+  {
+    let l = aa.log(butts);
+    l.classList.add('log_pinned');
+  }
 };
 
 
@@ -769,7 +773,7 @@ aa.q.stuff =async()=>
   await aa.q.print('a',{options});
   
   // Phase 2: start on_load subs (persistent)
-  await aa.fx.delay(420);
+  await aa.fx.delay(1000);
   aa.u.on_load_sub();
   
   // Phase 3: Load follows data

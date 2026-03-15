@@ -299,6 +299,11 @@ details.base[open] > summary,
   bottom: 0;
 }
 
+.log.log_pinned
+{
+  z-index: 5;
+}
+
 .aa:not(.cli_expanded) .section_l > header
 {
   justify-self: stretch;

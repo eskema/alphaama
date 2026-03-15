@@ -629,7 +629,8 @@ aa.u.setup_butt =()=>
 aa.u.on_load_sub =()=>
 {
   if (!localStorage.on_load_sub) return;
-  aa.mod.ready('r:manager', ()=> aa.q.sub(localStorage.on_load_sub));
+  let s = localStorage.on_load_sub.replaceAll('+',',');
+  aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(s), 420));
 };
 
 
