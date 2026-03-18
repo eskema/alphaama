@@ -36,7 +36,7 @@ aa.w =
   {
     mod:
     [
-      [`mk 10019`,'k10019']
+      [`k 10019`,'k10019']
     ],
     init:
     [
@@ -424,7 +424,7 @@ aa.w.mod_butts =async(used)=>
   {
     let df = new DocumentFragment();
     let add_butt = aa.mk.butt_action(`${mod.def.id} add `,'+');
-    let upd_butt = aa.mk.butt_action(`mk 10019`,'k10019');
+    let upd_butt = aa.mk.butt_action(`k 10019`,'k10019');
     df.append(add_butt,' ',upd_butt);
     fastdom.mutate(()=>
     {

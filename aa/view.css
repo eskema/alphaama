@@ -5,7 +5,7 @@
   align-self: start;
   display: grid;  
   grid-area: main;
-  grid-template-areas: "p" "dm" "e";
+  grid-template-areas: "p" "m" "e";
   position: relative;
   z-index: 1;
 }

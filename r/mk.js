@@ -44,7 +44,7 @@ aa.mk.k10002 =(string='')=>
 
 aa.actions.push(
   {
-    action:['mk','10002'],
+    action:['k','10002'],
     required:['<url,url>'],
     description:'create a relay list (kind-10002), permissions come from global settings for that relay',
     exe:aa.mk.k10002

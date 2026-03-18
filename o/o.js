@@ -18,9 +18,9 @@ const o =
     {
       'auto_decrypt': 'off',
       'cash': 'on',
-      'dm_auto_send': 'off',
-      'dm_decrypt': 'off',
-      'dm_get': 'off',
+      'm_auto_send': 'off',
+      'm_decrypt': 'off',
+      'm_get': 'off',
       'ns': '.',
       'on_load_sub': '', // used as the prefix for actions
       'pagination': '100', // number of root events displayed
@@ -75,20 +75,20 @@ o.defaults =
     options:['on','on_view','off'],
     fx:s=>aa.fx.cycle(s,o.defaults.auto_decrypt.options)
   },
-  dm_auto_send:
+  m_auto_send:
   {
     options:['on','off'],
-    fx:s=> aa.fx.pick_other(s,o.defaults.dm_auto_send.options)
+    fx:s=> aa.fx.pick_other(s,o.defaults.m_auto_send.options)
   },
-  dm_decrypt:
+  m_decrypt:
   {
     options:['on','off'],
-    fx:s=> aa.fx.pick_other(s,o.defaults.dm_decrypt.options)
+    fx:s=> aa.fx.pick_other(s,o.defaults.m_decrypt.options)
   },
-  dm_get:
+  m_get:
   {
     options:['on','off'],
-    fx:s=> aa.fx.pick_other(s,o.defaults.dm_get.options)
+    fx:s=> aa.fx.pick_other(s,o.defaults.m_get.options)
   },
   theme:
   {

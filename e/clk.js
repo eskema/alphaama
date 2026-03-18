@@ -235,7 +235,7 @@ aa.clk.pow =e=>
 aa.clk.react =e=>
 {
   const id = e.target.closest('[data-id]')?.dataset.id;
-  aa.bus.emit('cli:stage',`mk 7 ${id} ${localStorage.reaction}`);
+  aa.bus.emit('cli:stage',`k 7 ${id} ${localStorage.reaction}`);
 };
 
 

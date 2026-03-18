@@ -1,25 +1,19 @@
-/* dm module styles */
+/* m module styles */
 
 /* place after section_e in grid */
-.section_dm
+.section_m
 {
-  grid-area: dm;
-}
-
-/* always show header button (no count needed) */
-#view .section_dm:not(.expanded) > header > .section_butt
-{
-  /* display: block!important; */
+  grid-area: m;
 }
 
 /* hide panel when section is collapsed */
-.section_dm:not(.expanded) > .dm_panel
+.section_m:not(.expanded) > .m_panel
 {
   display: none;
 }
 
 /* split panel */
-.dm_panel
+.m_panel
 {
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -27,17 +21,53 @@
   background: rgb(var(--color-b));
   position: relative;
   z-index: 1;
+  margin-left: var(--pad-l);
 }
 
 /* left panel: conversation list */
-.dm_list
+.m_list
 {
-  overflow-y: auto;
-  border-right: 1px solid rgba(var(--color-c),1);
+  align-content: start;
+  display: grid;
+  /* overflow-y: scroll; */
+  
   max-height: 80vh;
+  position: sticky;
+  top: 0;
 }
 
-.dm_convo_item
+.m_panel:not(.expanded)
+{
+  grid-template-columns: calc(2rem + 2px) 1fr;
+}
+
+.m_panel:not(.expanded) .m_list
+{
+  width: calc(2rem + 2px);
+}
+
+.m_panel:not(.expanded) .m_convo_item
+{
+  padding: 0;
+  gap: 0;
+  width: calc(2rem + 2px);
+}
+
+.m_panel:not(.expanded) .m_convo_item .a.author img,
+.m_panel:not(.expanded) .m_convo_item .a.author::before,
+.m_panel:not(.expanded) .m_pending_label::before
+{
+  width: calc(2rem - 2px);
+  height: calc(2rem - 2px);
+}
+
+.m_panel:not(.expanded) .m_convo_preview,
+.m_panel:not(.expanded) .m_convo_time
+{
+  display: none;
+}
+
+.m_convo_item
 {
   align-items: center;
   cursor: pointer;
@@ -47,20 +77,28 @@
   gap: var(--padm);
   padding: var(--padm) var(--pad);
   border-bottom: 1px dotted rgba(var(--color-c),.5);
+  /* overflow-y: hidden; */
 }
 
-.dm_convo_item:hover
+.m_convo_item:hover
 {
   background: rgba(var(--color-c),.3);
 }
 
-.dm_convo_item.active
+.m_panel:not(.expanded) .m_convo_item.active
 {
-  background: rgba(var(--color-c),.5);
-  border-left: 2px solid rgb(var(--color-e));
+  padding-left: 1px;
+  margin-left: 1px;
 }
 
-.dm_convo_item > .a.author
+.m_convo_item.active
+{
+  background: rgba(var(--color-c),.5);
+  border-left: 1px dotted rgb(var(--color-e));
+  grid-row:1;
+}
+
+.m_convo_item > .a.author
 {
   font-size: var(--font-size-s);
   overflow: hidden;
@@ -69,19 +107,19 @@
   pointer-events: none;
 }
 
-.dm_convo_item.active > .a.author
+.m_convo_item.active > .a.author
 {
   pointer-events: auto;
 }
 
-.dm_convo_time
+.m_convo_time
 {
   font-size: var(--font-size-s);
   opacity: .6;
   justify-self: end;
 }
 
-.dm_convo_preview
+.m_convo_preview
 {
   grid-column: 1;
   font-size: var(--font-size-s);
@@ -91,103 +129,129 @@
   white-space: nowrap;
 }
 
-.dm_convo_unread
+.m_convo_unread
 {
   font-size: var(--font-size-s);
   justify-self: end;
   color: rgb(var(--color-e));
 }
 
-.dm_convo_unread::before
+.m_convo_unread::before
 {
-  content: "[";
+  content: "(";
 }
 
-.dm_convo_unread::after
+.m_convo_unread::after
 {
-  content: "]";
+  content: ")";
 }
 
-.dm_convo_unread.hidden
+.m_panel:not(.expanded) .m_convo_unread
+{
+  /* display: grid; */
+  align-content: center;
+  grid-template-columns: 1fr 1fr 1fr;
+  position: absolute;
+  background: rgba(var(--color-a),.8);
+  padding: 2px;
+  font-size: var(--font-size-s);
+  border-radius: 2px;
+  transform: translateX(-1rem);
+  /* transform: translateX(calc(-100% - 1rem)); */
+  justify-self: start;
+}
+
+.m_panel:not(.expanded) .m_convo_unread.hidden,
+.m_convo_unread.hidden
 {
   display: none;
 }
 
-/* right panel */
-.dm_view
+.m_panel:not(.expanded) .m_convo_unread::after,
+.m_panel:not(.expanded) .m_convo_unread::before
 {
-  display: flex;
-  flex-direction: column;
-  max-height: 80vh;
-  overflow: hidden;
+  content: "";
 }
 
-.dm_header
+/* right panel */
+.m_view
 {
+  border-left: 1px solid rgba(var(--color-c),1);
+  display: flex;
+  flex-direction: column;
+  /* max-height: 80vh; */
+  /* overflow: hidden; */
+}
+
+.m_header
+{
+  background: rgb(var(--color-b));
   border-bottom: 1px solid rgba(var(--color-c),1);
   padding: var(--padm) var(--pad);
   display: flex;
   align-items: center;
   gap: var(--pad);
+  position: sticky;
+  top: 0;
 }
 
-.dm_header .butt
+.m_header .butt
 {
   font-size: var(--font-size-s);
 }
 
-.dm_msg:last-child
+.m_msg:last-child
 {
   margin-bottom: 60vh;
 }
 
-.dm_back
+.m_back
 {
   font-size: var(--font-size-s);
   padding: 0 var(--padm);
 }
 
 /* mark read button — mirrors replies header pattern */
-.dm_mark_read
+.m_mark_read
 {
   font-size: var(--font-size-s);
   margin-left: auto;
 }
 
-.dm_view:not(.dm_read) .dm_mark_read::before
+.m_view:not(.m_read) .m_mark_read::before
 {
   content: "// ";
 }
 
-.dm_view.dm_read .dm_mark_read
+.m_view.m_read .m_mark_read
 {
   color: rgb(var(--color-no));
 }
 
-.dm_view.dm_read .dm_mark_read::before
+.m_view.m_read .m_mark_read::before
 {
   content: "/* ";
 }
 
-.dm_view.dm_read .dm_mark_read::after
+.m_view.m_read .m_mark_read::after
 {
   content: " read */";
 }
 
 @media screen and (min-width: 1025px)
 {
-  .dm_mark_read:hover
+  .m_mark_read:hover
   {
     background-color: rgba(var(--color-a),1);
   }
 
-  .dm_view:not(.dm_read) .dm_mark_read:hover::after
+  .m_view:not(.m_read) .m_mark_read:hover::after
   {
     content: " mark read";
   }
 }
 
-.dm_messages
+.m_messages
 {
   flex: 1;
   overflow-y: auto;
@@ -198,63 +262,63 @@
 }
 
 /* hide read messages when marked read */
-.dm_view.dm_read .dm_messages > .dm_msg:not(.dm_new)
+.m_view.m_read .m_messages > .m_msg:not(.m_new)
 {
   display: none;
 }
 
 /* messages */
-.dm_msg
+.m_msg
 {
   max-width: 80%;
   padding: var(--padm) var(--pad);
   border-radius: 4px;
-  background: rgba(var(--color-c),.2);
+  background: rgba(var(--c),.2);
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--padm);
 }
 
-.dm_msg.from_u
+.m_msg.from_u
 {
   margin-left: auto;
-  background: rgba(var(--color-e),.15);
+  /* background: rgba(var(--color-e),.15); */
 }
 
-.dm_content
+.m_content
 {
   flex: 1;
   min-width: 0;
   word-break: break-word;
 }
 
-.dm_time
+.m_time
 {
   font-size: var(--font-size-s);
   opacity: .4;
   white-space: nowrap;
 }
 
-.dm_inspect
+.m_inspect
 {
   opacity: .2;
   font-size: var(--font-size-s);
   padding: 0 var(--padm);
 }
 
-.dm_inspect:hover
+.m_inspect:hover
 {
   opacity: 1;
 }
 
 /* draft */
-.dm_draft
+.m_draft
 {
   border: 1px dashed rgba(var(--color-main),1);
 }
 
-.dm_actions
+.m_actions
 {
   display: flex;
   gap: var(--padm);
@@ -263,39 +327,49 @@
 }
 
 /* sending state */
-.dm_sending
+.m_sending
 {
   opacity: .6;
 }
 
-.dm_sent
+.m_sent
 {
   opacity: 1;
 }
 
-.dm_failed
+.m_failed
 {
   border: 1px solid red;
 }
 
-.dm_error
+.m_error
 {
   color: red;
   font-size: var(--font-size-s);
 }
 
 /* inspect dialog */
-.dm_inspect_wrap
+.m_inspect_wrap
 {
   max-width: 80vw;
 }
 
-.dm_inspect_wrap > header
+.m_inspect_wrap > header
 {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--pad);
+}
+
+.m_inspect_wrap > header h3
+{
+  margin-bottom: 0;
+}
+
+.m_inspect_wrap > header .butt
+{
+  font-size: var(--font-size-s);
 }
 
 .chain_section
@@ -322,26 +396,44 @@
 }
 
 /* pending convo item */
-.dm_pending_convo
+.m_pending_convo
 {
-  font-style: italic;
-  opacity: .8;
+  /* font-style: italic;
+  opacity: .8; */
 }
 
-.dm_pending_label
+
+.m_pending_label
 {
+  color: rgb(var(--color-f));
+  display: block;
   font-size: var(--font-size-s);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.m_pending_label::before
+{
+  display: inline-grid;
+  align-content: center;
+  background: rgb(var(--color-e));
+  color: rgb(var(--color-b));
+  content: "?";
+  margin-right: var(--padm);
+  text-align: center;
+  width: 1rem;
+  height: 1rem;
 }
 
 /* pending wrap items */
-.dm_pending_list
+.m_pending_list
 {
   flex: 1;
   overflow-y: auto;
   padding: var(--pad);
 }
 
-.dm_pending_wrap
+.m_pending_wrap
 {
   display: flex;
   align-items: center;
@@ -351,14 +443,14 @@
   font-size: var(--font-size-s);
 }
 
-.dm_pending_id,
-.dm_pending_pk
+.m_pending_id,
+.m_pending_pk
 {
   opacity: .6;
 }
 
 /* empty state */
-.dm_view:empty::after
+.m_view:empty::after
 {
   content: "select a conversation";
   display: flex;
@@ -368,15 +460,22 @@
   opacity: .3;
 }
 
+/* hide other sections when viewing a convo */
+.view_m #view > section:not(.section_m),
+.view_m #view > details
+{
+  display: none;
+}
+
 /* responsive */
 @media screen and (max-width: 768px)
 {
-  .dm_panel
+  .m_panel
   {
     grid-template-columns: 1fr;
   }
 
-  .dm_list
+  .m_list
   {
     max-height: 30vh;
   }

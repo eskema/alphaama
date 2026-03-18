@@ -65,7 +65,12 @@ aa.signer.set =(type, backend)=>
 };
 
 
-aa.signer.available =()=> !!aa.signer._backend;
+aa.signer.available =()=>
+{
+  if (!aa.signer._backend && window.nostr)
+    aa.signer.set('nip07', window.nostr);
+  return !!aa.signer._backend;
+};
 
 
 aa.signer._require =()=>
@@ -367,7 +372,7 @@ aa.u.load =async()=>
 
   aa.bus.emit('cli:set_default',
   {
-    action:['mk','note'],
+    action:['k','note'],
     required:['<text>'],
     description:'make a nostr note',
     exe:aa.mk.post

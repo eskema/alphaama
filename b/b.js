@@ -30,7 +30,7 @@ const b =
   {
     mod:
     [
-      ['mk 10063','k10063'],
+      ['k 10063','k10063'],
       ['b upload','upload'],
     ],
     init:[]

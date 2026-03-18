@@ -1,30 +1,30 @@
-// dm module view handler
+// m module view handler
 
-aa.view.ls.dm_ =async path=>
+aa.view.ls.m_ =async path=>
 {
-  if (path === 'dm_requests')
+  if (path === 'm_requests')
   {
     aa.view.active = path;
     // TODO: open requests view
     return
   }
 
-  // expand dm section if collapsed
-  let section = aa.el.get('section_dm');
+  // expand m section if collapsed
+  let section = aa.el.get('section_m');
   if (section && !section.classList.contains('expanded'))
     aa.clk.expand({target:section});
 
-  if (path === 'dm__pending')
+  if (path === 'm__pending')
   {
-    await aa.dm.restore();
-    aa.dm.open_pending();
+    await aa.m.restore();
+    aa.m.open_pending();
     return
   }
 
-  let npub = path.slice(3);
+  let npub = path.slice(2);
   let pubkey = aa.fx.decode(npub);
-  if (!pubkey) return aa.log('invalid dm view');
+  if (!pubkey) return aa.log('invalid m view');
 
-  await aa.dm.restore();
-  aa.dm.open(pubkey);
+  await aa.m.restore();
+  aa.m.open(pubkey);
 };

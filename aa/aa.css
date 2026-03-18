@@ -437,7 +437,8 @@ img:not([src]) {
 
 
 .butt.plug,
-.butt.exe
+.butt.exe,
+.butt.no
 {
   align-self: center;
   background: rgb(var(--color-c));

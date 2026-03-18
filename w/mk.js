@@ -170,19 +170,19 @@ aa.mk.k17375 =async(s='')=>
 
 aa.actions.push(
   {
-    action:['mk','10019'],
+    action:['k','10019'],
     description:'create kind:10019 (nip60)',
     exe:aa.mk.k10019
   },
   {
-    action:['mk','9321'],
+    action:['k','9321'],
     required:['<amount>','<pubkey>'],
     optional:['<memo>','<id>'],
     description:'nut zap pubkey and/or events',
     exe:aa.mk.k9321
   },
   {
-    action:['mk','17375'],
+    action:['k','17375'],
     description:'create kind:17375 from walLNut',
     exe:aa.mk.k17375
   },

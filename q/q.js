@@ -58,7 +58,7 @@ aa.q =
       "kinds":[11,1111],
       "since":"n_6"
     },
-    dm:{"#p":["u"],"kinds":[1059],"since":"n_21","limit":500},
+    m:{"#p":["u"],"kinds":[1059],"since":"n_21","limit":500},
     tag:{"#t":["s"],"limit":200},
     u:{"authors":["u"],"since":"n_7","limit":500},
   },
@@ -484,7 +484,7 @@ aa.q.load =async()=>
       exe:mod.sub
     },
     {
-      action:['mk','777'],
+      action:['k','777'],
       required:['<query_id>'],
       description:'create spell event (kind:777) from query',
       exe:aa.mk.k777
@@ -772,19 +772,19 @@ aa.q.stuff =async()=>
   aa.log('getting your stuff (relays, metadata, follows, etc…)');
   await aa.q.print('a',{options});
   
-  // Phase 2: start on_load subs (persistent)
+  // Sub a: persistent subscription
   await aa.fx.delay(1000);
-  aa.u.on_load_sub();
-  
-  // Phase 3: Load follows data
+  aa.q.sub('a', true);
+
+  // Phase 2: Load follows data
   await aa.fx.delay(666);
   aa.log('getting your follows stuff');
   await aa.q.print('b',{options});
-  
-  // Phase 4: Load follows via outbox model
+
+  // Sub b: persistent subscription via outbox
   await aa.fx.delay(999);
   aa.log('getting your follows stuff again but now in outbox mode');
-  await aa.q.print('b',{options, mode:'outbox'});
+  aa.q.sub('b out', true);
   
   // Finalize
   aa.log(make('p',{ content: 'all done ', app: aa.mk.reload_butt() }));
@@ -822,11 +822,11 @@ aa.q.stamp =async(id,timestamp)=>
 
 
 // sub filter
-aa.q.sub =async s=>
+aa.q.sub =async(s, silent)=>
 {
   let txt = `${aa.q.def.id} run:`;
   let ls = aa.q.o.ls;
-  
+
   const tasks = s.split(',');
   for (const task of tasks)
   {
@@ -878,6 +878,6 @@ aa.q.sub =async s=>
       aa.r.send_req({request,relays,options});
     }
 
-    aa.q.log('sub',request,`to: ${as_outbox ? 'outbox' : relays}`);
+    if (!silent) aa.q.log('sub',request,`to: ${as_outbox ? 'outbox' : relays}`);
   }
 };

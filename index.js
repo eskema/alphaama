@@ -14,21 +14,8 @@ const build_page =async()=>
   if (aa.p?.l) 
     p_section = aa.mk.section({id:'p',element:aa.p.l,filter:true});
   
-  let dm_section;
-  if (aa.dm?.l)
-  {
-    dm_section = aa.mk.section(
-    {
-      id: 'dm',
-      name: 'dm',
-      element: aa.dm.l,
-    });
-    let dm_header = dm_section.querySelector('header');
-    if (dm_header) dm_header.append(' ',make('span',{cla:'butts',app:[aa.mk.butt_action('dm get','get'),' ',aa.mk.butt_action('dm new ','new')]}));
-    let dm_butt = dm_section.querySelector('.section_butt');
-    if (dm_butt) dm_butt.addEventListener('click', aa.dm.restore, {once:true});
-    aa.dm.count_upd();
-  }
+  let m_section;
+  if (aa.m?.l) m_section = aa.mk.section_m();
 
   let e_section;
   if (aa.e?.l)
@@ -59,7 +46,7 @@ const build_page =async()=>
 
     let readme = await aa.fx.readme('/README.adoc');
     if (readme) elements.append(aa.mk.doc(readme),' ');
-    elements.append(p_section,' ',dm_section,' ',e_section);
+    elements.append(p_section,' ',m_section,' ',e_section);
     fastdom.mutate(()=>
     {
       view.append(elements)

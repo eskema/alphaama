@@ -7,7 +7,7 @@ aa.mk.k10063 =(string='')=>
 
   if (!servers.length)
   {
-    aa.log('mk 10063: no servers, use `b add` first');
+    aa.log('k 10063: no servers, use `b add` first');
     return
   }
 
@@ -17,7 +17,7 @@ aa.mk.k10063 =(string='')=>
     // let url = aa.fx.url(s.trim())?.href;
     if (!aa.fx.url(s))
     {
-      aa.log(`mk 10063: invalid url: ${s}`);
+      aa.log(`k 10063: invalid url: ${s}`);
       continue
     }
     tags.push(['server', s]);
@@ -327,7 +327,7 @@ aa.mk.b_list =(descriptors,server)=>
 
 aa.actions.push(
   {
-    action: ['mk', '10063'],
+    action: ['k', '10063'],
     description: 'create blossom server list (kind-10063)',
     exe: aa.mk.k10063,
   },

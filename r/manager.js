@@ -393,6 +393,7 @@ const on_closed =async(a,url)=>
   let [sub_id,reason] = a.slice(1);
 
   let relay = manager.relays.get(url);
+  let request = relay?.worker.open.get(sub_id);
   if (relay) relay.worker.open.delete(sub_id);
 
   if (!reason) return;
@@ -406,7 +407,12 @@ const on_closed =async(a,url)=>
       terminate(url);
       break;
     case 'auth-required':
-      if (!relay?.sets?.includes('auth')) terminate(url);
+      if (relay?.sets?.includes('auth') && request)
+      {
+        if (!relay.auth_sub_queue) relay.auth_sub_queue = [];
+        relay.auth_sub_queue.push(request);
+      }
+      else if (!relay?.sets?.includes('auth')) terminate(url);
       break;
     // case 'pow':
     // case 'duplicate':
@@ -863,6 +869,13 @@ const on_worker_message =async(relay,e)=>
             send_request(relay, {json: JSON.stringify(['EVENT', dat.event])});
         }
         relay.auth_queue.clear();
+      }
+      // resend subs that were closed before auth
+      if (relay.auth_sub_queue?.length)
+      {
+        for (const request of relay.auth_sub_queue)
+          send_request(relay, request);
+        relay.auth_sub_queue = [];
       }
       setTimeout(()=>{process_requests(relay)},500);
       break;

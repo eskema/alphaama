@@ -50,7 +50,7 @@ const aa =
     ['o','/o/o.js','esm'],
     ['p','/p/p.js'],
     ['e','/e/e.js'],
-    ['dm','/dm/dm.js'],
+    ['m','/m/m.js'],
     ['r','/r/r.js'],
     ['q','/q/q.js'],
     ['u','/u/u.js'],

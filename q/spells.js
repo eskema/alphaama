@@ -136,21 +136,21 @@ aa.mk.k777 =(s='')=>
   let [fid, content] = s.split(aa.regex.fw);
   if (!fid)
   {
-    aa.log('mk 777: provide a query id');
+    aa.log('k 777: provide a query id');
     return
   }
 
   let query = aa.q.o.ls[fid];
   if (!query)
   {
-    aa.log(`mk 777: filter not found: ${fid}`);
+    aa.log(`k 777: filter not found: ${fid}`);
     return
   }
 
   let filter = query.o || aa.pj(query.v);
   if (!filter)
   {
-    aa.log('mk 777: invalid filter');
+    aa.log('k 777: invalid filter');
     return
   }
 

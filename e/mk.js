@@ -457,38 +457,38 @@ aa.mk.k7 =async(s='')=>
 
 aa.actions.push(
   {
-    action:['mk','e'],
+    action:['k','e'],
     required:['<JSON>'],
     description:'mk event from JSON, auto-completes missing fields',
     exe:aa.mk.e
   },
   {
-    action:['mk','0'],
-    required:['<JSON>'], 
+    action:['k','0'],
+    required:['<JSON>'],
     description:'set metadata (kind-0)',
     exe:aa.mk.k0
   },
   {
-    action:['mk','4'],
+    action:['k','4'],
     required:['<pubkey>','<text>'],
     description:'encrypt text to pubkey',
     exe:aa.mk.k4
   },
   {
-    action:['mk','10050'],
+    action:['k','10050'],
     required:['<relay,relay>'],
     description:'set DM relay list (kind 10050)',
     exe:aa.mk.k10050
   },
   {
-    action:['mk','5'],
+    action:['k','5'],
     required:['<reason>','<id>'],
     optional:['<id>'],
     description:'request note(s) to be deleted',
     exe:aa.mk.k5
   },
   {
-    action:['mk','7'],
+    action:['k','7'],
     required:['<id>','<reaction>'],
     description:'react to a note',
     exe:aa.mk.k7
