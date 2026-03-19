@@ -46,6 +46,9 @@ aa.m.load =async()=>
   mod.view_el = make('div',{cla:'m_view'});
   mod.l.append(mod.list_el, mod.view_el);
 
+  mod.pending_item = aa.mk.m_pending_item();
+  mod.list_el.prepend(mod.pending_item);
+
   aa.view.clears.push(aa.m.view_clear);
   aa.mod.help_setup(mod);
 
@@ -70,7 +73,9 @@ aa.m.load =async()=>
   });
 
   if (localStorage.m_get === 'on')
-    aa.mod.ready('u:pubkey', aa.m.sub);
+    aa.mod.ready('u:pubkey', ()=> aa.mod.ready('r:manager', aa.m.sub));
+
+  aa.mod.ready('u:pubkey', aa.m.restore);
 };
 
 
@@ -118,6 +123,9 @@ aa.m.on_event =async dat=>
     }
   }
 
+  // skip previously failed decrypts
+  if (await aa.u.decrypt_cache.is_fail(id)) return;
+
   // auto-decrypt or stash as pending
   if (localStorage.m_decrypt === 'on')
     aa.m.decrypt_add(dat);
@@ -159,6 +167,15 @@ aa.m.pending_add =dat=>
     aa.m.o.pending.push(id);
     debt.add(aa.m.save_pending, 2100, 'm_save_pending');
   }
+  if (aa.m.active === '_pending')
+  {
+    let list = aa.m.view_el.querySelector('.m_pending_list');
+    if (list)
+    {
+      let el = aa.mk.m_pending_wrap(id, dat);
+      fastdom.mutate(()=>{ list.append(el) });
+    }
+  }
   aa.m.pending_upd();
 };
 
@@ -167,27 +184,17 @@ aa.m.pending_add =dat=>
 aa.m.pending_upd =()=>
 {
   let count = aa.m.pending.size;
-  if (!count && aa.m.pending_item)
+  if (!aa.m.pending_item) return;
+  fastdom.mutate(()=>
   {
-    fastdom.mutate(()=>{ aa.m.pending_item.remove() });
-    aa.m.pending_item = null;
-    if (aa.m.active === '_pending') aa.m.view_clear();
-    debt.add(aa.m.count_upd, 100, 'm_count');
-    return
-  }
-  if (count && !aa.m.pending_item)
-  {
-    aa.m.pending_item = aa.mk.m_pending_item();
-    fastdom.mutate(()=>{ aa.m.list_el.prepend(aa.m.pending_item) });
-  }
-  if (aa.m.pending_item)
-  {
-    fastdom.mutate(()=>
+    let c = aa.m.pending_item.querySelector('.m_convo_unread');
+    if (c)
     {
-      let c = aa.m.pending_item.querySelector('.m_convo_unread');
-      if (c) { c.textContent = count; c.classList.remove('hidden') }
-    });
-  }
+      c.textContent = count;
+      if (count) c.classList.remove('hidden');
+      else c.classList.add('hidden');
+    }
+  });
   debt.add(aa.m.count_upd, 100, 'm_count');
 };
 
@@ -201,7 +208,11 @@ aa.m.decrypt_pending =async n=>
   {
     aa.m.pending.delete(id);
     let ok = await aa.m.unwrap(dat);
-    if (!ok) await aa.u.decrypt_cache.fail(id);
+    if (!ok)
+    {
+      aa.log('decrypt fail: '+id.slice(0,12));
+      await aa.u.decrypt_cache.fail(id);
+    }
     let idx = aa.m.o.pending.indexOf(id);
     if (idx !== -1) { aa.m.o.pending.splice(idx, 1); changed = true }
     let el = aa.m.view_el.querySelector('.m_pending_wrap[data-id="'+id+'"]');
@@ -254,7 +265,11 @@ aa.m.unwrap =async dat=>
       return true
     }
   }
-  if (await aa.u.decrypt_cache.is_fail(wrap.id)) return false;
+  if (await aa.u.decrypt_cache.is_fail(wrap.id))
+  {
+    aa.log('unwrap: previously failed '+wrap.id.slice(0,12));
+    return false
+  }
   if (!aa.signer.available()) return false;
   if (aa.m.decrypt_active.has(wrap.id)) return false;
   aa.m.decrypt_active.add(wrap.id);
@@ -264,12 +279,28 @@ aa.m.unwrap =async dat=>
     // layer 1: decrypt gift wrap -> seal
     let seal_json;
     try { seal_json = await aa.signer.nip44.decrypt(wrap.pubkey,wrap.content) }
-    catch(er) { return false }
-    if (!seal_json) return false;
+    catch(er)
+    {
+      aa.log('unwrap: decrypt wrap failed '+wrap.id.slice(0,12));
+      return false
+    }
+    if (!seal_json)
+    {
+      aa.log('unwrap: empty seal '+wrap.id.slice(0,12));
+      return false
+    }
 
     let seal = aa.pj(seal_json);
-    if (!seal || seal.kind !== 13) return false;
-    if (!await aa.fx.verify_event(seal)) return false;
+    if (!seal || seal.kind !== 13)
+    {
+      aa.log('unwrap: invalid seal '+wrap.id.slice(0,12));
+      return false
+    }
+    if (!await aa.fx.verify_event(seal))
+    {
+      aa.log('unwrap: seal verify failed '+wrap.id.slice(0,12));
+      return false
+    }
 
     // layer 2: decrypt seal -> rumor
     let rumor_json;
@@ -300,7 +331,11 @@ aa.m.unwrap =async dat=>
       }
     }
 
-    if (!rumor || rumor.pubkey !== seal.pubkey) return false;
+    if (!rumor || rumor.pubkey !== seal.pubkey)
+    {
+      aa.log('unwrap: rumor decrypt failed '+wrap.id.slice(0,12));
+      return false
+    }
 
     await aa.u.decrypt_cache.add(wrap.id,JSON.stringify({rumor,seal}),seal.pubkey);
     aa.m.show(rumor,dat,seal);
@@ -828,8 +863,13 @@ aa.m.restore =async()=>
 // clear m view state
 aa.m.view_clear =()=>
 {
+  if (!aa.m.active) return;
   aa.m.active = null;
   aa.l.classList.remove('view_m');
+
+  // navigate away if still the active view (direct call, not from view.clear chain)
+  if (aa.view.active && String(aa.view.active).startsWith('m_'))
+    aa.view.state('');
 
   // restore CLI default action and note type
   if (aa.m._prev_action)

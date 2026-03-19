@@ -4,7 +4,18 @@
 // m section for #view
 aa.mk.section_m =()=>
 {
-  let section = aa.mk.section({id:'m', name:'m', element:aa.m.l});
+  let section = aa.mk.section(
+  {
+    id:'m', name:'m', element:aa.m.l,
+    clk: e=>
+    {
+      let s = aa.el.get('section_m');
+      let collapsing = s?.classList.contains('expanded');
+      aa.clk.expand(e);
+      aa.m.restore();
+      if (collapsing && aa.m.active) aa.m.view_clear();
+    }
+  });
 
   let expand = make('button',
   {
@@ -16,25 +27,11 @@ aa.mk.section_m =()=>
   let butts = make('span',
   {
     cla:'butts',
-    app:[aa.mk.butt_action('m get','get'),' ',aa.mk.butt_action('m new ','new'),' ',expand],
+    app:[expand,' ',aa.mk.butt_action('m get','get'),' ',aa.mk.butt_action('m new ','new')],
   });
 
   let header = section.querySelector('header');
   if (header) header.append(' ',butts);
-
-  let butt = section.querySelector('.section_butt');
-  if (butt)
-  {
-    butt.addEventListener('click', aa.m.restore, {once:true});
-    butt.addEventListener('click', ()=>
-    {
-      // aa.clk.expand toggles class in fastdom.mutate, so 'expanded' here
-      // means it's about to be collapsed
-      let s = aa.el.get('section_m');
-      if (s?.classList.contains('expanded') && aa.m.active)
-        aa.m.view_clear();
-    });
-  }
 
   aa.m.count_upd();
   return section
@@ -62,12 +59,13 @@ aa.mk.m_convo_item =pubkey=>
 // conversation header for right panel
 aa.mk.m_convo_header =pubkey=>
 {
-  let back = make('button',
+  let back = make('a',
   {
     cla:'butt m_back',
     con:'<',
+    ref:'/',
     tit:'close conversation',
-    clk: aa.m.clk.back,
+    clk: aa.clk.a,
   });
 
   let link = aa.mk.p_link(pubkey);
@@ -172,7 +170,7 @@ aa.mk.m_pending_item =()=>
 // pending view header
 aa.mk.m_pending_header =()=>
 {
-  let back = make('button',{cla:'butt m_back', con:'<', clk: aa.m.clk.back});
+  let back = make('a',{cla:'butt m_back', con:'<', ref:'/', clk: aa.clk.a});
   let label = make('span',{con:'pending'});
   let batch = make('button',{cla:'butt exe', con:'decrypt 5', clk: aa.m.clk.decrypt_batch});
   let all = make('button',{cla:'butt exe', con:'decrypt all', clk: aa.m.clk.decrypt_all});

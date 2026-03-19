@@ -321,11 +321,14 @@ aa.e.kinds[10050] =dat=>
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
+      let is_u = aa.u.is_u(dat.event.pubkey);
       for (const tag of dat.event.tags.filter(i=>i[0]==='relay'))
       {
         let url = aa.fx.url(tag[1])?.href;
         if (!url) continue;
-        relays[url] = {sets:['k10050']};
+        let sets = ['k10050'];
+        if (is_u) sets.push('auth');
+        relays[url] = {sets};
       }
       aa.e.relay_list_upd(p,dat,relays,'k10050');
     }

@@ -207,8 +207,9 @@
 
 .m_back
 {
-  font-size: var(--font-size-s);
+  /* font-size: var(--font-size-s); */
   padding: 0 var(--padm);
+  text-decoration: none;
 }
 
 /* mark read button — mirrors replies header pattern */
@@ -274,10 +275,11 @@
   padding: var(--padm) var(--pad);
   border-radius: 4px;
   background: rgba(var(--c),.2);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--padm);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  /* flex-wrap: wrap;
+  align-items: baseline; */
+  /* gap: var(--padm); */
 }
 
 .m_msg.from_u
@@ -288,9 +290,9 @@
 
 .m_content
 {
-  flex: 1;
+  /* flex: 1;
   min-width: 0;
-  word-break: break-word;
+  word-break: break-word; */
 }
 
 .m_time
@@ -298,6 +300,7 @@
   font-size: var(--font-size-s);
   opacity: .4;
   white-space: nowrap;
+  align-self: center;
 }
 
 .m_inspect
@@ -316,14 +319,21 @@
 .m_draft
 {
   border: 1px dashed rgba(var(--color-main),1);
+  grid-template-columns: 1fr;
 }
 
 .m_actions
 {
-  display: flex;
-  gap: var(--padm);
-  width: 100%;
-  justify-content: flex-end;
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-gap: var(--padm);
+  grid-template-columns: 1fr 1fr;
+  
+}
+
+.m_actions .butt
+{
+  text-align: center;
 }
 
 /* sending state */
@@ -433,8 +443,18 @@
   padding: var(--pad);
 }
 
+.m_pending_list::before 
+{
+  content: "no pending messages";
+  font-size: var(--font-size-s);
+  padding: var(--pad);
+  position: absolute;
+  z-index: -1;
+}
+
 .m_pending_wrap
 {
+  background: rgb(var(--color-b));
   display: flex;
   align-items: center;
   gap: var(--pad);

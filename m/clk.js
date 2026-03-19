@@ -11,7 +11,7 @@ aa.m.clk.select =e=>
   let pubkey = item.dataset.pubkey;
   if (pubkey === '_pending')
   {
-    aa.m.open_pending();
+    aa.view.state('#m_pending');
     return
   }
   let npub = aa.fx.encode('npub',pubkey);
@@ -81,13 +81,6 @@ aa.m.clk.cancel =e=>
 {
   let draft = e.target.closest('.m_draft');
   if (draft) draft.remove();
-};
-
-
-// close conversation, go back to list
-aa.m.clk.back =()=>
-{
-  aa.view.clear();
 };
 
 

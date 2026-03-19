@@ -2,9 +2,10 @@
 
 aa.view.ls.m_ =async path=>
 {
+  aa.view.active = path;
+
   if (path === 'm_requests')
   {
-    aa.view.active = path;
     // TODO: open requests view
     return
   }
@@ -14,7 +15,7 @@ aa.view.ls.m_ =async path=>
   if (section && !section.classList.contains('expanded'))
     aa.clk.expand({target:section});
 
-  if (path === 'm__pending')
+  if (path === 'm_pending')
   {
     await aa.m.restore();
     aa.m.open_pending();
