@@ -36,6 +36,7 @@ aa.m.load =async()=>
   if (!mod.o) mod.o = {id: mod.def.id};
   if (!mod.o.convos) mod.o.convos = {};
   if (!mod.o.pending) mod.o.pending = [];
+  if (!mod.o.seen) mod.o.seen = {};
 
   mod.pending = new Map();
   mod.decrypt_q = new Map();
@@ -455,7 +456,7 @@ aa.m.convo =pubkey=>
 
 
 // get last-seen timestamp for a conversation
-aa.m.seen_ts =pubkey=> parseInt(sessionStorage['m_seen_'+pubkey]) || 0;
+aa.m.seen_ts =pubkey=> aa.m.o.seen[pubkey] || 0;
 
 
 // update section button counts: convos / unread+pending
@@ -574,7 +575,11 @@ aa.m.mark_read =pubkey=>
       let s = parseInt(convo.messages.children[i].dataset.stamp);
       if (s > latest) { latest = s; break }
     }
-    if (latest) sessionStorage['m_seen_'+pubkey] = latest;
+    if (latest)
+    {
+      aa.m.o.seen[pubkey] = latest;
+      debt.add(aa.m.save_seen, 2100, 'm_save_seen');
+    }
 
     fastdom.mutate(()=>{ aa.m.view_el.classList.add('m_read') });
   }
@@ -612,7 +617,11 @@ aa.m.open =pubkey=>
     let s = parseInt(convo.messages.children[i].dataset.stamp);
     if (s > latest) { latest = s; break }
   }
-  if (latest) sessionStorage['m_seen_'+pubkey] = latest;
+  if (latest)
+  {
+    aa.m.o.seen[pubkey] = latest;
+    debt.add(aa.m.save_seen, 2100, 'm_save_seen');
+  }
   convo.unread = 0;
   aa.m.count_upd();
 
@@ -784,6 +793,9 @@ aa.m.save =()=>
 
 // persist pending wrap ids to IDB
 aa.m.save_pending =()=> aa.mod.save_to(aa.m);
+
+// persist seen timestamps to IDB
+aa.m.save_seen =()=> aa.mod.save_to(aa.m);
 
 
 // restore conversations from decrypt cache + pending wraps from event store
