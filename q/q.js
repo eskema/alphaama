@@ -777,12 +777,12 @@ aa.q.stuff =async()=>
   aa.q.sub('a', true);
 
   // Phase 2: Load follows data
-  await aa.fx.delay(666);
+  await aa.fx.delay(1000);
   aa.log('getting your follows stuff');
   await aa.q.print('b',{options});
 
   // Sub b: persistent subscription via outbox
-  await aa.fx.delay(999);
+  await aa.fx.delay(1500);
   aa.log('getting your follows stuff again but now in outbox mode');
   aa.q.sub('b out', true);
   

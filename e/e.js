@@ -947,7 +947,8 @@ aa.e.draft_upd =async(s='')=>
   if (!s) s = aa.bus.request('cli:value') || '';
   if (s.length)
   {
-    const reply_to = aa.view.active;
+    const v = aa.view.active;
+    const reply_to = v && !String(v).startsWith('m_') ? v : undefined;
 
     if (reply_to
     && aa.temp.dat?.replying !== reply_to)

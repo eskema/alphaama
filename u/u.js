@@ -30,7 +30,8 @@ aa.u =
       'pow 17',
       'relays_ask off',
       'auto_decrypt on_view',
-      'on_load_sub a',
+      'm_get on',
+      'on_load_sub a + b out',
     ]
   },
   styles:['/u/u.css'],
@@ -464,8 +465,6 @@ aa.u.load =async()=>
   // bus provider (breaks dependency on aa.u.p.pubkey from other modules)
   aa.bus.provide('u:pubkey', () => aa.u.o?.pubkey);
 
-  aa.mod.ready('u:pubkey', aa.u.on_load_sub);
-
   if (aa.u.p?.pubkey) aa.mod.fire_ready('u:pubkey');
 };
 
@@ -659,7 +658,8 @@ aa.u.setup_quick =async()=>
   await aa.u.add_pubkey(pubkey);
 
   setTimeout(()=>{aa.q.stuff()},1000);
-  aa.u.on_load_sub();
+  if (localStorage.m_get === 'on')
+    aa.mod.ready('r:manager', aa.m.sub);
 };
 
 
@@ -671,6 +671,7 @@ aa.u.start =async()=>
   aa.u.upd_u_u();
   aa.mod.mk(aa.u);
   aa.mk.profile(p);
+  aa.mod.ready('u:pubkey', aa.u.on_load_sub);
 };
 
 

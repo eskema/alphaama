@@ -42,7 +42,7 @@ aa.m.load =async()=>
   mod.decrypt_q = new Map();
   mod.decrypt_active = new Set();
 
-  mod.l = make('div',{cla:'m_panel'});
+  mod.l = make('div',{cla:'m_panel expanded'});
   mod.list_el = make('div',{cla:'m_list'});
   mod.view_el = make('div',{cla:'m_view'});
   mod.l.append(mod.list_el, mod.view_el);
