@@ -426,9 +426,10 @@ const on_closed =async(a,url)=>
 
 
 // relay worker ok response
-const on_ok =async(a,url)=>
+const on_ok =(a,url)=>
 {
-  postMessage([...a,url]);
+  let kind = manager.events.get(a[1])?.event?.kind;
+  postMessage([...a,url,kind]);
   if (a[2] === false) on_not_ok(a[1],a[3],url);
 };
 
@@ -471,13 +472,20 @@ const on_open =data=>
 };
 
 
-const on_state =async relay=>
+const state_pending = new Set();
+const on_state =relay=>
 {
-  postMessage(['state',
+  if (state_pending.has(relay.worker.url)) return;
+  state_pending.add(relay.worker.url);
+  Promise.resolve().then(()=>
   {
-    state: relay.ws?.readyState || 0,
-    ...relay.worker
-  }]);
+    state_pending.delete(relay.worker.url);
+    postMessage(['state',
+    {
+      state: relay.ws?.readyState || 0,
+      ...relay.worker
+    }]);
+  });
 };
 
 
@@ -530,10 +538,20 @@ const close_sub =id=>
 };
 
 
+let pre_process_active = 0;
+const pre_process_max = 3;
+const pre_process_queue = [];
+
 const pre_process_request =async request=>
 {
   let [type,sub_id,filter] = request;
-  if (type === 'REQ')
+  if (type !== 'REQ') return request;
+
+  if (pre_process_active >= pre_process_max)
+    await new Promise(resolve=> pre_process_queue.push(resolve));
+
+  pre_process_active++;
+  try
   {
     let results = db_tag_filter(await db.queryEvents(filter), filter);
     for (let event of results)
@@ -542,12 +560,12 @@ const pre_process_request =async request=>
       manager.events.set(event.id,dat);
       on_event([type,sub_id,event]);
     }
-    // for await (let event of db.queryEvents(filter))
-    // {
-    //   let dat = mk_dat({event});
-    //   manager.events.set(event.id,dat);
-    //   on_event([type,sub_id,event]);
-    // }
+  }
+  finally
+  {
+    pre_process_active--;
+    if (pre_process_queue.length)
+      pre_process_queue.shift()();
   }
   return request
 };
@@ -1004,11 +1022,19 @@ const pause =()=>
 const resume =()=>
 {
   manager.paused = false;
+  const to_reconnect = [];
   for (const [url,relay] of manager.relays)
   {
     if (!relay.worker || relay.worker.terminated) continue;
     if (!relay.ws || relay.ws.readyState > 1)
-      connect(relay);
+      to_reconnect.push(relay);
+  }
+  let delay = 0;
+  for (let i = 0; i < to_reconnect.length; i += 20)
+  {
+    const batch = to_reconnect.slice(i, i + 20);
+    setTimeout(()=>{ for (const relay of batch) connect(relay) }, delay);
+    delay += 3000;
   }
 };
 

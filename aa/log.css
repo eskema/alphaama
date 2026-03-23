@@ -2,12 +2,14 @@
 {
   align-content: start;
   align-items: start;
+  box-shadow: 0px 1rem 2rem 0 rgb(var(--color-b));
   display: grid;
   grid-area: l;
   max-height: 40vh;
   position: relative;
   scrollbar-width: none;
   transition: var(--trans-fast);
+  z-index: 1;
 }
 
 #cli.expanded .section_l

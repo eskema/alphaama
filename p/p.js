@@ -482,7 +482,7 @@ aa.p.load =async()=>
   aa.p.l = make('div',{cla:'authors'});
   aa.mod.help_setup(mod);
   await aa.mod.load(mod);
-  aa.mod.mk(mod);
+  // aa.mod.mk(mod);
 };
 
 

@@ -89,6 +89,7 @@ aa.m.clk.expand =e=>
 {
   let on = aa.m.l.classList.toggle('expanded');
   e.target.textContent = on ? 'compact' : 'expand';
+  sessionStorage.m_panel = on ? 'expanded' : '';
 };
 
 

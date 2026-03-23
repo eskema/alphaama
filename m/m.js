@@ -42,7 +42,8 @@ aa.m.load =async()=>
   mod.decrypt_q = new Map();
   mod.decrypt_active = new Set();
 
-  mod.l = make('div',{cla:'m_panel expanded'});
+  let panel_expanded = sessionStorage.m_panel !== undefined ? sessionStorage.m_panel === 'expanded' : true;
+  mod.l = make('div',{cla:'m_panel' + (panel_expanded ? ' expanded' : '')});
   mod.list_el = make('div',{cla:'m_list'});
   mod.view_el = make('div',{cla:'m_view'});
   mod.l.append(mod.list_el, mod.view_el);

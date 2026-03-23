@@ -244,6 +244,9 @@ aa.mod.ui =(mod,keys)=>
   let i = 0;
   const step =()=>
   {
+    // mod was rebuilt (aa.mod.mk called again) — our ul is stale, abort
+    if (mod.mod_ul !== ul) return;
+
     let end = Math.min(i + 5, keys.length);
     while (i < end)
     {

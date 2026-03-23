@@ -513,9 +513,11 @@ aa.e.kinds =(s='')=>
   s = s.trim();
   if (s.length)
   {
+    let kind = parseInt(s);
     let name = ls[s];
-    if (name) aa.log(`${s}: ${name}`);
-    else aa.log(`kind ${s} not found`);
+    let type = NostrTools.kinds.classifyKind(kind);
+    if (name) aa.log(`${s}: ${name} (${type})`);
+    else aa.log(`kind ${s}: unknown (${type})`);
   }
   else
   {

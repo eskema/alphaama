@@ -11,7 +11,7 @@
   overflow-y: scroll;
   padding-left: var(--line);
   padding-top: var(--line);
-  padding-bottom: 1px;
+  padding-bottom: 1rem;
 /*  position: absolute;
   bottom: 0;*/
 }

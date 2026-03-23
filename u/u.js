@@ -409,12 +409,6 @@ aa.u.load =async()=>
       exe:aa.fx.decrypt
     },
     {
-      action:['fx','kind'],
-      required:['<number>'],
-      description:'check if it is known',
-      exe:aa.fx.kinds_type
-    },
-    {
       action:['fx','keypair'],
       optional:['<xsec>'],
       description:'generate nostr keys (secret_bytes,public,xsec,nsec)',
@@ -423,7 +417,7 @@ aa.u.load =async()=>
     {
       action:[id,'setup'],
       optional:['<pubkey || nip05 || nprofile || npub || bunker://>'],
-      description:'setup pubkey (nip07, npub, nprofile, nip05, bunker://)',
+      description:'setup pubkey (nip07, npub, nprofile, nip05, bunker://), leave blank for nip07',
       exe:mod.setup
     },
     {
@@ -514,7 +508,8 @@ aa.u.reset =async()=>
 aa.u.setup =async(s='')=>
 {
   aa.u.setup_sheet = {s};
-  aa.log('u re beeing set up… '+(aa.u.setup_sheet.s||'via signer'));
+  let setup_log = aa.log('u re beeing set up… ');
+  let setup_logp = setup_log.lastChild;
   let [pubkey,mode] = s.split(aa.regex.fw).map(i=>i.trim());
   let relays = [];
 
@@ -524,14 +519,14 @@ aa.u.setup =async(s='')=>
     aa.log('(tip)=> press control + shift + (arrow_up (↑) or arrow_down (↓)) to access prompt history')
     return
   }
-  else if (!s && aa.signer.available()) pubkey = await aa.signer.getPublicKey();
-  else if (!s && window.nostr)
+  else if (!s && aa.signer.available()) 
   {
-    aa.signer.set('nip07', window.nostr);
+    setup_logp.append(` via ${aa.signer.type}`);
     pubkey = await aa.signer.getPublicKey();
   }
   else if (s.startsWith('bunker://'))
   {
+    setup_logp.append(' via bunker');
     let bp = await NostrTools.nip46.parseBunkerInput(s);
     if (!bp || !bp.relays?.length)
     {
@@ -552,13 +547,29 @@ aa.u.setup =async(s='')=>
       return
     }
   }
-  else if (aa.fx.is_key(s)) pubkey = s;
-  else if (s.startsWith('npub1')) pubkey = aa.fx.decode(s);
+  else if (aa.fx.is_key(s)) 
+  {
+    setup_logp.append(' via public key');
+    pubkey = s;
+  }
+  else if (s.startsWith('npub1')) 
+  {
+    setup_logp.append(' via npub');
+    pubkey = aa.fx.decode(s);
+  }
   else
   {
     let dis;
-    if (s.includes('@')) dis = await NostrTools.nip05.queryProfile(s);
-    else if (s.startsWith('nprofile1')) dis = aa.fx.decode(s);
+    if (s.includes('@')) 
+    {
+      setup_logp.append(' via nip-05');
+      dis = await NostrTools.nip05.queryProfile(s);
+    }
+    else if (s.startsWith('nprofile1')) 
+    {
+      setup_logp.append(' via nprofile');
+      dis = aa.fx.decode(s);
+    }
 
     if (dis?.pubkey?.length) pubkey = dis.pubkey;
     if (dis?.relays?.length) relays.push(...dis.relays);
@@ -600,9 +611,6 @@ aa.u.setup =async(s='')=>
     const req_butt = aa.mk.butt_action('q stuff','request your stuff');
     req_butt.addEventListener('click',aa.clk.done);
     log.lastChild.append(req_butt,' like profile, follows, etc..');
-    
-    // log = aa.log('finally, ');
-    // log.lastChild.append(aa.mk.reload_butt(),' for a clean start');
   }
 };
 
@@ -632,7 +640,7 @@ aa.u.setup_butt =()=>
 
 aa.u.on_load_sub =()=>
 {
-  if (!localStorage.on_load_sub) return;
+  if (!localStorage.on_load_sub || aa.q._stuffing) return;
   let s = localStorage.on_load_sub.replaceAll('+',',');
   aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(s), 420));
 };
@@ -655,11 +663,10 @@ aa.u.setup_quick =async()=>
     aa.log('unable to get public key');
     return
   }
+  aa.q._stuffing = true;
   await aa.u.add_pubkey(pubkey);
 
-  setTimeout(()=>{aa.q.stuff()},1000);
-  if (localStorage.m_get === 'on')
-    aa.mod.ready('r:manager', aa.m.sub);
+  setTimeout(()=>{ aa.q.stuff() },1000);
 };
 
 

@@ -85,25 +85,23 @@ aa.r.eose =async data=>
 
 
 // manager received from a relay
-// ["OK",<event_id>,<true|false>,<message>]
-aa.r.ok =async data=>
+// ["OK",<event_id>,<true|false>,<message>,<url>,<kind>]
+aa.r.ok =data=>
 {
-  const [type,id,is_ok,reason,url] = data;
+  const [type,id,is_ok,reason,url,kind] = data;
   let key = `["${type}","${url}"]`;
-  let dat = await aa.bus.request('e:get', id);
-  let kind = dat ? dat.event.kind : '?'
-  let text = `${kind} ${id} ${is_ok} ${reason}`;
-  aa.log_key(key,text)
-  
-  if (is_ok) aa.r.ok_ok(id,url);
-  else if (reason) aa.r.ok_not_ok(data);
+  let text = `${kind ?? '?'} ${id} ${is_ok} ${reason}`;
+  aa.log_key(key,text);
+
+  // auth events (kind 22242) are never printed — skip ok_ok
+  if (is_ok && kind !== 22242) aa.r.ok_ok(id,url);
+  else if (!is_ok && reason) aa.r.ok_not_ok(data);
 };
 
 
 // OK true
 aa.r.ok_ok =async(id,url)=>
 {
-  // const [s,id,is_ok,reason,url] = a;
   let dat = await aa.bus.request('e:get', id);
   if (!dat) return;
 

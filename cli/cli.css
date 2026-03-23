@@ -102,6 +102,7 @@
   white-space: pre-wrap;
   position: sticky;
   bottom: 0;
+  z-index: 1;
 }
 
 #cli_t:focus
@@ -112,6 +113,7 @@
 .cli_expanded #cli_t
 {
   background: rgb(var(--color-b));
+  box-shadow: 0 -1rem 1rem rgb(var(--color-b));
   color: rgb(var(--color-f));
   padding: var(--line);
 }

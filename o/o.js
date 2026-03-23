@@ -18,6 +18,9 @@ const o =
     {
       'auto_decrypt': 'off',
       'cash': 'on',
+      'ext_image': 'gif heic jpeg jpg png webp',
+      'ext_video': 'mp4 webm', // fuck mov
+      'ext_audio': '3ga aac aiff flac m4a mp3 ogg wav',
       'm_auto_send': 'off',
       'm_decrypt': 'off',
       'm_get': 'off',
@@ -26,11 +29,8 @@ const o =
       'pagination': '100', // number of root events displayed
       'pow': '0', // proof of work difficulty
       'reaction': '\uD83E\uDD18', // '🤘' default reaction emoji
-      'theme': 'dark', // 'light'
       'score': '11', // user score needed for loading media
-      'ext_image': 'gif heic jpeg jpg png webp',
-      'ext_video': 'mp4 webm', // fuck mov
-      'ext_audio': '3ga aac aiff flac m4a mp3 ogg wav',
+      'theme': 'dark', // 'light'
     },
 // todo
 //     'nav_keys':
@@ -195,12 +195,6 @@ o.load =async()=>
     },
   );
   mod.o = {id:id,ls:localStorage};
-
-  if (mod.o.ls.team)
-  {
-    mod.o.ls.theme = mod.o.ls.team;
-    o.del('team');
-  }
 
   // expose allowed extensions as getter on aa
   Object.defineProperty(aa,'allowed_extensions',{get:o.allowed_extensions});

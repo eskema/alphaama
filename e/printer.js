@@ -45,9 +45,11 @@ aa.e.append_as_root =(note,section)=>
   // let stamp = parseInt(note.dataset.stamp);
   let options = aa.temp[`section_${section}`];
   if (options)
-    // fastdom.mutate(()=>{
-      sift.insert(note,options)
-    // });
+  {
+    if (!options.pending) options.pending = new Set();
+    sift.insert(note,options);
+    debt.add(()=> sift.flush(options), 0, `sift_flush_${section}`);
+  }
   else console.log('aa.e.append_as_root: no options for section_'+section)
 };
 

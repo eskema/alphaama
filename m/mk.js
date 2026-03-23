@@ -20,7 +20,7 @@ aa.mk.section_m =()=>
   let expand = make('button',
   {
     cla:'butt exe m_expand',
-    con:'expand',
+    con: aa.m.l.classList.contains('expanded') ? 'compact' : 'expand',
     clk: aa.m.clk.expand,
   });
 

@@ -755,10 +755,24 @@ aa.q.print =async(id,options)=>
   let sheets = await aa.q.get(id,options);
   if (!sheets) return;
 
+  let max_ts = 0;
   for (const sheet of sheets)
   {
-    for (const [id,dat] of sheet.events)
+    for (const [eid,dat] of sheet.events)
+    {
+      if (dat.event.created_at > max_ts) max_ts = dat.event.created_at;
       aa.bus.emit('e:print_q', dat)
+    }
+  }
+
+  if (options?.sub && max_ts)
+  {
+    let sub_id = `${id}_sub`;
+    if (!aa.q.o.subs[sub_id] || aa.q.o.subs[sub_id] < max_ts)
+    {
+      aa.q.o.subs[sub_id] = max_ts;
+      aa.mod.save(aa.q);
+    }
   }
 };
 
@@ -771,25 +785,32 @@ aa.q.stuff =async()=>
   // Phase 1: Bootstrap with initial relays
   aa.log('getting your stuff (relays, metadata, follows, etc…)');
   await aa.q.print('a',{options});
-  
-  // Sub a: persistent subscription
-  await aa.fx.delay(1000);
-  aa.q.sub('a', true);
 
-  // Phase 2: Load follows data
+  // Phase 2: Updated user data via sub resumption
+  await aa.fx.delay(1000);
+  await aa.q.print('a',{options, sub:true});
+
+  // Phase 3: Load follows data
   await aa.fx.delay(1000);
   aa.log('getting your follows stuff');
   await aa.q.print('b',{options});
 
-  // Sub b: persistent subscription via outbox
+  // Phase 4: Follows via outbox
   await aa.fx.delay(1500);
   aa.log('getting your follows stuff again but now in outbox mode');
-  aa.q.sub('b out', true);
+  await aa.q.print('b',{options, mode:'outbox', sub:true});
   
   // Finalize
-  aa.log(make('p',{ content: 'all done ', app: aa.mk.reload_butt() }));
-  sessionStorage.q_out = 'f';
-  sessionStorage.q_run = 'n';
+  setTimeout(()=>
+  {
+    sessionStorage.q_out = 'f';
+    sessionStorage.q_run = 'n';
+    aa.log(make('p',
+    { 
+      content: 'all done ', 
+      app: aa.mk.reload_butt() 
+    }));
+  },1000);
 };
 
 
