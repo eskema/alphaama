@@ -184,16 +184,9 @@ sift.insert =(item,options)=>
     if (!match)
     {
       item.classList.add('sifted_out');
-      if (!options.pending) return
+      return
     }
     else item.classList.add('sifted_in');
-  }
-
-  // batched mode: defer DOM operations to sift.flush
-  if (options.pending)
-  {
-    options.pending.add(item);
-    return
   }
 
   if (!max)
@@ -213,59 +206,19 @@ sift.insert =(item,options)=>
     sift.move(item,last,element)
   }
 
-  if (element.childElementCount > max)
+  if (items.length > max)
   {
-    for (const i of [...element.children].slice(max))
+    for (let i = 0; i < items.length; i++)
     {
-      if (!i.classList.contains('in_path')
-      && !i.classList.contains('sifted_in')
-      ) i.remove()
+      if (i >= lower && i < upper) continue;
+      let it = items[i];
+      if (!it.classList.contains('in_path')
+      && !it.classList.contains('sifted_in')
+      ) it.remove()
     }
   }
 };
 
-
-sift.flush =(options)=>
-{
-  const { element, items, pending, max, page } = options;
-  if (!pending?.size) return;
-
-  const to_insert = [...pending].sort((a,b)=> items.indexOf(a) - items.indexOf(b));
-  pending.clear();
-
-  const find_before =(idx)=>
-  {
-    for (let i = idx + 1; i < items.length; i++)
-      if (items[i].parentElement === element) return items[i];
-    return null
-  };
-
-  if (!max)
-  {
-    for (const item of to_insert)
-      sift.move(item, find_before(items.indexOf(item)), element);
-    return
-  }
-
-  sift.update_total(options);
-  let p = page || 1;
-  let upper = max * p;
-  let lower = upper - max;
-
-  for (const item of to_insert)
-  {
-    let idx = items.indexOf(item);
-    if (idx >= lower && idx < upper)
-      sift.move(item, find_before(idx), element);
-  }
-
-  for (const item of items.slice(max))
-  {
-    if (!item.classList.contains('in_path')
-    && !item.classList.contains('sifted_in'))
-      item.remove();
-  }
-};
 
 
 sift.move =(element,before=null,parent=false)=>

@@ -46,9 +46,7 @@ aa.e.append_as_root =(note,section)=>
   let options = aa.temp[`section_${section}`];
   if (options)
   {
-    if (!options.pending) options.pending = new Set();
     sift.insert(note,options);
-    debt.add(()=> sift.flush(options), 0, `sift_flush_${section}`);
   }
   else console.log('aa.e.append_as_root: no options for section_'+section)
 };
