@@ -29,6 +29,7 @@ const manager =
   relays:new Map(),
   subs:new Map(),
   events:new Map(),
+  nip11_tried:new Set(),
 };
 
 
@@ -241,6 +242,7 @@ const fetch_info =async url=>
   let relay = manager.relays.get(url);
 
   if (relay?.no_info) return;
+  if (relay) relay.no_info = true;
   let info;
   try { info = await nip11(url) }
   catch(er)
@@ -249,18 +251,19 @@ const fetch_info =async url=>
   }
 
   info = info || null;
-  if (relay)
-  {
-    if (info) relay.info = info;
-    else relay.no_info = true;
-  }
+  if (relay && info) { delete relay.no_info; relay.info = info }
   postMessage(['info',url,info]);
 };
 
 
 const relay_info =async(relays=[])=>
 {
-  for (const url of relays) fetch_info(url)
+  for (const url of relays)
+  {
+    let relay = manager.relays.get(url);
+    if (relay) delete relay.no_info;
+    fetch_info(url)
+  }
 };
 
 
@@ -737,7 +740,7 @@ const set_relays =relays=>
         relay[key] = relays[url][key];
     }
 
-    if (!relay.info) fetch_info(url)
+    if (!relay.info && !relay.no_info) fetch_info(url)
   }
 };
 
@@ -762,7 +765,7 @@ const connect =(relay)=>
     return
   }
 
-  if (relay.ws?.readyState === 1) return;
+  if (relay.ws && relay.ws.readyState < 3) return;
 
   try { relay.ws = new WebSocket(relay.worker.url) }
   catch(er)
@@ -1023,16 +1026,24 @@ const resume =()=>
 {
   manager.paused = false;
   const to_reconnect = [];
+  const closed_info = [];
   for (const [url,relay] of manager.relays)
   {
     if (!relay.worker || relay.worker.terminated) continue;
     if (!relay.ws || relay.ws.readyState > 1)
+    {
       to_reconnect.push(relay);
+      closed_info.push({ url, ws_state: relay.ws ? relay.ws.readyState : 'no_ws' });
+    }
   }
+  console.log('[resume] triggered — relays to reconnect:', to_reconnect.length,
+    '\nclosed/missing ws:', closed_info,
+    '\ntotal tracked relays:', manager.relays.size);
   let delay = 0;
   for (let i = 0; i < to_reconnect.length; i += 20)
   {
     const batch = to_reconnect.slice(i, i + 20);
+    console.log(`[resume] batch ${i/20 + 1} (delay ${delay}ms):`, batch.map(r => r.worker.url));
     setTimeout(()=>{ for (const relay of batch) connect(relay) }, delay);
     delay += 3000;
   }

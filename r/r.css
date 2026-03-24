@@ -36,6 +36,12 @@
   opacity: .7;
 }
 
+.mod .relay[data-state="4"]::after
+{
+  color: rgb(var(--color-main));
+  opacity: .7;
+}
+
 .mod .relay .info > summary::after
 {
   content: none

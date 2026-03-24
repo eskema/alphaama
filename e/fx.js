@@ -38,11 +38,20 @@ aa.fx.id_ae =event=>
 aa.fx.id_af =string=>
 {
   let [kind,pubkey,identifier] = aa.fx.split_ida(string);
-  return {
-    kinds:[parseInt(kind)],
-    authors:[pubkey],
-    '#d':[identifier]
-  }
+  
+  const result = {};
+  
+  const kind_int = parseInt(kind);
+  if (!kind_int) return;
+  else result.kinds = [kind_int];
+  
+  if (!pubkey || !aa.fx.is_key(pubkey)) return result;
+  else result.authors = [pubkey];
+
+  if (!identifier) return result;
+  else result['#d'] = [identifier];
+
+  return result
 };
 
 

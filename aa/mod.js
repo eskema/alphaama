@@ -119,7 +119,9 @@ aa.mod.mk =async mod=>
   mod.mod_li = new Map();
   mod.mod_ul = aa.mk.ls({});
   let keys = Object.keys(mod.o.ls).sort(aa.fx.sorts.a);
-  if (keys.length) aa.mod.ui(mod,keys);
+  const on_ui_done =()=> aa.mod.fire_ready(`${mod.def.id}:ui`);
+  if (keys.length) aa.mod.ui(mod,keys,on_ui_done);
+  else on_ui_done();
   
   let mod_l_o =
   {
@@ -234,7 +236,7 @@ aa.mod.save_to =async mod=>
 
 
 // update mod item element
-aa.mod.ui =(mod,keys)=>
+aa.mod.ui =(mod,keys,on_done)=>
 {
   let ul = mod.mod_ul;
   if (!ul) return;
@@ -265,6 +267,7 @@ aa.mod.ui =(mod,keys)=>
       })
     }
     if (i < keys.length) requestAnimationFrame(step);
+    else if (on_done) on_done();
   };
   requestAnimationFrame(step);
 

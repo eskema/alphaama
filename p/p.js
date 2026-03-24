@@ -837,15 +837,11 @@ aa.p.relays =(p,set='write')=>
   return Object.entries(p.relays)
     .filter(r=>r[1].sets.includes(set))
     .filter(r=> {
-      // Filter out recently terminated relays
       const relay = aa.r.o.ls[r[0]];
       if (!relay) return true; // Unknown relay = include
-      const term_count = relay.terminated_count || 0;
-      if (term_count === 0) return true; // Never terminated = include
-
-      // Allow if last termination was >24h ago
-      const hours_since = (Date.now()/1000 - (relay.last_terminated || 0)) / 3600;
-      return hours_since > 24;
+      if (relay.sets?.includes('off')) return false;
+      if (relay.retry_after && Date.now() / 1000 < relay.retry_after) return false;
+      return aa.r.score(r[0]) >= 20;
     })
     .sort((a, b) => {
       // Primary sort: by reliability score

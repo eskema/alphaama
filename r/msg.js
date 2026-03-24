@@ -183,9 +183,33 @@ aa.r.update_stats =async data=>
   switch(stat_type)
   {
     case 'terminated':
-      aa.r.o.ls[url].terminated_count = (aa.r.o.ls[url].terminated_count || 0) + 1;
-      aa.r.o.ls[url].last_terminated = Math.floor(Date.now() / 1000);
+    {
+      const r = aa.r.o.ls[url];
+      r.terminated_count = (r.terminated_count || 0) + 1;
+      const now_ts = Math.floor(Date.now() / 1000);
+      r.last_terminated = now_ts;
+
+      const backoff = r.retry_backoff || 0;
+      const retry_after = r.retry_after || 0;
+
+      if (!backoff)
+      {
+        r.retry_backoff = 24;
+        r.retry_after = now_ts + 24 * 3600;
+      }
+      else if (backoff === 24 && now_ts >= retry_after)
+      {
+        r.retry_backoff = 48;
+        r.retry_after = now_ts + 48 * 3600;
+      }
+      else if (backoff === 48 && now_ts >= retry_after)
+      {
+        if (!r.sets) r.sets = ['off'];
+        else if (!r.sets.includes('off')) r.sets.push('off');
+        aa.log(`relay permanently disabled (too many failures): ${url}`);
+      }
       break;
+    }
     case 'error':
       aa.r.o.ls[url].error_count = (aa.r.o.ls[url].error_count || 0) + 1;
       break;

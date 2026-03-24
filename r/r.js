@@ -185,6 +185,7 @@ aa.r.common =(pubkeys=[],sets=[])=>
 {
   let common = {};
   let offed = aa.fx.in_set(aa.r.o.ls,'off',0);
+  const now = Date.now() / 1000;
   for (const pubkey of pubkeys)
   {
     let has_set;
@@ -200,6 +201,8 @@ aa.r.common =(pubkeys=[],sets=[])=>
     {
       url = aa.fx.is_valid_relay(aa.fx.url(url));
       if (!url || offed.includes(url)) continue;
+      const r = aa.r.o.ls[url];
+      if (r?.retry_after && now < r.retry_after) continue;
       if (!common[url]) common[url] = new Set();  // Use Set for O(1) deduplication
       common[url].add(pubkey);  // Set automatically handles duplicates
     }
@@ -583,7 +586,7 @@ aa.r.load =async()=>
   .then(()=>
   {
     aa.r.toggles();
-    setTimeout(()=>{aa.r.manager_setup()},200);
+    aa.mod.ready('r:ui', aa.r.manager_setup);
   });
 
   // pause/resume relays on connectivity changes
@@ -633,10 +636,11 @@ aa.r.mk =(k,v)=>
   });
 
   const score = Math.round(aa.r.score(k));
+  const in_backoff = v.retry_backoff > 0 && v.retry_after > Date.now() / 1000;
   const element = make('li',
   {
     cla:'item relay',
-    dat:{state:0,sets:v.sets,score},
+    dat:{state: in_backoff ? 4 : 0, sets:v.sets, score},
     app:[info,' ',sets,' ',actions],
     title: `Reliability: ${score}/100`
   });
@@ -795,7 +799,7 @@ aa.r.score =(url)=>
   const successes = relay.success_count || 0;
   const total = errors + successes;
 
-  if (total === 0) return score * 0.5; // No history = neutral
+  if (total === 0) return term_count > 0 ? score : score * 0.5; // No WS history: trust termination record as-is, unknown = neutral
 
   // Error rate penalty (0-30 points)
   const error_rate = errors / total;
@@ -812,7 +816,7 @@ aa.r.score =(url)=>
 // reset relay score(s) to default
 aa.r.score_reset =(s='')=>
 {
-  const keys = ['terminated_count','last_terminated','error_count','success_count'];
+  const keys = ['terminated_count','last_terminated','error_count','success_count','retry_backoff','retry_after'];
   let urls = s.trim() ? [aa.fx.url(s.trim())?.href].filter(Boolean) : Object.keys(aa.r.o.ls);
 
   let count = 0;
@@ -991,7 +995,9 @@ aa.r.info =([type,url,info])=>
 {
   let mod = aa.r;
   let relay = mod.o.ls[url];
-  relay.info = info;
+  if (!relay) return;
+  if (info) relay.info = info;
+  else relay.no_info = true;
   aa.mod.save_to(mod);
   aa.mod.ui(mod,url);
   // console.log(url,info)

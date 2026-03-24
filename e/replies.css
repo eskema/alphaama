@@ -76,6 +76,7 @@
 
 .root:not(.in_view) > .replies
 {
+  margin-bottom: 1rem;
   position: sticky;
   top: 0;
 }
