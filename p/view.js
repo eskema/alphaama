@@ -17,7 +17,13 @@ aa.view.ls.npub1 =async npub=>
   });
 
   let e_opts = aa.temp.section_e;
-  if (e_opts) sift.filter(e_opts,{pubkey});
+  if (e_opts)
+  {
+    sift.filter(e_opts,{pubkey});
+    let section = aa.el.get('section_e');
+    if (section && !section.classList.contains('expanded'))
+      aa.clk.expand({target:section});
+  }
 
   setTimeout(()=>{aa.fx.scroll(profile)},400);
 };

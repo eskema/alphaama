@@ -133,6 +133,10 @@ sift.filter_clear =options=>
     item.classList.remove('sifted_in','sifted_out');
   for (const el of element.querySelectorAll('.sift_match'))
     el.classList.remove('sift_match');
+  for (const el of element.querySelectorAll('.haz_match_reply'))
+    el.classList.remove('haz_match_reply');
+  for (const el of element.querySelectorAll('.haz_match'))
+    el.classList.remove('haz_match');
 };
 
 
@@ -168,9 +172,17 @@ sift.insert =(item,options)=>
 
   if (options.criteria)
   {
-    let has_match = sift.match(item,options.criteria)
-      || [...item.querySelectorAll('[data-kind]')]
-        .some(n=> sift.match(n,options.criteria));
+    let has_match = sift.match(item,options.criteria);
+    if (has_match) item.classList.add('sift_match');
+    else
+    {
+      for (const n of item.querySelectorAll('[data-kind]'))
+      {
+        if (!sift.match(n,options.criteria)) continue;
+        n.classList.add('sift_match');
+        has_match = true;
+      }
+    }
     item.classList.toggle('sifted_out',!has_match);
     item.classList.toggle('sifted_in',has_match);
   }
@@ -201,7 +213,8 @@ sift.insert =(item,options)=>
   let upper = max * page;
   let lower = upper - max;
 
-  if (index >= lower && index < upper)
+  if (index >= lower && index < upper
+  || item.classList.contains('sifted_in'))
   {
     sift.move(item,last,element)
   }

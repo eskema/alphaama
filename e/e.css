@@ -169,7 +169,7 @@
 .root.not_yet > .replies > .note,
 .note:not(.in_view) > .sig,
 
-.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
+.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply) > *:not(.replies),
 
 /* .view_p .root:not(.in_path), */
 
@@ -382,7 +382,8 @@
 
 
   
-  .clicker:hover
+  .clicker:hover,
+  .sift_match > .clicker
   {
     background: rgba(var(--c),.5);
   }

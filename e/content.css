@@ -327,7 +327,8 @@
   
   a.clicker:hover 
     + .by 
-    + .content
+    + .content,
+  .sift_match > .content
   {
     transform: translateX(calc(var(--padm)));
     /*z-index: 4;*/
@@ -355,8 +356,8 @@
   /* .view_p .root.in_path 
     > .content, */
   
-  .root.sifted_in:not(.in_view)
-    > .content,
+  /* .root.sifted_in:not(.in_view)
+    > .content, */
 
   .root:not(.in_view):not(.in_path) 
     > .content
@@ -386,3 +387,9 @@
   }
 }
 
+.note.sift_match > .content
+{
+  background: rgb(var(--color-a));
+  transform: translateX(calc(var(--padm)));
+  z-index: 11;
+}

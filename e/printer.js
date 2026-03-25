@@ -89,10 +89,14 @@ aa.e.append_as_rep =(note,rep)=>
     || null;
     rep.insertBefore(note,last);
     rep.parentElement.classList.add(...rep_add);
-    aa.e.upd_note_path(note);
-
     let root = note.closest('.root');
     let e_opts = aa.temp[`section_${root?.dataset.section || 'e'}`];
+    if (e_opts?.criteria && sift.match(note,e_opts.criteria))
+    {
+      note.classList.add('sift_match');
+      rep.parentElement.classList.add('haz_match_reply');
+    }
+    aa.e.upd_note_path(note);
     if (e_opts?.solo?.match?.(note))
     {
       note.classList.add('solo');
@@ -569,6 +573,8 @@ aa.e.upd_note_path =element=>
     else stamped = false;
     if (element.querySelector('.note.is_new'))
       element.classList.add('haz_new');
+    if (element.querySelector('.note.sift_match'))
+      element.classList.add('haz_match');
     aa.e.replies_summary_upd(element);
   }
   // update root post order

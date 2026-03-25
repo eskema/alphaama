@@ -13,14 +13,16 @@
 .note.in_view > .replies,
 .note.in_view .replies.expanded,
 .note.haz_new_reply > .replies,
+.note.haz_match_reply > .replies,
 .note.haz_reply > .replies,
-.note.is_new > .replies
+.note.is_new > .replies,
+.note.sift_match > .replies
 {
   padding-left: var(--padm);
 }
 
-.replies:not(.expanded) .note:not(.haz_new_reply):not(.is_new) > .replies,
-.note.in_view .replies:not(.expanded) .note:not(.haz_new_reply) > .replies,
+.replies:not(.expanded) .note:not(.haz_new_reply):not(.haz_match_reply):not(.is_new):not(.sift_match) > .replies,
+.note.in_view .replies:not(.expanded) .note:not(.haz_new_reply):not(.haz_match_reply) > .replies,
 .haz_new:not(.haz_new_reply):not(.haz_new_reply)[data-level="11"] .replies,
 .view_e .in_path:not(.in_view) > .replies
 {
@@ -28,9 +30,9 @@
   margin-bottom: 0;
 }
 
-.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply) > *:not(.replies),
-.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::before,
-.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)::after
+.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply) > *:not(.replies),
+.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply)::before,
+.aa:not(.view_e) .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply)::after
 {
   display: none;
 }
@@ -50,12 +52,13 @@
 .haz_reply > .replies > header,
 .root.haz_reply > .replies > header,
 .in_view.haz_reply > .replies > header,
-.haz_new_reply > .replies > header
+.haz_new_reply > .replies > header,
+.haz_match_reply > .replies > header
 {
   display: grid;
 }
 
-.replies:not(.expanded) .note:not(.haz_new_reply) > .replies > header
+.replies:not(.expanded) .note:not(.haz_new_reply):not(.haz_match_reply) > .replies > header
 {
   display: none;
 }
@@ -101,7 +104,7 @@
 }
 
 
-.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply) > .replies > header,
+.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply) > .replies > header,
 .view_e .in_path:not(.in_view) > .replies > header,
 .haz_solo .haz_reply:not(.in_path) > .replies > header,
 .haz_solo .root:not(.in_view):not(.in_path) > .replies > header
@@ -184,15 +187,16 @@
 }
 
 .view_e .note.in_path.haz_new_reply,
-.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply),
+.view_e .note.in_path.haz_match_reply,
+.replies:not(.expanded) > .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply),
 .replies:not(.expanded) .note:not(.is_new):not(.haz_new) + .note,
 .replies:not(.expanded) .note.haz_new > .replies > header + .note,
-.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
+.in_view .replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply)
 {
   padding-top: 0;
 }
 
-.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply)
+.replies:not(.expanded) .note:not(.is_new):not(.haz_new_reply):not(.sift_match):not(.haz_match_reply)
 {
   border-left: 1px dotted rgba(var(--c),1);
   border-top: 1px dotted rgba(var(--c),1);
@@ -200,7 +204,8 @@
   pointer-events: none;
 }
 
-.replies:not(.expanded) > .note.haz_new_reply:not(.is_new)
+.replies:not(.expanded) > .note.haz_new_reply:not(.is_new),
+.replies:not(.expanded) > .note.haz_match_reply:not(.sift_match)
 {
   padding-top: var(--pad);
   margin-bottom: var(--padm);
