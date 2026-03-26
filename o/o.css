@@ -1,0 +1,18 @@
+.mod_ss_label,
+.mod_ls_label
+{
+  font-size: var(--font-size);
+  opacity: 0.5;
+  padding: 0.25em 0;
+}
+
+.item[data-session]
+{
+  opacity: 0.75;
+}
+
+.item[data-overridden]
+{
+  opacity: 0.4;
+  text-decoration: line-through;
+}

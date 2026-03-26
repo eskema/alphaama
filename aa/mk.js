@@ -863,7 +863,7 @@ aa.mk.reload_butt =()=>
   return make('button',
   {
     con:'reload the page',
-    cla:'butt exe',
+    cla:'butt exe pinned',
     clk:e=>{location.reload()}
   })
 };

@@ -14,6 +14,7 @@ const o =
   def:
   {
     id:'o',
+    ss: {},
     ls:
     {
       'auto_decrypt': 'off',
@@ -48,8 +49,9 @@ const o =
   },
   butts:
   {
-    mod:[]
+    mod:[[`o ss `,'ss']]
   },
+  styles:['/o/o.css'],
   used:true
 };
 
@@ -98,11 +100,16 @@ o.defaults =
       if (aa.l.dataset.theme !== s) aa.l.dataset.theme = s;
     },
     fx:s=> aa.fx.pick_other(s,o.defaults.theme.options)
-  }
+  },
+  dev:
+  {
+    options:['on','off'],
+    fx:s=> aa.fx.pick_other(s,o.defaults.dev.options)
+  },
 };
 
 
-// add key as value
+// add key as value (localStorage)
 o.add =(s='')=>
 {
   const as = s.split(',').map(i=>i.trim());
@@ -111,14 +118,45 @@ o.add =(s='')=>
     for (const i of as)
     {
       let [key,newValue] = i.split(aa.regex.fw);
-      if (key && newValue)
+      if (!key) continue;
+      newValue = newValue ?? '';
+      // clear any session override for this key
+      if (!Object.hasOwn(o.def.ss,key) && Object.hasOwn(o.ss,key))
       {
-        let oldValue = localStorage[key];
-        localStorage[key] = newValue;
-        aa.mod.ui(o,key);
-        o.on_upd({key,newValue,oldValue})
+        delete o.ss[key];
+        sessionStorage.removeItem(key);
+        o.on_mk();
       }
+      let oldValue = localStorage[key];
+      localStorage[key] = newValue;
+      aa.mod.ui(o,key);
+      o.on_upd({key,newValue,oldValue})
     }
+  }
+};
+
+
+// set session option — tab-scoped, overrides matching localStorage key via aa.o.o.ls proxy
+o.ss_set =(s='')=>
+{
+  const as = s.split(',').map(i=>i.trim());
+  for (const i of as)
+  {
+    let [key,newValue] = i.split(aa.regex.fw);
+    if (!key) continue;
+    newValue = newValue ?? '';
+    let oldValue = o.ss[key];
+    sessionStorage[key] = newValue;
+    o.ss[key] = newValue;
+    if (Object.hasOwn(o.def.ss,key))
+    {
+      aa.mod.ui(o,key);
+    }
+    else
+    {
+      o.on_mk();
+    }
+    o.on_upd({key,newValue,oldValue});
   }
 };
 
@@ -173,6 +211,19 @@ o.load =async()=>
   {
     if (!localStorage[k]) localStorage[k] = mod.def.ls[k];
   }
+  // init session options — aa.o.ss mirrors sessionStorage for defined keys
+  mod.ss = {};
+  for (const k in mod.def.ss)
+  {
+    if (!sessionStorage[k]) sessionStorage[k] = mod.def.ss[k];
+    mod.ss[k] = sessionStorage[k];
+  }
+  // restore ad-hoc session overrides (ls keys that were overridden via o.ss_set)
+  for (const k in mod.def.ls)
+  {
+    if (k in sessionStorage && !Object.hasOwn(mod.ss,k))
+      mod.ss[k] = sessionStorage[k];
+  }
 
   aa.actions.push(
     {
@@ -180,6 +231,12 @@ o.load =async()=>
       required:['<key>','<value>'],
       description:'add key:value to options',
       exe:mod.add
+    },
+    {
+      action:[id,'ss'],
+      required:['<key>','<value>'],
+      description:'set session (tab) option, overrides matching localStorage key',
+      exe:mod.ss_set
     },
     {
       action:[id,'reset'],
@@ -194,7 +251,15 @@ o.load =async()=>
       exe:mod.del
     },
   );
-  mod.o = {id:id,ls:localStorage};
+  mod.o =
+  {
+    id,
+    ls: new Proxy(localStorage,
+    {
+      get:(target,k)=> k in o.ss ? o.ss[k] : target[k],
+      set:(target,k,v)=>{ target[k]=v; return true }
+    })
+  };
 
   // expose allowed extensions as getter on aa
   Object.defineProperty(aa,'allowed_extensions',{get:o.allowed_extensions});
@@ -204,6 +269,7 @@ o.load =async()=>
   // load mod
   await aa.mod.load(mod);
   aa.mod.mk(mod);
+
 };
 
 
@@ -235,12 +301,76 @@ o.on_upd =async ev=>
 };
 
 
+// called by aa.mod.mk after every panel rebuild — rebuilds the session section
+// also called directly from o.ss_set for ad-hoc overrides; idempotent
+o.on_mk =()=>
+{
+  // capture old elements before overwriting references
+  const old_label = o.ss_label;
+  const old_ul = o.ss_ul;
+  const old_ls_label = o.ls_label;
+  o.ls_label = make('p',{con:'local storage',cla:'mod_ls_label'});
+  const new_ls_label = o.ls_label;
+
+  o.ss_li = new Map();
+  o.ss_label = make('p',{con:'session (tab)',cla:'mod_ss_label'});
+  o.ss_ul = aa.mk.ls({});
+
+  for (const k of Object.keys(o.def.ss).sort(aa.fx.sorts.a))
+  {
+    let l = o.mk(k);
+    o.mod_li.set(k,l);
+    o.ss_ul.append(l);
+  }
+  // ad-hoc session overrides (keys in o.ss but not in def.ss)
+  const ad_hoc = Object.keys(o.ss).filter(k=>!Object.hasOwn(o.def.ss,k)).sort(aa.fx.sorts.a);
+  for (const k of ad_hoc)
+  {
+    let l = o.mk(k,undefined,true);
+    o.ss_li.set(k,l);
+    o.ss_ul.append(l);
+  }
+
+  const new_label = o.ss_label;
+  const new_ul = o.ss_ul;
+
+  fastdom.mutate(()=>
+  {
+    old_label?.remove();
+    old_ul?.remove();
+    old_ls_label?.remove();
+    o.mod_ul?.before(new_label, new_ul, new_ls_label);
+  });
+
+  // mark overridden LS items — retry each rAF until mod_li has them
+  // abort if panel is rebuilt before we finish (new on_mk will take over)
+  const mark_ul = o.mod_ul;
+  const mark =()=>
+  {
+    if (o.mod_ul !== mark_ul) return;
+    let pending = false;
+    for (const k of ad_hoc)
+    {
+      let ls_item = o.mod_li.get(k);
+      if (ls_item) ls_item.dataset.overridden = 'true';
+      else pending = true;
+    }
+    if (pending) requestAnimationFrame(mark);
+  };
+  requestAnimationFrame(mark);
+};
+
+
 // makes a mod option item, to use with aa.mod.mk()
-o.mk =(k,v)=>
+o.mk =(k,v,session=false)=>
 {
   const id = o.def.id;
+  const is_session = session || Object.hasOwn(o.def.ss,k);
+  if (is_session) v = o.ss[k] ?? o.def.ss[k] ?? '';
   const l = make('li',{cla:'item'});
-  let s = id+' add '+k+' '+v;
+  if (is_session) l.dataset.session = 'true';
+  let cmd = is_session ? id+' ss' : id+' add';
+  let s = cmd+' '+k+' '+v;
   if (k in o.defaults)
   {
     let dis = o.defaults[k];
@@ -251,7 +381,7 @@ o.mk =(k,v)=>
         v = dis.options[0];
     }
     if ('exe' in dis) dis.exe(v);
-    if ('fx' in dis) s = id+' add '+k+' '+dis.fx(v);
+    if ('fx' in dis) s = cmd+' '+k+' '+dis.fx(v);
   }
   l.append(aa.mk.item_action(k,v,s))
   aa.el.set(id+'_'+k,l);

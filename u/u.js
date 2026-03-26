@@ -640,8 +640,9 @@ aa.u.setup_butt =()=>
 
 aa.u.on_load_sub =()=>
 {
-  if (!localStorage.on_load_sub || aa.q._stuffing) return;
-  let s = localStorage.on_load_sub.replaceAll('+',',');
+  let on_load_sub = aa.o.o.ls.on_load_sub;
+  if (!on_load_sub || aa.q._stuffing) return;
+  let s = on_load_sub.replaceAll('+',',');
   aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(s), 420));
 };
 

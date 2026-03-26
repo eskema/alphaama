@@ -1,7 +1,49 @@
 = o => options
 
-* to add an option, type: `. o add` followed by `key` and `value`
-* to delete options, type `. o del` followed by `key`, if left empty deletes all and defaults are reset
+Manages localStorage options and tab-scoped session overrides.
+
+== localStorage options (`o add`)
+
+* `. o add key value` — set a localStorage option
+* `. o add key` — set to empty (clears the value)
+* `. o reset` — reset all options to defaults
+* `. o reset key` — reset a single key to its default
+* `. o del key` — delete a non-default option
+
+== session overrides (`o ss`)
+
+Session overrides are tab-scoped and take priority over localStorage values without modifying them.
+They persist across page reloads within the same browser session.
+
+* `. o ss key value` — override a localStorage key for this tab only
+* `. o ss key` — override with empty value (disables, e.g. `on_load_sub`)
+* Running `. o add key value` on a key with a session override clears the override automatically
+
+The options panel shows session overrides above the localStorage list.
+Overridden localStorage items appear dimmed with strikethrough.
+
+== options
+
+[cols="1,1,2"]
+|===
+|key |default |description
+
+|`theme` |`dark` |`dark` or `light`
+|`score` |`11` |minimum trust score to embed media
+|`pagination` |`100` |number of root events shown
+|`pow` |`0` |proof of work difficulty
+|`reaction` |`🤘` |default reaction emoji
+|`on_load_sub` |`` |sub prefix to run on load (empty = disabled)
+|`auto_decrypt` |`off` |`on`, `on_view`, or `off`
+|`m_decrypt` |`off` |auto-decrypt DMs
+|`m_get` |`off` |auto-fetch DMs
+|`m_auto_send` |`off` |auto-send DMs
+|`cash` |`on` |enable service worker cache
+|`ext_image` |`gif heic jpeg jpg png webp` |allowed image extensions
+|`ext_video` |`mp4 webm` |allowed video extensions
+|`ext_audio` |`3ga aac aiff flac m4a mp3 ogg wav` |allowed audio extensions
+|`ns` |`.` |CLI namespace prefix
+|===
 
 
 video::https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4["example of how to switch theme from dark to light and then setting `score` to `4` so it loads stuff from your fellas:"]

@@ -48,7 +48,8 @@ aa.mod.butts =mod=>
     if (mod.butts.mod)
     {
       if (Object.hasOwn(mod,'add')) butts.append(aa.mk.butt_action(`${mod.def.id} add `,'add'),' ');
-      for (const i of mod.butts.mod) butts.append(aa.mk.butt_action(...i),' ') 
+      for (const i of mod.butts.mod) butts.append(aa.mk.butt_action(...i),' ')
+      butts.append(aa.mk.butt_action(`${mod.def.id} help`,'?'),' ');
     }
   }
   else if (mod.butts.init)
@@ -162,6 +163,7 @@ aa.mod.mk =async mod=>
   if (mod.mod_l) mod.mod_l.replaceWith(mod_l);
   else aa.mod.append(mod_l);
   mod.mod_l = mod_l;
+  mod.on_mk?.();
 };
 
 aa.mod.append =mod_l=>
