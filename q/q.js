@@ -65,6 +65,7 @@ aa.q =
   scripts:
   [
     '/q/spells.js',
+    '/q/views.js',
   ],
   butts:
   {

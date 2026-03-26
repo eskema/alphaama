@@ -437,8 +437,8 @@ img:not([src]) {
 
 
 .butt.plug,
-.butt.exe,
-.butt.no
+.butt.exe
+/* .butt.no */
 {
   align-self: center;
   background: rgb(var(--color-c));
@@ -467,13 +467,14 @@ img:not([src]) {
   color: rgb(var(--color-yes));
 }
 
+.butt.no,
 .butt.cancel
 {
   color: rgb(var(--color-no));
 }
 
-.butt.del,
-.butt.no 
+.butt.del
+/* .butt.no  */
 {
   
   background-color: rgb(var(--color-no));

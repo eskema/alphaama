@@ -688,6 +688,7 @@ aa.r.outbox =(authors=[],sets=[])=>
 aa.r.rel =(s='')=>
 {
   s = s.trim();
+  if (!s.includes('://') && s.includes('.')) s = `wss://${s}`;
   const a = [];
   let relay = aa.fx.url(s)?.href;
   if (relay) a.push(relay);

@@ -97,7 +97,7 @@ aa.view.resolve =(path,search)=>
     if (path.startsWith(view))
     {
       has_view = true;
-      setTimeout(()=>{ aa.view.ls[view](path) },200);
+      setTimeout(()=>{ aa.view.ls[view](path,search) },200);
       break;
     }
   }
