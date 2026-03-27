@@ -285,9 +285,8 @@ aa.e.kinds[10002] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
-  aa.p.get(dat.event.pubkey).then(p=>
+  aa.p.author(dat.event.pubkey).then(p=>
   {
-    if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
@@ -310,31 +309,99 @@ aa.e.kinds[10002] =dat=>
 };
 
 
-// DM relay list (NIP-17, kind-10050)
-aa.e.kinds[10050] =dat=>
+// generic simple relay list kind handler
+// tag_name: tag to extract urls from ('r', 'relay', etc.)
+// set_key: primary set name for this kind (e.g. 'k10050')
+// u_sets: extra sets added when the event belongs to the logged-in user
+aa.e.relay_list_kind =(dat, tag_name, set_key, u_sets=[])=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
-  aa.p.get(dat.event.pubkey).then(p=>
+  aa.p.author(dat.event.pubkey).then(p=>
   {
-    if (!p) p = aa.p.p(dat.event.pubkey);
     if (aa.p.events_newer(p,dat.event))
     {
       let relays = {};
-      let is_u = aa.u.is_u(dat.event.pubkey);
-      for (const tag of dat.event.tags.filter(i=>i[0]==='relay'))
+      let is_u = u_sets.length && aa.u.is_u(dat.event.pubkey);
+      for (const t of dat.event.tags.filter(i=>i[0]===tag_name))
       {
-        let url = aa.fx.url(tag[1])?.href;
+        let url = aa.fx.url(t[1])?.href;
         if (!url) continue;
-        let sets = ['k10050'];
-        if (is_u) sets.push('auth');
+        let sets = [set_key];
+        if (is_u) sets.push(...u_sets);
         relays[url] = {sets};
       }
-      aa.e.relay_list_upd(p,dat,relays,'k10050');
+      aa.e.relay_list_upd(p,dat,relays,set_key);
     }
   });
   return note
 };
+
+
+// DM relay list (NIP-17, kind-10050)
+aa.e.kinds[10050] =dat=> aa.e.relay_list_kind(dat,'relay','k10050',['auth']);
+
+
+// search relay list (NIP-51, kind-10007)
+aa.e.kinds[10007] =dat=> aa.e.relay_list_kind(dat,'r','k10007',['search']);
+
+
+// blocked relay list (NIP-51, kind-10006)
+// for user's own event: adds 'off' set, terminating those connections
+aa.e.kinds[10006] =dat=> aa.e.relay_list_kind(dat,'r','k10006',['off']);
+
+
+// generic user-own list kind handler
+// only fires for the logged-in user's event, after events_newer check
+// on_newer(values) receives a Set of tag values (tag_name column)
+aa.e.list_kind =(dat, tag_name, on_newer)=>
+{
+  const note = aa.e.note_regular(dat);
+  note.classList.add('root','tiny');
+  if (!aa.u.is_u(dat.event.pubkey)) return note;
+  aa.p.author(dat.event.pubkey).then(up=>
+  {
+    if (!aa.p.events_newer(up,dat.event)) return;
+    on_newer(new Set(aa.fx.tags_values(dat.event.tags,tag_name)));
+  });
+  return note
+};
+
+
+// mute list (NIP-51, kind-10000)
+// p.muted overrides score at point of use (is_trusted etc)
+aa.e.kinds[10000] =dat=> aa.e.list_kind(dat,'p', muted=>
+{
+  for (const [pubkey, prof] of Object.entries(aa.db.p))
+  {
+    if (prof.muted && !muted.has(pubkey))
+    {
+      prof.muted = false;
+      aa.p.save(prof);
+    }
+  }
+  for (const pubkey of muted)
+  {
+    aa.p.author(pubkey).then(mp=>
+    {
+      if (mp.muted) return;
+      mp.muted = true;
+      aa.p.save(mp);
+    });
+  }
+});
+
+
+// nip-51 list kinds — pin, bookmarks, communities, public chats
+for (const kind of [10001,10003,10004,10005])
+{
+  aa.e.kinds[kind] =dat=>
+  {
+    const note = aa.e.note_regular(dat);
+    note.classList.add('root','tiny');
+    return note
+  };
+}
 
 
 // encrypted DM (NIP-04)

@@ -269,7 +269,11 @@ aa.mod.ui =(mod,keys,on_done)=>
       })
     }
     if (i < keys.length) requestAnimationFrame(step);
-    else if (on_done) on_done();
+    else
+    {
+      if (on_done) on_done();
+      mod.on_ui?.();
+    }
   };
   requestAnimationFrame(step);
 

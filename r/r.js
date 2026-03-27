@@ -248,6 +248,15 @@ aa.r.def_req =(id,filter,relays)=>
 
 
 
+// nip-50 search
+aa.r.search =(s='')=>
+{
+  if (!s) return;
+  const relays = aa.r.rel('search').length ? aa.r.rel('search') : aa.r.r;
+  aa.r.def_req('search_'+aa.now, {search:s,limit:100}, relays);
+};
+
+
 // delete relay
 aa.r.del =s=>
 {
@@ -578,6 +587,12 @@ aa.r.load =async()=>
       description:'reset relay score(s) to default',
       exe:mod.score_reset
     },
+    {
+      action:[id,'s'],
+      required:['<search>'],
+      description:'nip-50 search request to read relays',
+      exe:mod.search
+    },
   );
 
   // load saved data and make ui
@@ -746,7 +761,10 @@ aa.r.send_req =data=>
 
 
 // request from outbox
-aa.r.send_out =data=>{ aa.r.manager.postMessage(['outbox',data]) };
+aa.r.send_out =data=>
+{
+  aa.mod.ready('r:manager', ()=> aa.r.manager.postMessage(['outbox',data]));
+};
 
 
 // remove set from server
@@ -834,73 +852,122 @@ aa.r.score_reset =(s='')=>
 };
 
 
-// toggles for relay mod l
+// toggles for relay mod l — cycles each button through active/inactive/solo
+// solo: stackable — multiple solo buttons show their union; inactive still applies within solo
+// re-entrant: on subsequent calls only the button lists are rebuilt
 aa.r.toggles =()=>
 {
   const mod = aa.r;
+  const cycle = ['active','inactive','solo'];
+  const state_names = { 0:'unused', 1:'open', 2:'closing', 3:'closed', 4:'backoff' };
+
+  const get_items =(k,v)=>
+  {
+    if (k === 'state')
+      return Array.from(mod.mod_ul.children)
+        .filter(i=> i.dataset.state === v);
+    if (k === 'sets')
+      return aa.fx.in_set(aa.r.o.ls,v,false)
+        .map(url=> aa.el.get(url))
+        .filter(Boolean);
+    return [];
+  };
+
+  const set_btn_state =(btn,state)=>
+  {
+    btn.dataset.toggle_state = state;
+    btn.classList.remove(...cycle);
+    if (state !== 'active') btn.classList.add(state);
+  };
+
+  // recompute the 'solo' sift from all currently solo buttons
+  // items not in any solo group get hidden; items in at least one are shown
+  const recalc_solo =(all_btns,all_items)=>
+  {
+    for (const item of all_items) sift.less(item,'solo');
+    const solo_btns = all_btns.filter(b=> (b.dataset.toggle_state||'active') === 'solo');
+    if (!solo_btns.length) return;
+    const solo_items = new Set(
+      solo_btns.flatMap(b=> get_items(b.dataset.k,b.dataset.v))
+    );
+    for (const item of all_items)
+      if (!solo_items.has(item)) sift.more(item,'solo');
+  };
 
   const clk =e=>
   {
     e.preventDefault();
     e.stopPropagation();
-    let element = e.target;
-    const k = element.dataset.k;
-    const v = element.dataset.v;
+    const btn = e.currentTarget;
+    const k = btn.dataset.k;
+    const v = btn.dataset.v;
+    const key = `${k}_${v}`;
+    const cur = btn.dataset.toggle_state || 'active';
+    const next = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
+    const all_btns = Array.from(mod.mod_toggles.querySelectorAll('[data-k]'));
+    const all_items = Array.from(mod.mod_ul.children);
 
-    let items;
-    switch (k)
-    {
-      case 'state': 
-        items = Array.from(aa.r.mod_ul.children)
-          .filter(i=> i.dataset.state === v);
-        break;
-      case 'sets': 
-        items = aa.fx.in_set(aa.r.o.ls,v,false)
-          .map(url=>aa.r.mod_li.get(url)); 
-        break;
-    }
-  //   sift.filter =(items,value,element)=>
-  // {
-    let active_class = 'active';
-    let value = `${k}_${v}`;
     fastdom.mutate(()=>
     {
-      if (element.classList.contains(active_class))
-      {
-        element.classList.remove(active_class);
-        for (const item of items) sift.more(item,value);
-      }
-      else
-      {
-        element.classList.add(active_class);
-        for (const item of items) sift.less(item,value);
-      }
-    })
-  // };
-  //   sift.filter(items,`${k}_${v}`,element);
+      if (cur === 'inactive')
+        for (const item of get_items(k,v)) sift.less(item,key);
+
+      if (next === 'inactive')
+        for (const item of get_items(k,v)) sift.more(item,key);
+
+      set_btn_state(btn,next);
+
+      if (cur === 'solo' || next === 'solo')
+        recalc_solo(all_btns,all_items);
+    });
   };
 
-  let sets_butts = [...Object.values(aa.r.o.ls)
+  // snapshot current button states so we can carry them over on rebuild
+  const prev_states = {};
+  if (mod.mod_toggles)
+  {
+    for (const btn of mod.mod_toggles.querySelectorAll('[data-k]'))
+      prev_states[`${btn.dataset.k}_${btn.dataset.v}`] = btn.dataset.toggle_state || 'active';
+  }
+
+  const mk_btn =(k,v,label)=>
+  {
+    const prev = prev_states[`${k}_${v}`] || 'active';
+    const btn = make('button',
+    {
+      con: label,
+      cla: 'butt',
+      dat: { k, v, toggle_state: prev },
+      clk
+    });
+    if (prev !== 'active') btn.classList.add(prev);
+    return btn
+  };
+
+  // sets: one button per unique set across all relays
+  const sets_butts = [...Object.values(aa.r.o.ls)
     .reduce((s,i)=> s.union(new Set(i.sets)), new Set())
-  ].map(i=> make('button',
+  ].map(s=> mk_btn('sets',s,s));
+
+  // states: derived from current list items, fallback to all known states
+  let avail_states = [...new Set(
+    Array.from(mod.mod_ul.children).map(i=> i.dataset.state).filter(Boolean)
+  )];
+  if (!avail_states.length) avail_states = Object.keys(state_names);
+  const states_butts = avail_states.map(s=> mk_btn('state',s,state_names[s] || s));
+
+  // on subsequent calls: replace just the button spans, leave sift_input intact
+  if (mod.mod_toggles)
   {
-    con: i,
-    cla: 'butt active',
-    dat: { k: 'sets', v: i },
-    clk
-  }));
+    fastdom.mutate(()=>
+    {
+      mod.mod_toggles.querySelector('.sets').replaceChildren(...sets_butts);
+      mod.mod_toggles.querySelector('.states').replaceChildren(...states_butts);
+    });
+    return
+  }
 
-
-  let states_butts = [['0','unused'],['1','open'],['3','closed']]
-  .map(([key,value])=> make('button',
-  {
-    con: `${value} (${key})`,
-    cla: 'butt active',
-    dat: { k: 'state', v: key },
-    clk
-  }));
-
-  let toggles = make('p',
+  mod.mod_toggles = make('p',
   {
     cla:'toggles',
     app:
@@ -913,9 +980,11 @@ aa.r.toggles =()=>
     ]
   });
 
+  mod.on_ui =()=> debt.add(aa.r.toggles,420,'r_toggles');
+
   fastdom.mutate(()=>
   {
-    mod.mod_l.insertBefore(toggles,mod.mod_ul);
+    mod.mod_l.insertBefore(mod.mod_toggles,mod.mod_ul);
   })
 };
 

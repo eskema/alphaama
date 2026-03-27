@@ -335,6 +335,13 @@ details.base[open] > summary,
   transform: translateX(var(--pad-l)) translateY(-1.5rem);
 }
 
+.aa:not(.cli_expanded) .log.is_new.log_pinned:not(:last-child)
+{
+  transition: all .4s ease-in-out 1s;
+  background: rgba(var(--color-c),.5);
+  transform: translateX(var(--pad-l)) translateY(calc(-1.5rem  - 100%));
+}
+
 .aa:not(.cli_expanded) .log.is_new summary
 {
   top: 0;

@@ -119,6 +119,19 @@
 }
 
 
+.mod .toggles .butt.inactive
+{
+  color: rgb(var(--color-c));
+  text-decoration: line-through;
+}
+
+.mod .toggles .butt:focus.solo,
+.mod .toggles .butt.solo
+{
+  color: rgb(var(--color-main));
+}
+
+
 
 @media screen and (max-width: 768px) 
 {

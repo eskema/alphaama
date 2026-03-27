@@ -168,6 +168,7 @@ aa.r.state =async data=>
     element.dataset.score = Math.round(score);
     element.title = `Reliability: ${Math.round(score)}/100`;
   })
+  if (aa.r.mod_toggles) debt.add(aa.r.toggles,420,'r_toggles');
 };
 
 
