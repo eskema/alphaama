@@ -6,10 +6,13 @@ aa.clk.pa =e=>
   if (!l.classList.contains('empty')) return
   
   let butts = [...aa.p.butts.pa];
-  
-  if (!aa.u.is_u(pubkey)) 
+
+  if (!aa.u.is_u(pubkey))
+  {
     butts.unshift([aa.p.following(pubkey)?'del':'add','k3']);
- 
+    if (aa.m) butts.unshift(['dm','m_dm']);
+  }
+
   butts.unshift([`${aa.db.p[pubkey]?.score??0}`,'p_score']);
   
   for (const array of butts) 
@@ -92,6 +95,16 @@ aa.clk.p_score =async e=>
   const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   const p = await aa.p.get(pubkey);
   if (p) aa.bus.emit('cli:set',localStorage.ns+' p score '+pubkey+' '+p.score);
+};
+
+
+// open dm conversation with profile
+aa.clk.m_dm =e=>
+{
+  const pubkey = e.target.closest('[data-pubkey]')?.dataset.pubkey;
+  if (!pubkey) return;
+  let npub = aa.fx.encode('npub', pubkey);
+  aa.view.state('#m_' + npub);
 };
 
 

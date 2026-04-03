@@ -7,8 +7,10 @@ aa.e.rnd =
   encrypted:[4,1059,33301],
   highlight:[9802],
   image:[20],
+  list:[3,10000,10001,10002,10003,10004,10005,10006,10007,10050,10063,15128,35128],
   object:[0,30166],
   video:[21,22,1063,34235,34236],
+  zap:[9735],
 };
 
 
@@ -228,6 +230,44 @@ aa.e.render_object =async(element,dat)=>
 
   // element.textContent = '';
   // element.append(aa.mk.ls({ls,sort:'a'}));
+};
+
+
+// render list kinds — tags are the content
+aa.e.render_list =(element,dat,o={})=>
+{
+  const tags = dat.event.tags;
+  if (tags?.length) element.append(aa.mk.tag_list(tags));
+  if (o.note) o.note.classList.add('root','tiny','event_list');
+};
+
+
+// render zap receipt: amount from sender + parsed 9734 content
+aa.e.render_zap =async(element,dat)=>
+{
+  let desc = aa.fx.tag_value(dat.event.tags,'description');
+  let event = desc ? aa.pj(desc) : null;
+  if (event?.kind !== 9734) event = null;
+
+  let bolt11 = aa.fx.tag_value(dat.event.tags,'bolt11');
+  let sats = NostrTools.nip57.getSatoshisAmountFromBolt11(bolt11);
+
+  let header = make('p',{cla:'paragraph zap_header'});
+  if (sats) header.append(make('span',{cla:'zap_amount',con:String(sats)}));
+  if (event)
+  {
+    header.append(' from ');
+    header.append(aa.mk.p_link(event.pubkey));
+  }
+  element.append(header);
+
+  if (event?.content)
+  {
+    let p = event ? await aa.p.author(event.pubkey) : null;
+    let trusted = aa.fx.is_trusted(p?.score || 0);
+    element.append(aa.e.content(event.content,trusted));
+    element.classList.add('parsed');
+  }
 };
 
 

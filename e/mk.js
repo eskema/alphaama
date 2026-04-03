@@ -1,3 +1,31 @@
+// e section for #view
+aa.mk.section_e =()=>
+{
+  let section = aa.mk.section(
+  {
+    id: 'e',
+    element: aa.e.l,
+    map: aa.e.printed,
+    filter: true,
+    filter_by: i=> i.classList.contains('root'),
+    order: 'desc',
+    max: parseInt(localStorage.pagination),
+    sort_by: i=> i.dataset.stamp,
+  });
+
+  // let butts = make('span',
+  // {
+  //   cla:'butts',
+  //   app:[aa.e.anal_butt],
+  // });
+
+  // let header = section.querySelector('header');
+  // if (header) header.append(' ', butts);
+
+  return section
+};
+
+
 aa.mk.event_header =dat=>
 {
   const id = dat.event.id;
@@ -144,7 +172,7 @@ aa.mk.note =dat=>
   if (stored && stored === 'tiny') note.classList.add('tiny');
   
   aa.fx.color(pubkey,note);
-  aa.e.render(dat).then(content=>
+  aa.e.render(dat,{note}).then(content=>
   {
     fastdom.mutate(()=>{note.insertBefore(content,header.nextElementSibling)})
   });

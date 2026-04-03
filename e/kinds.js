@@ -83,7 +83,12 @@ aa.e.note_pre =dat=>
       versions.append(og_l);
       og_l.parentElement.insertBefore(note,next);
     }
-    else aa.e.append_as_rep(note,versions);
+    else
+    {
+      note.classList.add('reply','rendered');
+      note.classList.remove('root','orphan','not_yet');
+      versions.append(note);
+    }
   }
 
   return note
@@ -131,8 +136,6 @@ aa.e.kinds[1] =dat=>
 aa.e.kinds[3] =dat=>
 {
   const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
-  
   aa.p.author(dat.event.pubkey).then(p=>
   {
     if (aa.p.events_newer(p,dat.event))
@@ -239,8 +242,32 @@ aa.e.kinds[1111] =dat=>
 aa.e.kinds[11] = aa.e.kinds[1111];
 
 
-// zap template
-aa.e.kinds[9735] = aa.e.kinds[1];
+// zap receipt
+aa.e.kinds[9735] =dat=>
+{
+  let note = aa.mk.note(dat);
+  note.classList.add('tiny');
+
+  let bolt11 = aa.fx.tag_value(dat.event.tags,'bolt11');
+  let sats = NostrTools.nip57.getSatoshisAmountFromBolt11(bolt11);
+  let desc = sats ? aa.pj(aa.fx.tag_value(dat.event.tags,'description')) : null;
+
+  let tag_reply = aa.fx.tag_e_last(dat.event.tags);
+  aa.e.append_to(dat,note,tag_reply, sats ? parent=>
+  {
+    if (parent.dataset.zap_sats) parent.classList.add('zaps_total');
+    parent.dataset.zap_sats = parseInt(parent.dataset.zap_sats || 0) + sats;
+
+    let parent_dat = aa.em.get(parent.dataset.id);
+    if (parent_dat)
+    {
+      if (!parent_dat.zaps) parent_dat.zaps = {};
+      parent_dat.zaps[dat.event.id] = {amount:sats, pubkey:desc?.pubkey, id:dat.event.id};
+    }
+  } : undefined);
+
+  return note
+};
 
 
 // highlight template
@@ -284,7 +311,6 @@ aa.e.relay_list_upd =(p, dat, relays, sets)=>
 aa.e.kinds[10002] =dat=>
 {
   const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
   aa.p.author(dat.event.pubkey).then(p=>
   {
     if (aa.p.events_newer(p,dat.event))
@@ -316,7 +342,6 @@ aa.e.kinds[10002] =dat=>
 aa.e.relay_list_kind =(dat, tag_name, set_key, u_sets=[])=>
 {
   const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
   aa.p.author(dat.event.pubkey).then(p=>
   {
     if (aa.p.events_newer(p,dat.event))
@@ -357,7 +382,6 @@ aa.e.kinds[10006] =dat=> aa.e.relay_list_kind(dat,'r','k10006',['off']);
 aa.e.list_kind =(dat, tag_name, on_newer)=>
 {
   const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
   if (!aa.u.is_u(dat.event.pubkey)) return note;
   aa.p.author(dat.event.pubkey).then(up=>
   {
@@ -390,18 +414,6 @@ aa.e.kinds[10000] =dat=> aa.e.list_kind(dat,'p', muted=>
     });
   }
 });
-
-
-// nip-51 list kinds — pin, bookmarks, communities, public chats
-for (const kind of [10001,10003,10004,10005])
-{
-  aa.e.kinds[kind] =dat=>
-  {
-    const note = aa.e.note_regular(dat);
-    note.classList.add('root','tiny');
-    return note
-  };
-}
 
 
 // encrypted DM (NIP-04)

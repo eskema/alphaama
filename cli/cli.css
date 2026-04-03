@@ -18,13 +18,6 @@
   z-index: 9;
 }
 
-.cli_expanded #cli.expanded
-{
-  grid-template-rows: auto 1fr auto;
-  height: 100vh;
-  max-height: 100vh;
-}
-
 #cli_t > strong
 {
   color: red;
@@ -71,6 +64,13 @@
 {
   max-height: calc(100vh - var(--size));
   z-index: 11;
+}
+
+.cli_expanded #cli.expanded
+{
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  max-height: 100vh;
 }
 
 .cli_expanded #cli > .butts

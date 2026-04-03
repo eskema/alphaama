@@ -642,8 +642,23 @@ aa.u.on_load_sub =()=>
 {
   let on_load_sub = aa.o.o.ls.on_load_sub;
   if (!on_load_sub || aa.q._stuffing) return;
-  let s = on_load_sub.replaceAll('+',',');
-  aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(s), 420));
+  let tasks = on_load_sub.replaceAll('+',',').split(',').map(t=> t.trim()).filter(Boolean);
+
+  let db_tasks = [];
+  let sub_tasks = [];
+  for (const task of tasks)
+  {
+    if (task.endsWith(' db'))
+      db_tasks.push(task.slice(0, -3).trim());
+    else
+      sub_tasks.push(task);
+  }
+
+  if (db_tasks.length)
+    aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.db(db_tasks.join(',')), 420));
+
+  if (sub_tasks.length)
+    aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(sub_tasks.join(',')), 420));
 };
 
 

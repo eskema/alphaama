@@ -163,12 +163,21 @@ const db_tag_filter =(events, filter)=>
   );
 };
 
+const db_time_filter =(events, filter)=>
+{
+  if (!filter.since && !filter.until) return events;
+  return events.filter(ev =>
+    (!filter.since || ev.created_at >= filter.since)
+    && (!filter.until || ev.created_at <= filter.until)
+  );
+};
+
 const db_filter =async filter=>
 {
   let events = new Map();
   try
   {
-    let results = db_tag_filter(await db.queryEvents(filter), filter);
+    let results = db_time_filter(db_tag_filter(await db.queryEvents(filter), filter), filter);
     for (let event of results)
       events.set(event.id,event);
     // for await (let event of db.queryEvents(filter))
@@ -556,7 +565,7 @@ const pre_process_request =async request=>
   pre_process_active++;
   try
   {
-    let results = db_tag_filter(await db.queryEvents(filter), filter);
+    let results = db_time_filter(db_tag_filter(await db.queryEvents(filter), filter), filter);
     for (let event of results)
     {
       let dat = mk_dat({event});
@@ -588,7 +597,7 @@ const process_request =async data=>
 };
 
 
-const get_outbox =async({request,outbox,options})=>
+const get_outbox =async({request,outbox,outbox_keys,options})=>
 {
   // ensure outbox relays are registered in manager
   for (const [url] of outbox)
@@ -602,7 +611,7 @@ const get_outbox =async({request,outbox,options})=>
 
   pre_process_request(request);
 
-  if (Object.hasOwn(filter,'authors')) delete filter.authors;
+  for (const {key} of outbox_keys) delete filter[key];
 
   let batch_size = 20;
   let delay = 420;
@@ -611,11 +620,17 @@ const get_outbox =async({request,outbox,options})=>
     let batch = outbox.slice(i, i + batch_size);
     setTimeout(()=>
     {
-      for (const [url,authors] of batch)
+      for (const [url,all_pubs] of batch)
       {
+        let f = {...filter};
+        for (const {key,pubkeys} of outbox_keys)
+        {
+          let relevant = pubkeys.filter(p => all_pubs.includes(p));
+          if (relevant.length) f[key] = relevant;
+        }
         relay_request(
         {
-          request:['REQ',fid,{...filter,authors}],
+          request:['REQ',fid,f],
           url,
           options
         });

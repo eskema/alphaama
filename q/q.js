@@ -12,7 +12,7 @@ aa.q =
   name:'queries',
   about:'manage and make nostr requests (REQ)',
   active:{},
-  def:{id:'q',ls:{},subs:{}},
+  def:{id:'q',ls:{},subs:{},reqs:{}},
   ls:
   {
     a:
@@ -156,6 +156,7 @@ aa.q.close =s=>
 // run filter
 aa.q.db =async(s='')=>
 {
+  if (s) sessionStorage.q_db = s;
   const tasks = aa.fx.splitr(s,',');
   let times = 0;
   for (const task of tasks)
@@ -165,7 +166,7 @@ aa.q.db =async(s='')=>
     if (a.length) fid = a.shift();
     if (fid && aa.q.o.ls.hasOwnProperty(fid))
     {
-      let filter = aa.q.o.ls[fid].o || aa.q.o.ls[fid].v;
+      let filter = aa.q.o.ls[fid].v;
       let [filtered] = aa.q.filter(filter);
       if (!filtered) 
       {
@@ -185,9 +186,10 @@ aa.q.db =async(s='')=>
 // returns an array with a request filter and options
 aa.q.filter =filter=>
 {
-  if (typeof filter === 'string') 
+  if (typeof filter === 'string')
     filter = aa.pj(filter);
   if (!filter) return [];
+  filter = structuredClone(filter);
 
   let options = {};
 
@@ -286,15 +288,21 @@ aa.q.get =async(fid,options)=>
   let as_outbox = options?.mode === 'outbox';
   
   let [filter,opts] = aa.q.filter(filter_raw);
-  if (!filter 
-  || (as_outbox && !filter.authors?.length))
+  if (!filter)
+  {
+    aa.log('invalid filter: '+fid);
+    return false
+  }
+
+  let {keys:outbox_keys,outbox:outbox_map} = as_outbox ? aa.q.outbox_key(filter) : {};
+  if (as_outbox && !outbox_keys?.length)
   {
     aa.log('invalid filter: '+fid);
     return false
   }
 
   if (!options) options = opts;
-  
+
   let results = [];
 
   if (!as_outbox)
@@ -321,34 +329,39 @@ aa.q.get =async(fid,options)=>
   }
 
   // as outbox
-  let outbox = aa.r.outbox(filter.authors);
-  if (!outbox.length)
+  if (!outbox_map.length)
   {
     aa.log('no authors in outbox');
     return
   }
 
-  delete filter.authors;
-  
+  for (const {key} of outbox_keys) delete filter[key];
+
   return new Promise(resolve=>
   {
     const abort = setTimeout(()=>{resolve(results)},10000);
     const res =sheet=>
     {
       results.push(sheet);
-      if (results.length === outbox.length)
+      if (results.length === outbox_map.length)
       {
         clearTimeout(abort);
         resolve(results);
       }
     };
 
-    for (const [url,authors] of outbox)
+    for (const [url,all_pubs] of outbox_map)
     {
-      let dis = 
+      let f = {...filter};
+      for (const {key,pubkeys} of outbox_keys)
+      {
+        let relevant = pubkeys.filter(p => all_pubs.includes(p));
+        if (relevant.length) f[key] = relevant;
+      }
+      let dis =
       {
         id:id+aa.fx.rands(),
-        filter:{...filter,authors},
+        filter:f,
         relays:[url],
         options
       }
@@ -358,7 +371,7 @@ aa.q.get =async(fid,options)=>
         aa.r.get(dis).then(res).catch(res)
       }
       catch(er){console.log(results,er)}
-      
+
     }
   })
 };
@@ -396,7 +409,7 @@ aa.q.last_butts =()=>
 {
   const butts = make('span');
   const id = 'q';
-  for (const s of ['run','out','sub'])
+  for (const s of ['view','run','out','sub','db'])
   {
     let dis = `${id}_${s}`;
     if (sessionStorage.getItem(dis))
@@ -441,6 +454,12 @@ aa.q.load =async()=>
       required:['<query_id>'],
       description:'remove one or more filters',
       exe:mod.del
+    },
+    {
+      action:[id,'view'],
+      required:['<id||filter||search>'],
+      description:'open filter as a view',
+      exe:mod.view
     },
     {
       action:[id,'run'],
@@ -493,11 +512,10 @@ aa.q.load =async()=>
   );
 
   await aa.mod.load(mod);
-  if (!mod.o?.subs)
-  {
-    mod.o.subs = {};
-    aa.mod.save(mod);
-  }
+  let needs_save;
+  if (!mod.o?.subs) { mod.o.subs = {}; needs_save = true; }
+  if (!mod.o?.reqs) { mod.o.reqs = {}; needs_save = true; }
+  if (needs_save) aa.mod.save(mod);
   aa.mod.mk(mod);
 
   // register spell render
@@ -566,6 +584,13 @@ aa.q.mk =(key,value) =>
     : preview_text;
 
   let butts = make('span',{cla:'butts'});
+  butts.append(make('a',
+  {
+    cla:'a butt',
+    ref:`#req?req=${key}`,
+    con:'view',
+    clk:aa.clk.a
+  }),' ');
   for (const item of ['req','sub','run','out'])
   {
     butts.append(aa.mk.butt_action(texts[item],item),' ')
@@ -604,6 +629,71 @@ aa.q.mk =(key,value) =>
 };
 
 
+// convert a JSON filter object to req view URL search params
+aa.q.view_search =filter=>
+{
+  let p = new URLSearchParams();
+  for (const [k,v] of Object.entries(filter))
+  {
+    // strip # prefix for tag filters in URL
+    let pk = k.startsWith('#') ? k.slice(1) : k;
+    if (Array.isArray(v)) p.set(pk,v.join(','));
+    else p.set(pk,String(v));
+  }
+  return p.toString()
+};
+
+// open filter as a view
+// accepts: filter id, JSON filter, or URL search string
+aa.q.view =s=>
+{
+  s = s.trim();
+  let search;
+
+  // JSON filter
+  let o = aa.pj(s);
+  if (o)
+  {
+    let [expanded] = aa.q.filter(o);
+    if (!expanded)
+    {
+      aa.log(aa.q.def.id+' view: invalid filter');
+      return
+    }
+    search = aa.q.view_search(o);
+  }
+  // URL search string (has = in it)
+  else if (s.includes('='))
+  {
+    let p = new URLSearchParams(s);
+    if (!p.toString().length)
+    {
+      aa.log(aa.q.def.id+' view: invalid search string');
+      return
+    }
+    search = p.toString();
+  }
+  // filter id
+  else
+  {
+    if (!Object.hasOwn(aa.q.o.ls,s))
+    {
+      aa.log(aa.q.def.id+' view: filter not found '+s);
+      return
+    }
+    search = `req=${s}`;
+  }
+
+  sessionStorage.q_view = s;
+  if (!aa.q.o.reqs[search])
+  {
+    aa.q.o.reqs[search] = {ts: Date.now()};
+    aa.mod.save_to(aa.q);
+  }
+  aa.view.state('#req',search);
+};
+
+
 // run filter with outbox
 aa.q.out =async s=>
 {
@@ -628,34 +718,61 @@ aa.q.out =async s=>
 };
 
 
+// outbox source: collect pubkeys from authors, #p, #P — do relay lookup per set, merge
+aa.q.outbox_key =filter=>
+{
+  let keys = [];
+  if (filter?.authors?.length) keys.push({key:'authors', pubkeys:filter.authors, sets:['write','k10002']});
+  if (filter?.['#p']?.length) keys.push({key:'#p', pubkeys:filter['#p'], sets:['read','k10002']});
+  if (filter?.['#P']?.length) keys.push({key:'#P', pubkeys:filter['#P'], sets:['read','k10002']});
+  if (!keys.length) return {};
+
+  // relay lookup per group, merge into single map {url: Set(pubkeys)}
+  let merged = {};
+  for (const g of keys)
+  {
+    let ob = aa.r.outbox(g.pubkeys, g.sets);
+    for (const [url, pubs] of ob)
+    {
+      if (!merged[url]) merged[url] = new Set();
+      for (const p of pubs) merged[url].add(p);
+    }
+  }
+
+  let outbox = Object.entries(merged).map(([url,s]) => [url,[...s]]);
+  outbox.sort(aa.fx.sorts.len);
+  return {keys, outbox}
+};
+
+
 // demand request as outbox
 aa.q.outbox =(request,more)=>
 {
   let [type,fid,filter,options] = request;
   // fid = `${fid}_out`;
-  let authors_len = filter?.authors?.length;
-  if (!authors_len) 
+
+  let {keys,outbox} = aa.q.outbox_key(filter);
+  if (!keys?.length)
   {
     aa.log('no authors for outbox');
     return;
   }
-
-  let outbox = aa.r.outbox(filter.authors);
   if (!outbox.length)
   {
     aa.log('no authors in outbox');
     return;
   }
-  
+
   aa.r.add(`${outbox.map(i=>i[0]).join(' out,')} out`);
-  
+
   let callback = more?.on_sub || (dat => aa.bus.emit('e:print_q', dat));
   aa.r.on_sub.set(fid,callback);
-  aa.r.send_out({request:['REQ',fid,filter],outbox,options});
+  aa.r.send_out({request:['REQ',fid,filter],outbox,outbox_keys:keys,options});
 
   if (!options.eose || options.eose !== 'close')
   {
-    let txt = `outbox for ${authors_len} authors`;
+    let all = [...new Set(keys.flatMap(k => k.pubkeys))];
+    let txt = `outbox for ${all.length} pubkeys (${keys.map(k=>k.key).join(', ')})`;
     txt += `\nusing ${outbox.length} relays:\n`;
     txt += outbox.map(i=>`${i[0]} ${i[1].length}`).join(', ');
     aa.q.log('out',request,txt);
@@ -687,9 +804,15 @@ aa.q.req =(s='')=>
     return
   }
 
-  let relays = aa.r.rel(rels);
+  let as_outbox = rels === 'out';
+  let relays = as_outbox ? [] : aa.r.rel(rels);
   let request = ['REQ',fid,filter];
-  if (!relays.length)
+  if (!relays.length && !as_outbox)
+  {
+    aa.log(`${aa.q.def.id} req: no relays for ${rels}`);
+    return
+  }
+  if (as_outbox || !relays.length)
   {
     request.push(options);
     aa.q.outbox(request)
@@ -739,7 +862,12 @@ aa.q.run =async(s='')=>
       
       if (a.length) rels = a.shift();
       let relays = aa.r.rel(rels);
-      if (!relays.length) relays = aa.r.r;
+      if (!relays.length && !rels) relays = aa.r.r;
+      if (!relays.length)
+      {
+        aa.log(`${aa.q.def.id} run: no relays for ${rels || 'default'}`);
+        continue
+      }
       aa.r.on_sub.set(fid, dat => aa.bus.emit('e:print_q', dat));
       setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
@@ -807,10 +935,10 @@ aa.q.stuff =async()=>
     sessionStorage.q_out = 'f';
     sessionStorage.q_run = 'n';
     aa.log(make('p',
-    { 
-      content: 'all done ', 
-      app: aa.mk.reload_butt() 
-    }));
+    {
+      content: 'all done ',
+      app: aa.mk.reload_butt()
+    }),{pinned:true});
   },1000);
 };
 
@@ -846,6 +974,7 @@ aa.q.stamp =async(id,timestamp)=>
 // sub filter
 aa.q.sub =async(s, silent)=>
 {
+  if (s) sessionStorage.q_sub = s;
   let txt = `${aa.q.def.id} run:`;
   let ls = aa.q.o.ls;
 
@@ -861,7 +990,12 @@ aa.q.sub =async(s, silent)=>
 
     let as_outbox = rels === 'out';
     let relays = as_outbox ? [] : aa.r.rel(rels);
-    if (!relays.length && !as_outbox) relays = aa.r.r;
+    if (!relays.length && !as_outbox && !rels) relays = aa.r.r;
+    if (!relays.length && !as_outbox)
+    {
+      aa.log(`${txt} no relays for ${rels}`);
+      continue
+    }
 
     let [filter,options] = aa.q.filter(ls[fid].v);
 

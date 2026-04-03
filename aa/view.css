@@ -28,7 +28,7 @@
   z-index: 0;
 }
 
-#view > section > header > .butt 
+#view > section > header > .section_butt
 {
   background: rgb(var(--color-b));
   color: rgb(var(--color-alt));
@@ -41,17 +41,17 @@
   justify-self: stretch;
 }
 
-#view > section > header > .butt::before
+#view > section > header > .section_butt::before
 {
   content: "[" ;
 }
 
-#view > section > header > .butt::after
+#view > section > header > .section_butt::after
 {
   content: ":" attr(data-count) "]";
 }
 
-#view > section > header > .butt[data-stashed]::after
+#view > section > header > .section_butt[data-stashed]::after
 {
   content: ":" attr(data-count) "/" attr(data-stashed) "]";
 }
@@ -81,7 +81,7 @@
   padding-bottom: var(--line);
 }
 
-#view > section.expanded > header > .butt
+#view > section.expanded > header > .section_butt
 {
   
   font-size: var(--font-size);

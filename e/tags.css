@@ -98,7 +98,7 @@
   width: max-content;
 }
 
-.note > .content.no_content + .tags_wrapper
+/* .note > .content.no_content + .tags_wrapper
 {
   bottom: unset;
   grid-area: content;
@@ -109,7 +109,7 @@
 {
   position: relative;
   transform: none;
-}
+} */
 
 .note .tags_wrapper[open] > .tags
 {
@@ -172,6 +172,25 @@ dialog .tag
   color: rgb(var(--color-c));
   content: "]";
   font-size: var(--font-size-s);
+}
+
+.render_list .tag[data-i]::before
+{
+  color: rgba(var(--color-c),.8);
+  width: 4rem;
+  /* text-align: center; */
+}
+
+.render_list .tag[data-i]::before,
+.render_list > .tags 
+{
+  font-size: var(--font-size);
+  line-height: 2rem;
+}
+
+.render_list > .tag
+{
+  grid-template-columns: 4rem 1fr auto;
 }
 
 .note.no_content > .tags_wrapper,

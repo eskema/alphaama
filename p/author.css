@@ -1,5 +1,6 @@
 .author
 {
+  align-items: center;
   color: rgb(var(--color-d));
   grid-template-areas: "img name nip5 flw";
   line-height: 1rem;
@@ -12,6 +13,7 @@
 {
   color: rgb(var(--color-e));
   grid-area: name;
+  margin-right: 1px;
   padding: 0 var(--padm);
 }
 
@@ -45,7 +47,8 @@
 
 .author::after
 {
-  align-self: center;
+  align-items: center;
+  align-self: stretch;
   background: rgb(var(--color-b));
   color: rgb(var(--color-d));
   content: attr(data-followers);

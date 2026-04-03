@@ -46,13 +46,15 @@ aa.mk.m_convo_item =pubkey=>
   let time = make('span',{cla:'m_convo_time'});
   let unread = make('span',{cla:'m_convo_unread hidden', con:'0'});
 
-  return make('div',
+  let item = make('div',
   {
     cla:'m_convo_item',
     dat:{pubkey, stamp:0},
     app:[link, time, preview, unread],
     clk: aa.m.clk.select,
-  })
+  });
+  aa.fx.color(pubkey, item);
+  return item
 };
 
 
@@ -62,7 +64,7 @@ aa.mk.m_convo_header =pubkey=>
   let back = make('a',
   {
     cla:'butt m_back',
-    con:'<',
+    con:'x',
     ref:'/',
     tit:'close conversation',
     clk: aa.clk.a,
@@ -170,7 +172,7 @@ aa.mk.m_pending_item =()=>
 // pending view header
 aa.mk.m_pending_header =()=>
 {
-  let back = make('a',{cla:'butt m_back', con:'<', ref:'/', clk: aa.clk.a});
+  let back = make('a',{cla:'butt m_back', con:'x', ref:'/', clk: aa.clk.a});
   let label = make('span',{con:'pending'});
   let batch = make('button',{cla:'butt exe', con:'decrypt 5', clk: aa.m.clk.decrypt_batch});
   let all = make('button',{cla:'butt exe', con:'decrypt all', clk: aa.m.clk.decrypt_all});

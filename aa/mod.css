@@ -165,7 +165,19 @@ dialog .mod > header
 
 .mod .item > .butts
 {
+  align-self: center;
+  
   grid-area: s;
+}
+
+.mod .item > .mod_details[open] + .butts
+{
+  align-self: end;
+  /* display: grid; */
+  /* grid-gap: var(--padm); */
+  /* grid-template-columns: auto auto; */
+  padding-left: var(--pad);
+  padding-bottom: var(--pad);
 }
 
 .mod.expanded .list
@@ -181,26 +193,40 @@ dialog .mod > header
 .mod_details[open],
 .item > .mod_details[open]
 {
+  background: rgba(var(--color-b),1);
   margin-bottom: var(--pad) 0;
   /* border-top: 1px dashed rgb(var(--color-c)); */
   margin-bottom: var(--line) 0;
+  padding: var(--padm);
 }
 
 .mod_details[open] > summary,
 .item > .mod_details[open] > summary
 {
+  background: rgba(var(--color-c),.2);
   font-size: var(--font-size);
   padding: var(--line) 0;
 }
 
-.mod details
+.mod_details
 {
   grid-area: v;
 }
 
-.mod details.base[open]
+.mod_details[open]
 {
   background: rgb(var(--color-a));
+}
+
+.mod_details[open] > .butts
+{
+  align-self: center;
+}
+
+.mod_details[open] .val
+{
+  background: rgba(var(--color-b),1);
+  margin: var(--line) 0;
 }
 
 /* .mod > .butt

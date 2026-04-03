@@ -2,7 +2,6 @@
 aa.view.ls.npub1 =async npub=>
 {
   aa.view.active = npub;
-  const k = 'pubkey';
   let pubkey = aa.fx.decode(npub);
   let p = await aa.p.author(pubkey);
   let profile = aa.mk.profile(p);
@@ -23,6 +22,12 @@ aa.view.ls.npub1 =async npub=>
     let section = aa.el.get('section_e');
     if (section && !section.classList.contains('expanded'))
       aa.clk.expand({target:section});
+  }
+
+  if (aa.m?.open)
+  {
+    await aa.m.restore();
+    aa.m.open(pubkey);
   }
 
   setTimeout(()=>{aa.fx.scroll(profile)},400);

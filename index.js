@@ -8,7 +8,7 @@ const build_page =async()=>
 {
   aa.el.get('side')?.append(aa.mod_l);
   aa.bus.on('cli:collapse',aa.logs_read);
-  aa.log(aa.mk.status(),0,0);
+  aa.log(aa.mk.status(),{is_new:false});
   
   let p_section;
   if (aa.p?.l) 
@@ -18,20 +18,7 @@ const build_page =async()=>
   if (aa.m?.l) m_section = aa.mk.section_m();
 
   let e_section;
-  if (aa.e?.l)
-  {
-    e_section = aa.mk.section(
-    {
-      id: 'e',
-      element: aa.e.l,
-      map: aa.e.printed,
-      filter: true,
-      filter_by: i=> i.classList.contains('root'),
-      order: 'desc',
-      max: parseInt(localStorage.pagination),
-      sort_by: i=> i.dataset.stamp,
-    });
-  }
+  if (aa.e?.l) e_section = aa.mk.section_e();
   let view = aa.el.get('view');
   if (view)
   {

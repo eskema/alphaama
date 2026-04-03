@@ -262,7 +262,7 @@
   /* box-shadow: 0px var(--padm) 6px white; */
 }
 
-.note.sift_match > .content
+.note.sift_match:not(.tiny) > .content
 {
   background-color: rgb(var(--color-c));
   color: rgb(var(--color-e));
@@ -379,8 +379,6 @@
     border-left: 1px solid rgba(var(--c),.5);
     border-top: 1px solid rgba(var(--c),.5);
   }
-
-
   
   .clicker:hover,
   .sift_match > .clicker

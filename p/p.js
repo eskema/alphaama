@@ -975,6 +975,6 @@ aa.p.search =async(s='')=>
   });
 
   let details = aa.mk.details(`${results.length} results for "${s}":`,make('p',{con:`${lines.join('\n')}`}),1)
-  aa.log(details,false,false);
+  aa.log(details,{is_new:false});
   // aa.log(`${results.length} results for "${s}":\n${lines.join('\n')}`,false,false);
 };

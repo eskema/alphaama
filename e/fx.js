@@ -5,7 +5,9 @@ aa.fx.follow =p=>
   if (relay) follow.push(relay);
   let petname;
   if (p.metadata?.name) petname = p.metadata.name;
+  else if (p.petname) petname = p.petname;
   else if (p.petnames.length) petname = p.petnames[0];
+  else if (p.metadata?.display_name) petname = p.metadata.display_name;
   if (petname) 
   {
     if (!relay) follow.push('-')

@@ -1,7 +1,7 @@
 // decides where to append a note
-aa.e.append_to =async(dat,note,tag)=>
+aa.e.append_to =async(dat,note,tag,on_parent)=>
 {
-  if (tag?.length) aa.e.append_check(dat,note,tag);
+  if (tag?.length) aa.e.append_check(dat,note,tag,on_parent);
   else aa.e.append_as_root(note);
 };
 
@@ -139,7 +139,7 @@ aa.e.append_as_rep =(note,rep)=>
 
 
 // decides where to append a reply
-aa.e.append_check =async(dat,note,tag)=>
+aa.e.append_check =async(dat,note,tag,on_parent)=>
 {
   if (!tag)
   {
@@ -169,10 +169,11 @@ aa.e.append_check =async(dat,note,tag)=>
   if (reply)
   {
     aa.e.append_as_rep(note,reply.querySelector('.replies'));
+    if (on_parent) on_parent(reply);
     return
   }
 
-  aa.e.orphan(dat,note,tag);
+  aa.e.orphan(dat,note,tag,on_parent);
 
   // external reference (URL) — create stub parent
   if (is_ext)
@@ -309,7 +310,7 @@ aa.e.note_rm =note=>
 
 
 // stash orphan
-aa.e.orphan =(dat,note,tag)=>
+aa.e.orphan =(dat,note,tag,on_parent)=>
 {
   const id = tag[1];
 
@@ -317,7 +318,7 @@ aa.e.orphan =(dat,note,tag)=>
   let refs = aa.temp.refs.get(id);
   if (!refs.has(dat.event.id))
   {
-    refs.set(dat.event.id,[dat,note,tag]);
+    refs.set(dat.event.id,[dat,note,tag,on_parent]);
     aa.temp.orphan.set(dat.event.id,id);
     aa.e.stashed_upd();
   }
@@ -447,14 +448,20 @@ aa.e.print_kind =(map,kind,order)=>
   if (!map.has(kind)) return;
   let items = map.get(kind).sort(order);
   map.delete(kind);
+  return items
+};
+
+
+aa.e.print_drain =queue=>
+{
   let i = 0;
   const step =()=>
   {
-    let end = Math.min(i + 5, items.length);
-    while (i < end) aa.e.print(items[i++]);
-    if (i < items.length) requestAnimationFrame(step);
+    let end = Math.min(i + 9, queue.length);
+    while (i < end) aa.e.print(queue[i++]);
+    if (i < queue.length) setTimeout(step, 0);
   };
-  requestAnimationFrame(step);
+  step();
 };
 
 
@@ -488,28 +495,22 @@ aa.e.print_q =dat=>
     }
     aa.temp.print_q.clear();
     
-    aa.e.print_kind(print_map,0,aa.fx.sorts.ca_desc);
-    aa.e.print_kind(print_map,3,aa.fx.sorts.ca_desc);
-    aa.e.print_kind(print_map,10002,aa.fx.sorts.ca_desc);
+    let queue = [];
+    let hi;
+    hi = aa.e.print_kind(print_map,0,aa.fx.sorts.ca_desc);
+    if (hi) queue.push(...hi);
+    hi = aa.e.print_kind(print_map,3,aa.fx.sorts.ca_desc);
+    if (hi) queue.push(...hi);
+    hi = aa.e.print_kind(print_map,10002,aa.fx.sorts.ca_desc);
+    if (hi) queue.push(...hi);
 
     for (const kind of print_map.keys())
     {
-      aa.e.print_kind(print_map,kind,aa.fx.sorts.ca_asc);
+      hi = aa.e.print_kind(print_map,kind,aa.fx.sorts.ca_asc);
+      if (hi) queue.push(...hi);
     }
 
-    // let dats = [...aa.temp.print_q.values()];
-
-    // let profiles = dats
-    //   .filter(i=>i.event.kind === 0)
-    //   .sort(aa.fx.sorts.ca_desc);
-
-    // let prints = [...aa.temp.print_q.values()]
-    // .sort(aa.fx.sorts.ca_asc);
-
-    // aa.temp.print_q.clear();
-
-    // for (const dat of prints)
-    //   setTimeout(()=>{aa.e.print(dat)},21);
+    if (queue.length) aa.e.print_drain(queue);
   },
   150,'brrrr');
 };

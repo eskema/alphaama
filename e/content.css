@@ -284,6 +284,9 @@
   max-height: var(--size);
 }
 
+
+
+
 @media screen and (min-width: 1025px)
 {
   .note.root:not(.tiny):not(.in_path) 
@@ -299,15 +302,15 @@
     background: rgb(var(--color-a));
   }
 
-  .note 
+  .note:not(.tiny) 
     > .by:hover 
       + .content,
 
-  a.clicker:hover 
+  .note:not(.tiny) > a.clicker:hover 
     + .by 
     + .content,
 
-  .reply 
+  .reply:not(.tiny) 
     > .by:hover 
       + .content
   {
@@ -325,10 +328,11 @@
     z-index: 101;
   }
   
-  a.clicker:hover 
-    + .by 
-    + .content,
-  .sift_match > .content
+  .note:not(.tiny) > 
+    a.clicker:hover 
+      + .by 
+      + .content,
+  .sift_match:not(.tiny) > .content
   {
     transform: translateX(calc(var(--padm)));
     /*z-index: 4;*/
@@ -387,7 +391,7 @@
   }
 }
 
-.note.sift_match > .content
+.note.sift_match:not(.tiny) > .content
 {
   background: rgb(var(--color-a));
   transform: translateX(calc(var(--padm)));

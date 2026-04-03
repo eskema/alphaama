@@ -1,0 +1,112 @@
+.note.tiny[data-kind="9735"]:not(.in_view)
+{
+  grid-template-areas: "after after" "content by";
+  grid-template-columns: auto 1fr;
+}
+
+.note.tiny[data-kind="9735"] > .by
+{
+  align-self: start;
+}
+
+.note.tiny[data-kind="9735"] > .clicker
+{
+  border-left: none;
+}
+
+
+.note.tiny[data-kind="9735"]:not(.in_view) > .content
+{
+  font-size: var(--font-size-s);
+  margin-top: 0;
+  left: -1px;
+  top: -1px;
+}
+
+.note.tiny[data-kind="9735"]:not(.in_view) > .content > .paragraph:not(.zap_header)
+{
+  display: none;
+}
+
+.note.tiny[data-kind="9735"]:not(.in_view) .paragraph.zap_header
+{
+  margin: 0;
+  line-height: 1.5;
+  padding: 0;
+  padding-right:  var(--padm);
+  display: flex;
+  overflow: hidden;
+}
+
+.zap_header .zap_amount
+{
+  color: rgb(var(--color-main));
+}
+
+.note.tiny[data-kind="9735"]:not(.in_view) .zap_header .zap_amount
+{
+  align-items: center;
+  display: flex;
+  font-size: var(--font-size);
+  align-self: start;
+  line-height: 1;
+}
+
+.zap_header .zap_amount::after
+{
+  content: " ⚡️";
+}
+
+.note.tiny[data-kind="9735"]:not(.in_view) .zap_header .zap_amount::after
+{
+  font-size: var(--font-size-s);
+}
+
+.paragraph.zap_header > .author
+{
+  align-self: start;
+}
+
+.note.tiny[data-kind="9735"]:not(.in_view) > .tags_wrapper,
+.note.tiny[data-kind="9735"]:not(.in_view) > .content::after,
+.note.tiny[data-kind="9735"]:not(.in_view) > .by > .p_link,
+.note.tiny[data-kind="9735"]:not(.in_view) > .by > .actions
+{
+  display: none;
+}
+
+.note[data-zap_sats]
+{
+  --zaps: attr(data-zap_sats);
+  
+}
+
+/* .note[data-zap_sats].zaps_total > .replies > header
+{
+  grid-template-areas: "zaps mark_read filter collapse";
+  grid-template-columns: auto 1fr auto auto;
+}
+
+.note[data-zap_sats].zaps_total > .replies > header::before
+{
+  color: rgb(var(--color-main));
+  content: var(--zaps) " sats = total zaps" ;
+  grid-area: zaps;
+  font-size: var(--font-size-s);
+  margin-right: var(--pad);
+} */
+
+.note[data-zap_sats].zaps_total > .replies::after
+{
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-main));
+  content: "total zaps = " var(--zaps) " sats ";
+  /* grid-area: zaps; */
+  font-size: var(--font-size-s);
+  margin-right: var(--pad);
+  padding-top: var(--pad);
+  padding-bottom: var(--pad);
+  position: sticky;
+  bottom: calc(var(--size) + 1rem);
+  z-index: 100;
+}

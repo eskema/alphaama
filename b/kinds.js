@@ -2,8 +2,6 @@
 aa.e.kinds[10063] =dat=>
 {
   const note = aa.e.note_regular(dat);
-  note.classList.add('root','tiny');
-
   aa.p.get(dat.event.pubkey).then(p=>
   {
     if (!p) p = aa.p.p(dat.event.pubkey);

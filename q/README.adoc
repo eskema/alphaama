@@ -46,6 +46,10 @@ to run a query on specific relays, type: . q run <fid> <relset>
 
 to run a query as outbox, type: . q out <fid>
 
+to open a query as a view, type: . q view <fid>
+
+* this navigates to a dedicated view for the filter, querying both db and relays
+
 to close a query, type: . q close <fid>
 
 * if <fid> is omitted all opened queries will be closed instead

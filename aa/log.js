@@ -1,8 +1,10 @@
 aa.logs = make('ul',{id:'logs',cla:'list'});
 // log stuff
-aa.log =(con='',container=false,is_new=true)=>
+aa.log =(con='',o={})=>
 {
-  const cla = 'log item'+(is_new?' is_new':'');
+  const is_new = o.is_new !== false;
+  const container = o.container || aa.logs;
+  const cla = 'log item'+(is_new?' is_new':'')+(o.pinned?' log_pinned':'');
   const clk =e=>
   {
     e.stopPropagation();
@@ -13,8 +15,7 @@ aa.log =(con='',container=false,is_new=true)=>
     : con;
   const log = make('li',{cla,clk,app});
   log.prepend(' ',aa.mk.butt_clip(log.textContent));
-  
-  if (!container) container = aa.logs;
+
   if (container) fastdom.mutate(()=>
   {
     container.append(log);
@@ -179,7 +180,7 @@ aa.logs_clear =async s=>
   });
   setTimeout(()=>
   {
-    aa.log(aa.mk.status(),0,0);
+    aa.log(aa.mk.status(),{is_new:false});
   },200)
 };
 

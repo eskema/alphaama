@@ -46,6 +46,14 @@ aa.view.ls.req = async (_path, search) =>
   if (req_fired.has(search)) return;
   req_fired.add(search);
 
+  // persist to reqs
+  if (!aa.q.o.reqs[search])
+  {
+    aa.q.o.reqs[search] = {id: req_id, ts: Date.now()};
+    aa.mod.save_to(aa.q);
+  }
+  if (req_id) sessionStorage.q_view = req_id;
+
   aa.log(aa.mk.details(`req view: ${search}`, make('pre', {con: JSON.stringify(expanded, null, 2)})));
 
   // resolve relays
@@ -59,11 +67,16 @@ aa.view.ls.req = async (_path, search) =>
     relays = [...new Set(relays)];
     let unknown = relays.filter(r => !aa.r.o.ls[r]);
     if (unknown.length) aa.r.add(unknown.map(r => `${r} hint`).join(','));
-    if (!relays.length) relays = aa.r.r;
-    if (!relays.length)
+    if (!relays.length && !rels_s) relays = aa.r.r;
+    if (!relays.length && !rels_s)
     {
       relays = aa.u.bootstrap.relays;
       aa.r.add(relays.map(r => `${r} read write`).join(','));
+    }
+    if (!relays.length && rels_s)
+    {
+      aa.log(`req view: no relays for ${rels_s}`);
+      return
     }
   }
 

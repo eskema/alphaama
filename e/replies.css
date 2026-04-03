@@ -1,6 +1,10 @@
 .replies
 {
+  align-self: end;
+  align-items: end;
+  display: grid;
   grid-area: replies;
+  grid-template-rows: 1fr auto;
 }
 
 /* .replies.expanded
@@ -79,9 +83,10 @@
 
 .root:not(.in_view) > .replies
 {
-  margin-bottom: 2rem;
+  margin-top: 1rem;
   position: sticky;
-  top: 0;
+  /* top: 0; */
+  bottom: calc(var(--size) + var(--line));
 }
 
 .root:not(.in_view) > .replies > header,

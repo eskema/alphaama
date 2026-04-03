@@ -1,0 +1,300 @@
+#aa_anal
+{
+  font-size: var(--font-size);
+  padding: var(--pad-l);
+  text-align: left;
+}
+
+#aa_anal > summary
+{
+  margin-bottom: var(--pad);
+  font-size: var(--font-size-s);
+}
+
+.anal
+{
+  line-height: 1.5rem;
+}
+
+.anal details.base
+{
+  border-left: 1px solid rgba(var(--color-c));
+  background: rgb(var(--color-a));
+}
+
+.anal details.base[open]
+{
+  background: rgb(var(--color-a));
+}
+
+.anal details.base > summary
+{
+  top:0;
+  /* background: rgb(var(--color-b)); */
+  padding-left: var(--padm);
+  /* transition: 1s ease-in-out .5s; */
+}
+
+.anal details.base[open] > summary
+{
+  color: rgb(var(--color-b));
+  top:0;
+  background: rgb(var(--color-c));
+  transform: translateX(calc(var(--pad) * -1));
+}
+
+.anal details.base details.base > summary
+{
+  top: var(--line);
+}
+
+.anal > details > summary
+{
+  line-height: 2rem;
+}
+
+
+.anal .item
+{
+  border-top: 1px dotted rgb(var(--color-c));
+  border-bottom: 1px dotted rgb(var(--color-b));
+  grid-gap: var(--pad);
+  padding-bottom: var(--pad);
+  padding-top: var(--pad);
+  grid-template-areas: "k v"; 
+  grid-auto-flow: column;
+  grid-template-columns: auto 1fr;
+}
+
+.mod.expanded .anal .list
+{
+  /* background: rgb(var(--color-b)); */
+}
+
+.anal_mention.item
+{
+  /* align-items: center; */
+  /* grid-auto-flow: column; */
+  grid-template-areas: "a counts b";
+  grid-template-columns: 1fr auto 1fr;
+  /* justify-items: center;
+  justify-content: center; */
+}
+
+.anal .key
+{
+  display: grid;
+}
+
+.anal .item > .a.author,
+.anal .val > .a.author,
+.anal .key > .a.author
+{
+  /* border: 2px solid rgb(var(--c)); */
+  /* font-size: var(--font-size-s); */
+  background: rgba(var(--c),.5);
+}
+
+.anal .key > .a.author::after,
+.anal .val > .a.author::after,
+.anal .item > .a.author::after
+{
+  /* background: rgb(var(--c));
+  display: block; */
+  /* align-self: stretch;
+  display: grid;
+  align-items: center; */
+}
+
+.anal .key > .a.author .name,
+.anal .val > .a.author .name,
+.anal .item > .a.author .name
+{
+  background: rgb(var(--color-b));
+  justify-self: start;
+  align-self: stretch;
+  align-items: center;
+}
+
+.anal .key > .a.author img,
+.anal .val > .a.author img,
+.anal .item > .a.author img,
+.anal_pair_author > .a.author img,
+.anal .key > .a.author::before,
+.anal .val > .a.author::before,
+.anal .item > .a.author::before,
+.anal_pair_author > .a.author::before
+{
+  width: 2rem;
+  height: 2rem;
+}
+
+/* .anal .a.author[data-luma="light"]::after
+{
+  color: rgb(var(--color-dark));
+}
+
+.anal .a.author[data-luma="dark"]::after
+{
+  color: rgb(var(--color-light));
+} */
+
+.anal .dim
+{
+  margin: 0 var(--pad);
+}
+
+.anal .item > .note_quote,
+.anal .key > .note_quote,
+.anal .val > .note_quote
+{
+  margin: 0;
+  max-height: calc(var(--size) * 1.5);
+  /* width: 40vw; */
+}
+
+/* .anal_pair_author:first-child
+{
+  grid-area: a;
+  justify-self: end;
+}
+
+.anal_pair_author:last-child
+{
+  grid-area: b;
+  justify-self: start;
+} */
+
+.anal_mention
+{
+  align-items: start;
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.anal_pair_author:first-child 
+{
+  grid-area: a;
+  justify-self: end;
+  text-align: right;
+}
+
+.anal_mention .anal_total
+{
+  /* align-items: center;
+  display: grid;
+  grid-area: counts;
+  grid-gap: 0 var(--line);
+  grid-template-areas:
+    "count_a total count_b"; */
+  margin: 0 var(--pad);
+}
+
+.anal_mention > .anal_counts .anal_count_a
+{
+  grid-area: count_a;
+  justify-self: end;
+}
+
+.anal_mention > .anal_counts .anal_count_b
+{
+  grid-area: count_b;
+  justify-self: start;
+}
+
+.anal_mention > .anal_counts .anal_kinds_a
+{
+  grid-area: kinds_a;
+  font-size: var(--font-size-s);
+}
+
+.anal_mention > .anal_counts .anal_kinds_b
+{
+  grid-area: kinds_b;
+  font-size: var(--font-size-s);
+  justify-self: start;
+}
+
+.anal_mention > .anal_total
+{
+  /* align-self: center; */
+  font-size: var(--font-size-m);
+  grid-area: counts;
+  justify-self: center;
+  margin-left: var(--line);
+  margin-right: calc(var(--line) + var(--padm));
+}
+
+.anal_mention summary
+{
+  margin-right: var(--padm);
+}
+
+.anal_kinds_list > .item,
+.anal_mentioned > .item,
+.anal_most_mentioned > .item,
+.anal_mentioned_by > .item,
+.anal_relay_authors > .item
+{
+  grid-template-areas: "v k";
+  grid-template-columns: var(--size) 1fr;
+}
+
+.anal_authors > .list
+{
+  display: grid;
+  /* grid-template-columns: 
+    repeat(3, 1fr); */
+}
+
+.anal_author.item,
+.anal_peak_list > .item,
+.anal_hours_list > .item
+{
+  grid-template-areas: "k" "v";
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr;
+}
+
+/* .anal_author.item, */
+.anal_peak_list > .item,
+.anal_hours_list > .item
+{
+  border-top: 1px solid transparent;
+  padding: 0;
+  align-items: start;
+  /* grid-template-areas: "k" "v";
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr; */
+  text-align: right;
+}
+
+.anal_top_roots > .item
+{
+  grid-template-areas: "k v";
+  grid-template-columns: var(--size) 1fr;
+}
+
+
+
+.anal_top.item
+{
+  grid-template-areas: "k v";
+  grid-template-columns: auto 1fr;
+}
+
+.anal_peak_list,
+.anal_hours_list
+{
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-areas: unset;
+  grid-template-columns: auto;
+  margin: 0!important;
+}
+
+.item.anal_relay
+{
+  grid-template-areas: unset;
+  grid-template-columns: auto;
+  overflow-x: unset;
+}

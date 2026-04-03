@@ -53,7 +53,8 @@ aa.r.eose =async data=>
   let [sub_id,url] = data.slice(1);
   if (aa.r.on_eose.has(sub_id))
   {
-    setTimeout(()=>{aa.r.on_eose.get(sub_id)(url)},100);
+    let fn = aa.r.on_eose.get(sub_id);
+    setTimeout(()=>{fn(url)},100);
     return
   }
 

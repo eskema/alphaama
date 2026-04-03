@@ -185,6 +185,13 @@ details.base[open],
   border-bottom: 1px dotted rgba(var(--color-d),1);
 }
 
+details.base > summary
+{
+  
+  position: sticky;
+  top: var(--line);
+}
+
 details.base[open] > summary,
 .log details[open] > summary
 {

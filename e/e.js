@@ -13,6 +13,7 @@ aa.e =
   def:{id:'e'},
   kinds:{},
   printed:new Map(),
+  anal:{},
   sheet:new Map(),
   scripts:
   [
@@ -25,11 +26,13 @@ aa.e =
     '/e/printer.js',
     '/e/miss.js',
     '/e/render.js',
-    '/e/views.js'
+    '/e/views.js',
+    '/e/anal.js'
   ],
   styles:
   [
     '/e/e.css',
+    '/e/anal.css',
     '/e/by.css',
     '/e/content.css',
     '/e/tags.css',
@@ -40,6 +43,7 @@ aa.e =
     '/e/kind_7.css',
     '/e/follows.css',
     '/e/editor.css',
+    '/e/zap.css',
   ],
   butts:
   {
@@ -47,7 +51,11 @@ aa.e =
     // k4:['encrypt'],
     draft:['yolo','sign','pow','editor','edit','cancel'],
     not_sent:['bro','cancel'],
-    blank:['fetch']
+    blank:['fetch'],
+    init:
+    [
+      ['e anal','anal']
+    ],
   }
 };
 
@@ -98,7 +106,7 @@ aa.e.context =(element,event,is_trusted)=>
 aa.e.em =dat=>
 {
   // console.log(dat);
-  const id = dat?.event?.id;  
+  const id = dat?.event?.id;
   if (!aa.em.has(id))
   {
     aa.em.set(id,dat);
@@ -112,6 +120,12 @@ aa.e.em =dat=>
       }
       else aa.em_a.set(dat.id_a,dat);
     }
+  }
+  else
+  {
+    const existing = aa.em.get(id);
+    aa.fx.a_add(existing.seen, dat.seen);
+    aa.fx.a_add(existing.subs, dat.subs);
   }
   return id
 };
@@ -203,29 +217,6 @@ aa.e.decrypted_content =async(id,decrypted)=>
 };
 
 
-aa.e.anal =()=>
-{
-  let authors = new Map();
-  for (const dat of aa.em.values())
-  {
-    if (!authors.has(dat.event.pubkey))
-    {
-      authors.set(dat.event.pubkey,new Set());
-    }
-   authors.get(dat.event.pubkey).add(dat.event.id);
-  }
-  let array = [...authors.entries()]
-    .sort((a,b)=>a[1].size < b[1].size ? 1 : -1 )
-    .map(i=>
-    {
-      let pubkey = i[0];
-      let name = aa.temp.p_link.get(pubkey)?.data.name
-        || aa.db.p[pubkey]?.metadata?.name;
-      return [name,...i]
-    })
-    
-  return array
-};
 
 // build p tag from string
 aa.e.follow_tag =string=>
@@ -246,7 +237,7 @@ aa.e.follow_tag =string=>
 
   let tag = ['p',key];
   
-  let [relay,petname] = rest.trim().split(aa.regex.fw);
+  let [relay,petname] = (rest||'').trim().split(aa.regex.fw);
   relay = aa.fx.url(relay)?.href || '';
   if (relay) tag.push(relay);
   
@@ -595,11 +586,19 @@ aa.e.load =async()=>
       description:'show orphaned events waiting for missing parents',
       exe:mod.orphans
     },
+    {
+      action:[id,'anal'],
+      description:'analyze loaded events: post counts, author breakdown, mention pairs',
+      exe:mod.anal.run
+    },
   );
   mod.l = make('div',{cla:'notes'});
+  mod.anal_butt = aa.mk.butt_action('e anal','anal');
   mod.section_observer = new MutationObserver(mod.section_mutated);
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
-  aa.mod.help_setup(aa.e);
+
+  await aa.mod.load(mod);
+  aa.mod.mk(mod);
   aa.bus.on('cli:upd',aa.e.draft_upd);
 
   // bus providers (breaks r -> e circular dependency)

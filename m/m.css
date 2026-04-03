@@ -12,6 +12,12 @@
   display: none;
 }
 
+/* show panel when viewing a profile, regardless of expanded state */
+.view_p .section_m > .m_panel
+{
+  display: grid;
+}
+
 /* split panel */
 .m_panel
 {
@@ -22,6 +28,11 @@
   position: relative;
   z-index: 1;
   margin-left: var(--pad-l);
+}
+
+.view_p .m_panel
+{
+  min-height: unset;
 }
 
 /* left panel: conversation list */
@@ -36,23 +47,29 @@
   top: 0;
 }
 
+.view_p .m_panel,
 .m_panel:not(.expanded)
 {
   grid-template-columns: calc(2rem + 2px) 1fr;
 }
 
+.view_p .m_list,
 .m_panel:not(.expanded) .m_list
 {
   width: calc(2rem + 2px);
 }
 
+.view_p .m_convo_item,
 .m_panel:not(.expanded) .m_convo_item
 {
   padding: 0;
   gap: 0;
-  width: calc(2rem + 2px);
+  width: calc(2rem - 2px);
 }
 
+.view_p .m_convo_item .a.author img,
+.view_p .m_convo_item .a.author::before,
+.view_p .m_pending_label::before,
 .m_panel:not(.expanded) .m_convo_item .a.author img,
 .m_panel:not(.expanded) .m_convo_item .a.author::before,
 .m_panel:not(.expanded) .m_pending_label::before
@@ -61,6 +78,8 @@
   height: calc(2rem - 2px);
 }
 
+.view_p .m_convo_preview,
+.view_p .m_convo_time,
 .m_panel:not(.expanded) .m_convo_preview,
 .m_panel:not(.expanded) .m_convo_time
 {
@@ -70,14 +89,30 @@
 .m_convo_item
 {
   align-items: center;
+  background: rgba(var(--color-b),.6);
   cursor: pointer;
   display: grid;
+  grid-template-areas: 
+    "profile unread" 
+    "preview time";
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto;
   gap: var(--padm);
-  padding: var(--padm) var(--pad);
-  border-bottom: 1px dotted rgba(var(--color-c),.5);
+  margin-bottom: var(--pad);
+  /* padding: var(--padm); */
+  border-left: 1px solid rgba(var(--c),.5);
+  border-top: 1px dotted rgba(var(--color-c),1);
   /* overflow-y: hidden; */
+}
+
+.m_convo_item.active[data-luma="light"]
+{
+  color: rgb(var(--color-dark));
+}
+
+.m_convo_item.active[data-luma="dark"]
+{
+  color: rgb(var(--color-light));
 }
 
 .m_convo_item:hover
@@ -85,21 +120,35 @@
   background: rgba(var(--color-c),.3);
 }
 
+.view_p .m_convo_item.active,
 .m_panel:not(.expanded) .m_convo_item.active
 {
-  padding-left: 1px;
-  margin-left: 1px;
+  /* background: rgba(var(--c),1); */
+  /* padding-left: 1px;
+  margin-left: 1px; */
+  transform: translateX(calc(var(--padm) * -1));
+}
+
+.m_panel.expanded .m_convo_item.active
+{
+  background: rgba(var(--c),1);
+}
+
+.m_panel.expanded .m_convo_item > .a.author
+{
+  /* padding: .2rem;  */
 }
 
 .m_convo_item.active
 {
-  background: rgba(var(--color-c),.5);
-  border-left: 1px dotted rgb(var(--color-e));
+  
+  /* border-left: 1px dotted rgb(var(--color-e)); */
   grid-row:1;
 }
 
 .m_convo_item > .a.author
 {
+  background: rgba(var(--c),1);
   font-size: var(--font-size-s);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -107,9 +156,15 @@
   pointer-events: none;
 }
 
+
+.m_convo_item > .a.author .name
+{
+  background: rgba(var(--color-b),1);
+}
+
 .m_convo_item.active > .a.author
 {
-  pointer-events: auto;
+  /* pointer-events: auto; */
 }
 
 .m_convo_time
@@ -117,23 +172,36 @@
   font-size: var(--font-size-s);
   opacity: .6;
   justify-self: end;
+  grid-area: time;
 }
 
+.m_pending_convo::after,
 .m_convo_preview
 {
   grid-column: 1;
+  grid-area: preview;
   font-size: var(--font-size-s);
   opacity: .7;
   overflow: hidden;
+  padding: var(--padm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.m_pending_convo.active::after
+{
+  color: rgb(var(--color-dark));
+}
+
+
 .m_convo_unread
 {
-  font-size: var(--font-size-s);
+  align-self: center;
+  font-size: var(--font-size-xs);
+  grid-area: unread;
   justify-self: end;
   color: rgb(var(--color-e));
+  
 }
 
 .m_convo_unread::before
@@ -152,47 +220,89 @@
   align-content: center;
   grid-template-columns: 1fr 1fr 1fr;
   position: absolute;
-  background: rgba(var(--color-a),.8);
+  /* background: rgba(var(--color-a),.8); */
   padding: 2px;
-  font-size: var(--font-size-s);
-  border-radius: 2px;
-  transform: translateX(-1rem);
+  font-size: var(--font-size-xs);
+  /* border-radius: 2px; */
+  transform: translateX(-1.2rem);
   /* transform: translateX(calc(-100% - 1rem)); */
   justify-self: start;
 }
 
+.view_p .m_convo_unread.hidden,
 .m_panel:not(.expanded) .m_convo_unread.hidden,
 .m_convo_unread.hidden
 {
   display: none;
 }
-
+/* 
+.view_p .m_convo_unread::after,
+.view_p .m_convo_unread::before,
 .m_panel:not(.expanded) .m_convo_unread::after,
 .m_panel:not(.expanded) .m_convo_unread::before
 {
   content: "";
-}
+} */
 
 /* right panel */
 .m_view
 {
-  border-left: 1px solid rgba(var(--color-c),1);
+  /* border-left: 1px solid rgba(var(--color-c),1); */
   display: flex;
   flex-direction: column;
   /* max-height: 80vh; */
   /* overflow: hidden; */
 }
 
+.view_p .m_view
+{
+  /* border-left: none; */
+  /* line-height: 1.5; */
+}
+
 .m_header
 {
   background: rgb(var(--color-b));
   border-bottom: 1px solid rgba(var(--color-c),1);
-  padding: var(--padm) var(--pad);
-  display: flex;
+  padding: 0 var(--padm);
   align-items: center;
-  gap: var(--pad);
   position: sticky;
   top: 0;
+
+  display: grid;
+  justify-content: start;
+  grid-template-columns: auto auto 1fr auto;
+  grid-template-areas: "profile actions replies close";
+}
+
+.m_pending_header
+{
+  grid-template-columns: auto auto auto 1fr;
+  grid-gap: var(--pad);
+  justify-items: end;
+}
+
+.m_pending_header .butt
+{
+
+}
+
+.view_p .m_header
+{
+  grid-template-columns: 1fr auto;
+}
+
+.m_header .m_back
+{
+  line-height: 1.5;
+  padding: var(--padm);
+}
+
+.view_p .m_header .m_back,
+.view_p .m_header .author,
+.view_p .m_header .actions
+{
+  display: none;
 }
 
 .m_header .butt
@@ -200,7 +310,7 @@
   font-size: var(--font-size-s);
 }
 
-.m_msg:last-child
+.view_m.cli_expanded:not(.view_p) .m_msg:last-child
 {
   margin-bottom: 60vh;
 }
@@ -208,6 +318,7 @@
 .m_back
 {
   /* font-size: var(--font-size-s); */
+  grid-area: close;
   padding: 0 var(--padm);
   text-decoration: none;
 }
@@ -217,6 +328,11 @@
 {
   font-size: var(--font-size-s);
   margin-left: auto;
+
+  margin-left: var(--padm);
+  padding: var(--padm);
+  display: block;
+  line-height: 1.5;
 }
 
 .m_view:not(.m_read) .m_mark_read::before
@@ -260,6 +376,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--padm);
+}
+
+.view_p .m_messages
+{
+  max-height: 21rem;
+  overflow: scroll;
 }
 
 /* hide read messages when marked read */
@@ -408,14 +530,20 @@
 /* pending convo item */
 .m_pending_convo
 {
+  --c: var(--color-e);
   /* font-style: italic;
   opacity: .8; */
 }
 
+.m_panel.expanded .m_pending_convo::after
+{
+  content: "awaiting decryption";
+}
 
 .m_pending_label
 {
-  color: rgb(var(--color-f));
+  background: rgb(var(--color-b));
+  color: rgb(var(--color-e));
   display: block;
   font-size: var(--font-size-s);
   white-space: nowrap;
@@ -481,8 +609,14 @@
 }
 
 /* hide other sections when viewing a convo */
-.view_m #view > section:not(.section_m),
-.view_m #view > details
+.view_m:not(.view_p) #view > section:not(.section_m),
+.view_m:not(.view_p) #view > details
+{
+  display: none;
+}
+
+/* when viewing a profile, show only the active convo */
+.view_p .m_convo_item:not(.active)
 {
   display: none;
 }

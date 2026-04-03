@@ -877,8 +877,18 @@ aa.m.restore =async()=>
 aa.m.view_clear =()=>
 {
   if (!aa.m.active) return;
+  let _pubkey = aa.m.active;
   aa.m.active = null;
   aa.l.classList.remove('view_m');
+
+  // drop empty convos created by profile view with no messages
+  let _convo = aa.m.convos.get(_pubkey);
+  if (_convo && !_convo.messages.children.length)
+  {
+    aa.m.convos.delete(_pubkey);
+    fastdom.mutate(()=>{ _convo.item.remove() });
+    aa.m.count_upd();
+  }
 
   // navigate away if still the active view (direct call, not from view.clear chain)
   if (aa.view.active && String(aa.view.active).startsWith('m_'))
