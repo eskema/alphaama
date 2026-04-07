@@ -47,7 +47,7 @@ aa.mk.event_header =dat=>
             ref:`#${aa.fx.encode('note',id)}`,
             app:make('span',
             {
-              con:aa.e.kinds_list[kind],
+              con:aa.e.kinds_list[kind] || aa.fx.kind_type(kind),
               dat:{kind}
             }),
             clk:aa.clk.a
@@ -138,7 +138,7 @@ aa.mk.note =dat=>
   {
     cla:'a clicker',
     ref:'#'+nid,
-    con:'k'+kind+' '+aa.e.kinds_list[kind],
+    con:'k'+kind+' '+(aa.e.kinds_list[kind] || aa.fx.kind_type(kind)),
     clk:aa.clk.a
   });
 

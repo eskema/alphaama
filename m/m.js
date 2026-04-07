@@ -209,7 +209,7 @@ aa.m.decrypt_pending =async n=>
   for (let [id, dat] of batch)
   {
     aa.m.pending.delete(id);
-    let ok = await aa.m.unwrap(dat);
+    let ok = await aa.m.unwrap(dat, true);
     if (!ok)
     {
       aa.log('decrypt fail: '+id.slice(0,12));
@@ -251,7 +251,8 @@ aa.m.open_pending =()=>
 
 
 // unwrap gift wrap (kind 1059) -> seal (kind 13) -> rumor (kind 14)
-aa.m.unwrap =async dat=>
+// force: skip is_fail check (user-initiated retry)
+aa.m.unwrap =async(dat, force)=>
 {
   let wrap = dat.event;
 
@@ -267,7 +268,7 @@ aa.m.unwrap =async dat=>
       return true
     }
   }
-  if (await aa.u.decrypt_cache.is_fail(wrap.id))
+  if (!force && await aa.u.decrypt_cache.is_fail(wrap.id))
   {
     aa.log('unwrap: previously failed '+wrap.id.slice(0,12));
     return false
@@ -366,7 +367,7 @@ aa.m.unwrap_by_id =async id=>
     aa.log('not a gift wrap');
     return
   }
-  return aa.m.unwrap(dat)
+  return aa.m.unwrap(dat, true)
 };
 
 

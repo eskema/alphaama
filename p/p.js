@@ -659,7 +659,12 @@ aa.p.process_k3_tags =async(event,p)=>
     .map(i=>i[1]));
   let unfollowed = old_follows.difference(new_follows);
   p.follows = [...new_follows];
-  if (aa.u.is_u(event.pubkey)) aa.p.k3 = new_follows;
+  if (aa.u.is_u(event.pubkey))
+  {
+    aa.p.k3 = new_follows;
+    aa.u.o.ls.k3 = p.follows.join(' ');
+    aa.mod.save(aa.u);
+  }
 
   await aa.p.get_authors([...new_follows.union(old_follows)]);
   // update unfollowed

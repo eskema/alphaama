@@ -8,8 +8,9 @@ aa.e.note_by_kind =dat=>
   let kind = dat.event.kind;
   let type = aa.fx.kind_type(kind);
 
-  // always ensure author profile exists
+  // always ensure author profile exists, fetch if missing
   aa.p.author(dat.event.pubkey);
+  aa.e.authors([['p',dat.event.pubkey]]);
 
   // load p-tagged profiles for selected kinds
   if (aa.e.p_tag_kinds.has(kind))
@@ -217,8 +218,13 @@ aa.e.kinds[20] =dat=>
 };
 
 
-// video template
-aa.e.kinds[1063] = aa.e.kinds[20];
+// file metadata (NIP-94)
+aa.e.kinds[1063] =dat=>
+{
+  let note = aa.mk.note(dat);
+  aa.e.append_as_root(note);
+  return note
+};
 
 
 // repost of generic note

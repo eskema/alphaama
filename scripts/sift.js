@@ -315,6 +315,8 @@ sift.update_total =options=>
     let total = Math.ceil(options.items.length / options.max);
     if (options.total_pages_el.textContent != total)
       options.total_pages_el.textContent = total;
+    let footer = options.total_pages_el.closest('footer');
+    if (footer) footer.hidden = total <= 1;
   }, 500, 'sift_total');
 };
 
@@ -327,7 +329,11 @@ sift.paginate =(options,items)=>
   element.textContent = '';
   if (items) for (const item of items) element.append(item);
   if (options.total_pages_el && options.counts?.pages)
+  {
     options.total_pages_el.textContent = options.counts.pages;
+    let footer = options.total_pages_el.closest('footer');
+    if (footer) footer.hidden = options.counts.pages <= 1;
+  }
 };
 
 

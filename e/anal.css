@@ -106,6 +106,7 @@
   align-items: center; */
 }
 
+.anal_pair_author > .a.author .name,
 .anal .key > .a.author .name,
 .anal .val > .a.author .name,
 .anal .item > .a.author .name
@@ -114,7 +115,11 @@
   justify-self: start;
   align-self: stretch;
   align-items: center;
+  max-width: 12rem;
+  overflow-x: scroll;
 }
+
+
 
 .anal .key > .a.author img,
 .anal .val > .a.author img,

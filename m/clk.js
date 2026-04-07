@@ -110,8 +110,14 @@ aa.m.clk.decrypt_one =async e=>
   let dat = aa.m.pending.get(id);
   if (!dat) return;
   aa.m.pending.delete(id);
-  let ok = await aa.m.unwrap(dat);
+  let ok = await aa.m.unwrap(dat, true);
   if (!ok) await aa.u.decrypt_cache.fail(id);
+  let idx = aa.m.o.pending.indexOf(id);
+  if (idx !== -1)
+  {
+    aa.m.o.pending.splice(idx, 1);
+    aa.m.save_pending();
+  }
   let el = aa.m.view_el.querySelector('.m_pending_wrap[data-id="'+id+'"]');
   if (el) fastdom.mutate(()=>{ el.remove() });
   aa.m.pending_upd();

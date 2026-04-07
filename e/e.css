@@ -45,9 +45,11 @@
   grid-template-areas: 
     "after    after    after"
     "by       by       by"
+    "content  content  extra"
     "content  content  replies"
     "tags     tags     tags"
     "versions versions versions";
+  /* grid-template-rows: auto 1fr auto; */
 }
 
 .note.in_path.in_view
@@ -56,6 +58,7 @@
   grid-template-areas: 
     "by      by"
     "content content"
+    "extra extra"
     "tags    tags"
     "after   after"
     "replies replies"
@@ -112,6 +115,7 @@
 {
   /*background: rgba(var(--color-b),.4);*/
   /*color: rgb(var(--color-d))!important;*/
+  background: rgb(var(--color-b));
   content: "subs: " attr(data-subs) "\Aseen: " attr(data-seen);
   margin: 0 var(--padm);
   opacity: 1;

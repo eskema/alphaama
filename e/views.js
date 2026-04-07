@@ -69,13 +69,10 @@ aa.view.ls.note1 =async nid=>
   {
     let dat = await aa.e.get(id);
     if (dat) aa.e.print_q(dat);
-    else 
+    else
     {
       aa.e.miss_set('e',id);
-      
-      // let msg = make('p',{con:'looking for event.. '+x});
-      // aa.temp['looking_for_'+x] = msg;
-      // aa.log(msg);
+      aa.log(`looking for ${nid.slice(0,16)}…`);
     }
   }
 };

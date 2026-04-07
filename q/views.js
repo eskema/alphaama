@@ -86,10 +86,15 @@ aa.view.ls.req = async (_path, search) =>
 
   let sub_id = `req_${aa.fx.rands()}`;
 
-  // DB first
-  let [, events] = await aa.r.get_filter(expanded);
-  aa.q.log('db', ['REQ', sub_id, expanded, opts], `db: ${events.length} events`);
-  for (const dat of events) aa.bus.emit('e:print_q', dat);
+  await new Promise(resolve => aa.mod.ready('r:manager', resolve));
+
+  // DB first (skip when explicit relays specified)
+  if (!rels_s)
+  {
+    let [, events] = await aa.r.get_filter(expanded);
+    aa.q.log('db', ['REQ', sub_id, expanded, opts], `db: ${events.length} events`);
+    for (const dat of events) aa.bus.emit('e:print_q', dat);
+  }
 
   // relay sub or outbox
   aa.r.on_sub.set(sub_id, dat => aa.bus.emit('e:print_q', dat));
@@ -104,7 +109,9 @@ aa.view.ls.req = async (_path, search) =>
   {
     let request = ['REQ', sub_id, expanded];
     aa.q.log('req', request, `to: ${relays}`);
-    aa.r.send_req({ request, relays, options: opts || {} });
+    let req_opts = opts || {};
+    if (rels_s) req_opts.db = false;
+    aa.r.send_req({ request, relays, options: req_opts });
   }
 
   aa.view.req_sub = sub_id;

@@ -240,7 +240,7 @@
   line-height: 1;
   margin: 0;
   position: relative;
-  padding-left: 1px;
+  /* padding-left: 1px; */
 }
 
 .p_link
@@ -279,6 +279,8 @@
 
 .profile > .pubkey .author .name
 {
+  align-self: stretch;
+  align-items: center;
   justify-self: start;
   padding: var(--padm);
 }

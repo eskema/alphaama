@@ -58,3 +58,34 @@ to close a query, type: . q close <fid>
 video::https://v.nostr.build/hzQufBzjStD8L8j6.mp4["example of running the query: a"]
 
 example: . q run f, u, n
+
+
+== req view
+
+navigate to `#req?param=value&param=value...` to run a filter as a URL view.
+
+=== filter params
+
+* `kinds` — comma-separated numbers. ex: `kinds=1,6,7`
+* `authors` — comma-separated hex, bech32, or variables. ex: `authors=u`, `authors=k3`
+* `ids` — comma-separated hex or bech32. ex: `ids=note1abc...`
+* `limit` — number. ex: `limit=50`
+* `since` / `until` — time value, supports variable shortcuts (n_7, h_12, etc). ex: `since=n_7`
+* `search` — NIP-50 search string. ex: `search=bitcoin`
+* single letter (`e`, `p`, `t`, `a`, ...) — auto-prefixed with `#` to become tag filters. ex: `t=bitcoin`
+
+values in `ids`, `authors`, `e`, `p` are decoded if bech32 (npub1, note1, nevent1, naddr1, nprofile1), otherwise passed through for variable expansion.
+
+=== special params
+
+* `req` — saved filter ID; loads base filter from stored queries, URL params merge on top
+* `relays` — comma-separated relay names/URLs, or `out` for outbox model. if omitted, uses your read relays
+
+=== examples
+
+....
+#req?kinds=1&authors=u&since=n_7
+#req?kinds=1,6&authors=k3&relays=out&limit=100
+#req?kinds=30023&t=nostr&relays=read
+#req?req=my_saved_filter&limit=20
+....

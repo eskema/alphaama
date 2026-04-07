@@ -712,7 +712,9 @@ const hires =(url)=>
       console.log(`manager.hires: relay is terminated`,url);
       return
     }
-    else return relay
+    if (!relay.ws || relay.ws.readyState > 1)
+      connect(relay);
+    return relay
   }
 
   url = is_valid_url(url);
@@ -803,18 +805,39 @@ const connect =(relay)=>
 
   relay.ws.onclose =e=>
   {
+    clearTimeout(relay.worker.ping);
+
     if (manager.paused) return;
+
+    let url = relay.worker.url;
+    console.log('ws close', url, e.code, e.reason || '');
 
     manager.closes.push(now());
     check_connectivity();
 
     if (manager.paused) return;
 
-    if ((relay.worker.errors.length - relay.worker.successes.length) < 21)
+    let w = relay.worker;
+
+    // don't reconnect if idle (no open subs, no queued requests)
+    if (!w.open.size && !w.queue.length) return;
+
+    // track rapid reconnect cycles
+    let t = now();
+    if (!w.closes) w.closes = [];
+    w.closes.push(t);
+    // keep last 5 minutes
+    w.closes = w.closes.filter(c => t - c < 300);
+    // if 3+ closes in 2 minutes, back off longer
+    let recent = w.closes.filter(c => t - c < 120).length;
+
+    if ((w.errors.length - w.successes.length) < 21)
     {
-      relay.worker.errors.push(now());
-      // Don't track error stats here - onerror already handles it
-      setTimeout(()=>{connect(relay)},420*(relay.worker.errors.length+1))
+      w.errors.push(t);
+      let delay = recent >= 3
+        ? 30000 * Math.min(recent - 2, 4)
+        : 420 * (w.errors.length + 1);
+      setTimeout(()=>{connect(relay)}, delay);
     }
     else terminate_worker(relay);
   };
@@ -843,7 +866,8 @@ const connect =(relay)=>
             sub.stamp = date;
           break;
       }
-      on_message(data,relay.worker.url)
+      on_message(data,relay.worker.url);
+      keepalive(relay);
     }
     else console.log('bad data from ws',e.data);
   };
@@ -856,6 +880,8 @@ const connect =(relay)=>
 
     relay.worker.successes.push(now());
     postMessage(['update_stats', relay.worker.url, 'success']);
+
+    keepalive(relay);
 
     if (relay.worker.open.size)
     {
@@ -951,6 +977,24 @@ const process_requests =(relay,request)=>
 };
 
 
+// reset keepalive timeout — resends open subs after 21s idle
+const keepalive =relay=>
+{
+  clearTimeout(relay.worker.ping);
+  if (relay.ws?.readyState !== 1 || !relay.worker.open.size) return;
+  relay.worker.ping = setTimeout(()=>
+  {
+    if (relay.ws?.readyState !== 1) return;
+    for (const [id, sub] of relay.worker.open)
+    {
+      sub.request[2].since = now();
+      relay.ws.send(JSON.stringify(sub.request));
+    }
+    keepalive(relay);
+  }, 21000);
+};
+
+
 const send_request =(relay,request)=>
 {
   if (relay.ws?.readyState === 1)
@@ -965,7 +1009,7 @@ const send_request =(relay,request)=>
       relay.worker.open.set(request.id,request);
     }
     relay.ws.send(request.json);
-    // relay.worker.sent.push(request.json);
+    keepalive(relay);
     on_state(relay)
     return
   }

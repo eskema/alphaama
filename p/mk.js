@@ -184,10 +184,11 @@ aa.mk.metadata_website =(k,v)=>
 aa.mk.p_link =(pubkey,p)=>
 {
   if (!p) p = aa.db.p[pubkey];
-  if (!p) 
+  if (!p)
   {
     p = aa.p.p(pubkey);
   }
+  if (!p.metadata) aa.bus.emit('p:miss', pubkey);
 
   const element = make('a',
   {

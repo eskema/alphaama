@@ -96,20 +96,26 @@
   /* transform: translateY(calc(-100% - 1.5rem)); */
   transform-origin: bottom;
   width: max-content;
+  
 }
 
-/* .note > .content.no_content + .tags_wrapper
+/* .note > .content.no_content + .tags_wrapper */
+.tags_wrapper.tags_open
 {
+  align-self: start;
   bottom: unset;
-  grid-area: content;
+  /* grid-area: content; */
+  grid-area: extra;
   position: relative;
 }
 
-.note > .content.no_content + .tags_wrapper > .tags
+/* .note > .content.no_content + .tags_wrapper > .tags */
+.tags_wrapper.tags_open > .tags
 {
   position: relative;
   transform: none;
-} */
+  width: auto;
+}
 
 .note .tags_wrapper[open] > .tags
 {

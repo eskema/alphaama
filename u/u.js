@@ -743,10 +743,14 @@ aa.u.load_u =async()=>
     ls.u = p.pubkey;
     aa.mod.save(mod);
   }
-  if (!ls.k3 && p.follows.length)
+  if (p.follows.length)
   {
-    ls.k3 = p.follows.join(' ');
-    aa.mod.save(mod);
+    let k3 = p.follows.join(' ');
+    if (ls.k3 !== k3)
+    {
+      ls.k3 = k3;
+      aa.mod.save(mod);
+    }
   }
   return p
 };

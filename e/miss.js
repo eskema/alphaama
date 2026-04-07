@@ -1,5 +1,7 @@
-// gets all p tags from event
-// checks if metadata is available 
+aa.bus.on('p:miss', pubkey => aa.e.authors([['p', pubkey]]));
+
+
+// checks if metadata is available
 // or set it as missing
 aa.e.authors =p_tags=>
 {

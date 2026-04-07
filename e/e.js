@@ -852,11 +852,17 @@ aa.e.view =element=>
 // clear view from aa.e.view
 aa.e.view_clear =in_view=>
 {
-  if (Object.hasOwn(aa.view,'id_a')) 
+  if (Object.hasOwn(aa.view,'id_a'))
     delete aa.view.id_a;
 
   aa.l.classList.remove('view_e');
   sift.filter_clear(aa.temp.section_e);
+
+  let opts = aa.temp.section_e;
+  if (!opts) return;
+  let section = aa.el.get('section_e');
+  if (section?.classList.contains('expanded') && !opts.items?.length)
+    aa.clk.expand({target:section});
 };
 
 

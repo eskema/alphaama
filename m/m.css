@@ -530,7 +530,7 @@
 /* pending convo item */
 .m_pending_convo
 {
-  --c: var(--color-e);
+  --c: rgb(var(--color-e));
   /* font-style: italic;
   opacity: .8; */
 }

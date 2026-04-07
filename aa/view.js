@@ -156,4 +156,15 @@ aa.actions.push(
 });
 
 
+// handle web+nostr: protocol handler URIs
+aa.view.ls['web+nostr:'] =entity=>
+{
+  entity = entity.replace(/^web\+nostr:/,'');
+  if (entity) aa.view.upd(entity);
+};
+
+if (navigator.registerProtocolHandler)
+  navigator.registerProtocolHandler('web+nostr', location.origin + '/#%s');
+
+
 window.addEventListener('popstate',aa.view.pop);

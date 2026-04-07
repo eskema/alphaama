@@ -84,7 +84,7 @@ cash.cacheable =response=>
   // opaque responses (cross-origin no-cors) have ok=false
   // and inaccessible headers — cache them anyway
   if (response.type === 'opaque') return true;
-  if (!response.ok) return false;
+  if (!response.ok || response.status === 206) return false;
   let type = response.headers.get('Content-Type') || '';
   return type.startsWith('image/')
 };

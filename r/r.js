@@ -342,6 +342,7 @@ aa.r.get =async dis=>
 
 aa.r.get_events =async ids=>
 {
+  await new Promise(resolve => aa.mod.ready('r:manager', resolve));
   let id = 'get_events_'+aa.fx.rands();
 
   return new Promise(resolve=>
@@ -361,6 +362,7 @@ aa.r.get_events =async ids=>
 
 aa.r.get_filter =async filter=>
 {
+  await new Promise(resolve => aa.mod.ready('r:manager', resolve));
   let id = 'get_filter_'+aa.fx.rands();
 
   return new Promise(resolve=>
@@ -756,7 +758,8 @@ aa.r.send_req =data=>
     // console.trace(dis);
     return
   }
-  aa.r.manager.postMessage(['request',{relays,request,options}]);
+  aa.mod.ready('r:manager', ()=>
+    aa.r.manager.postMessage(['request',{relays,request,options}]));
 };
 
 

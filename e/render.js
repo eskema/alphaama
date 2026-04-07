@@ -9,7 +9,8 @@ aa.e.rnd =
   image:[20],
   list:[3,10000,10001,10002,10003,10004,10005,10006,10007,10050,10063,15128,35128],
   object:[0,30166],
-  video:[21,22,1063,34235,34236],
+  file:[1063],
+  video:[21,22,34235,34236],
   zap:[9735],
 };
 
@@ -136,6 +137,44 @@ aa.e.render_encrypted =async(element,dat)=>
     let ad = localStorage.auto_decrypt;
     if ((ad === 'on' || ad === 'on_view') && aa.signer.available())
       aa.e.decrypt_q(dat.event.id);
+  }
+};
+
+
+// render file metadata (NIP-94 kind 1063)
+aa.e.render_file =async(element,dat,o={})=>
+{
+  let p = await aa.p.get(dat.event.pubkey);
+  let trusted = aa.fx.is_trusted(p?.score||0);
+  aa.e.context(element,dat.event,trusted);
+  let url = aa.fx.url_from_tags(dat.event.tags);
+  let mime = aa.fx.tag_value(dat.event.tags,'m') || '';
+  let type = mime.split('/')[0];
+
+  if (url && trusted)
+  {
+    let app;
+    if (type === 'image')
+      app = aa.mk.img(url);
+    else if (type === 'video' || type === 'audio')
+      app = aa.mk.av(url,{on_grab:s=>aa.log(aa.mk.img(s))});
+    else
+      app = aa.mk.link(url);
+    element.prepend(make('p',{cla:'paragraph',app}));
+  }
+  else if (url)
+  {
+    element.prepend(make('p',{cla:'paragraph',app:aa.mk.link(url)}));
+  }
+
+  if (o.note)
+  {
+    let tw = o.note.querySelector('details.tags_wrapper');
+    if (tw) 
+    {
+      tw.toggleAttribute('open',true);
+      tw.classList.add('tags_open');
+    }
   }
 };
 
