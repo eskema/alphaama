@@ -94,7 +94,7 @@ aa.clk.p_score =async e=>
 {
   const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
   const p = await aa.p.get(pubkey);
-  if (p) aa.bus.emit('cli:set',localStorage.ns+' p score '+pubkey+' '+p.score);
+  if (p) aa.bus.emit('cli:set',aa.cmd('p score '+pubkey+' '+p.score));
 };
 
 
@@ -117,5 +117,5 @@ aa.clk.p_req =e=>
   const filter = `{"authors":["${p.pubkey}"],"kinds":[1],"limit":100}`;
   let relay = aa.p.relays(p,'write')[0];
   if (!relay) relay = 'read';
-  aa.bus.emit('cli:set',`${localStorage.ns} ${aa.q.def.id} req ${relay} ${filter}`);
+  aa.bus.emit('cli:set',aa.cmd(`${aa.q.def.id} req ${relay} ${filter}`));
 };

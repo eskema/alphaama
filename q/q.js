@@ -112,7 +112,7 @@ aa.q.add =(s='',silent)=>
     return ''
   }
   let mod = aa.q;
-  let con = `${localStorage.ns} ${mod.def.id} add ${fid} `;
+  let con = aa.cmd(`${mod.def.id} add ${fid} `);
   let filter = mod.o.ls[fid];
   let is_new;
   let changed;

@@ -205,7 +205,7 @@ aa.mk.post =async(s='')=>
     if (!aa.u?.p?.pubkey)
     {
       log_text += ', login first using the command: ';
-      log_text += localStorage.ns+' u login';
+      log_text += aa.cmd('u login');
     }
     aa.log(log_text);
   }
@@ -485,7 +485,7 @@ aa.mk.k7 =async(s='')=>
 
 aa.actions.push(
   {
-    action:['k','e'],
+    action:['e','raw'],
     required:['<JSON>'],
     description:'mk event from JSON, auto-completes missing fields',
     exe:aa.mk.e

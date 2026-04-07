@@ -2,7 +2,7 @@
 aa.clk.bro =e=>
 {
   const note = e.target.closest('[data-id]');
-  aa.bus.emit('cli:set',`${localStorage.ns} e bro ${note.dataset.id}`);
+  aa.bus.emit('cli:set',aa.cmd(`e bro ${note.dataset.id}`));
 };
 
 
@@ -86,7 +86,7 @@ aa.clk.fetch =e=>
       if (url) relset = url+' ';
     }
   }
-  aa.bus.emit('cli:set',localStorage.ns+' '+aa.q.def.id+' req '+relset+filter);
+  aa.bus.emit('cli:set',aa.cmd(aa.q.def.id+' req '+relset+filter));
 };
 
 
@@ -266,7 +266,7 @@ aa.clk.req =e=>
 {
   const note = e.target.closest('[data-id]');
   const filter = '{"#e":["'+note?.dataset.id+'"],"kinds":[1],"limit":100}';
-  aa.bus.emit('cli:set',`${localStorage.ns} ${aa.q.def.id} req read ${filter}`);
+  aa.bus.emit('cli:set',aa.cmd(`${aa.q.def.id} req read ${filter}`));
 };
 
 

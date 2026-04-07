@@ -166,7 +166,7 @@ o.del =(s='')=>
 {
   let mod = o;
   const id = mod.def.id;
-  const log = localStorage.ns+' '+id+' rm';
+  const log = aa.cmd(id+' rm');
 
   let items = aa.fx.splitr(s,',');
   for (const item of items)

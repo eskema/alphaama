@@ -5,7 +5,7 @@ aa.clk.nzap =e=>
   const note = e.target.closest('[data-pubkey]');
   const pubkey = note.dataset.pubkey;
  
-  let t = `${localStorage.ns} mk 9321 ${localStorage.zap}`;
+  let t = aa.cmd(`mk 9321 ${localStorage.zap}`);
   t = `${t} ${pubkey} "${localStorage.zap_memo}"`;
   if (note.dataset.id) t += ` ${note.dataset.id}`;
   aa.bus.emit('cli:set',t);

@@ -33,12 +33,20 @@ aa.cli =
 aa.cli.act =s=>
 {
   const ns = localStorage.ns;
-  if (!ns) return false; 
-  if (ns.startsWith(s) 
-  || s.startsWith(ns+' ') 
-  || s === ns
-  ) return true;
-  return false
+  if (!ns) return false;
+  if (ns.startsWith(s)) return true;
+  if (!s.startsWith(ns)) return false;
+  if (s[ns.length] === ' ') return false;
+  return aa.cli.has_act(s.slice(ns.length))
+};
+
+
+// returns true if the first word of body matches some action's first segment
+aa.cli.has_act =body=>
+{
+  const first = body.split(' ')[0];
+  if (!first) return true;
+  return aa.actions.some(a=>a.action[0].startsWith(first))
 };
 
 
@@ -47,18 +55,18 @@ aa.cli.add =string=>
 {
   let text = aa.cli.t.value;
   let ns = localStorage.ns;
-  let dis = `${ns} ${string}`;
-  
-  if (!text.length || (!text.startsWith(ns) 
+  let dis = `${ns}${string}`;
+
+  if (!text.length || (!text.startsWith(ns)
   && window.confirm('replace input with command?')))
   {
     aa.cli.v(dis);
     return
   }
-  
+
   let [act,rest] = string.split(aa.regex.fw);
   let [cmd,value] = rest.split(aa.regex.fw);
-  if (text.startsWith(`${ns} ${act} ${cmd} `))
+  if (text.startsWith(`${ns}${act} ${cmd} `))
   {
     aa.cli.v(`${text}, ${value}`);
     return
@@ -98,17 +106,19 @@ aa.cli.exe =async(s='')=>
   {
     aa.nfc(); return
   }
-  let a = s.split(localStorage.ns+' ');
-  let output;
-  for (const action of a)
-  { 
-    if (!action.length) continue;
-    let acts = action.split(' | ');
+  const ns = localStorage.ns;
+  if (!s.startsWith(ns)) return;
+  let body = s.slice(ns.length);
+  let commands = body.split(' && ');
+  for (const command of commands)
+  {
+    let acts = command.split(' | ');
+    let output;
     for (const ac of acts)
     {
       let act;
       let cut;
-      let cmd = ac.split(aa.regex.fw);
+      let cmd = ac.trim().split(aa.regex.fw);
       let actions = aa.actions.filter(o=>o.action[0] === cmd[0]);
       if (actions.length > 1)
       {
@@ -136,8 +146,8 @@ aa.cli.exe =async(s='')=>
         if (typeof output === 'object') output = JSON.stringify(output);
       }
     }
+    if (output) aa.log(output)
   }
-  if (output) aa.log(output)
 };
 
 
@@ -360,11 +370,12 @@ aa.cli.mk =()=>
 
 
 // filters actions for autocomplete and add items to oto
-aa.cli.oto_act =(s)=>
+// receives the command body (input with ns prefix already stripped)
+aa.cli.oto_act =(body)=>
 {
-  const a = s.split(' ');
+  const a = body.split(' ');
   // first level, group all actions by section
-  if (a.length === 1 || (a.length === 2 && a[1] === ''))
+  if (!a[0])
   {
     let sn = {};
     for (const act of aa.actions)
@@ -380,23 +391,21 @@ aa.cli.oto_act =(s)=>
   else
   // sub level, display actions in a single section
   {
-    let dis_act = aa.actions.find(i=>i.action[0] === a[1] && i.action[1] === a[2]);
-    // let dis_act = aa.actions.filter(i=>i.action[0] === a[1] && i.action[1] === a[2])[0];
+    let dis_act = aa.actions.find(i=>i.action[0] === a[0] && i.action[1] === a[1]);
     if (!dis_act)
     {
-      let single_action = aa.actions.find(i=>i.action[0] === a[1]);
-      // let single_action = aa.actions.filter(i=>i.action[0] === a[1])[0];
+      let single_action = aa.actions.find(i=>i.action[0] === a[0]);
       if (single_action && single_action.action.length === 1) dis_act = single_action;
-    } 
+    }
     if (dis_act) aa.cli.oto.append(aa.mk.oto_act_item(dis_act,'pinned'));
     else
     {
-      let actions = aa.actions.filter(o=>o.action[0].startsWith(a[1]))
+      let actions = aa.actions.filter(o=>o.action[0].startsWith(a[0]))
       .sort((a,b)=>a.action[1]>b.action[1]?1:-1);
       for(const act of actions)
       {
-        let action = localStorage.ns+' '+act.action[0]+' '+act.action[1];
-        if (action.startsWith(s)) aa.cli.oto.append(aa.mk.oto_act_item(act));
+        let action = act.action[0]+' '+act.action[1];
+        if (action.startsWith(body)) aa.cli.oto.append(aa.mk.oto_act_item(act));
       }
       if (!aa.cli.oto.childNodes.length)
       {
@@ -430,22 +439,25 @@ aa.cli.upd =e=>
 {
   const s = aa.cli.t.value.replace(/\u2028/g,'');
   const ns = localStorage.ns;
-  let space = s.includes(' ');
-  let first = space?s.slice(0,s.indexOf(' ')):s;
   fastdom.mutate(()=>
   {
     aa.cli.oto.textContent = '';
     aa.cli.oto.dataset.s = s;
-    
-    if (!s.length || (!space && ns.startsWith(first)))
+
+    if (!s.length)
     // maybe action
     {
       aa.cli.oto.append(aa.mk.oto_act_item({action:[]}));
     }
-    else if (first === ns)
+    else if (s.startsWith(ns) && s[ns.length] !== ' ' && aa.cli.has_act(s.slice(ns.length)))
     // is action
     {
-      aa.cli.oto_act(s); 
+      aa.cli.oto_act(s.slice(ns.length));
+    }
+    else if (ns.startsWith(s))
+    // typing partial ns (multi-char ns)
+    {
+      aa.cli.oto.append(aa.mk.oto_act_item({action:[]}));
     }
     else
     {

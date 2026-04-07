@@ -373,7 +373,7 @@ aa.u.load =async()=>
 
   aa.bus.emit('cli:set_default',
   {
-    action:['k','note'],
+    action:['post'],
     required:['<text>'],
     description:'make a nostr note',
     exe:aa.mk.post

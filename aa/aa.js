@@ -295,6 +295,10 @@ aa.check_online =()=>
 };
 
 
+// build a command string with the ns prefix
+aa.cmd =s=> localStorage.ns + s;
+
+
 // JSON.parse wrapper
 aa.pj =(string='')=>
 {

@@ -40,7 +40,7 @@ aa.mk.oto_act_item =(o,s)=>
       {
         e.stopPropagation();
         e.preventDefault();
-        let text = localStorage.ns+' ';
+        let text = localStorage.ns;
         text += e.target.closest('.item').querySelector('.val').textContent+' ';
         text += act+' ';
         aa.bus.emit('cli:upd_from_oto',text);
@@ -56,7 +56,7 @@ aa.mk.oto_act_item =(o,s)=>
     {
       e.stopPropagation();
       e.preventDefault();
-      aa.bus.emit('cli:upd_from_oto',localStorage.ns+' '+e.target.closest('.item').querySelector('.val').textContent);
+      aa.bus.emit('cli:upd_from_oto',localStorage.ns+e.target.closest('.item').querySelector('.val').textContent);
     };
     l.onclick = clk;
     l.onkeydown =e=>

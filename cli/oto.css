@@ -34,7 +34,7 @@
 #oto .item 
 {
   cursor: pointer;
-  grid-gap: var(--pad); /* calc(var(--pad) - .2em); */
+  /* grid-gap: var(--pad); */
   grid-template-columns: auto min-content auto auto 1fr;
   grid-template-areas: 
     "bef val required optional description";
@@ -82,6 +82,7 @@
   grid-area: val;
   margin: 0;
   padding: 0;
+  /* margin-left: var(--pad); */
 }
 
 #oto .item.mention
@@ -117,6 +118,7 @@
   border-bottom: 1px solid rgb(var(--color-d));
   color: rgb(var(--color-d));
   grid-area: required;
+  margin-left: var(--pad);
 }
 
 #oto .item .optional 
@@ -124,6 +126,7 @@
   border-bottom: 1px dashed rgba(var(--color-d),.6);
   color: rgba(var(--color-d),.6);
   grid-area: required;
+  margin-left: var(--pad);
 }
 
 #oto .item .required + .optional 
@@ -139,6 +142,7 @@
   grid-area: description;
   justify-self: end;
   padding-right: var(--pad);
+  margin-left: var(--pad);
 }
 
 #oto .item.pinned 
@@ -179,6 +183,11 @@
 {
   border-bottom: 1px dashed rgb(var(--color-b));
   color: rgb(var(--color-c));
+}
+
+#oto .item .acts
+{
+  margin-left: var(--pad);
 }
 
 #oto .item .acts,
