@@ -737,6 +737,19 @@ aa.u.load_u =async()=>
     needs_saving = true;
   }
   if (aa.fx.a_add(p.sets,['u'])) needs_saving = true;
+
+  // self-heal: dedupe stale/polluted p.follows from legacy idb records
+  if (p.follows?.length)
+  {
+    let unique = [...new Set(p.follows)];
+    if (unique.length !== p.follows.length)
+    {
+      console.warn(`u.load_u: deduped p.follows ${p.follows.length} → ${unique.length}`);
+      p.follows = unique;
+      needs_saving = true;
+    }
+  }
+
   if (needs_saving) aa.p.save(p);
   if (!ls.u && p)
   {

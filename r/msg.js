@@ -90,9 +90,8 @@ aa.r.eose =async data=>
 aa.r.ok =data=>
 {
   const [type,id,is_ok,reason,url,kind] = data;
-  let key = `["${type}","${url}"]`;
-  let text = `${kind ?? '?'} ${id} ${is_ok} ${reason}`;
-  aa.log_key(key,text);
+  let text = `${kind ?? '?'} ${id} ${is_ok} ${reason} ${url}`;
+  aa.log_key(`["${type}"]`,text,{preview:true});
 
   // auth events (kind 22242) are never printed — skip ok_ok
   if (is_ok && kind !== 22242) aa.r.ok_ok(id,url);

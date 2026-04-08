@@ -227,14 +227,18 @@ aa.q.filter =filter=>
             }
           }
         }
-        if (!filter[key].length) 
+        if (!filter[key].length)
         {
           aa.log('vars: invalid filter');
           return []
         }
         else
         {
-          if (key === 'authors' 
+          // dedupe expanded values (defends against polluted variables like ls.k3)
+          if (filter[key].length !== new Set(filter[key]).size)
+            filter[key] = [...new Set(filter[key])];
+
+          if (key === 'authors'
           || key === 'ids'
           || key === '#p'
           || key === '#e')

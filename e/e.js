@@ -459,7 +459,7 @@ aa.e.get_a =async ids=>
   }
   if (want.size)
   {
-    let filters = [...want].map(aa.fx.id_af);
+    let filters = [...want].map(aa.fx.id_af).filter(Boolean);
     for (const filter of filters)
     {
       let [get_id,events] = await aa.r.get_filter(filter);

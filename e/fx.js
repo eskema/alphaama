@@ -19,7 +19,7 @@ aa.fx.follow =p=>
 
 aa.fx.id_a =o=>
 {
-  if (!o.kind || typeof o.kind !== 'number') return;
+  if (typeof o.kind !== 'number' || Number.isNaN(o.kind)) return;
   if (!o.pubkey || !aa.fx.is_key(o.pubkey)) return;
   if (!o.identifier || typeof o.identifier !== 'string') return;
   return `${o.kind}:${o.pubkey}:${o.identifier}`;
@@ -36,22 +36,30 @@ aa.fx.id_ae =event=>
   })
 };
 
-// make request filter from addressable string
+// make request filter from addressable string (kind:pubkey:d-identifier)
 aa.fx.id_af =string=>
 {
   let [kind,pubkey,identifier] = aa.fx.split_ida(string);
-  
+
   const result = {};
-  
+
   const kind_int = parseInt(kind);
-  if (!kind_int) return;
-  else result.kinds = [kind_int];
-  
-  if (!pubkey || !aa.fx.is_key(pubkey)) return result;
-  else result.authors = [pubkey];
+  if (Number.isNaN(kind_int))
+  {
+    console.warn('aa.fx.id_af: invalid ida (non-numeric kind)',{string,kind,pubkey,identifier});
+    return
+  }
+  result.kinds = [kind_int];
+
+  if (!pubkey || !aa.fx.is_key(pubkey))
+  {
+    console.warn('aa.fx.id_af: invalid ida (missing/bad pubkey)',{string,kind,pubkey,identifier});
+    return
+  }
+  result.authors = [pubkey];
 
   if (!identifier) return result;
-  else result['#d'] = [identifier];
+  result['#d'] = [identifier];
 
   return result
 };

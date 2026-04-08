@@ -683,16 +683,14 @@ aa.r.outbox =(authors=[],sets=[])=>
   }
   
   // use read relays to ask for everything
-  for (const r of aa.r.r) outbox[r] = authors;
+  // copy authors per relay to avoid aliasing (mutations below would leak back to caller)
+  for (const r of aa.r.r) outbox[r] = [...authors];
 
   let sorted_outbox = Object.entries(outbox).sort(aa.fx.sorts.len);
-  if (none) 
+  if (none)
   {
     for (const item of sorted_outbox)
-    {
-      item[1].push(...none);
-      item[1] = [...new Set(item[1])];
-    }
+      item[1] = [...new Set([...item[1], ...none])];
   }
 
   

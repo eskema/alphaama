@@ -64,13 +64,24 @@ aa.log_details =(id,summary,key,con)=>
 };
 
 
-aa.log_key =(key,value)=>
+aa.log_key =(key,value,o={})=>
 {
   let item = make('p',{con:value});
   let element = aa.el.get(key);
   if (!element)
   {
-    let summary = make('summary',{con:key});
+    let summary;
+    if (o.preview)
+    {
+      let latest = make('span',{cla:'latest',con:value});
+      summary = make('summary',
+      {
+        app: [make('span',{cla:'key',con:key}),' ',latest]
+      });
+      summary._latest = latest;
+    }
+    else summary = make('summary',{con:key});
+
     element = make('details',
     {
       cla: 'base',
@@ -81,16 +92,18 @@ aa.log_key =(key,value)=>
   let log = element.parentElement;
   if (log)
   {
+    let summary = element.firstChild;
     fastdom.mutate(()=>
     {
       let logs = log.parentElement;
       element.append(item);
+      if (summary._latest) summary._latest.textContent = value;
       logs.lastChild.after(log);
       log.classList.add('is_new');
       logs.classList.add('has_new');
       logs.parentElement.classList.add('has_new');
     });
-  } 
+  }
   else aa.log(element);
   aa.fx.count_upd(element.firstChild);
 };

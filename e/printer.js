@@ -183,7 +183,12 @@ aa.e.append_check =async(dat,note,tag,on_parent)=>
   }
 
   let miss_dat;
-  if (is_a) miss_dat = await aa.e.get_a(id);
+  if (is_a)
+  {
+    // skip malformed a-tag values (url refs, empty, missing kind/pubkey) — id_af warns
+    if (!aa.fx.id_af(id)) return;
+    miss_dat = await aa.e.get_a(id);
+  }
   else miss_dat = await aa.e.get(id);
 
   if (miss_dat)

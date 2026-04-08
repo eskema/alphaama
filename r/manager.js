@@ -317,6 +317,7 @@ const on_auth =async(challenge,url)=>
   if (event)
   {
     manager.events.set(event.id,mk_dat({event}));
+    relay.auth_event_id = event.id;
     on_worker_message(relay,
     {
       data:
@@ -419,18 +420,25 @@ const on_closed =async(a,url)=>
       terminate(url);
       break;
     case 'auth-required':
-      if (relay?.sets?.includes('auth') && request)
+      // any relay can demand auth — if we already auto-signed, queue for resend after auth completes
+      if (request && !relay?.authed)
       {
         if (!relay.auth_sub_queue) relay.auth_sub_queue = [];
         relay.auth_sub_queue.push(request);
       }
-      else if (!relay?.sets?.includes('auth')) terminate(url);
+      else terminate(url);
+      break;
+    case 'rate-limited':
+      // back off and stop blasting; resend will be gated by process_requests / keepalive
+      if (relay)
+      {
+        relay.rate_limited_until = now() + 60;
+        console.warn('rate-limited:',url,why || '');
+      }
       break;
     // case 'pow':
     // case 'duplicate':
-    // case 'rate-limited':
     // case 'invalid':
-    // case 'restricted':
     // case 'error':
     // default:
   }
@@ -440,9 +448,49 @@ const on_closed =async(a,url)=>
 // relay worker ok response
 const on_ok =(a,url)=>
 {
-  let kind = manager.events.get(a[1])?.event?.kind;
+  let event_id = a[1];
+  let ok = a[2];
+  let relay = manager.relays.get(url);
+
+  // OK for our auto-signed AUTH event — drive auth state. still surface to page for log visibility
+  // (page-side aa.r.ok already skips ok_ok for kind 22242).
+  if (relay?.auth_event_id === event_id)
+  {
+    if (ok)
+    {
+      relay.authed = true;
+      delete relay.waiting;
+      clearTimeout(relay.auth_timeout);
+      delete relay.auth_timeout;
+      flush_after_auth(relay);
+    }
+  }
+
+  let kind = manager.events.get(event_id)?.event?.kind;
   postMessage([...a,url,kind]);
-  if (a[2] === false) on_not_ok(a[1],a[3],url);
+  if (ok === false) on_not_ok(event_id,a[3],url);
+};
+
+
+// flush queues that were blocked by the auth gate
+const flush_after_auth =relay=>
+{
+  if (relay.auth_queue?.size)
+  {
+    for (const id of relay.auth_queue)
+    {
+      let dat = manager.events.get(id);
+      if (dat) send_request(relay,{json: JSON.stringify(['EVENT', dat.event])});
+    }
+    relay.auth_queue.clear();
+  }
+  if (relay.auth_sub_queue?.length)
+  {
+    for (const request of relay.auth_sub_queue)
+      send_request(relay,request);
+    relay.auth_sub_queue = [];
+  }
+  process_requests(relay);
 };
 
 
@@ -451,15 +499,24 @@ const on_not_ok =(event_id,reason,url)=>
 {
   if (!reason) return;
 
+  let relay = manager.relays.get(url);
+
+  // our auto-signed AUTH event was rejected — relay won't accept this client
+  if (relay?.auth_event_id === event_id)
+  {
+    terminate(url);
+    return
+  }
+
   let [what,why] = reason.split(':');
   switch (what)
   {
     case 'block':
     case 'blocked':
+    case 'restricted':
       terminate(url);
       break;
     case 'auth-required':
-      let relay = manager.relays.get(url);
       if (!relay) break;
       if (manager.events.has(event_id))
       {
@@ -471,7 +528,6 @@ const on_not_ok =(event_id,reason,url)=>
     // case 'duplicate':
     // case 'rate-limited':
     // case 'invalid':
-    // case 'restricted':
     // case 'error':
     // default:
   }
@@ -521,6 +577,25 @@ const on_message =(a,url)=>
 
 
 // ─── 6. REQUEST PIPELINE ──────────────────────────────────
+
+// dedupe array fields in a filter, returns a new filter if anything changed
+const dedupe_filter =(filter,ctx)=>
+{
+  if (!filter || typeof filter !== 'object') return filter;
+  let cleaned;
+  for (const k of ['authors','ids','#p','#P','#e','#a','kinds'])
+  {
+    let v = filter[k];
+    if (Array.isArray(v) && v.length !== new Set(v).size)
+    {
+      if (!cleaned) cleaned = {...filter};
+      cleaned[k] = [...new Set(v)];
+      console.warn(`dedupe_filter: ${k} ${v.length} → ${cleaned[k].length}`,ctx);
+    }
+  }
+  return cleaned || filter
+};
+
 
 // close subscription on a specific relay
 const sub_close =(relay,id)=>
@@ -663,6 +738,8 @@ const relay_request =async({url,request,options})=>
   switch (request[0].toLowerCase())
   {
     case 'req':
+      request[2] = dedupe_filter(request[2],{sub_id:request[1],url});
+
       let id = request[1];
       let sub_id = 'sub:'+(relay.worker.subs.size+1);
       request[1] = sub_id;
@@ -918,28 +995,21 @@ const on_worker_message =async(relay,e)=>
   {
     case 'open' : connect(relay); break;
     case 'auth':
-      relay.authed = true;
-      if (Object.hasOwn(relay,'waiting')) delete relay.waiting;
+      // dispatch our AUTH event but don't mark authed until OK true arrives.
+      // queues are flushed by flush_after_auth() from on_ok.
       send_request(relay,data[1]);
-      // send events that were rejected before auth
-      if (relay.auth_queue?.size)
+      clearTimeout(relay.auth_timeout);
+      // fallback: if the relay doesn't send OK at all (some don't), assume success after 5s
+      relay.auth_timeout = setTimeout(()=>
       {
-        for (const id of relay.auth_queue)
+        if (!relay.authed && !relay.worker?.terminated)
         {
-          let dat = manager.events.get(id);
-          if (dat)
-            send_request(relay, {json: JSON.stringify(['EVENT', dat.event])});
+          relay.authed = true;
+          delete relay.waiting;
+          delete relay.auth_timeout;
+          flush_after_auth(relay);
         }
-        relay.auth_queue.clear();
-      }
-      // resend subs that were closed before auth
-      if (relay.auth_sub_queue?.length)
-      {
-        for (const request of relay.auth_sub_queue)
-          send_request(relay, request);
-        relay.auth_sub_queue = [];
-      }
-      setTimeout(()=>{process_requests(relay)},500);
+      },5000);
       break;
     case 'request': process_requests(relay,data[1]); break;
     case 'waiting': relay.waiting = data[1]; break;
@@ -953,11 +1023,16 @@ const process_requests =(relay,request)=>
   if (request)
     relay.worker.queue.push(request);
 
-  // block only while an auth challenge is pending response
-  let awaiting_auth = relay.sets?.includes('auth')
-    && relay.waiting && !relay.authed;
+  if (relay.worker.terminated) return;
 
-  if (!awaiting_auth)
+  // block while an auth challenge is pending OK true
+  let awaiting_auth = relay.waiting && !relay.authed;
+
+  // block while rate-limited backoff is active
+  let t = now();
+  let rate_limited = relay.rate_limited_until && t < relay.rate_limited_until;
+
+  if (!awaiting_auth && !rate_limited)
   {
     while (relay.worker.queue.length)
     {
@@ -969,10 +1044,13 @@ const process_requests =(relay,request)=>
         return
       }
     }
+    return
   }
-  else if (relay.worker.queue.length)
+
+  if (relay.worker.queue.length)
   {
-    setTimeout(()=>{process_requests(relay)},1000)
+    let wait = rate_limited ? (relay.rate_limited_until - t + 1) * 1000 : 1000;
+    setTimeout(()=>{process_requests(relay)},wait)
   }
 };
 
@@ -985,6 +1063,12 @@ const keepalive =relay=>
   relay.worker.ping = setTimeout(()=>
   {
     if (relay.ws?.readyState !== 1) return;
+    // skip while rate-limited to avoid making it worse
+    if (relay.rate_limited_until && now() < relay.rate_limited_until)
+    {
+      keepalive(relay);
+      return
+    }
     for (const [id, sub] of relay.worker.open)
     {
       sub.request[2].since = now();
@@ -1021,27 +1105,29 @@ const send_request =(relay,request)=>
 };
 
 
-// order to terminate workers
+// terminate a relay: mark terminated, close ws, notify page. idempotent.
 const terminate =async url=>
 {
-  let relay = hires(url);
-  if (!relay)
+  let relay = manager.relays.get(url);
+  if (!relay || !relay.worker) return;
+  if (relay.worker.terminated) return;
+
+  relay.worker.terminated = now();
+  clearTimeout(relay.worker.ping);
+
+  if (relay.ws)
   {
-    // console.error('!relay',url)
-    return
+    try { relay.ws.close() } catch (er) {}
+    delete relay.ws;
   }
+
+  postMessage(['update_stats', url, 'terminated']);
   postMessage(['state',{state:3,url,subs:relay.worker.subs}]);
 };
 
 
-// terminate worker
-const terminate_worker =(relay,s='terminated')=>
-{
-  delete relay.ws;
-  relay.worker.terminated = now();
-  postMessage(['update_stats', relay.worker.url, 'terminated']);
-  terminate(relay.worker.url)
-};
+// terminate worker (called from ws.onclose when errors >> successes)
+const terminate_worker =relay=> terminate(relay.worker.url);
 
 
 // detect mass relay closures — if many drop at once, we're offline
