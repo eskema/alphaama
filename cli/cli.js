@@ -477,7 +477,9 @@ aa.cli.upd =e=>
 // when updating from otocomplete options
 aa.cli.upd_from_oto =(s,w=false)=>
 {
-  aa.cli.t.value = aa.cli.t.value.slice(0,-Math.abs(w.length??s.length)) + s.trim() + ' ';
+  let trimmed = s.trim();
+  let suffix = trimmed === localStorage.ns ? '' : ' ';
+  aa.cli.t.value = aa.cli.t.value.slice(0,-Math.abs(w.length??s.length)) + trimmed + suffix;
   aa.cli.foc();
   aa.cli.upd();
 };
