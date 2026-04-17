@@ -93,6 +93,11 @@
 
 .content > .butt
 {
+  
+}
+
+.content > .tag
+{
   margin: var(--pad);
 }
 
@@ -159,7 +164,8 @@
 .decrypted > .butt.decrypt
 {
   pointer-events: none;
-  opacity: .4;
+  color: rgb(var(--color-a));
+  /* opacity: .4; */
 }
 
 .decrypted > .butt.decrypt::after

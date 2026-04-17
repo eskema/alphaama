@@ -67,6 +67,18 @@
   margin: 0!important;
 }
 
+.note.deleted
+{
+  border: 1px dashed rgba(var(--color-no),1);
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 4px,
+    rgba(var(--color-no), 0.5) 4px,
+    rgba(var(--color-no), 0.5) 5px
+);
+}
+
 .note.draft > .clicker
 {
   border-left: 1px dashed rgba(var(--color-main),1);

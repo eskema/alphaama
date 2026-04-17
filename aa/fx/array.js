@@ -157,3 +157,16 @@ aa.fx.cycle =(s,a)=>
   else index++;
   return a[index]
 };
+
+
+// Fisher-Yates shuffle, returns a new array
+aa.fx.shuffle =a=>
+{
+  let b = [...a];
+  for (let i = b.length - 1; i > 0; i--)
+  {
+    let j = Math.floor(Math.random() * (i + 1));
+    [b[i],b[j]] = [b[j],b[i]];
+  }
+  return b
+};

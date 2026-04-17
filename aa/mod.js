@@ -48,12 +48,20 @@ aa.mod.butts =mod=>
     if (mod.butts.mod)
     {
       if (Object.hasOwn(mod,'add')) butts.append(aa.mk.butt_action(`${mod.def.id} add `,'add'),' ');
-      for (const i of mod.butts.mod) butts.append(aa.mk.butt_action(...i),' ')
+      for (const i of mod.butts.mod)
+      {
+        if (i instanceof Element) butts.append(i,' ')
+        else butts.append(aa.mk.butt_action(...i),' ')
+      }
     }
   }
   else if (mod.butts.init)
   {
-    for (const i of mod.butts.init) butts.append(aa.mk.butt_action(...i),' ')
+    for (const i of mod.butts.init)
+    {
+      if (i instanceof Element) butts.append(i,' ')
+      else butts.append(aa.mk.butt_action(...i),' ')
+    }
   }
   butts.append(aa.mk.butt_action(`${mod.def.id} help`,'?'),' ');
   return butts

@@ -32,6 +32,7 @@ const o =
       'reaction': '\uD83E\uDD18', // '🤘' default reaction emoji
       'score': '11', // user score needed for loading media
       'theme': 'dark', // 'light'
+      'wallnut': 'off', // cashu wallet
     },
 // todo
 //     'nav_keys':
@@ -100,6 +101,11 @@ o.defaults =
       if (aa.l.dataset.theme !== s) aa.l.dataset.theme = s;
     },
     fx:s=> aa.fx.pick_other(s,o.defaults.theme.options)
+  },
+  wallnut:
+  {
+    options:['on','off'],
+    fx:s=> aa.fx.pick_other(s,o.defaults.wallnut.options)
   },
   dev:
   {

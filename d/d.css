@@ -1,0 +1,91 @@
+/* d — double ratchet module styles (layout + items + messages from aa/chat.css) */
+
+
+.section_d
+{
+  grid-area: d;
+}
+
+/* hide panel when section is collapsed */
+.section_d:not(.expanded) > .chat_panel
+{
+  display: none;
+}
+
+/* show panel when viewing a profile, regardless of expanded state */
+.view_p .section_d > .chat_panel
+{
+  display: grid;
+}
+
+/* info bar */
+.d_info
+{
+  color: rgb(var(--color-c));
+  font-size: var(--font-size-s);
+  margin-bottom: var(--pad);
+}
+
+.chat_d .d_empty
+{
+  color: rgb(var(--color-c));
+  padding: var(--padm);
+  font-size: var(--font-size-s);
+}
+
+/* invite detail view */
+.d_invite_detail
+{
+  padding: var(--padm);
+  border-bottom: 1px dotted rgb(var(--color-c));
+}
+
+.d_invite_detail .key { font-family: inherit; }
+.d_invite_detail .val { color: rgb(var(--color-c)); }
+.d_invite_detail .time { color: rgb(var(--color-c)); }
+.d_invite_detail.revoked { opacity: .5; }
+.d_invite_peers { padding-top: var(--padm); }
+
+.d_invite_url
+{
+  display: block;
+  width: 100%;
+  margin-top: var(--padm);
+  font-family: inherit;
+  font-size: var(--font-size-s);
+  padding: var(--padm);
+}
+
+/* pending detail view */
+.d_pending_detail
+{
+  padding: var(--padm) 0;
+  border-bottom: 1px dotted rgb(var(--color-c));
+}
+
+.d_pending_detail .key { font-family: inherit; }
+.d_pending_detail .val { color: rgb(var(--color-c)); }
+
+/* session info bar */
+.d_session_info
+{
+  font-size: var(--font-size-s);
+  color: rgb(var(--color-c));
+  padding: var(--padm);
+  border-bottom: 1px dotted rgb(var(--color-c));
+}
+
+/* placeholder text */
+.d_placeholder
+{
+  color: rgb(var(--color-c));
+  padding: var(--padm);
+}
+
+/* hide other sections when viewing a d convo */
+.view_d:not(.view_p) #view > section:not(.section_d),
+.view_d:not(.view_p) #view > details,
+.view_d #view > section > header
+{
+  display: none;
+}

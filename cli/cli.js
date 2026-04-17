@@ -44,7 +44,7 @@ aa.cli.act =s=>
 // returns true if the first word of body matches some action's first segment
 aa.cli.has_act =body=>
 {
-  const first = body.split(' ')[0];
+  const first = body.split(' ')[0].toLowerCase();
   if (!first) return true;
   return aa.actions.some(a=>a.action[0].startsWith(first))
 };
@@ -66,9 +66,29 @@ aa.cli.add =string=>
 
   let [act,rest] = string.split(aa.regex.fw);
   let [cmd,value] = rest.split(aa.regex.fw);
-  if (text.startsWith(`${ns}${act} ${cmd} `))
+  let action_prefix = `${act} ${cmd} `;
+
+  // find the last segment (after && or |) to check the tail action
+  let segments = text.split(/( && | \| )/);
+  let last = segments[segments.length - 1].trim();
+  // strip ns from first segment
+  if (last.startsWith(ns)) last = last.slice(ns.length);
+
+  if (last.startsWith(action_prefix))
   {
-    aa.cli.v(`${text}, ${value}`);
+    // check if action has a custom stage function
+    let action = aa.actions.find(a=>
+      a.action[0] === act && (a.action.length === 1 || a.action[1] === cmd));
+    if (action?.stage)
+    {
+      let existing = last.slice(action_prefix.length);
+      let merged = action.stage(existing,value);
+      segments[segments.length - 1] = segments.length === 1
+        ? `${ns}${action_prefix}${merged}`
+        : ` ${action_prefix}${merged}`;
+      aa.cli.v(segments.join(''));
+    }
+    else aa.cli.v(`${text}, ${value}`);
     return
   }
   aa.cli.v(dis);
@@ -119,11 +139,13 @@ aa.cli.exe =async(s='')=>
       let act;
       let cut;
       let cmd = ac.trim().split(aa.regex.fw);
-      let actions = aa.actions.filter(o=>o.action[0] === cmd[0]);
+      let mod = cmd[0]?.toLowerCase();
+      let actions = aa.actions.filter(o=>o.action[0] === mod);
       if (actions.length > 1)
       {
         let sub_cmd = cmd[1].split(aa.regex.fw);
-        let sub_actions = actions.filter(o=>o.action[1] === sub_cmd[0]);
+        let sub = sub_cmd[0]?.toLowerCase();
+        let sub_actions = actions.filter(o=>o.action[1] === sub);
         if (sub_actions.length)
         {
           act = sub_actions[0];
@@ -373,7 +395,8 @@ aa.cli.mk =()=>
 // receives the command body (input with ns prefix already stripped)
 aa.cli.oto_act =(body)=>
 {
-  const a = body.split(' ');
+  const lower = body.toLowerCase();
+  const a = lower.split(' ');
   // first level, group all actions by section
   if (!a[0])
   {
@@ -383,7 +406,7 @@ aa.cli.oto_act =(body)=>
       let a0 = act.action[0];
       if (!sn.hasOwnProperty(a0)) sn[a0] = {action:[a0],acts:[]};
       sn[a0].acts.push(act.action[1]);
-      sn[a0].acts.sort();
+      sn[a0].acts.sort((a,b)=> (a-b) || (a>b?1:-1));
     }
     let sorted = Object.keys(sn).sort();
     for (const k of sorted) aa.cli.oto.append(aa.mk.oto_act_item(sn[k]));
@@ -401,11 +424,11 @@ aa.cli.oto_act =(body)=>
     else
     {
       let actions = aa.actions.filter(o=>o.action[0].startsWith(a[0]))
-      .sort((a,b)=>a.action[1]>b.action[1]?1:-1);
+      .sort((a,b)=> (a.action[1]-b.action[1]) || (a.action[1]>b.action[1]?1:-1));
       for(const act of actions)
       {
         let action = act.action[0]+' '+act.action[1];
-        if (action.startsWith(body)) aa.cli.oto.append(aa.mk.oto_act_item(act));
+        if (action.startsWith(lower)) aa.cli.oto.append(aa.mk.oto_act_item(act));
       }
       if (!aa.cli.oto.childNodes.length)
       {

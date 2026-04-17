@@ -122,20 +122,46 @@ aa.fx.mentions =async(string='')=>
   for (const match of matches)
   {
     let dis = match[0].slice(6);
-    if (dis.startsWith('npub')) 
+    if (dis.startsWith('npub'))
     {
       let p_x = aa.fx.decode(dis);
       if (p_x) mentions.push(aa.fx.tag_p(p_x));
     }
+    else if (dis.startsWith('nprofile'))
+    {
+      let decoded = aa.fx.decode(dis);
+      if (decoded?.pubkey) mentions.push(aa.fx.tag_p(decoded.pubkey));
+    }
     else if (dis.startsWith('note'))
     {
       const e_x = aa.fx.decode(dis);
-      if (e_x) 
+      if (e_x)
       {
         mentions.push(aa.fx.tag_q(e_x));
         let dat = await aa.e.get(e_x);
-        if (dat && dat.event.pubkey !== aa.u.p.pubkey) 
+        if (dat && dat.event.pubkey !== aa.u.p.pubkey)
           mentions.push(aa.fx.tag_p(dat.event.pubkey));
+      }
+    }
+    else if (dis.startsWith('nevent'))
+    {
+      let decoded = aa.fx.decode(dis);
+      if (decoded?.id)
+      {
+        mentions.push(aa.fx.tag_q(decoded.id));
+        if (decoded.author && decoded.author !== aa.u.p.pubkey)
+          mentions.push(aa.fx.tag_p(decoded.author));
+      }
+    }
+    else if (dis.startsWith('naddr'))
+    {
+      let decoded = aa.fx.decode(dis);
+      if (decoded?.pubkey)
+      {
+        let id_a = aa.fx.id_a(decoded);
+        if (id_a) mentions.push(['a',id_a]);
+        if (decoded.pubkey !== aa.u.p.pubkey)
+          mentions.push(aa.fx.tag_p(decoded.pubkey));
       }
     }
   }

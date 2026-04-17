@@ -72,3 +72,16 @@ const is_x =s=> /^[A-F0-9]+$/i.test(s);
 
 // is a valid nostr key
 const is_key =x=> is_x(x) && x.length === 64;
+
+
+// Fisher-Yates shuffle, returns a new array
+const shuffle =a=>
+{
+  let b = [...a];
+  for (let i = b.length - 1; i > 0; i--)
+  {
+    let j = Math.floor(Math.random() * (i + 1));
+    [b[i],b[j]] = [b[j],b[i]];
+  }
+  return b
+};

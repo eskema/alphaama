@@ -1,3 +1,86 @@
-= w => walLNut
+= w => wallnut
 
-play with your nip sixty nuts
+zaps (NIP-57), nostr wallet connect (NIP-47), cashu (NIP-60/61).
+
+zap and nwc are always available. cashu features are gated behind the enable button (persisted as `w.o.enabled`).
+
+== zap
+
+to zap a note or pubkey, type: `. w zap <amount> <pubkey> "<memo>" <event_id>`
+
+* `amount` — sats to send
+* `pubkey` — recipient hex pubkey
+* `memo` — optional comment (in quotes)
+* `event_id` — optional, zaps a specific note instead of just the pubkey
+* example: `. w zap 21 abc123... "nice post" def456...`
+* the zap button on notes prefills this command with defaults
+* defaults: amount from `o zap` (21), memo from `o zap_memo` (<3)
+
+flow: refreshes recipient's metadata from relays (kind 0 + 10019), fetches LNURL endpoint, creates signed kind-9734 zap request, calls callback for bolt11, routes to NWC or manual payment.
+
+== nwc
+
+nostr wallet connect lets you pay invoices automatically through a remote wallet.
+
+to set up NWC, type: `. w nwc <connection_string>`
+
+* `connection_string` — a `nostr+walletconnect://` URI from your wallet provider
+* the connection string contains a wallet pubkey, relay, and secret key
+* the secret is stored encrypted in the decrypt cache (not in localStorage)
+
+to check NWC status: `. w nwc`
+
+to remove NWC: `. w nwc clear`
+
+when NWC is configured, zaps are paid automatically. if NWC fails (timeout, error), the manual payment dialog is shown as fallback.
+
+== manual payment
+
+when NWC is not configured or fails, a dialog is shown with:
+
+* a link to open the invoice in a lightning wallet app (`lightning:` URI)
+* a QR code to scan with a mobile wallet
+* a button to copy the raw bolt11 invoice
+
+== cashu (NIP-60/61)
+
+when disabled, the module shows an enable button. clicking it sets `w.o.enabled = true` (persisted to IDB) and runs `init_cashu`. the `o wallnut` option is a separate user preference and no longer gates activation on its own.
+
+on enable, wallnut syncs from relays: fetches wallet config (kind 17375), proofs (kind 7375), mint discovery (kind 10019), and nutzaps (kind 9321). proofs are decrypted, deduplicated, checked for spendability, and imported.
+
+=== storage
+
+* proofs are encrypted in the decrypt cache (NIP-44), not stored in plain IDB
+* balances per mint are visible in the module UI
+* wallet private key (p2pk) stored in decrypt cache, tracked via `w.o.ls.p2pk`
+* rotated keys kept in `w.o.ls.rotated_keys`
+
+=== wallet setup
+
+* `. w add <mint_url>` — add a mint
+* `. w key <privkey>` — set wallet private key (offers to publish k:10019 and k:17375)
+* `. w import <event_id>` — import wallet config from kind 17375/37375
+* `. w proofs <event_id>` — import proofs from kind 7375
+
+=== minting & melting
+
+* `. w quote <amount>` — request a mint quote (bolt11 to pay)
+* `. w mint <quote_id>` — mint proofs after paying the quote
+* `. w melt <invoice>` — pay a lightning invoice using cashu proofs
+
+=== tokens
+
+* `. w token <amount> [pubkey] [memo]` — create a sendable cashu token
+* `. w receive <token>` — receive a cashu token
+* `. w redeem <event_id>` — redeem a nutzap (kind 9321)
+
+=== event creation
+
+* `. k 7375 [mint_url]` — publish proof backup (all mints if no url). deletes old proof events.
+* `. k 9321 <amount> <pubkey> [memo] [event_id]` — send a nutzap
+* `. k 10019` — publish wallet discovery (mints + p2pk)
+* `. k 17375` — publish wallet config (encrypted mints + privkey)
+
+=== migration
+
+kind 37375 (old addressable wallet format) is detected and a migration button is shown to create a new kind 17375 replaceable event.

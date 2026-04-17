@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>m/ratchet test bench</title>
+  <script src="/dep/nostr-tools.js"></script>
+  <script src="/dep/ratchet.js"></script>
+  <link rel="stylesheet" href="/aa/aa.css">
+  <style>
+    body
+    {
+      box-sizing: border-box;
+      padding: var(--pad);
+    }
+
+    header
+    {
+      align-items: baseline;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      padding-bottom: var(--pad);
+    }
+
+    header h1
+    {
+      font-size: var(--font-size-l);
+      margin: 0;
+    }
+
+    header .meta
+    {
+      color: rgb(var(--color-c));
+      font-size: var(--font-size-s);
+    }
+
+    main
+    {
+      display: grid;
+      grid-gap: var(--pad);
+      grid-template-columns: auto 1fr;
+    }
+
+    #controls
+    {
+      align-content: start;
+      display: grid;
+      grid-gap: var(--pad-s);
+      min-width: 18em;
+    }
+
+    #controls button
+    {
+      font-size: var(--font-size-m);
+      padding: var(--pad-s) var(--pad);
+      text-align: left;
+    }
+
+    #log
+    {
+      background: rgb(var(--color-bg));
+      border: 1px dotted rgb(var(--color-c));
+      font-family: var(--font-mono, monospace);
+      font-size: var(--font-size-s);
+      max-height: 80vh;
+      overflow: auto;
+      padding: var(--pad);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    #log .ok    { color: rgb(var(--color-ok,  100 220 120)); }
+    #log .err   { color: rgb(var(--color-err, 240 100 100)); }
+    #log .info  { color: rgb(var(--color-c)); }
+    #log .head  { color: rgb(var(--color-fg)); font-weight: bold; margin-top: 1em; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>m/ratchet test bench</h1>
+  <span class="meta">isolated — no relays, no alphaama init</span>
+</header>
+<main>
+  <div id="controls"></div>
+  <pre id="log"></pre>
+</main>
+<script src="./test.js"></script>
+</body></html>

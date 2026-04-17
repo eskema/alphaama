@@ -17,21 +17,13 @@ aa.mk.section_m =()=>
     }
   });
 
-  let expand = make('button',
-  {
-    cla:'butt exe m_expand',
-    con: aa.m.l.classList.contains('expanded') ? 'compact' : 'expand',
-    clk: aa.m.clk.expand,
-  });
+  section.firstElementChild.append(make('h2', {con:'nip17 messages'}));
 
-  let butts = make('span',
+  // buttons go in the chat_header (inside the panel), not the section header
+  if (aa.m.chat?.header_el)
   {
-    cla:'butts',
-    app:[expand,' ',aa.mk.butt_action('m get','get'),' ',aa.mk.butt_action('m new ','new')],
-  });
-
-  let header = section.querySelector('header');
-  if (header) header.append(' ',butts);
+    aa.m.chat.header_el.append(aa.mk.butt_action('m get','get'), ' ', aa.mk.butt_action('m new ','new'), ' ', aa.m.chat.compact_btn);
+  }
 
   aa.m.count_upd();
   return section
@@ -41,20 +33,15 @@ aa.mk.section_m =()=>
 // conversation list item for left panel
 aa.mk.m_convo_item =pubkey=>
 {
-  let link = aa.mk.p_link(pubkey);
-  let preview = make('span',{cla:'m_convo_preview'});
-  let time = make('span',{cla:'m_convo_time'});
-  let unread = make('span',{cla:'m_convo_unread hidden', con:'0'});
-
-  let item = make('div',
-  {
-    cla:'m_convo_item',
-    dat:{pubkey, stamp:0},
-    app:[link, time, preview, unread],
-    clk: aa.m.clk.select,
-  });
-  aa.fx.color(pubkey, item);
-  return item
+  let base = aa.mk.chat_item(pubkey, {cla:'m_convo_item'});
+  // add m-specific aliases + classes for backward compat with m.css
+  base.preview.classList.add('m_convo_preview');
+  base.time.classList.add('m_convo_time');
+  base.count.classList.add('m_convo_unread');
+  base.count.textContent = '0';
+  // m uses its own click handler (not chat_list delegation)
+  base.el.addEventListener('click', aa.m.clk.select);
+  return base.el;
 };
 
 
@@ -63,7 +50,7 @@ aa.mk.m_convo_header =pubkey=>
 {
   let back = make('a',
   {
-    cla:'butt m_back',
+    cla:'butt chat_back m_back',
     con:'x',
     ref:'/',
     tit:'close conversation',
@@ -82,7 +69,7 @@ aa.mk.m_convo_header =pubkey=>
 
   let mark_read = make('button',
   {
-    cla:'butt m_mark_read',
+    cla:'butt chat_mark_read m_mark_read',
     con: count,
     tit:'mark read',
     dat:{pubkey},
@@ -91,9 +78,9 @@ aa.mk.m_convo_header =pubkey=>
 
   return make('header',
   {
-    cla:'m_header',
+    cla:'chat_view_header m_header',
     dat:{pubkey},
-    app:[back,' ',link,' ',actions,' ',mark_read],
+    app:[link,' ',mark_read,' ',actions,' ',back],
   })
 };
 
@@ -102,16 +89,16 @@ aa.mk.m_convo_header =pubkey=>
 aa.mk.m_msg =rumor=>
 {
   let from_u = aa.u.is_u(rumor.pubkey);
-  let cla = 'm_msg' + (from_u ? ' from_u' : '');
+  let cla = 'chat_msg m_msg' + (from_u ? ' from_u' : '');
 
-  let content = make('div',{cla:'m_content'});
+  let content = make('div',{cla:'chat_msg_content m_content'});
   let parsed = aa.e.content(rumor.content);
   if (parsed) content.append(parsed);
   else content.textContent = rumor.content || '';
 
   let time = make('span',
   {
-    cla:'m_time',
+    cla:'chat_msg_time m_time',
     con: aa.fx.time_elapsed(new Date(rumor.created_at * 1000)),
     tit: new Date(rumor.created_at * 1000).toLocaleString(),
   });
@@ -137,7 +124,7 @@ aa.mk.m_msg =rumor=>
 // draft message in active convo
 aa.mk.m_draft =(content,pubkey)=>
 {
-  let content_el = make('div',{cla:'m_content'});
+  let content_el = make('div',{cla:'chat_msg_content m_content'});
   let parsed = aa.e.content(content);
   if (parsed) content_el.append(parsed);
   else content_el.textContent = content || '';
@@ -147,7 +134,7 @@ aa.mk.m_draft =(content,pubkey)=>
 
   return make('div',
   {
-    cla:'m_msg m_draft from_u',
+    cla:'chat_msg m_msg m_draft from_u',
     dat:{pubkey},
     app:[content_el, actions],
   })
@@ -157,30 +144,29 @@ aa.mk.m_draft =(content,pubkey)=>
 // pending convo item in left panel
 aa.mk.m_pending_item =()=>
 {
-  let label = make('span',{cla:'m_pending_label', con:'pending'});
-  let unread = make('span',{cla:'m_convo_unread'});
-  return make('div',
-  {
-    cla:'m_convo_item m_pending_convo',
-    dat:{pubkey:'_pending'},
-    app:[label, unread],
-    clk: aa.m.clk.select,
-  })
+  let item = aa.mk.chat_item(null, {label:'pending', key:'_pending', cla:'m_convo_item m_pending_convo'});
+  item.preview.textContent = 'awaiting decryption';
+  item.count.classList.add('m_convo_unread');
+  item.count.classList.remove('hidden');
+  item.count.textContent = '0';
+  item.el.addEventListener('click', aa.m.clk.select);
+  return item.el;
 };
 
 
 // pending view header
 aa.mk.m_pending_header =()=>
 {
-  let back = make('a',{cla:'butt m_back', con:'x', ref:'/', clk: aa.clk.a});
-  let label = make('span',{con:'pending'});
+  let back = make('a',{cla:'butt chat_back m_back', con:'x', ref:'/', clk: aa.clk.a});
+  let label = aa.mk.p_link_stub('pending');
   let batch = make('button',{cla:'butt exe', con:'decrypt 5', clk: aa.m.clk.decrypt_batch});
   let all = make('button',{cla:'butt exe', con:'decrypt all', clk: aa.m.clk.decrypt_all});
+  let actions = make('span',{cla:'chat_actions', app:[batch,' ',all]});
 
   return make('header',
   {
-    cla:'m_header m_pending_header',
-    app:[back,' ',label,' ',batch,' ',all],
+    cla:'chat_view_header m_header m_pending_header',
+    app:[label,' ',actions,' ',back],
   })
 };
 

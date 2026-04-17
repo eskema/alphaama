@@ -65,7 +65,7 @@ aa.fx.tag_q =(x)=>
 aa.fx.tag_value =(a,s)=>
 {
   let value,tag = a.find(i=>i[0]===s);
-  if (tag && tag.length > 1) value = tag[1].trim();
+  if (tag && tag.length > 1 && tag[1]) value = tag[1].trim();
   return value;
 }
 

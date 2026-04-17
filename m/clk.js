@@ -8,7 +8,7 @@ aa.m.clk.select =e=>
 {
   let item = e.target.closest('.m_convo_item');
   if (!item) return;
-  let pubkey = item.dataset.pubkey;
+  let pubkey = item.dataset.key;
   if (pubkey === '_pending')
   {
     aa.view.state('#m_pending');
@@ -88,7 +88,7 @@ aa.m.clk.cancel =e=>
 aa.m.clk.expand =e=>
 {
   let on = aa.m.l.classList.toggle('expanded');
-  e.target.textContent = on ? 'compact' : 'expand';
+  e.target.textContent = on ? '⟻' : '⟼';
   sessionStorage.m_panel = on ? 'expanded' : '';
 };
 

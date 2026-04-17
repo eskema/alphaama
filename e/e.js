@@ -10,7 +10,7 @@ aa.e =
 {
   name:'events',
   about:'view and manage events',
-  def:{id:'e'},
+  def:{id:'e',ls:{}},
   kinds:{},
   printed:new Map(),
   anal:{},
@@ -52,10 +52,8 @@ aa.e =
     draft:['yolo','sign','pow','editor','edit','cancel'],
     not_sent:['bro','cancel'],
     blank:['fetch'],
-    init:
-    [
-      ['e anal','anal']
-    ],
+    mod:[],
+    init:[],
   }
 };
 
@@ -280,8 +278,8 @@ aa.e.follows_add =async string=>
     return
   }
 
-  const {kind,content,tags} = dat.event;
-  tags.push(tag);
+  const {kind,content} = dat.event;
+  let tags = [...dat.event.tags, tag];
 
   let l = make('div',
   {
@@ -593,11 +591,18 @@ aa.e.load =async()=>
     },
   );
   mod.l = make('div',{cla:'notes'});
-  mod.anal_butt = aa.mk.butt_action('e anal','anal');
+  let anal_butt = make('button',{cla:'butt exe',con:'anal',clk:()=> mod.anal.run()});
+  mod.butts.mod.push(anal_butt);
+  mod.butts.init.push(anal_butt);
   mod.section_observer = new MutationObserver(mod.section_mutated);
   mod.section_observer.observe(mod.l,{attributes:false,childList:true});
 
   await aa.mod.load(mod);
+  if (!mod.o.deleted)
+  {
+    mod.o.deleted = new Set(mod.o.ls.deleted || []);
+    delete mod.o.ls.deleted;
+  }
   aa.mod.mk(mod);
   aa.bus.on('cli:upd',aa.e.draft_upd);
 
@@ -609,6 +614,39 @@ aa.e.load =async()=>
   aa.bus.on('e:print_q', aa.e.print_q);
   aa.bus.on('e:finalize', (event, relays) => aa.e.finalize(event, relays));
   aa.bus.on('e:render_add', (key, kinds, fn) => aa.e.render_add(key, kinds, fn));
+};
+
+
+// mark event ids/addresses as deleted
+aa.e.mark_deleted =refs=>
+{
+  let changed;
+  for (const ref of refs)
+  {
+    if (aa.e.o.deleted.has(ref)) continue;
+    aa.e.o.deleted.add(ref);
+    changed = true;
+    // mark already-printed note by id or id_a
+    let note = aa.e.printed.get(ref);
+    if (!note)
+    {
+      let dat_a = aa.em_a?.get(ref);
+      if (dat_a) note = aa.e.printed.get(dat_a.event.id);
+    }
+    if (!note)
+    {
+      for (const [id,el] of aa.e.printed)
+      {
+        let dat = aa.em.get(id);
+        if (dat?.id_a === ref) { note = el; break }
+      }
+    }
+    if (note) fastdom.mutate(()=> note.classList.add('deleted'));
+  }
+  if (changed)
+  {
+    debt.add(()=> aa.mod.save(aa.e),2000,'e_deleted_save');
+  }
 };
 
 
@@ -627,7 +665,8 @@ aa.e.note_actions =dat=>
   else if (dat.clas.includes('blank')) aa.fx.a_add(butts,aa.e.butts.blank);
   else
   {
-    // aa.mk.butt_clk(s)
+    if (aa.u.is_u(dat.event.pubkey)) 
+      aa.fx.a_add(butts,['del']);
     aa.fx.a_add(butts,[['…','action_butt','na']]);
     l.classList.add('empty');
     l.classList.remove('expanded');

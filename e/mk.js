@@ -13,15 +13,6 @@ aa.mk.section_e =()=>
     sort_by: i=> i.dataset.stamp,
   });
 
-  // let butts = make('span',
-  // {
-  //   cla:'butts',
-  //   app:[aa.e.anal_butt],
-  // });
-
-  // let header = section.querySelector('header');
-  // if (header) header.append(' ', butts);
-
   return section
 };
 
@@ -408,41 +399,53 @@ aa.mk.k10050 =(s='')=>
 };
 
 
-aa.mk.k5 =async(s='')=>
-{
-  let [content,rest] = aa.fx.split_str(s);
-  if (!rest) return;
-  
-  const event = {kind:5,content,tags:[]};
-  const relays = [];
-  
-  let ids = [...new Set(aa.fx.splitr(rest))];
-  let dis = `confirm delete request for these events:\n${ids}`;
-  if (!window.confirm(dis)) return;
-
-  for (const id of ids)
+  aa.mk.k5 =async(s='')=>
   {
-    let tag = [id];
-    let kind;
-    if (aa.fx.is_key(id)) 
+    let [content,rest] = aa.fx.split_str(s);
+    if (!rest) return;
+
+    const event = {kind:5,content,tags:[]};
+    const relays = [];
+    let kinds = new Set();
+
+    let ids = [...new Set(aa.fx.splitr(rest))];
+    let dis = `confirm delete request for these events:\n${ids}`;
+    if (!window.confirm(dis)) return;
+
+    for (const id of ids)
     {
-      tag.unshift('e');
-      let dat = await aa.e.get(id);
-      if (dat)
+      if (aa.fx.is_key(id))
       {
-        kind = dat.event.kind+'';
-        aa.fx.a_add(relays,dat.seen);
-        // dat.clas.push('k5');
-        aa.bus.emit('db:save', dat.event);
+        let dat = await aa.e.get(id);
+        if (dat)
+        {
+          kinds.add(dat.event.kind+'');
+          aa.fx.a_add(relays,dat.seen);
+          aa.bus.emit('db:save', dat.event);
+          if (dat.id_a) event.tags.push(['a',dat.id_a]);
+        }
+        event.tags.push(['e',id]);
+      }
+      else
+      {
+        event.tags.push(['a',id]);
+        let k = id.split(':')[0];
+        if (k) kinds.add(k);
+        // resolve address to event id
+        let dat_a = aa.em_a?.get(id);
+        if (dat_a)
+        {
+          event.tags.push(['e',dat_a.event.id]);
+          aa.fx.a_add(relays,dat_a.seen);
+        }
       }
     }
-    else tag.unshift('a');
-    event.tags.push(tag);
-    if (kind) event.tags.push(['k',kind])
+    for (const kind of kinds) event.tags.push(['k',kind]);
 
+    // send to seen relays + all write relays
+    aa.fx.a_add(relays,aa.r.w);
     aa.e.finalize(aa.e.normalise(event),relays);
-  }
-};
+  };
 
 
 // new reaction event (kind-7)
@@ -513,7 +516,16 @@ aa.actions.push(
     required:['<reason>','<id>'],
     optional:['<id>'],
     description:'request note(s) to be deleted',
-    exe:aa.mk.k5
+    exe:aa.mk.k5,
+    stage:(existing,value)=>
+    {
+      // merge: keep the quoted content, append id space-separated
+      let [content,ids] = aa.fx.split_str(existing);
+      let [,new_id] = aa.fx.split_str(value);
+      if (!new_id) new_id = value;
+      let all = ids ? `${ids} ${new_id}` : new_id;
+      return `"${content || 'delete'}" ${all}`;
+    }
   },
   {
     action:['k','7'],

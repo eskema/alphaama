@@ -153,6 +153,14 @@ aa.e.kinds[5] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('tiny');
+  // track deleted refs
+  let refs = [];
+  for (const tag of dat.event.tags)
+  {
+    if (tag[0] === 'e' && tag[1]) refs.push(tag[1]);
+    if (tag[0] === 'a' && tag[1]) refs.push(tag[1]);
+  }
+  if (refs.length) aa.e.mark_deleted(refs);
   return note
 };
 
@@ -259,6 +267,7 @@ aa.e.kinds[9735] =dat=>
   let desc = sats ? aa.pj(aa.fx.tag_value(dat.event.tags,'description')) : null;
 
   let tag_reply = aa.fx.tag_e_last(dat.event.tags);
+  if (!tag_reply) tag_reply = aa.fx.tag_reply(dat.event.tags);
   aa.e.append_to(dat,note,tag_reply, sats ? parent=>
   {
     if (parent.dataset.zap_sats) parent.classList.add('zaps_total');

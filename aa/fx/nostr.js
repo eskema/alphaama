@@ -88,7 +88,32 @@ aa.fx.decrypt_parse =async event=>
 };
 
 
-// encrypt
+// encrypt nip44 — cli: `. fx encrypt <pubkey> <text>`
+aa.fx.encrypt =async(s='')=>
+{
+  let [pubkey,...rest] = s.split(aa.regex.fw);
+  let text = rest.join(' ');
+  if (!text)
+  {
+    aa.log('usage: fx encrypt <pubkey> <text>');
+    return
+  }
+  if (!pubkey || pubkey.length < 64)
+  {
+    let decoded = aa.fx.decode(pubkey);
+    if (decoded?.data) pubkey = decoded.data;
+  }
+  if (!aa.signer.available())
+  {
+    aa.log('you need a signer');
+    return
+  }
+  let result = await aa.signer.nip44.encrypt(pubkey,text);
+  if (result) aa.log(result);
+  return result
+};
+
+// encrypt (internal) — takes (text, pubkey)
 aa.fx.encrypt44 =async(text,pubkey)=>
 {
   if (!pubkey) pubkey = aa.u.p.pubkey;

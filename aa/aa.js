@@ -55,7 +55,8 @@ const aa =
     ['q','/q/q.js'],
     ['u','/u/u.js'],
     ['b','/b/b.js','esm'],
-    // ['w','/w/w.js'],
+    ['w','/w/w.js'],
+    ['d','/d/d.js'],
   ],
   scripts:
   [
@@ -85,6 +86,7 @@ const aa =
     '/aa/view.css',
     '/aa/side.css',
     '/aa/dialog.css',
+    '/aa/chat.css',
   ],
   el:new Map(),
   fx:{},
@@ -283,6 +285,19 @@ aa.load =async(options={})=>
     aa.online = false;
     aa.mk.status(true);
     for (const fn of aa.on_offline) fn();
+  });
+
+  document.addEventListener('copy', e=>
+  {
+    let sel = document.getSelection();
+    if (!sel.rangeCount) return;
+    let text = sel.toString();
+    let clean = text.trimEnd();
+    if (text !== clean)
+    {
+      e.preventDefault();
+      e.clipboardData.setData('text/plain', clean);
+    }
   });
 };
 

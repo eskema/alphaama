@@ -1,0 +1,26 @@
+.section_mod_w > .list
+{
+  display: grid;
+  grid-template-areas: "def" "p2pk" "mints" "history";
+}
+
+.section_mod_w .item_def
+{
+  grid-area: def;
+}
+
+.section_mod_w .item_p2pk
+{
+  grid-area: p2pk;
+}
+
+.section_mod_w .item_mints
+{
+  grid-area: mints;
+}
+
+.section_mod_w .item_history
+{
+  grid-area: history;
+}
+

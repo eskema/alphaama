@@ -32,6 +32,7 @@ aa.u =
       'auto_decrypt on_view',
       'm_get on',
       'on_load_sub a + b out',
+      'wallnut on',
     ]
   },
   styles:['/u/u.css'],
@@ -407,6 +408,12 @@ aa.u.load =async()=>
       required:['<text>','<pubkey>'],
       description:'decrypt cyphertext',
       exe:aa.fx.decrypt
+    },
+    {
+      action:['fx','encrypt'],
+      required:['<pubkey>','<text>'],
+      description:'nip44 encrypt text for pubkey',
+      exe:aa.fx.encrypt
     },
     {
       action:['fx','keypair'],

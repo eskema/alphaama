@@ -19,6 +19,21 @@ const build_page =async()=>
 
   let e_section;
   if (aa.e?.l) e_section = aa.mk.section_e();
+
+  let d_section;
+  if (aa.d?.l) d_section = aa.mk.section(
+  {
+    id:'d', name:'d', element:aa.d.l,
+    clk: e =>
+    {
+      let s = aa.el.get('section_d');
+      let collapsing = s?.classList.contains('expanded');
+      aa.clk.expand(e);
+      if (collapsing && aa.d.active) aa.d.view_clear();
+    }
+  });
+  if (d_section) d_section.firstElementChild.append(make('h2', {con:'double ratchet messages'}));
+
   let view = aa.el.get('view');
   if (view)
   {
@@ -33,7 +48,7 @@ const build_page =async()=>
 
     let readme = await aa.fx.readme('/README.adoc');
     if (readme) elements.append(aa.mk.doc(readme),' ');
-    elements.append(p_section,' ',m_section,' ',e_section);
+    elements.append(p_section,' ',d_section,' ',m_section,' ',e_section);
     fastdom.mutate(()=>
     {
       view.append(elements)

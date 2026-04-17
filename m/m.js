@@ -42,11 +42,30 @@ aa.m.load =async()=>
   mod.decrypt_q = new Map();
   mod.decrypt_active = new Set();
 
-  let panel_expanded = sessionStorage.m_panel !== undefined ? sessionStorage.m_panel === 'expanded' : true;
-  mod.l = make('div',{cla:'m_panel' + (panel_expanded ? ' expanded' : '')});
-  mod.list_el = make('div',{cla:'m_list'});
-  mod.view_el = make('div',{cla:'m_view'});
-  mod.l.append(mod.list_el, mod.view_el);
+  let chat = aa.mk.chat_list(
+  {
+    id: 'm',
+    expanded: sessionStorage.m_panel !== undefined ? sessionStorage.m_panel === 'expanded' : true,
+    persist_expand: 'm_panel',
+    on_select: (key)=>
+    {
+      if (key === '_pending')
+        aa.view.state('#m_pending');
+      else
+      {
+        let npub = aa.fx.encode('npub', key);
+        aa.view.state('#m_' + npub);
+      }
+    },
+    input: false,  // m uses CLI for input
+  });
+  mod.l = chat.l;
+  mod.l.classList.add('m_panel');
+  mod.list_el = chat.list_el;
+  mod.list_el.classList.add('m_list');
+  mod.view_el = chat.view_el;
+  mod.view_el.classList.add('m_view');
+  mod.chat = chat;
 
   mod.pending_item = aa.mk.m_pending_item();
   mod.list_el.prepend(mod.pending_item);
@@ -442,7 +461,7 @@ aa.m.convo =pubkey=>
     return aa.m.convos.get(pubkey);
 
   let item = aa.mk.m_convo_item(pubkey);
-  let messages = make('div',{cla:'m_messages'});
+  let messages = make('div',{cla:'chat_messages m_messages'});
   let element = make('div',{cla:'m_convo_wrap', dat:{pubkey}});
   element.append(messages);
 

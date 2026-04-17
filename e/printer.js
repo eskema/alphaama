@@ -428,7 +428,11 @@ aa.e.print =dat=>
   }
   
   aa.e.printed.set(dat.event.id,note);
-  
+
+  // check if this event was deleted
+  if (aa.e.o.deleted?.has(dat.event.id) || (dat.id_a && aa.e.o.deleted?.has(dat.id_a)))
+    note.classList.add('deleted');
+
   if (dat.clas.includes('miss'))
     dat.clas = aa.fx.a_rm(dat.clas,['miss']);
 

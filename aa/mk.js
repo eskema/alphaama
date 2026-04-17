@@ -1058,3 +1058,186 @@ aa.mk.file_input =()=>
 };
 
 
+// stub p_link — same DOM structure as aa.mk.p_link (<a class="a author"> + <span class="name">)
+// but with no real pubkey. used for non-profile sidebar items (pending, invites)
+// so they match the same grid/css without extra styling.
+// hash a string into a 6-char hex color key (for aa.fx.color)
+aa.mk._label_hex =s=>
+{
+  let h = 0;
+  for (let i = 0; i < s.length; i++)
+    h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h).toString(16).padStart(6, '0').slice(0, 6);
+};
+
+aa.mk.p_link_stub =(label, opts)=>
+{
+  let o = opts || {};
+  let el = make('span',
+  {
+    cla:'a author' + (o.cla ? ' ' + o.cla : ''),
+    tit: o.title || label,
+    app: make('span', {cla:'name', con:label}),
+  });
+  aa.fx.color(aa.mk._label_hex(label), el);
+  return el;
+};
+
+
+// reusable sidebar item for chat-like lists.
+// pass pubkey for a real profile item, or omit and pass opts.label for a stub.
+// returns {el, preview, time, count} so modules can update children in place.
+//
+// options:
+//   pubkey    string?  — profile pubkey (drives p_link + color). if falsy, uses label.
+//   label     string?  — text for stub p_link (used when no pubkey)
+//   cla       string?  — extra classes on the item
+//   key       string?  — data-key override (defaults to pubkey or label)
+aa.mk.chat_item =(pubkey, options)=>
+{
+  let opts = options || {};
+  let link = pubkey
+    ? aa.mk.p_link(pubkey)
+    : aa.mk.p_link_stub(opts.label || '?');
+  let preview = make('span', {cla:'chat_preview'});
+  let time = make('span', {cla:'chat_time'});
+  let count = make('span', {cla:'chat_count hidden'});
+
+  let key = opts.key || pubkey || opts.label || '';
+  let cla = 'chat_item' + (opts.cla ? ' ' + opts.cla : '');
+  let el = make('div',
+  {
+    cla,
+    dat:{key, stamp:0},
+    app:[link, time, preview, count],
+  });
+  aa.fx.color(pubkey || aa.mk._label_hex(opts.label || ''), el);
+  return {el, preview, time, count};
+};
+
+
+// reusable two-panel chat layout: sidebar (list) + main pane (view).
+// modules own ALL rendering — this just provides the shell, selection state,
+// and a built-in compact/expand toggle. sending is via CLI (no input row).
+//
+// options:
+//   id              string   — CSS class suffix: chat_{id}
+//   expanded        bool     — initial expand/compact (default true)
+//   persist_expand  string?  — sessionStorage key to persist expand state
+//   on_select       fn(key, item_el)  — called when user clicks a sidebar .chat_item
+//
+// returns: {l, header_el, list_el, view_el, add, remove, get_item, select, deselect, selected, clear_view, set_view, expand, is_expanded}
+aa.mk.chat_list =options=>
+{
+  let opts = options || {};
+  let _selected = null;
+
+  // DOM
+  let l = make('div', {cla:'chat_panel chat_' + (opts.id || '')});
+  let header_el = make('header', {cla:'chat_header'});
+  let list_el = make('div', {cla:'chat_list'});
+  let main = make('div', {cla:'chat_main'});
+  let view_el = make('div', {cla:'chat_view'});
+  main.append(view_el);
+
+  // expand state
+  let _expanded = opts.persist_expand
+    ? (sessionStorage[opts.persist_expand] !== undefined ? sessionStorage[opts.persist_expand] === 'expanded' : opts.expanded !== false)
+    : opts.expanded !== false;
+  if (_expanded) l.classList.add('expanded');
+
+  // built-in compact/expand button — always last in header
+  let compact_btn = make('button',
+  {
+    cla:'butt exe chat_compact',
+    con: _expanded ? '<-|' : '|->',
+    clk: ()=>
+    {
+      api.expand();
+      compact_btn.textContent = api.is_expanded() ? '<-|' : '|->';
+    },
+  });
+
+  l.append(header_el, list_el, main);
+
+  // click delegation on sidebar
+  list_el.addEventListener('click', e =>
+  {
+    let item = e.target.closest('.chat_item[data-key]');
+    if (!item) return;
+    let key = item.dataset.key;
+    if (opts.on_select) opts.on_select(key, item);
+  });
+
+  // --- API ---
+
+  let api =
+  {
+    l,
+    header_el,
+    compact_btn,
+    list_el,
+    view_el,
+
+    add(key, el)
+    {
+      if (!el.classList.contains('chat_item')) el.classList.add('chat_item');
+      el.dataset.key = key;
+      if (key === _selected) el.classList.add('active');
+      list_el.append(el);
+    },
+
+    remove(key)
+    {
+      let el = list_el.querySelector(`.chat_item[data-key="${CSS.escape(key)}"]`);
+      if (el) el.remove();
+      if (_selected === key) { _selected = null; view_el.textContent = ''; }
+    },
+
+    get_item(key)
+    {
+      return list_el.querySelector(`.chat_item[data-key="${CSS.escape(key)}"]`);
+    },
+
+    select(key)
+    {
+      let prev = list_el.querySelector('.chat_item.active');
+      if (prev) prev.classList.remove('active');
+      _selected = key;
+      let item = api.get_item(key);
+      if (item) item.classList.add('active');
+      view_el.textContent = '';
+    },
+
+    deselect()
+    {
+      let prev = list_el.querySelector('.chat_item.active');
+      if (prev) prev.classList.remove('active');
+      _selected = null;
+      view_el.textContent = '';
+    },
+
+    selected() { return _selected; },
+
+    clear_view() { view_el.textContent = ''; },
+
+    set_view(...elements)
+    {
+      view_el.textContent = '';
+      for (let el of elements) { if (el) view_el.append(el); }
+    },
+
+    expand(on)
+    {
+      if (on === undefined) on = !_expanded;
+      _expanded = on;
+      l.classList.toggle('expanded', on);
+      if (opts.persist_expand) sessionStorage[opts.persist_expand] = on ? 'expanded' : 'compact';
+    },
+
+    is_expanded() { return _expanded; },
+  };
+
+  return api;
+};
+

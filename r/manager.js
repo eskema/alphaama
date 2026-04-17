@@ -178,12 +178,10 @@ const db_filter =async filter=>
   try
   {
     let results = db_time_filter(db_tag_filter(await db.queryEvents(filter), filter), filter);
+    if (results.length > 500)
+      console.warn('db_filter: %d results for', results.length, filter);
     for (let event of results)
       events.set(event.id,event);
-    // for await (let event of db.queryEvents(filter))
-    // {
-    //   events.set(event.id,event)
-    // }
   }
   catch(er){ console.error(er)}
 
@@ -597,6 +595,22 @@ const dedupe_filter =(filter,ctx)=>
 };
 
 
+// shuffle pubkey arrays so order varies between requests
+const shuffle_filter =filter=>
+{
+  if (!filter || typeof filter !== 'object') return filter;
+  let shuffled;
+  for (const k of ['authors','#p','#P'])
+  {
+    let v = filter[k];
+    if (!Array.isArray(v) || v.length < 2) continue;
+    if (!shuffled) shuffled = {...filter};
+    shuffled[k] = shuffle(v);
+  }
+  return shuffled || filter
+};
+
+
 // close subscription on a specific relay
 const sub_close =(relay,id)=>
 {
@@ -641,6 +655,8 @@ const pre_process_request =async request=>
   try
   {
     let results = db_time_filter(db_tag_filter(await db.queryEvents(filter), filter), filter);
+    if (results.length > 500)
+      console.warn('pre_process: %d results for', results.length, filter);
     for (let event of results)
     {
       let dat = mk_dat({event});
@@ -739,6 +755,7 @@ const relay_request =async({url,request,options})=>
   {
     case 'req':
       request[2] = dedupe_filter(request[2],{sub_id:request[1],url});
+      request[2] = shuffle_filter(request[2]);
 
       let id = request[1];
       let sub_id = 'sub:'+(relay.worker.subs.size+1);
@@ -1055,27 +1072,67 @@ const process_requests =(relay,request)=>
 };
 
 
-// reset keepalive timeout — resends open subs after 21s idle
+// adaptive keepalive — only pings relays that have a pattern of dropping.
+//
+// sends ['PING'] over the WebSocket to keep the connection alive. does NOT
+// re-send REQs or advance `since` — subscriptions stay exactly as they are.
+// only fires for relays that tend to disconnect; stable relays get no ping.
+//
+// computes the typical connection lifetime from the relay's open/close history.
+// if the median lifetime is under 5 minutes, schedules a ping at 80% of that
+// lifetime. otherwise the relay is stable enough to leave alone.
 const keepalive =relay=>
 {
   clearTimeout(relay.worker.ping);
-  if (relay.ws?.readyState !== 1 || !relay.worker.open.size) return;
+  if (relay.ws?.readyState !== 1) return;
+
+  let delay = ping_delay(relay);
+  if (!delay) return;  // stable relay, no ping needed
+
   relay.worker.ping = setTimeout(()=>
   {
     if (relay.ws?.readyState !== 1) return;
-    // skip while rate-limited to avoid making it worse
     if (relay.rate_limited_until && now() < relay.rate_limited_until)
     {
       keepalive(relay);
       return
     }
-    for (const [id, sub] of relay.worker.open)
-    {
-      sub.request[2].since = now();
-      relay.ws.send(JSON.stringify(sub.request));
-    }
+    relay.ws.send(JSON.stringify(['PING']));
     keepalive(relay);
-  }, 21000);
+  }, delay);
+};
+
+// compute how soon to ping based on the relay's connection history.
+// returns 0 if no ping is needed (stable or insufficient data).
+const ping_delay =relay=>
+{
+  let w = relay.worker;
+  if (!w.closes?.length || w.closes.length < 2) return 0;
+
+  // pair each close with the latest open that preceded it → connection lifetime
+  let lifetimes = [];
+  let opens = w.successes || [];
+  for (let i = 0; i < w.closes.length; i++)
+  {
+    let close_t = w.closes[i];
+    let open_t = 0;
+    for (let j = opens.length - 1; j >= 0; j--)
+    {
+      if (opens[j] <= close_t) { open_t = opens[j]; break; }
+    }
+    if (open_t > 0) lifetimes.push(close_t - open_t);
+  }
+  if (!lifetimes.length) return 0;
+
+  lifetimes.sort((a, b) => a - b);
+  let median = lifetimes[Math.floor(lifetimes.length / 2)];
+  if (median <= 0) return 0;
+
+  // stable relay: median lifetime > 5 minutes → no ping needed
+  if (median > 300) return 0;
+
+  // ping at 80% of median lifetime (in ms), minimum 10s
+  return Math.max(median * 800, 10000);
 };
 
 

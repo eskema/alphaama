@@ -125,10 +125,21 @@ aa.r.ok_ok =async(id,url)=>
         ? aa.fx.splitr(note.dataset.seen.trim()) 
         : [];
         
-      if (aa.fx.a_add(seen,[url])) 
+      if (aa.fx.a_add(seen,[url]))
         note.dataset.seen = seen.join(' ');
 
     })
+  }
+
+  // kind 5: mark referenced events as deleted
+  if (dat.event.kind === 5)
+  {
+    let refs = [];
+    for (const tag of dat.event.tags)
+    {
+      if ((tag[0] === 'e' || tag[0] === 'a') && tag[1]) refs.push(tag[1]);
+    }
+    if (refs.length) aa.e.mark_deleted(refs);
   }
 };
 

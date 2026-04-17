@@ -105,6 +105,7 @@ aa.is_read =options=>
       if (element.dataset.id) aa.fx.storage.set(element.dataset.id, 'is_read');
       element.classList.remove(...classes);
     }
+    // collapse if expanded, but don't expand
     if (section.classList.contains('expanded'))
     {
       if (id) aa.fx.storage.set(id, '');
@@ -231,11 +232,34 @@ aa.clk.pow =e=>
 };
 
 
+// delete event (kind 5)
+aa.clk.del =async e=>
+{
+  const id = e.target.closest('[data-id]')?.dataset.id;
+  if (!id) return;
+  let dat = await aa.e.get(id);
+  let ref = dat?.id_a || id;
+  aa.bus.emit('cli:stage',`k 5 "delete" ${ref}`);
+};
+
+
 // react to event
 aa.clk.react =e=>
 {
   const id = e.target.closest('[data-id]')?.dataset.id;
   aa.bus.emit('cli:stage',`k 7 ${id} ${localStorage.reaction}`);
+};
+
+
+// zap event
+aa.clk.zap =e=>
+{
+  const note = e.target.closest('[data-pubkey]');
+  const pubkey = note?.dataset.pubkey;
+  if (!pubkey) return;
+  let t = `w zap ${localStorage.zap || 21} ${pubkey} "${localStorage.zap_memo || '<3'}"`;
+  if (note.dataset.id) t += ` ${note.dataset.id}`;
+  aa.bus.emit('cli:stage',t);
 };
 
 

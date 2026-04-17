@@ -476,8 +476,8 @@ img:not([src]) {
 .butt.del
 /* .butt.no  */
 {
-  
   background-color: rgb(var(--color-no));
+  color: rgba(var(--color-light));
 }
 
 .butt.maybe

@@ -34,6 +34,17 @@
   content: 'not_sent';
 }
 
+.note.deleted .by::after
+{
+  align-self: stretch;
+  align-items: center;
+  background-color: rgb(var(--color-no)); /* rgb(var(--color-a)); */
+  color: rgb(var(--color-a));
+  content: 'deleted';
+  display: grid;
+  padding: 0 var(--padm);
+}
+
 .in_view > .by,
 
 /* .haz_solo .root.in_path:not(.in_view) > .by, */

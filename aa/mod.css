@@ -173,8 +173,8 @@ dialog .mod > header
 .mod .item > .mod_details[open] + .butts
 {
   align-self: end;
-  /* display: grid; */
-  /* grid-gap: var(--padm); */
+  display: grid;
+  grid-gap: var(--padm);
   /* grid-template-columns: auto auto; */
   padding-left: var(--pad);
   padding-bottom: var(--pad);
@@ -227,6 +227,7 @@ dialog .mod > header
 {
   background: rgba(var(--color-b),1);
   margin: var(--line) 0;
+  word-break: break-all;
 }
 
 /* .mod > .butt

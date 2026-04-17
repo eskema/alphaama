@@ -188,7 +188,9 @@ aa.mk.p_link =(pubkey,p)=>
   {
     p = aa.p.p(pubkey);
   }
-  if (!p.metadata) aa.bus.emit('p:miss', pubkey);
+  // only fetch if we've never seen any event from this pubkey
+  // (p.updated is bumped by events_newer on any stored kind)
+  if (!p.metadata && !p.updated) aa.bus.emit('p:miss', pubkey);
 
   const element = make('a',
   {

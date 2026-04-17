@@ -61,6 +61,8 @@ aa.q =
     m:{"#p":["u"],"kinds":[1059],"since":"n_21","limit":500},
     tag:{"#t":["s"],"limit":200},
     u:{"authors":["u"],"since":"n_7","limit":500},
+    z:{"kinds":[9735],"#P":["u","k3"],"since":"h_24"},
+    zaps:{"kinds":[9735],"#p":["u","k3"],"since":"h_24"},
   },
   scripts:
   [

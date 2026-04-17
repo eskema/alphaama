@@ -1,0 +1,526 @@
+/* chat — shared two-panel chat layout + conversation item styles.
+   used by m/ and d/ modules. module-specific overrides in their own CSS. */
+
+
+/* ----- panel layout ----- */
+
+.chat_panel
+{
+  display: grid;
+  grid-template-columns: var(--chat-sidebar-w, 220px) 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "header header" "list main";
+  min-height: 200px;
+  background: rgb(var(--color-b));
+  position: relative;
+  z-index: 1;
+  margin-left: var(--pad-l);
+}
+
+.chat_panel.expanded
+{
+  grid-template-areas: "header main" "list main";
+}
+
+/* compact mode: shrink sidebar */
+.chat_panel:not(.expanded)
+{
+  grid-template-columns: calc(2rem + 2px) 1fr;
+}
+
+
+/* ----- header ----- */
+
+.chat_header
+{
+  display: grid;
+  grid-area: header;
+  grid-auto-flow: column;
+  justify-items: start;
+  justify-content: start;
+  margin-bottom: var(--pad);
+}
+
+.chat_panel.expanded > .chat_header
+{
+  justify-content: stretch;
+}
+
+.chat_header .butt
+{
+  font-size: var(--font-size-s);
+  margin: var(--padm);
+}
+
+.chat_header .chat_compact
+{
+  justify-self: end;
+}
+
+
+/* ----- sidebar list ----- */
+
+.chat_list
+{
+  grid-area: list;
+  align-content: start;
+  display: grid;
+  overflow-y: auto;
+  max-height: 80vh;
+  position: sticky;
+  top: 0;
+}
+
+.chat_panel:not(.expanded) .chat_list
+{
+  width: calc(2rem + 2px);
+}
+
+
+/* ----- conversation item ----- */
+
+.chat_item
+{
+  align-items: center;
+  background: rgba(var(--color-b),.6);
+  cursor: pointer;
+  display: grid;
+  grid-template-areas:
+    "profile unread"
+    "preview time";
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: var(--padm);
+  margin-bottom: var(--pad);
+  border-left: 1px solid rgba(var(--c),.5);
+  border-top: 1px dotted rgba(var(--color-c),1);
+}
+
+.chat_item:hover
+{
+  background: rgba(var(--color-c),.3);
+}
+
+.chat_item.active
+{
+  grid-row: 1;
+}
+
+.chat_panel.expanded .chat_item.active
+{
+  color: rgb(var(--color-e));
+  background: rgba(var(--c),.3);
+}
+
+/* .chat_item.active[data-luma="light"]
+{
+  color: rgb(var(--color-dark));
+}
+
+.chat_item.active[data-luma="dark"]
+{
+  color: rgb(var(--color-light));
+} */
+
+/* compact mode: shrink items */
+.chat_panel:not(.expanded) .chat_item
+{
+  padding: 0;
+  gap: 0;
+  width: calc(2rem - 2px);
+}
+
+/* author link inside item */
+.chat_item > .a.author
+{
+  grid-area: profile;
+  background: rgba(var(--c),1);
+  font-size: var(--font-size-s);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.chat_item > .a.author .name
+{
+  background: rgba(var(--color-b),1);
+}
+
+/* compact mode: author image/initial size */
+.chat_panel:not(.expanded) .chat_item .a.author img,
+.chat_panel:not(.expanded) .chat_item .a.author::before
+{
+  width: calc(2rem - 2px);
+  height: calc(2rem - 2px);
+}
+
+/* preview / time / count inside item */
+.chat_preview
+{
+  grid-column: 1;
+  grid-area: preview;
+  font-size: var(--font-size-s);
+  overflow: hidden;
+  padding: var(--padm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat_time
+{
+  font-size: var(--font-size-s);
+  opacity: .6;
+  justify-self: end;
+  grid-area: time;
+  padding: 0 var(--padm);
+}
+
+.chat_count
+{
+  align-self: center;
+  font-size: var(--font-size-s);
+  grid-area: unread;
+  justify-self: end;
+  padding: 0 var(--padm);
+}
+
+.chat_count::before { content: "("; }
+.chat_count::after { content: ")"; }
+
+.chat_count.hidden
+{
+  display: none;
+}
+
+/* compact mode: hide preview and time */
+.chat_panel:not(.expanded) .chat_preview,
+.chat_panel:not(.expanded) .chat_time
+{
+  display: none;
+}
+
+/* compact mode: count repositioning */
+.chat_panel:not(.expanded) .chat_count
+{
+  align-content: center;
+  position: absolute;
+  padding: 2px;
+  font-size: var(--font-size-xs);
+  transform: translateX(-1.2rem);
+  justify-self: start;
+}
+
+.chat_panel:not(.expanded) .chat_count.hidden
+{
+  display: none;
+}
+
+
+/* ----- main pane ----- */
+
+.chat_main
+{
+  grid-area: main;
+}
+
+.chat_view
+{
+  display: flex;
+  flex-direction: column;
+}
+
+.chat_view:empty::after
+{
+  content: "select a conversation";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  opacity: .3;
+}
+
+/* close/back button in view headers */
+.chat_back
+{
+  grid-area: close;
+  margin-left: var(--pad);
+  padding: 0 var(--padm);
+  text-decoration: none;
+}
+
+
+/* ----- messages area ----- */
+
+/* hide read messages when mark_read is toggled */
+.m_read .chat_messages > .chat_msg:not(.m_new),
+.m_read .chat_messages > .chat_sys:not(.m_new)
+{
+  display: none;
+}
+
+.chat_messages
+{
+  color: rgb(var(--color-e));
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--pad);
+  display: flex;
+  flex-direction: column;
+  gap: var(--padm);
+}
+
+/* system / info message — inline timeline event, not a bubble */
+.chat_sys
+{
+  font-size: var(--font-size-s);
+  color: rgb(var(--color-d));
+  text-align: center;
+  padding: var(--padm) var(--pad);
+  opacity: .6;
+}
+
+.chat_sys::before
+{
+  content: "— ";
+}
+
+.chat_sys::after
+{
+  content: " —";
+}
+
+/* message bubble */
+.chat_msg
+{
+  max-width: fit-content;
+  padding: var(--padm) var(--pad);
+  border-radius: 4px;
+  background: rgba(var(--c),.2);
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+}
+
+.chat_msg.from_u
+{
+  margin-left: auto;
+}
+
+/* .chat_msg_content {} */
+
+/* draft */
+.chat_draft
+{
+  border: 1px dashed rgba(var(--color-main),1);
+  grid-template-columns: 1fr;
+}
+
+.chat_draft_actions
+{
+  display: grid;
+  font-size: var(--font-size-s);
+  grid-gap: var(--padm);
+  grid-template-columns: 1fr 1fr;
+}
+
+.chat_draft_actions .butt
+{
+  text-align: center;
+}
+
+.chat_msg_time
+{
+  font-size: var(--font-size-s);
+  opacity: .4;
+  white-space: nowrap;
+  align-self: center;
+}
+
+.chat_msg.recovered
+{
+  opacity: .7;
+}
+
+.chat_msg .tag
+{
+  color: rgb(var(--color-c));
+  font-style: italic;
+  font-size: var(--font-size-s);
+}
+
+/* view header: profile | mark_read(1fr) | actions | close */
+.chat_view_header
+{
+  background: rgb(var(--color-b));
+  border-bottom: 1px solid rgba(var(--color-c),1);
+  padding: 0 var(--padm);
+  align-items: center;
+  position: sticky;
+  top: 0;
+  display: grid;
+  justify-content: start;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "profile mark_read butts actions close";
+}
+
+.chat_view_header .butt
+{
+  font-size: var(--font-size-s);
+}
+
+
+.chat_view_header .p_link
+{
+  grid-area: profile;
+}
+
+.chat_panel.expanded .chat_view_header a.author,
+.chat_view_header a.author.has-picture img, 
+.chat_view_header .a.author::before
+{
+  display: none;
+}
+
+.chat_view_header .chat_mark_read
+{
+  grid-area: mark_read;
+}
+
+.chat_view_header .chat_actions
+{
+  grid-area: actions;
+  justify-self: end;
+}
+
+.chat_view_header .chat_back
+{
+  grid-area: close;
+  line-height: 1.5;
+  padding: var(--padm);
+}
+
+/* mark read */
+.chat_mark_read
+{
+  font-size: var(--font-size-s);
+  margin-left: var(--padm);
+  padding: var(--padm);
+  display: block;
+  line-height: 1.5;
+}
+
+.chat_mark_read::before
+{
+  content: "// ";
+}
+
+/* read state: hide non-new messages, change mark_read style */
+.m_read .chat_mark_read
+{
+  color: rgb(var(--color-no));
+}
+
+.m_read .chat_mark_read::before
+{
+  content: "/* ";
+}
+
+.m_read .chat_mark_read::after
+{
+  content: " read */";
+}
+
+@media screen and (min-width: 1025px)
+{
+  .chat_mark_read:hover
+  {
+    background-color: rgba(var(--color-a),1);
+  }
+
+  .chat_mark_read:hover::after
+  {
+    content: " mark read";
+  }
+}
+
+/* inspect button */
+.chat_inspect
+{
+  opacity: .5;
+  font-size: var(--font-size-s);
+  padding: 0 var(--padm);
+}
+
+.chat_inspect:hover
+{
+  opacity: 1;
+}
+
+/* inspect dialog */
+.chat_inspect_wrap
+{
+  max-width: 80vw;
+}
+
+.chat_inspect_wrap > header
+{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--pad);
+}
+
+.chat_inspect_wrap > header h3
+{
+  margin-bottom: 0;
+}
+
+.chat_inspect_wrap > header .butt
+{
+  font-size: var(--font-size-s);
+}
+
+.chain_section
+{
+  margin-bottom: var(--pad);
+}
+
+.chain_section > h4
+{
+  font-size: var(--font-size-s);
+  opacity: .7;
+  margin-bottom: var(--padm);
+}
+
+.chain_section > pre
+{
+  background: rgba(var(--color-a),.5);
+  font-size: var(--font-size-s);
+  max-height: 200px;
+  overflow: auto;
+  padding: var(--padm);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* sending state */
+.chat_sending { opacity: .6; }
+.chat_sent { opacity: 1; }
+.chat_failed { border: 1px solid red; }
+.chat_error { color: red; font-size: var(--font-size-s); }
+
+
+/* ----- responsive ----- */
+
+@media screen and (max-width: 768px)
+{
+  .chat_panel
+  {
+    grid-template-columns: 1fr;
+  }
+
+  .chat_list
+  {
+    max-height: 30vh;
+  }
+}

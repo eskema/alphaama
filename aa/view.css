@@ -5,7 +5,7 @@
   align-self: start;
   display: grid;  
   grid-area: main;
-  grid-template-areas: "p" "m" "e";
+  grid-template-areas: "p" "d" "m" "e" "readme";
   position: relative;
   z-index: 1;
 }
@@ -26,6 +26,13 @@
     "search pagination";
   grid-template-columns: auto 1fr; */
   z-index: 0;
+}
+
+#view > section > header h2
+{
+  color: rgb(var(--color-d));
+  font-size: var(--font-size-m);
+  padding: var(--padm);
 }
 
 #view > section > header > .section_butt
@@ -108,6 +115,11 @@
 {
   margin-bottom: var(--pad);
   padding-left: var(--padm);
+}
+
+#aa_read_me
+{
+  grid-area: readme;
 }
 
 #view > details > summary
