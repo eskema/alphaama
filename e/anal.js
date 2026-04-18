@@ -208,10 +208,14 @@ aa.e.anal.collect('tags',
     }
 
     // normal path
+    // only count p tags for kinds where they represent real mentions/engagement;
+    // list kinds (3 follows, 10000 mute, etc.) carry membership not mentions
+    // and would otherwise flood leaderboards + trigger fresh p:miss waterfalls.
     const pk = dat.event.pubkey;
+    const p_ok = aa.e.p_tag_kinds.has(kind);
     for (const tag of dat.event.tags)
     {
-      if (tag[0] === 'p' && aa.fx.is_hex(tag[1]))
+      if (p_ok && tag[0] === 'p' && aa.fx.is_hex(tag[1]))
         count_p(pk, tag[1]);
       else if (tag[0] === 'e' && aa.fx.is_hex(tag[1]))
       {
