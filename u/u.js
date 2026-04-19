@@ -641,7 +641,7 @@ aa.u.setup_butt =()=>
     ]
   });
 
-  setTimeout(()=>{ aa.log(setup_butt) },500);
+  setTimeout(()=>{ aa.log(setup_butt, {pinned:true}) },500);
 };
 
 
