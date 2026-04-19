@@ -1,0 +1,104 @@
+= d => double ratchet
+
+forward-secret direct messages via the Signal-style double ratchet, bound to nostr events.
+
+vendored from nostr-double-ratchet (mmalmi) as `dep/ratchet.js`. upstream wire format v1: kind 1060 outer (message), kind 30078 (invite), kind 1059 (invite response). v2 will swap construction for a 1059-shaped variant per alphaama design notes.
+
+each chat runs its own ratchet: every message derives a fresh key, so past keys can't decrypt future messages and future keys can't decrypt past ones. compromise of a single key only exposes that message.
+
+== invite
+
+to offer a session, type: `. d invite`
+
+* returns a one-off invite URL containing the shared secret + your relay hints
+* ship the URL to the peer through any side channel (QR, paste, zap memo, etc.)
+* while the invite is active, d listens for responses on your write relays
+* revoke with `. d revoke <secret_prefix>` (or `. d revoke all`) — wipes the crypto material, stops listening
+
+== join
+
+to accept an invite, type: `. d join <invite_url>`
+
+* decodes the URL, runs the initial DH, publishes a kind-1059 response to the inviter's relays
+* a new session is opened immediately on your side
+* the inviter's side adopts (or confirms) the session when the response arrives
+
+== send
+
+to send a message, type: `. d send <peer> <text>`
+
+* `peer` is a hex pubkey prefix — enough characters to uniquely identify a live session (typically 4–8 chars)
+* `text` is the plaintext body
+* example: `. d send 83d9 hello world`
+* every send advances the ratchet and publishes a kind 1060 event via your write relays
+
+== sessions
+
+sessions persist across reloads. `aa.d.o.sessions` holds serialized ratchet state + history per peer. on load, `aa.d.restore` rehydrates live `Session` instances from storage and resumes the invite listener for any non-revoked invite.
+
+runtime maps live in `aa.d.live`:
+
+* `sessions` — active `{session, name, history}` per peer
+* `pending` — accepted-but-not-adopted sessions awaiting user confirmation
+* `invites` — active invite listeners keyed by shared_secret
+* `unsub` — per-session teardown handle
+
+== pending + adopt
+
+when a peer accepts your invite, the adopting side may already have a session with them. to avoid clobbering:
+
+* the new session lands in `live.pending`
+* a confirm dialog offers to adopt (replace), merge history, or dismiss
+* `. d adopt <peer>` adopts from CLI
+* `. d dismiss <peer>` drops the pending session
+
+== export / import
+
+to transfer your chat history between devices (or to rebuild after state loss):
+
+* `. d export <peer>` — prints an encrypted blob scoped to that peer. the blob is prefixed with your identity pubkey so the other side knows which session to import into.
+* `. d import <peer> <cyphertext>` — merges the blob into the local peer session. returns `added / total`.
+* content is nip44-encrypted to yourself (your signer) — only you can read it.
+
+== close
+
+`. d close <peer>` closes the live session but keeps the persistent record (marks `closed_at`). messages stop flowing; history remains in storage.
+
+== status
+
+`. d status` prints a summary: device id, live session count, pending count, active invites, unread totals.
+
+== storage
+
+all persistent state lives under `aa.d.o` in the IDB `stuff` store:
+
+* `device_id` — stable per-install identifier
+* `invites` — `shared_secret -> {serialized, url, created_at, revoked_at?, accepted_by?}`
+* `sessions` — `peer_pubkey -> {name, state, history, opened_at, closed_at?}`
+* `pending_sessions` — unaccepted-by-user incoming sessions
+* `invite_seen` — dedup map of invite response event ids
+* `seen` — per-peer last-read timestamp (drives unread badges)
+* `log` — append-only audit trail
+
+saves are debounced; `beforeunload` flushes synchronously so tab-close doesn't drop ratchet state.
+
+== relays
+
+d uses your write relays (`aa.r.w`) for outbound events (invites, responses, messages) and listens on those same relays for inbound. sessions without any write relay configured will log `no write relays — sub will be empty` and no traffic flows.
+
+== ui
+
+`aa.d.mk.panel` builds the section panel — a two-column chat layout shared with m/ via `aa.mk.chat_list`. sidebar lists live sessions + pending + invites; main pane renders the selected session's history. click delegation drives selection via the view system (`#d_<npub>`).
+
+== security notes
+
+* **forward secrecy** — past keys are wiped as the ratchet advances. a later device compromise does not decrypt old messages.
+* **post-compromise recovery** — once the ratchet rotates past the compromised step, future messages are safe again.
+* **invite secrets** are single-use conceptually; a listener stays open until explicit revoke or first accept (policy may tighten in v2).
+* **no signer prompts on every send** — identity binding happens at session setup; per-message encryption uses derived ratchet keys, not your nostr key.
+
+== related
+
+* dep/ratchet.js — vendored library implementing the double ratchet + nostr session wrappers
+* ma/ratchet/ — standalone test harness for the ratchet implementation
+* m/ — nip-17 gift-wrapped DMs (separate protocol, same chat UI shell)

@@ -258,6 +258,14 @@
   margin: var(--pad) 0;
   max-height: var(--media-height);
   max-width: 100%;
+
+  /* suppress HDR so scrolling past HDR media doesn't renegotiate display range
+     and flicker neighbouring SDR content. dynamic-range-limit is the official
+     fix (Chromium 123+); filter forces SDR raster as a fallback for Safari/FF;
+     isolation keeps any remaining flicker from escaping into surrounding UI. */
+  dynamic-range-limit: standard;
+  filter: brightness(1);
+  isolation: isolate;
 }
 
 .content-img

@@ -127,7 +127,7 @@ aa.w.zap =async(string='')=>
 
   // get lnurl endpoint
   let endpoint;
-  try { endpoint = await NostrTools.nip57.getZapEndpoint(dat.event) }
+  try { endpoint = await NostrTools.nip57.getZapEndpoint(k0_event) }
   catch(err)
   {
     aa.log('w zap: failed to get endpoint: ' + err.message);
@@ -187,12 +187,14 @@ aa.w.zap =async(string='')=>
   }
 
   aa.log('w zap: invoice received for ' + amount + ' sats');
-  aa.w.zap_pay(response.pr);
+  aa.w.zap_pay(response.pr, signed);
 };
 
 
 // route payment: nwc → auto-melt → manual dialog
-aa.w.zap_pay =async(bolt11)=>
+// zap_request (signed kind 9734) is forwarded so the dialog can watch for its
+// matching zap receipt (kind 9735) and auto-close on payment
+aa.w.zap_pay =async(bolt11, zap_request)=>
 {
   // try nwc
   let nwc = await aa.w.nwc_get();
@@ -210,7 +212,7 @@ aa.w.zap_pay =async(bolt11)=>
   }
 
   // fallback: manual dialog
-  aa.w.zap_present(bolt11);
+  aa.w.zap_present(bolt11, zap_request);
 };
 
 
@@ -255,7 +257,7 @@ aa.w.melt_invoice =async(bolt11)=>
 
 
 // fallback: show lightning link + qr code
-aa.w.zap_present =(bolt11)=>
+aa.w.zap_present =(bolt11, zap_request)=>
 {
   let sats = NostrTools.nip57.getSatoshisAmountFromBolt11(bolt11);
   let l = make('div',{cla:'zap_invoice'});
@@ -302,6 +304,44 @@ aa.w.zap_present =(bolt11)=>
     l,
     no:{title:'done'}
   });
+
+  // watch for the matching zap receipt (kind 9735) and auto-close on payment
+  if (!zap_request?.id) return;
+  let recipient = aa.fx.tag_value(zap_request.tags, 'p');
+  if (!recipient) return;
+
+  let sub_id = 'zap_watch:' + zap_request.id.slice(0,8);
+  let on_evt = dat=>
+  {
+    if (dat.event.kind !== 9735) return;
+    // match by zap request id embedded in the receipt's description tag
+    let desc = aa.fx.tag_value(dat.event.tags, 'description');
+    if (!desc) return;
+    let parsed = aa.pj(desc);
+    if (parsed?.id !== zap_request.id) return;
+    aa.log('w zap: receipt received, closing dialog');
+    let dialog = aa.el.get('dialog');
+    if (dialog?.open) dialog.close();
+  };
+
+  aa.r.on_sub.set(sub_id, on_evt);
+  aa.r.send_req(
+  {
+    relays: aa.r.r,
+    request: ['REQ', sub_id, {kinds:[9735], '#p':[recipient], since: aa.now}]
+  });
+
+  // clean up on dialog close (manual or auto)
+  setTimeout(()=>
+  {
+    let dialog = aa.el.get('dialog');
+    if (!dialog) return;
+    dialog.addEventListener('close', ()=>
+    {
+      aa.r.close(sub_id);
+      aa.r.on_sub.delete(sub_id);
+    }, {once:true});
+  }, 0);
 };
 
 

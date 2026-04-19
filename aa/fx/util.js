@@ -30,7 +30,7 @@ aa.fx.readme =async(path,o={})=>
       response = await fetch(path)
     }
     catch {}
-    if (!response) return;
+    if (!response || !response.ok) return;
     let text = await response.text();
     if (text) o.readme = text;
   }
