@@ -197,8 +197,8 @@
   display: none;
 }
 
-.view_e .note.in_view .note,
-.section:not(.expanded) .note.in_view .note
+.view_e #view .note.in_view .replies.expanded .note, 
+#view .section_e:not(.expanded) .note.in_view .replies.section.expanded .note
 {
   display: grid;
 }
@@ -396,10 +396,14 @@
     border-top: 1px solid rgba(var(--c),.5);
   }
   
-  .clicker:hover,
-  .sift_match > .clicker
+  .clicker:hover
   {
     background: rgba(var(--c),.5);
+  }
+
+  .sift_match > .clicker
+  {
+    /* background: rgba(var(--c),.1); */
   }
 
   .clicker:hover

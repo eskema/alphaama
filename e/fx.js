@@ -21,22 +21,27 @@ aa.fx.id_a =o=>
 {
   if (typeof o.kind !== 'number' || Number.isNaN(o.kind)) return;
   if (!o.pubkey || !aa.fx.is_key(o.pubkey)) return;
-  if (!o.identifier || typeof o.identifier !== 'string') return;
+  // identifier may be the empty string for the "default" instance of an addressable event
+  if (typeof o.identifier !== 'string') return;
   return `${o.kind}:${o.pubkey}:${o.identifier}`;
 };
 
 
 aa.fx.id_ae =event=>
 {
+  // missing d tag defaults to empty string (addressable event "default" instance)
+  let d = aa.fx.tag_value(event.tags,'d');
+  if (typeof d !== 'string') d = '';
   return aa.fx.id_a(
   {
     kind:event.kind,
     pubkey:event.pubkey,
-    identifier:aa.fx.tag_value(event.tags,'d'),
+    identifier:d,
   })
 };
 
 // make request filter from addressable string (kind:pubkey:d-identifier)
+// empty identifier → #d:[""] so we match only the default instance
 aa.fx.id_af =string=>
 {
   let [kind,pubkey,identifier] = aa.fx.split_ida(string);
@@ -58,8 +63,7 @@ aa.fx.id_af =string=>
   }
   result.authors = [pubkey];
 
-  if (!identifier) return result;
-  result['#d'] = [identifier];
+  if (typeof identifier === 'string') result['#d'] = [identifier];
 
   return result
 };

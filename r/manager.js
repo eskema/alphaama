@@ -1074,13 +1074,16 @@ const process_requests =(relay,request)=>
 
 // adaptive keepalive — only pings relays that have a pattern of dropping.
 //
-// sends ['PING'] over the WebSocket to keep the connection alive. does NOT
-// re-send REQs or advance `since` — subscriptions stay exactly as they are.
-// only fires for relays that tend to disconnect; stable relays get no ping.
+// sends a valid NIP-01 REQ+CLOSE pair that can't match any event (filter by
+// an all-'a' id with limit:0). keeps the connection active without polluting
+// the relay's real subscription state and without relying on non-standard
+// message types. stable relays get no ping.
 //
 // computes the typical connection lifetime from the relay's open/close history.
 // if the median lifetime is under 5 minutes, schedules a ping at 80% of that
 // lifetime. otherwise the relay is stable enough to leave alone.
+const PING_FILTER = {ids:['a'.repeat(64)], limit:0};
+
 const keepalive =relay=>
 {
   clearTimeout(relay.worker.ping);
@@ -1097,7 +1100,9 @@ const keepalive =relay=>
       keepalive(relay);
       return
     }
-    relay.ws.send(JSON.stringify(['PING']));
+    let ping_id = 'ping:' + now();
+    relay.ws.send(JSON.stringify(['REQ', ping_id, PING_FILTER]));
+    relay.ws.send(JSON.stringify(['CLOSE', ping_id]));
     keepalive(relay);
   }, delay);
 };

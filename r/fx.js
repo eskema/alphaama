@@ -25,33 +25,39 @@ const is_valid_url =(s='')=>
 
 const fx_id_ae =event=>
 {
+  // missing d tag defaults to empty string (addressable event "default" instance)
+  let d_tag = event.tags.find(t=>t[0]==='d');
+  let identifier = d_tag && typeof d_tag[1] === 'string' ? d_tag[1] : '';
   return fx_id_a(
   {
     kind:event.kind,
     pubkey:event.pubkey,
-    identifier:event.tags.find(t=>t[0]==='d')[1],
+    identifier,
   })
 };
 
 
 const fx_id_a =o=>
 {
-  if (!o.kind || typeof o.kind !== 'number') return;
+  if (typeof o.kind !== 'number' || Number.isNaN(o.kind)) return;
   if (!o.pubkey || !is_key(o.pubkey)) return;
-  if (!o.identifier || typeof o.identifier !== 'string') return;
+  // identifier may be the empty string ("default" instance of an addressable event)
+  if (typeof o.identifier !== 'string') return;
   return `${o.kind}:${o.pubkey}:${o.identifier}`;
 };
 
 
 // make request filter from addressable string
+// empty identifier → #d:[""] so we match only the default instance
 const fx_id_af =string=>
 {
   let [kind,pubkey,identifier] = fx_split_ida(string);
-  return {
+  let filter = {
     kinds:[parseInt(kind)],
     authors:[pubkey],
-    '#d':[identifier]
-  }
+  };
+  if (typeof identifier === 'string') filter['#d'] = [identifier];
+  return filter
 };
 
 
