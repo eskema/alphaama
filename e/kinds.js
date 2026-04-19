@@ -96,11 +96,12 @@ aa.e.note_pre =dat=>
 };
 
 
-// event template for user metadata 
+// event template for user metadata
 aa.e.kinds[0] =dat=>
 {
   const note = aa.e.note_regular(dat);
   note.classList.add('root','tiny');
+  let is_u = aa.u.is_u(dat.event.pubkey);
   aa.p.author(dat.event.pubkey)
   .then(p=>
   {
@@ -115,11 +116,13 @@ aa.e.kinds[0] =dat=>
         p.metadata = metadata;
         aa.p.save(p);
         aa.p.links_upd(p);
-        if (aa.u.is_u(dat.event.pubkey)) aa.u.upd_u_u();
+        if (is_u) aa.u.upd_u_u();
       }
     }
+    // signal q.stuff that we have your k0 (fire_ready is idempotent)
+    if (is_u) aa.mod.fire_ready('u:k0');
   });
-  
+
   return note
 };
 
@@ -326,6 +329,7 @@ aa.e.relay_list_upd =(p, dat, relays, sets)=>
 aa.e.kinds[10002] =dat=>
 {
   const note = aa.e.note_regular(dat);
+  let is_u = aa.u.is_u(dat.event.pubkey);
   aa.p.author(dat.event.pubkey).then(p=>
   {
     if (aa.p.events_newer(p,dat.event))
@@ -345,6 +349,8 @@ aa.e.kinds[10002] =dat=>
       }
       aa.e.relay_list_upd(p,dat,relays,'k10002');
     }
+    // signal q.stuff that we have your k10002 (fire_ready is idempotent)
+    if (is_u) aa.mod.fire_ready('u:k10002');
   });
   return note
 };

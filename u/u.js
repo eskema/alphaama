@@ -647,9 +647,13 @@ aa.u.setup_butt =()=>
 
 aa.u.on_load_sub =()=>
 {
+  // during first-time setup, q.stuff drives the pipeline + fires u:ready itself
+  if (aa.q._stuffing) return;
+
   let on_load_sub = aa.o.o.ls.on_load_sub;
-  if (!on_load_sub || aa.q._stuffing) return;
-  let tasks = on_load_sub.replaceAll('+',',').split(',').map(t=> t.trim()).filter(Boolean);
+  let tasks = on_load_sub
+    ? on_load_sub.replaceAll('+',',').split(',').map(t=> t.trim()).filter(Boolean)
+    : [];
 
   let db_tasks = [];
   let sub_tasks = [];
@@ -666,6 +670,10 @@ aa.u.on_load_sub =()=>
 
   if (sub_tasks.length)
     aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(sub_tasks.join(',')), 420));
+
+  // on normal reload (no q.stuff), signal non-critical modules that initial
+  // bootstrap is effectively done so they can start their own work
+  aa.mod.fire_ready('u:ready');
 };
 
 

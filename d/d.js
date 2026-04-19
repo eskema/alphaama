@@ -67,13 +67,11 @@ aa.d.load =async()=>
   // view system integration
   aa.view.clears.push(aa.d.view_clear);
 
-  // restore after other modules have loaded — d is not critical path
-  aa.mod.ready('u:pubkey', ()=>
+  // restore only after initial u setup is done (q.stuff finalize or on_load_sub
+  // scheduling) — otherwise d.restore competes with the startup fetch pipeline
+  aa.mod.ready('u:ready', ()=>
   {
-    aa.mod.ready('r:manager', ()=>
-    {
-      setTimeout(aa.d.restore, 2000);
-    });
+    aa.mod.ready('r:manager', aa.d.restore);
   });
 
   // beforeunload flush — don't lose ratchet state on tab close

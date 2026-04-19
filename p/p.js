@@ -664,6 +664,8 @@ aa.p.process_k3_tags =async(event,p)=>
     aa.p.k3 = new_follows;
     aa.u.o.ls.k3 = p.follows.join(' ');
     aa.mod.save(aa.u);
+    // signal downstream (q.stuff phases 3/4) that follows are now expandable
+    aa.mod.fire_ready('u:follows');
   }
 
   await aa.p.get_authors([...new_follows.union(old_follows)]);

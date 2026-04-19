@@ -913,29 +913,116 @@ aa.q.print =async(id,options)=>
 
 
 // fetch basic stuff to get things started
+//
+// staged pipeline — each stage awaits the prior one's data to be processed
+// so the next stage can use it. stages use inline filters (not aa.q.ls) so
+// the sequencing is explicit and doesn't depend on variable expansion.
+//
+// stage 1  — your k10002 (relay list) from bootstrap reads
+// stage 2a — your k0 + k3 first, on your own relays; wait for k3 to apply so
+//            later stages have your follows list. separate from 2b so the
+//            list kinds don't compete for bandwidth with the critical k3.
+// stage 2b — your other list kinds (mute, search, blocked, emoji, DM, etc.)
+// stage 3  — follows' k10002, needed for stage 4's outbox routing
+// stage 4  — follows' k0 + k3 + k10050 via outbox
 aa.q.stuff =async()=>
 {
   const options = {eose:'close'};
-  
-  // Phase 1: Bootstrap with initial relays
-  aa.log('getting your stuff (relays, metadata, follows, etc…)');
-  await aa.q.print('a',{options});
+  const pubkey = aa.u.p?.pubkey;
+  if (!pubkey) { aa.log('q stuff: no pubkey'); return }
 
-  // Phase 2: Updated user data via sub resumption
-  await aa.fx.delay(1000);
-  await aa.q.print('a',{options, sub:true});
+  // direct fetch via aa.r.get + emit results to print_q so handlers run
+  const grab =async(filter, relays)=>
+  {
+    let id = 'stuff_' + aa.fx.rands();
+    let sheet = await aa.r.get({id, filter, relays: relays?.length ? relays : aa.r.r, options});
+    for (const [, dat] of sheet.events) aa.bus.emit('e:print_q', dat);
+    return sheet;
+  };
 
-  // Phase 3: Load follows data
-  await aa.fx.delay(1000);
-  aa.log('getting your follows stuff');
-  await aa.q.print('b',{options});
+  // outbox-routed fetch — groups authors by each of their declared write
+  // relays (from k10002) and fans out per-relay queries in parallel.
+  const grab_outbox =async filter=>
+  {
+    let {keys, outbox} = aa.q.outbox_key(filter);
+    if (!keys?.length || !outbox?.length)
+    {
+      aa.log('q stuff: no outbox routing available — skipping');
+      return
+    }
+    let base = {...filter};
+    for (const {key} of keys) delete base[key];
 
-  // Phase 4: Follows via outbox
-  await aa.fx.delay(1500);
-  aa.log('getting your follows stuff again but now in outbox mode');
-  await aa.q.print('b',{options, mode:'outbox', sub:true});
-  
-  // Finalize
+    let promises = [];
+    for (const [url, pubs] of outbox)
+    {
+      let f = {...base};
+      for (const {key, pubkeys} of keys)
+      {
+        let relevant = pubkeys.filter(p => pubs.includes(p));
+        if (relevant.length) f[key] = relevant;
+      }
+      let id = 'stuff_out_' + aa.fx.rands();
+      promises.push(aa.r.get({id, filter: f, relays: [url], options}));
+    }
+    let sheets = await Promise.all(promises);
+    for (const sheet of sheets)
+      for (const [, dat] of sheet.events) aa.bus.emit('e:print_q', dat);
+  };
+
+  // wait for a readiness signal, short-circuit if the condition already holds
+  // (fire_ready so the race resolves immediately), cap with a timeout
+  const wait =(key, check, ms=3000)=>
+  {
+    if (check && check()) aa.mod.fire_ready(key);
+    return Promise.race(
+    [
+      new Promise(resolve => aa.mod.ready(key, resolve)),
+      aa.fx.delay(ms),
+    ])
+  };
+
+  // does p have any k10002-tagged relays?
+  const has_k10002 =p=>
+    !!p?.relays && Object.values(p.relays).some(r => r.sets?.includes('k10002'));
+
+  // stage 1 — your relay list
+  aa.log('q stuff 1/4: finding your relays');
+  await grab({authors:[pubkey], kinds:[10002]});
+  await wait('u:k10002', () => has_k10002(aa.u.p));
+
+  // stage 2a — your profile + follows, prioritised so k3 lands before list kinds
+  aa.log('q stuff 2/4: getting your profile and follows');
+  await grab({authors:[pubkey], kinds:[0,3]});
+  await Promise.all(
+  [
+    wait('u:k0', () => !!aa.u.p?.metadata),
+    wait('u:follows', () => !!aa.u.o.ls.k3?.length),
+  ]);
+
+  // stage 2b — remaining list kinds (background, non-critical)
+  grab({authors:[pubkey], kinds:[10000,10001,10003,10004,10005,10006,10007,10050,10063]});
+
+  let follows = aa.u.o.ls.k3 ? aa.u.o.ls.k3.split(' ').filter(Boolean) : [];
+  if (!follows.length)
+  {
+    aa.log('q stuff: no follows — done');
+  }
+  else
+  {
+    // stage 3 — follows' relay lists, so stage 4 can route via outbox
+    aa.log(`q stuff 3/4: getting ${follows.length} follows' relays`);
+    await grab({authors: follows, kinds:[10002]});
+    // no single readiness for N follows — small ceiling to let handlers apply
+    await aa.fx.delay(1500);
+
+    // stage 4 — follows' profile + follow lists + DM relays via outbox
+    let ready_count = follows.filter(pk => has_k10002(aa.db.p[pk])).length;
+    aa.log(`q stuff 4/4: ${ready_count}/${follows.length} follows have k10002 — fetching via outbox`);
+    await grab_outbox({authors: follows, kinds:[0,3,10050]});
+  }
+
+  // finalize
   setTimeout(()=>
   {
     sessionStorage.q_out = 'f';
@@ -945,6 +1032,8 @@ aa.q.stuff =async()=>
       content: 'all done ',
       app: aa.mk.reload_butt()
     }),{pinned:true});
+    // non-critical modules (e.g. d) gate their restore on this signal
+    aa.mod.fire_ready('u:ready');
   },1000);
 };
 
