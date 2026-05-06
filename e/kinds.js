@@ -315,7 +315,17 @@ aa.e.relay_list_upd =(p, dat, relays, sets)=>
     {
       if (!Object.hasOwn(relays,i))
       {
+        let before = [...aa.r.o.ls[i].sets];
         aa.r.o.ls[i].sets = aa.fx.a_rm(aa.r.o.ls[i].sets,sets);
+        // telemetry: if this mutation incidentally drops read/write, surface it
+        if (before.includes('read') && !aa.r.o.ls[i].sets.includes('read') ||
+            before.includes('write') && !aa.r.o.ls[i].sets.includes('write'))
+        {
+          let msg = `r ${sets[0]}: dropped read/write from ${i} — was [${before.join(',')}] now [${aa.r.o.ls[i].sets.join(',')}] (triggered by ${dat.event.kind}:${dat.event.id.slice(0,8)})`;
+          aa.log(msg);
+          console.warn(msg);
+          console.trace();
+        }
         aa.mod.ui(aa.r,i);
       }
     }

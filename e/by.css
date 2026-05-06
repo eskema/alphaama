@@ -118,6 +118,7 @@
 {
   justify-items: start;
   justify-content: start;
+  position: relative;
 }
 
 .by .author
@@ -298,21 +299,53 @@
     display: grid;
     font-size: var(--font-size-s);
     grid-area: by;
-    grid-template-areas:
+    /* grid-template-areas:
       "author x . clas"
       "id actions created_at ."
       ;
-    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "id x clas"
+      "author created_at ."
+      
+      ;
+    grid-template-columns: 1fr auto; */
     line-height: 1;
     position: sticky;
     top: 0;
     z-index: 1;
   }
 
+  .by .id
+  {
+    grid-template-areas: "nid";
+    grid-template-columns: 
+      auto;
+    align-self: stretch;
+  }
+
   .by .id .nid span:not([data-kind="1"])
   {
     background-color: rgba(var(--color-b),1)!important;
     color: rgba(var(--color-d),1);
+  }
+
+  .note:not(.in_view) > .by .xid
+  {
+    pointer-events: none;
+    user-select: none;
+    display: none;
+  }
+
+  [data-luma="light"] > .by .xid,
+  .in_view[data-luma="light"] > .by .xid
+  {
+    color: rgb(var(--color-dark));
+  }
+  
+  [data-luma="dark"] > .by:hover .xid,
+  .in_view[data-luma="dark"] > .by .xid
+  {
+    color: rgb(var(--color-light));
   }
 
   .replies > .note:not(.in_path) > .by

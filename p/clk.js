@@ -4,7 +4,7 @@ aa.clk.pa =e=>
   let pubkey = l.closest('[data-pubkey]').dataset.pubkey;
   l.classList.toggle('expanded');
   if (!l.classList.contains('empty')) return
-  
+
   let butts = [...aa.p.butts.pa];
 
   if (!aa.u.is_u(pubkey))
@@ -14,9 +14,12 @@ aa.clk.pa =e=>
   }
 
   butts.unshift([`${aa.db.p[pubkey]?.score??0}`,'p_score']);
-  
-  for (const array of butts) 
-    l.append(' ',aa.mk.butt_clk(array));
+
+  // dedicated container so toggle stays separate from action buttons
+  let container = l.querySelector('.butts') || make('span', {cla:'butts'});
+  for (const array of butts)
+    container.append(aa.mk.butt_clk(array),' ');
+  if (!container.parentElement) l.append(container);
   l.classList.remove('empty');
 };
 
@@ -74,10 +77,30 @@ aa.clk.p_metadata =e=>
 
 
 // refresh all profile data (metadata,relays,follows)
-aa.clk.p_refresh =e=>
+aa.clk.p_refresh =async e=>
 {
   const pubkey = e.target.closest('[data-pubkey]').dataset.pubkey;
-  aa.r.def_req('p_refresh',{authors:[pubkey],kinds:[0,3,10002,10019]})
+  const relays = aa.r.r;
+  if (!relays.length)
+  {
+    aa.log('p refresh: no read relays — check your relay sets (add some with the `read` set)');
+    return
+  }
+  aa.log(`p refresh: fetching ${pubkey.slice(0,8)}… across ${relays.length} relay(s)`);
+  let sheet = await aa.r.get(
+  {
+    id: 'p_refresh_' + aa.fx.rands(),
+    filter: {authors:[pubkey], kinds:[0,3,10002,10019]},
+    relays,
+    options: {eose:'close'},
+  });
+  let n = sheet.events.size;
+  for (const [, dat] of sheet.events) aa.bus.emit('e:print_q', dat);
+  // aa.r.get doesn't clean up on_sub after resolve — do it here
+  aa.r.on_sub.delete(sheet.id);
+  aa.r.on_eose.delete(sheet.id);
+  let reached = sheet.eose.size;
+  aa.log(`p refresh: ${n} event(s) from ${reached}/${relays.length} relay(s)${sheet.ended ? '' : ' (timed out, partial)'}`);
 };
 
 

@@ -239,4 +239,12 @@
     line-height: 3rem;
     opacity: 1;
   }
+
+  .root:not(.in_view) > .replies
+  {
+    margin-top: 1rem;
+    position: relative;
+    /* top: 0; */
+    bottom: unset;
+  }
 }

@@ -49,7 +49,11 @@ aa.mk.oto_act_item =(o,s)=>
     }
   }
 
-  if (s === 'pinned' || s === 'invalid') l.classList.add(s);
+  if (s === 'pinned' || s === 'invalid') 
+  {
+    l.classList.add(s);
+    l.tabIndex = -1;
+  }
   else
   {
     const clk =e=>

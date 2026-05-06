@@ -168,23 +168,29 @@ aa.mod.mk =async mod=>
   mod_header.append(' ',pop);
   mod_l.insertBefore(mod_info,mod_header.nextElementSibling);
   
-  if (mod.mod_l) mod.mod_l.replaceWith(mod_l);
+  // guard replaceWith: only valid if mod.mod_l actually has a parent — an
+  // orphan replaceWith is a silent no-op and the new section would never make
+  // it into the tree. don't use isConnected here: during module load aa.mod_l
+  // itself hasn't been attached to document yet, so every child reports
+  // isConnected=false and we'd end up appending duplicates each time.
+  if (mod.mod_l?.parentElement) mod.mod_l.replaceWith(mod_l);
   else aa.mod.append(mod_l);
   mod.mod_l = mod_l;
   mod.on_mk?.();
 };
 
+// synchronous — fastdom batching here caused a race: on rapid re-renders the
+// first append's mod_l would flush into the DOM after a subsequent replaceWith
+// had already run on the (still-orphan) reference, leaving the stale element
+// visible while aa.el pointed at a detached one.
 aa.mod.append =mod_l=>
 {
   if (aa.mod_l)
   {
-    fastdom.mutate(()=>
-    {
-      // insert alphabetically
-      const last = [...aa.mod_l.children]
+    // insert alphabetically
+    const last = [...aa.mod_l.children]
       .find(i=> mod_l.dataset.id < i.dataset.id) || null;
-      sift.move(mod_l,last,aa.mod_l);
-    });
+    sift.move(mod_l, last, aa.mod_l);
   }
   else aa.log(mod_l)
 };

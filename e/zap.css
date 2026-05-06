@@ -148,3 +148,10 @@
   width: 100%;
   height: auto;
 }
+
+@media screen and (max-width: 768px) 
+{
+  .note.tiny[data-kind="9735"] > .by {
+      align-self: stretch;
+  }
+}

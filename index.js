@@ -56,6 +56,12 @@ const build_page =async()=>
   }
 
   aa.q?.last_butts();
+
+  // gate — nothing that logs, fetches or restores state may run before
+  // "online at" and last_butts are in place. modules hook their background
+  // work off aa.mod.ready('page:ready', ...) so the log header is always
+  // the first thing the user sees.
+  aa.mod.fire_ready('page:ready');
 };
 
 const whateverthefuckyouwant =async()=>

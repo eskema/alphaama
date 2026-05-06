@@ -459,7 +459,6 @@ var redstore = (() => {
         }
         this.#fullyInitialized = false;
         this.#manuallyClosed = true;
-        this.#initialized = Promise.reject(new DatabaseError("database was manually closed and cannot be reopened"));
       }
     }
     /**

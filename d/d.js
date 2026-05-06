@@ -34,7 +34,7 @@ aa.d.load =async()=>
 {
   let mod = aa.d;
 
-  if (typeof RATCHET === 'undefined') { aa.log('[d] RATCHET dep missing'); return; }
+  if (typeof RATCHET === 'undefined') { aa.log('d: RATCHET dep missing'); return; }
 
   // load persistent state from IDB stuff store via standard mod.o pattern
   await aa.mod.load(mod);
@@ -244,7 +244,9 @@ aa.d.load =async()=>
     exe: ()=> aa.d.status(),
   });
 
-  setTimeout(()=> aa.log(`[d] loaded — device ${mod.o.device_id.slice(0,8)}…`), 420);
+  // gate the loaded-line on page:ready so it stays below the header logs
+  aa.mod.ready('page:ready', ()=>
+    aa.log(`d: loaded — device ${mod.o.device_id.slice(0,8)}…`));
 };
 
 
@@ -327,7 +329,7 @@ aa.d.save_now =async()=>
         // closed_at intentionally not set when live
       };
     }
-    catch(er) { aa.log(`[d] failed to serialize session ${peer.slice(0,8)}: ${er.message}`); }
+    catch(er) { aa.log(`d save: failed to serialize session ${peer.slice(0,8)}: ${er.message}`); }
   }
 
   // MERGE live invites into mod.o.invites — preserve accepted_by, fulfilled_at, etc.
@@ -343,7 +345,7 @@ aa.d.save_now =async()=>
         created_at: e.created_at,
       });
     }
-    catch(er) { aa.log(`[d] failed to serialize invite: ${er.message}`); }
+    catch(er) { aa.log(`d save: failed to serialize invite: ${er.message}`); }
   }
 
   await aa.mod.save(mod);
@@ -355,8 +357,8 @@ aa.d.save =()=>
 {
   aa.d.save_now().catch(e =>
   {
-    console.error('[d] save failed', e);
-    aa.log('[d] save failed: ' + (e.message || e));
+    console.error('d save: failed', e);
+    aa.log('d save: failed: ' + (e.message || e));
   });
 };
 
@@ -386,11 +388,11 @@ aa.d.subscribe_factory =()=>
   {
     let sub_id = 'dr_' + Math.random().toString(36).slice(2, 10);
     let relays = aa.r?.w || [];
-    if (!relays.length) aa.log('[d] no write relays — sub will be empty');
+    if (!relays.length) aa.log('d sub: no write relays — sub will be empty');
     aa.r.on_sub.set(sub_id, dat =>
     {
       try { on_event(dat.event); }
-      catch(e) { console.error('[d] sub callback', e); }
+      catch(e) { console.error('d sub: callback', e); }
     });
     aa.r.send_req({relays, request:['REQ', sub_id, filter]});
     return ()=>
@@ -422,7 +424,7 @@ aa.d.subscribe_factory_for_invite =secret=>
   {
     let sub_id = 'dr_inv_' + Math.random().toString(36).slice(2, 10);
     let relays = aa.r?.w || [];
-    if (!relays.length) aa.log('[d] no write relays — invite sub will be empty');
+    if (!relays.length) aa.log('d invite: no write relays — invite sub will be empty');
 
     if (!aa.d.o.invite_seen) aa.d.o.invite_seen = {};
     if (!aa.d.o.invite_seen[secret]) aa.d.o.invite_seen[secret] = {};
@@ -451,8 +453,8 @@ aa.d.subscribe_factory_for_invite =secret=>
       }
       catch(e)
       {
-        aa.log('[d] invite response processing failed: ' + (e.message || e));
-        console.error('[d] invite sub callback', e);
+        aa.log('d invite: response processing failed: ' + (e.message || e));
+        console.error('d invite: sub callback', e);
       }
     });
     aa.r.send_req({relays, request:['REQ', sub_id, filter]});
@@ -466,7 +468,7 @@ aa.d.subscribe_factory_for_invite =secret=>
 aa.d.publish =async event=>
 {
   let relays = aa.r?.w || [];
-  if (!relays.length) { aa.log('[d] publish: no relays'); return false; }
+  if (!relays.length) { aa.log('d publish: no relays'); return false; }
   await aa.r.send_event({relays, event});
   return event;
 };
@@ -497,12 +499,12 @@ aa.d.adopt_session =(peer, session, label, history=[], opts={})=>
   {
     if (opts.replace)
     {
-      aa.log(`[d] adopt_session: replacing existing live session for ${peer.slice(0,8)}…`);
+      aa.log(`d adopt: replacing existing live session for ${peer.slice(0,8)}…`);
       aa.d.close(peer);   // wipes state for FS, sets closed_at, leaves history in mod.o
     }
     else
     {
-      aa.log(`[d] adopt_session: ${peer.slice(0,8)}… already has a live session, discarding new one (run \`dr close <peer>\` first to re-handshake)`);
+      aa.log(`d adopt: ${peer.slice(0,8)}… already has a live session, discarding new one (run \`d close <peer>\` first to re-handshake)`);
       try { session.close(); } catch(e) {}
       return mod.live.sessions.get(peer);
     }
@@ -514,7 +516,7 @@ aa.d.adopt_session =(peer, session, label, history=[], opts={})=>
   {
     history = prior.history;
     let was_closed = prior.closed_at ? ' (was closed)' : '';
-    aa.log(`[d] adopt_session: recovered ${history.length} history item(s) from prior entry for ${peer.slice(0,8)}${was_closed}`);
+    aa.log(`d adopt: recovered ${history.length} history item(s) from prior entry for ${peer.slice(0,8)}${was_closed}`);
     history.push({dir:'sys', text:`session opened — ${history.length} messages from previous session`, ts: Date.now()});
   }
   // clear closed_at since this peer now has a fresh live session
@@ -551,7 +553,7 @@ aa.d.adopt_session =(peer, session, label, history=[], opts={})=>
         let name = aa.p?.author_name(p) || peer.slice(0,12);
         let notif = make();
         notif.append(
-          make('span', {con:'[d] '}),
+          make('span', {con:'d: '}),
           make('a', {con:name, ref:'#d_' + peer, clk:aa.clk.a}),
           make('span', {con:': ' + (rumor.content || '').slice(0, 80)}),
         );
@@ -608,7 +610,7 @@ aa.d._record_sent =async(peer, text, rumor, outer)=>
 aa.d.send =async(peer, text)=>
 {
   let entry = aa.d.live.sessions.get(peer);
-  if (!entry) { aa.log(`[d] no session for ${peer.slice(0,8)}`); return false; }
+  if (!entry) { aa.log(`d send: no session for ${peer.slice(0,8)}`); return false; }
   let {event, innerEvent} = entry.session.send(text);
   await aa.d.publish(event);
   await aa.d._record_sent(peer, text, innerEvent, event);
@@ -721,7 +723,7 @@ aa.d._stash_pending =(peer, session, label, secret)=>
     invite_secret: secret,
     ts: Date.now(),
   };
-  aa.log(`[d] invite accepted by ${peer.slice(0,8)} — pending (click adopt or run \`dr adopt ${peer.slice(0,8)}\`)`);
+  aa.log(`d invite: accepted by ${peer.slice(0,8)} — pending (click adopt or run \`d adopt ${peer.slice(0,8)}\`)`);
   aa.d._log('pending_stash', {peer});
   aa.bus.emit('d:pending_session', {peer, label});
   aa.d.save();
@@ -792,7 +794,7 @@ aa.d.adopt_pending =peer=>
         mod.live.pending.delete(peer);
         delete mod.o.pending_sessions[peer];
         aa.d.save();
-        aa.log(`[d] kept existing session for ${peer.slice(0,8)}, discarded pending`);
+        aa.log(`d adopt: kept existing session for ${peer.slice(0,8)}, discarded pending`);
       }
     },
     yes:
@@ -854,7 +856,7 @@ aa.d.invite_create =async()=>
     invite, listen_unsub, url, created_at: Date.now(),
   });
 
-  aa.log('[d] invite created');
+  aa.log('d invite: created');
   aa.d._log('invite_create', {});  // don't log secret or url — they contain crypto material
   aa.bus.emit('d:invite_created', {invite, url});
   aa.d.save();
@@ -880,7 +882,7 @@ aa.d.invite_accept =async input=>
   // user-initiated accept — adopt directly (replace if existing)
   aa.d.adopt_session(invite.inviter, session, 'inviter ' + invite.inviter.slice(0,8), [], {replace: true});
   aa.d._log('invite_accept', {peer: invite.inviter});
-  aa.log(`[d] accepted invite from ${invite.inviter.slice(0,8)}`);
+  aa.log(`d invite: accepted from ${invite.inviter.slice(0,8)}`);
   return {session, event};
 };
 
@@ -994,7 +996,7 @@ aa.d.dedupe_history =peer=>
   entry.history = kept;
   if (aa.d.o.sessions[peer]) aa.d.o.sessions[peer].history = kept;
   let removed = before - kept.length;
-  aa.log(`[d] deduped ${entry.name}: removed ${removed} duplicate(s) (${before} → ${kept.length})`);
+  aa.log(`d dedupe: ${entry.name}: removed ${removed} duplicate(s) (${before} → ${kept.length})`);
   aa.d._log('history_dedupe', {peer, removed});
   aa.d.save();
   aa.bus.emit('d:history_merged', {peer, added: 0});  // reuse the merge event so the panel refreshes
@@ -1007,10 +1009,10 @@ aa.d.dedupe_history =peer=>
 aa.d.merge_history =async(peer, payload, source)=>
 {
   let entry = aa.d.live.sessions.get(peer);
-  if (!entry) { aa.log(`[d] merge: no session for ${peer.slice(0,8)}`); return 0; }
+  if (!entry) { aa.log(`d merge: no session for ${peer.slice(0,8)}`); return 0; }
   if (!payload || payload.type !== 'dr-history-sync')
   {
-    aa.log('[d] merge: bad payload');
+    aa.log('d merge: bad payload');
     return 0;
   }
 
@@ -1044,7 +1046,7 @@ aa.d.merge_history =async(peer, payload, source)=>
   aa.d.dedupe_history(peer);
 
   if (added) entry.history.push({dir:'sys', text:`imported ${added} message${added!==1?'s':''} from peer`, ts: Date.now()});
-  aa.log(`[d] merged ${added} history item(s) from ${entry.name}`);
+  aa.log(`d merge: merged ${added} history item(s) from ${entry.name}`);
   aa.d._log('history_merge', {peer, added, source_id: source?.rumor?.id});
   aa.d.save();
   aa.bus.emit('d:history_merged', {peer, added});
@@ -1071,7 +1073,7 @@ aa.d.restore =async()=>
       aa.d.adopt_session(peer, session, saved.name, saved.history || []);
       restored_sessions++;
     }
-    catch(e) { aa.log(`[d] restore session ${peer.slice(0,8)} failed: ${e.message}`); console.error(e); }
+    catch(e) { aa.log(`d restore: session ${peer.slice(0,8)} failed: ${e.message}`); console.error(e); }
     await yield_ui();
   }
 
@@ -1093,7 +1095,7 @@ aa.d.restore =async()=>
       });
       restored_invites++;
     }
-    catch(e) { aa.log(`[d] restore invite failed: ${e.message}`); console.error(e); }
+    catch(e) { aa.log(`d restore: invite failed: ${e.message}`); console.error(e); }
     await yield_ui();
   }
 
@@ -1109,13 +1111,13 @@ aa.d.restore =async()=>
       mod.live.pending.set(peer, {session, label: saved.label, invite_secret: saved.invite_secret});
       restored_pending++;
     }
-    catch(e) { aa.log(`[d] restore pending ${peer.slice(0,8)} failed: ${e.message}`); console.error(e); }
+    catch(e) { aa.log(`d restore: pending ${peer.slice(0,8)} failed: ${e.message}`); console.error(e); }
     await yield_ui();
   }
 
   let skipped = (skipped_closed ? `, ${skipped_closed} closed skipped` : '') + (skipped_revoked ? `, ${skipped_revoked} revoked skipped` : '');
   let pending_msg = restored_pending ? `, ${restored_pending} pending` : '';
-  aa.log(`[d] restored ${restored_sessions} session(s), ${restored_invites} invite(s)${pending_msg}${skipped}`);
+  aa.log(`d restore: ${restored_sessions} session(s), ${restored_invites} invite(s)${pending_msg}${skipped}`);
   aa.d._log('restore', {sessions: restored_sessions, invites: restored_invites, pending: restored_pending, skipped_closed, skipped_revoked});
   aa.d._restored = true;
   aa.bus.emit('d:restored', {sessions: restored_sessions, invites: restored_invites, pending: restored_pending});
@@ -1132,7 +1134,7 @@ aa.d.restore =async()=>
 aa.d.status =()=>
 {
   let mod = aa.d;
-  let lines = [`[d] device ${mod.o.device_id.slice(0,8)}… · ${mod.live.sessions.size} session(s) · ${mod.live.invites.size} invite(s)`];
+  let lines = [`d status: device ${mod.o.device_id.slice(0,8)}… · ${mod.live.sessions.size} session(s) · ${mod.live.invites.size} invite(s)`];
   for (let [peer, e] of mod.live.sessions)
   {
     let s = e.session.state || {};

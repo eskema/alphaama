@@ -49,8 +49,10 @@
 
 #oto .item:focus
 {
-  background-color: rgba(var(--color-main),.4);
-  color: rgb(var(--color-c));
+  /* background-color: rgba(var(--color-main),.4);
+  color: rgb(var(--color-c)); */
+  background-color: rgba(var(--color-e),1);
+  z-index: 2;
   outline: none;
 }
 
@@ -87,7 +89,7 @@
 
 #oto .item.mention
 {
-  background: rgb(var(--color-b));
+  /* background: rgb(var(--color-b)); */
   grid-template-areas: "bef val description";
   grid-template-columns: auto 1fr auto;
   overflow-x: clip;
@@ -104,6 +106,8 @@
 #oto .item.mention .butts .butt
 {
   overflow-x: scroll;
+  color: rgb(var(--color-c));
+  text-decoration: underline;
 }
 
 
@@ -221,7 +225,7 @@
   #oto .item:not(.pinned):not(.invalid):hover,
   #oto .item.mention:hover
   {
-    background-color: rgba(var(--color-c),1);
+    background-color: rgba(var(--color-c),.8);
     z-index: 2;
   }
 }

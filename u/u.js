@@ -650,30 +650,35 @@ aa.u.on_load_sub =()=>
   // during first-time setup, q.stuff drives the pipeline + fires u:ready itself
   if (aa.q._stuffing) return;
 
-  let on_load_sub = aa.o.o.ls.on_load_sub;
-  let tasks = on_load_sub
-    ? on_load_sub.replaceAll('+',',').split(',').map(t=> t.trim()).filter(Boolean)
-    : [];
-
-  let db_tasks = [];
-  let sub_tasks = [];
-  for (const task of tasks)
+  // defer all side effects until the page header has been logged — keeps
+  // the "online at" and last_butts lines at the top of the log
+  aa.mod.ready('page:ready', ()=>
   {
-    if (task.endsWith(' db'))
-      db_tasks.push(task.slice(0, -3).trim());
-    else
-      sub_tasks.push(task);
-  }
+    let on_load_sub = aa.o.o.ls.on_load_sub;
+    let tasks = on_load_sub
+      ? on_load_sub.replaceAll('+',',').split(',').map(t=> t.trim()).filter(Boolean)
+      : [];
 
-  if (db_tasks.length)
-    aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.db(db_tasks.join(',')), 420));
+    let db_tasks = [];
+    let sub_tasks = [];
+    for (const task of tasks)
+    {
+      if (task.endsWith(' db'))
+        db_tasks.push(task.slice(0, -3).trim());
+      else
+        sub_tasks.push(task);
+    }
 
-  if (sub_tasks.length)
-    aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(sub_tasks.join(',')), 420));
+    if (db_tasks.length)
+      aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.db(db_tasks.join(',')), 420));
 
-  // on normal reload (no q.stuff), signal non-critical modules that initial
-  // bootstrap is effectively done so they can start their own work
-  aa.mod.fire_ready('u:ready');
+    if (sub_tasks.length)
+      aa.mod.ready('r:manager', ()=> setTimeout(()=> aa.q.sub(sub_tasks.join(','), {persist:false}), 420));
+
+    // on normal reload (no q.stuff), signal non-critical modules that initial
+    // bootstrap is effectively done so they can start their own work
+    aa.mod.fire_ready('u:ready');
+  });
 };
 
 

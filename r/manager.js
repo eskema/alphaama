@@ -153,15 +153,18 @@ const mem_events =events_map=>
 };
 
 
-// workaround: redstore ignores #d filter when authors is absent
-const db_tag_filter =(events, filter)=>
-{
-  if (!filter['#d'] || filter.authors) return events;
-  const values = filter['#d'];
-  return events.filter(ev =>
-    ev.tags.some(t => t[0] === 'd' && values.includes(t[1]))
-  );
-};
+// workaround: redstore ignored #d filter when authors was absent.
+// supposedly fixed upstream in @nostr/gadgets 0.1.6 — testing by bypassing
+// our filter. restore the body below if we see regressions.
+const db_tag_filter =(events, filter)=> events;
+// const db_tag_filter =(events, filter)=>
+// {
+//   if (!filter['#d'] || filter.authors) return events;
+//   const values = filter['#d'];
+//   return events.filter(ev =>
+//     ev.tags.some(t => t[0] === 'd' && values.includes(t[1]))
+//   );
+// };
 
 const db_time_filter =(events, filter)=>
 {

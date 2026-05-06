@@ -589,6 +589,22 @@ aa.e.load =async()=>
       description:'analyze loaded events: post counts, author breakdown, mention pairs',
       exe:mod.anal.run
     },
+    {
+      action:[id,'mute'],
+      required:['<pubkey>'],
+      optional:['<kind>','<kind>'],
+      repeat:' ',
+      description:'mute a pubkey entirely, or only specific kinds (space-separated)',
+      exe:mod.mute
+    },
+    {
+      action:[id,'unmute'],
+      required:['<pubkey>'],
+      optional:['<kind>','<kind>'],
+      repeat:' ',
+      description:'unmute a pubkey (all kinds) or remove specific kinds from an existing mute',
+      exe:mod.unmute
+    },
   );
   mod.l = make('div',{cla:'notes'});
   let anal_butt = make('button',{cla:'butt exe',con:'anal',clk:()=> mod.anal.run()});
@@ -603,6 +619,10 @@ aa.e.load =async()=>
     mod.o.deleted = new Set(mod.o.ls.deleted || []);
     delete mod.o.ls.deleted;
   }
+  // muted pubkeys — {pubkey_hex: [kinds...]}; empty array = mute everything
+  if (!mod.o.ls.muted) mod.o.ls.muted = {};
+  // register profile-action button (lives here so mute logic stays in e/)
+  aa.p?.butts?.pa?.push(['mute','p_mute']);
   aa.mod.mk(mod);
   aa.bus.on('cli:upd',aa.e.draft_upd);
 
@@ -650,6 +670,145 @@ aa.e.mark_deleted =refs=>
 };
 
 
+// sweep already-printed notes and add/remove the .muted class based on the
+// current state of aa.e.o.ls.muted. counts swept matches against the session
+// muted_count so the mod panel summary reflects retroactive mutes too.
+aa.e.muted_sweep =()=>
+{
+  let added = 0, removed = 0;
+  for (const [id, dat] of aa.em)
+  {
+    let note = aa.e.printed.get(id);
+    if (!note) continue;
+    let should_mute = aa.e.is_muted(dat.event.pubkey, dat.event.kind);
+    let is_muted = note.classList.contains('muted');
+    if (should_mute && !is_muted)
+    {
+      fastdom.mutate(()=> note.classList.add('muted'));
+      added++;
+    }
+    else if (!should_mute && is_muted)
+    {
+      fastdom.mutate(()=> note.classList.remove('muted'));
+      removed++;
+    }
+  }
+  if (added) aa.temp.muted_count = (aa.temp.muted_count || 0) + added;
+  return {added, removed}
+};
+
+
+// mute a pubkey entirely, or only specific kinds
+// string = '<pubkey> [<kind> <kind> ...]'
+aa.e.mute =(s='')=>
+{
+  let [pubkey, ...kinds_str] = aa.fx.splitr(s);
+  if (!pubkey || !aa.fx.is_key(pubkey))
+  {
+    aa.log('e mute: invalid pubkey');
+    return
+  }
+  let kinds = kinds_str.map(k => parseInt(k)).filter(k => !isNaN(k));
+  aa.e.o.ls.muted[pubkey] = kinds;
+  let scope = kinds.length ? `kinds [${kinds.join(',')}]` : 'all';
+  let {added} = aa.e.muted_sweep();
+  aa.log(`e mute: ${pubkey.slice(0,12)}… ${scope} — hid ${added} already-printed event(s)`);
+  aa.mod.ui(aa.e, 'muted');
+  debt.add(()=> aa.mod.save(aa.e), 2000, 'e_muted_save');
+};
+
+
+// unmute: no kinds = remove entirely; with kinds = remove those kinds from an
+// existing list (only meaningful when the pubkey wasn't muted for all)
+aa.e.unmute =(s='')=>
+{
+  let [pubkey, ...kinds_str] = aa.fx.splitr(s);
+  if (!pubkey || !aa.fx.is_key(pubkey))
+  {
+    aa.log('e unmute: invalid pubkey');
+    return
+  }
+  if (!aa.e.o.ls.muted[pubkey])
+  {
+    aa.log(`e unmute: ${pubkey.slice(0,12)}… not muted`);
+    return
+  }
+  let kinds = kinds_str.map(k => parseInt(k)).filter(k => !isNaN(k));
+  if (!kinds.length)
+  {
+    delete aa.e.o.ls.muted[pubkey];
+    let {removed} = aa.e.muted_sweep();
+    aa.log(`e unmute: ${pubkey.slice(0,12)}… (all) — restored ${removed} note(s)`);
+  }
+  else
+  {
+    let existing = aa.e.o.ls.muted[pubkey];
+    if (!existing.length)
+    {
+      aa.log(`e unmute: ${pubkey.slice(0,12)}… is muted for all kinds — run \`e unmute ${pubkey}\` with no kinds to remove`);
+      return
+    }
+    let after = existing.filter(k => !kinds.includes(k));
+    if (!after.length) delete aa.e.o.ls.muted[pubkey];
+    else aa.e.o.ls.muted[pubkey] = after;
+    let {removed} = aa.e.muted_sweep();
+    aa.log(`e unmute: ${pubkey.slice(0,12)}… kinds [${kinds.join(',')}] — restored ${removed} note(s)`);
+  }
+  aa.mod.ui(aa.e, 'muted');
+  debt.add(()=> aa.mod.save(aa.e), 2000, 'e_muted_save');
+};
+
+
+// is this event muted? (by pubkey or by pubkey+kind)
+// defensive: muted may be undefined or corrupt during early load — return
+// false rather than throwing, so a malformed entry doesn't break print_q.
+aa.e.is_muted =(pubkey, kind)=>
+{
+  try
+  {
+    let muted = aa.e.o?.ls?.muted;
+    if (!muted || typeof muted !== 'object') return false;
+    let kinds = muted[pubkey];
+    if (kinds === undefined) return false;
+    if (!Array.isArray(kinds) || !kinds.length) return true;
+    return kinds.includes(kind)
+  }
+  catch { return false }
+};
+
+
+// custom mod item renderer — surfaces 'muted' as a collapsible details entry
+// with unmute buttons + per-session muted event count in the summary
+aa.e.mk =(key, value)=>
+{
+  if (key === 'muted') return aa.mk.e_muted(value);
+  return aa.mk.item(key, value)
+};
+
+
+aa.mk.e_muted =(value={})=>
+{
+  let entries = Object.entries(value || {});
+  let count = aa.temp.muted_count || 0;
+  let label = `muted (${entries.length} pubkey${entries.length === 1 ? '' : 's'}, ${count} event${count === 1 ? '' : 's'} this session)`;
+
+  let ul = make('ul', {cla:'list'});
+  for (const [pubkey, kinds] of entries)
+  {
+    let li = make('li', {cla:'item'});
+    let p_link = aa.mk.p_link(pubkey);
+    let scope = make('span', {cla:'val', con: kinds.length ? `kinds ${kinds.join(',')}` : 'all'});
+    let unmute_butt = aa.mk.butt_action(`e unmute ${pubkey}`, 'unmute');
+    li.append(p_link, ' ', scope, ' ', unmute_butt);
+    ul.append(li);
+  }
+
+  let item = make('li', {cla:'item item_muted'});
+  item.append(aa.mk.details(label, ul, 0, 'base'));
+  return item
+};
+
+
 // note actions
 aa.e.note_actions =dat=>
 {
@@ -665,8 +824,8 @@ aa.e.note_actions =dat=>
   else if (dat.clas.includes('blank')) aa.fx.a_add(butts,aa.e.butts.blank);
   else
   {
-    if (aa.u.is_u(dat.event.pubkey)) 
-      aa.fx.a_add(butts,['del']);
+    // del + everything else lives in the .butts container that aa.clk.na
+    // populates on expand — keep the toggle as the only top-level child here
     aa.fx.a_add(butts,[['…','action_butt','na']]);
     l.classList.add('empty');
     l.classList.remove('expanded');

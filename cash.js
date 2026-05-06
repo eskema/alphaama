@@ -119,10 +119,27 @@ cash.flow =async e=>
     catch { return new Response('',{status:502}) }
   }
 
+  // range requests (video/audio scrubbing) must always go to the network —
+  // opaque cached responses can't satisfy a Range header and serving them
+  // produces "FetchEvent ... network error response" in the browser.
+  if (e.request.headers.get('range'))
+  {
+    try { return await fetch(e.request) }
+    catch { return new Response('',{status:502}) }
+  }
+
   const cache = await caches.open(cash.id);
   let response = await cache.match(e.request);
   if (response)
   {
+    // opaque cached body can only be returned to a no-cors request. if the
+    // current request was issued with cors/same-origin mode, the browser
+    // would reject the opaque match — bypass cache and re-fetch.
+    if (response.type === 'opaque' && e.request.mode !== 'no-cors')
+    {
+      try { return await fetch(e.request) }
+      catch { return new Response('',{status:502}) }
+    }
     cash.touch(cache, e.request, response);
     return response
   }

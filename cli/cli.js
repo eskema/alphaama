@@ -420,7 +420,10 @@ aa.cli.oto_act =(body)=>
       let single_action = aa.actions.find(i=>i.action[0] === a[0]);
       if (single_action && single_action.action.length === 1) dis_act = single_action;
     }
-    if (dis_act) aa.cli.oto.append(aa.mk.oto_act_item(dis_act,'pinned'));
+    if (dis_act) 
+    {
+      aa.cli.oto.append(aa.mk.oto_act_item(dis_act,'pinned'));
+    }
     else
     {
       let actions = aa.actions.filter(o=>o.action[0].startsWith(a[0]))

@@ -175,6 +175,18 @@ var Redstore = class {
     wasm.__wbg_redstore_free(ptr, 0);
   }
   /**
+   * @param {Array<any>} last_attempts
+   * @param {Array<any>} raw_events_arr
+   * @returns {any}
+   */
+  save_events(last_attempts, raw_events_arr) {
+    const ret = wasm.redstore_save_events(this.__wbg_ptr, last_attempts, raw_events_arr);
+    if (ret[2]) {
+      throw takeFromExternrefTable0(ret[1]);
+    }
+    return takeFromExternrefTable0(ret[0]);
+  }
+  /**
    * @param {object} filter
    * @returns {Array<any>}
    */
@@ -208,31 +220,10 @@ var Redstore = class {
     }
   }
   /**
-   * @param {FileSystemSyncAccessHandle} sync_handle
+   * @returns {Uint8Array}
    */
-  constructor(sync_handle) {
-    const ret = wasm.redstore_new(sync_handle);
-    if (ret[2]) {
-      throw takeFromExternrefTable0(ret[1]);
-    }
-    this.__wbg_ptr = ret[0] >>> 0;
-    RedstoreFinalization.register(this, this.__wbg_ptr, this);
-    return this;
-  }
-  close() {
-    const ptr = this.__destroy_into_raw();
-    const ret = wasm.redstore_close(ptr);
-    if (ret[1]) {
-      throw takeFromExternrefTable0(ret[0]);
-    }
-  }
-  /**
-   * @param {Array<any>} last_attempts
-   * @param {Array<any>} raw_events_arr
-   * @returns {any}
-   */
-  save_events(last_attempts, raw_events_arr) {
-    const ret = wasm.redstore_save_events(this.__wbg_ptr, last_attempts, raw_events_arr);
+  get_outbox_bounds() {
+    const ret = wasm.redstore_get_outbox_bounds(this.__wbg_ptr);
     if (ret[2]) {
       throw takeFromExternrefTable0(ret[1]);
     }
@@ -252,14 +243,23 @@ var Redstore = class {
     return takeFromExternrefTable0(ret[0]);
   }
   /**
-   * @returns {Uint8Array}
+   * @param {FileSystemSyncAccessHandle} sync_handle
    */
-  get_outbox_bounds() {
-    const ret = wasm.redstore_get_outbox_bounds(this.__wbg_ptr);
+  constructor(sync_handle) {
+    const ret = wasm.redstore_new(sync_handle);
     if (ret[2]) {
       throw takeFromExternrefTable0(ret[1]);
     }
-    return takeFromExternrefTable0(ret[0]);
+    this.__wbg_ptr = ret[0] >>> 0;
+    RedstoreFinalization.register(this, this.__wbg_ptr, this);
+    return this;
+  }
+  close() {
+    const ptr = this.__destroy_into_raw();
+    const ret = wasm.redstore_close(ptr);
+    if (ret[1]) {
+      throw takeFromExternrefTable0(ret[0]);
+    }
   }
 };
 if (Symbol.dispose) Redstore.prototype[Symbol.dispose] = Redstore.prototype.free;

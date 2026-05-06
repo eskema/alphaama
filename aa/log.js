@@ -99,9 +99,12 @@ aa.log_key =(key,value,o={})=>
       element.append(item);
       if (summary._latest) summary._latest.textContent = value;
       logs.lastChild.after(log);
-      log.classList.add('is_new');
-      logs.classList.add('has_new');
-      logs.parentElement.classList.add('has_new');
+      if (!o.silent_upd)
+      {
+        log.classList.add('is_new');
+        logs.classList.add('has_new');
+        logs.parentElement.classList.add('has_new');
+      }
     });
   }
   else aa.log(element);

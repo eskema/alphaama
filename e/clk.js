@@ -185,8 +185,17 @@ aa.clk.na =e=>
   {
     if (element.classList.contains('empty'))
     {
-      for (const a of aa.e.butts.na)
-        element.prepend(aa.mk.butt_clk(a),' ');
+      // dedicated container so the toggle button stays separate from the
+      // expanded action list (matches profile actions structure)
+      let butts = element.querySelector('.butts')
+        || make('span', {cla:'butts'});
+      let list = [...aa.e.butts.na];
+      // from_u notes get their author-only actions (e.g. del) inside .butts too
+      let pubkey = element.closest('[data-pubkey]')?.dataset.pubkey;
+      if (pubkey && aa.u.is_u(pubkey)) list.push('del');
+      for (const a of list)
+        butts.append(aa.mk.butt_clk(a),' ');
+      if (!butts.parentElement) element.append(butts);
       element.classList.remove('empty');
     }
     element.classList.toggle('expanded');
@@ -260,6 +269,23 @@ aa.clk.zap =e=>
   let t = `w zap ${localStorage.zap || 21} ${pubkey} "${localStorage.zap_memo || '<3'}"`;
   if (note.dataset.id) t += ` ${note.dataset.id}`;
   aa.bus.emit('cli:stage',t);
+};
+
+
+// mute / unmute pubkey — stages the cli command so user can review, add
+// specific kinds, or submit as-is. toggles based on current mute state.
+// when clicked from a note (has data-kind), prefills the kind so the user
+// can mute just that kind of content; from a profile (no data-kind), no kind.
+aa.clk.p_mute =e=>
+{
+  const target = e.target.closest('[data-pubkey]');
+  const pubkey = target?.dataset.pubkey;
+  if (!pubkey) return;
+  let already = aa.e.o?.ls?.muted?.[pubkey] !== undefined;
+  let action = already ? 'e unmute' : 'e mute';
+  let kind = target.dataset.kind;
+  let suffix = kind ? ` ${kind}` : '';
+  aa.bus.emit('cli:stage', `${action} ${pubkey}${suffix}`);
 };
 
 

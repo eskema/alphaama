@@ -94,15 +94,40 @@ const av =(src,opts={})=>
   l.setAttribute('playsinline','');
   l.setAttribute('preload','metadata');
   l.crossOrigin = 'anonymous';
-  l.onerror =()=>
+
+  // recovery: strip crossOrigin and reload. losing crossOrigin taints the
+  // canvas (frame-grab won't work after) — trade-off for getting the video
+  // to play at all. tracks attempts so the auto-stall watcher gives up
+  // instead of looping forever on genuinely-broken sources.
+  let reload_attempts = 0;
+  l.reload =()=>
   {
-    if (l.crossOrigin)
-    {
-      l.crossOrigin = null;
-      l.src = src;
-    }
+    reload_attempts++;
+    l.crossOrigin = null;
+    let cur = l.src;
+    l.removeAttribute('src');
+    l.load();
+    l.src = cur || src;
   };
+  l.onerror =()=> { if (l.crossOrigin) l.reload() };
+
+  // auto-recover from stalled loads: some hosts/proxies don't fire `error`
+  // when a CORS preflight or range request hangs. if we haven't reached
+  // HAVE_METADATA (readyState>=1) after N seconds, kick off a reload. one
+  // automatic attempt only — the manual reload button is still there.
+  let stall_timer;
+  const watch_stall =(ms=5000)=>
+  {
+    clearTimeout(stall_timer);
+    stall_timer = setTimeout(()=>
+    {
+      if (l.readyState >= 1 || reload_attempts >= 1) return;
+      l.reload();
+    }, ms);
+  };
+
   l.src = src;
+  watch_stall();
   if (poster) l.setAttribute('poster',poster);
   l.onclick = vip;
 
@@ -168,9 +193,18 @@ const av =(src,opts={})=>
   grab_butt.textContent = 'grab';
   grab_butt.onclick = grab;
 
-  trols.append(url);
+  // reload — strips crossOrigin and reloads. always shown next to the url
+  // so it's reachable even when the video fails to load (no metadata event,
+  // no other controls). loses frame-grab on the recovered element.
+  const reload_butt = document.createElement('button');
+  reload_butt.classList.add('reload');
+  reload_butt.textContent = 'reload';
+  reload_butt.onclick =()=> l.reload();
+
+  trols.append(url, reload_butt);
   l.onloadedmetadata =e=>
   {
+    clearTimeout(stall_timer);
     seeker.setAttribute('max', l.duration);
     trols.append(seeker, mute_butt, pip_butt, grab_butt);
     progress({target:l})

@@ -476,16 +476,24 @@ aa.e.print_drain =queue=>
 
 // send data to print
 aa.e.print_q =dat=>
-{ 
-  if (!Object.hasOwn(aa.temp,'print_q')) 
+{
+  if (!Object.hasOwn(aa.temp,'print_q'))
     aa.temp.print_q = new Map();
 
-  if (!dat?.event?.id || aa.temp.print_q.has(dat.event.id)) 
+  if (!dat?.event?.id || aa.temp.print_q.has(dat.event.id))
   {
     if (!dat?.event?.id) console.trace(dat);
     return
   }
-  
+
+  // muted: drop before enqueue; bump session counter and debounce a UI refresh
+  if (aa.e.is_muted?.(dat.event.pubkey, dat.event.kind))
+  {
+    aa.temp.muted_count = (aa.temp.muted_count || 0) + 1;
+    debt.add(()=> aa.mod.ui(aa.e,'muted'), 500, 'e_muted_ui');
+    return
+  }
+
   aa.temp.print_q.set(dat.event.id,dat);
 
   aa.e.miss_remove(dat);

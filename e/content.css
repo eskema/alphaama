@@ -313,7 +313,7 @@
     > .by:hover
       + .content
   {
-    background: rgb(var(--color-a));
+    background: rgba(var(--color-a),.4),rgba(var(--color-b),1);
   }
 
   .note:not(.tiny) 
@@ -328,7 +328,7 @@
     > .by:hover 
       + .content
   {
-    background: rgb(var(--color-a));
+    background: rgba(var(--color-a),1);
     /* pointer-events: none; */
     position: sticky;
     top: 2rem;

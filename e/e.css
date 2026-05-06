@@ -79,6 +79,12 @@
 );
 }
 
+/* notes from muted pubkeys (or muted kinds) — hide entirely */
+.note.muted
+{
+  display: none;
+}
+
 .note.draft > .clicker
 {
   border-left: 1px dashed rgba(var(--color-main),1);
@@ -328,6 +334,12 @@
 }
 
 /* #endregion versions */
+
+.mod .item_muted
+{
+  grid-template-areas: unset;
+  grid-template-columns: unset;
+}
 /* #region pagination */
 
 /* .pagination

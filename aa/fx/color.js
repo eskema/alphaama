@@ -24,7 +24,7 @@ aa.fx.color =async(x,l)=>
 // but not too dark if pow/mined
 aa.fx.color_hex =x=>
 {
-  try { return x.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/,(x0,x_x)=>x_x) }
+  try { return x.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/,(x_x,xx)=>xx) }
   catch(er) { return x }
 };
 

@@ -40,7 +40,23 @@ aa.r =
   temp: new Map(),
   on_sub:new Map(),
   on_eose:new Map(),
-  get r(){ return aa.fx.in_set(this.o.ls,this.o.r) },
+  get r()
+  {
+    let result = aa.fx.in_set(this.o.ls,this.o.r);
+    // one-shot alert when routing breaks: we have some relays stored but none
+    // of them carry the 'read' set. happened sporadically — if it happens
+    // again, this trace should catch who last mutated the sets.
+    if (!result.length && this.o?.ls && Object.keys(this.o.ls).length && !this._warned_no_read)
+    {
+      this._warned_no_read = true;
+      let summary = Object.entries(this.o.ls)
+        .map(([url, v]) => `${url.replace(/^wss:\/\//,'')} [${(v.sets||[]).join(',')}]`)
+        .join(', ');
+      aa.log(`r: no 'read' relays — current state: ${summary || '(empty)'}. use \`r add <url> read write\` to restore.`);
+      console.warn('aa.r.r empty:', this.o.ls);
+    }
+    return result
+  },
   get w(){ return aa.fx.in_set(this.o.ls,this.o.w) }
 };
 
@@ -752,8 +768,17 @@ aa.r.send_req =data=>
   relays = aa.r.validate(data);
   if (!relays.length)
   {
-    // console.log('aa.r.send_req: no valid relays',data);
-    // console.trace(dis);
+    // only log the "broken routing" case — i.e. there are no read relays at
+    // all. if read relays exist but this specific request's hint URLs got
+    // filtered (unknown + relays_ask=on triggers a 'found' notice instead),
+    // that's expected behaviour and shouldn't spam the log.
+    if (!aa.r.r.length)
+    {
+      let req_id = Array.isArray(request) ? request[1] : 'unknown';
+      let bucket = req_id.split(/[_:]/)[0] || 'req';
+      debt.add(()=> aa.log(`r send_req: no read relays and no valid hints for ${bucket}_… — check your relay sets`),
+               3000, `r_no_relays_${bucket}`);
+    }
     return
   }
   aa.mod.ready('r:manager', ()=>
@@ -775,14 +800,24 @@ aa.r.setrm =(s="")=>
   const as = s.split(',');
   if (as.length)
   {
-    for (const i of as) 
+    for (const i of as)
     {
       let a = i.trim().split(' ').map(n=>n.trim());
       let url_string = a.shift();
       const url = aa.fx.url(url_string)?.href;
       const server = mod.o.ls[url];
-      if (!server) return;
+      if (!server) continue;  // was `return` — skipped rest of batch on first miss
+      let before = [...server.sets];
       server.sets = aa.fx.a_rm(server.sets,a);
+      // telemetry for the recurring "read/write vanished" mystery
+      if (before.includes('read') && !server.sets.includes('read') ||
+          before.includes('write') && !server.sets.includes('write'))
+      {
+        let msg = `r setrm: dropped read/write from ${url} — was [${before.join(',')}] now [${server.sets.join(',')}]`;
+        aa.log(msg);
+        console.warn(msg);
+        console.trace();
+      }
       aa.mod.ui(mod,url);
     }
   }

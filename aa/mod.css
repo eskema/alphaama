@@ -147,10 +147,16 @@ dialog .mod > header
   text-align: left;
 }
 
-.mod > .list > .item 
+.mod .list > .item 
 {
   border-bottom: 1px solid rgba(var(--color-c),0);
   border-top: 1px solid rgba(var(--color-c),0);
+  overflow: unset;
+}
+
+.mod .list > .item > .val
+{
+  align-self: center;
 }
 
 .mod_actions

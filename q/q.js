@@ -47,7 +47,7 @@ aa.q =
     n:
     {
       "#p":["u"],
-      "kinds":[1,4,6,7,16],
+      "kinds":[1,4,6,7,11,16,1111],
       "since":"n_21",
       "limit":500
     },
@@ -202,6 +202,10 @@ aa.q.filter =filter=>
     switch(key)
     {
       case 'eose':
+      case 'db':
+        // not real filter keys — extract into options.
+        // db:false skips the manager's pre_process_request so the request hits
+        // only the network relays and bypasses the local event store.
         options[key] = value;
         delete filter[key];
         break;
@@ -703,6 +707,7 @@ aa.q.view =s=>
 // run filter with outbox
 aa.q.out =async s=>
 {
+  aa.q.expand_e();
   const tasks = s.split(',');
   if (!aa.q.active.out) aa.q.active.out = [];
   for (const task of tasks)
@@ -786,6 +791,15 @@ aa.q.outbox =(request,more)=>
 };
 
 
+// expand the events section if it's currently collapsed, so results land in view
+aa.q.expand_e =()=>
+{
+  let section_e = aa.el.get('section_e');
+  if (section_e && !section_e.classList.contains('expanded'))
+    fastdom.mutate(()=> section_e.classList.add('expanded'));
+};
+
+
 // raw req
 aa.q.req =(s='')=>
 {
@@ -798,6 +812,8 @@ aa.q.req =(s='')=>
     aa.log('invalid filter: '+filter);
     return false
   }
+
+  aa.q.expand_e();
 
   // db-only query
   if (rels === 'db')
@@ -845,6 +861,7 @@ aa.q.reset =(keys=[])=>
 // run filter
 aa.q.run =async(s='')=>
 {
+  aa.q.expand_e();
   const tasks = s.split(',');
   let delay = 0;
   for (const task of tasks)
@@ -1025,8 +1042,8 @@ aa.q.stuff =async()=>
   // finalize
   setTimeout(()=>
   {
-    sessionStorage.q_out = 'f';
-    sessionStorage.q_run = 'n';
+    sessionStorage.q_out = 'f,z';
+    sessionStorage.q_run = 'u,n';
     aa.log(make('p',
     {
       content: 'all done ',
@@ -1067,9 +1084,17 @@ aa.q.stamp =async(id,timestamp)=>
 
 
 // sub filter
-aa.q.sub =async(s, silent)=>
+// opts.silent — suppress the "sub" log line
+// opts.persist — set to false to skip writing to sessionStorage.q_sub, used by
+// on_load_sub so auto-scheduled subs don't appear as pinned last_butts (they
+// already ran and would be redundant / confusing as buttons to re-run)
+aa.q.sub =async(s, opts={})=>
 {
-  if (s) sessionStorage.q_sub = s;
+  // back-compat: allow a bare boolean as second arg for `silent`
+  if (typeof opts === 'boolean') opts = {silent: opts};
+  const silent = opts.silent === true;
+  const persist = opts.persist !== false;
+  if (s && persist) sessionStorage.q_sub = s;
   let txt = `${aa.q.def.id} run:`;
   let ls = aa.q.o.ls;
 
