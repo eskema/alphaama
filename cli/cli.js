@@ -143,14 +143,22 @@ aa.cli.exe =async(s='')=>
       let actions = aa.actions.filter(o=>o.action[0] === mod);
       if (actions.length > 1)
       {
-        let sub_cmd = cmd[1].split(aa.regex.fw);
-        let sub = sub_cmd[0]?.toLowerCase();
-        let sub_actions = actions.filter(o=>o.action[1] === sub);
-        if (sub_actions.length)
+        // cmd[1] may be undefined when the user types just `.help` and the
+        // mod has both a single-token action (['help']) and per-sub actions
+        // (['help','profiles'], …). without a sub, fall back to the
+        // single-token one rather than throwing on undefined.split.
+        let sub_cmd = cmd[1]?.split(aa.regex.fw);
+        let sub = sub_cmd?.[0]?.toLowerCase();
+        if (sub)
         {
-          act = sub_actions[0];
-          cut = sub_cmd[1];
+          let sub_actions = actions.filter(o=>o.action[1] === sub);
+          if (sub_actions.length)
+          {
+            act = sub_actions[0];
+            cut = sub_cmd[1];
+          }
         }
+        else act = actions.find(o=> o.action.length === 1);
       }
       else if (actions.length)
       {

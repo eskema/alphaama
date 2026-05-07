@@ -1,4 +1,3 @@
-
 = aa => alphaama
 
 * alphaama doesn't do much on it's own, it takes commands given by the user and executes them
@@ -7,6 +6,42 @@
 * this value also acts as a delimiter for running multiple commands (similar to &&)
 * can be used to create any event type and autofills the missing required fields (raw JSON)
 * you can use multiple tabs with different requests
-* to reset everything, type: `. zzz`
-* some commands accept multiple entries using `,` as a separator (ex: `. o add score 4, theme light, pagination 500, ns gm`)
+* to reset everything, type: `.zzz`
+* some commands accept multiple entries using `,` as a separator (ex: `.o add score 4, theme light, pagination 500, ns gm`)
 * some commands may be piped using ` | `
+
+== interface
+
+* *header* — A<3 logo (home button) and the current view path
+* *main* — where notes, profiles, and conversations appear
+* *side panel* — collapsible sections for notes, profiles, messages, relays, logs
+* *CLI* — your main way of doing things, anchored at the bottom
+
+everything goes through the CLI. type `.` and the autocomplete will show what's available.
+
+== keyboard shortcuts
+
+|===
+| `Enter` | execute command
+| `Escape` | dismiss dialog / close CLI
+| `Ctrl+Shift+Up/Down` | navigate CLI history
+| `Ctrl+B` | file upload dialog
+|===
+
+== filter input
+
+most lists (notes, relays, profiles) have a filter input at the top that narrows what's shown in real time.
+
+* free text — substring match
+* `kind:1` — filter by event kind (notes section only)
+* `by:alice` — filter by author name, NIP-05, or petname
+* combine: `kind:1 by:alice bitcoin`
+
+== tips
+
+* click timestamps to refresh elapsed time
+* click the A<3 logo to go home
+* side panel sections are collapsible — click the section header to toggle
+* notes you've interacted with persist their read / collapsed state per session
+* autocomplete narrows as you type — you rarely need to type full command names
+* every nostr entity (`npub1...`, `note1...`, etc.) is clickable and navigable

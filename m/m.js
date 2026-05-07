@@ -8,7 +8,7 @@ direct messages (NIP-17)
 
 aa.m =
 {
-  name:'m',
+  name:'messages',
   about:'direct messages (NIP-17)',
   def:{id:'m'},
   convos: new Map(),

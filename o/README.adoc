@@ -4,20 +4,20 @@ Manages localStorage options and tab-scoped session overrides.
 
 == localStorage options (`o add`)
 
-* `. o add key value` — set a localStorage option
-* `. o add key` — set to empty (clears the value)
-* `. o reset` — reset all options to defaults
-* `. o reset key` — reset a single key to its default
-* `. o del key` — delete a non-default option
+* `.o add key value` — set a localStorage option
+* `.o add key` — set to empty (clears the value)
+* `.o reset` — reset all options to defaults
+* `.o reset key` — reset a single key to its default
+* `.o del key` — delete a non-default option
 
 == session overrides (`o ss`)
 
 Session overrides are tab-scoped and take priority over localStorage values without modifying them.
 They persist across page reloads within the same browser session.
 
-* `. o ss key value` — override a localStorage key for this tab only
-* `. o ss key` — override with empty value (disables, e.g. `on_load_sub`)
-* Running `. o add key value` on a key with a session override clears the override automatically
+* `.o ss key value` — override a localStorage key for this tab only
+* `.o ss key` — override with empty value (disables, e.g. `on_load_sub`)
+* Running `.o add key value` on a key with a session override clears the override automatically
 
 The options panel shows session overrides above the localStorage list.
 Overridden localStorage items appear dimmed with strikethrough.

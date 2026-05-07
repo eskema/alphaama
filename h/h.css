@@ -1,0 +1,78 @@
+/* h module — minimal main-view positioning + collapsed-state hide.
+   side panel uses the standard .mod / .list / .item CSS already. */
+
+.section_h
+{
+  grid-area: h;
+}
+
+.section_h:not(.expanded) > .h_body
+{
+  display: none;
+}
+
+/* hide every other view-section while reading a help doc — same
+   pattern m/d use via .view_m / .view_d */
+.view_h #view > section:not(.section_h),
+.view_h #view > details
+{
+  display: none;
+}
+
+
+/* h docs (one <details> per module readme) — mirror the rules
+   aa/view.css applies to `#view > details` so they get the same
+   summary brackets, sticky header on wide screens, etc. */
+
+.section_h .h_body > details
+{
+  margin-bottom: var(--pad);
+  padding-left: var(--padm);
+}
+
+.section_h .h_body > details > summary
+{
+  font-size: var(--font-size-s);
+}
+
+.section_h .h_body > details > summary::before
+{
+  content: "[";
+  font-size: var(--font-size-s);
+}
+
+.section_h .h_body > details > summary::after
+{
+  content: "]";
+  font-size: var(--font-size-s);
+}
+
+.section_h .h_body > details .content
+{
+  max-height: unset;
+}
+
+.section_h .h_body > details[open] > summary
+{
+  font-size: 0;
+}
+
+.section_h .h_body > details[open] > summary::before
+{
+  content: "[x";
+}
+
+.section_h .h_body > details[open] article
+{
+  padding: var(--line) 1rem;
+}
+
+@media screen and (min-width: 1025px)
+{
+  .section_h .h_body > details[open] > summary
+  {
+    position: sticky;
+    top: 0;
+    line-height: 1.5rem;
+  }
+}

@@ -8,9 +8,45 @@
 * relay sets (relset) can be used in requests or to create lists
 * depending from where relays were imported, some sets are added automatically (`ext`, `k3`, `k10002`, `out`, `hint`)
 
-to add a relay, type: `. r add <url> <set_1> <set_2>`
+== add / remove
+
+to add a relay, type: `.r add <url> <set_1> <set_2>`
 
 * `url` is a valid full URL
-* `set` is a relay set (a-z_0-9) 
-* example command for adding multiple relays: `. r add wss://relay1.com read write, wss://relay2.org read, wss://relay3.net write`
-* to remove a set from a relay, type: `. r setrm <url> <set>`
+* `set` is a relay set (a-z_0-9)
+* example for adding multiple relays at once: `.r add wss://relay1.com read write, wss://relay2.org read, wss://relay3.net write`
+
+* `.r del <url>` — remove a relay entirely
+* `.r setrm <url> <set>` — remove one or more sets from a relay (relay stays)
+
+== list / inspect
+
+* `.r ls [<set>]` — list relays in a set (or all relays if no set given)
+* `.r info <url> [<url> ...]` — fetch NIP-11 information document(s)
+
+== search
+
+* `.r s <text>` — NIP-50 search request. uses your `search` set if defined, else falls back to `read`
+
+== broadcast
+
+* `.e bro <id> [<url||set> ...]` — re-broadcast an existing event to specific relays. with no relays, defaults to your write set
+
+== publish relay list
+
+* `.k 10002 <url,url,...>` — publish your relay list (kind-10002). permissions for each URL come from its current sets
+
+== scoring
+
+every relay has a reliability score from 0 to 100. unreliable relays get filtered out automatically when your queries fan out via outbox.
+
+* `.r score_reset` — reset all relay scores
+* `.r score_reset <url>` — reset just one
+
+== outbox
+
+nostr is a relay-based protocol where different people publish to different relays. if you only ever connect to your own relays, you'll miss events from people who publish elsewhere.
+
+each person publishes a kind-10002 event listing their preferred relays. when alphaama needs events from a specific person, it connects to *their* declared relays. that's the outbox model.
+
+run a query in outbox mode: `.q out <fid>`. relays you've never explicitly added show up automatically — you'll be asked whether to keep them (controlled by the `relays_ask` option).

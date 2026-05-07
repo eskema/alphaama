@@ -382,11 +382,6 @@ aa.u.load =async()=>
 
   aa.actions.push(
     {
-      action:['help','aa'],
-      description:'alphaama help',
-      exe:()=>{aa.mk.help()}
-    },
-    {
       action:['zzz'],
       description:'resets everything',
       exe:aa.u.reset

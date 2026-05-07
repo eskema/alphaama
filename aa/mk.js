@@ -247,6 +247,10 @@ aa.mk.confirm =async options=>
 aa.mk.doc =text=>
 {
   if (!text) return;
+  // strip leading whitespace before extracting the title — otherwise a
+  // readme that opens with a blank line (e.g. aa/README.adoc) ends up
+  // with an empty <summary>
+  text = text.replace(/^\s+/, '');
   let article = make('article',
   {
     cla:'content parsed',
@@ -254,9 +258,9 @@ aa.mk.doc =text=>
   });
 
   let title = text.slice(0,text.indexOf('\n'));
-  if (title.startsWith('=') || title.startsWith('#')) 
+  if (title.startsWith('=') || title.startsWith('#'))
     title = title.slice(1).trim();
-  
+
   let details = aa.mk.details(title,article);
   details.id = 'aa_read_me';
   return details

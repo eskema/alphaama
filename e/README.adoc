@@ -1,3 +1,89 @@
 = e => events
 
-soon™
+events flow in from relays, get rendered as notes, replies, reactions, zaps, and other kinds.
+
+== posting
+
+type into the CLI to draft a note. a draft appears in the events section with action buttons:
+
+* `yolo` — sign + mine PoW (if `pow` option set) + broadcast in one shot
+* `sign` — just sign (doesn't broadcast)
+* `pow` — mine proof-of-work before signing
+* `editor` — open the full editor dialog
+* `edit` — put the content back in the CLI for changes
+* `cancel` — discard the draft
+* `Ctrl+B` while drafting — open the file upload dialog
+
+the draft kind is auto-detected from the current view: kind-1 root on the home view, kind-1 reply when a kind-1 note is open, kind-`<k>` comment for other kinds. mentions (`@name`) trigger autocomplete and end up encoded as `nprofile1...`. hashtags (`#topic`) become `t` tags automatically.
+
+`post` is the default action that handles plain text without a command prefix — same effect as typing the text directly. it still goes through the draft process.
+
+== event creation
+
+short-circuit creators for specific kinds (build + sign + broadcast):
+
+* `.k 0 <JSON>` — set metadata (kind-0)
+* `.k 4 <pubkey> <text>` — encrypt text to pubkey (NIP-04, deprecated)
+* `.k 5 <reason> <id> [<id> ...]` — request deletion of one or more events
+* `.k 7 <id> <reaction>` — react to a note
+* `.k 10050 <relay,relay>` — set your DM relay list
+
+raw event creation, autofills missing fields:
+
+* `.e raw <JSON>` — build from JSON
+
+== view, fetch, decrypt
+
+* `.e view <id>` — open an event by hex id in its own view
+* `.e json <id>` — log raw JSON of stored event
+* `.e s <text>` — search rendered note contents
+* `.e decrypt <id>` — decrypt a NIP-04 / NIP-44 event manually
+* `.e kinds [<kind>]` — list all known event kinds, or look up a specific one
+* `.e clear` — clear the events section
+
+== broadcast
+
+`.e bro <id> [<url||set> ...]` — re-broadcast an event to specific relays. with no relays, defaults to your write set minus relays that already have it.
+
+== interacting with existing notes
+
+click the `…` button on any note to reveal action buttons:
+
+* react — send your default reaction (set via `.o add reaction <emoji>`)
+* req — fetch replies to this note
+* bro — re-broadcast (same as `.e bro <id>`)
+* render — toggle parsed vs raw content
+* quote — insert a `nevent1...` reference into the CLI to quote-post
+
+to reply, open the note's view (click its header) and type into the CLI — threading is handled automatically.
+
+== proof of work
+
+* `.e pow <id> <difficulty>` — add PoW to an existing draft
+* default difficulty: `.o add pow <n>`
+
+== mute
+
+mute a pubkey entirely, or only specific kinds:
+
+* `.e mute <pubkey>` — mute everything from this pubkey
+* `.e mute <pubkey> 1 6` — mute only kinds 1 and 6
+* `.e unmute <pubkey>` — remove mute (all kinds)
+* `.e unmute <pubkey> 1` — unmute kind 1 only, leave other muted kinds in place
+
+== orphans
+
+events that reference a parent you don't have yet are stashed as orphans. when the parent arrives, the reply snaps into place automatically.
+
+* `.e orphans` — open a dialog showing currently-orphaned events
+
+== analytics
+
+`.e anal` runs an aggregation over the loaded events and renders:
+
+* kind distribution
+* author breakdown (notes per author, peak hours, relay coverage)
+* mention pairs (BFFs, stalkers)
+* zap leaderboards
+* relay coverage
+* timeline (per-day and 24h hourly)

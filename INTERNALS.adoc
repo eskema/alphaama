@@ -1,0 +1,112 @@
+= alphaama internals
+
+implementation notes per module. for working *on* the code, not using the app. companion to CLAUDE.md — CLAUDE.md is the working guide (conventions, patterns, gotchas); INTERNALS is the per-module deeper reference.
+
+== e — events
+
+* mute system: per-pubkey, optionally kind-scoped. `aa.e.o.ls.muted[pubkey] = []` mutes all kinds; `[1, 6]` mutes only those kinds. muted notes get a `.muted` class. `aa.e.muted_sweep` sweeps already-printed notes when the mute set changes, so toggling is retroactive.
+* decrypt queue: `aa.e.decrypt_q` debounces auto-decryption with a 200ms delay and processes one at a time with 100ms gaps to spread crypto work.
+* orphans: events with unresolved parents are stashed in `aa.temp.refs` (parent_id → [id, note] pairs). when the parent arrives, replies are reattached.
+* PoW miner runs in a worker (`e/miner.js`) so the UI stays responsive.
+* in-memory caches: `aa.e.printed` (Map of rendered note elements keyed by event id), `aa.em` / `aa.em_a` (event data Maps, id-keyed and addressable).
+
+== p — profiles
+
+* profile data lives in `aa.db.p` keyed by hex pubkey, kept in sync with kind-0 metadata, kind-3 follow lists, kind-10002 relay lists, kind-10050 DM relay lists.
+* petname fallback chain: `petname → petnames[0] → display_name → nip05 → short_key`.
+* profile bar background colour is deterministically derived from the pubkey.
+* logged-in user gets `score=9` hardcoded in `aa.u.load_u`.
+* `p search` lazily loads all stored profiles into memory on first call; subsequent searches are instant.
+
+== r — relays
+
+* scoring formula: baseline 100, -20 per termination with 24h decay, error_rate × 30 down, success_rate × 20 up. relays with no history get 50.
+* backoff: terminated relays get a `retry_after` timestamp and a growing `retry_backoff`; requests skip relays during their backoff window.
+* outbox connection batching: 20 connections per batch with ~3-second gaps to work around Chrome/Brave's ~28-handshake cap on concurrent WebSockets.
+* NIP-42 auth handled in `r/manager.js`. kind-10050 (DM) relays authenticate automatically on first request.
+* telemetry: the `aa.r.r` getter logs once if all relays lose their `read` set; `aa.r.setrm` traces the stack on read/write removal. catching a recurring "set vanished" bug — don't strip these.
+
+== u — user
+
+* signer abstraction (`aa.signer`) unifies NIP-07 (window.nostr) and NIP-46 (BunkerSigner) behind a single API: `signEvent`, `getPublicKey`, `nip04.{encrypt,decrypt}`, `nip44.{encrypt,decrypt}`. modules never call `window.nostr.*` directly. bunker config persists in `aa.u.o.signer` and reconnects on page load.
+* decrypt cache (`aa.u.decrypt_cache`): persistent layer is a NIP-44-encrypted blob in IDB, mirrored as plaintext in sessionStorage for fast access. stores decrypted event bodies and per-conversation private keys. failed decrypts are marked with `fail: true` so they aren't retried each session.
+
+== m — NIP-17 DMs
+
+* three-layer encryption: rumor (kind 14) wrapped in seal (kind 13) wrapped in gift wrap (kind 1059).
+* timestamps are randomised 0–48h into the past on send (NIP-59).
+* kind-10050 relays auto-authenticate via NIP-42 on first request.
+* conversation keys are derived per-peer via ECDH and cached in the decrypt cache.
+
+== d — Double Ratchet
+
+* vendored from nostr-double-ratchet (mmalmi) as `dep/ratchet.js`. upstream wire format v1: kind 1060 outer (message), kind 30078 (invite), kind 1059 (invite response). v2 will swap construction for a 1059-shaped variant per alphaama design notes.
+* sessions persist across reloads in `aa.d.o.sessions` (serialized ratchet state + history per peer). on load, `aa.d.restore` rehydrates live `Session` instances and resumes the invite listener for any non-revoked invite.
+* runtime maps live in `aa.d.live`:
+** `sessions` — active `{session, name, history}` per peer
+** `pending` — accepted-but-not-adopted sessions awaiting user confirmation
+** `invites` — active invite listeners keyed by shared_secret
+** `unsub` — per-session teardown handle
+* persistent state under `aa.d.o` in the IDB `stuff` store:
+** `device_id` — stable per-install identifier
+** `invites` — `shared_secret -> {serialized, url, created_at, revoked_at?, accepted_by?}`
+** `sessions` — `peer_pubkey -> {name, state, history, opened_at, closed_at?}`
+** `pending_sessions` — unaccepted-by-user incoming sessions
+** `invite_seen` — dedup map of invite response event ids
+** `seen` — per-peer last-read timestamp (drives unread badges)
+** `log` — append-only audit trail
+* saves are debounced; `beforeunload` flushes synchronously so tab-close doesn't drop ratchet state.
+* ui: `aa.d.mk.panel` builds the section panel — a two-column chat layout shared with `m/` via `aa.mk.chat_list`. sidebar lists live sessions + pending + invites; main pane renders the selected session's history. selection drives via the view system (`#d_<npub>`).
+* related: `dep/ratchet.js`, `ma/ratchet/` (test harness).
+
+== b — Blossom
+
+* protocol coverage:
+** BUD-01: server requirements, blob retrieval (`GET /<sha256>`)
+** BUD-02: upload (`PUT /upload`), list (`GET /list/<pubkey>`), delete (`DELETE /<sha256>`)
+** BUD-03: user server lists (kind 10063)
+** BUD-04: mirror (`PUT /mirror`)
+** BUD-05: media optimization (`PUT /media`)
+** BUD-06: upload pre-flight (`HEAD /upload`)
+* spec: https://github.com/hzrd149/blossom
+
+== w — walLNut
+
+* zap flow: refresh recipient's metadata from relays (kind 0 + 10019) → fetch LNURL endpoint → create signed kind-9734 zap request → call callback for bolt11 → route to NWC or manual payment.
+* cashu activation: `w.o.enabled = true` (persisted to IDB) gates `init_cashu`. the `o wallnut` option is a separate user preference and no longer gates activation on its own.
+* sync (on enable): fetches wallet config (kind 17375), proofs (kind 7375), mint discovery (kind 10019), nutzaps (kind 9321). proofs are decrypted, deduplicated, checked for spendability, and imported.
+* storage:
+** proofs are encrypted in the decrypt cache (NIP-44), not stored in plain IDB
+** wallet private key (p2pk) stored in decrypt cache, tracked via `w.o.ls.p2pk`
+** rotated keys kept in `w.o.ls.rotated_keys`
+** NWC secret stored in decrypt cache, not localStorage
+* migration: kind 37375 (old addressable wallet format) is detected and a migration button is shown to create a new kind 17375 replaceable event.
+
+== db — storage
+
+* RedEventStore (current event store): WASM-backed using OPFS. bundled in `dep/` as `redstore.js` (IIFE), `redstore-worker.js` (ESM nested worker), `gadgets_redstore_bg.wasm`. the manager worker spawns the nested worker which owns the OPFS file handle. leader election via BroadcastChannel ensures only one tab writes.
+* IndexedDB module state: the `stuff` store keyed by mod id holds persistent state for `r`, `e`, `q`, `u`, `m`, `d`, etc. accessed via `db/idb.js` worker.
+* service worker `/cash.js` registered from `db/db.js`, scope `/`. caches the app shell for offline use.
+* `aa.db.ops(worker, ops)` wraps `postMessage` with an incrementing `request_id` matched to a pending Promise resolver. 6.6s timeout resolves to `null`.
+* storage policy: always store user's events; store follows' events for kinds 0, 3, 10002, 10019, 17375. legacy IDB event-store schema is commented out in `r/manager.js` (kept for rollback).
+
+== h — help
+
+* nav is built at load by iterating `['aa', ...aa.mods.map(m => m[0])]` and filtering on `mod.readme` being present (prefetched by `aa.mod.help_setup`). modules without a README are silently skipped — that's the canonical way to opt a module out of the help index.
+* `aa` itself isn't a mod (no entry in `aa.mods`), so `aa.mod.help_setup` doesn't prefetch its readme. `h.load` does that explicitly: fetches `/aa/README.adoc` into `aa.readme` and registers `[help, alphaama]` directly.
+* each module readme renders as a `<details>` whose `toggle` event drives navigation: opening fires `aa.view.state('#help_<slug>')`, collapsing fires `aa.view.state('')`. a `_programmatic` flag on the element suppresses this when h itself does the opening / closing (e.g. on initial render or via `close_others`), so programmatic state changes don't trigger spurious view transitions.
+* at most one doc is kept open at a time via `close_others(keep_modid)`.
+* the main-view section is appended to `#view` once at `page:ready` and stays there. hash navigation (`#help`, `#help_<slug>`) only toggles the `in_view` class and the `expanded` class on the section — the section is never moved out of the DOM.
+* `h.count_upd` writes `data-count` on the section's butt based on `body.children.length`; CSS gates the section header's visibility on this attr being present.
+* slug resolution: `h.resolve(s)` accepts a free-form input and returns a known modid, matching against both `mod.def.id` and `mod.name` (lowercased). canonical URL form is `#help_<mod.name>` — both ids and friendly names survive a hard reload.
+
+== aa — framework
+
+* event bus (`aa.bus`): `on/emit` for fire-and-forget, `provide/request` for synchronous data. used to break circular deps (`r→e:get`, `r→e:sign`, `q→cli:value`, `e→cli:dismiss`, `u→u:pubkey`, `db→db:save`). prefer over direct `aa.foo.bar()`.
+* readiness gates: `aa.mod.ready(key, fn)` / `aa.mod.fire_ready(key)`. replaces timing-based bootstrap. common keys: `r:manager`, `r:ui`, `u:pubkey`, `u:k0`, `u:k10002`, `u:follows`, `u:ready`, `page:ready`, `<mod_id>:ui`.
+* `q.stuff` staged on these signals: stage 1 your k10002 → 2a your k0+k3 → 2b other lists (background) → 3 follows' k10002 → 4 follows' k0/k3/k10050 via outbox → fire `u:ready`.
+* DOM mutations batched via `fastdom.mutate()`. lazy rendering via IntersectionObserver in `e/printer.js` (90% threshold). debouncing via `debt.add(fn, ms, key)`.
+* `aa.mod.help_setup` (called once from inside `aa.mod.load`): prefetches `/<modid>/README.adoc` into `mod.readme`, then registers two help aliases — `[help, <mod.name>]` and `[<mod.def.id>, help]` — both routing to `aa.view.state('#help_<slug>')` (slug = `mod.name || mod.def.id`). `h` is skipped (the generic `[help]` action covers it). don't call `help_setup` directly from a mod's load — `aa.mod.load` handles it.
+* `aa.mod.butts` gates the per-section `?` button on `!mod.no_help_butt`, so a mod can opt out of pointing back at help (used by `h` itself).
+* `aa.mk.doc(text)` strips leading whitespace before extracting the title, so a README that opens with a blank line still renders a non-empty `<summary>`. still cleaner not to lead with blank lines.
+* `mod.name` is user-facing now: it's the slug in `#help_<name>` URLs and the label in the side-panel section header. use a readable name (`'profiles'`, `'messages'`, `'double_ratchet'`), not the single-letter id. the letter is `mod.def.id`.

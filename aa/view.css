@@ -5,7 +5,7 @@
   align-self: start;
   display: grid;  
   grid-area: main;
-  grid-template-areas: "p" "d" "m" "e" "readme";
+  grid-template-areas: "p" "d" "m" "e" "h" "readme";
   position: relative;
   z-index: 1;
 }

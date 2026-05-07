@@ -480,7 +480,6 @@ aa.p.load =async()=>
   // oto complete profiles
   aa.bus.on('cli:upd',mod.oto);
   aa.p.l = make('div',{cla:'authors'});
-  aa.mod.help_setup(mod);
   await aa.mod.load(mod);
   // aa.mod.mk(mod);
 };

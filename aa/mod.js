@@ -63,18 +63,29 @@ aa.mod.butts =mod=>
       else butts.append(aa.mk.butt_action(...i),' ')
     }
   }
-  butts.append(aa.mk.butt_action(`${mod.def.id} help`,'?'),' ');
+  // mods can opt out (e.g. h itself — no point pointing help back at help)
+  if (!mod.no_help_butt)
+    butts.append(aa.mk.butt_action(`${mod.def.id} help`,'?'),' ');
   return butts
 };
 
 
-aa.mod.help_setup =async(mod,path)=>
+// per-module help aliases — both `.help <fullname>` and `.<modid> help` are
+// registered so they show up directly in cli autocomplete (clickable). they
+// route to the h module's view. readme is prefetched (best-effort, may 404)
+// so h's nav can filter modules without one; the cli aliases stay
+// registered regardless and produce a clear log via h.show on misses.
+//
+// h itself is skipped: the generic `.help` (and `.h` alias) already cover
+// it, so `[help, help]` and `[h, help]` would just be redundant clutter.
+aa.mod.help_setup =async mod=>
 {
-  if (!path) path = mod.readme_src || `/${mod.def.id}/README.adoc`;
-  let readme = await aa.fx.readme(path,mod);
-  if (!readme) return;
-  let exe = ()=>{aa.mk.help(mod.def.id)};
+  if (mod.def.id === 'h') return;
+  let path = mod.readme_src || `/${mod.def.id}/README.adoc`;
+  await aa.fx.readme(path, mod);
   let description = `help with ${mod.name} (${mod.def.id})`;
+  let slug = mod.name || mod.def.id;
+  let exe = ()=> aa.view.state(`#help_${slug}`);
   aa.actions.push(
     {
       action:['help',mod.name],

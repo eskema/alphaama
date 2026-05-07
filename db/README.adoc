@@ -1,22 +1,7 @@
 = db => database
 
-the database in alphaama is a local indexedDB instance using multiple stores.
+your data — events, profiles, options, queries, conversations, wallet — persists locally across reloads. there's no user-facing `db` command; storage just happens.
 
-* the "events" store is for all events from the user and also of certain kinds.
-* the "authors" store is for user profiles data.
-* the "stuff" store is for general modules data.
+if something goes wrong and you want a clean slate, type `.zzz`. wipes everything (caches, IndexedDB, localStorage, sessionStorage) and reloads.
 
-
-you can view a stored event or author with the command: `. db view <note1||npub1>`
-
-* if the data cannot be found in the db, alphaama will try to find it on your relays.
-
-
-to view more than one event, use the command: `. db some <number> asc`
-
-* <number> is how many notes you want to load
-* `asc` is an option to return notes in ascending order (instead of descending)
-
-
-to know how many things are stored in a given store, use the command: `. db count <store>`
-
+to disable the offline service worker cache: `.o add cash off`.

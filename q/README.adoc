@@ -5,14 +5,14 @@ to receive events from relays, you send them requests containing your queries
 * relays will keep relaying new events as they receive them until the request is closed
 * by default events will be printed to the view
 
-to send a raw request, type: . q req <relset> <query>
+to send a raw request, type: .q req <relset> <query>
 
 * <relset> is either a single relay URL or a relay set id
 * <query> is a nostr request filter (JSON)
 * "eose":"close" can be added to the query (this will close the request after all stored events have been returned)
 
 example of a raw request that will be performed on relays that have the set "read":
-. q req read {"kinds":[1],"limit":10,"eose":"close"}
+.q req read {"kinds":[1],"limit":10,"eose":"close"}
 
 the following variables can be used in queries as values:
 
@@ -33,31 +33,55 @@ inside author field:
 
 example of query with variables: {"kinds":[1],"authors":["u"],"since":"n_7"}
 
+== built-in queries
+
+reset and load defaults with `.q reset`. each one is editable / removable like any saved query.
+
+|===
+|id |what it fetches
+
+|`a` |your profile metadata (kinds 0, 3, 10000–10007, 10050, 10063)
+|`b` |your follows' profiles + relay/DM lists
+|`c` |your follows' relay configurations only
+|`f` |recent feed from you + follows (12h window)
+|`n` |mentions of you (last 21 days)
+|`m` |gift-wrap DMs sent to you (kind 1059)
+|`u` |all your notes (7-day window)
+|`replies` |recent replies from you + follows (6-day window)
+|`tag` |hashtag search (uses `s` variable as the tag name)
+|`id` |fetch a specific event by id (uses `x` variable)
+|`ref` |fetch events that reference a given event id
+|`z` / `zaps` |zap receipts to/around you and your follows (24h)
+|===
+
+example: set the search var, then run the `tag` query —
+`.u add s bitcoin && .q run tag`
+
 you can store queries so it's easier to run them
-to store a query, type: . q add <fid> <query>
+to store a query, type: .q add <fid> <query>
 
 * <fid> is a filter identifier with the following allowed characters: a-z_0-9
 * <query> is explained above
 
-to run a query on specific relays, type: . q run <fid> <relset>
+to run a query on specific relays, type: .q run <fid> <relset>
 
 * <fid> is explained above
 * <relset> is a single relay url or a relay set; by leaving it empty, it defaults relset "read"
 
-to run a query as outbox, type: . q out <fid>
+to run a query as outbox, type: .q out <fid>
 
-to open a query as a view, type: . q view <fid>
+to open a query as a view, type: .q view <fid>
 
 * this navigates to a dedicated view for the filter, querying both db and relays
 
-to close a query, type: . q close <fid>
+to close a query, type: .q close <fid>
 
 * if <fid> is omitted all opened queries will be closed instead
 
 
 video::https://v.nostr.build/hzQufBzjStD8L8j6.mp4["example of running the query: a"]
 
-example: . q run f, u, n
+example: .q run f, u, n
 
 
 == req view

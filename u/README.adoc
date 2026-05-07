@@ -1,4 +1,47 @@
 = u => user / you
 
-* to setup a user via browser extension, type: `. u setup` and follow instructions.
-* if you just want to read stuff, you can setup a user in read-only mode via nip05, nprofile or npub by appending it to the setup command: `. u setup <your_nip05>`
+your identity, custom variables, and the catch-all utility commands.
+
+== setup
+
+`.u setup [<input>]` — set up the logged-in user. accepts:
+
+* nothing — uses NIP-07 (browser extension) if available
+* `<hex_pubkey>` — read-only via raw pubkey
+* `npub1...` — read-only via npub
+* `nprofile1...` — read-only with relay hints
+* `<name@domain>` — read-only via NIP-05 lookup
+* `bunker://...` — remote signing (NIP-46), persisted across reloads
+
+reading from nostr doesn't require signing, so any of the read-only methods are fine if you only want to browse.
+
+once setup completes, alphaama bootstraps your profile, your follow list, and your follows' profiles in stages. the events section populates as data arrives.
+
+== variables
+
+custom shortcuts you can use inside query filters as values.
+
+* `.u add <key> <value>` — add or replace a variable
+* `<value>` can be one or more space-separated entries
+
+the keys `pubkey`, `npub`, and `k3` are reserved (managed automatically from your profile and follows).
+
+example: `.u add devs npub1abc... npub1def...` then use `"devs"` in a filter's `authors` field.
+
+== reset
+
+* `.zzz` — wipe everything (caches, IndexedDB, localStorage, sessionStorage) and reload. nuclear option.
+
+== utilities (`fx`)
+
+miscellaneous tools.
+
+* `.fx qr <text>` — generate a QR code into the log
+* `.fx decode <nip19>` — decode npub/note/nevent/nprofile/naddr to its hex/raw form
+* `.fx encrypt <pubkey> <text>` — NIP-44 encrypt for a pubkey
+* `.fx decrypt <ciphertext> <pubkey>` — decrypt NIP-04 or NIP-44
+* `.fx keypair [<xsec>]` — generate a new keypair, or derive from an existing hex secret. returns secret bytes, public hex, xsec hex, nsec.
+
+== help
+
+* `.help aa` — open the alphaama help dialog

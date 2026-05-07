@@ -1,8 +1,34 @@
 = p => pubkey / profile
 
-soon™
+profiles, follows, follower counts, NIP-05 verification, web-of-trust scoring.
 
-the WoT score system used here is very primitive and consists of 2 integer values:
+== view & lookup
 
-* a value that you can set manually (default is 0, 9 for the logged-in pubkey and 5 for it's follows) and has influence in displaying content (renders image, video, etc). this value relates to the `score` option
-* a generated value from the number of followers a pubkey has that you also follow. this is only used as a visual hint
+* `.p view <pubkey>` — open a profile by hex pubkey or npub
+* `.p md [<pubkey>]` — log raw metadata (kind-0) for a pubkey, or yourself if omitted
+* `.p check <name@domain>` — verify a NIP-05 identifier
+* `.p search <text>` — search stored profiles by name, NIP-05, or petname
+
+a profile view shows: name, bio, picture, banner, NIP-05 verification, website, lightning address, follow / follower counts, "common follows" (followers of theirs that you also follow), and their notes (fetched on demand). profile background colour is derived from the pubkey, so each person gets a unique tint.
+
+click `…` on a profile to reveal actions: get notes, refresh metadata, insert their `nprofile1...` into the CLI, follow / unfollow, set score.
+
+== follow / unfollow
+
+* `.p add <pubkey> [<relay>] [<petname>]` — follow a pubkey, optionally with a relay hint and a petname (your local nickname for them)
+* `.p del <pubkey>` — unfollow
+
+both publish an updated kind-3 follow list to your write relays.
+
+* `.p follows [<pubkey>]` — list who someone follows (defaults to you)
+
+profile views also show follower counts and a "common follows" hint — followers of theirs who also follow you.
+
+== trust scoring
+
+a manual integer per pubkey. controls media embedding (images, video, audio render as plain links for untrusted authors).
+
+* `.p score <pubkey> <n>` — set trust score
+* `.o add score <n>` — set the threshold for embedding media (default 11, so nothing embeds by default until you raise pubkey scores)
+
+your own pubkey gets the maximum score automatically.

@@ -14,7 +14,7 @@ loaded as part of aa.mods.
 
 aa.d =
 {
-  name: 'd',
+  name: 'double_ratchet',
   about: 'double ratchet (forward-secret DMs)',
   def: {id:'d'},
   scripts:
