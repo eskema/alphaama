@@ -244,9 +244,6 @@ aa.d.load =async()=>
     exe: ()=> aa.d.status(),
   });
 
-  // gate the loaded-line on page:ready so it stays below the header logs
-  aa.mod.ready('page:ready', ()=>
-    aa.log(`d: loaded — device ${mod.o.device_id.slice(0,8)}…`));
 };
 
 
@@ -1115,9 +1112,12 @@ aa.d.restore =async()=>
     await yield_ui();
   }
 
-  let skipped = (skipped_closed ? `, ${skipped_closed} closed skipped` : '') + (skipped_revoked ? `, ${skipped_revoked} revoked skipped` : '');
-  let pending_msg = restored_pending ? `, ${restored_pending} pending` : '';
-  aa.log(`d restore: ${restored_sessions} session(s), ${restored_invites} invite(s)${pending_msg}${skipped}`);
+  if (restored_sessions || restored_invites)
+  {
+    let skipped = (skipped_closed ? `, ${skipped_closed} closed skipped` : '') + (skipped_revoked ? `, ${skipped_revoked} revoked skipped` : '');
+    let pending_msg = restored_pending ? `, ${restored_pending} pending` : '';
+    aa.log(`d status: device ${mod.o.device_id.slice(0,8)}… · ${restored_sessions} session(s) · ${restored_invites} invite(s)${pending_msg}${skipped}`);
+  }
   aa.d._log('restore', {sessions: restored_sessions, invites: restored_invites, pending: restored_pending, skipped_closed, skipped_revoked});
   aa.d._restored = true;
   aa.bus.emit('d:restored', {sessions: restored_sessions, invites: restored_invites, pending: restored_pending});

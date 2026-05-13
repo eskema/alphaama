@@ -252,7 +252,7 @@ Identity binding happens at session setup; per-message encryption uses derived r
 
 ## Things to Know About
 
-- `aa_version` (in `aa/aa.js`) is bumped on releases for cache-busting. Currently 84.
+- `aa_version` (in `aa/aa.js`) is bumped on releases for cache-busting. Currently 85.
 - The CLI prefix is stored in `localStorage.ns` and used as a delimiter for command chaining (`<ns> cmd_a && <ns> cmd_b`). `aa.cmd(s)` prepends it.
 - Funny-name grep: `caralho`, `tits`, `yolo`, `dickbutt` are intentional. Don't rename them.
 - Outbox connection batching: 20 connections per batch with ~3-second gaps to work around Chrome/Brave's ~28-handshake cap on concurrent WebSockets.

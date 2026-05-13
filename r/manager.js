@@ -288,6 +288,12 @@ const auth =data=>
     console.log('manager auth: relay is invalid',relays[0]);
     return
   }
+  let event = request[1];
+  if (event?.id)
+  {
+    manager.events.set(event.id,mk_dat({event}));
+    relay.auth_event_id = event.id;
+  }
   on_worker_message(relay,{data:['auth',{json:JSON.stringify(request)}]});
 };
 

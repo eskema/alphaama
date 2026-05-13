@@ -320,9 +320,10 @@
     > .by:hover 
       + .content,
 
-  .note:not(.tiny) > a.clicker:hover 
-    + .by 
-    + .content,
+  .note:not(.tiny) 
+    > a.clicker:hover 
+      + .by 
+      + .content,
 
   .reply:not(.tiny) 
     > .by:hover 
@@ -332,6 +333,14 @@
     /* pointer-events: none; */
     position: sticky;
     top: 2rem;
+    z-index: 11;
+  }
+
+  .note.root:not(.tiny) 
+    > .by:hover 
+      + .content
+  {
+    top: 1rem;
     z-index: 11;
   }
 

@@ -228,6 +228,15 @@
     background-color: rgba(var(--color-c),.8);
     z-index: 2;
   }
+
+  #oto .item.mention:hover .butt
+  {
+    color: rgba(var(--color-d),1);
+  }
+  #oto .item.mention .butt:hover
+  {
+    color: rgba(var(--color-e),1);
+  }
 }
 
 @media screen and (max-width: 769px)

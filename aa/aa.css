@@ -449,6 +449,11 @@ img:not([src]) {
   line-height: 1rem;
 }
 
+a.butt
+{
+  text-decoration: none;
+}
+
 .butt.exe
 {
   background: rgb(var(--color-main));

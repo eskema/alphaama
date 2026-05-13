@@ -533,6 +533,8 @@ aa.q.load =async()=>
 
   // bus listener (breaks r -> q circular dependency)
   aa.bus.on('q:stamp', (sub, ts) => aa.q.stamp(sub, ts));
+  // lets other mods (m, d) get a REQ entry in the log without depending on q
+  aa.bus.on('q:log_req', (request, con) => aa.q.log('req', request, con));
 };
 
 
@@ -594,13 +596,15 @@ aa.q.mk =(key,value) =>
     : preview_text;
 
   let butts = make('span',{cla:'butts'});
-  butts.append(make('a',
+  let view_a = make('a',
   {
-    cla:'a butt',
+    cla:'a butt exe',
     ref:`#req?req=${key}`,
     con:'view',
-    clk:aa.clk.a
-  }),' ');
+  });
+  view_a.target = '_blank';
+  view_a.rel = 'noopener';
+  butts.append(view_a,' ');
   for (const item of ['req','sub','run','out'])
   {
     butts.append(aa.mk.butt_action(texts[item],item),' ')
@@ -947,6 +951,7 @@ aa.q.stuff =async()=>
   const options = {eose:'close'};
   const pubkey = aa.u.p?.pubkey;
   if (!pubkey) { aa.log('q stuff: no pubkey'); return }
+  if (!aa.r.r.length) { aa.log('q stuff: no relays — add some with `r add <url> read write`'); return }
 
   // direct fetch via aa.r.get + emit results to print_q so handlers run
   const grab =async(filter, relays)=>
@@ -1051,6 +1056,11 @@ aa.q.stuff =async()=>
     }),{pinned:true});
     // non-critical modules (e.g. d) gate their restore on this signal
     aa.mod.fire_ready('u:ready');
+
+    // if on_load_sub is configured, run it now so the first reload resumes
+    // from saved sub timestamps instead of refetching from scratch
+    aa.q._stuffing = false;
+    if (aa.o.o.ls.on_load_sub) aa.u.on_load_sub();
   },1000);
 };
 

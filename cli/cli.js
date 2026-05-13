@@ -456,7 +456,7 @@ aa.cli.oto_act =(body)=>
 aa.cli.run =async s=>
 {
   aa.cli.history_upd(s);
-  aa.log(s);
+  aa.log(s,{is_new:false});
   if (aa.cli.act(s)) aa.cli.exe(s);
   else if (aa.cli.def.action) aa.cli.def.action.exe(s)
 };

@@ -120,6 +120,7 @@ aa.m.sub =s=>
 
   aa.r.on_sub.set(id, aa.m.on_event);
   aa.r.send_req({request:['REQ',id,filter], relays});
+  aa.bus.emit('q:log_req', ['REQ',id,filter], `to: ${relays}`);
 };
 
 

@@ -188,7 +188,7 @@ dialog .mod > header
 
 .mod.expanded .list
 {
-  background-color: rgb(var(--color-a));
+  /* background-color: rgb(var(--color-a)); */
 }
 
 .mod.expanded details[open] .list
@@ -231,9 +231,14 @@ dialog .mod > header
 
 .mod_details[open] .val
 {
-  background: rgba(var(--color-b),1);
-  margin: var(--line) 0;
+  /* background: rgba(var(--color-b),1); */
+  /* margin: var(--line) 0; */
   word-break: break-all;
+}
+
+.mod .list > .item summary::before
+{
+  margin-left: var(--pad);
 }
 
 /* .mod > .butt
