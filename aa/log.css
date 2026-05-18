@@ -284,6 +284,13 @@ details.base[open] > summary,
   white-space: pre;
 }
 
+
+.log summary .latest
+{
+  white-space: pre;
+  overflow-x: auto;
+}
+
 .cli_expanded .section_l
 {
   overflow: hidden;
@@ -343,6 +350,7 @@ details.base[open] > summary,
 }
 
 .aa:not(.cli_expanded) .log.is_new.log_pinned:not(:last-child)
+/* .aa:not(.cli_expanded) .log.is_new.log_pinned:not(:has(~ .log.is_new)) */
 {
   transition: all .4s ease-in-out 1s;
   background: rgba(var(--color-c),.5);

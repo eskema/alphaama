@@ -20,7 +20,8 @@ blobs stored on media servers. content-addressed file storage using SHA256 hashe
 == list & delete
 
 * `.b list` shows your blobs on the default server
-* `.b list <pubkey>` shows someone else's
+* `.b list <server>` lists your blobs on a specific server
+* `.b list <server> <pubkey>` lists someone else's blobs on a specific server
 * `.b del <sha256>` removes a blob from the server (requires signer)
 
 == mirror

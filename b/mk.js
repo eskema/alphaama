@@ -252,42 +252,58 @@ aa.mk.b_upload =()=>
 };
 
 
+// build a single <li> for one blob descriptor
+aa.mk.b_list_item =d=>
+{
+  let item = make('li', {cla: 'item'});
+  let link = make('a', {ref: d.url, con: d.sha256, target: '_blank'});
+  let meta = make('span', {con: ` ${aa.fx.format_bytes(d.size)} ${d.type || ''}`});
+  let time = make('span', {con: ` ${aa.fx.time_display(d.uploaded)}`});
+  let copy_butt = aa.mk.butt_clip(d.url);
+  copy_butt.textContent = 'copy';
+  copy_butt.classList.add('butt','exe');
+  let del_butt = make('button',
+  {
+    cla: 'butt exe del',
+    con: 'del',
+    clk: async()=>
+    {
+      let ok = await aa.b.del(d.sha256);
+      if (ok) item.remove();
+    },
+  });
+  let preview = make('span',
+  {
+    cla:'img_thumb',
+    app:aa.mk.img(d.url, true),
+    clk: e=>
+    {
+      // toggle expanded — used in grid view to reveal info; harmless in list
+      e.preventDefault();
+      item.classList.toggle('expanded');
+    },
+  });
+  let butts = make('span', {cla:'butts', app:[copy_butt,' ', del_butt]});
+  item.append(preview, ' ', link, meta, ' ', time, butts);
+  return item
+};
+
+
+// build a <ul> of blob descriptors (used by the logged list)
+aa.mk.b_list_items =descriptors=>
+{
+  let list = make('ul', {cla: 'list'});
+  for (const d of descriptors) list.append(aa.mk.b_list_item(d));
+  return list
+};
+
+
 // render blob descriptor list in logs
 aa.mk.b_list =(descriptors,server)=>
 {
   let key = 'b_list';
   let element = aa.el.get(key);
-
-  // build item list
-  let list = make('ul', {cla: 'list'});
-  for (const d of descriptors)
-  {
-    let item = make('li', {cla: 'item'});
-    let link = make('a', {ref: d.url, con: d.sha256.slice(0,16) + '...', target: '_blank'});
-    let meta = make('span', {con: ` ${aa.fx.format_bytes(d.size)} ${d.type || ''}`});
-    let time = make('span', {con: ` ${aa.fx.time_display(d.uploaded)}`});
-    let del_butt = make('button',
-    {
-      cla: 'butt exe del',
-      con: 'del',
-      clk: async()=>
-      {
-        let ok = await aa.b.del(d.sha256);
-        if (ok) item.remove();
-      },
-    });
-    let preview = make('span',
-    {
-      cla:'img_thumb',
-      app:aa.mk.img(d.url, true)
-    });
-    let butts = make('span', {cla:'butts',app:
-    [
-       ' ', del_butt
-    ]});
-    item.append(preview, ' ', link, meta, ' ', time,butts);
-    list.append(item);
-  }
+  let list = aa.mk.b_list_items(descriptors);
 
   if (!element)
   {

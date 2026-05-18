@@ -29,6 +29,8 @@
   position: absolute;
   white-space: pre;
   z-index: 1;
+  overflow: hidden;
+  max-height: 1.5rem;
 }
 
 #oto .item 
@@ -51,7 +53,7 @@
 {
   /* background-color: rgba(var(--color-main),.4);
   color: rgb(var(--color-c)); */
-  background-color: rgba(var(--color-e),1);
+  background-color: rgba(var(--color-c),1);
   z-index: 2;
   outline: none;
 }

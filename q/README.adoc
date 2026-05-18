@@ -37,25 +37,21 @@ example of query with variables: {"kinds":[1],"authors":["u"],"since":"n_7"}
 
 reset and load defaults with `.q reset`. each one is editable / removable like any saved query.
 
-|===
-|id |what it fetches
+* `a` — your profile metadata (kinds 0, 3, 10000–10007, 10050, 10063)
+* `b` — your follows' profiles + relay/DM lists
+* `c` — your follows' relay configurations only
+* `f` — recent feed from you + follows (12h window)
+* `n` — mentions of you (last 21 days)
+* `m` — gift-wrap DMs sent to you (kind 1059)
+* `u` — all your notes (7-day window)
+* `replies` — recent replies from you + follows (6-day window)
+* `spells` — NIP-A7 spell events (kind 777, recent 200)
+* `tag` — the #asknostr feed (limit 200)
+* `id` — fetch a specific event by id (uses `x` variable)
+* `ref` — fetch events that reference a given event id
+* `z` / `zaps` — zap receipts to/around you and your follows (24h)
 
-|`a` |your profile metadata (kinds 0, 3, 10000–10007, 10050, 10063)
-|`b` |your follows' profiles + relay/DM lists
-|`c` |your follows' relay configurations only
-|`f` |recent feed from you + follows (12h window)
-|`n` |mentions of you (last 21 days)
-|`m` |gift-wrap DMs sent to you (kind 1059)
-|`u` |all your notes (7-day window)
-|`replies` |recent replies from you + follows (6-day window)
-|`tag` |hashtag search (uses `s` variable as the tag name)
-|`id` |fetch a specific event by id (uses `x` variable)
-|`ref` |fetch events that reference a given event id
-|`z` / `zaps` |zap receipts to/around you and your follows (24h)
-|===
-
-example: set the search var, then run the `tag` query —
-`.u add s bitcoin && .q run tag`
+example — make your own hashtag query and run it: `.q add btc {"#t":["bitcoin"],"limit":200} && q run btc`
 
 you can store queries so it's easier to run them
 to store a query, type: .q add <fid> <query>
@@ -108,8 +104,8 @@ values in `ids`, `authors`, `e`, `p` are decoded if bech32 (npub1, note1, nevent
 === examples
 
 ....
-#req?kinds=1&authors=u&since=n_7
-#req?kinds=1,6&authors=k3&relays=out&limit=100
-#req?kinds=30023&t=nostr&relays=read
-#req?req=my_saved_filter&limit=20
+"#req?kinds=1&authors=u&since=n_7"
+"#req?kinds=1,6&authors=k3&relays=out&limit=100"
+"#req?kinds=30023&t=nostr&relays=read"
+"#req?req=my_saved_filter&limit=20"
 ....

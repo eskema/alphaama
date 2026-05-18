@@ -105,6 +105,11 @@
   z-index: 1;
 }
 
+#cli_t::placeholder
+{
+  color: rgba(var(--color-d),.9);
+}
+
 #cli_t:focus
 {
   font-size: 16px;

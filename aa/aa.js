@@ -7,13 +7,13 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 85;
+const aa_version = 86;
 // a
 const aa = 
 {
   name:'alphaama',
   aka:'A<3',
-  about:'just .aa nostr fucking client',
+  about:'just a nostr fucking client',
   actions:[],
   db:{},
   clears:[],

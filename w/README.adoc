@@ -1,6 +1,6 @@
 = w => wallnut
 
-zaps (NIP-57), nostr wallet connect (NIP-47), cashu (NIP-60/61).
+zaps (NIP-57), NWC (NIP-47), cashu (NIP-60/61).
 
 zap and nwc are always available. cashu features are gated behind an enable button in the module panel.
 
@@ -18,11 +18,11 @@ to zap a note or pubkey, type: `.w zap <amount> <pubkey> "<memo>" <event_id>`
 
 == nwc
 
-nostr wallet connect lets you pay invoices automatically through a remote wallet.
+NWC lets you pay invoices automatically through a remote service.
 
 to set up NWC, type: `.w nwc <connection_string>`
 
-* `connection_string` — a `nostr+walletconnect://` URI from your wallet provider
+* `connection_string` — a `nostr+walletconnect://` URI from your NWC provider
 * the secret is stored encrypted (not in localStorage)
 
 * `.w nwc` — check status
@@ -34,19 +34,19 @@ when NWC is configured, zaps are paid automatically. if NWC fails (timeout, erro
 
 when NWC is not configured or fails, a dialog is shown with:
 
-* a link to open the invoice in a lightning wallet app (`lightning:` URI)
-* a QR code to scan with a mobile wallet
+* a link to open the invoice in a lightning app (`lightning:` URI)
+* a QR code to scan with a mobile lightning app
 * a button to copy the raw bolt11 invoice
 
 == cashu (NIP-60/61)
 
-when disabled, the module shows an enable button. on enable, wallnut syncs your wallet config, proofs, mints, and incoming nutzaps from relays.
+when disabled, the module shows an enable button. on enable, wallnut syncs your config, proofs, mints, and incoming nutzaps from relays.
 
-=== wallet setup
+=== wallnut setup
 
 * `.w add <mint_url>` — add a mint
-* `.w key <privkey>` — set wallet private key (offers to publish k:10019 and k:17375)
-* `.w import <event_id>` — import wallet config from kind 17375/37375
+* `.w key <privkey>` — set the wallnut private key (offers to publish k:10019 and k:17375)
+* `.w import <event_id>` — import wallnut config from kind 17375/37375
 * `.w proofs <event_id>` — import proofs from kind 7375
 
 === minting & melting
@@ -65,9 +65,9 @@ when disabled, the module shows an enable button. on enable, wallnut syncs your 
 
 * `.k 7375 [mint_url]` — publish proof backup (all mints if no url). deletes old proof events.
 * `.k 9321 <amount> <pubkey> [memo] [event_id]` — send a nutzap
-* `.k 10019` — publish wallet discovery (mints + p2pk)
-* `.k 17375` — publish wallet config (encrypted mints + privkey)
+* `.k 10019` — publish wallnut discovery (mints + p2pk)
+* `.k 17375` — publish wallnut config (encrypted mints + privkey)
 
 === migration
 
-if you have an old kind-37375 wallet, a migration button is shown to upgrade it to the current kind-17375 format.
+if you have an old kind-37375 record, a migration button is shown to upgrade it to the current kind-17375 format.

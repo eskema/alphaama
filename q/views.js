@@ -150,9 +150,9 @@ aa.view.ls.req = async (_path, search) =>
     else
     {
       let request = ['REQ', sub_id, expanded];
-      aa.q.log('req', request, `to: ${relays}`);
       let req_opts = opts || {};
       if (rels_s) req_opts.db = false;
+      aa.q.log('req', request, `to: ${relays}`, req_opts);
       aa.r.send_req({ request, relays, options: req_opts });
     }
   }

@@ -204,6 +204,7 @@ dialog .mod > header
   /* border-top: 1px dashed rgb(var(--color-c)); */
   margin-bottom: var(--line) 0;
   padding: var(--padm);
+  margin: 0 var(--pad);
 }
 
 .mod_details[open] > summary,
@@ -212,6 +213,8 @@ dialog .mod > header
   background: rgba(var(--color-c),.2);
   font-size: var(--font-size);
   padding: var(--line) 0;
+  margin-bottom: var(--pad);
+  /* margin: 0 var(--pad); */
 }
 
 .mod_details
@@ -239,6 +242,12 @@ dialog .mod > header
 .mod .list > .item summary::before
 {
   margin-left: var(--pad);
+}
+
+.mod a.butt.exe
+{
+  border: 1px solid rgb(var(--color-main));
+  color: rgb(var(--color-main));
 }
 
 /* .mod > .butt

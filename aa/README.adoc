@@ -3,7 +3,7 @@
 * alphaama doesn't do much on it's own, it takes commands given by the user and executes them
 * it has a single input field for interaction like a Command Line Interface (CLI) wrapped in a Graphical User Interface (GUI) that can be interacted with
 * commands are given by prefixing the input with a value (default is ".")
-* this value also acts as a delimiter for running multiple commands (similar to &&)
+* chain multiple commands with `&&` (e.g. `.q stuff && r ls`) — only the first command needs the prefix
 * can be used to create any event type and autofills the missing required fields (raw JSON)
 * you can use multiple tabs with different requests
 * to reset everything, type: `.zzz`
@@ -14,19 +14,25 @@
 
 * *header* — A<3 logo (home button) and the current view path
 * *main* — where notes, profiles, and conversations appear
-* *side panel* — collapsible sections for notes, profiles, messages, relays, logs
-* *CLI* — your main way of doing things, anchored at the bottom
+* *side panel* — collapsible per-module sections (saved queries, relays, options, etc.)
+* *CLI* — input + logs at the bottom; your main way of doing things
 
 everything goes through the CLI. type `.` and the autocomplete will show what's available.
 
 == keyboard shortcuts
 
-|===
-| `Enter` | execute command
-| `Escape` | dismiss dialog / close CLI
-| `Ctrl+Shift+Up/Down` | navigate CLI history
-| `Ctrl+B` | file upload dialog
-|===
+* `Enter` — execute command
+* `Escape` — dismiss dialog / close CLI
+* `Ctrl+Shift+Up/Down` — navigate CLI history
+* `Ctrl+B` — file upload dialog
+
+== piping
+
+some commands return a value. that value can be fed into the next command with ` | `. the second command goes bare (no prefix), same as with `&&`.
+
+* `.fx decode npub1abc... | p md` — inspect a pubkey's metadata when you only have an npub (`.p md` requires hex)
+* `.fx decode note1abc... | e view` — open a note by its note1 id
+* `.e json <id> | e raw` — clone an event into your drafts area to fork, edit, or republish
 
 == filter input
 

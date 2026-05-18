@@ -176,8 +176,6 @@ aa.q.render_spell =async(element,dat)=>
   let name = aa.fx.tag_value(tags,'name') || '';
   let cmd = aa.fx.tag_value(tags,'cmd') || 'REQ';
 
-  // raw filter for display, converted for import
-  let filter = aa.q.spell_filter(tags);
   let filter_import = aa.q.spell_filter(tags, true);
 
   let relays_tag = tags.find(t=> t[0] === 'relays');
@@ -188,25 +186,32 @@ aa.q.render_spell =async(element,dat)=>
   if (!fid.length) fid = '<query_id>';
 
   let info = make('p', {cla: 'paragraph spell_info',con: `cmd: ${cmd} `});
-  let filter_el = make('pre', {cla: 'paragraph spell_filter', con: JSON.stringify(filter, null, 2)});
+  let filter_el = make('pre', {cla: 'paragraph spell_filter', con: JSON.stringify(filter_import, null, 2)});
 
-  // import button
   let import_cmd = fid
     ? `q add ${fid} ${import_json}`
     : `q add ${import_json}`;
+  let import_butt = aa.mk.butt_action(import_cmd, 'import spell', 'exe');
 
-  let import_butt = make('p',
+  let search = aa.q.view_search(filter_import);
+  if (relays.length) search += '&relays=' + encodeURIComponent(relays.join(','));
+  let view_butt = make('a',
   {
-    cla:'paragraph',
-    app:aa.mk.butt_action(import_cmd, 'import spell', 'exe')
+    ref: `#req?${search}`,
+    con: 'view',
+    cla: 'butt exe',
   });
-  
+  view_butt.target = '_blank';
+  view_butt.rel = 'noreferrer noopener';
+
+  let butts = make('p', {cla: 'paragraph', app: [import_butt, ' ', view_butt]});
+
   element.append(
     name ? make('h4', {con: name}) : '',
     info,
     filter_el,
     relays.length ? make('p', {cla: 'paragraph spell_relays', con: 'relays: ' + relays.join(', ')}) : '',
-    import_butt
+    butts
   );
 
 };

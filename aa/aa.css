@@ -447,11 +447,7 @@ img:not([src]) {
   color: rgb(var(--color-e));
   padding: 0 var(--padm);
   line-height: 1rem;
-}
-
-a.butt
-{
-  text-decoration: none;
+  text-align: center;
 }
 
 .butt.exe
@@ -495,6 +491,18 @@ a.butt
   color: rgb(var(--color-c));
   pointer-events: none;
   cursor: not-allowed;
+}
+
+a.butt
+{
+  display: inline-block;
+  text-decoration: none;
+}
+
+a.butt.exe
+{
+  background: unset;
+  color: unset;
 }
 
 @keyframes clk

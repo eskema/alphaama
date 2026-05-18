@@ -212,6 +212,29 @@
   display: none;
 }
 
+.paragraph > .butt
+{
+  line-height: inherit;
+}
+
+/* .paragraph a.butt
+{
+  display: inline-block;
+  background: unset;
+  color: unset;
+} */
+
+.paragraph a.butt.exe
+{
+  border: 1px solid rgb(var(--color-main));
+  color: rgb(var(--color-main));
+}
+
+.paragraph a.butt::after
+{
+  content: " ↗︎";
+}
+
 .view_e .in_path:not(.in_view) > .content .paragraph,
 .replies:not(.expanded) .note:not(.is_new):not(.in_view).haz_new > .content .paragraph
 {

@@ -24,26 +24,21 @@ Overridden localStorage items appear dimmed with strikethrough.
 
 == options
 
-[cols="1,1,2"]
-|===
-|key |default |description
-
-|`theme` |`dark` |`dark` or `light`
-|`score` |`11` |minimum trust score to embed media
-|`pagination` |`100` |number of root events shown
-|`pow` |`0` |proof of work difficulty
-|`reaction` |`🤘` |default reaction emoji
-|`on_load_sub` |`` |sub prefix to run on load (empty = disabled)
-|`auto_decrypt` |`off` |`on`, `on_view`, or `off`
-|`m_decrypt` |`off` |auto-decrypt DMs
-|`m_get` |`off` |auto-fetch DMs
-|`m_auto_send` |`off` |auto-send DMs
-|`cash` |`on` |enable service worker cache
-|`ext_image` |`gif heic jpeg jpg png webp` |allowed image extensions
-|`ext_video` |`mp4 webm` |allowed video extensions
-|`ext_audio` |`3ga aac aiff flac m4a mp3 ogg wav` |allowed audio extensions
-|`ns` |`.` |CLI namespace prefix
-|===
+* `theme` (default `dark`) — `dark` or `light`
+* `score` (default `11`) — minimum trust score to embed media
+* `pagination` (default `100`) — number of root events shown
+* `pow` (default `0`) — proof of work difficulty
+* `reaction` (default `🤘`) — default reaction emoji
+* `on_load_sub` (default empty) — sub prefix to run on load (empty = disabled)
+* `auto_decrypt` (default `off`) — `on`, `on_view`, or `off`
+* `m_decrypt` (default `off`) — auto-decrypt DMs
+* `m_get` (default `off`) — auto-fetch DMs
+* `m_auto_send` (default `off`) — auto-send DMs
+* `cash` (default `on`) — enable service worker cache
+* `ext_image` (default `gif heic jpeg jpg png webp`) — allowed image extensions
+* `ext_video` (default `mp4 webm`) — allowed video extensions
+* `ext_audio` (default `3ga aac aiff flac m4a mp3 ogg wav`) — allowed audio extensions
+* `ns` (default `.`) — CLI namespace prefix
 
 
 video::https://v.nostr.build/w5smDlU8vMRQ1r4N.mp4["example of how to switch theme from dark to light and then setting `score` to `4` so it loads stuff from your fellas:"]

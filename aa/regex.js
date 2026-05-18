@@ -2,7 +2,7 @@
 export default
 {
   get an(){ return /^[A-Z_0-9]+$/i },
-  get hashtag(){ return /(\B[#])[\w_-]+/g },
+  get hashtag(){ return /(?<=^|\s)#[\w_-]+/g },
   get hex(){ return /^[A-F0-9]+$/i },
   //get lnbc(){ return /((lnbc)[A-Z0-9]*)\b/gi },
   //get magnet(){ return /(magnet:\?xt=urn:btih:.*)/gi },

@@ -19,12 +19,13 @@
   /* white-space: pre; */
 }
 
-.section_mod_q details[open] .q_about_preview
+.section_mod_q details[open] .q_about_preview,
+.section_mod_q > .list > .item > details > summary::after
 {
   display: none;
 }
 
-
-
-.section_mod_q > .list > .item > details > summary::after
-{display: none;}
+.section_mod_q > .list > .item > details[open]  .mod_actions
+{
+  margin-top: var(--line);
+}

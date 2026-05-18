@@ -1,7 +1,133 @@
-.section_mod_b > .list > .item.def .key::after
+/* server item layout: actions on the left, details (URL + body) fills */
+.section_mod_b > .list > .item
 {
-  content: ' (default)';
-  opacity: .5;
+  grid-template-areas: "info actions";
+  grid-template-columns: 1fr auto;
+}
+
+.section_mod_b > .list > .item > .mod_actions
+{
+  grid-area: actions;
+}
+
+.section_mod_b > .list > .item > .mod_blobs
+{
+  grid-area: info;
+  padding-left: var(--padm);
+}
+
+/* stack action buttons vertically when the per-server details is expanded
+   (matches r.css's `.info[open] ~ .mod_actions` behavior; we use :has()
+   since actions sit before mod_blobs in DOM order) */
+.section_mod_b > .list > .item:has(> .mod_blobs[open]) > .mod_actions
+{
+  grid-auto-flow: row;
+  align-self: start;
+  margin-top: var(--pad);
+  /* margin-right: var(--pad); */
+}
+
+/* def / backup label on the summary, floated to the right */
+.section_mod_b .b_tag
+{
+  float: right;
+  opacity: .7;
+  font-size: var(--font-size-s);
+}
+
+.section_mod_b > .list > .item.def .b_tag
+{
+  color: rgb(var(--color-yes));
+}
+
+.section_mod_b > .list > .item.backup .b_tag
+{
+  color: rgb(var(--color-main));
+}
+
+.section_mod_b > .list > .item.def.backup .b_tag
+{
+  color: rgb(var(--color-main));
+  opacity: 1;
+}
+
+/* button row inside the per-server details (time + refresh + butts) */
+.list_controls
+{
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--pad);
+  margin: var(--pad) 0;
+}
+
+.list_controls .butts
+{
+  margin-left: auto;
+}
+
+/* blob items inside the per-server list */
+.mod_blobs > .list > .item
+{
+  align-items: center;
+  grid-gap: var(--pad);
+  grid-template-areas: "thumb link type date s";
+  grid-template-columns: calc(var(--size) + 2px) auto;
+  padding: 0;
+}
+
+/* full hash visible, scroll horizontally instead of clipping */
+.mod_blobs > .list > .item > a
+{
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: scroll;
+  white-space: pre;
+  vertical-align: middle;
+}
+
+.mod_blobs > .list > .item > .img_thumb
+{
+  cursor: pointer;
+  border: 1px solid rgba(var(--color-c),.1);
+  grid-area: thumb
+}
+
+/* grid view — toggled via .butts toggle button */
+.mod_blobs > .list.grid
+{
+  display: grid;
+  gap: var(--pad);
+  grid-template-columns: repeat(auto-fill, minmax(var(--size), 1fr));
+  
+}
+
+.mod_blobs > .list.grid .item
+{
+  grid-gap: 0;
+  /* grid-template-areas: "thumb";
+  grid-template-columns: auto; */
+}
+
+/* collapsed grid item: only the thumb is visible; click thumb to expand */
+.mod_blobs > .list.grid > .item:not(.expanded) > a,
+.mod_blobs > .list.grid > .item:not(.expanded) > span:not(.img_thumb)
+{
+  display: none;
+}
+
+/* expanded grid item spans full row width and reveals info */
+.mod_blobs > .list.grid > .item.expanded
+{
+  grid-column: 1 / -1;
+  grid-gap: var(--pad);
+  /* grid-template-columns: calc(var(--size) + 2px) auto; */
+  /* grid-template-areas: "thumb link link s" "thumb info date s"; */
+}
+
+.mod_blobs > .list.grid > .item.expanded > a
+{
+  grid-area: link;
 }
 
 

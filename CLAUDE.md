@@ -174,7 +174,7 @@ Recurring "read/write set vanished from a relay" mystery has live instrumentatio
 - **localStorage**: User preferences, relay lists, namespace prefix, user pubkey/variables (survive reloads, shared across tabs)
 - **sessionStorage**: Tab-specific UI state (expanded sections, active queries, last query, decrypt cache plaintext mirror)
 - **OPFS (RedEventStore)**: Persistent event storage via WASM. Replaces IndexedDB for events
-- **IndexedDB**: Module persistent state (the `stuff` store keyed by mod id), wallet vault blob, encrypted decrypt cache blob
+- **IndexedDB**: Module persistent state (the `stuff` store keyed by mod id), wallnut vault blob, encrypted decrypt cache blob
 - **Memory Maps**: Session cache (events in `aa.em`/`aa.em_a`, profiles in `aa.db.p`, printed elements in `aa.e.printed`)
 
 ## Database
@@ -185,7 +185,7 @@ WASM/OPFS-backed via `@nostr/gadgets/redstore`. Bundled in `dep/` as three files
 ### IndexedDB (legacy + module storage)
 Old event-store schema is commented out in `r/manager.js`. Active IDB usage:
 - **stuff** store: keyPath `id`, holds module persistent state keyed by mod id (`r`, `e`, `q`, `u`, `m`, `d`, etc.)
-- Wallet vault: AES-GCM encrypted proofs blob (sidesteps NIP-44 size limits)
+- Wallnut vault: AES-GCM encrypted proofs blob (sidesteps NIP-44 size limits)
 - Decrypt cache: NIP-44 encrypted JSON blob
 
 Storage policy: always store user's events; store follows' events for kinds 0, 3, 10002, 10019, 17375.
@@ -205,23 +205,23 @@ Storage policy: always store user's events; store follows' events for kinds 0, 3
 - NIP-42: Relay authentication
 - NIP-44: Encrypted content
 - NIP-46: Remote signing (bunker://, via `aa.signer`)
-- NIP-47: Nostr Wallet Connect (NWC) — outbound zaps in `w/`
+- NIP-47: NWC — outbound zaps in `w/`
 - NIP-50: Search (`r s <query>`, kind-aware via NIP-50 search relay set)
 - NIP-51: Lists — mute (10000), pin (10001), bookmarks (10003), blocked relays (10006), search relays (10007)
 - NIP-57: Zaps (read + send via `w zap`)
 - NIP-59: Gift wrap timestamp randomization (0–48h past)
-- NIP-60/61: Cashu wallet + nutzaps (kinds 7375/7376/9321/10019/17375)
+- NIP-60/61: Cashu + nutzaps (kinds 7375/7376/9321/10019/17375)
 - NIP-A7: Spell events (kind 777) — `q/spells.js`
 - NIP-B7 / Blossom: media servers (kinds 24242 auth, 10063 server list)
 - Double Ratchet DMs (vendored, not yet a finalized NIP — wire format v1, kinds 1060 message / 30078 invite / 1059 invite response)
 
-## Wallet (walLNut) — Experimental
+## walLNut — Experimental
 
-Cashu ecash wallet. Has been a forcing function for architectural improvements (vault, signer abstraction, decrypt cache) but is unfinished. Not core to alphaama's identity.
+Cashu ecash. Has been a forcing function for architectural improvements (vault, signer abstraction, decrypt cache) but is unfinished. Not core to alphaama's identity.
 
 - **Vault**: AES-GCM encrypted proofs blob in IDB; the AES key lives in `decrypt_cache._data.keys`. Bypasses NIP-44 size limits for big proof bags.
-- **NWC fallback**: when Cashu auto-melt fails, the wallet falls back to NIP-47 NWC for outbound payments, then to a manual dialog.
-- **Sync**: pulls replaceable wallet config (17375), proof events (7375), nutzaps (9321) and dedupes by proof secret. Tracks redeemable/redeemed sets.
+- **NWC fallback**: when Cashu auto-melt fails, wallnut falls back to NIP-47 NWC for outbound payments, then to a manual dialog.
+- **Sync**: pulls replaceable wallnut config (17375), proof events (7375), nutzaps (9321) and dedupes by proof secret. Tracks redeemable/redeemed sets.
 - **Send-zap is functional** (`w zap <amount> <pubkey> [memo] [event_id]`). Read-only zap rendering also handled in `e/render.js`.
 - Cashu lib is `cashu-ts` (vendored as `w/cashu-ts.iife.js`, also in `dep/`).
 
@@ -252,8 +252,8 @@ Identity binding happens at session setup; per-message encryption uses derived r
 
 ## Things to Know About
 
-- `aa_version` (in `aa/aa.js`) is bumped on releases for cache-busting. Currently 85.
-- The CLI prefix is stored in `localStorage.ns` and used as a delimiter for command chaining (`<ns> cmd_a && <ns> cmd_b`). `aa.cmd(s)` prepends it.
+- `aa_version` (in `aa/aa.js`) is bumped on releases for cache-busting. Currently 86.
+- The CLI prefix is stored in `localStorage.ns`. Commands are chained with `&&`; only the *first* segment carries the prefix (`.cmd_a && cmd_b`) — `aa.cli.exe` strips it once from the start and splits the remainder on ` && `. `aa.cmd(s)` prepends the prefix.
 - Funny-name grep: `caralho`, `tits`, `yolo`, `dickbutt` are intentional. Don't rename them.
 - Outbox connection batching: 20 connections per batch with ~3-second gaps to work around Chrome/Brave's ~28-handshake cap on concurrent WebSockets.
 - NIP-46 connect: bunker:// URLs are parsed via `NostrTools.nip46.parseBunkerInput`. The signer reconnects across reloads from `aa.u.o.signer`.

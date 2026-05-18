@@ -74,13 +74,13 @@ implementation notes per module. for working *on* the code, not using the app. c
 
 * zap flow: refresh recipient's metadata from relays (kind 0 + 10019) → fetch LNURL endpoint → create signed kind-9734 zap request → call callback for bolt11 → route to NWC or manual payment.
 * cashu activation: `w.o.enabled = true` (persisted to IDB) gates `init_cashu`. the `o wallnut` option is a separate user preference and no longer gates activation on its own.
-* sync (on enable): fetches wallet config (kind 17375), proofs (kind 7375), mint discovery (kind 10019), nutzaps (kind 9321). proofs are decrypted, deduplicated, checked for spendability, and imported.
+* sync (on enable): fetches wallnut config (kind 17375), proofs (kind 7375), mint discovery (kind 10019), nutzaps (kind 9321). proofs are decrypted, deduplicated, checked for spendability, and imported.
 * storage:
 ** proofs are encrypted in the decrypt cache (NIP-44), not stored in plain IDB
-** wallet private key (p2pk) stored in decrypt cache, tracked via `w.o.ls.p2pk`
+** wallnut private key (p2pk) stored in decrypt cache, tracked via `w.o.ls.p2pk`
 ** rotated keys kept in `w.o.ls.rotated_keys`
 ** NWC secret stored in decrypt cache, not localStorage
-* migration: kind 37375 (old addressable wallet format) is detected and a migration button is shown to create a new kind 17375 replaceable event.
+* migration: kind 37375 (old addressable format) is detected and a migration button is shown to create a new kind 17375 replaceable event.
 
 == db — storage
 

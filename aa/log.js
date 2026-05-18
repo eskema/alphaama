@@ -96,7 +96,8 @@ aa.log_key =(key,value,o={})=>
     fastdom.mutate(()=>
     {
       let logs = log.parentElement;
-      element.append(item);
+      if (o.prepend) summary.after(item);
+      else element.append(item);
       if (summary._latest) summary._latest.textContent = value;
       logs.lastChild.after(log);
       if (!o.silent_upd)

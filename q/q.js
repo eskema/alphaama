@@ -59,7 +59,8 @@ aa.q =
       "since":"n_6"
     },
     m:{"#p":["u"],"kinds":[1059],"since":"n_21","limit":500},
-    tag:{"#t":["s"],"limit":200},
+    spells:{"kinds":[777],"limit":200},
+    tag:{"#t":["asknostr"],"limit":200},
     u:{"authors":["u"],"since":"n_7","limit":500},
     z:{"kinds":[9735],"#P":["u","k3"],"since":"h_24"},
     zaps:{"kinds":[9735],"#p":["u","k3"],"since":"h_24"},
@@ -538,9 +539,10 @@ aa.q.load =async()=>
 };
 
 
-aa.q.log =(s,request,con)=>
+aa.q.log =(s,request,con,options)=>
 {
-  let [type,fid,filter,options] = request;
+  let [type,fid,filter] = request;
+  if (options === undefined) options = request[3];
 
   aa.q.last(fid,filter);
   if (aa.q.o.ls[fid])
@@ -826,7 +828,7 @@ aa.q.req =(s='')=>
     {
       for (const dat of events) aa.bus.emit('e:print_q', dat);
     });
-    aa.q.log('req',['REQ',fid,filter],'to: db');
+    aa.q.log('req',['REQ',fid,filter],'to: db',options);
     return
   }
 
@@ -847,7 +849,7 @@ aa.q.req =(s='')=>
   {
     aa.r.on_sub.set(fid, dat => aa.bus.emit('e:print_q', dat));
     aa.r.send_req({request,relays,options});
-    aa.q.log('req',request,`to: ${relays}`);
+    aa.q.log('req',request,`to: ${relays}`,options);
   }
 };
 
@@ -899,7 +901,7 @@ aa.q.run =async(s='')=>
       setTimeout(()=>{ aa.r.send_req({request,relays,options}) },delay);
       delay = delay + 1000;
       
-      aa.q.log('run',request,`to: ${relays}`);
+      aa.q.log('run',request,`to: ${relays}`,options);
 
     } 
     else aa.log(aa.q.def.id+' run: filter not found');
@@ -1164,6 +1166,6 @@ aa.q.sub =async(s, opts={})=>
       aa.r.send_req({request,relays,options});
     }
 
-    if (!silent) aa.q.log('sub',request,`to: ${as_outbox ? 'outbox' : relays}`);
+    if (!silent) aa.q.log('sub',request,`to: ${as_outbox ? 'outbox' : relays}`,options);
   }
 };

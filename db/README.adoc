@@ -1,6 +1,6 @@
 = db => database
 
-your data — events, profiles, options, queries, conversations, wallet — persists locally across reloads. there's no user-facing `db` command; storage just happens.
+your data — events, profiles, options, queries, conversations, wallnut — persists locally across reloads. there's no user-facing `db` command; storage just happens.
 
 if something goes wrong and you want a clean slate, type `.zzz`. wipes everything (caches, IndexedDB, localStorage, sessionStorage) and reloads.
 

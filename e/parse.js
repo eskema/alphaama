@@ -8,7 +8,12 @@ aa.parse.hashtag =match=>
     dat: { label: match[0].slice(1).toLowerCase() }
   });
 
-  return { parsed, type: 'inline' }
+  const result = { parsed, type: 'inline' };
+  if (match.index)
+    result.before = match.input.slice(0, match.index);
+  if (match[0].length < (match.input.length - match.index))
+    result.after = match.input.slice(match[0].length + match.index);
+  return result
 };
 
 

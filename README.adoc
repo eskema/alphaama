@@ -1,4 +1,4 @@
-= alphaama is just aa nostr fucking client
+= alphaama is just a nostr fucking client
 
 dat:
 
