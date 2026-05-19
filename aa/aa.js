@@ -76,6 +76,7 @@ const aa =
     '/aa/fx/validate.js',
     '/aa/fx/dom.js',
     '/aa/fx/util.js',
+    '/aa/fx/namecoin.js',
     '/aa/log.js',
     '/aa/wakelock.js',
   ],

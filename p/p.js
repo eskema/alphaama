@@ -106,13 +106,15 @@ aa.p.view_clear =()=>
 };
 
 
-// verify nip05
+// verify nip05 (with .bit / namecoin branch)
 aa.p.check_nip05 =async(s,p)=>
 {
   let verified = false;
   try
   {
-    let dis = await NostrTools.nip05.queryProfile(s);
+    let dis;
+    if (aa.fx.is_bit_nip05(s)) dis = await aa.fx.nip05_namecoin(s);
+    else dis = await NostrTools.nip05.queryProfile(s);
     if (dis)
     {
       if (!p) p = await aa.p.get(dis.pubkey);
