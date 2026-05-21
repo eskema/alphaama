@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en-US" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>aa.fx.namecoin test bench</title>
+  <link rel="stylesheet" href="/aa/aa.css">
+  <style>
+    body { box-sizing:border-box; padding:var(--pad); font-family:monospace; }
+    h1 { font-size:var(--font-size-l); margin:0 0 var(--pad); }
+    #log { white-space:pre-wrap; }
+    .ok   { color: #6c6; }
+    .err  { color: #f66; }
+    .head { color: #ccc; font-weight:bold; margin-top:1em; }
+    .info { color: #888; }
+  </style>
+</head>
+<body>
+  <h1>aa.fx.namecoin id-match test bench</h1>
+  <p class="info">replays server-initiated frames (server.banner / headers.subscribe) before the real response and confirms the resolver still returns the right value.</p>
+  <div id="log"></div>
+
+  <!-- bare aa shim — we only need aa.fx + aa.fx.is_key -->
+  <script>
+    window.aa = window.aa || {};
+    aa.fx = aa.fx || {};
+    // is_key: 64-char lowercase hex (mirrors aa/fx/validate.js)
+    aa.fx.is_key =s=> typeof s === 'string' && /^[0-9a-f]{64}$/.test(s);
+  </script>
+  <script src="/aa/fx/namecoin.js"></script>
+  <script src="/aa/fx/namecoin.test.js"></script>
+</body>
+</html>

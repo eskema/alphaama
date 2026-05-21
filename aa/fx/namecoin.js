@@ -37,8 +37,11 @@ aa.fx.namecoin_servers =
 
 
 // small per-page cache: name -> {ts, val}
+// split TTL: positive results live 5 min, negatives 30 s so one bad
+// lookup doesn't poison a name for the full window.
 aa.fx.namecoin_cache = new Map();
 aa.fx.namecoin_ttl = 5 * 60 * 1000;
+aa.fx.namecoin_ttl_negative = 30 * 1000;
 
 
 // is this a .bit nip-05? (cheap pre-check, callers branch on it)
@@ -129,7 +132,8 @@ aa.fx.namecoin_resolve =async key=>
 {
   let now = Date.now();
   let hit = aa.fx.namecoin_cache.get(key);
-  if (hit && (now - hit.ts) < aa.fx.namecoin_ttl) return hit.val;
+  let ttl = (hit && hit.val) ? aa.fx.namecoin_ttl : aa.fx.namecoin_ttl_negative;
+  if (hit && (now - hit.ts) < ttl) return hit.val;
 
   let val = null;
   for (const url of aa.fx.namecoin_servers)
@@ -153,10 +157,16 @@ aa.fx.namecoin_resolve =async key=>
 
 
 // one-shot ElectrumX JSON-RPC blockchain.name.show over wss
+// id-matched: ElectrumX may push unsolicited frames (server.banner,
+// headers.subscribe notifications) BEFORE the response, so we filter on
+// the outgoing request id and drop anything that doesn't match.
 aa.fx.electrumx_name_show =(url, name, timeout_ms=8000)=> new Promise((resolve,reject)=>
 {
   let ws;
   let done = false;
+  // unique-ish per call; full collision avoidance isn't needed (one socket,
+  // one outstanding request) but it's cheap insurance against any future reuse.
+  let req_id = (Date.now() & 0x7fffffff) ^ ((Math.random() * 0x7fffffff) | 0);
   let to = setTimeout(()=>
   {
     if (done) return;
@@ -169,7 +179,7 @@ aa.fx.electrumx_name_show =(url, name, timeout_ms=8000)=> new Promise((resolve,r
 
   ws.onopen =()=>
   {
-    let req = JSON.stringify({id:1, method:'blockchain.name.show', params:[name]});
+    let req = JSON.stringify({id:req_id, method:'blockchain.name.show', params:[name]});
     try { ws.send(req) }
     catch (er) { clearTimeout(to); done=true; reject(er) }
   };
@@ -183,12 +193,17 @@ aa.fx.electrumx_name_show =(url, name, timeout_ms=8000)=> new Promise((resolve,r
   ws.onmessage =ev=>
   {
     if (done) return;
-    done = true; clearTimeout(to);
-    try { ws.close() } catch {}
     let txt = typeof ev.data === 'string' ? ev.data : '';
     let msg;
     try { msg = JSON.parse(txt) }
-    catch (er) { return reject(er) }
+    catch (er) { /* keep listening for a parseable frame until timeout */ return }
+    // server-initiated push (notification): has `method`, no matching id.
+    if (msg && typeof msg === 'object' && msg.method) return;
+    // response must echo our id; anything else is a stray frame, ignore.
+    if (!msg || msg.id !== req_id) return;
+    // matched response — claim the slot.
+    done = true; clearTimeout(to);
+    try { ws.close() } catch {}
     if (msg.error) return reject(new Error(msg.error.message || 'rpc error'));
     // ElectrumX returns either the raw JSON value string or an object {name,value,...}
     let v = msg.result;
