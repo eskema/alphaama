@@ -59,6 +59,16 @@ aa.fx.is_trusted =number=>
 };
 
 
+// is url's protocol safe for the page's security context?
+// browsers block ws:// and http:// on https:// pages (mixed content)
+aa.fx.is_secure_ok =url=>
+{
+  if (typeof location === 'undefined' || location.protocol !== 'https:') return true;
+  let p = url?.protocol;
+  return p === 'wss:' || p === 'https:';
+};
+
+
 // converts string to URL and returns it or false
 aa.fx.is_valid_relay =(url)=>
 {

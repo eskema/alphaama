@@ -171,7 +171,7 @@ Recurring "read/write set vanished from a relay" mystery has live instrumentatio
 
 ## Storage Strategy
 
-- **localStorage**: User preferences, relay lists, namespace prefix, user pubkey/variables (survive reloads, shared across tabs)
+- **localStorage**: Options only — user preferences managed via `o/` (`theme`, `score`, `pow`, `pagination`, `ns`, `outbox_max`, `cash`, `ext_*`, etc.). Survive reloads, shared across tabs. Never use localStorage for arbitrary app state — module persistent state belongs in IDB via `aa.mod.save`.
 - **sessionStorage**: Tab-specific UI state (expanded sections, active queries, last query, decrypt cache plaintext mirror)
 - **OPFS (RedEventStore)**: Persistent event storage via WASM. Replaces IndexedDB for events
 - **IndexedDB**: Module persistent state (the `stuff` store keyed by mod id), wallnut vault blob, encrypted decrypt cache blob

@@ -3,7 +3,7 @@ const sift =
   name: 'sift.js',
   about: 'simple item filtering thing',
   in_path: new Set(),
-  keywords: ['kind','by'],
+  keywords: ['kind','by','i','sub'],
 };
 
 
@@ -50,7 +50,21 @@ sift.matchers =
     let name = (p.metadata?.name || p.petname || '').toLowerCase();
     return name.includes(v.toLowerCase())
   },
+  // NIP-73 external ref stubs — i:1 or i:* matches any, i:<text> substring
+  i: (item,v)=>
+  {
+    let i = item.dataset.i;
+    if (!i) return false;
+    if (v === '1' || v === '*') return true;
+    return i.toLowerCase().includes(v.toLowerCase())
+  },
   pubkey: (item,v)=> item.dataset.pubkey === v,
+  sub: (item,v)=>
+  {
+    let s = item.dataset.subs;
+    if (!s) return false;
+    return s.split(' ').includes(v)
+  },
   text: (item,v)=> item.textContent.toLowerCase().includes(v),
 };
 

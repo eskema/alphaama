@@ -161,16 +161,23 @@
   /* display: none; */
 }
 
+.butt.decrypt
+{
+  margin: var(--pad);
+  color: rgb(var(--color-a));
+}
+
 .decrypted > .butt.decrypt
 {
   pointer-events: none;
   color: rgb(var(--color-a));
-  /* opacity: .4; */
+  background: none;
+  font-size: var(--font-size-s);
 }
 
 .decrypted > .butt.decrypt::after
 {
-  content: 'ed';
+  content: 'ed:';
 }
 
 .in_view > .content > .paragraph,

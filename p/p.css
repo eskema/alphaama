@@ -257,7 +257,7 @@
 {
   font-size: var(--font-size);
   justify-self: stretch;
-  z-index: 1;
+  /* z-index: 1; */
 }
 
 .profile > .pubkey .author::before
@@ -532,7 +532,7 @@ p[data-meta="banner"]
 [data-meta="lud06"]:not(.empty)::before, 
 [data-meta="lud16"]:not(.empty)::before 
 {
-  content: "\020BF"  "⚡️ ";
+  content: "\020BF"  "\26A1\FE0F ";
   font-family: var(--font-emoji),var(--font-main);
   font-variant-emoji: emoji;
 }

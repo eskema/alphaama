@@ -54,7 +54,7 @@
 
 .zap_header .zap_amount::after
 {
-  content: " ⚡️";
+  content: " \26A1\FE0F";
 }
 
 .note.tiny[data-kind="9735"]:not(.in_view) .zap_header .zap_amount::after

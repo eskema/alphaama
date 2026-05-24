@@ -11,6 +11,8 @@
   user-select: none;
   /* white-space: pre; */
   width: auto;
+  align-self: stretch;
+  align-content: center;
 }
 
 .actions:not(.expanded)
@@ -44,6 +46,7 @@
   margin-right: var(--pad);
 } */
 
+.profile .actions.expanded,
 .note .actions.expanded
 {
   background: rgba(var(--color-a));

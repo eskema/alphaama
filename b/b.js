@@ -38,6 +38,23 @@ const b =
 };
 
 
+// gated fetch — blocks http:// when page is https:// (mixed content)
+b.fetch =(url, init)=>
+{
+  let parsed = aa.fx.url(url);
+  if (parsed && !aa.fx.is_secure_ok(parsed))
+  {
+    aa.log(`b: blocked insecure ${parsed.href} (page is https)`);
+    return Promise.resolve(new Response(null,
+    {
+      status: 502,
+      statusText: 'mixed-content blocked'
+    }));
+  }
+  return fetch(url, init);
+};
+
+
 // create blossom auth event (kind 24242)
 // returns Authorization header value
 b.auth =async(action, opts={})=>
@@ -88,7 +105,7 @@ b.upload =async(server, file)=>
   const auth = await b.auth('upload', {sha256, server});
   if (!auth) return;
 
-  const res = await fetch(server + '/upload',
+  const res = await b.fetch(server + '/upload',
   {
     method: 'PUT',
     headers:
@@ -123,7 +140,7 @@ b.upload =async(server, file)=>
 b.get =async(server, sha256, ext)=>
 {
   const url = server + '/' + sha256 + (ext || '');
-  const res = await fetch(url);
+  const res = await b.fetch(url);
   if (!res.ok)
   {
     aa.log(`b get failed: ${res.statusText}`);
@@ -136,7 +153,7 @@ b.get =async(server, sha256, ext)=>
 // HEAD /<sha256>
 b.head =async(server, sha256)=>
 {
-  const res = await fetch(server + '/' + sha256, {method: 'HEAD'});
+  const res = await b.fetch(server + '/' + sha256, {method: 'HEAD'});
   return res.ok
 };
 
@@ -153,7 +170,7 @@ b.del =async(sha256, server)=>
   const auth = await b.auth('delete', {sha256, server});
   if (!auth) return;
 
-  const res = await fetch(server + '/' + sha256,
+  const res = await b.fetch(server + '/' + sha256,
   {
     method: 'DELETE',
     headers: {'Authorization': auth},
@@ -196,7 +213,7 @@ b.list =async(server, pubkey, opts={})=>
   const qs = params.toString();
   if (qs) url += '?' + qs;
 
-  const res = await fetch(url);
+  const res = await b.fetch(url);
   if (!res.ok)
   {
     aa.log(`b list failed (${server}): ${res.status}${res.statusText ? ' ' + res.statusText : ''}`);
@@ -227,7 +244,7 @@ b.mirror =async(url, server)=>
   const auth = await b.auth('upload', {sha256, server});
   if (!auth) return;
 
-  const res = await fetch(server + '/mirror',
+  const res = await b.fetch(server + '/mirror',
   {
     method: 'PUT',
     headers:
@@ -264,7 +281,7 @@ b.media =async(server, file)=>
   const auth = await b.auth('media', {sha256, server});
   if (!auth) return;
 
-  const res = await fetch(server + '/media',
+  const res = await b.fetch(server + '/media',
   {
     method: 'PUT',
     headers:
@@ -292,7 +309,7 @@ b.check =async(server, sha256, size, type)=>
   if (!server) server = b.get_def();
   if (!server) return {ok: false, reason: 'no server'};
 
-  const res = await fetch(server + '/upload',
+  const res = await b.fetch(server + '/upload',
   {
     method: 'HEAD',
     headers:
@@ -313,6 +330,7 @@ b.add =(string='')=>
   let urls = aa.fx.splitr(string);
   let added = [];
   let needs_saving;
+  let new_def;  // first url that became the def in this call (if any)
   for (let url of urls)
   {
     url = aa.fx.url(url.trim())?.href;
@@ -327,13 +345,19 @@ b.add =(string='')=>
     {
       b.o.def = url;
       needs_saving = true;
+      new_def = url;
     }
     added.push(url);
   }
   if (needs_saving)
   {
     aa.mod.save(b);
-    for (const url of added) aa.mod.ui(b, url);
+    // pass on_done to aa.mod.ui so we know the server_blobs ref is populated
+    // before we try to refresh against it. mod_blobs_init likely ran earlier
+    // with no def and returned early — this catches that case.
+    aa.mod.ui(b, added, new_def
+      ? ()=> aa.mod.ready('u:pubkey', ()=> b.server_blobs_refresh(new_def))
+      : undefined);
   }
   if (added.length) aa.log(`b added: ${added.join(', ')}`);
   return added
@@ -678,7 +702,7 @@ b.sync =async(source, dest)=>
     {
       try
       {
-        const res = await fetch(dest + '/mirror',
+        const res = await b.fetch(dest + '/mirror',
         {
           method: 'PUT',
           headers: {'Authorization': auth, 'Content-Type': 'application/json'},

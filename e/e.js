@@ -1020,9 +1020,9 @@ aa.e.view =element=>
 {
   fastdom.mutate(()=>
   {
-    if (element.classList.contains('not_yet')) 
+    if (element.classList.contains('not_yet'))
       aa.e.note_yet(element);
-    
+
     // Check if element is actually connected to the document
     if (!element.isConnected)
     {
@@ -1041,8 +1041,18 @@ aa.e.view =element=>
     sift.path_add(element,'note');
 
     aa.clk.time({target:element.querySelector('.by .created_at')});
-    
+
     setTimeout(()=>{aa.fx.scroll(element)},200);
+
+    if (localStorage.auto_decrypt === 'on_view' && aa.signer.available())
+    {
+      let id = element.dataset.id;
+      let kind = parseInt(element.dataset.kind);
+      let content = element.querySelector(':scope > .content.encrypted.for_u');
+      if (id && content
+      && !aa.e.rnd.no_auto_decrypt?.includes(kind))
+        aa.e.decrypt_q(id);
+    }
   });
 };
 

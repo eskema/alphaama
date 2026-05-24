@@ -885,6 +885,15 @@ const connect =(relay)=>
     return
   }
 
+  // mixed-content gate: browsers block ws:// on https://
+  if (location.protocol === 'https:'
+  && relay.worker.url.startsWith('ws://'))
+  {
+    console.log('mixed-content blocked (https→ws):',relay.worker.url);
+    terminate(relay.worker.url);
+    return
+  }
+
   if (relay.ws && relay.ws.readyState < 3) return;
 
   try { relay.ws = new WebSocket(relay.worker.url) }

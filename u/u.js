@@ -630,7 +630,7 @@ aa.u.setup_butt =()=>
       make('button',
       {
         cla:'butt exe',
-        con:'else',
+        con:'use defaults',
         clk:aa.u.setup_quick
       })
     ]

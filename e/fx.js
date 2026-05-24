@@ -349,12 +349,14 @@ aa.fx.tag_e_last =tags=>
 
 
 // gets a or e tag marked 'reply' or the last not marked 'mention'
+// falls back to NIP-73 i tag (external refs, e.g. podcast)
 aa.fx.tag_reply =tags=>
 {
   return tags.find(t=>t[0]==='e'&&t[3]==='reply')
   || tags.find(t=>t[0]==='a'&&t[3]==='reply')
   || tags.find(t=>t[0]==='a'&&t[3]!=='mention')
   || tags.filter(t=>t[0]==='e'&&t[3]!=='mention').pop()
+  || tags.find(t=>t[0]==='i')
 };
 
 

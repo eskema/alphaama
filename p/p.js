@@ -881,7 +881,11 @@ aa.p.save_to =(flush)=>
   let pubs = [...new Set(aa.temp[q_id])];
   aa.temp[q_id] = [];
   let all = [];
-  for (const pub of pubs) all.push(aa.db.p[pub]);
+  for (const pub of pubs)
+  {
+    let p = aa.db.p[pub];
+    if (p?.pubkey) all.push(p);
+  }
 
   if (flush)
   {
@@ -916,6 +920,7 @@ window.addEventListener('beforeunload',()=>
 
 aa.p.save = async p=>
 {
+  if (!p?.pubkey) return;
   aa.db.p[p.pubkey] = p;
   // if (!p.updated
   // // || p.followers.length < 10

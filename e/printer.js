@@ -175,10 +175,10 @@ aa.e.append_check =async(dat,note,tag,on_parent)=>
 
   aa.e.orphan(dat,note,tag,on_parent);
 
-  // external reference (URL) — create stub parent
+  // external reference (NIP-73 i/I) — create stub parent
   if (is_ext)
   {
-    await aa.e.stub_url(id);
+    await aa.e.stub_i(tag);
     return
   }
 
@@ -330,43 +330,55 @@ aa.e.orphan =(dat,note,tag,on_parent)=>
 };
 
 
-// create stub note for external URL reference
-aa.e.stub_url =async url=>
+// create stub root note for an external i/I tag (NIP-73)
+// tag = ['i'|'I', '<scheme:value>', '<url_hint>?']
+aa.e.stub_i =async tag=>
 {
-  if (aa.e.printed.has(url)) return;
+  let [, ref, hint] = tag;
+  if (!ref || aa.e.printed.has(ref)) return;
 
-  let parsed = aa.fx.url(url);
-  let hostname = parsed?.hostname || url;
-  let pubkey = await aa.fx.sha256(hostname);
+  let parsed = aa.fx.url(ref);
+  let href = aa.fx.url(hint)?.href || parsed?.href;
+  let label = parsed?.hostname || ref;
+  // pubkey is synthetic — only used for color/keying, no fake profile created
+  let pubkey = await aa.fx.sha256(label);
 
-  // pre-create profile with stub marker
-  let p = aa.p.p(pubkey);
-  if (p)
-  {
-    p.type = 'url';
-    p.metadata = {name:hostname};
-    aa.db.p[pubkey] = p;
-  }
+  let content = ref;
+  if (href && href !== ref) content += '\n' + href;
 
+  // tags empty: stub is root — must not self-thread via tag_reply
   let event =
   {
     pubkey,
     created_at:0,
     kind:1,
     tags:[],
-    content:url,
+    content,
     sig:''
   };
   event.id = aa.fx.hash(event);
 
-  let dat = aa.mk.dat({event,clas:['stub']});
+  let dat = aa.mk.dat({event,clas:['stub','i_stub']});
   aa.e.print(dat);
 
   let note = aa.e.printed.get(event.id);
   if (note)
   {
-    aa.e.printed.set(url,note);
-    aa.e.refs(url);
+    note.dataset.i = ref;
+    aa.e.printed.set(ref,note);
+    aa.e.refs(ref);
+
+    // replace fake-profile author area with an external link
+    let p_link_div = note.querySelector('header .p_link');
+    if (p_link_div)
+    {
+      let display = href ? (aa.fx.url(href)?.hostname || href) : ref;
+      let link = href
+        ? aa.mk.link(href, display, ref)
+        : make('span', {cla:'content_link', con:display, tit:ref});
+      p_link_div.textContent = '';
+      p_link_div.append(link);
+    }
   }
 };
 

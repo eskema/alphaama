@@ -81,7 +81,7 @@
   z-index: 4;
 }
 
-.root:not(.in_view) > .replies
+.root:not(.in_path) > .replies
 {
   margin-top: 1rem;
   position: sticky;
