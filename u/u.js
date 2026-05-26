@@ -82,7 +82,10 @@ aa.signer._require =()=>
     if (window.nostr)
       aa.signer.set('nip07', window.nostr);
     else
+    {
+      aa.log('signer not available — log in first (NIP-07 extension or .u bunker <url>)');
       throw new Error('signer not available — log in first');
+    }
   }
 };
 

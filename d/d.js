@@ -867,7 +867,23 @@ aa.d.invite_accept =async input=>
   if (!identity) throw new Error('not logged in');
 
   let invite;
-  if (typeof input === 'string') invite = RATCHET.Invite.fromUrl(input);
+  if (typeof input === 'string')
+  {
+    // iris chat now generates invite URLs with a hash-router prefix
+    // (#/invite/<json>); the ratchet lib expects the hash to be pure JSON.
+    let normalized = input;
+    try
+    {
+      let u = new URL(input);
+      if (u.hash.startsWith('#/invite/'))
+      {
+        u.hash = u.hash.slice('#/invite/'.length);
+        normalized = u.toString();
+      }
+    }
+    catch {}
+    invite = RATCHET.Invite.fromUrl(normalized);
+  }
   else if (input?.kind === RATCHET.INVITE_EVENT_KIND) invite = RATCHET.Invite.fromEvent(input);
   else throw new Error('accept: pass URL or kind 30078 event');
 
@@ -876,10 +892,16 @@ aa.d.invite_accept =async input=>
   if (!event) throw new Error('invite.accept returned no event');
   await aa.d.publish(event);
 
+  // multi-device invites (iris) carry an `ownerPubkey` that is the user's real
+  // identity; `inviter` is just the device key used by the ratchet transport.
+  // store sessions under the owner pubkey so profile lookups, links, and the
+  // chat UI show the actual user.
+  let peer = invite.ownerPubkey || invite.inviter;
+
   // user-initiated accept — adopt directly (replace if existing)
-  aa.d.adopt_session(invite.inviter, session, 'inviter ' + invite.inviter.slice(0,8), [], {replace: true});
-  aa.d._log('invite_accept', {peer: invite.inviter});
-  aa.log(`d invite: accepted from ${invite.inviter.slice(0,8)}`);
+  aa.d.adopt_session(peer, session, 'inviter ' + peer.slice(0,8), [], {replace: true});
+  aa.d._log('invite_accept', {peer});
+  aa.log(`d invite: accepted from ${peer.slice(0,8)}`);
   return {session, event};
 };
 

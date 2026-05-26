@@ -251,15 +251,30 @@ aa.mk.doc =text=>
   // readme that opens with a blank line (e.g. aa/README.adoc) ends up
   // with an empty <summary>
   text = text.replace(/^\s+/, '');
-  let article = make('article',
-  {
-    cla:'content parsed',
-    app:aa.fx.parse(text,aa.fx.is_trusted(4))
-  });
 
   let title = text.slice(0,text.indexOf('\n'));
   if (title.startsWith('=') || title.startsWith('#'))
     title = title.slice(1).trim();
+
+  // adoc image::path[alt] — built directly so relative paths bundled with
+  // the repo (e.g. stuff/foo.jpg) resolve against document.baseURI. the
+  // generic parser would otherwise miss it (alt may contain spaces, which
+  // breaks the word-split flow) and any embedded URL would render as a link.
+  let article = make('article', {cla:'content parsed'});
+  let img_re = /^image::(\S+?)\[([^\]]*)\]\s*$/gm;
+  let last = 0, m;
+  while ((m = img_re.exec(text)) !== null)
+  {
+    let before = text.slice(last, m.index);
+    if (before.length) article.append(aa.fx.parse(before, aa.fx.is_trusted(4)));
+    let img = aa.mk.img(m[1]);
+    let alt = m[2].trim().replace(/^"(.*)"$/, '$1');
+    if (alt) img.alt = alt;
+    article.append(img);
+    last = m.index + m[0].length;
+  }
+  let rest = text.slice(last);
+  if (rest.length) article.append(aa.fx.parse(rest, aa.fx.is_trusted(4)));
 
   let details = aa.mk.details(title,article);
   details.id = 'aa_read_me';
@@ -1011,7 +1026,7 @@ aa.mk.status =force=>
   let on_off = aa.online ? 'on' : 'off';
   status = make('p',
   {
-    con: `${on_off}line at ${location.origin} since `,
+    con: `v${aa_version} ${on_off}line at ${location.origin} since `,
     app: aa.mk.time(aa.now)
   });
   aa.el.set('status',status);

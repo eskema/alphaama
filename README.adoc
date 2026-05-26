@@ -23,13 +23,10 @@ nostr:
 https://github.com/nostr-protocol/nostr
 
 
-stable deployment:
+deployment:
 https://alphaama.com
 
 
-work in progress dev deployment:
-https://wip.alphaama.com
-
-
-
-image::https://i.nostr.build/XyflANm8pOEQUHI6.jpg["screenshot of alphaama"]
+screenshots:
+image::/stuff/aa_screenshot.jpg["screenshot of alphaama ui"]
+image::/stuff/aa_screenshot_1.jpg["screenshot of alphaama viewing notes"]

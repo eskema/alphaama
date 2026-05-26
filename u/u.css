@@ -61,10 +61,16 @@ header.has-picture .section_side_butt
   height: var(--line);
 }
 
+.section_side > header:not(.has-picture) .section_side_butt
+{
+  color: rgba(var(--color-a),1)
+}
+
 
 .section_side > header:not(.has-picture) .section_side_butt::after
 {
   background-color: rgba(var(--c),1);
+  color: rgba(var(--color-a),1);
   align-content: center;
   animation: u_u 4s ease-in-out 0s infinite;
   content: "u_u";

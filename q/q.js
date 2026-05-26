@@ -689,15 +689,17 @@ aa.q.view =s=>
     }
     search = p.toString();
   }
-  // filter id
+  // filter id (or comma-separated list of ids for a batched multi-req view)
   else
   {
-    if (!Object.hasOwn(aa.q.o.ls,s))
+    let ids = s.split(',').map(x => x.trim()).filter(Boolean);
+    let missing = ids.filter(id => !Object.hasOwn(aa.q.o.ls, id));
+    if (missing.length)
     {
-      aa.log(aa.q.def.id+' view: filter not found '+s);
+      aa.log(aa.q.def.id+' view: filter not found '+missing.join(','));
       return
     }
-    search = `req=${s}`;
+    search = `req=${ids.join(',')}`;
   }
 
   sessionStorage.q_view = s;
@@ -955,6 +957,8 @@ aa.q.stuff =async()=>
   if (!pubkey) { aa.log('q stuff: no pubkey'); return }
   if (!aa.r.r.length) { aa.log('q stuff: no relays — add some with `r add <url> read write`'); return }
 
+  aa.q.expand_e();
+
   // direct fetch via aa.r.get + emit results to print_q so handlers run
   const grab =async(filter, relays)=>
   {
@@ -1051,18 +1055,27 @@ aa.q.stuff =async()=>
   {
     sessionStorage.q_out = 'f,z';
     sessionStorage.q_run = 'u,n';
-    aa.log(make('p',
-    {
-      content: 'all done ',
-      app: aa.mk.reload_butt()
-    }),{pinned:true});
     // non-critical modules (e.g. d) gate their restore on this signal
     aa.mod.fire_ready('u:ready');
 
     // if on_load_sub is configured, run it now so the first reload resumes
     // from saved sub timestamps instead of refetching from scratch
     aa.q._stuffing = false;
-    if (aa.o.o.ls.on_load_sub) aa.u.on_load_sub();
+    let has_load_sub = !!aa.o.o.ls.on_load_sub;
+    if (has_load_sub) aa.u.on_load_sub();
+
+    // wait for on_load_sub to kick off subs before showing the "reload page"
+    // button, so the user doesn't reload while subs are still spinning up.
+    // on_load_sub has its own 420ms setTimeout before aa.q.sub fires; pick a
+    // delay that's comfortably past that. no-op delay when on_load_sub is off.
+    setTimeout(()=>
+    {
+      aa.log(make('p',
+      {
+        content: 'all done ',
+        app: aa.mk.reload_butt()
+      }),{pinned:true});
+    }, has_load_sub ? 2000 : 0);
   },1000);
 };
 
