@@ -1,5 +1,11 @@
 aa.logs = make('ul',{id:'logs',cla:'list'});
 // log stuff
+//
+// o.first — claim the top of the list (prepend instead of append). use this
+// for entries that must visually anchor the log regardless of when they're
+// inserted — e.g. the status line. since module load can outrun the sync
+// status log in build_page, prepend guarantees status ends up on top even
+// if a mod logged a setup button first.
 aa.log =(con='',o={})=>
 {
   const is_new = o.is_new !== false;
@@ -18,7 +24,8 @@ aa.log =(con='',o={})=>
 
   if (container) fastdom.mutate(()=>
   {
-    container.append(log);
+    if (o.first) container.prepend(log);
+    else container.append(log);
 
     // if (log.offsetTop + log.offsetHeight >= container.offsetHeight - 1)
     //   container.scrollIntoView({block:'end'});
@@ -138,8 +145,15 @@ aa.log_read =async element=>
     element.classList.add('is_recent');
     let has_new = [...element.parentElement.children]
       .find(i=>i.classList.contains('is_new'));
-    if (!has_new) element.parentElement.classList
-      .remove('has_new')
+    if (!has_new)
+    {
+      // mirror what aa.log does on insert: it adds `has_new` to both the
+      // list and its parent section. clear both, otherwise the section's
+      // mark-all-as-read button stays visible after the last is_new is
+      // individually dismissed.
+      element.parentElement.classList.remove('has_new');
+      element.parentElement.parentElement?.classList.remove('has_new');
+    }
   })
 };
 
@@ -197,7 +211,7 @@ aa.logs_clear =async s=>
   });
   setTimeout(()=>
   {
-    aa.log(aa.mk.status(),{is_new:false});
+    aa.log(aa.mk.status(),{is_new:false, first:true});
   },200)
 };
 

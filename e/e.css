@@ -3,6 +3,21 @@
   grid-area: e;
 }
 
+.shred_butt
+{
+
+}
+
+.section_e.shred .shred_butt
+{
+  color: rgb(var(--color-f));
+}
+
+.section_e.shred .shred_butt::after
+{
+  content: "=on"
+}
+
 .notes
 {
   background: rgb(var(--color-b));
@@ -79,7 +94,7 @@
 );
 }
 
-/* notes from muted pubkeys (or muted kinds) — hide entirely */
+.shred .root.note.displayed:not(.haz_new),
 .note.muted
 {
   display: none;
@@ -197,17 +212,20 @@
 
 .view_e .note.root:not(.in_path),
 .view_e .note:not(.in_path),
+/* .view_e #view .note.in_view .replies.expanded.collapsed .note, */
 
 #view > .section:not(.expanded) .note:not(.in_path)
 {
   display: none;
 }
 
-.view_e #view .note.in_view .replies.expanded .note, 
+.view_e #view .note.in_view .replies:not(.collapsed) .note, 
 #view .section_e:not(.expanded) .note.in_view .replies.section.expanded .note
 {
   display: grid;
 }
+
+:not(.collapsed)
 
 .section.expanded .notes > .note:last-child
 {

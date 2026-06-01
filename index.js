@@ -8,7 +8,7 @@ const build_page =async()=>
 {
   aa.el.get('side')?.append(aa.mod_l);
   aa.bus.on('cli:collapse',aa.logs_read);
-  aa.log(aa.mk.status(),{is_new:false});
+  aa.log(aa.mk.status(),{is_new:false, first:true});
   
   let p_section;
   if (aa.p?.l) 

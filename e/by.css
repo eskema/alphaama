@@ -84,8 +84,13 @@
 .in_view > .replies .replies > .note:not(.in_path) > .by
 {
   position: sticky;
-  top: calc(5rem);
+  top: 2.5rem;
   z-index: 2;
+}
+
+.in_view > .replies.expanded .replies > .note:not(.in_path) > .by
+{
+  top: 5rem;
 }
 
 .by .created_at
@@ -281,10 +286,15 @@
     color: rgb(var(--color-light));
   }
 
-  .in_view > .replies .replies .note:hover > .by
+  .in_view > .replies.expanded .replies .note:hover > .by
   {
     top: 5rem;
     z-index: 3;
+  }
+
+  .in_view > .replies .replies .note:hover > .by
+  {
+    top: 2.5rem;
   }
 }
 

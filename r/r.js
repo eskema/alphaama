@@ -31,10 +31,12 @@ aa.r =
   ],
   butts:
   {
-    mod:[],
+    // mod:[
+    //   ['r test','test']
+    // ],
     init:
     [
-      ['r stuff','stuff']
+      ['r add','add']
     ]
   },
   temp: new Map(),

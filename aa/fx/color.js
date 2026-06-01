@@ -10,6 +10,7 @@ fx: color utilities
 // and also sets luma
 aa.fx.color =async(x,l)=>
 {
+  // const rgb = aa.fx.color_xrgb(x.slice(-6));
   const rgb = aa.fx.color_xrgb(aa.fx.color_hex(x));
   fastdom.mutate(()=>
   {
@@ -22,9 +23,10 @@ aa.fx.color =async(x,l)=>
 // removes leading zeroes from beginning of hexstring
 // to be used as a hex color from pubkeys
 // but not too dark if pow/mined
-aa.fx.color_hex =x=>
+aa.fx.color_hex =(x,reg)=>
 {
-  try { return x.replace(/^0*([1-9a-f][0-9a-f]{5}).*$/,(x_x,xx)=>xx) }
+  if (!reg) reg = /^0*([1-9a-f][0-9a-f]{5}).*$/;
+  try { return x.replace(reg,(x_x,xx)=>xx) }
   catch(er) { return x }
 };
 

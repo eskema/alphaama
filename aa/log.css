@@ -321,6 +321,13 @@ details.base[open] > summary,
   z-index: 5;
 }
 
+.cli_expanded .log.log_pinned
+{
+  background: rgb(var(--color-b));
+  position: sticky;
+  top: 1.5rem;
+}
+
 .aa:not(.cli_expanded) .section_l > header
 {
   justify-self: stretch;

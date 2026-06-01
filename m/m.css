@@ -8,6 +8,7 @@
 }
 
 /* hide panel when section is collapsed */
+.view_e #view .section_m,
 .section_m:not(.expanded) > .m_panel
 {
   display: none;

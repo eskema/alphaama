@@ -765,7 +765,9 @@ aa.mk.pagination =options=>
       'change': async e=>
       {
         options.page = parseInt(e.target.value);
-        sift.paginate(options)
+        sift.paginate(options);
+        e.target.blur();
+        setTimeout(()=>{element.scrollIntoView()},200);
       }
     }
   });
@@ -820,6 +822,8 @@ aa.mk.pagination =options=>
     if (new_page < 1) new_page = 1;
     page_input.value = options.page = new_page;
     sift.paginate(options);
+    // blur so a follow-up Enter doesn't re-trigger the same button
+    e.currentTarget.blur();
     setTimeout(()=>{element.scrollIntoView()},200);
   });
 
@@ -830,6 +834,7 @@ aa.mk.pagination =options=>
     if (total_pages && new_page > total_pages) new_page = total_pages;
     page_input.value = options.page = new_page;
     sift.paginate(options);
+    e.currentTarget.blur();
     setTimeout(()=>{element.scrollIntoView()},200);
   });
 

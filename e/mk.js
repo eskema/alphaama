@@ -13,6 +13,35 @@ aa.mk.section_e =()=>
     sort_by: i=> i.dataset.stamp,
   });
 
+  let shred_butt = make('button',
+  {
+    cla: 'butt shred_butt',
+    con: 'shred',
+    clk: e=>
+    {
+      e.stopPropagation();
+      const was_on = section.classList.contains('shred');
+      section.classList.toggle('shred');
+      // shred just turned off → re-observe previously-displayed notes so they
+      // can be tracked again. without this, notes that retired during the
+      // prior shred session are stuck un-observed and never auto-mark again
+      // unless a new reply lands on them (the upd_note_path re-observe hook).
+      if (was_on)
+      {
+        for (const el of section.querySelectorAll('.root.note.displayed'))
+        {
+          el.classList.remove('displayed');
+          aa.e.note_shown.delete(el);
+          aa.e.note_observer.observe(el);
+        }
+      }
+    }
+  });
+  section.querySelector('header').append(
+    ' ',
+    make('span', {cla: 'butts', app: [shred_butt]})
+  );
+
   return section
 };
 
@@ -139,10 +168,22 @@ aa.mk.note =dat=>
 
   if (tags?.length)
   {
-    let opened = false; //dat.event.content.length ? false : true;
-    const tags_section = aa.mk.details('tags',aa.mk.tag_list(tags),opened);
-    tags_section.classList.add('tags_wrapper');
+    // lazy tag list — build the <li> rows on first open (toggle event fires
+    // for both user clicks and programmatic `open` attribute changes). keeps
+    // the DOM lean for tag-heavy events like kind 3 follow lists, where the
+    // wrapper is closed by default and most users never expand it.
+    const tags_section = aa.mk.details('tags', false, false);
+    tags_section.classList.add('tags_wrapper', 'lazy');
     tags_section.querySelector('summary').dataset.count = tags.length;
+    tags_section.addEventListener('toggle', ()=>
+    {
+      if (!tags_section.classList.contains('lazy')) return;
+      fastdom.mutate(()=>
+      {
+        tags_section.append(aa.mk.tag_list(tags));
+        tags_section.classList.remove('lazy');
+      });
+    }, {once: true});
     app.append(tags_section);
   }
 
@@ -195,8 +236,8 @@ aa.mk.post =async(s='')=>
     let log_text = 'unable to create note';
     if (!aa.u?.p?.pubkey)
     {
-      log_text += ', login first using the command: ';
-      log_text += aa.cmd('u login');
+      log_text += ', set up your user first using the command: ';
+      log_text += aa.cmd('u setup');
     }
     aa.log(log_text);
   }

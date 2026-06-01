@@ -278,7 +278,13 @@ aa.e.render_list =(element,dat,o={})=>
 {
   const tags = dat.event.tags;
   if (tags?.length) element.append(aa.mk.tag_list(tags));
-  if (o.note) o.note.classList.add('root','tiny','event_list');
+  // do NOT pre-add `root` here — render runs inside aa.mk.note, before
+  // aa.e.append_as_root is called. append_as_root uses the absence of
+  // `root` as its "first append" guard to add `not_yet` and wire up the
+  // intersection observer. pre-marking root here makes the guard short-
+  // circuit, leaving list-kind notes (3, 10000-10007, 10050, 10063, etc.)
+  // un-observed and stuck without `not_yet`/`rendered`.
+  if (o.note) o.note.classList.add('tiny','event_list');
 };
 
 

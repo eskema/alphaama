@@ -34,6 +34,7 @@
 .actions .butt
 {
   padding: 0 var(--padm);
+  /* transition: var(--trans-fast); */
 }
 
 /* .actions:not(.expanded) > *:not(.action_butt)
@@ -69,7 +70,8 @@
 
 .actions .butts .butt
 {
-  margin-bottom: var(--padm);
+  padding-bottom: var(--padm);
+  
 }
 
 /* .note .actions.expanded .butt
@@ -90,7 +92,11 @@
     color: rgb(var(--color-e));
     opacity: 1;
   }
-  
+
+  .note .by .actions .butts .butt:hover
+  {
+    font-size: var(--font-size);
+  }
 }
 
 @media screen and (max-width: 768px) 

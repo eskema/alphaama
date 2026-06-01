@@ -206,19 +206,98 @@ aa.e.append_check =async(dat,note,tag,on_parent)=>
 
 
 // create note intersection observer
-aa.e.note_observer = new IntersectionObserver(a=>
+//
+// lifecycle (two thresholds — render at 90% in, retire at 0% out):
+//   not_yet  → (ratio ≥ 0.9)                            → rendered            [keep observing, start clock]
+//   rendered → (ratio === 0 && total screen time ≥ 3 s) → rendered+displayed  [unobserve]
+//
+// we never give up on a not_yet note — if a user scrolls past it without it
+// crossing 90% (fast flick, display:none ancestor, etc.), it stays observed
+// so a later scroll back, expand, or layout change can still trigger note_yet.
+//
+// `displayed` only fires once the note has accumulated ≥3 s of any-visibility
+// time since first render. brief flicks and fast-scrolls keep the note in
+// the observer pool — the user hasn't really "seen" it yet.
+aa.e.note_shown_min_ms = 3000;
+aa.e.note_shown = new WeakMap();  // el → {total: ms, since: ts | null}
+
+aa.e.note_observer = new IntersectionObserver(entries=>
 {
-  for (const b of a)
+  const now = Date.now();
+  for (const entry of entries)
   {
-    if (b.isIntersecting || b.boundingClientRect.top > 0)
+    const el = entry.target;
+    const r = entry.boundingClientRect;
+
+    // skip callbacks fired against elements with no layout: collapsed sections
+    // and the single-note view both apply `display:none` to non-in_path notes
+    // (see e/e.css). a display:none element reports rect 0,0,0,0 — keep
+    // observing so we get a real callback once layout returns. also pause the
+    // clock if it was running (the user can't see a hidden note).
+    if (r.width === 0 && r.height === 0)
     {
-      aa.e.note_yet(b.target);
-      aa.e.note_observer.unobserve(b.target);
+      let rec = aa.e.note_shown.get(el);
+      if (rec && rec.since !== null)
+      {
+        rec.total += now - rec.since;
+        rec.since = null;
+      }
+      continue;
     }
 
-    //   if (b.boundingClientRect.top > 0)
+    const rendered = el.classList.contains('rendered');
+    const ratio = entry.intersectionRatio;
+    const visible = entry.isIntersecting;
+
+    // first time crossing 90% → render and start the screen-time clock
+    if (ratio >= 0.9 && !rendered)
+    {
+      aa.e.note_yet(el);
+      aa.e.note_shown.set(el, {total: 0, since: now});
+      continue;
+    }
+
+    // pre-render: still observing, nothing to track yet
+    if (!rendered) continue;
+
+    let rec = aa.e.note_shown.get(el);
+    if (!rec) { rec = {total: 0, since: null}; aa.e.note_shown.set(el, rec); }
+
+    // re-entering view after a leave → restart the clock
+    if (visible && rec.since === null) rec.since = now;
+    // leaving any-visibility → accumulate
+    else if (!visible && rec.since !== null)
+    {
+      rec.total += now - rec.since;
+      rec.since = null;
+    }
+
+    // fully off-screen and with enough screen time → mark displayed, retire.
+    // when the e section is in "shred" mode, also auto-mark the note + its
+    // replies as read (reuses aa.is_read, same flow as aa.clk.mark_read but
+    // without the user-click scroll bump).
+    if (ratio === 0 && rec.total >= aa.e.note_shown_min_ms)
+    {
+      const shred = aa.el.get('section_e')?.classList.contains('shred');
+      fastdom.mutate(()=>
+      {
+        el.classList.add('displayed');
+        // only run the mark-read flow if there's actually new state to clear,
+        // otherwise aa.is_read's expand/collapse toggle would fire pointlessly
+        // every time a clean note scrolls past in shred mode.
+        if (shred && el.classList.contains('haz_new'))
+        {
+          const classes = ['haz_new_reply','haz_new','is_new'];
+          el.classList.remove(...classes);
+          const replies = el.querySelector('.replies');
+          if (replies) aa.is_read({section: replies, classes});
+        }
+      });
+      aa.e.note_observer.unobserve(el);
+      aa.e.note_shown.delete(el);
+    }
   }
-},{root:null,threshold:.9});
+},{root:null,threshold:[0, .9]});
 
 
 // on observed note intersection
@@ -602,7 +681,19 @@ aa.e.upd_note_path =element=>
     }
     else stamped = false;
     if (element.querySelector('.note.is_new'))
+    {
       element.classList.add('haz_new');
+      // a new reply just landed on a previously-displayed note → put it back
+      // in the observer pool so shred mode can re-mark it after the next
+      // pass. cheap: observe() is idempotent and only runs on the rare
+      // "new reply on an already-displayed note" path.
+      if (element.classList.contains('displayed'))
+      {
+        element.classList.remove('displayed');
+        aa.e.note_shown.delete(element);
+        aa.e.note_observer.observe(element);
+      }
+    }
     if (element.querySelector('.note.sift_match'))
       element.classList.add('haz_match');
     aa.e.replies_summary_upd(element);

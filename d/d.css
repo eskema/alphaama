@@ -7,6 +7,7 @@
 }
 
 /* hide panel when section is collapsed */
+.view_e #view .section_d,
 .section_d:not(.expanded) > .chat_panel
 {
   display: none;
