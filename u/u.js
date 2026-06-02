@@ -568,7 +568,8 @@ aa.u.setup =async(s='')=>
     if (s.includes('@')) 
     {
       setup_logp.append(' via nip-05');
-      dis = await NostrTools.nip05.queryProfile(s);
+      if (aa.fx.is_bit_nip05(s)) dis = await aa.fx.nip05_namecoin(s);
+      else dis = await NostrTools.nip05.queryProfile(s);
     }
     else if (s.startsWith('nprofile1')) 
     {
