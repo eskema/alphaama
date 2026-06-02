@@ -552,14 +552,25 @@ aa.e.print_kind =(map,kind,order)=>
 };
 
 
+aa.e.print_active = false;
+
 aa.e.print_drain =queue=>
 {
+  aa.e.print_active = true;
   let i = 0;
   const step =()=>
   {
     let end = Math.min(i + 9, queue.length);
     while (i < end) aa.e.print(queue[i++]);
     if (i < queue.length) setTimeout(step, 0);
+    else
+    {
+      aa.e.print_active = false;
+      // signal to callers (e.g. q.stuff finalize) that bootstrap events
+      // are now on screen. they should also check aa.temp.print_q.size === 0
+      // to make sure there isn't a fresh batch waiting for the next debounce.
+      aa.bus.emit('e:print_idle');
+    }
   };
   step();
 };

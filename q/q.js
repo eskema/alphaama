@@ -1050,33 +1050,59 @@ aa.q.stuff =async()=>
     await grab_outbox({authors: follows, kinds:[0,3,10050]});
   }
 
-  // finalize
+  // wait for the print pipeline to fully drain bootstrap events before we
+  // claim "all done". each grab() awaits the relay EOSE but emits results
+  // into aa.temp.print_q, which itself debounces (150ms) and then drains 9
+  // events per setTimeout(0). a fixed delay can't keep up — for thousands
+  // of events the drain can run for seconds, longer than any guess.
+  // we poll for two consecutive idle ticks (queue empty + no active drain)
+  // to make sure no new batch is mid-debounce.
+  await aa.q._wait_print_idle();
+
+  sessionStorage.q_out = 'f,z';
+  sessionStorage.q_run = 'u,n';
+  // non-critical modules (e.g. d) gate their restore on this signal
+  aa.mod.fire_ready('u:ready');
+
+  // if on_load_sub is configured, run it now so the first reload resumes
+  // from saved sub timestamps instead of refetching from scratch.
+  // these subs stream live events forever — they're not part of bootstrap
+  // and we don't gate the button on them, just on giving them time to
+  // kick off so the user doesn't reload mid-handshake.
+  aa.q._stuffing = false;
+  let has_load_sub = !!aa.o.o.ls.on_load_sub;
+  if (has_load_sub) aa.u.on_load_sub();
+
   setTimeout(()=>
   {
-    sessionStorage.q_out = 'f,z';
-    sessionStorage.q_run = 'u,n';
-    // non-critical modules (e.g. d) gate their restore on this signal
-    aa.mod.fire_ready('u:ready');
-
-    // if on_load_sub is configured, run it now so the first reload resumes
-    // from saved sub timestamps instead of refetching from scratch
-    aa.q._stuffing = false;
-    let has_load_sub = !!aa.o.o.ls.on_load_sub;
-    if (has_load_sub) aa.u.on_load_sub();
-
-    // wait for on_load_sub to kick off subs before showing the "reload page"
-    // button, so the user doesn't reload while subs are still spinning up.
-    // on_load_sub has its own 420ms setTimeout before aa.q.sub fires; pick a
-    // delay that's comfortably past that. no-op delay when on_load_sub is off.
-    setTimeout(()=>
+    aa.log(make('p',
     {
-      aa.log(make('p',
-      {
-        content: 'all done ',
-        app: aa.mk.reload_butt()
-      }),{pinned:true});
-    }, has_load_sub ? 2000 : 0);
-  },1000);
+      content: 'all done ',
+      app: aa.mk.reload_butt()
+    }),{pinned:true});
+  }, has_load_sub ? 2000 : 0);
+};
+
+
+// poll until the e print pipeline is idle: no events queued for the next
+// debounce AND no drain step currently running. requires two consecutive
+// idle ticks so we don't race a batch that's about to start draining.
+aa.q._wait_print_idle =async(idle_ms=300, max_ms=30000)=>
+{
+  let start = Date.now();
+  let consec = 0;
+  while (Date.now() - start < max_ms)
+  {
+    let queued = aa.temp.print_q?.size || 0;
+    let idle = !aa.e.print_active && queued === 0;
+    if (idle)
+    {
+      if (++consec >= 2) return;
+    }
+    else consec = 0;
+    await aa.fx.delay(idle_ms);
+  }
+  aa.log('q stuff: print drain wait timed out');
 };
 
 
