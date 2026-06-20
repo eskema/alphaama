@@ -195,6 +195,19 @@
   margin-top: var(--pad);
 }
 
+
+.note[data-kind="1"] > .content > .paragraph:first-child,
+.note[data-kind="30023"] > .content > .paragraph:first-child
+{
+  font-size: var(--font-size-m);
+}
+
+.note.in_view > .content > .paragraph:first-child
+{
+  font-size: var(--font-size-l);
+  line-height: 1.4;
+}
+
 .paragraph:last-child
 {
   margin-bottom: var(--pad);

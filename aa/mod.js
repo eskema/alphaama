@@ -107,18 +107,28 @@ aa.mod.load =async mod=>
   if (!mod.o)
   {
     let ops = {get:{store:'stuff',key:mod.def.id}};
-    mod.o = await aa.db.ops('idb',ops);
-    if (!mod.o && mod.old_id)
+    try
     {
-      // in case the db key path changes
-      // load mod from old_id and upgrade it
-      ops.get.key = mod.old_id;
-      mod.o = await aa.db.ops('idb',ops);
-      if (mod.o)
+      mod.o = await aa.db.ops('idb',ops,{strict:true});
+      if (!mod.o && mod.old_id)
       {
-        mod.o.id = mod.def.id;
-        aa.mod.save(mod);
+        // in case the db key path changes
+        // load mod from old_id and upgrade it
+        ops.get.key = mod.old_id;
+        mod.o = await aa.db.ops('idb',ops,{strict:true});
+        if (mod.o)
+        {
+          mod.o.id = mod.def.id;
+          aa.mod.save(mod);
+        }
       }
+    }
+    catch (e)
+    {
+      // db never answered — run on defaults for this session but DON'T let
+      // a later save overwrite the real stored blob with those defaults
+      mod.load_failed = true;
+      console.warn(`mod.load: ${mod.def.id} load failed, running read-only`,e);
     }
     if (mod.o) mod.used = true;
     if (!mod.o && mod.def) mod.o = mod.def;
@@ -247,6 +257,13 @@ aa.mod.dialog =(id='')=>
 // save mod
 aa.mod.save =async mod=>
 {
+  // never persist when load failed — mod.o is defaults, not the real blob,
+  // and writing it would clobber the stored state (irrecoverable for d/)
+  if (mod && mod.load_failed)
+  {
+    console.warn(`mod.save: skipped ${mod.def?.id} (load failed)`);
+    return mod;
+  }
   if (mod && mod.o && mod.o.id)
   {
     await aa.db.ops('idb', {put:{store:'stuff',a:[mod.o]}});

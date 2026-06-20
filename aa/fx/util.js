@@ -39,6 +39,8 @@ aa.fx.readme =async(path,o={})=>
 
 
 // converts string to URL
+// scheme allowlist: javascript://host/%0acode parses with a hostname
+// and would otherwise become a clickable href
 aa.fx.url =string=>
 {
   if (!string) return false;
@@ -46,6 +48,7 @@ aa.fx.url =string=>
   try { url = new URL(string) }
   catch { return false }
   if (!url.hostname.length) return false;
+  if (!['http:','https:','ws:','wss:','ftp:'].includes(url.protocol)) return false;
   return url
 };
 

@@ -32,7 +32,17 @@ aa.m.load =async()=>
   let mod = aa.m;
 
   // load saved state from IDB stuff store
-  mod.o = await aa.db.ops('idb', {get:{store:'stuff',key:mod.def.id}});
+  // strict: distinguish "db timed out" from "no record" so a later save
+  // doesn't overwrite stored convos with defaults (see aa.mod.save guard)
+  try
+  {
+    mod.o = await aa.db.ops('idb', {get:{store:'stuff',key:mod.def.id}},{strict:true});
+  }
+  catch (e)
+  {
+    mod.load_failed = true;
+    console.warn('m.load: load failed, running read-only',e);
+  }
   if (!mod.o) mod.o = {id: mod.def.id};
   if (!mod.o.convos) mod.o.convos = {};
   if (!mod.o.pending) mod.o.pending = [];

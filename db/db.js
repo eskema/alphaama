@@ -56,7 +56,11 @@ aa.db.count =async(s='')=>
 
 
 // Send operation to worker with request tracking
-aa.db.ops = async(worker, ops) =>
+// options.strict: on final timeout reject instead of resolving null, so the
+// caller can tell "db never answered" apart from "no record" (both falsy
+// otherwise). Used by aa.mod.load to avoid overwriting stored state with
+// defaults after a slow/contended db open.
+aa.db.ops = async(worker, ops, options={}) =>
 {
   // Get the persistent worker
   if (typeof worker === 'string')
@@ -70,17 +74,24 @@ aa.db.ops = async(worker, ops) =>
     return Promise.resolve(null);
   }
 
-  // Generate unique request ID
-  const request_id = ++aa.db.request_id;
-
-  return new Promise((resolve, reject) =>
+  // one retry before giving up — most timeouts are transient (db-open
+  // contention, redstore wasm init) and clear on a second attempt
+  const attempt = (retries) => new Promise((resolve, reject) =>
   {
-    // Store pending request
+    const request_id = ++aa.db.request_id;
+
     const timeout = setTimeout(() =>
     {
       aa.db.pending.delete(request_id);
-      resolve(null); // Timeout resolves to null
+      if (retries > 0)
+      {
+        console.warn(`db.ops: request ${request_id} timed out, retrying`);
+        attempt(retries - 1).then(resolve, reject);
+        return;
+      }
       console.warn(`db.ops: request ${request_id} timed out`);
+      if (options.strict) reject(new Error('db.ops timeout'));
+      else resolve(null); // legacy contract: timeout resolves to null
     }, 6666);
 
     aa.db.pending.set(request_id, {resolve, reject, timeout});
@@ -88,6 +99,8 @@ aa.db.ops = async(worker, ops) =>
     // Send message with request_id
     worker.postMessage({request_id, ops});
   });
+
+  return attempt(1);
 };
 
 aa.resets.push(

@@ -709,9 +709,15 @@ const get_outbox =async({request,outbox,outbox_keys,options})=>
 
   let [fid,filter] = request.slice(1);
 
+  // pre_process_request runs async and may suspend on the throttle before it
+  // reads `filter` via db.queryEvents — so we must NOT mutate `filter` here, or
+  // the local query resumes with authors/#p stripped and pulls every stored
+  // k0/k3/k10002. strip the per-author keys on a copy instead, leaving the
+  // object pre_process_request still references untouched.
   pre_process_request(request);
 
-  for (const {key} of outbox_keys) delete filter[key];
+  let base = {...filter};
+  for (const {key} of outbox_keys) delete base[key];
 
   let batch_size = 20;
   let delay = 420;
@@ -722,7 +728,7 @@ const get_outbox =async({request,outbox,outbox_keys,options})=>
     {
       for (const [url,all_pubs] of batch)
       {
-        let f = {...filter};
+        let f = {...base};
         for (const {key,pubkeys} of outbox_keys)
         {
           let relevant = pubkeys.filter(p => all_pubs.includes(p));

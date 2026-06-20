@@ -182,13 +182,13 @@ dialog .tag
 
 .render_list .tag[data-i]::before
 {
-  color: rgba(var(--color-c),.8);
+  /* color: rgba(var(--color-c),.8); */
   width: 4rem;
   /* text-align: center; */
 }
 
-.render_list .tag[data-i]::before,
-.render_list > .tags 
+.note > .render_list .tag[data-i]::before,
+.note > .render_list > .tags 
 {
   font-size: var(--font-size);
   line-height: 2rem;
