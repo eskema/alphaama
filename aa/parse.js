@@ -38,6 +38,11 @@ aa.parse.url =(match,is_trusted)=>
   const [src,type] = src_type(url);
 
   if (!is_trusted || !type) return aa.mk.link(src);
+  // mixed-content guard: on an https:// page an inline http:// image/video/
+  // audio triggers a browser mixed-content warning (and often a silent
+  // upgrade + failed load). fall back to a plain link so the user can still
+  // open it in a new tab without spraying the console.
+  if (!aa.fx.is_secure_ok(url)) return aa.mk.link(src);
   if (type === 'image') return aa.mk.img(src);
   else if (type === 'audio' || type === 'video')
   {
