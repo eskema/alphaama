@@ -100,6 +100,11 @@ aa.parse.url =(match,is_trusted)=>
   const [src,type] = aa.fx.src_type(url,aa.allowed_extensions);
 
   if (!is_trusted || !type) result.parsed = aa.mk.link(src);
+  // mixed-content guard: on an https:// page an inline http:// image/video/
+  // audio triggers a browser mixed-content warning (and often a silent
+  // upgrade + failed load). fall back to a plain link so the user can still
+  // open it in a new tab without spraying the console.
+  else if (!aa.fx.is_secure_ok(url)) result.parsed = aa.mk.link(src);
   else if (type === 'image') result.parsed = aa.mk.img(src);
   else if (type === 'audio' || type === 'video')
   {
@@ -108,7 +113,7 @@ aa.parse.url =(match,is_trusted)=>
     else options.on_grab = s=>aa.log(aa.mk.img(s));
     result.parsed = aa.mk.av(src,options);
   }
-  
+
   return result
 };
 
