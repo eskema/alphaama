@@ -78,8 +78,22 @@ aa.e.clear_events =s=>
 };
 
 
-// content parsing (delegated to aa.fx)
-aa.e.content = aa.fx.parse;
+// note content parser — same as aa.fx.parse, but if the first paragraph
+// contains "a sentence. another sentence", we split at the first ". " so
+// the parser emits it as its own <p> and the CSS bump-up on
+// .paragraph:first-child lands on a single short line instead of a wall.
+aa.e.content =(content, is_trusted)=>
+{
+  let para_end = content.search(/\n\s*\n/);
+  let first_para = para_end === -1 ? content : content.slice(0, para_end);
+  let rest      = para_end === -1 ? '' : content.slice(para_end);
+
+  let dot = first_para.indexOf('. ');
+  if (dot !== -1)
+    content = first_para.slice(0, dot + 1) + '\n\n' + first_para.slice(dot + 2) + rest;
+
+  return aa.fx.parse(content, is_trusted);
+};
 
 
 // parse content as object
