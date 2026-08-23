@@ -313,6 +313,16 @@ sift.items =options=>
     },[]);
 
     let page_index = page > 0 ? page - 1 : 0;
+    // clamp to the last existing page: when the page count shrinks under the
+    // current page (e.g. raising max from 100 to 1000 while on page 2) the
+    // stale page would render empty AND hide the footer controls — no way
+    // back. clamp and sync the page input so the user lands on real content
+    if (page_index >= pages.length)
+    {
+      page_index = pages.length ? pages.length - 1 : 0;
+      options.page = page_index + 1;
+      if (options.page_input) options.page_input.value = options.page;
+    }
     result = pages[page_index] || [];
     options.counts.pages = pages.length;
   }

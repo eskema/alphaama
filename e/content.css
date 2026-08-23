@@ -301,6 +301,10 @@
   margin: var(--pad) 0;
   max-height: var(--media-height);
   max-width: 100%;
+  /* width:auto is required because imeta dims set a width attribute, which
+     would otherwise pin the width and stop max-height from scaling tall
+     images proportionally (squashing them wide) */
+  width: auto;
 
   /* suppress HDR so scrolling past HDR media doesn't renegotiate display range
      and flicker neighbouring SDR content. dynamic-range-limit is the official

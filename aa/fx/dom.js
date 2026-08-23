@@ -197,7 +197,7 @@ aa.fx.storage = (() => {
 })();
 
 
-aa.fx.parse =(content,is_trusted)=>
+aa.fx.parse =(content,is_trusted,tags)=>
 {
   let items =
   [
@@ -206,5 +206,5 @@ aa.fx.parse =(content,is_trusted)=>
     {id:'hashtag', regex:aa.regex.hashtag, exe:aa.parse.hashtag},
   ];
 
-  return parse_all({ content, items, is_trusted })
+  return parse_all({ content, items, is_trusted, tags })
 };

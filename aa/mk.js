@@ -335,10 +335,19 @@ aa.mk.help =async(s='')=>
 
 
 // make generic image
-aa.mk.img =(src,thumb=false)=>
+aa.mk.img =(src,thumb=false,dim=false)=>
 {
   const l = make('img');
   l.loading = 'lazy';
+  // intrinsic size before src: gives the img an aspect-ratio so it reserves
+  // its space up front instead of popping from 0 height on decode and
+  // reflowing (and repainting) everything below it. css still sets the
+  // displayed size via max-width/max-height + height:auto
+  if (dim)
+  {
+    l.width = dim[0];
+    l.height = dim[1];
+  }
   l.src = src;
   if (!thumb) 
   {

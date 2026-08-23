@@ -81,7 +81,7 @@ aa.parse.nostr =match=>
 
 
 // parse url as link or media given trust
-aa.parse.url =(match,is_trusted)=>
+aa.parse.url =(match,is_trusted,tags)=>
 {
   let url = aa.fx.url(match[0]);
   if (!url) return;
@@ -105,7 +105,7 @@ aa.parse.url =(match,is_trusted)=>
   // upgrade + failed load). fall back to a plain link so the user can still
   // open it in a new tab without spraying the console.
   else if (!aa.fx.is_secure_ok(url)) result.parsed = aa.mk.link(src);
-  else if (type === 'image') result.parsed = aa.mk.img(src);
+  else if (type === 'image') result.parsed = aa.mk.img(src,false,aa.fx.dim_from_tags(tags,src));
   else if (type === 'audio' || type === 'video')
   {
     let options = {};

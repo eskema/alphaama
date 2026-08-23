@@ -156,7 +156,7 @@ aa.e.render_file =async(element,dat,o={})=>
   {
     let app;
     if (type === 'image')
-      app = aa.mk.img(url);
+      app = aa.mk.img(url,false,aa.fx.dim_from_tags(dat.event.tags,url));
     else if (type === 'video' || type === 'audio')
       app = aa.mk.av(url,{on_grab:s=>aa.log(aa.mk.img(s))});
     else
@@ -255,7 +255,9 @@ aa.e.render_image =async(element,dat)=>
   let url = aa.fx.url_from_tags(dat.event.tags);
   if (!url) return;
   
-  let app = trusted ? aa.mk.img(url) : aa.mk.link(url);
+  let app = trusted
+  ? aa.mk.img(url,false,aa.fx.dim_from_tags(dat.event.tags,url))
+  : aa.mk.link(url);
   element.prepend(make('p',{cla:'paragraph',app}))
 };
 

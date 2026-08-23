@@ -6,6 +6,31 @@ fx: tag creation & access
 */
 
 
+// image dimensions for a url, as [w,h]
+// NIP-92: ["imeta","url <url>","dim <w>x<h>"] — matched by url
+// NIP-94: separate top-level ["url",...] and ["dim","<w>x<h>"] tags
+aa.fx.dim_from_tags =(tags,url)=>
+{
+  if (!tags || !url) return;
+  let dim;
+  for (const tag of tags)
+  {
+    if (tag[0] !== 'imeta') continue;
+    const o = aa.fx.a_o(tag);
+    if (o.dim && aa.fx.url(o.url)?.href === url)
+    {
+      dim = o.dim;
+      break
+    }
+  }
+  if (!dim && aa.fx.url(aa.fx.tag_value(tags,'url'))?.href === url)
+    dim = aa.fx.tag_value(tags,'dim');
+  if (!dim) return;
+  const [w,h] = String(dim).split('x').map(i=>parseInt(i,10));
+  if (w > 0 && h > 0) return [w,h]
+};
+
+
 // create a tag from event
 aa.fx.tag_a =o=>
 {

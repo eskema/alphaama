@@ -82,7 +82,7 @@ aa.e.clear_events =s=>
 // contains "a sentence. another sentence", we split at the first ". " so
 // the parser emits it as its own <p> and the CSS bump-up on
 // .paragraph:first-child lands on a single short line instead of a wall.
-aa.e.content =(content, is_trusted)=>
+aa.e.content =(content, is_trusted, tags)=>
 {
   let para_end = content.search(/\n\s*\n/);
   let first_para = para_end === -1 ? content : content.slice(0, para_end);
@@ -92,7 +92,7 @@ aa.e.content =(content, is_trusted)=>
   if (dot !== -1)
     content = first_para.slice(0, dot + 1) + '\n\n' + first_para.slice(dot + 2) + rest;
 
-  return aa.fx.parse(content, is_trusted);
+  return aa.fx.parse(content, is_trusted, tags);
 };
 
 
@@ -111,7 +111,7 @@ aa.e.context =(element,event,is_trusted)=>
 {
   element.classList.add('parsed');
   element.textContent = '';
-  element.append(aa.e.content(event.content,is_trusted))
+  element.append(aa.e.content(event.content,is_trusted,event.tags))
 };
 
 

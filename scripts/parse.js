@@ -6,6 +6,7 @@ const parse =(options={})=>
     regex,
     exe,
     is_trusted,
+    tags,
   } = options;
 
   let index = 0;
@@ -20,7 +21,7 @@ const parse =(options={})=>
     // }
     
     // fragment.append(match.input.slice(index,match.index));
-    let { parsed, type, before, after } = exe(match,is_trusted);
+    let { parsed, type, before, after } = exe(match,is_trusted,tags);
     if (!parsed)
     {
       console.error('parser:',regex,match);
@@ -76,6 +77,7 @@ const parse_all =(options)=>
     content,
     items,
     is_trusted,
+    tags,
   } = options;
 
   let tested = [];
@@ -139,6 +141,7 @@ const parse_all =(options)=>
         {
           found.content = word;
           found.is_trusted = is_trusted;
+          found.tags = tags;
           found.regex.lastIndex = 0;
           let { parsed, type, before, after } = parse(found);
           if (before) element.append(before,' ');
