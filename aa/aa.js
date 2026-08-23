@@ -7,7 +7,7 @@ A<3   aa
 
 
 // a version to change
-const aa_version = 91;
+const aa_version = 92;
 // a
 const aa = 
 {
@@ -28,17 +28,9 @@ const aa =
   [
     '/dep/fastdom.js?v=1.0.4',
     '/dep/nostr-tools.js?v=2.23.1',
-    // '/dep/store.js',
     '/dep/qrcode.js',
-    // '/dep/asciidoctor.min.js?v=3.0.4',
-    // '/dep/bolt11.js',
-    // '/dep/cashuts.js?v=2.0.0',
-    // '/dep/fastdom-promised.js?v=1.0.4',
-    // '/dep/fastdom-strict.js?v=1.0.4',
-    // '/dep/math.js?v=14.0.1',
-    // '/dep/webtorrent.min.js',
-    // '/dep/hls.js?v=1',
-    // '/dep/blurhash.js?v=10000',
+    // unused deps retired to _local/dep/ 2026-08-23 (asciidoctor, blurhash,
+    // bolt11, cashuts, fastdom-promised/strict, hls, math, ratchet, webtorrent)
     '/scripts/make.js',
     '/scripts/debt.js',
     '/scripts/sift.js',
@@ -50,14 +42,14 @@ const aa =
     ['o','/o/o.js','esm'],
     ['p','/p/p.js'],
     ['e','/e/e.js'],
-    ['m','/m/m.js'],
     ['r','/r/r.js'],
     ['q','/q/q.js'],
     ['u','/u/u.js'],
     ['b','/b/b.js','esm'],
-    ['w','/w/w.js'],
-    ['d','/d/d.js'],
     ['h','/h/h.js','esm'],
+    // m (nip-17 dms), w (wallnut), d (double ratchet) retired to _local/
+    // 2026-08-23 — experiments now live in nostrapps; alphaama stays a
+    // query-display client. restore by moving the dir back + re-adding here.
   ],
   scripts:
   [

@@ -42,15 +42,16 @@ Everything hangs off a single global `aa` object. Each module extends it. Inter-
 | `q/` | `aa.q` | mod | Queries: filter templates, variable expansion, subscriptions, outbox, NIP-A7 spells, URL-driven views | q.js, spells.js, views.js |
 | `r/` | `aa.r` | mod | Relays: WebSocket mgmt via worker, scoring, batching, outbox model, NIP-42 auth, progressive backoff | r.js, manager.js (worker), msg.js, fx.js, mk.js |
 | `u/` | `aa.u` | mod | User: auth, **signer abstraction** (NIP-07 + NIP-46 unified), bootstrap, decrypt cache, variable system | u.js |
-| `m/` | `aa.m` | mod | NIP-17 gift-wrap DMs (rumor/seal/wrap, kind 1059) | m.js, mk.js, clk.js, view.js |
-| `d/` | `aa.d` | mod | Double Ratchet DMs (Signal-style, vendored from mmalmi's nostr-double-ratchet) | d.js, mk.js, view.js |
 | `b/` | `b` (esm default) | mod (esm) | Blossom: kind 24242 auth, kind 10063 server lists, BUD-01..06 | b.js, mk.js, kinds.js |
-| `w/` | `aa.w` | mod | walLNut: zaps (NIP-57), NWC (NIP-47), Cashu (NIP-60/61) with AES-GCM proof vault. **Experimental** | w.js, mk.js, clk.js, fx.js, kinds.js |
 | `h/` | `aa.h` | mod (esm) | Help — renders all module READMEs in a unified view; nav auto-built from modules with a prefetched `mod.readme` | h.js |
 | `db/` | `aa.db` | scripts | DB orchestration: persistent IDB worker, request_id tracking, service-worker registration | db.js, idb.js, sdb.js |
 | `av/` | — | dynamic ESM | Audio/video player; loaded inline by `aa.load`, exposes only `aa.mk.av` and `aa.fx.generate_waveform` | av.js |
 
-Mod load order in `aa/aa.js`: `cli, o, p, e, m, r, q, u, b, w, d, h`. Order matters — later modules can depend on earlier ones being loaded. `o`, `b`, and `h` are loaded as ESM via `import()`; the rest are script tags.
+Mod load order in `aa/aa.js`: `cli, o, p, e, r, q, u, b, h`. Order matters — later modules can depend on earlier ones being loaded. `o`, `b`, and `h` are loaded as ESM via `import()`; the rest are script tags.
+
+### Retired modules (2026-08-23)
+
+`m/` (NIP-17 DMs), `w/` (walLNut), `d/` (double ratchet DMs), and `ma/` (standalone tools) were retired to `_local/` — experiments now live in nostrapps; alphaama focuses on query→relay→print. To restore one: move the dir back and re-add its entry to `mods` in `aa/aa.js`. Kind-1059 events now render as `gift_wrap` stubs via `e/kinds.js`; zap *display* (9735) remains in `e/`. `aa.mk.chat_list` in `aa/mk.js` is currently unused (was shared by m/ and d/).
 
 ### Module file convention
 
@@ -74,7 +75,6 @@ Vary in practice: `e/` is the biggest with 14 files; `b/` and `d/` are leaner.
 | `scripts/parse.js` | Markdown/text content parser |
 | `scripts/debt.js` | Debounce/timeout manager (`debt.add(fn, ms, key)`) |
 | `dep/` | Vendored libs (pre-built bundles): nostr-tools, fastdom, qrcode, redstore (WASM/OPFS), redstore-worker, ratchet, cashu-ts, hls, webtorrent, math, blurhash, bolt11, asciidoctor |
-| `ma/` | Standalone tools: PoW miner, note builder, filter builder, ratchet test harness, ws_test |
 | `stuff/` | Static assets (logos, favicons, font, images) |
 | `cash.js` | Service worker (root, registered from `db/db.js`) |
 
@@ -215,24 +215,7 @@ Storage policy: always store user's events; store follows' events for kinds 0, 3
 - NIP-B7 / Blossom: media servers (kinds 24242 auth, 10063 server list)
 - Double Ratchet DMs (vendored, not yet a finalized NIP — wire format v1, kinds 1060 message / 30078 invite / 1059 invite response)
 
-## walLNut — Experimental
 
-Cashu ecash. Has been a forcing function for architectural improvements (vault, signer abstraction, decrypt cache) but is unfinished. Not core to alphaama's identity.
-
-- **Vault**: AES-GCM encrypted proofs blob in IDB; the AES key lives in `decrypt_cache._data.keys`. Bypasses NIP-44 size limits for big proof bags.
-- **NWC fallback**: when Cashu auto-melt fails, wallnut falls back to NIP-47 NWC for outbound payments, then to a manual dialog.
-- **Sync**: pulls replaceable wallnut config (17375), proof events (7375), nutzaps (9321) and dedupes by proof secret. Tracks redeemable/redeemed sets.
-- **Send-zap is functional** (`w zap <amount> <pubkey> [memo] [event_id]`). Read-only zap rendering also handled in `e/render.js`.
-- Cashu lib is `cashu-ts` (vendored as `w/cashu-ts.iife.js`, also in `dep/`).
-
-## DMs: m vs d
-
-Two separate modules with two protocols, sharing the same chat UI shell (`aa.mk.chat_list`):
-
-- **`m/` — NIP-17 gift wrap.** Stateless after decrypt: ECDH derives the conversation key, decrypted bodies cached in `decrypt_cache`. Pending (undecrypted) wraps persisted across sessions. Timestamps randomized 0–48h into the past on send.
-- **`d/` — Double Ratchet.** Stateful: each peer has a serialized ratchet state in `aa.d.o.sessions`. Forward secrecy and post-compromise recovery. Append-only audit log in `aa.d.o.log`. Export/import history with `d export <peer>` / `d import <peer> <blob>` for state recovery. Invite flow: `d invite` → ship URL → peer `d join <url>` → adopt-or-merge confirm dialog if a session already exists.
-
-Identity binding happens at session setup; per-message encryption uses derived ratchet keys, not your nostr signer — so no signer prompt per send.
 
 ## When Working on This Codebase
 

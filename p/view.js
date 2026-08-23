@@ -24,12 +24,6 @@ aa.view.ls.npub1 =async npub=>
       aa.clk.expand({target:section});
   }
 
-  if (aa.m?.open)
-  {
-    await aa.m.restore();
-    aa.m.open(pubkey);
-  }
-
   setTimeout(()=>{aa.fx.scroll(profile)},400);
 };
 
