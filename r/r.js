@@ -42,6 +42,11 @@ aa.r =
   temp: new Map(),
   on_sub:new Map(),
   on_eose:new Map(),
+  // sub ids whose late EOSEs should be swallowed, not logged as strays. every
+  // def_req is an ephemeral eose:'close' fan-out (miss reconciliation, search):
+  // it closes on the first EOSE, but the other relays keep EOSE-ing the same
+  // sub id afterwards. def_req adds/prunes ids here.
+  eose_mute:new Set(),
   get r()
   {
     let result = aa.fx.in_set(this.o.ls,this.o.r);
@@ -255,6 +260,7 @@ aa.r.def_req =(id,filter,relays)=>
   const request = ['REQ',id,filter];
   const options = {eose:'close'};
   if (!relays?.length) relays = aa.r.r;
+  aa.r.eose_mute.add(id);   // fan-out req — don't log the slow relays' late EOSEs
   if (!aa.r.on_sub.has(id)) aa.r.on_sub.set(id, dat => aa.bus.emit('e:print_q', dat));
   aa.r.on_eose.set(id,()=>
   {
@@ -262,6 +268,8 @@ aa.r.def_req =(id,filter,relays)=>
     aa.r.on_sub.delete(id);
   });
   aa.r.send_req({request,relays,options});
+  // stop tracking once the sub is long closed, so the set can't grow unbounded
+  setTimeout(()=>{aa.r.eose_mute.delete(id)},30000);
 };
 
 

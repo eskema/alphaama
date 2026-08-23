@@ -19,7 +19,6 @@ aa.r.event =async data=>
   // console.log(data);
   for (const sub of dat?.subs)
   {
-    aa.bus.emit('q:stamp', sub, dat.event.created_at);
     if (aa.r.on_sub.has(sub))
     {
       aa.r.on_sub.get(sub)(dat);
@@ -57,6 +56,10 @@ aa.r.eose =async data=>
     setTimeout(()=>{fn(url)},100);
     return
   }
+
+  // ephemeral miss reqs: the round's handler is gone but slow relays are still
+  // EOSE-ing the same random sub id — swallow those instead of logging strays
+  if (aa.r.eose_mute.has(sub_id)) return;
 
   let l_id = `["REQ","${sub_id}"]`;
   let l = aa.el.get(l_id);

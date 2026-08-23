@@ -257,7 +257,15 @@ aa.e.get_missing =type=>
     if (done) return;
     done = true;
     clearTimeout(timeout_id);
-    cleanup_handlers();
+    // do NOT tear down on_sub here: finish fires on the FIRST EOSE per req
+    // (usually a fast relay that doesn't have the event), while the relay
+    // that does have it delivers a few hundred ms later. cleaning up
+    // immediately dropped those late events from printing — and since every
+    // picked relay is already in nope[], the id was never re-asked: quotes
+    // stayed missing until a manual req found them in the local db. keep
+    // the handlers alive for a grace window instead; duplicates are deduped
+    // by the print path.
+    setTimeout(cleanup_handlers, 6000);
     aa.e._miss_inflight[type] = false;
     // anything still missing → try the next relay batch now. items that
     // arrived during this round were already cleared from aa.temp.miss by

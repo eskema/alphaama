@@ -532,9 +532,7 @@ aa.q.load =async()=>
   // register spell render
   aa.bus.emit('e:render_add', 'spell', [777], aa.q.render_spell);
 
-  // bus listener (breaks r -> q circular dependency)
-  aa.bus.on('q:stamp', (sub, ts) => aa.q.stamp(sub, ts));
-  // lets other mods (m, d) get a REQ entry in the log without depending on q
+  // lets other mods get a REQ entry in the log without depending on q
   aa.bus.on('q:log_req', (request, con) => aa.q.log('req', request, con));
 };
 
@@ -1103,34 +1101,6 @@ aa.q._wait_print_idle =async(idle_ms=300, max_ms=30000)=>
     await aa.fx.delay(idle_ms);
   }
   aa.log('q stuff: print drain wait timed out');
-};
-
-
-aa.q.stamp =async(id,timestamp)=>
-{
-  let mod = aa.q;
-  let sub = mod.o.ls[id];
-  if (!sub) return;
-  let changed;
-  if (!sub.since || sub.since > timestamp)
-  {
-    sub.since = timestamp;
-    changed = true;
-  }
-  if (!sub.until || sub.until < timestamp)
-  {
-    sub.until = timestamp;
-    changed = true;
-  }
-  
-  if (changed)
-  {
-    debt.add(()=>
-    {
-      // console.log('aa.q.stamp saved',id);
-      aa.mod.save(mod);
-    }, 2100, `q.stamp_${id}`)
-  }
 };
 
 
